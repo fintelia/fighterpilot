@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="`anonymous-namespace'::auto_array&lt;T&gt;" Collapsed="true">
+    <Position X="7" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAEAAAAAAAAYAgAQQAAAAAAAAoAAAAGAIAAAAA=</HashCode>
+      <FileName>imageloader.cpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="bullet" Collapsed="true">
+    <Position X="8.75" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAEAAAAAAAAAgAAAAgAAAAAAAAAAAAAAAFBgAQAEAAA=</HashCode>
+      <FileName>bullet.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Image" Collapsed="true">
+    <Position X="7" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAUAQAAAAAAAAAAAABIAAAAAAAAAAAA=</HashCode>
+      <FileName>imageloader.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="controller" Collapsed="true">
+    <Position X="7" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAIAAAAAAAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>input.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="input" Collapsed="true">
+    <Position X="8.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>input.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="missile" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAWAAAAAAAAAgAAAAgAAAAAAAAAAAAAEBEAAAABAAAA=</HashCode>
+      <FileName>missile.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="spark" Collapsed="true">
+    <Position X="8.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAEAAAAAAAAAgAAAAgAAAAAAAAAAAAAEAERgAQAEAAA=</HashCode>
+      <FileName>partical.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="planeBase" Collapsed="true">
+    <Position X="3.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAYAAAAAIqIABkIAAAgABAgBCKAEApQBDAAAAAFAAAA=</HashCode>
+      <FileName>plane.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="plane" Collapsed="true">
+    <Position X="2.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAACIABEAAAAAABAABCAAEAoABAAAAAAEAAAA=</HashCode>
+      <FileName>plane.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIplane" Collapsed="true">
+    <Position X="5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQCAAAAACIABEAAAAAABABBCAAEAIABAAAAAAEAAAA=</HashCode>
+      <FileName>plane.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Terrain" Collapsed="true">
+    <Position X="7" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAABAAQEAAAgAAQAAAQACEJEgAAAAAAAA=</HashCode>
+      <FileName>Terain.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Vec3f" Collapsed="true">
+    <Position X="8.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>GgAAAAQAAAAQAgAAYAUIAAAAAAAAAIgAARAAAAAAAIA=</HashCode>
+      <FileName>vec3f.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="entity" Collapsed="true">
+    <Position X="2.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAQAAAgA=</HashCode>
+      <FileName>entity.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="vert" Collapsed="true">
+    <Position X="7" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAQAAAAA=</HashCode>
+      <FileName>model.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="__unnamed_006d_1" Collapsed="true">
+    <Position X="4.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAwAAAAAAAAAABAAAAABABAAAAAAA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="__unnamed_006d_2" Collapsed="true">
+    <Position X="3" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="__unnamed_006d_3" Collapsed="true">
+    <Position X="1.25" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQABAAAAAAAAAAAAEAAIAAhAAAAAAAAAAAAAQA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="Texture" Collapsed="true">
+    <Position X="4.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="TGAHeader" Collapsed="true">
+    <Position X="3" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="TGA" Collapsed="true">
+    <Position X="1.25" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>texture2.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>
