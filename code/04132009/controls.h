@@ -17,6 +17,7 @@ private:
 	int *axis;
 	bool *key;
 public:
+	unsigned char my_char;
 	control(int *a,bool positive)
 	{
 		valid=true;
@@ -27,11 +28,12 @@ public:
 		else
 			dir=-1;
 	}
-	control(bool *k)
+	control(bool *k,unsigned char c)
 	{
 		integer=false;
 		key=k;
 		valid=true;
+		my_char=c;
 	}
 	control()
 	{
@@ -60,6 +62,7 @@ public:
 	}
 	void newControl(int *a,bool positive)
 	{
+		valid=true;
 		integer=true;
 		axis=a;
 		if(positive)
@@ -67,10 +70,12 @@ public:
 		else
 			dir=-1;
 	}
-	void newControl(bool *k)
+	void newControl(bool *k,unsigned char c)
 	{
+		valid=true;
 		integer=false;
 		key=k;
+		my_char=c;
 	}
 };
 
@@ -79,9 +84,9 @@ public:
 class playerControls
 {
 private:
-	control c[8];
-public:
 
+public:
+	control c[8];
 	bool load_controls(char *filename)
 	{
 		ifstream myfile (filename);
@@ -120,26 +125,26 @@ public:
 	{
 		if(p==1)
 		{
-			c[CON_CLIMB]=&input->keys[53];
-			c[CON_DIVE]=&input->keys[50];
-			c[CON_LEFT]=&input->keys[230];
-			c[CON_RIGHT]=&input->keys[228];
-			c[CON_ACCEL]=&input->keys[229];
-			c[CON_BRAKE]=&input->keys[231];
-			c[CON_SHOOT]=&input->keys[48];
-			c[CON_MISSILE]=&input->keys[57];
+			c[CON_CLIMB].newControl(&input->keys[53],53);
+			c[CON_DIVE].newControl(&input->keys[50],50);
+			c[CON_LEFT].newControl(&input->keys[230],230);
+			c[CON_RIGHT].newControl(&input->keys[228],228);
+			c[CON_ACCEL].newControl(&input->keys[229],229);
+			c[CON_BRAKE].newControl(&input->keys[231],231);
+			c[CON_SHOOT].newControl(&input->keys[48],48);
+			c[CON_MISSILE].newControl(&input->keys[57],57);
 			//save_controls("saved controls/P1 default.ctrl"); //uncomment to update defaults
 		}
 		else if(p==2)
 		{
-			c[CON_CLIMB]=&input->keys[117];
-			c[CON_DIVE]=&input->keys[106];
-			c[CON_LEFT]=&input->keys[100];
-			c[CON_RIGHT]=&input->keys[97];
-			c[CON_ACCEL]=&input->keys[119];
-			c[CON_BRAKE]=&input->keys[115];
-			c[CON_SHOOT]=&input->keys[32];
-			c[CON_MISSILE]=&input->keys[98];
+			c[CON_CLIMB].newControl(&input->keys[117],117);
+			c[CON_DIVE].newControl(&input->keys[106],106);
+			c[CON_LEFT].newControl(&input->keys[100],100);
+			c[CON_RIGHT].newControl(&input->keys[97],97);
+			c[CON_ACCEL].newControl(&input->keys[119],119);
+			c[CON_BRAKE].newControl(&input->keys[115],115);
+			c[CON_SHOOT].newControl(&input->keys[32],32);
+			c[CON_MISSILE].newControl(&input->keys[98],98);
 			//save_controls("saved controls/P2 default.ctrl"); //uncomment to update defaults
 		}
 	}

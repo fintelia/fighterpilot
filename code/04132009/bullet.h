@@ -1,5 +1,5 @@
 
-const float speed=20;
+const float speed=30;
 class bullet
 {
 public:

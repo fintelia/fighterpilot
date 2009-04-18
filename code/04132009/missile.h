@@ -64,11 +64,10 @@ public:
 	}
 	bool Update()
 	{
-
 		/////////////////follow target////////////////////
 		//if(target!=-1)
 		//{
-		//	difAng=correctAng(   atan2(planes->at(target)->x-x,planes->at(target)->z-z)/PI*180    );
+		//	difAng=correctAng(   atan2(  planes->at(target)->x-x , planes->at(target)->z-z  ) /PI*180    );
 		//	angle-=(angle-difAng)/8;
 		//	//if(difAng>angle)
 		//	//	angle+=0.2;
@@ -88,16 +87,17 @@ public:
 		z += cos(float(angle*PI/180))*speed;
 
 		////////////////////sparks//////////////////////////
-		for(int i=0;i<30;i++)
+		for(int i=0;i<3;i++)
 		{
-			spark tmp(x+rand()%100/10-5.0f,y+rand()%100/10-5.0f,z+rand()%100/10-5.0f,0,0,0,5);
+			spark tmp(x,y,z,5,0.5,0.5,0.5,5);
 			sparks->push_back(tmp);
 		}
-		for(int i=0;i<30;i++)
+		for(int i=0;i<3;i++)
 		{
-			spark tmp(x+rand()%100/10-5.0f-sin(float(angle*PI/180))*speed/2,
-					y+rand()%100/10-5.0f-sin(climbAngle)*speed/2,
-					z+rand()%100/10-5.0f-cos(float(angle*PI/180))*speed/2,0,0,0,5);
+			spark tmp(x-sin(float(angle*PI/180))*speed/2,
+					y-sin(climbAngle)*speed/2,
+					z-cos(float(angle*PI/180))*speed/2,
+					5,0.5,0.5,0.5,5);
 			sparks->push_back(tmp);
 		}
 

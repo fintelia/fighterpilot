@@ -1,9 +1,7 @@
 
 class modes
 {
-public:
-	int newMode;
-	virtual int update(int value)=0;
+protected:
 	void ViewOrtho(int x, int y)				// Set Up An Ortho View
 	{
 		glMatrixMode(GL_PROJECTION);			// Select Projection
@@ -21,5 +19,8 @@ public:
 		glMatrixMode( GL_MODELVIEW );			// Select Modelview
 		glPopMatrix();							// Pop The Matrix
 	}
+public:
+	int newMode;
+	virtual int update(int value)=0;
 	virtual void draw()=0;
 };

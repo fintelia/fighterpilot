@@ -79,15 +79,15 @@ public:
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 		
-		float ly= 0.5;
+		//float ly= 0.5;
 		Vec3f cam;
 		if(firstP[acplayer-1]==false)
 		{
-			gluLookAt(p.x - sin(p.angle * DegToRad)*100, p.y + ly*40, p.z - cos(p.angle * DegToRad)*100,
+			gluLookAt(p.x - sin(p.angle * DegToRad)*100, p.y + sin(45.0)*100, p.z - cos(p.angle * DegToRad)*100,
 				p.x + sin(p.angle * DegToRad)*100, p.y, p.z + cos(p.angle * DegToRad)*100, 
 				0,1,0);//p.normalX,p.normalY,p.normalZ);
 			cam[0]=p.x - sin(p.angle * DegToRad)*100;
-			cam[1]=p.y + ly*40;
+			cam[1]=p.y + sin(45.0)*100;
 			cam[2]=p.z - cos(p.angle * DegToRad)*100;
 		}
 		else
@@ -148,11 +148,14 @@ public:
 		{
 			glColor3f(1,0,0);
 			glPushMatrix();
+			
 			glTranslatef(missiles[i].x,missiles[i].y,missiles[i].z);
 			glRotatef(missiles[i].angle+180,0,1,0);
 			glRotatef(missiles[i].climbAngle,1,0,0);
 			//glTranslatef(63,0,-10);
-			glScalef(15,15,15);
+			//glScalef(15,15,15);
+			glScalef(0.25f,0.25f,0.25f);
+			glRotatef(-90,1,0,0);
 			glCallList(model[1]);
 			glPopMatrix();
 			if(missiles[i].target!=-1)
@@ -167,17 +170,22 @@ public:
 			glEnd();
 			}
 		}
-		//glColor3f(0.5,0.5,0.5);
-		//glBegin(GL_POINTS);
-		//	for(int i=0;i<(signed int )particles.size();i++)
-		//	{
-		//		glVertex3f(particles[i].x,particles[i].y,particles[i].z);
-		//	}
-		//glEnd();
-		for(int i=0;i<(signed int )particles.size();i++)
-		{
-			render_billboard(particleTex,10,10,particles[i].x,particles[i].y,particles[i].z,cam);
-		}
+		glEnable(GL_BLEND);
+		glBegin(GL_POINTS);
+			for(int i=0;i<(signed int )particles.size();i++)
+			{
+				glColor4f(particles[i].r,particles[i].g,particles[i].b,0.6);
+				for(int l=0;l<10;l++)
+				{
+					glVertex3f(particles[i].x+rand()%200/10-10,particles[i].y+rand()%200/10-10,particles[i].z+rand()%200/10-10);
+				}
+			}
+		glEnd();
+		glDisable(GL_BLEND);
+		//for(int i=0;i<(signed int )particles.size();i++)
+		//{
+		//	render_billboard(particleTex,10,10,particles[i].x,particles[i].y,particles[i].z,cam);
+		//}
 		//glPushMatrix(); 
 		//	glTranslatef(o.x, o.y, o.z);
 		//
@@ -193,28 +201,24 @@ public:
 				if(planes[i]->hit)
 					glColor3f(1,0,0);
 				glPushMatrix(); 
+					
+					//glRotatef(90,1,0,0);
 					glTranslatef(planes[i]->x, planes[i]->y, planes[i]->z);
 					glRotatef(planes[i]->angle-planes[i]->turn/3,0,1,0);
 					glRotatef(planes[i]->turn,0,0,1);
+					glScalef(3,3,3);
 					glCallList(model[0]);
 				glPopMatrix();
-				glColor3f(0, 0, 0);
-				//float mX=(float)(int)planes[i]->x-int(planes[i]->x)%(int)size;
-				//float mZ=(float)(int)planes[i]->z-int(planes[i]->z)%(int)size;
+				//glColor3f(1, 0, 0);
 				//glBegin(GL_LINES);
+				//	glVertex3f(planes[i]->x-32, planes[i]->y, planes[i]->z);
+				//	glVertex3f(planes[i]->x+32, planes[i]->y, planes[i]->z);
 
-				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z);
-				//	glVertex3f(mX,_terrain->getHeight(int(planes[i]->x/size), int(planes[i]->z/size)) * 10,mZ);
+				//	glVertex3f(planes[i]->x, planes[i]->y+32, planes[i]->z);
+				//	glVertex3f(planes[i]->x, planes[i]->y-32, planes[i]->z);
 
-				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z);
-				//	glVertex3f(mX+size,_terrain->getHeight(int(planes[i]->x/size)+1, int(planes[i]->z/size)) * 10,mZ);
-
-				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z);
-				//	glVertex3f(mX,_terrain->getHeight(int(planes[i]->x/size), int(planes[i]->z/size)+1) * 10,mZ+size);
-
-				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z);
-				//	glVertex3f(mX+size,_terrain->getHeight(int(planes[i]->x/size)+1, int(planes[i]->z/size)+1) * 10,mZ+size);
-
+				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z+32);
+				//	glVertex3f(planes[i]->x, planes[i]->y, planes[i]->z-32);
 				//glEnd();
 			}
 		}
@@ -417,7 +421,8 @@ public:
 	int update(int value) {
 		for(int i=0;i<2;i++)
 		{
-			if(controls[i][CON_ACCEL]>300)   planes[i]->Accelerate();
+			if(controls[i][CON_ACCEL]>300)   
+				planes[i]->Accelerate();
 			if(controls[i][CON_BRAKE]>300)   planes[i]->Brake();
 			if(controls[i][CON_CLIMB]>300)   planes[i]->Climb();
 			if(controls[i][CON_DIVE]>300)    planes[i]->Dive();
@@ -461,7 +466,7 @@ public:
 		Vec3f b2;
 		Vec3f p;
 		int l;
-		for(int i=0;i<NumPlayers;i++)
+		for(int i=0;i<(signed int)planes.size();i++)
 		{
 			p[0]=planes[i]->x;p[1]=planes[i]->y;p[2]=planes[i]->z;
 			for(l=0;l<(signed int)bullets.size();l++)
@@ -470,7 +475,7 @@ public:
 				//b2[0]=bullets[l].x+bullets[l].vx*speed;
 				//b2[1]=bullets[l].y+bullets[l].vy*speed;
 				//b2[2]=bullets[l].z+bullets[l].vz*speed;
-				if(d(p,b1)<256 && bullets[l].owner != i)
+				if(d(p,b1)<32 && bullets[l].owner != i)
 				{
 					planes[i]->die();
 					bullets.erase(bullets.begin()+l);
@@ -483,7 +488,7 @@ public:
 				//b2[0]=missiles[l].x+missiles[l].vx*speed;
 				//b2[1]=missiles[l].y+missiles[l].vy*speed;
 				//b2[2]=missiles[l].z+missiles[l].vz*speed;
-				if(d(p,b1)<256 && missiles[l].owner != i)
+				if(d(p,b1)<32 && missiles[l].owner != i)
 				{
 					planes[i]->die();
 					missiles.erase(missiles.begin()+l);

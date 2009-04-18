@@ -26,6 +26,9 @@ public:
 	bool special[21];
 	bool joy[10];
 	int axes[3];
+	bool *lastKey;
+	unsigned char lastAscii; 
+	int tPresses;
 	Input()
 	{
 		memset(keys,false,256);
@@ -52,10 +55,14 @@ public:
 			joy[i]=false;
 		for(i=0;i<3;i++)
 			axes[i]=0;
+		tPresses=0;
 	}
 	void down(int k)
 	{
 		keys[k]=true;
+		tPresses++;
+		lastKey=&keys[k];
+		lastAscii=k;
 	}
 	void up(int k)
 	{
@@ -87,6 +94,9 @@ public:
 		special[19]=special[19]||GLUT_KEY_END==k;
 		special[19]=special[19]||GLUT_KEY_INSERT==k;
 		keys[k+128]=true;
+		lastKey=&keys[k+128];
+		tPresses++;
+		lastAscii=k+128;
 	}
 	void specialUp(int k)
 	{

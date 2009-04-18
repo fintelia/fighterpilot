@@ -10,7 +10,12 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <GL\freeglut.h>
+#ifdef __APPLE__
+#include <OpenGL/OpenGL.h>
+#include <GLUT/glut.h>
+#else
+#include "GL/glut.h"
+#endif
 
 
 
@@ -59,9 +64,9 @@ vector<planeBase*> planes;
 bool firstP[NumPlayers] = {true,true};
 vector<int> model;
 vector<int> tex;
-vector<int> menuOps;
-int particleTex;
-int menuBack;
+vector<int> menus;
+//int particleTex;
+GLuint menuBack;
 int disp[1];
 float radarAng=0;
 
@@ -170,7 +175,7 @@ void initRendering() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
-	glEnable(GL_POINT_SMOOTH);
+	//glEnable(GL_POINT_SMOOTH);
 	glShadeModel(GL_SMOOTH);
 //	glEnable(GL_MULTISAMPLE);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -752,6 +757,7 @@ int main(int argc, char** argv) {
 		glutCreateWindow("dog fights!" );
 	}
 
+
 	initRendering();
 
 	glutKeyboardFunc(handleKeypress);
@@ -765,8 +771,8 @@ int main(int argc, char** argv) {
 	glutReshapeFunc(handleResize);
 
 	glutSetCursor(GLUT_CURSOR_NONE);
-
 	mode=new loading;
+
 
 	glutMainLoop();
 	return 0;

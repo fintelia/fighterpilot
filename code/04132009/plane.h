@@ -75,6 +75,8 @@ public:
 class AIplane:public planeBase
 {
 public:
+	int nextShot;//determines how long until the plane can fire again
+	int rBullets;//remaining bullits
 	AIplane();
 	AIplane(int _player,Terrain *T,vector<missile> *m,vector<bullet> *b,vector<spark> *s,vector<planeBase*> *p);
 	void Accelerate();

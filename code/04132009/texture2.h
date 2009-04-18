@@ -33,7 +33,7 @@ GLuint LoadBitMap(char *filename,float r,float g, float b)
 	r=r*255;
 	g=g*255;
 	b=b*255;
-	GLuint tex[1]={-1};
+	GLuint texV[1]={-1};
     int i, j=0; //Index variables
     //unsigned char *l_texture; //The pointer to the memory zone in which we will load the texture
 	
@@ -97,8 +97,8 @@ GLuint LoadBitMap(char *filename,float r,float g, float b)
 		}
 	}
 	fin.close();
-	glGenTextures(1,tex);
-    glBindTexture(GL_TEXTURE_2D, tex[0]); // Bind the ID texture specified by the 2nd parameter
+	glGenTextures(1,texV);
+    glBindTexture(GL_TEXTURE_2D, texV[0]); // Bind the ID texture specified by the 2nd parameter
 
 	// Finally we define the 2d texture
     glTexImage2D(GL_TEXTURE_2D, 0, 4 , tga.Width, tga.Height, 0,texture.type, GL_UNSIGNED_BYTE, (GLvoid *)texture.imageData);
@@ -116,5 +116,5 @@ GLuint LoadBitMap(char *filename,float r,float g, float b)
 	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     free(texture.imageData); // Free the memory we used to load the texture
 
-    return (tex[0]); // Returns the current texture OpenGL ID
+    return (texV[0]); // Returns the current texture OpenGL ID
 }
