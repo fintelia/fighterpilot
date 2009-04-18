@@ -6,7 +6,7 @@ public:
 	void exitProgram()
 	{
 		cout << "texture file not found" << endl; 
-		Sleep(1000);
+		//sleep(1000);
 		exit (0);		
 	}
 	Terrain* loadTerrain(const char* filename, float height) {
@@ -50,17 +50,17 @@ public:
 							
 							normal = _terrain->getNormal(x, z+1);
 							glNormal3f(normal[0], normal[1], normal[2]);
-							glTexCoord2f(0,4);
+							glTexCoord2f(0,1);
 							glVertex3f(x * size, _terrain->getHeight(x, z+1), (z+1) * size);
 
 							normal = _terrain->getNormal(x+1, z);
 							glNormal3f(normal[0], normal[1], normal[2]);
-							glTexCoord2f(4,0);
+							glTexCoord2f(1,0);
 							glVertex3f((x+1) * size, _terrain->getHeight(x+1, z), z * size);
 							
 							normal = _terrain->getNormal(x+1, z+1);
 							glNormal3f(normal[0], normal[1], normal[2]);
-							glTexCoord2f(4,4);
+							glTexCoord2f(1,1);
 							glVertex3f((x+1) * size, _terrain->getHeight(x+1, z+1), (z+1) * size);
 					}
 				glEnd();
@@ -72,11 +72,11 @@ public:
 	}
 	void load()
 	{
-		model.push_back(load_texture("media2/plane.raw"));
+		model.push_back(load_texture("media2/plane3.raw"));
 		model.push_back(load_texture("media2/missile3.raw"));
 
 		tex.push_back(LoadBitMap("media2/cockpit.tga"));//0
-		tex.push_back(LoadBitMap("media2/grass.tga"));
+		tex.push_back(LoadBitMap("media2/grass2.tga"));
 		tex.push_back(LoadBitMap("media2/fire.tga"));
 		tex.push_back(LoadBitMap("media2/aimer.tga"));//5
 		tex.push_back(LoadBitMap("media2/dial front.tga"));
@@ -86,31 +86,25 @@ public:
 		tex.push_back(LoadBitMap("media2/needle.tga"));//8
 		tex.push_back(LoadBitMap("media2/radar2.tga"));
 		tex.push_back(LoadBitMap("media2/radar tail2.tga"));//10
-		tex.push_back(LoadBitMap("media2/plane radar2.tga"));//11
+		tex.push_back(LoadBitMap("media2/plane radar2.tga"));
+		tex.push_back(LoadBitMap("media2/key.tga"));
+		tex.push_back(LoadBitMap("media2/letters.tga"));//13
 
-		menuOps.push_back(LoadBitMap("media2/multiplayer.tga"));
-		menuOps.push_back(LoadBitMap("media2/multiplayer select.tga"));
-		menuOps.push_back(LoadBitMap("media2/singleplayer.tga"));
-		menuOps.push_back(LoadBitMap("media2/singleplayer select.tga"));
-		menuOps.push_back(LoadBitMap("media2/join.tga"));
-		menuOps.push_back(LoadBitMap("media2/join select.tga"));//10
-		menuOps.push_back(LoadBitMap("media2/host.tga"));
-		menuOps.push_back(LoadBitMap("media2/host select.tga"));
-		menuOps.push_back(LoadBitMap("media2/controls.tga"));//5
-		menuOps.push_back(LoadBitMap("media2/controls select.tga"));
+		menus.push_back(LoadBitMap("media2/mainMenu.tga"));
+		menus.push_back(LoadBitMap("media2/controlsMenu.tga"));
 
-		particleTex=LoadBitMap("media2/smoke2.tga");
-		if(particleTex==-1)
-			exitProgram();
+		//particleTex=LoadBitMap("media2/smoke2.tga");
+		//if(particleTex==-1)
+		//	exitProgram();
 
 		for(int i=0;i< (signed int)tex.size();i++)
 		{
 			if (tex[i]==-1)
 				exitProgram();
 		}
-		for(int i=0;i< (signed int)menuOps.size();i++)
+		for(int i=0;i< (signed int)menus.size();i++)
 		{
-			if (menuOps[i]==-1)
+			if (menus[i]==-1)
 				exitProgram();
 		}
 
@@ -148,9 +142,22 @@ public:
 			DisplayLists();
 			newMode=2;
 		}
-		menuBack=LoadBitMap("media2/menu background.tga");
-		if(menuBack==-1)
-			exitProgram();
+		else
+		{
+			menuBack=4;
+			menuBack=LoadBitMap("media2/menu background.tga");
+			if(menuBack==-1)
+				exitProgram();
+			//glutGameModeString("800x600:32");
+			//// enter full screen
+			//if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)) 
+			//	glutEnterGameMode();
+			//else {
+			//	cout << "error";
+			//	glutInitWindowSize(600, 800);
+			//	glutCreateWindow("dog fights!" );
+			//}
+		}
 		glutPostRedisplay();
 		toLoad=true;
 		return 1;

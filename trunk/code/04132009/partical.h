@@ -3,33 +3,39 @@ class spark
 public:	
 	int life;
 	float x,y,z;
-	float vx, vy, vz;
+	float r, g, b;
 	int owner;
 	spark()
 	{
 		cout << "error" << endl;
 	}
-	spark(float _x,float _y,float _z,float _vx,float _vy,float _vz,int _life)
+	spark(float _x,float _y,float _z,float rad,float _r,float _g,float _b,int _life)
 	{
-		x=_x;
-		y=_y;
-		z=_z;
-		vx=0;
-		vy=0;
-		vz=0;
+		x=_x+rand()%int(200*rad)/100-rad;
+		y=_y+rand()%int(200*rad)/100-rad;
+		z=_z+rand()%int(200*rad)/100-rad;
+		r=_r;g=_g;b=_b;
+		life=_life;
+	}
+	void change(float _x,float _y,float _z,float rad,float _r,float _g,float _b,int _life)
+	{
+		x=_x+rand()%int(200*rad)/100-rad;
+		y=_y+rand()%int(200*rad)/100-rad;
+		z=_z+rand()%int(200*rad)/100-rad;
+		r=_r;g=_g;b=_b;
 		life=_life;
 	}
 	void random()
 	{
-		vx=((float)(rand()%100)/50-1)/15;
-		vy=((float)(rand()%100)/50-1)/15;
-		vz=((float)(rand()%100)/50-1)/15;
+		//vx=((float)(rand()%100)/50-1)/15;
+		//vy=((float)(rand()%100)/50-1)/15;
+		//vz=((float)(rand()%100)/50-1)/15;
 	}
 	bool update(float length)
 	{
-		x+=(float)vx*length;
-		y+=(float)vy*length-0.01f;
-		z+=(float)vz*length;
+		//x+=(float)vx*length;
+		//y+=(float)vy*length-0.01f;
+		//z+=(float)vz*length;
 		return --life >= 0 ? true : false;
 	}
 };

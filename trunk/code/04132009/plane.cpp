@@ -92,7 +92,6 @@ void plane::Level()
 	{
 		turn -= 0.01f * turn;
 	}
-
 }
 
 void plane::Shoot()
@@ -123,7 +122,7 @@ void plane::Shoot()
 	}
 	bullet tmp(x,y,z,(float)sin(angle/180*PI)*5,((float)climb/1.0f)*5,(float)cos(angle/180*PI)*5,player);
 	bullets->push_back(tmp);
-	cooldown=3;
+	cooldown=2;
 }
 void plane::ShootMissile()
 {
@@ -167,6 +166,42 @@ bool plane::Update()
 		respawn--;
 		if(respawn<=0)
 			spawn();
+		acceleration -= 0.025f;
+		if(acceleration<2)
+			acceleration=2;
+		x -= (-sin(float(angle * PI  / 180)) * acceleration);
+		z -= (-cos(float(angle * PI / 180)) * acceleration);
+		climb-=0.1;
+		if(x > 64 * size){x = 64*size;}
+		if(x < 0){x = 0;}
+		if(z > 64 * size){z = 64*size;}
+		if(z < 0){z = 0;}
+		y += climb;
+		if(y>135)
+			y=135;
+		angle -= turn/110;
+		if(angle > 360)
+			angle -= 360;
+		if(angle < 0)
+			angle += 360;
+		for(int i=0;i<12;i++)
+		{
+			spark tmp(x,y,z,15,0,0,0,5);
+			particles->push_back(tmp);
+		}
+		spark tmp(x,y,z,15,0.7,0,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,0.8,0,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,0.9,0,0,5);
+		particles->push_back(tmp);
+
+		tmp.change(x,y,z,15,1,0.5,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,1,0.6,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,1,0.7,0,5);
+		particles->push_back(tmp);
 	}
 	else
 	{
@@ -235,13 +270,6 @@ void plane::spawn()
 	climb = 0;
 	turn = 0;
 
-	//cout << "x    : " << x << endl;
-	//cout << "y    : " << y << endl;
-	//cout << "z    : " << z << endl;
-	//cout << "angle: " << angle << endl;
-	//cout << "accel: " << acceleration << endl;
-	//cout << "climb: " << climb << endl;
-	//cout << "turn : " << turn << endl << endl;
 	hit = false;
 	respawn=-1;
 	controled=false;
@@ -351,6 +379,8 @@ void AIplane::Shoot()
 {
 	if(cooldown>0)
 		return;
+	if(nextShot>0)
+		return;
 	Vec3f self[2];//current,future
 	self[0][0]=x;self[0][1]=y;self[0][2]=z;
 	self[1][0]=(float)sin(angle * PI / 180);
@@ -374,7 +404,12 @@ void AIplane::Shoot()
 	}
 	bullet tmp(x,y,z,(float)sin(angle/180*PI)*5,((float)climb/1.0f)*5,(float)cos(angle/180*PI)*5,player);
 	bullets->push_back(tmp);
-	cooldown=3;
+	cooldown=2;
+	if(rBullets<=0)
+	{
+		nextShot=rand()%15+15;
+		rBullets=rand()%5+5;
+	}
 }
 void AIplane::ShootMissile()
 {
@@ -488,6 +523,49 @@ bool AIplane::Update()
 {
 	if(respawn>=0)
 	{
+
+		acceleration -= 0.025f;
+		if(acceleration<2)
+			acceleration=2;
+		x -= (-sin(float(angle * PI  / 180)) * acceleration);
+		z -= (-cos(float(angle * PI / 180)) * acceleration);
+		climb-=0.1;
+
+		if(x > 64 * size){x = 64*size;}
+		if(x < 0){x = 0;}
+		if(z > 64 * size){z = 64*size;}
+		if(z < 0){z = 0;}
+
+		y += climb;
+		if(y>135)
+			y=135;
+		float mX=(float)(int)x-int(x)%(int)size;
+		float mZ=(float)(int)z-int(z)%(int)size;
+		if(terrain->getHeight(mX, mZ) * 10<y){y=terrain->getHeight(mX, mZ) * 10;}
+
+		angle -= turn/110;
+		if(angle > 360)
+			angle -= 360;
+		if(angle < 0)
+			angle += 360;
+		for(int i=0;i<12;i++)
+		{
+			spark tmp(x,y,z,15,0,0,0,5);
+			particles->push_back(tmp);
+		}
+		spark tmp(x,y,z,15,0.7,0,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,0.8,0,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,0.9,0,0,5);
+		particles->push_back(tmp);
+
+		tmp.change(x,y,z,15,1,0.5,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,1,0.6,0,5);
+		particles->push_back(tmp);
+		tmp.change(x,y,z,15,1,0.7,0,5);
+		particles->push_back(tmp);
 		respawn--;
 		if(respawn<=0)
 			spawn();
@@ -503,6 +581,8 @@ bool AIplane::Update()
 		cooldown=0;
 	if(--mCooldown<0)
 		mCooldown=0;
+	if(--nextShot<0)
+		nextShot=0;
 	acceleration -= 0.025f;
 	if(acceleration<2)
 		acceleration=2;
@@ -535,5 +615,5 @@ void AIplane::die()
 {
 	hit =true;
 	if(respawn==-1)
-		respawn=50;
+		respawn=200;
 }

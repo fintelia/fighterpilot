@@ -66,6 +66,8 @@ public:
 
 		if(input->keys[SPACE] || input->keys[ENTER])
 		{
+			input->keys[SPACE]=false;
+			input->keys[ENTER]=false;
 			switch(selected)
 			{
 			case 1:
@@ -103,20 +105,26 @@ public:
 			glTexCoord2f(1,0);	glVertex2f(800,600);		
 			glTexCoord2f(1,1);	glVertex2f(800,0);
 		glEnd();
-
+		glBindTexture(GL_TEXTURE_2D, menus[0]);
+		glBegin(GL_QUADS);
 		for(int i=1;i<=5;i++)
 		{
 			if(i==selected)
-				glBindTexture(GL_TEXTURE_2D, menuOps[i*2-1]);
+			{		
+				glTexCoord2f(0.5,1.2-0.2*i);	glVertex2f(202,i*100);
+				glTexCoord2f(1  ,1.2-0.2*i);	glVertex2f(202+395,i*100);
+				glTexCoord2f(1  ,1.0-0.2*i);	glVertex2f(202+395,i*100+52);
+				glTexCoord2f(0.5,1.0-0.2*i);	glVertex2f(202,i*100+52);
+			}
 			else
-				glBindTexture(GL_TEXTURE_2D, menuOps[i*2-2]);
-			glBegin(GL_QUADS);
-				glTexCoord2f(0,1);	glVertex2f(202,i*100);
-				glTexCoord2f(1,1);	glVertex2f(202+395,i*100);
-				glTexCoord2f(1,0);	glVertex2f(202+395,i*100+52);
-				glTexCoord2f(0,0);	glVertex2f(202,i*100+52);
-			glEnd();
+			{
+				glTexCoord2f(0.01  ,1.2-0.2*i);	glVertex2f(202,i*100);
+				glTexCoord2f(0.49,1.2-0.2*i);	glVertex2f(202+395,i*100);
+				glTexCoord2f(0.49,1.0-0.2*i);	glVertex2f(202+395,i*100+52);
+				glTexCoord2f(0.01  ,1.0-0.2*i);	glVertex2f(202,i*100+52);
+			}
 		}
+		glEnd();
 		glDisable(GL_BLEND);
 		glDisable(GL_TEXTURE_2D);
 		ViewPerspective();

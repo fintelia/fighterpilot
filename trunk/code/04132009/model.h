@@ -56,14 +56,15 @@ int load_texture(char *filename)
 	vert v[4];
 	int i = glGenLists (1);
 	glNewList (i, GL_COMPILE);
-	glScalef(0.015f,0.015f,0.015f);
+	//glScalef(0.015f,0.015f,0.015f);
+	//glScalef(5,5,5);
 	//glTranslatef(0,0,50);
-	glRotatef(-90,1,0,0);
+	//glRotatef(-90,1,0,0);
 	vert norm;
 	while (!fin.eof())
 	{
 		fin >> v[0].x >> v[0].y >> v[0].z;
-		fin	>> v[1].x >> v[1].y >> v[1].z; 
+		fin	>> v[1].x >> v[1].y >> v[1].z;
 		fin >> v[2].x >> v[2].y >> v[2].z; 
 		//fin >> v[3].x >> v[3].y >> v[3].z;
 		//glColor3f(v[0].x,v[0].y,v[0].z);
