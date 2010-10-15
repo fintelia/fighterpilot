@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C7F9616-0B43-4C38-9FDB-6FE40996FC45}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>FighterPilot</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_44;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AABox.cpp" />
+    <ClCompile Include="Angle.cpp" />
+    <ClCompile Include="collide.cpp" />
+    <ClCompile Include="dataManager.cpp" />
+    <ClCompile Include="explosion.cpp" />
+    <ClCompile Include="FrustumG.cpp" />
+    <ClCompile Include="GameMath.cpp" />
+    <ClCompile Include="geoPlane.cpp" />
+    <ClCompile Include="GLee.c">
+      <FloatingPointExceptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </FloatingPointExceptions>
+    </ClCompile>
+    <ClCompile Include="gridFloat.cpp" />
+    <ClCompile Include="gui.cpp" />
+    <ClCompile Include="imageloader.cpp" />
+    <ClCompile Include="level.cpp" />
+    <ClCompile Include="load_save.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="menu.cpp" />
+    <ClCompile Include="menuScreen.cpp" />
+    <ClCompile Include="missile.cpp" />
+    <ClCompile Include="modes.cpp" />
+    <ClCompile Include="plane.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="random.cpp" />
+    <ClCompile Include="script.cpp" />
+    <ClCompile Include="settings.cpp" />
+    <ClCompile Include="Terain.cpp" />
+    <ClCompile Include="terrain.cpp" />
+    <ClCompile Include="texture.cpp" />
+    <ClCompile Include="time.cpp" />
+    <ClCompile Include="turret.cpp" />
+    <ClCompile Include="worldManager.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AABox.h" />
+    <ClInclude Include="Angle.h" />
+    <ClInclude Include="basicMath.h" />
+    <ClInclude Include="bullet.h" />
+    <ClInclude Include="collide.h" />
+    <ClInclude Include="controls.h" />
+    <ClInclude Include="dataManager.h" />
+    <ClInclude Include="debug.h" />
+    <ClInclude Include="entity.h" />
+    <ClInclude Include="enums.h" />
+    <ClInclude Include="explosion.h" />
+    <ClInclude Include="FrustumG.h" />
+    <ClInclude Include="gameMath.h" />
+    <ClInclude Include="geoPlane.h" />
+    <ClInclude Include="gridFloat.h" />
+    <ClInclude Include="gui.h" />
+    <ClInclude Include="imageloader.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="keys.h" />
+    <ClInclude Include="level.h" />
+    <ClInclude Include="loading.h" />
+    <ClInclude Include="load_save.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="mainMenu.h" />
+    <ClInclude Include="mapBuilder.h" />
+    <ClInclude Include="menu.h" />
+    <ClInclude Include="menuScreen.h" />
+    <ClInclude Include="missile.h" />
+    <ClInclude Include="modes.h" />
+    <ClInclude Include="onePlayer.h" />
+    <ClInclude Include="partical.h" />
+    <ClInclude Include="plane.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="profiler.h" />
+    <ClInclude Include="quaternion.h" />
+    <ClInclude Include="random.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="script.h" />
+    <ClInclude Include="settings.h" />
+    <ClInclude Include="Terain.h" />
+    <ClInclude Include="text.h" />
+    <ClInclude Include="texture2.h" />
+    <ClInclude Include="time.h" />
+    <ClInclude Include="turret.h" />
+    <ClInclude Include="twoPlayerVs.h" />
+    <ClInclude Include="vector.h" />
+    <ClInclude Include="worldManager.h" />
+    <ClInclude Include="XboxContInput.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="media\grass.frag" />
+    <None Include="media\health.frag" />
+    <None Include="media\health.vert" />
+    <None Include="media\horizon.frag" />
+    <None Include="media\horizon.vert" />
+    <None Include="media\icon.ico" />
+    <None Include="media\island.frag" />
+    <None Include="media\island.vert" />
+    <None Include="media\ocean.vert" />
+    <None Include="media\radar.frag" />
+    <None Include="media\radar.vert" />
+    <None Include="media\radar2.frag" />
+    <None Include="media\radar2.vert" />
+    <None Include="media\terrain.frag" />
+    <None Include="media\terrain.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FighterPilot.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
