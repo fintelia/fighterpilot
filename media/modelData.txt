@@ -1,0 +1,55 @@
+MISSILE=media/m1(center).obj
+MISSILE=media/m2(center).obj
+MISSILE=media/m3(center).obj
+MISSILE=media/m4(center).obj
+
+
+
+PLANE=F16
+MODEL=media/f16.obj
+	H_MISSILE=0
+	H_OFFSET=4.0,0.0,-1.75
+	H_MIRROR=TRUE
+
+	H_MISSILE=1
+	H_OFFSET=6.0,0.0,-0.5
+	H_MIRROR=TRUE
+
+	H_MISSILE=2
+	H_OFFSET=7.5,-0.25,-4.25
+	H_MIRROR=TRUE
+
+	H_MISSILE=3
+	H_OFFSET=10.75,-0.1,-4.0
+	H_MIRROR=TRUE
+
+PLANE=F18
+MODEL=media/f18hornet.obj
+
+
+PLANE=F22
+MODEL=media/f22.obj
+	H_MISSILE=0
+	H_OFFSET=5.0,0.0,-1.75
+	H_MIRROR=TRUE
+
+	H_MISSILE=1
+	H_OFFSET=7.0,0.0,-0.5
+	H_MIRROR=TRUE
+
+	H_MISSILE=2
+	H_OFFSET=9.5,-0.25,-4.25
+	H_MIRROR=TRUE
+
+	H_MISSILE=3
+	H_OFFSET=11.75,-0.5,-4.0
+	H_MIRROR=TRUE
+
+PLANE=B2
+MODEL=media/b2.obj
+
+
+PLANE=UAV
+MODEL=media/uav.obj
+
+DEFAULT=F22
