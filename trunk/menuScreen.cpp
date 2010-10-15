@@ -176,7 +176,7 @@ bool menuLevelEditor::init()
 	//zones
 
 	//settings
-
+	
 	v.clear();
 	l=new menuLabel;
 	v.push_back(new menuButton());		v[0]->init(120,50,100,30,"respawn");
