@@ -1,0 +1,343 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="glee">
+      <UniqueIdentifier>{e4727c1f-d859-412b-b661-0383e5ed22ae}</UniqueIdentifier>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modes">
+      <UniqueIdentifier>{4e6d1f52-c4f5-45f8-b232-1d478fe84c2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{0b20f20e-370d-4e36-9b55-c464e5757731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\quaternion">
+      <UniqueIdentifier>{4d9b716a-eb2d-4488-87bd-1c5ea0fe69ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\vector">
+      <UniqueIdentifier>{1c4ed234-b520-4c24-8aef-fc2331f4b38d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\AAbox">
+      <UniqueIdentifier>{08c0cf51-5ce1-4e3b-bcf9-d71955d1b177}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\angle">
+      <UniqueIdentifier>{8fe210af-2efb-4bc1-bbde-7c452af7576b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\horizon">
+      <UniqueIdentifier>{62a8ab34-7bf4-44f9-b7d4-d769313af93e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\health bar">
+      <UniqueIdentifier>{ff43bfa4-6d7e-4210-8d1a-3436f6d2da16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\island">
+      <UniqueIdentifier>{bdee319b-7656-4954-9381-fcd65101115e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\terrain">
+      <UniqueIdentifier>{f05f3885-33bc-4cdc-aaf9-6481a7caf828}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\radar">
+      <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dataManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="explosion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrustumG.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="geoPlane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gridFloat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imageloader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="level.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="load_save.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="menuScreen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="missile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="player.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="random.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="script.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Terain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="turret.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLee.c">
+      <Filter>glee</Filter>
+    </ClCompile>
+    <ClCompile Include="AABox.cpp">
+      <Filter>Source Files\math\AAbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Angle.cpp">
+      <Filter>Source Files\math\angle</Filter>
+    </ClCompile>
+    <ClCompile Include="collide.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="GameMath.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="modes.cpp">
+      <Filter>Source Files\modes</Filter>
+    </ClCompile>
+    <ClCompile Include="worldManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bullet.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="controls.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dataManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enums.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="explosion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrustumG.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="geoPlane.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gridFloat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imageloader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="keys.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="load_save.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mainMenu.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapBuilder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menuScreen.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="missile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="partical.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plane.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="script.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Terain.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="text.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="texture2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="time.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="turret.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XboxContInput.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="quaternion.h">
+      <Filter>Source Files\math\quaternion</Filter>
+    </ClInclude>
+    <ClInclude Include="vector.h">
+      <Filter>Source Files\math\vector</Filter>
+    </ClInclude>
+    <ClInclude Include="modes.h">
+      <Filter>Source Files\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="onePlayer.h">
+      <Filter>Source Files\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="twoPlayerVs.h">
+      <Filter>Source Files\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="loading.h">
+      <Filter>Source Files\modes</Filter>
+    </ClInclude>
+    <ClInclude Include="AABox.h">
+      <Filter>Source Files\math\AAbox</Filter>
+    </ClInclude>
+    <ClInclude Include="Angle.h">
+      <Filter>Source Files\math\angle</Filter>
+    </ClInclude>
+    <ClInclude Include="basicMath.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="collide.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="gameMath.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="worldManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="media\horizon.frag">
+      <Filter>shaders\horizon</Filter>
+    </None>
+    <None Include="media\horizon.vert">
+      <Filter>shaders\horizon</Filter>
+    </None>
+    <None Include="media\health.frag">
+      <Filter>shaders\health bar</Filter>
+    </None>
+    <None Include="media\health.vert">
+      <Filter>shaders\health bar</Filter>
+    </None>
+    <None Include="media\icon.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="media\island.frag">
+      <Filter>shaders\island</Filter>
+    </None>
+    <None Include="media\island.vert">
+      <Filter>shaders\island</Filter>
+    </None>
+    <None Include="media\terrain.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\terrain.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\grass.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\ocean.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\radar.frag">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar.vert">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar2.frag">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar2.vert">
+      <Filter>shaders\radar</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FighterPilot.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
