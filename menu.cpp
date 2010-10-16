@@ -550,11 +550,13 @@ int m_chooseMode::update(int value)
 			inGame=true;
 			newMode=TWO_PLAYER_VS;
 			Redisplay=true;
+			Cmenu=new closedMenu(*((closedMenu*)this));
 			break;
 		case 2://one player
 			inGame=true;
 			newMode=ONE_PLAYER;
 			Redisplay=true;
+			Cmenu=new closedMenu(*((closedMenu*)this));
 			break;
 		case 3://map builder
 			inGame=false;

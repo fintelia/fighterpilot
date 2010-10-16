@@ -265,8 +265,4 @@ public:
 		level->newGround(65);
 		faultLine();
 	}
-	~mapBuilder()
-	{
-		//ShowCursor(false);
-	}
 };

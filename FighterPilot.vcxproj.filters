@@ -197,9 +197,6 @@
     <ClInclude Include="mainMenu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="mapBuilder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="menu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -286,6 +283,9 @@
     </ClInclude>
     <ClInclude Include="worldManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mapBuilder.h">
+      <Filter>Source Files\modes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
