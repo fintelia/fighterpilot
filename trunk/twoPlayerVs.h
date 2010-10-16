@@ -22,42 +22,44 @@ public:
 	}
 
 	int update(float ms) {
-		if(input->getKey(F1)){	players[0].toggleFirstPerson(); input->up(F1);}
-		if(input->getKey(F2)){	players[1].toggleFirstPerson(); input->up(F2);}
+		//if(input->getKey(F1)){	players[0].toggleFirstPerson(); input->up(F1);}
+		//if(input->getKey(F2)){	players[1].toggleFirstPerson(); input->up(F2);}
 
 
-		//for(int i=0;i<2;i++)
-		//{
-		//	planes[i]->Accelerate	(ms*controls[i][CON_ACCEL]);
-		//	planes[i]->Brake		(ms*controls[i][CON_BRAKE]);
-		//	planes[i]->Climb		(ms*controls[i][CON_CLIMB]);
-		//	planes[i]->Dive			(ms*controls[i][CON_DIVE]);
-		//	planes[i]->Turn_Right	(ms*controls[i][CON_RIGHT]);
-		//	planes[i]->Turn_Left	(ms*controls[i][CON_LEFT]);
-		//	if(controls[i][CON_MISSILE]>0.75)	planes[i]->ShootMissile();
-		//	if(controls[i][CON_SHOOT]>0.75)		planes[i]->Shoot();
-		//}
-		if(input->getKey(0x4C)) planes[0]->loseHealth(2.5);
+		////for(int i=0;i<2;i++)
+		////{
+		////	planes[i]->Accelerate	(ms*controls[i][CON_ACCEL]);
+		////	planes[i]->Brake		(ms*controls[i][CON_BRAKE]);
+		////	planes[i]->Climb		(ms*controls[i][CON_CLIMB]);
+		////	planes[i]->Dive			(ms*controls[i][CON_DIVE]);
+		////	planes[i]->Turn_Right	(ms*controls[i][CON_RIGHT]);
+		////	planes[i]->Turn_Left	(ms*controls[i][CON_LEFT]);
+		////	if(controls[i][CON_MISSILE]>0.75)	planes[i]->ShootMissile();
+		////	if(controls[i][CON_SHOOT]>0.75)		planes[i]->Shoot();
+		////}
+		//if(input->getKey(0x4C)) planes[0]->loseHealth(2.5);
 
-		((plane*)planes[0])->setControlState(players[0].getControlState());
-		((plane*)planes[1])->setControlState(players[1].getControlState());
+		//((plane*)planes[0])->setControlState(players[0].getControlState());
+		//((plane*)planes[1])->setControlState(players[1].getControlState());
 
-		updateWorld(ms);
-		radarAng+=45.0*ms/1000;
-		if(radarAng>=360)
-			radarAng-=360;
+		//updateWorld(ms);
+		//radarAng+=45.0*ms/1000;
+		//if(radarAng>=360)
+		//	radarAng-=360;
 
-		Redisplay=true;
+		//Redisplay=true;
 		return 16;
 	}
 	twoPlayerVs()
 	{
 		prepareMap("media/mapfile.txt");
 		waterDisp();
+		
 		//level = new Level(settings.MAP_FILE.c_str());
 
-		newMode=(modeType)0;
-		Cmenu=new closedMenu;
+		//newMode=(modeType)0;
+		newMode=BLANK_MODE;
+
 		int i;
 		for(i=0;i<2;i++)
 		{
