@@ -4,24 +4,10 @@ class mapBuilder: public modes
 private:
 	Angle rot;
 	editLevel* level;
-	//int currentShader;
 	float maxHeight;
 	float minHeight;
 
-	float getHeight(int x, int z)
-	{
-		//while(x>=(int)level->ground()->getSize()-1)
-		//	x -= (int)level->ground()->getSize()-1;
-		//while(z>=(int)level->ground()->getSize()-1)
-		//	z -= (int)level->ground()->getSize()-1;
-		//while(z<0)
-		//	z += (int)level->ground()->getSize()-1;
-		//while(x<0)
-		//	x += (int)level->ground()->getSize()-1;
-
-		return level->ground()->getHeight(x,z);
-	}
-	void diamondSquare(float h)
+	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	{
 		//set corners
 
@@ -55,10 +41,10 @@ private:
 			{
 				for(z = 0; z < numSquares; z++)
 				{
-					y = (getHeight(x*squareSize,z*squareSize)+
-						getHeight(x*squareSize+squareSize,z*squareSize)+
-						getHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
-						getHeight(x*squareSize,z*squareSize+squareSize))/4;
+					y = (level->ground()->getHeight(x*squareSize,z*squareSize)+
+						level->ground()->getHeight(x*squareSize+squareSize,z*squareSize)+
+						level->ground()->getHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
+						level->ground()->getHeight(x*squareSize,z*squareSize+squareSize))/4;
 					y += float(rand()%2000-1000)/500.0f*rVal;
 
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
@@ -70,40 +56,40 @@ private:
 				for(z = 0; z < numSquares; z++)
 				{
 					//left
-					c[0]=getHeight(x*squareSize,z*squareSize);
-					c[1]=getHeight(x*squareSize,z*squareSize+squareSize);
-					c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=getHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
+					c[0]=level->ground()->getHeight(x*squareSize,z*squareSize);
+					c[1]=level->ground()->getHeight(x*squareSize,z*squareSize+squareSize);
+					c[2]=level->ground()->getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+					c[3]=level->ground()->getHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
 					if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal;
 					else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 
 
 					//top
-					c[0]=getHeight(x*squareSize,z*squareSize);
-					c[1]=getHeight(x*squareSize+squareSize,z*squareSize);
-					c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=getHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
+					c[0]=level->ground()->getHeight(x*squareSize,z*squareSize);
+					c[1]=level->ground()->getHeight(x*squareSize+squareSize,z*squareSize);
+					c[2]=level->ground()->getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+					c[3]=level->ground()->getHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
 					if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal;
 					else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
 
 					if(x == numSquares-1)//right
 					{
-						c[0]=getHeight((x+1)*squareSize,z*squareSize);
-						c[1]=getHeight((x+1)*squareSize,z*squareSize+squareSize);
+						c[0]=level->ground()->getHeight((x+1)*squareSize,z*squareSize);
+						c[1]=level->ground()->getHeight((x+1)*squareSize,z*squareSize+squareSize);
 						//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
-						c[3]=getHeight((x+1)*squareSize-squareSize/2,z*squareSize+squareSize/2);
+						c[3]=level->ground()->getHeight((x+1)*squareSize-squareSize/2,z*squareSize+squareSize/2);
 						y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal;
 						//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 						level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 					}
 					if(z == numSquares-1)//buttom
 					{
-						c[0]=getHeight(x*squareSize,z*squareSize);
-						c[1]=getHeight(x*squareSize+squareSize,z*squareSize);
+						c[0]=level->ground()->getHeight(x*squareSize,z*squareSize);
+						c[1]=level->ground()->getHeight(x*squareSize+squareSize,z*squareSize);
 						//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-						c[3]=getHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
+						c[3]=level->ground()->getHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
 						y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal;
 						//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 						level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
@@ -172,53 +158,27 @@ private:
 		}
 		level->ground()->setMinMaxHeights();
 	}
-	//int loadShader(char* vert,char* frag)
-	//{
-	//	char * ff = textFileRead(frag);
-	//	char * vv = textFileRead(vert);
-	//	if(ff == NULL || vv == NULL)
-	//		return 0;
-
-	//	GLuint v=0,f=0,p;
-	//	v = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-	//	f = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-
-	//	glShaderSource(v, 1, (const char **)&vv, NULL);
-	//	glShaderSource(f, 1, (const char **)&ff, NULL);
-	//	glCompileShader(v);
-	//	glCompileShader(f);
-	//	free(ff);
-	//	free(vv);
-
-	//	char* cv=(char*)malloc(512); memset(cv,0,512);
-	//	char* cf=(char*)malloc(512); memset(cf,0,512);
-	//	int lv,lf;
-	//	glGetShaderInfoLog(v,512,&lv,cv);
-	//	glGetShaderInfoLog(f,512,&lf,cf);
-
-	//	p = glCreateProgram();
-	//	glAttachShader(p,f);
-	//	glAttachShader(p,v);
-
-	//	glLinkProgram(p);
-	//	shaders.push_back(p);
-	//	glUseProgram(0);
-
-	//	if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-	//	if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-	//	return p;
-	//}
-
-
-	//struct shaderButton{
-	//	guiBase::handle id;
-	//	int shaderId;
-	//	shaderButton(guiBase::handle Id, int ShaderId): id(Id), shaderId(ShaderId) {}
-	//};
+	void fromFile(string filename)
+	{
+		string ext=filesystem::extension(filename);
+		if(ext.compare(".bmp")==0)
+		{
+			Image* image = loadBMP(filename.c_str());
+			float* t = new float[image->width * image->height];
+			for(int y = 0; y < image->height; y++) {
+				for(int x = 0; x < image->width; x++) {
+					t[y * image->width + x] = 30.0 * (((unsigned char)image->pixels[3 * (y * image->width + x)] / 255.0f) - 0.5f);
+				}
+			}
+			assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
+			level->newGround(image->height,t);
+			delete[] t;
+			delete image;
+		}
+	}
 	vector<int> shaderButtons;
 	friend class menuLevelEditor;
 public:
-	//map<guiBase::handle,string> buttons;
 	virtual int update(float value)
 	{
 		if(input->getKey(0x52) && !menuManager.getMenu()->popupActive())//r key
@@ -239,7 +199,7 @@ public:
 		glEnable(GL_LIGHTING);
 		GLfloat lightPos0[] = {-0.3f, -0.3f, -0.4f, 0.0f};
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-
+		
 		if(((menuLevelEditor*)menuManager.getMenu())->getShader() == -1)
 			level->ground()->draw();
 		else

@@ -240,15 +240,17 @@ public:
 		//if(s<10)return;
 		s=0;
 
+
 		glClearColor(0.5f,0.5f,0.9f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0 , sw, sh);
 		glLoadIdentity();
+		
 		//gluPerspective(80.0, (double)sw / ((double)sh/2),0.999, 10000.0);
 		viewOrtho(sw,sh);
-		glPushMatrix();
 		glEnable(GL_BLEND);
 		glColor3f(1,1,1);
+		
 		glBindTexture(GL_TEXTURE_2D, menuBack); // We set the active texture
 		glBegin(GL_QUADS);
 			glTexCoord2f(0,1);	glVertex2f(0,0);
@@ -256,9 +258,11 @@ public:
 			glTexCoord2f(1,0);	glVertex2f(sw,sh);		
 			glTexCoord2f(1,1);	glVertex2f(sw,0);
 		glEnd();
+		
 		glDisable(GL_BLEND);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		viewPerspective();
+		
 	}
 	int update(float value)
 	{
@@ -279,7 +283,6 @@ public:
 		//	hasContext=false;
 		//}
 
-
 		interleavedLoad();
 		if(dataManager.registerAssets())
 		{
@@ -287,7 +290,7 @@ public:
 			newMode=BLANK_MODE;
 		}
 		Redisplay=true;
-
+		
 		return 0;
 	}
 	loading()

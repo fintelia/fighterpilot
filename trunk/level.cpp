@@ -111,7 +111,7 @@ void Level::heightmap::draw(int shader) const
 		dataManager.bind("snow",3);
 		dataManager.bind("LCnoise",4);
 		dataManager.bind("hardNoise",5);
-
+		
 		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
 		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight);
 		glUniform1f(glGetUniformLocation(shader, "XZscale"),	size);
@@ -123,19 +123,20 @@ void Level::heightmap::draw(int shader) const
 		glUniform1i(glGetUniformLocation(shader, "snow"),		textures[3]);
 		glUniform1i(glGetUniformLocation(shader, "LCnoise"),	textures[4]);
 		glUniform1i(glGetUniformLocation(shader, "waterBumpMap"),textures[5]);
-
+		
+		glPushMatrix();
 		glBindBuffer(GL_ARRAY_BUFFER, VBOvert);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOindex);
-
+		
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 		glDrawElements(GL_TRIANGLE_STRIP, numIdices, GL_UNSIGNED_INT, 0);
 		glDisableClientState(GL_VERTEX_ARRAY);
-
+		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
+		glPopMatrix();
+		
 
 		dataManager.bindTex(0,5);
 		dataManager.bindTex(0,4);
@@ -144,6 +145,14 @@ void Level::heightmap::draw(int shader) const
 		dataManager.bindTex(0,1);
 		dataManager.bindTex(0,0);
 		glUseProgram(0);
+		
+		glBegin(GL_QUADS);
+			glVertex3f(-50,0,-50);
+			glVertex3f(-50,0,50);
+			glVertex3f(50,0,50);
+			glVertex3f(50,0,-50);
+		glEnd();
+		
 	}
 	else
 	{
@@ -158,7 +167,7 @@ void Level::heightmap::draw(int shader) const
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-
+		
 }
 unsigned int Level::heightmap::getSize() const
 {

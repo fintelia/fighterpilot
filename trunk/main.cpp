@@ -14,6 +14,7 @@ bool InitMultisample(HINSTANCE hInstance,HWND hWnd,PIXELFORMATDESCRIPTOR pfd);
 //int fontBase;
 extern const float PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;
 extern const float size=128;
+char* errorString;
 
 int sh=1024;
 int sw=1280;
@@ -26,7 +27,6 @@ profiler Profiler;
 map<int,planeBase*> planes;
 vector<turret*> turrets;
 TextManager* textManager;
-
 
 menus *Cmenu;
 modes *mode;
@@ -86,7 +86,7 @@ bool initRendering() {
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_MULTISAMPLE);
-	
+
 	glActiveTextureARB(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
@@ -112,6 +112,7 @@ bool initRendering() {
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
+	
 	return true;
 }
 void handleResize(int w, int h) {
@@ -144,6 +145,7 @@ bool draw()
 	//	timebase = Time;
 	//	frame = 0;
 	//}
+	
 	mode->draw();
 	Cmenu->draw();
 	glViewport(0,0,sw,sh);
@@ -151,6 +153,7 @@ bool draw()
 	menuManager.render();
 	viewPerspective();
 	Profiler.endElement("mainDraw");
+	glError();
 	return true;
 }
 void viewOrtho(int x, int y)				// Set Up An Ortho View
@@ -218,7 +221,7 @@ int update(float v)
 		i = mode->update(v);
 	else
 		i=l;
-
+	
 	modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
 	menuType nMenu=Cmenu->newMenu;
 	if(nMode != (modeType)0)
@@ -706,7 +709,6 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 //}
 void mainLoop(void* v)
 {
-	
 	static unsigned long frameNumber=0;
 	static float nextUpdate=0;
 	static float lastUpdate=0;
@@ -715,17 +717,19 @@ void mainLoop(void* v)
 	if(v!=NULL) endFrame=frameNumber+*((int*)v);
 	while(!done && frameNumber!=endFrame)
 	{
-	
 		if(getContext)
 		{
 			wglMakeCurrent(hDC,hRC);
 			hasContext=true;
 			getContext=false;
 		}
+		
 		float waitTime=nextUpdate-GetTime();
 		if(waitTime>0)	Sleep(waitTime);
+		
 		nextUpdate=update(GetTime()-lastUpdate)+GetTime();
 		lastUpdate=GetTime();
+		
 		
 
 		resize.lock();
@@ -817,7 +821,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 #else
 	int f=1;
 #endif
-
 	while(!done)									// Loop That Runs While done=FALSE
 	{
 		

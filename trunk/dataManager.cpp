@@ -1,5 +1,4 @@
 
-#include <boost/filesystem.hpp>
 #include "main.h"
 
 DataManager::~DataManager()
@@ -145,7 +144,6 @@ int DataManager::loadTGA(string filename)
 		return 0;
 	}
 	NPOT = GLEE_ARB_texture_non_power_of_two && (texture.width & (texture.width-1)) && (texture.height & (texture.height-1));
-
 	if(texture.bpp == 24)													// If the BPP of the image is 24...
 		texture.type	= GL_RGB;											// Set Image type to GL_RGB
 	else																	// Else if its 32 BPP
@@ -155,7 +153,7 @@ int DataManager::loadTGA(string filename)
 	tga.imageSize		= (tga.bytesPerPixel * tga.Width * tga.Height);		// Compute the total amout ofmemory needed to store data
 	texture.imageData	= (GLubyte *)malloc(tga.imageSize);					// Allocate that much memory
 
-
+	
 	if(texture.imageData == NULL)											// If no space was allocated 
 	{
 		fin.close();
@@ -178,7 +176,7 @@ int DataManager::loadTGA(string filename)
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
+	
 	if(NPOT)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -187,16 +185,16 @@ int DataManager::loadTGA(string filename)
 	else
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
+	
 	if(NPOT)
 		glTexImage2D(GL_TEXTURE_2D,0, texture.type, tga.Width, tga.Height,0, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
 	else
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
-
+	
     free(texture.imageData);
     return texV;
 }
@@ -217,12 +215,12 @@ int DataManager::loadMMP(string filename)
 
 	unsigned char* imageData=(unsigned char*)malloc(h.size_x*h.size_y*h.channels);
 	if(imageData==NULL) return -1;
-
+	
 	GLuint texV;
 	glGenTextures(1,&texV);
     glBindTexture(GL_TEXTURE_2D, texV);
 
-
+	
 	int x=h.size_x, y=h.size_y, mLevel=0;
 	while (true) 
 	{
@@ -244,7 +242,7 @@ int DataManager::loadMMP(string filename)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	return texV;
 }
@@ -399,7 +397,7 @@ int DataManager::loadOBJ(string filename)
 		return false;
 	}
 	//fopen_s(&fp,filename, "r");
-
+	
 	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
 		mtls[numMtls++]=itt->second;
 
@@ -559,7 +557,7 @@ int DataManager::loadOBJ(string filename)
 	delete[] faces;
 	delete[] normals;
 	delete[] mtls;
-
+	
 	return d;
 }
 
@@ -609,12 +607,12 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("sand",				"media/sand.mmp");
 	if(callNum==n++)	registerAsset("snow",				"media/snow.mmp");
 	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.mmp");
-	if(callNum==n++)	registerAsset("aimer",				"media/aimer.tga");
-	if(callNum==n++)	registerAsset("dialFront",			"media/dial front.tga");
-	if(callNum==n++)	registerAsset("dialBAck",			"media/dial back.tga");	
-	if(callNum==n++)	registerAsset("dialSpeed",			"media/speed2.tga");
-	if(callNum==n++)	registerAsset("dialAltitude",		"media/altitude.tga");
-	if(callNum==n++)	registerAsset("needle",				"media/needle2.tga");	
+	//if(callNum==n++)	registerAsset("aimer",				"media/aimer.tga");
+	//if(callNum==n++)	registerAsset("dialFront",			"media/dial front.tga");
+	//if(callNum==n++)	registerAsset("dialBAck",			"media/dial back.tga");	
+	//if(callNum==n++)	registerAsset("dialSpeed",			"media/speed2.tga");
+	//if(callNum==n++)	registerAsset("dialAltitude",		"media/altitude.tga");
+	//if(callNum==n++)	registerAsset("needle",				"media/needle2.tga");	
 	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.tga");
 	if(callNum==n++)	registerAsset("particle",			"media/particle4.mmp");	
 	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.tga");
@@ -627,17 +625,17 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("health bar",			"media/health bar.tga");
 	if(callNum==n++)	registerAsset("tilt",				"media/tilt.tga");
 	if(callNum==n++)	registerAsset("targeter",			"media/targeter.tga");
-	if(callNum==n++)	registerAsset("speed",				"media/speed2.tga");
-	if(callNum==n++)	registerAsset("altitude",			"media/altitude.tga");
+	//if(callNum==n++)	registerAsset("speed",				"media/speed2.tga");
+	//if(callNum==n++)	registerAsset("altitude",			"media/altitude.tga");
 	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.tga");
 	if(callNum==n++)	registerAsset("key",				"media/key.tga");
 	if(callNum==n++)	registerAsset("letters",			"media/letters.tga");
-	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
+	//if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
 	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.tga");
 	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
 
-	if(callNum==n++)	registerAsset("menu main",			"media/mainMenu.tga");
-	if(callNum==n++)	registerAsset("menu controls",		"media/controlsMenu.tga");
+	//if(callNum==n++)	registerAsset("menu main",			"media/mainMenu.tga");
+	//if(callNum==n++)	registerAsset("menu controls",		"media/controlsMenu.tga");
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.tga");
 	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.tga");
 	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.tga");
