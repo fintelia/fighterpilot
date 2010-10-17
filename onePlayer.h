@@ -8,50 +8,50 @@ public:
 	int enemies_left;
 	float countdown;
 	bool levelup;
-	void drawOrthoView(int acplayer)
-	{
-
-		viewOrtho(sw,sh); //set view to ortho - start 2d
-
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glDisable(GL_LIGHTING);
-		glColor4f(1,1,1,1);
-		
-		if(players[acplayer].firstPerson())
-		{
-			//targeter start
-			Vec3f fwd=(frustum.ntl+frustum.ntr+frustum.nbl+frustum.nbr)/4.0-planes[players[acplayer].planeNum()]->pos;
-			float length=1.0/fwd.dot(planes[players[acplayer].planeNum()]->targeter);
-			Vec3f tar=planes[players[acplayer].planeNum()]->targeter*length;
-			tar+=planes[players[acplayer].planeNum()]->pos;
-			float tarX=dist_Point_to_Segment(tar,frustum.ntl,frustum.nbl)/frustum.ntl.distance(frustum.ntr);
-			float tarY=dist_Point_to_Segment(tar,frustum.ntl,frustum.ntr)/frustum.ntl.distance(frustum.nbl);
-			//targeter end
-			float s=(float)sw/800.0;
-			texturedQuad("cockpit",0,0,sw,sh);//cockpit
-			texturedQuad("aimer",tarX*(float)sw-16,tarY*(float)sh-16,32,32);
-			drawgauge(16*s,504*s,80*s,568*s,"tilt back","tilt front",-planes[players[acplayer].planeNum()]->turn,0);
-			drawgauge(16*s,32*s,80*s,96*s,"speed","needle",0,planes[players[acplayer].planeNum()]->velocity.magnitude()*45-20);
-			drawgauge(368*s,504*s,432*s,568*s,"altitude","needle",0,planes[players[acplayer].planeNum()]->altitude);//(p.y-_terrain->getHeight(int(p.x/size), int(p.z/size)) * 10));
-			glColor3f(1,1,1);
-			//if(p.dead)
-			//	render_tex_quad(tex[2],0,800*s,0,(float)sh);
-		}
-		drawRadar(acplayer,1.0,1.0);
-		glDisable(GL_BLEND);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-#ifdef _DEBUG
-		glColor4f(0,0,0,1.0);
-		if(acplayer==0)
-			textManager->renderText(lexical_cast<string>(fps),sw/2-25,25);
-#endif
-
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_LIGHTING);
-		viewPerspective();//end 2d
-	}
+//	void drawOrthoView(int acplayer)
+//	{
+//
+//		viewOrtho(sw,sh); //set view to ortho - start 2d
+//
+//		glDisable(GL_DEPTH_TEST);
+//		glEnable(GL_BLEND);
+//		glDisable(GL_LIGHTING);
+//		glColor4f(1,1,1,1);
+//		
+//		if(players[acplayer].firstPerson())
+//		{
+//			//targeter start
+//			Vec3f fwd=(frustum.ntl+frustum.ntr+frustum.nbl+frustum.nbr)/4.0-planes[players[acplayer].planeNum()]->pos;
+//			float length=1.0/fwd.dot(planes[players[acplayer].planeNum()]->targeter);
+//			Vec3f tar=planes[players[acplayer].planeNum()]->targeter*length;
+//			tar+=planes[players[acplayer].planeNum()]->pos;
+//			float tarX=dist_Point_to_Segment(tar,frustum.ntl,frustum.nbl)/frustum.ntl.distance(frustum.ntr);
+//			float tarY=dist_Point_to_Segment(tar,frustum.ntl,frustum.ntr)/frustum.ntl.distance(frustum.nbl);
+//			//targeter end
+//			float s=(float)sw/800.0;
+//			texturedQuad("cockpit",0,0,sw,sh);//cockpit
+//			texturedQuad("aimer",tarX*(float)sw-16,tarY*(float)sh-16,32,32);
+//			drawgauge(16*s,504*s,80*s,568*s,"tilt back","tilt front",-planes[players[acplayer].planeNum()]->turn,0);
+//			drawgauge(16*s,32*s,80*s,96*s,"speed","needle",0,planes[players[acplayer].planeNum()]->velocity.magnitude()*45-20);
+//			drawgauge(368*s,504*s,432*s,568*s,"altitude","needle",0,planes[players[acplayer].planeNum()]->altitude);//(p.y-_terrain->getHeight(int(p.x/size), int(p.z/size)) * 10));
+//			glColor3f(1,1,1);
+//			//if(p.dead)
+//			//	render_tex_quad(tex[2],0,800*s,0,(float)sh);
+//		}
+//		drawRadar(acplayer,1.0,1.0);
+//		glDisable(GL_BLEND);
+//		glBindTexture(GL_TEXTURE_2D, 0);
+//
+//#ifdef _DEBUG
+//		glColor4f(0,0,0,1.0);
+//		if(acplayer==0)
+//			textManager->renderText(lexical_cast<string>(fps),sw/2-25,25);
+//#endif
+//
+//		glEnable(GL_DEPTH_TEST);
+//		glEnable(GL_LIGHTING);
+//		viewPerspective();//end 2d
+//	}
 	void drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up);
 	void draw()//MAIN DRAW FUNCTION
 	{

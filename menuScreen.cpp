@@ -168,6 +168,8 @@ bool menuLevelEditor::init()
 	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader");
 	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square");
 	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line");
+	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file");
+
 	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,30,"Exit",Color(0.8,0.8,0.8));
 
 	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),Color(0,0.7,0),Color(0,1,0),0);
@@ -231,6 +233,7 @@ bool menuLevelEditor::init()
 int menuLevelEditor::update()
 {
 	static bool awaitingShaderFile = false;
+	static bool awaitingMapFile = false;
 	if(popup != NULL)
 	{
 		popup->update();
@@ -241,6 +244,12 @@ int menuLevelEditor::update()
 				string f=((menuChooseFile*)popup)->getFile();
 				addShader(f);
 				awaitingShaderFile=false;
+			}
+			else if(awaitingMapFile)
+			{
+				string f=((menuChooseFile*)popup)->getFile();
+				((mapBuilder*)mode)->fromFile(f);
+				awaitingMapFile=false;
 			}
 			//else if(...)
 			//   .
@@ -269,6 +278,13 @@ int menuLevelEditor::update()
 		{
 			((mapBuilder*)mode)->diamondSquare(0.9);
 			bDiamondSquare->reset();
+		}
+		else if(bFromFile->getPressed())
+		{
+			awaitingMapFile = true;
+			bFromFile->reset();
+			popup = new menuChooseFile;
+			popup->init();
 		}
 		else if(bNewShader->getPressed())
 		{
@@ -326,6 +342,7 @@ void menuLevelEditor::render()
 		bNewShader->render();
 		bDiamondSquare->render();
 		bFaultLine->render();
+		bFromFile->render();
 	}
 	else if(getTab() == ZONES)
 	{
@@ -366,6 +383,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 			bDiamondSquare->mouseDownL(x,y);
 			bFaultLine->mouseDownL(x,y);
 			bShaders->mouseDownL(x,y);
+			bFromFile->mouseDownL(x,y);
 		}
 		else if(getTab() == ZONES)
 		{
@@ -391,6 +409,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 			bFaultLine->mouseUpL(x,y);
 			bShaders->mouseUpL(x,y);
 			bTabs->mouseUpL(x,y);
+			bFromFile->mouseUpL(x,y);
 		}
 		else if(getTab() == ZONES)
 		{

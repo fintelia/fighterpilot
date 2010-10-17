@@ -186,6 +186,7 @@ protected:
 
 	menuButton* bDiamondSquare;
 	menuButton* bFaultLine;
+	menuButton* bFromFile;
 
 	menuButton* bExit;
 

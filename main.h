@@ -15,6 +15,7 @@
 #include "debug.h"
 #include <cassert>
 //--Boost C++ Library
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 //--Namespaces

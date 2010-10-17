@@ -71,3 +71,10 @@ class functor<void,B>
 public:
 	virtual void operator() (B b)=0;
 };
+
+extern char* errorString;
+#define glError(){									\
+	errorString=(char*)gluErrorString(glGetError());\
+	if(string(errorString).compare("no error") != 0)\
+		__debugbreak();								\
+}
