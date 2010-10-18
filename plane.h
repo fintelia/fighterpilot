@@ -37,7 +37,6 @@ public:
 	virtual void autoPilotUpdate(float value);
 	virtual void exitAutoPilot();
 	virtual void returnToBattle();
-	virtual void returnToBattle2();
 	virtual bool Update(float value)=0;
 	virtual void spawn()=0;
 	void drawExplosion(bool flash);
@@ -63,13 +62,13 @@ public:
 
 	};
 //////////////flight specs/////////
-	float turn; // -50 to 50
 	//Vec3f pos; (from entity)
 	Vec3f velocity;
 	Vec3f accel;
 	Vec3f normal;
 	Angle roll;
 	float altitude;
+	float turn; // -50 to 50
 /////////////weapons///////////////
 	Vec3f targeter;
 	armament machineGun;
