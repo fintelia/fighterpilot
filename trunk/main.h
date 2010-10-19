@@ -44,7 +44,7 @@ extern bool			active;						// Window Active Flag
 extern bool			fullscreen;					// Fullscreen Flag Set To TRUE By Default
 //extern int fontBase;
 
-extern const float PI;
+extern const double PI;
 extern const float size;
 
 extern bool lowQuality;

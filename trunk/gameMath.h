@@ -4,6 +4,7 @@
 #include "angle.h"
 //#include "vec3f.h"
 #include "vector.h"
+#include "quaternion.h"
 #include "geoPlane.h"//-------------------------//
 #include "AABox.h"/////---for frustum culling---//
 #include "FrustumG.h"//-------------------------//

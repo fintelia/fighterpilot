@@ -47,9 +47,8 @@ public:
 	{
 		double time;
 		Vec3f position;
-		Vec3f fwd;
-		Angle roll;
-		wayPoint(double Time,Vec3f Position,Vec3f Fwd,Angle Roll): time(Time), position(Position), fwd(Fwd), roll(Roll){}
+		Quat4f rotation;
+		wayPoint(double Time,Vec3f pos,Quat4f rot): time(Time), position(pos), rotation(rot){}
 		wayPoint(){}
 	};
 	struct armament
@@ -63,12 +62,19 @@ public:
 	};
 //////////////flight specs/////////
 	//Vec3f pos; (from entity)
-	Vec3f velocity;
-	Vec3f accel;
-	Vec3f normal;
-	Angle roll;
+	Quat4f rotation;//for model
+
+	float speed;
+	double turn;
+	double climb;
+	Angle direction;
+
+	//Vec3f velocity;
+	//Vec3f accel;
+	//Vec3f normal;
+	//Angle roll;
 	float altitude;
-	float turn; // -50 to 50
+	//float turn; // -50 to 50
 /////////////weapons///////////////
 	Vec3f targeter;
 	armament machineGun;
