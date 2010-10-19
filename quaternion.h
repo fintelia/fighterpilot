@@ -4,13 +4,17 @@ class Quaternion
 {
 public:
 	T x, y, z, w;
-	Quaternion(X, Y, Z, W): x(X), y(Y), z(Z), w(W) 
+	Quaternion(): x(0), y(0), z(0), w(1.0) 
 	{
 
 	}
-	Quaternion(const Vector3<T>& vec, Angle theta): w(cos(ang/2)) 
+	Quaternion(T X, T Y, T Z, T W): x(X), y(Y), z(Z), w(W) 
 	{
-		Vector3<t> vn = vec.normalize() * sin(theta/2);
+
+	}
+	Quaternion(const Vector3<T>& vec, Angle theta): w(cos(theta/2)) 
+	{
+		Vector3<T> vn = vec.normalize() * sin(theta/2);
 
 		x = vn.x;
 		y = vn.y;
@@ -36,7 +40,7 @@ public:
  
 		normalize();
 	}
-	void normalize()
+	Quaternion normalize()
 	{
 		// Don't normalize if we don't have to
 		T mag2 = w * w + x * x + y * y + z * z;
@@ -47,10 +51,11 @@ public:
 			y /= mag;
 			z /= mag;
 		}
+		return *this;
 	}
-	Quaternion conjugate()
+	Quaternion conjugate() const
 	{
-		return Quaternion(-x, -y, -z, w);
+		return Quaternion<T>(-x, -y, -z, w);
 	}
 	template <typename U>
 	Quaternion<T> operator* (const Quaternion<U> &rq) const
@@ -63,20 +68,76 @@ public:
 	}
 	Vec3f operator* (const Vector3<T> &vec) const
 	{
-		Quaternion<T> vecQuat(vec.x,vec.y,vec.z,0.0);
-		vecQuat.normalize();
+		//Quaternion<T> vecQuat(vec.x,vec.y,vec.z,0.0);
+		//vecQuat.normalize();
 
 		Vector3<T> vn(vec);
 		vn.normalize();
  
 		Quaternion<T> vecQuat(vn.x,vn.y,vn.z,0.0), resQuat;
  
-		resQuat = vecQuat * getConjugate();
+		resQuat = vecQuat * this->conjugate();
 		resQuat = *this * resQuat;
  
 		return (Vector3<T>(resQuat.x, resQuat.y, resQuat.z));
 	}
+	Quaternion lerp(const Quaternion& q2, T t)
+	{
+		if (t <= (T)0.0)
+			return *this;
+		if (t >= (T)1.0)
+			return q2;
+
+		return ((*this) * ((T)1.0 - t)+q2 * t).normalize();
+	}
+	Quaternion<T> slerp(const Quaternion<T>& q2, T t)
+	{
+		if (t <= (T)0.0)
+			return *this;
+		if (t >= (T)1.0)
+			return q2;
+		
+		Quaternion<T> q3 = q2;
+		T c = dot(q3);
+
+		if (c < (T)0.0)
+		{
+			q3 = -q3;
+			c = -c;
+		}
+	
+		if (c > (T)0.999)
+			return lerp(q3, t); // Lerp() = q1 + t * (q2 - q1)
+		
+		Angle a = acosA(c); // ACos() clamps input to [-1, 1]
+		return  ((*this) *sin(a * (1.0 - t)) + q3 * sin(a * t)) / sin(a);
+	}
+	template <typename U>
+	T dot(const Quaternion<U> &q)
+	{
+		return x*q.x+y*q.y+z*q.z+w*q.w;
+	}
+	Quaternion operator*(T scale) const
+	{
+		return Quaternion<T>(x*scale,y*scale,z*scale,w*scale);
+	}
+	Quaternion operator/(T scale) const
+	{
+		return Quaternion<T>(x/scale,y/scale,z/scale,w/scale);
+	}
+	Quaternion operator+(const Quaternion &other) const
+	{
+		return Quaternion<T>(x+other.x,y+other.y,z+other.z,w+other.w);
+	}
+	Quaternion operator-(const Quaternion &other) const
+	{
+		return Quaternion<T>(x-other.x,y-other.y,z-other.z,w-other.w);
+	}
+	Quaternion operator-() const
+	{
+		return Quaternion<T>(-x,-y,-z,-w);
+	}
 };
 
-typedef Quat4f Quaternion<float>;
-typedef Quat4d Quaternion<double>;
+typedef Quaternion<float> Quat4f;
+typedef Quaternion<double> Quat4d;

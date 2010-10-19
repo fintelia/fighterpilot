@@ -1,5 +1,5 @@
 
-extern const float PI;
+extern const double PI;
 class Angle
 {
 private:
@@ -56,6 +56,25 @@ public:
 			return !(ang>high && ang<low);
 		}
 	}
+	void clampedAdd(double amount, double low,double high)
+	{
+		if(low>high) 
+			return;
+
+		if(amount > 0)
+		{
+			ang+=amount;
+			if(ang > high) 
+				ang=high;
+		}
+		else
+		{
+			ang+=amount;
+			if(ang < low) 
+				ang=low;
+		}
+		normalize();
+	}
 	operator double() { return ang; }
 
 	Angle operator*(Angle a){return Angle(ang*a.ang);}
@@ -104,3 +123,26 @@ Angle atan2A(double X,double Y);
 Angle asinA(double X);
 Angle acosA(double X);
 Angle lerp(Angle a1,Angle a2,double l);
+
+template <class U,class V>
+Angle clamp(Angle angle, U v1, V v2)
+{
+	Angle low=v1;
+	Angle high=v2;
+
+	if(angle.inRange())
+		return angle;
+
+	if(low.ang<high.ang)
+	{
+		if(angle.ang<low.ang) return low;
+		if(angle.ang>high.ang) return high;
+		return angle;
+	}
+	else
+	{
+		if(angle.ang<high && angle.ang>low) return angle;
+		if(angle.ang<(high.ang+low.ang)/2) return high;//a bit arbitrary....
+		return low;
+	}
+}

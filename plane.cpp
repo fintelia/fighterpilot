@@ -20,8 +20,10 @@ void planeBase::updateAll()
 		}
 		else
 		{
-			velocity.y-=ms/10;
-			pos+=velocity*(ms/1000);
+			//rotation = rotation * (1.0-ms/10000.0) + Quat4f(1,0,0,PI/2.0) * ms/10000.0;
+			//velocity.y-=ms/10;
+			pos+=rotation * Vec3f(0,0,1) * (ms/1000);
+			pos.y-=ms/10;
 		}
 		//for(int i=0;i<5;i++)
 		//{
@@ -62,32 +64,39 @@ void planeBase::updateAll()
 		}
 		else
 		{
+			float r;
 			Vec3f lastPos=pos;
-			Vec3f lastVelocity=velocity;
+			Quat4f lastRotation=rotation;
+			Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
 
 			altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
 			if(altitude<3.0){die();pos.y-=altitude-3;hitGround=true;}
 			
-			velocity=velocity.normalize()*clamp(velocity.magnitude() + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,300.0,700.0);
-			float r=sqrt(velocity.x*velocity.x+velocity.z*velocity.z)*sin(PI/3);
-			velocity.y=clamp(velocity.y + ms*controller.climb*0.2 - ms*controller.dive*0.2,-r,r);
-			turn=clamp(turn + 0.05f*controller.right*ms - 0.05f*controller.left*ms,-60,60);
+			speed = clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,300.0,700.0);
+			climb = clamp(climb + 0.9*controller.climb*(ms/1000) - 0.9*controller.dive*(ms/1000),-PI/3,PI/4);
+			turn  = clamp(turn  + 0.9*controller.right*(ms/1000) - 0.9*controller.left*(ms/1000),-1.0,1.0);
+			direction -= turn/120;
 
-			//angle -= turn/60*t+sin(turn*DegToRad)*climb*t;//second term acounts for climb
-			Angle a=atan2A(velocity.z,velocity.x)+(turn/120)*PI/180;
-			r=sqrt(velocity.x*velocity.x+velocity.z*velocity.z);
-			velocity.z=r*sin(a);
-			velocity.x=r*cos(a);
+			rotation = Quat4f(0,0,0,1);
+			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+
+
+			fwd = rotation * Vec3f(0,0,1);
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)
 			{
-				Vec3f up,right,move(0,0,0);					//define our vectors		
-				upAndRight(velocity,roll,up,right);			//set up and right
-				move+=Vec3f(0,-50*(ms/1000),0);				//gravity
-				move+=velocity*(ms/1000);					//thrust
-				move+=up*velocity.magnitude()*(ms/1000)*0.2;//lift
-				move*=0.95;									//drag
-				pos+=move;									//increase position
+				//Vec3f up,right,move(0,0,0);					//define our vectors		
+				//upAndRight(velocity,roll,up,right);			//set up and right
+				//move+=Vec3f(0,-50*(ms/1000),0);				//gravity
+				//move+=velocity*(ms/1000);					//thrust
+				//move+=up*velocity.magnitude()*(ms/1000)*0.2;//lift
+				//move*=0.95;									//
+				//pos+=move;									//increase position
+
+				Vec3f move = rotation * Vec3f(0,0,1) * speed * (ms/1000);
+				pos+=move;
 			}
 			////////////////////end move////////////////////////////////////
 			bool setAutoPilot=false;
@@ -100,11 +109,11 @@ void planeBase::updateAll()
 				returnToBattle();
 			}
 
-			if(pos.y>300 && velocity.y>0)
-				velocity.y=clamp(velocity.y-ms/2500,0,velocity.y);
+			//if(pos.y>300 && velocity.y>0)
+			//	velocity.y=clamp(velocity.y-ms/2500,0,velocity.y);
 
 			//if(pos.y>250)	pos.y=250;
-			roll=turn*PI/180;
+			//roll=turn*PI/180;
 			Level(ms);
 
 			if(lastController.shoot1<=0.75)
@@ -117,7 +126,7 @@ void planeBase::updateAll()
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
 					Vec3f l=pos*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=velocity.normalize()*(1.0-extraShootTime/ms) + lastVelocity.normalize()*extraShootTime/ms;//+Vec3f(float(rand()%1000)/50000,float(rand()%1000-500)/50000,float(rand()%1000)/50000);
+					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms;//+Vec3f(float(rand()%1000)/50000,float(rand()%1000-500)/50000,float(rand()%1000)/50000);
 					bullets.push_back(bullet(l,t,id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
@@ -132,7 +141,7 @@ void planeBase::updateAll()
 		//normal = v.cross(o);
 		//forward=Vec3f(sin(angle*DegToRad)*acceleration,cos(turn*DegToRad)*climb,cos(angle *DegToRad)*acceleration).normalize();
 		
-		normal=Vec3f(0,1,0);
+		//normal=Vec3f(0,1,0);
 		findTargetVector();
 	}
 	lastController = controller;
@@ -146,11 +155,13 @@ void planeBase::autoPilotUpdate(float value)
 	if(time>(wayPoints.back()).time)
 	{
 		controled=false;
+		Vec3f fwd = wayPoints.back().rotation * Vec3f(0,0,1);
 
-		velocity=		wayPoints.back().fwd;
-		pos=			wayPoints.back().position;		
-		roll=			wayPoints.back().roll;
-		turn=0;
+		rotation=		wayPoints.back().rotation;
+		pos =			wayPoints.back().position;
+		direction =		atan2A(fwd.x,fwd.z);
+		climb =			asin(fwd.y/fwd.magnitude());
+		turn =			0;//to hard and rather useless to find
 
 		wayPoints.clear();
 		return;
@@ -169,11 +180,17 @@ void planeBase::autoPilotUpdate(float value)
 		}
 	}
 
-	t=(w2.time-time)/(w2.time-w1.time);
+	t=1.0-(w2.time-time)/(w2.time-w1.time);
 
-	pos=		w1.position*t+w2.position*(1.0-t);
-	velocity=	w1.fwd*t+w2.fwd*(1.0-t);
-	roll=		lerp(w1.roll,w2.roll,t);//w1.roll*t+w2.roll*(1.0-t);
+	pos =		w1.position*(1.0-t)+w2.position*t;
+	rotation =	w1.rotation.slerp(w2.rotation,t);
+	center.x = pos.x;
+	center.z = pos.z;
+	//Vec3f fwd = rotation * Vec3f(0,0,1);
+	//direction =	atan2A(fwd.x,fwd.z);
+	//climb =		asin(fwd.y/fwd.magnitude());
+	//turn =		0;
+
 }
 void planeBase::exitAutoPilot()
 {
@@ -190,11 +207,13 @@ void planeBase::exitAutoPilot()
 	if(time>(wayPoints.back()).time)//beyond last waypoint
 	{
 		controled=false;
+		Vec3f fwd = wayPoints.back().rotation * Vec3f(0,0,1);
 
-		velocity=		wayPoints.back().fwd;
-		pos=			wayPoints.back().position;		
-		roll=			wayPoints.back().roll;
-		turn=0;
+		rotation=		wayPoints.back().rotation;
+		pos =			wayPoints.back().position;
+		direction =		atan2A(fwd.x,fwd.z);
+		climb =			asin(fwd.y/fwd.magnitude());
+		turn =			0;//to hard and rather useless to find
 
 		wayPoints.clear();
 		return;
@@ -215,46 +234,43 @@ void planeBase::exitAutoPilot()
 
 	t=(w2.time-time)/(w2.time-w1.time);
 
-	pos=		w1.position*t+w2.position*(1.0-t);
-	velocity=	(w1.fwd*t+w2.fwd*(1.0-t)).normalize() * w1.position.distance(w2.position)/(w2.time-w1.time);
-	roll=		lerp(w1.roll,w2.roll,t);
+	pos =		w1.position*t+w2.position*(1.0-t);
+	rotation =	w1.rotation.slerp(w2.rotation,t);
+	Vec3f fwd = rotation * Vec3f(0,0,1);
+	direction =	atan2A(fwd.x,fwd.z);
+	climb =		asin(fwd.y/fwd.magnitude());
+	turn =		0;
 
-	turn=0;
 	controled=false;
 	wayPoints.clear();
 }
 void planeBase::returnToBattle()
 {
+
 	wayPoints.clear();
 	controled =true;
 	double time=gameTime();
-	Vec3f vel2D(velocity.x,0,velocity.z);
-	camera=Vec3f(pos.x - vel2D.normalize().x*175, pos.y + sin(45.0)*175,	 pos.z - vel2D.normalize().z*175);
-	center=Vec3f(pos.x + vel2D.normalize().x*175, pos.y, pos.z + vel2D.normalize().z*175);
+
+	Vec3f fwd	= rotation * Vec3f(0,0,1);
+	Vec3f up	= rotation * Vec3f(0,1,0);
+	Vec3f right	= rotation * Vec3f(1,0,0);
+	fwd.y=0; fwd=fwd.normalize();
+
+	Quat4f newRot(Vec3f(0,1,0),atan2A(pos.x-size*64,pos.z-size*64));
+	Vec3f newFwd = newRot * Vec3f(0,0,1);
+
+	camera=Vec3f(pos.x - fwd.x*175, pos.y + sin(45.0)*175,	 pos.z - fwd.z*175);
+	center=Vec3f(pos.x + fwd.x*175, pos.y, pos.z + fwd.z*175);
 	
-	Vec3f fwd(velocity.x,0,velocity.z); fwd=fwd.normalize();
-	Vec3f right=fwd.cross(normal);
-	wayPoints.push_back(wayPoint(time,									pos,
-								velocity,								roll));
 
-	wayPoints.push_back(wayPoint(time+4000.0,							pos+fwd*1100,
-								fwd,									0));
-
-	wayPoints.push_back(wayPoint(time+5000.0,							pos+fwd*1150+Vec3f(0,150,0),
-								Vec3f(0,1,0),							0));
-
-	wayPoints.push_back(wayPoint(time+5000.0,							pos+fwd*1150+Vec3f(0,150,0),
-								Vec3f(0,1,0),							PI));
-
-	wayPoints.push_back(wayPoint(time+6000.0,							pos+fwd*1100+Vec3f(0,300,0),
-								-fwd,									PI));
-
-
-	wayPoints.push_back(wayPoint(time+9000.0,							pos+fwd*600,
-								-(fwd*11+Vec3f(0,3,0)).normalize(),		0));
-
-	wayPoints.push_back(wayPoint(time+10500.0,							pos,
-								-fwd,									0));
+	wayPoints.push_back(wayPoint(time,				pos,								rotation								));
+	wayPoints.push_back(wayPoint(time+3000.0,		pos+newFwd*2500,					newRot									));
+	wayPoints.push_back(wayPoint(time+3610.0,		pos+newFwd*2875+Vec3f(0,375,0),		newRot * Quat4f(Vec3f(-1,0,0),PI*0.25)	));
+	wayPoints.push_back(wayPoint(time+4220.0,		pos+newFwd*2500+Vec3f(0,750,0),		newRot * Quat4f(Vec3f(-1,0,0),PI*0.5)	));
+	wayPoints.push_back(wayPoint(time+4460.0,		pos+newFwd*2309+Vec3f(0,588,0),		newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
+	wayPoints.push_back(wayPoint(time+5300.0,		pos+newFwd*1743+Vec3f(0,176,0),		newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
+	wayPoints.push_back(wayPoint(time+5660.0,		pos+newFwd*1500,					newRot * Quat4f(Vec3f(-1,0,0),PI)		));
+	wayPoints.push_back(wayPoint(time+7000.0,		pos-newFwd*5,						newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 
 	////wayPoints.push_back(wayPoint(time+7000.0,	pos,
 	////							0,				acceleration,
@@ -265,16 +281,15 @@ void planeBase::returnToBattle()
 
 void planeBase::Level(float ms)
 {
-
 	int sgn=turn/abs(turn);
-	turn-=5.0*(ms/1000)*sgn;
+	turn-=0.1*(ms/1000)*sgn;
 	if(turn/abs(turn)!=sgn)
 		turn=0;
 
-	sgn=velocity.y/abs(velocity.y);
-	velocity.y-=30.0*(ms/1000)*sgn;
-	if(velocity.y/abs(velocity.y)!=sgn)
-		velocity.y=0;
+	sgn=climb/abs(climb);
+	climb-=0.1*(ms/1000)*sgn;
+	if(climb/abs(climb)!=sgn)
+		climb=0;
 }
 void planeBase::die()
 {
@@ -293,17 +308,18 @@ void planeBase::die()
 void planeBase::findTargetVector()
 {
 
-	Vec3f enemy;
-	for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	{
-		enemy=(*i).second->pos;
-		if(acos( velocity.dot( (enemy-pos).normalize() )) < 0.1 && (*i).first!=id && !(*i).second->dead && pos.distance(enemy)<4000)
-		{
-			targeter=(enemy-pos).normalize();
-			return;
-		}
-	}
-	targeter=velocity;
+	//Vec3f enemy;
+	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
+	//{
+	//	enemy=(*i).second->pos;
+	//	if(acos( velocity.dot( (enemy-pos).normalize() )) < 0.1 && (*i).first!=id && !(*i).second->dead && pos.distance(enemy)<4000)
+	//	{
+	//		targeter=(enemy-pos).normalize();
+	//		return;
+	//	}
+	//}
+	//targeter=velocity;
+	targeter = rotation * Vec3f(0,0,1);
 }
 
 void planeBase::ShootMissile()
@@ -311,11 +327,14 @@ void planeBase::ShootMissile()
 	if(rockets.coolDownLeft>0 || rockets.left<=0 || controled)
 		return;
 
-	Vec3f up,right;
-	upAndRight(velocity.normalize(),roll,up,right);
+	Vec3f fwd	= (rotation * Vec3f(0,0,1)).normalize(),
+		  up	= (rotation * Vec3f(0,1,0)).normalize(),
+		  right	= (rotation * Vec3f(1,0,0)).normalize();
+
+
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	missiles.push_back(missile(pos+right*o.x*5+up*o.y*5+velocity.normalize()*o.z*5,velocity,id,d));
+	missiles.push_back(missile(pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd,id,d));
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -412,9 +431,11 @@ void plane::spawn()
 	if(pos.y<settings.SEA_LEVEL+35)
 		pos.y=settings.SEA_LEVEL+35;
 
-	velocity = (pos-Vec3f(size*32,pos.y,size*32)).normalize()*300.0;
+	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
 	turn = 0;
-	roll=0;
+	climb = 0;
+	direction = 0;
+	speed=300.0;
 
 	dead = false;
 	controled=false;
@@ -471,10 +492,13 @@ void AIplane::spawn()
 	if(pos.y<settings.SEA_LEVEL+35)
 		pos.y=settings.SEA_LEVEL+35;
 
-	velocity = (pos-Vec3f(size*32,pos.y,size*32)).normalize()*300.0;
 
+	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
 	turn = 0;
-	roll=0;
+	climb = 0;
+	direction = 0;
+	speed=300.0;
+
 	dead = false;
 	controled=false;
 	maneuver=0;
@@ -485,90 +509,90 @@ void AIplane::spawn()
 }
 void AIplane::freeForAll_calcMove(int value)
 {
-	controller=controlState();
-	Vec3f self[2]={pos,pos+velocity};//current,future
-	Vec3f enemy;
-	if(machineGun.coolDownLeft<=0.0)
-	{
-		for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-		{
-			enemy=(*i).second->pos;
-			if(acos( self[1].dot( (enemy-self[0]).normalize() )) < 0.5 && self[0].distance(enemy)<2000 && (*i).first!=id)
-			{
-				controller.shoot1=1.0;
-				break;
-			}
-		}
-	}
-	target=-1;
-	float ang=999;
-	for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	{
-		enemy=(*i).second->pos;
-		if(acos( self[1].dot( (enemy-self[0]).normalize() )) < ang && self[0].distance(enemy)<3000 && (*i).second->team!=team)
-		{
-			ang=acos( self[1].dot( (enemy-self[0]).normalize() ));
-			target=(*i).first;
-		}
-	}
-	
-	if(target>=0)
-	{
-		if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-			controller.left=1.0;
-		else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-			controller.right=1.0;
+	//controller=controlState();
+	//Vec3f self[2]={pos,pos+velocity};//current,future
+	//Vec3f enemy;
+	//if(machineGun.coolDownLeft<=0.0)
+	//{
+	//	for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
+	//	{
+	//		enemy=(*i).second->pos;
+	//		if(acos( self[1].dot( (enemy-self[0]).normalize() )) < 0.5 && self[0].distance(enemy)<2000 && (*i).first!=id)
+	//		{
+	//			controller.shoot1=1.0;
+	//			break;
+	//		}
+	//	}
+	//}
+	//target=-1;
+	//float ang=999;
+	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
+	//{
+	//	enemy=(*i).second->pos;
+	//	if(acos( self[1].dot( (enemy-self[0]).normalize() )) < ang && self[0].distance(enemy)<3000 && (*i).second->team!=team)
+	//	{
+	//		ang=acos( self[1].dot( (enemy-self[0]).normalize() ));
+	//		target=(*i).first;
+	//	}
+	//}
+	//
+	//if(target>=0)
+	//{
+	//	if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
+	//		controller.left=1.0;
+	//	else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
+	//		controller.right=1.0;
 
-		if(altitude>=30 && planes[target]->pos.y<pos.y)
-			controller.dive=1.0;
-		else if(planes[target]->pos.y>pos.y || altitude<25)
-			controller.climb=1.0;
+	//	if(altitude>=30 && planes[target]->pos.y<pos.y)
+	//		controller.dive=1.0;
+	//	else if(planes[target]->pos.y>pos.y || altitude<25)
+	//		controller.climb=1.0;
 
-		if(velocity.magnitude()>planes[target]->velocity.magnitude()+50)
-			controller.accelerate=1.0;
-		else if(velocity.magnitude()<planes[target]->velocity.magnitude()-50)
-			controller.brake=1.0;
-	}
-	else
-	{
+	//	if(velocity.magnitude()>planes[target]->velocity.magnitude()+50)
+	//		controller.accelerate=1.0;
+	//	else if(velocity.magnitude()<planes[target]->velocity.magnitude()-50)
+	//		controller.brake=1.0;
+	//}
+	//else
+	//{
 
-		if(altitude<30 || pos.y<settings.SEA_LEVEL+30)
-			controller.climb=1.0;
-		else if(altitude>=25 && rand()%2>1)
-			controller.dive=1.0;
+	//	if(altitude<30 || pos.y<settings.SEA_LEVEL+30)
+	//		controller.climb=1.0;
+	//	else if(altitude>=25 && rand()%2>1)
+	//		controller.dive=1.0;
 
-		if(velocity.magnitude()<500)
-			controller.accelerate=1.0;
-	}
+	//	if(velocity.magnitude()<500)
+	//		controller.accelerate=1.0;
+	//}
 
 }
 void AIplane::playerVs_calcMove(int value)
 {
-	//Vec3f self[2]={		Vec3f(x,y,z), 		Vec3f(sin(angle*PI/180),climb,cos(angle*PI/180)).normalize()};//current,future
-	controller=controlState();
+	////Vec3f self[2]={		Vec3f(x,y,z), 		Vec3f(sin(angle*PI/180),climb,cos(angle*PI/180)).normalize()};//current,future
+	//controller=controlState();
 
-	Vec3f enemy;
+	//Vec3f enemy;
 
-	target	=planes.begin()->first;
-	Vec3f loc(planes[target]->pos);
+	//target	=planes.begin()->first;
+	//Vec3f loc(planes[target]->pos);
 
-	if(acos( velocity.dot( (loc-pos).normalize() )) < 0.5 && pos.distance(loc)<2000)
-		controller.shoot1=1.0;
+	//if(acos( velocity.dot( (loc-pos).normalize() )) < 0.5 && pos.distance(loc)<2000)
+	//	controller.shoot1=1.0;
 
-	if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-		controller.left=1.0;
-	else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-		controller.right=1.0;
+	//if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
+	//	controller.left=1.0;
+	//else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
+	//	controller.right=1.0;
 
-	if(altitude>=30 && planes[target]->pos.y<pos.y)
-		controller.dive=1.0;
-	else if(planes[target]->pos.y>pos.y || altitude<25)
-		controller.climb=1.0;
+	//if(altitude>=30 && planes[target]->pos.y<pos.y)
+	//	controller.dive=1.0;
+	//else if(planes[target]->pos.y>pos.y || altitude<25)
+	//	controller.climb=1.0;
 
-	if(velocity.magnitude()<planes[target]->velocity.magnitude()+50)
-		controller.accelerate=1.0;
-	else if(velocity.magnitude()>planes[target]->velocity.magnitude()-50)
-		controller.brake=1.0;
+	//if(velocity.magnitude()<planes[target]->velocity.magnitude()+50)
+	//	controller.accelerate=1.0;
+	//else if(velocity.magnitude()>planes[target]->velocity.magnitude()-50)
+	//	controller.brake=1.0;
 }
 void AIplane::teams_calcMove(int value)
 {

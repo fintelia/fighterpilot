@@ -1187,34 +1187,34 @@ protected:
 		glUseProgram(0);
 		glColor4f(1,1,1,0.25);
 
-		dataManager.bind("radar plane");
-		Vec3f trans;
-		for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-		{
-			int d=p.pos.distance((*i).second->pos);
-			if(d<3733 && acplayer!=(*i).first && !(*i).second->dead)
-			{
-				glPushMatrix();
-				glTranslatef(xc,yc,0);
-				glRotatef(acosA(Vec3f(p.velocity.x,0,p.velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
-				glTranslatef(((*i).second->pos.x-p.pos.x)*(x2-xc)/(16384),((*i).second->pos.z-p.pos.z)*(x2-xc)/(16384),0);
-				glRotatef(acosA(Vec3f((*i).second->velocity.x,0,(*i).second->velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
+		//dataManager.bind("radar plane");
+		//Vec3f trans;
+		//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
+		//{
+		//	int d=p.pos.distance((*i).second->pos);
+		//	if(d<3733 && acplayer!=(*i).first && !(*i).second->dead)
+		//	{
+		//		glPushMatrix();
+		//		glTranslatef(xc,yc,0);
+		//		glRotatef(acosA(Vec3f(p.velocity.x,0,p.velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
+		//		glTranslatef(((*i).second->pos.x-p.pos.x)*(x2-xc)/(16384),((*i).second->pos.z-p.pos.z)*(x2-xc)/(16384),0);
+		//		glRotatef(acosA(Vec3f((*i).second->velocity.x,0,(*i).second->velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
 
-				for(float x=-0.5;x<0.9;x+=0.5)
-				{
-					for(float y=-0.5;y<0.9;y+=0.5)
-					{
-						glBegin(GL_QUADS);
-							glTexCoord2f(0,1);	glVertex2f(4+x,4+y);
-							glTexCoord2f(0,0);	glVertex2f(4+x,-4+y);
-							glTexCoord2f(1,0);	glVertex2f(-4+x,-4+y);
-							glTexCoord2f(1,1);	glVertex2f(-4+x,4+y);
-						glEnd();
-					}
-				}
-				glPopMatrix();
-			}
-		}
+		//		for(float x=-0.5;x<0.9;x+=0.5)
+		//		{
+		//			for(float y=-0.5;y<0.9;y+=0.5)
+		//			{
+		//				glBegin(GL_QUADS);
+		//					glTexCoord2f(0,1);	glVertex2f(4+x,4+y);
+		//					glTexCoord2f(0,0);	glVertex2f(4+x,-4+y);
+		//					glTexCoord2f(1,0);	glVertex2f(-4+x,-4+y);
+		//					glTexCoord2f(1,1);	glVertex2f(-4+x,4+y);
+		//				glEnd();
+		//			}
+		//		}
+		//		glPopMatrix();
+		//	}
+		//}
 		if(!players[acplayer].firstPerson() || p.controled)
 		{
 			glColor4f(1,1,1,1);
@@ -1828,9 +1828,13 @@ protected:
 					//else 					glRotatef(atan(-cPlane->climb/cPlane->acceleration)*50,1,0,0);
 					
 					
-					glRotatef(atan2A(cPlane->velocity.x,cPlane->velocity.z).degrees(),0,1,0);
-					glRotatef(asinA(-cPlane->velocity.y/cPlane->velocity.magnitude()).degrees(),1,0,0);
-					glRotatef(cPlane->roll.degrees(),0,0,1);
+					//glRotatef(atan2A(cPlane->velocity.x,cPlane->velocity.z).degrees(),0,1,0);
+					//glRotatef(asinA(-cPlane->velocity.y/cPlane->velocity.magnitude()).degrees(),1,0,0);
+					//glRotatef(cPlane->roll.degrees(),0,0,1);
+
+
+					Angle ang = acosA(cPlane->rotation.w);
+					glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
 
 					glScalef(5,5,5);
 
@@ -1915,12 +1919,10 @@ protected:
 		Vec3f u;
 		if(!players[acplayer].firstPerson() || p.controled)
 		{
-			Vec3f vel2D(p.velocity.x,0,p.velocity.z);
+			Vec3f vel2D = p.rotation * Vec3f(0,0,1); vel2D.y=0;
 			e=Vec3f(p.pos.x - vel2D.normalize().x*175, p.pos.y + sin(45.0)*175 , p.pos.z - vel2D.normalize().z*175);
-			//e=Vec3f(p.pos.x , p.pos.y +200 , p.pos.z);
 			if(p.controled) e=p.camera;
 			c=Vec3f(p.pos.x + vel2D.normalize().x*175, p.pos.y, p.pos.z + vel2D.normalize().z*175);
-			//c=p.pos;
 			if(p.controled) c=p.center;
 			u=Vec3f(0,1,0);
 
@@ -1933,6 +1935,13 @@ protected:
 			//e=Vec3f(64*size,15000,64*size);
 			//c=Vec3f(64*size,900,64*size);
 
+			//e = p.pos + Vec3f(250,400,250);
+			//c = p.pos;
+			//u= Vec3f(0,1,0);
+
+
+
+
 			gluLookAt(e[0],e[1],e[2],c[0],c[1],c[2],u[0],u[1],u[2]);
 			frustum.setCamDef(e,c,u);
 			cam=e;
@@ -1940,8 +1949,9 @@ protected:
 		else
 		{
 			e=p.pos;//
-			c=p.velocity.normalize()+e;//(p.x + sin(p.angle * DegToRad),p.y + p.climb,p.z + cos(p.angle * DegToRad));
-			upAndRight(p.velocity,p.roll,u,Vec3f());
+			c=p.rotation * Vec3f(0,0,1)+e;//(p.x + sin(p.angle * DegToRad),p.y + p.climb,p.z + cos(p.angle * DegToRad));
+			u=p.rotation * Vec3f(0,1,0);
+			//upAndRight(p.rotation * Vec3f(0,0,1),p.roll,u,Vec3f());
 			
 			gluLookAt(e[0],e[1],e[2],c[0],c[1],c[2],u[0],u[1],u[2]);
 			frustum.setCamDef(e,c,u);
