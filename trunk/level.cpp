@@ -145,14 +145,7 @@ void Level::heightmap::draw(int shader) const
 		dataManager.bindTex(0,1);
 		dataManager.bindTex(0,0);
 		glUseProgram(0);
-		
-		glBegin(GL_QUADS);
-			glVertex3f(-50,0,-50);
-			glVertex3f(-50,0,50);
-			glVertex3f(50,0,50);
-			glVertex3f(50,0,-50);
-		glEnd();
-		
+
 	}
 	else
 	{

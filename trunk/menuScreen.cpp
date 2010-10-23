@@ -114,8 +114,69 @@ bool menuChooseFile::init()
 {
 	return true;
 }
+bool menuChooseFile::init(string ExtFilter)
+{
+	extFilter=ExtFilter;
+	directory=".";
+	refreshView();
+	return true;
+}
+void menuChooseFile::refreshView()
+{
+	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if(*i!=NULL) delete (*i);
+	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if(*i!=NULL) delete (*i);
+	files.clear();
+	folders.clear();
+	folderButtons.clear();
+	fileButtons.clear();
+
+	folders.push_back("..");
+	filesystem::directory_iterator end_itr; // default construction yields past-the-end
+	for ( filesystem::directory_iterator itr( directory );	itr != end_itr;	 ++itr )
+	{
+		if ( is_directory(itr->status()) && itr->filename().compare(".svn") != 0)
+		{
+			folders.push_back(itr->filename());
+		}
+		else if ( filesystem::extension(itr->path()).compare(extFilter) == 0 ) // see below
+		{
+			files.push_back(itr->filename());
+		}
+	}
+	int row=0, column=0;
+	for(vector<string>::iterator i=folders.begin();i!=folders.end();i++)	
+	{
+		folderButtons.push_back(new menuButton());
+		folderButtons.back()->init(10+145*column,5+40*row,140,35,(*i),Color(0.4,0.4,0.4));
+		if(++column==4){column=0;row++;}
+	}
+	for(vector<string>::iterator i=files.begin();i!=files.end();i++)
+	{
+		fileButtons.push_back(new menuButton());
+		fileButtons.back()->init(10+145*column,5+40*row,140,35,(*i),Color(0.6,0.6,0.6));
+		if(++column==4){column=0;row++;}
+	}
+}
 int menuChooseFile::update()
 {
+	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
+	{
+		if((*i)->getPressed())
+		{
+			directory/=(*i)->getText();
+			refreshView();
+			return 0;
+		}
+	}
+	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
+	{
+		if((*i)->getPressed())
+		{
+			file=(*i)->getText();
+			done=true;
+			return 0;
+		}
+	}
 	return 0;
 }
 void menuChooseFile::render()
@@ -129,7 +190,12 @@ void menuChooseFile::render()
 	glEnd();
 	glEnable(GL_BLEND);
 	glColor4f(0,0,0,1);
-	textManager->renderText(file,(sw-textManager->getTextWidth(file))/2,(sh-textManager->getTextHeight(file))/2);
+	textManager->renderText(file,(sw-textManager->getTextWidth(file))/2,sh/2+195-textManager->getTextHeight(file));
+	glPushMatrix();
+	glTranslatef((sw/2-300),(sh/2-200),0);
+	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
+	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
+	glPopMatrix();
 	glDisable(GL_BLEND);
 }
 void menuChooseFile::keyDown(int vkey)
@@ -149,7 +215,19 @@ void menuChooseFile::keyDown(int vkey)
 			file  += MapVirtualKey(vkey,MAPVK_VK_TO_CHAR);
 	}
 }
-
+void menuChooseFile::mouseL(bool down, int x, int y)
+{
+	if(down)
+	{
+		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-300),y-(sh/2-200));
+		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-300),y-(sh/2-200));
+	}
+	else
+	{
+		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
+		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
+	}
+}
 
 
 int menuScreen::backgroundImage=0;
@@ -173,7 +251,8 @@ bool menuLevelEditor::init()
 	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,30,"Exit",Color(0.8,0.8,0.8));
 
 	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),Color(0,0.7,0),Color(0,1,0),0);
-	addShader("terrain.frag");
+	addShader("media/terrain.frag");
+	addShader("media/snow.frag");
 
 	//zones
 
@@ -284,14 +363,14 @@ int menuLevelEditor::update()
 			awaitingMapFile = true;
 			bFromFile->reset();
 			popup = new menuChooseFile;
-			popup->init();
+			((menuChooseFile*)popup)->init(".bmp");
 		}
 		else if(bNewShader->getPressed())
 		{
 			awaitingShaderFile=true;
 			bNewShader->reset();
 			popup = new menuChooseFile;
-			popup->init();
+			((menuChooseFile*)popup)->init(".frag");
 		}
 		else
 		{
@@ -430,7 +509,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 }
 void menuLevelEditor::addShader(string filename)
 {
-	int s = dataManager.loadTerrainShader(string("media/")+filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
+	int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
 	((mapBuilder*)mode)->shaderButtons.push_back(s);
 
 	menuButton* b = new menuButton();
@@ -496,12 +575,41 @@ void menuInGame::keyDown(int vkey)
 	}
 }
 
+void menuButton::setElementText(string t)
+{
+	text=t;
+	clampedText=t;
+	if(textManager->getTextWidth(clampedText) < width-6)
+	{
+		return;
+	}
+	else if(textManager->getTextWidth("...") > width-6)
+	{
+		clampedText="";
+	}
+	else
+	{
+		while(textManager->getTextWidth(clampedText + "...") > width-6)
+			clampedText.erase(clampedText.size()-1);
+		int l=clampedText.find_last_not_of(" \t\f\v\n\r")+1;
+		clampedText=clampedText.substr(0,l);
+		clampedText += "...";
+	}
 
+}
+void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
+{
+	x=X;
+	y=Y;
+	width=Width;
+	height=Height;
+	setElementText(text);//update clampedText
+}
 void menuButton::init(int X, int Y, int Width, int Height, string t, Color c)
 {
 	setElementXYWH(X, Y, Width, Height);
 	color=c;
-	text=t;
+	setElementText(t);
 }
 void menuButton::render()
 {
@@ -514,7 +622,7 @@ void menuButton::render()
 	glEnd();
 	glEnable(GL_BLEND);
 	glColor4f(0,0,0,1);
-	textManager->renderText(text,x+(width-textManager->getTextWidth(text))/2,y+(height-textManager->getTextHeight(text))/2);
+	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
 	glDisable(GL_BLEND);
 }
 void menuButton::mouseDownL(int X, int Y)

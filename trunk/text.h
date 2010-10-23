@@ -15,9 +15,6 @@ extern double GetTime();
 class TextManager
 {
 private:
-	int textureId;
-	int textureWidth;
-	int textureHeight;
 	struct character
 	{
 		unsigned short x;
@@ -25,7 +22,17 @@ private:
 		unsigned short width;
 		unsigned short height;
 	};
+	struct font
+	{
+		int textureId;
+		int textureWidth;
+		int textureHeight;
+		character chars[128];
+	};
 
+	int textureId;
+	int textureWidth;
+	int textureHeight;
 	character chars[128];
 
 	void renderCharacter(char c, int x, int y)

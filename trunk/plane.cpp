@@ -334,7 +334,7 @@ void planeBase::ShootMissile()
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	missiles.push_back(missile(pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd,id,d));
+	missiles.push_back(missile(pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd*speed,id,d));
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }

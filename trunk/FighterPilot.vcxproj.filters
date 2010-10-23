@@ -334,6 +334,9 @@
     <None Include="media\radar2.vert">
       <Filter>shaders\radar</Filter>
     </None>
+    <None Include="media\snow.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">
