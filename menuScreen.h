@@ -11,10 +11,10 @@ public:
 
 	virtual void render()=0;
 
-	void setElementXYWH(int X, int Y, int Width, int Height)	{x=X; y=Y; width=Width; height=Height;}
-	void setElementXY(int X, int Y)	{x=X; y=Y;}
-	void setElementText(string t) {text=t;}
-	void setElementColor(Color c) {color=c;}
+	virtual void setElementXYWH(int X, int Y, int Width, int Height)	{x=X; y=Y; width=Width; height=Height;}
+	virtual void setElementXY(int X, int Y)	{x=X; y=Y;}
+	virtual void setElementText(string t) {text=t;}
+	virtual void setElementColor(Color c) {color=c;}
 	int getType() {return type;}
 
 	//state
@@ -26,6 +26,7 @@ public:
 	void hideElement()		{view = false;}
 	bool getElementView()	{return view;}
 
+	string getText()		{return text;}
 	//events
 	virtual void mouseDownR(int X, int Y){}
 	virtual void mouseDownL(int X, int Y){}
@@ -72,7 +73,12 @@ public:
 
 	bool getPressed(){return pressed;}
 	void reset(){pressed=false;}
+
+	void setElementText(string t);
+	void setElementXYWH(int X, int Y, int Width, int Height);
 protected:
+	string clampedText;
+
 	void click();
 	void unclick();
 
@@ -109,7 +115,6 @@ public:
 	menuPopup(): done(false){}
 	virtual ~menuPopup(){}
 
-	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
 
@@ -130,14 +135,28 @@ public:
 	~menuChooseFile(){}
 
 	bool init();
+	bool init(string ExtFilter);
 	int update();
 	void render();
 
-	void keyDown(int vkey);
+	
+	void refreshView();
+	string getFile() {return (directory/file).string();}
 
-	string getFile() {return file;}
+	void keyDown(int vkey);
+	void mouseL(bool down, int x, int y);
 protected:
 	string file;
+
+	filesystem::path directory;
+
+	string extFilter;
+	vector<string> files;
+	vector<string> folders;
+
+	vector<menuButton*> folderButtons;
+	vector<menuButton*> fileButtons;
+
 };
 
 class menuScreen

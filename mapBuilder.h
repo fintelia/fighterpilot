@@ -9,6 +9,20 @@ private:
 
 	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	{
+		int v=level->ground()->getSize();
+		if( !(!((v-1) & (v-2) ) && v > 1) )//if v is not one more than a power of 2
+		{
+			v--;
+			v |= v >> 1;
+			v |= v >> 2;
+			v |= v >> 4;
+			v |= v >> 8;
+			v |= v >> 16;
+			v+=2;//changes mapsize to one more than a power of 2
+			level->newGround(v);
+		}
+
+		
 		//set corners
 
 		int x, z, numSquares, squareSize;

@@ -21,6 +21,7 @@
 //--Namespaces
 using namespace std;
 using namespace boost;
+using namespace boost::filesystem;
 
 #pragma warning( disable : 4305)
 #pragma warning( disable : 4244)
