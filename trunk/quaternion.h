@@ -81,39 +81,8 @@ public:
  
 		return (Vector3<T>(resQuat.x, resQuat.y, resQuat.z));
 	}
-	Quaternion lerp(const Quaternion& q2, T t)
-	{
-		if (t <= (T)0.0)
-			return *this;
-		if (t >= (T)1.0)
-			return q2;
-
-		return ((*this) * ((T)1.0 - t)+q2 * t).normalize();
-	}
-	Quaternion<T> slerp(const Quaternion<T>& q2, T t)
-	{
-		if (t <= (T)0.0)
-			return *this;
-		if (t >= (T)1.0)
-			return q2;
-		
-		Quaternion<T> q3 = q2;
-		T c = dot(q3);
-
-		if (c < (T)0.0)
-		{
-			q3 = -q3;
-			c = -c;
-		}
-	
-		if (c > (T)0.999)
-			return lerp(q3, t); // Lerp() = q1 + t * (q2 - q1)
-		
-		Angle a = acosA(c); // ACos() clamps input to [-1, 1]
-		return  ((*this) *sin(a * (1.0 - t)) + q3 * sin(a * t)) / sin(a);
-	}
 	template <typename U>
-	T dot(const Quaternion<U> &q)
+	T dot(const Quaternion<U> &q) const
 	{
 		return x*q.x+y*q.y+z*q.z+w*q.w;
 	}
@@ -141,3 +110,37 @@ public:
 
 typedef Quaternion<float> Quat4f;
 typedef Quaternion<double> Quat4d;
+
+template <class T>
+Quaternion<T> slerp(const Quaternion<T>& q1, const Quaternion<T>& q2, T t)
+{
+	if (t <= (T)0.0)
+		return q1;
+	if (t >= (T)1.0)
+		return q2;
+		
+	Quaternion<T> q3 = q2;
+	T c = q1.dot(q3);
+
+	if (c < (T)0.0)
+	{
+		q3 = -q3;
+		c = -c;
+	}
+	
+	if (c > (T)0.999)
+		return lerp(q1, q3, t);
+		
+	Angle a = acosA(c); // ACos() clamps input to [-1, 1]
+	return  (q1 *sin(a * (1.0 - t)) + q3 * sin(a * t)) / sin(a);
+};
+template <class T>
+Quaternion<T> lerp(const Quaternion<T>& q1, const Quaternion<T>& q2, T t)
+{
+	if (t <= (T)0.0)
+		return q1;
+	if (t >= (T)1.0)
+		return q2;
+
+	return (q1 * ((T)1.0 - t) + q2 * t).normalize();
+};

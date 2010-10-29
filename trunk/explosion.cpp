@@ -14,6 +14,8 @@ explosion::explosion(Vec3f Pos): pos(Pos), coreSize(0.0), fireballSize(0.0)
 void explosion::render(bool flash)
 {
 	float time=gameTime()-StartTime;//in ms
+	if(time < 0) return;
+
 	Vec3f up, right;
 	l3dBillboardGetUpRightVector(up,right);
 	dataManager.bind("explosion core");

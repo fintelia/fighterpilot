@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <cstdarg>
 #include "debug.h"
 #include <cassert>
 //--Boost C++ Library
@@ -72,6 +73,7 @@ void viewPerspective();
 
 #include "dataManager.h"
 #include "load_save.h"
+#include "path.h"
 #include "level.h"
 #include "script.h"
 #include "profiler.h"

@@ -414,6 +414,7 @@ int menuLevelEditor::update()
 }
 void menuLevelEditor::render()
 {
+	glEnable(GL_BLEND);
 	glColor3f(0,1,0);
 	if(getTab() == TERRAIN)
 	{
@@ -449,6 +450,7 @@ void menuLevelEditor::render()
 		glVertex2f((float)cursorPos.x,(float)cursorPos.y+20);
 		glVertex2f((float)cursorPos.x+10,(float)cursorPos.y+16);
 	glEnd();
+	glDisable(GL_BLEND);
 }
 void menuLevelEditor::mouseL(bool down, int x, int y)
 {

@@ -51,6 +51,7 @@ public:
 		wayPoint(double Time,Vec3f pos,Quat4f rot): time(Time), position(pos), rotation(rot){}
 		wayPoint(){}
 	};
+
 	struct armament
 	{
 		bool firing;
@@ -96,6 +97,8 @@ public:
 	int maneuver;
 	bool controled;
 	vector<wayPoint> wayPoints;
+
+	objectPath planePath;
 ///////////camera view/////////////
 	Vec3f camera;
 	Vec3f center;

@@ -45,6 +45,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_44;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -126,6 +127,7 @@
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="modes.cpp" />
+    <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="random.cpp" />
@@ -170,6 +172,7 @@
     <ClInclude Include="modes.h" />
     <ClInclude Include="onePlayer.h" />
     <ClInclude Include="partical.h" />
+    <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="profiler.h" />
@@ -197,6 +200,7 @@
     <None Include="media\icon.ico" />
     <None Include="media\island.frag" />
     <None Include="media\island.vert" />
+    <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
     <None Include="media\radar.frag" />
     <None Include="media\radar.vert" />

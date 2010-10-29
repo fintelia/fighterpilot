@@ -237,6 +237,17 @@ T Vector3<T>::distanceSquared(Vector3 v)
 	return (v.x-x)*(v.y-y)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
 }
 
+template <class T>
+Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T t)
+{
+	if (t <= (T)0.0)
+		return v1;
+	if (t >= (T)1.0)
+		return v2;
+
+	return (v1 * ((T)1.0 - t) + v2 * t);
+};
+
 ////////////////////////////////////////////////////////////Vector2/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <class T>
@@ -383,7 +394,16 @@ T Vector2<T>::distanceSquared(Vector2 v)
 {
 	return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
 }
+template <class T>
+Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t)
+{
+	if (t <= (T)0.0)
+		return v1;
+	if (t >= (T)1.0)
+		return v2;
 
+	return (v1 * ((T)1.0 - t) + v2 * t).normalize();
+};
 
 
 //Vec3f operator*(float scale, const Vec3f &v);

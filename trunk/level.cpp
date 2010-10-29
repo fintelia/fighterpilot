@@ -2,7 +2,6 @@
 #include "main.h"
 
 
-
 void Level::heightmap::setVBO() const
 {
 	glBindBuffer(GL_ARRAY_BUFFER, VBOvert);
@@ -60,14 +59,14 @@ void Level::heightmap::init(float* heights)
 	setMinMaxHeights();
 	VBOvalid = true;
 }
-Level::heightmap::heightmap(int Size, bool Dynamic): size(Size), dynamic(Dynamic), sand(0), rock(0), grass(0), snow(0), LCnoise(0), normals(0)
+Level::heightmap::heightmap(int Size, bool Dynamic): size(Size), dynamic(Dynamic)
 {
 	float* tmpHeights=(float*)malloc(size*size*sizeof(float));
 	memset(tmpHeights,0,size*size*sizeof(float));
 	init(tmpHeights);
 	free(tmpHeights);
 }
-Level::heightmap::heightmap(int Size, float* heights, bool Dynamic): size(Size), dynamic(Dynamic), sand(0), rock(0), grass(0), snow(0), LCnoise(0), normals(0)
+Level::heightmap::heightmap(int Size, float* heights, bool Dynamic): size(Size), dynamic(Dynamic)
 {
 	init(heights);
 }
@@ -97,6 +96,7 @@ float Level::heightmap::getHeight(unsigned int x, unsigned int z) const
 }
 void Level::heightmap::draw(int shader) const
 {
+
 	if(!VBOvalid && dynamic)
 		setVBO();
 	if(!minMaxValid && dynamic)
@@ -113,16 +113,14 @@ void Level::heightmap::draw(int shader) const
 		dataManager.bind("hardNoise",5);
 		
 		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
-		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight);
+		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight + (maxHeight-minHeight)/3);
 		glUniform1f(glGetUniformLocation(shader, "XZscale"),	size);
 		glUniform1f(glGetUniformLocation(shader, "time"),		gameTime());
-		glUniform1f(glGetUniformLocation(shader, "sea_level"),	(maxHeight-minHeight)/3+minHeight);
 		glUniform1i(glGetUniformLocation(shader, "sand"),		textures[0]);
 		glUniform1i(glGetUniformLocation(shader, "grass"),		textures[1]);
 		glUniform1i(glGetUniformLocation(shader, "rock"),		textures[2]);
 		glUniform1i(glGetUniformLocation(shader, "snow"),		textures[3]);
 		glUniform1i(glGetUniformLocation(shader, "LCnoise"),	textures[4]);
-		glUniform1i(glGetUniformLocation(shader, "waterBumpMap"),textures[5]);
 		
 		glPushMatrix();
 		glBindBuffer(GL_ARRAY_BUFFER, VBOvert);
@@ -160,7 +158,6 @@ void Level::heightmap::draw(int shader) const
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-		
 }
 unsigned int Level::heightmap::getSize() const
 {
@@ -209,7 +206,94 @@ void Level::render()
 {
 	glPushMatrix();
 	glScalef(size,1,size);
-	mGround->draw(dataManager.getId("grass new terrain"));
+
+	
+	if(!mGround->VBOvalid && mGround->dynamic)
+		mGround->setVBO();
+	if(!mGround->minMaxValid && mGround->dynamic)
+		mGround->setMinMaxHeights();
+	if(mSettings.water)
+	{
+		mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
+
+		int s=dataManager.getId("ocean");
+		dataManager.bind("ocean");
+
+		dataManager.bind("hardNoise",0);
+
+		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->size);
+
+		glBegin(GL_QUADS);
+			glVertex3f(0,mWater.seaLevel,0);
+			glVertex3f(0,mWater.seaLevel,mGround->size-1);
+			glVertex3f(mGround->size-1,mWater.seaLevel,mGround->size-1);
+			glVertex3f(mGround->size-1,mWater.seaLevel,0);
+		glEnd();
+
+		dataManager.bindTex(0,0);
+		dataManager.bindShader(0);
+	}
+	if(mGround->shader != 0)
+	{
+		int textures[6]={0,1,2,3,4,5};
+		glUseProgram(mGround->shader);
+		dataManager.bind("sand",0);
+		dataManager.bind("grass",1);
+		dataManager.bind("rock",2);
+		dataManager.bind("snow",3);
+		dataManager.bind("LCnoise",4);
+		dataManager.bind("hardNoise",5);
+		
+		glUniform1f(glGetUniformLocation(mGround->shader, "maxHeight"),	mGround->maxHeight);
+		glUniform1f(glGetUniformLocation(mGround->shader, "minHeight"),	mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3);
+		glUniform1f(glGetUniformLocation(mGround->shader, "XZscale"),	mGround->size);
+		glUniform1f(glGetUniformLocation(mGround->shader, "time"),		gameTime());
+		glUniform1i(glGetUniformLocation(mGround->shader, "sand"),		textures[0]);
+		glUniform1i(glGetUniformLocation(mGround->shader, "grass"),		textures[1]);
+		glUniform1i(glGetUniformLocation(mGround->shader, "rock"),		textures[2]);
+		glUniform1i(glGetUniformLocation(mGround->shader, "snow"),		textures[3]);
+		glUniform1i(glGetUniformLocation(mGround->shader, "LCnoise"),	textures[4]);
+		
+		glPushMatrix();
+		glBindBuffer(GL_ARRAY_BUFFER, mGround->VBOvert);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mGround->VBOindex);
+		
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+		glDrawElements(GL_TRIANGLE_STRIP, mGround->numIdices, GL_UNSIGNED_INT, 0);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glPopMatrix();
+		
+
+		dataManager.bindTex(0,5);
+		dataManager.bindTex(0,4);
+		dataManager.bindTex(0,3);
+		dataManager.bindTex(0,2);
+		dataManager.bindTex(0,1);
+		dataManager.bindTex(0,0);
+		glUseProgram(0);
+
+	}
+	else
+	{
+
+		glBindBuffer(GL_ARRAY_BUFFER, mGround->VBOvert);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mGround->VBOindex);
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glDrawElements(GL_TRIANGLE_STRIP, mGround->numIdices, GL_UNSIGNED_INT, 0);
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	//mGround->draw(dataManager.getId("grass new terrain"));
 	glPopMatrix();
 }
 //__________________________________________________________________________________________________________________________________________________________//
