@@ -22,6 +22,8 @@ public:
 
 	bool registerAssets();
 
+
+
 private:
 	int loadTGA(string filename);
 	int loadMMP(string filename);

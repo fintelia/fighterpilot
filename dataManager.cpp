@@ -9,7 +9,6 @@ DataManager::~DataManager()
 	}
 }
 
-
 int DataManager::loadTexture(string filename)
 {
 	string ext=filesystem::extension(filename);
@@ -76,18 +75,21 @@ int DataManager::loadTerrainShader(string frag)
 			p;
 	char	*ff = textFileRead((char*)frag.c_str()),
 			*cf=(char*)malloc(512);
-	int		lf;
+	int		lf=0;
 
-	glShaderSource(f, 1, (const char **)&ff, NULL);
-	glCompileShader(f);
-	free(ff);
-	memset(cf,0,512);
-	glGetShaderInfoLog(f,512,&lf,cf);
+	if(ff != NULL) 
+	{
+		glShaderSource(f, 1, (const char **)&ff, NULL);
+		glCompileShader(f);
+		free(ff);
+		memset(cf,0,512);
+		glGetShaderInfoLog(f,512,&lf,cf);
 
-	p = glCreateProgram();
-	glAttachShader(p,f);
-	glAttachShader(p,v);
-	glLinkProgram(p);
+		p = glCreateProgram();
+		glAttachShader(p,f);
+		glAttachShader(p,v);
+		glLinkProgram(p);
+	}
 	glUseProgram(0);
 
 	if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
@@ -649,6 +651,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerShader("island terrain",	"media/island.vert","media/island.frag");
 	if(callNum==n++)	registerShader("rock terrain",		"media/rock.vert","media/rock.frag");
 	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
+	if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
 	if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass.frag");
 

@@ -25,6 +25,14 @@ struct LevelFile
 class Level
 {
 public:
+	enum textureType{	GRASS		= 0x01,
+						ROCK		= 0x02,
+						SAND		= 0x04,
+						SNOW		= 0x08,
+						LCNOISE		= 0x10,
+						HEIGHTMAP	= 0x20,
+						NORMALMAP	= 0x40};
+
 	class heightmap
 	{
 	private:
@@ -33,22 +41,14 @@ public:
 
 		vertex*			vertices;
 		index*			indices;
-
 		unsigned int	size,
 						numVerts,
 						numIdices;
-
 		int				VBOvert,
-						VBOindex,
-						sand,
-						rock,
-						grass,
-						snow,
-						LCnoise,
-						normals;
-
+						VBOindex;
 		mutable float	minHeight,
 						maxHeight;
+		int				shader;
 		void setVBO() const;
 		void init(float* heights);
 
@@ -61,12 +61,15 @@ public:
 		heightmap(int Size, float* heights, bool Dynamic=false);
 		void setHeight(unsigned int x, float height, unsigned int z);
 		void increaseHeight(unsigned int x, float height, unsigned int z);
+		void setShader(int s){shader=s;}
 
 		float getHeight(unsigned int x, unsigned int z) const;
 		void draw(int shader=0) const;
 		unsigned int getSize() const;
 		void setMinMaxHeights() const;
 
+
+		friend class Level;
 	};
 	class waterPlane
 	{
@@ -81,8 +84,10 @@ public:
 	};
 	struct levelSettings
 	{
+		textureType seaFloor;
 		bool water;
 	};
+
 protected:
 	heightmap*		mGround;
 	waterPlane		mWater;

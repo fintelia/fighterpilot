@@ -62,5 +62,11 @@ public:
 	{
 		return paused;
 	}
+	void addTime(double ms)
+	{
+		startTime -= ms / 1000.0 * ticksPerSecond;
+		__int64 t = totalTicks();
+		if(startTime > t)	startTime = t;
+	}
 };
 extern GameTime gameTime;

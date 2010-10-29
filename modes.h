@@ -1880,15 +1880,18 @@ protected:
 		glBegin(GL_LINES);
 			for(vector<bullet>::iterator i=bullets.begin();i!=bullets.end();i++)
 			{
-				start=i->startPos+i->velocity*(time-i->startTime)/1000;
-				//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
-				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*40;
-				end2=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*140;
+				if(time > i->startTime)
+				{
+					start=i->startPos+i->velocity*(time-i->startTime)/1000;
+					//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
+					end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*40;
+					end2=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*140;
 
-				glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
-				glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
-				glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
-				glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
+					glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
+					glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
+					glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
+					glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
+				}
 			}
 		glEnd();
 		glLineWidth(1);

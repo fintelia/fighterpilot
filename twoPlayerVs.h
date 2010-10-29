@@ -37,7 +37,10 @@ public:
 		//	if(controls[i][CON_MISSILE]>0.75)	planes[i]->ShootMissile();
 		//	if(controls[i][CON_SHOOT]>0.75)		planes[i]->Shoot();
 		//}
+
+#ifdef _DEBUG
 		if(input->getKey(0x4C)) planes[0]->loseHealth(2.5);
+#endif
 
 		((plane*)planes[0])->setControlState(players[0].getControlState());
 		((plane*)planes[1])->setControlState(players[1].getControlState());

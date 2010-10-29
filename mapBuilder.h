@@ -203,22 +203,28 @@ public:
 	}
 	virtual void draw() 
 	{
+		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.5f,0.8f,0.9f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, sw, sh);
-		gluPerspective(80.0, (double)sw / ((double)sh),1.0, 25000.0);
-		gluLookAt(level->ground()->getSize()/2+level->ground()->getSize()/2*sin(rot),50,level->ground()->getSize()/2+level->ground()->getSize()/2*cos(rot),	level->ground()->getSize()/2,0,level->ground()->getSize()/2,	0,1,0);
+		gluPerspective(80.0, (double)sw / ((double)sh),10.0, 25000.0);
+		Vec3f e = Vec3f(level->ground()->getSize()/2+level->ground()->getSize()/2*sin(rot), 50, level->ground()->getSize()/2+level->ground()->getSize()/2*cos(rot))*size;
+		Vec3f c = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+		gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	0,1,0);
 		
 
 		glEnable(GL_LIGHTING);
 		GLfloat lightPos0[] = {-0.3f, -0.3f, -0.4f, 0.0f};
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 		
-		if(((menuLevelEditor*)menuManager.getMenu())->getShader() == -1)
-			level->ground()->draw();
-		else
-			level->ground()->draw(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
+		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
+
+		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
+			level->ground()->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
+		level->render();
+
 		glDisable(GL_LIGHTING);
+		//glDisable(GL_DEPTH_TEST);
 		//viewOrtho(sw,sh);
 		//menuManager.render();
 		//viewPerspective();

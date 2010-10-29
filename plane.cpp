@@ -10,6 +10,24 @@ void planeBase::updateAll()
 	double ms=time-lastUpdateTime;
 	lastUpdateTime=time;
 
+	//static bool followingPath = false;
+	//if(time < planePath.endTime())
+	//{
+	//	objectPath::point p=planePath(time);
+	//	rotation = p.rotation;
+	//	pos = p.position;
+	//	followingPath = true;
+	//	return;
+	//}
+	//if(followingPath)
+	//{
+	//	objectPath::point p=planePath(time);
+	//	rotation = p.rotation;
+	//	pos = p.position;
+	//	ms -= (time - planePath.endTime());
+	//	followingPath = false;
+	//}
+
 	if(respawning)
 	{
 		altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
@@ -64,6 +82,7 @@ void planeBase::updateAll()
 		}
 		else
 		{
+
 			float r;
 			Vec3f lastPos=pos;
 			Quat4f lastRotation=rotation;
@@ -131,6 +150,17 @@ void planeBase::updateAll()
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
+
+			//static double lastWaypoint = 9999.9;
+			//lastWaypoint += ms;
+			//if(lastWaypoint >= 100.0)
+			//{
+			//	objectPath::point p;
+			//	p.position = pos;
+			//	p.rotation = rotation;
+			//	p.ms = time;
+			//	planePath << p;
+			//}
 		}
 		//if(angle > 360)						angle -= 360;
 		//if(angle < 0)						angle += 360;
@@ -183,7 +213,7 @@ void planeBase::autoPilotUpdate(float value)
 	t=1.0-(w2.time-time)/(w2.time-w1.time);
 
 	pos =		w1.position*(1.0-t)+w2.position*t;
-	rotation =	w1.rotation.slerp(w2.rotation,t);
+	rotation =	slerp(w1.rotation,w2.rotation,t);
 	center.x = pos.x;
 	center.z = pos.z;
 	//Vec3f fwd = rotation * Vec3f(0,0,1);
@@ -235,7 +265,7 @@ void planeBase::exitAutoPilot()
 	t=(w2.time-time)/(w2.time-w1.time);
 
 	pos =		w1.position*t+w2.position*(1.0-t);
-	rotation =	w1.rotation.slerp(w2.rotation,t);
+	rotation =	slerp(w1.rotation,w2.rotation,t);
 	Vec3f fwd = rotation * Vec3f(0,0,1);
 	direction =	atan2A(fwd.x,fwd.z);
 	climb =		asin(fwd.y/fwd.magnitude());
