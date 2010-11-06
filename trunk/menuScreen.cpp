@@ -77,39 +77,68 @@ bool MenuManager::setMenu(string menuName)
 	}
 	return true;
 }
-void MenuManager::mouseUpdate(bool left,bool right, int x, int y)
+//void MenuManager::mouseUpdate(bool left,bool right, int x, int y)
+//{
+//	static bool lLeft=left;
+//	static bool lRight=right;
+//	static int lX=x;
+//	static int lY=y;
+//
+//	if(menu == NULL) return;
+//
+//	if(left && !lLeft) menu->mouseL(true,x,y);
+//	if(!left && lLeft) menu->mouseL(false,x,y);
+//	if(right && !lRight) menu->mouseR(true,x,y);
+//	if(!right && lRight) menu->mouseR(false,x,y);
+//
+//	lLeft=left;
+//	lRight=right;
+//	lX=x;
+//	lY=y;
+//}
+//void MenuManager::keyUpdate(bool down, int vkey)
+//{
+//	if(down)
+//	{
+//		if(menu!=NULL)
+//			menu->keyDown(vkey);
+//	}
+//	else
+//	{
+//		if(menu!=NULL)
+//			menu->keyUp(vkey);
+//	}
+//}
+//void MenuManager::scrollUpdate(float rotations)
+//{
+//	if(menu!=NULL)
+//		menu->scroll(rotations);
+//}
+void MenuManager::inputCallback(Input::callBack* callback)
 {
-	static bool lLeft=left;
-	static bool lRight=right;
-	static int lX=x;
-	static int lY=y;
-
-	if(menu == NULL) return;
-
-	if(left && !lLeft) menu->mouseL(true,x,y);
-	if(!left && lLeft) menu->mouseL(false,x,y);
-	if(right && !lRight) menu->mouseR(true,x,y);
-	if(!right && lRight) menu->mouseR(false,x,y);
-
-	lLeft=left;
-	lRight=right;
-	lX=x;
-	lY=y;
-}
-void MenuManager::keyUpdate(bool down, int vkey)
-{
-	if(down)
-	{
-		if(menu!=NULL)
-			menu->keyDown(vkey);
+	if(callback->type == KEY_STROKE){
+		Input::keyStroke* call = (Input::keyStroke*)callback;
+		if(!call->up && menu!=NULL)
+			menu->keyDown(call->vkey);
+		if(call->up && menu!=NULL)
+			menu->keyUp(call->vkey);
 	}
-	else
-	{
+	else if(callback->type == MOUSE_CLICK){
+		Input::mouseClick* call = (Input::mouseClick*)callback;
+		if(call->button == LEFT_BUTTON && menu!=NULL)
+			menu->mouseL(call->down,call->x,call->y);
+		else if(call->button == MIDDLE_BUTTON && menu!=NULL)
+			menu->mouseC(call->down,call->x,call->y);
+		else if(call->button == RIGHT_BUTTON && menu!=NULL)
+			menu->mouseR(call->down,call->x,call->y);
+
+	}
+	else if(callback->type == MOUSE_SCROLL){
+		Input::mouseScroll* call = (Input::mouseScroll*)callback;
 		if(menu!=NULL)
-			menu->keyUp(vkey);
+			menu->scroll(call->rotations);
 	}
 }
-
 bool menuChooseFile::init()
 {
 	return true;
@@ -253,7 +282,7 @@ bool menuLevelEditor::init()
 	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),Color(0,0.7,0),Color(0,1,0),0);
 	addShader("media/terrain.frag");
 	addShader("media/snow.frag");
-
+	addShader("media/grass.frag");
 	//zones
 
 	//settings
@@ -508,6 +537,15 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		bExit->mouseUpL(x,y);
 	}
 
+}
+void menuLevelEditor::scroll(float rotations)
+{
+	((mapBuilder*)mode)->zoom(rotations);
+}
+void menuLevelEditor::mouseC(bool down, int x, int y)
+{
+	if(!down)
+		((mapBuilder*)mode)->trackBallUpdate(x,y);
 }
 void menuLevelEditor::addShader(string filename)
 {

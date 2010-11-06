@@ -636,39 +636,49 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		}
 
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
-		{
-			if((lParam & 0x40000000)==0)
-				input->down(wParam);				// If So, Mark It As TRUE
-			menuManager.keyUpdate(true,wParam);
-			return 0;								// Jump Back
-		}
-
+		//{
+		//	
+		//	if((lParam & 0x40000000)==0)
+		//	{
+		//		menuManager.keyUpdate(true,wParam);
+		//		input->down(wParam);				// If So, Mark It As TRUE
+		//	}
+		//	return 0;								// Jump Back
+		//}
 		case WM_KEYUP:								// Has A Key Been Released?
-		{
-			input->up(wParam);						// If So, Mark It As FALSE
-			menuManager.keyUpdate(false,wParam);
-			return 0;								// Jump Back
-		}
+		//{
+		//	menuManager.keyUpdate(false,wParam);
+		//	input->up(wParam);						// If So, Mark It As FALSE
+		//	return 0;								// Jump Back
+		//}
 		//case WM_MOUSEMOVE:
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 		case WM_LBUTTONUP:
 		case WM_RBUTTONUP:
-		{
-			// Retrieve mouse screen position
-			int x=(short)LOWORD(lParam);
-			int y=(short)HIWORD(lParam);
-
-			// Check to see if the left button is held down:
-			bool leftButtonDown=(wParam & MK_LBUTTON) != 0;
-
-			// Check if right button down:
-			bool rightButtonDown=(wParam & MK_RBUTTON) != 0;
-			//if(GUI != NULL)
-			//	GUI->mouseUpdate(leftButtonDown,rightButtonDown,x,y);
-			menuManager.mouseUpdate(leftButtonDown,rightButtonDown,x,y);
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:							//{
+		//	// Retrieve mouse screen position
+		//	int x=(short)LOWORD(lParam);
+		//	int y=(short)HIWORD(lParam);
+		//
+		//	// Check to see if the left button is held down:
+		//	bool leftButtonDown=(wParam & MK_LBUTTON) != 0;
+		//
+		//	// Check if right button down:
+		//	bool rightButtonDown=(wParam & MK_RBUTTON) != 0;
+		//	//if(GUI != NULL)
+		//	//	GUI->mouseUpdate(leftButtonDown,rightButtonDown,x,y);
+		//	menuManager.mouseUpdate(leftButtonDown,rightButtonDown,x,y);
+		//	return 0;
+		//}
+		case WM_MOUSEWHEEL:							//float rotations = float(GET_WHEEL_DELTA_WPARAM(wParam))/120.0;
+		//menuManager.scrollUpdate(rotations);
+			input->windowsInput(uMsg,wParam,lParam);
 			return 0;
-		}
+
+		case WM_ERASEBKGND:								// Check To See If Windows Is Trying To Erase The Background
+			return 1;								// Return 0 (Prevents Flickering While Resizing A Window)
 		case WM_SIZE:								// Resize The OpenGL Window
 		{
 			resize.lock();
@@ -678,9 +688,6 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			resize.unlock();
 			return 0;								// Jump Back
 		}
-		case WM_ERASEBKGND:								// Check To See If Windows Is Trying To Erase The Background
-			return 1;								// Return 0 (Prevents Flickering While Resizing A Window)
-
 	}
 
 	// Pass All Unhandled Messages To DefWindowProc

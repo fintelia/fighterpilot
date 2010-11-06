@@ -632,7 +632,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.tga");
 	if(callNum==n++)	registerAsset("key",				"media/key.tga");
 	if(callNum==n++)	registerAsset("letters",			"media/letters.tga");
-	//if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
+	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
 	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.tga");
 	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
 

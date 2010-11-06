@@ -49,13 +49,18 @@ public:
 		mutable float	minHeight,
 						maxHeight;
 		int				shader;
+
+		int				groundTex;
+		mutable unsigned char *groundValues;//needed only if dynamic (R,G,B) = normal and (A) = height
+
 		void setVBO() const;
+		void setTex() const;
 		void init(float* heights);
 
 		bool dynamic;
 		mutable bool VBOvalid;
 		mutable bool minMaxValid;
-
+		mutable bool texValid;
 	public:
 		heightmap(int Size, bool Dynamic=false);
 		heightmap(int Size, float* heights, bool Dynamic=false);
@@ -64,7 +69,8 @@ public:
 		void setShader(int s){shader=s;}
 
 		float getHeight(unsigned int x, unsigned int z) const;
-		void draw(int shader=0) const;
+		Vec3f getNormal(unsigned int x, unsigned int z) const;
+		//void draw(int shader=0) const;
 		unsigned int getSize() const;
 		void setMinMaxHeights() const;
 
@@ -87,7 +93,6 @@ public:
 		textureType seaFloor;
 		bool water;
 	};
-
 protected:
 	heightmap*		mGround;
 	waterPlane		mWater;
@@ -95,7 +100,7 @@ protected:
 	levelSettings	mSettings;
 	int				groundShader;
 
-	Level(): mGround(NULL), groundShader(0){}
+	Level(): mGround(NULL), groundShader(0) {}
 public:
 	Level(LevelFile file);
 	Level(string BMP);
