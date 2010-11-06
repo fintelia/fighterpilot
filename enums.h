@@ -4,30 +4,42 @@
 
 
 enum menuType{
-	MENU			=0x100,
-	MAIN_MENU		=0x101,
-	CLOSED			=0x102,
-	SET_CONTROLS	=0x104,
-	START			=0x108,
-	CHOOSE_MODE		=0x110
+	MENU			=0x0100,
+	MAIN_MENU		=0x0101,
+	CLOSED			=0x0102,
+	SET_CONTROLS	=0x0104,
+	START			=0x0108,
+	CHOOSE_MODE		=0x0110
 };
 enum modeType{
-	MODE			=0x200,
-	LOADING 		=0x201,
-	BLANK_MODE		=0x202,
-	TWO_PLAYER_VS	=0x204,
-	ONE_PLAYER		=0x208,
-	MAP_BUILDER		=0x210
+	MODE			=0x0200,
+	LOADING 		=0x0201,
+	BLANK_MODE		=0x0202,
+	TWO_PLAYER_VS	=0x0204,
+	ONE_PLAYER		=0x0208,
+	MAP_BUILDER		=0x0210
 };
 
 enum planeType{
-	F12				=0x401,
-	F16				=0x402,
-	F18				=0x404,
-	F22				=0x408,
-	UAV				=0x410,
-	B2				=0x420
+	F12				=0x0401,
+	F16				=0x0402,
+	F18				=0x0404,
+	F22				=0x0408,
+	UAV				=0x0410,
+	B2				=0x0420
 };
+
+enum inputCallbackType{
+	KEY_STROKE		=0x0801,
+	MOUSE_CLICK		=0x0802,
+	MOUSE_SCROLL	=0x0804
+};
+enum mouseButton{
+	LEFT_BUTTON		=0x1001,
+	MIDDLE_BUTTON	=0x1002,
+	RIGHT_BUTTON	=0x1004
+};
+
 extern planeType defaultPlane;
 extern map<planeType,int> planeModels;
 

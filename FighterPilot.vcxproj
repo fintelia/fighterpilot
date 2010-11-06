@@ -120,6 +120,7 @@
     <ClCompile Include="gridFloat.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="imageloader.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="load_save.cpp" />
     <ClCompile Include="main.cpp" />

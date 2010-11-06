@@ -49,7 +49,7 @@ const int GAMEPAD4_OFFSET	= 316;
 
 class xinput_input: public standard_input
 {
-private:
+protected:
 	bool joy[14][4];
 	int axes[6 * 4];
 	XINPUT_GAMEPAD gamepads[MAX_CONTROLLERS];

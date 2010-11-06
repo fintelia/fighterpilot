@@ -122,6 +122,7 @@ public:
 	virtual void mouseR(bool down, int x, int y){}
 	virtual void keyDown(int vkey){}
 	virtual void keyUp(int vkey){}
+	virtual void scroll(float rotations){}
 
 	bool isDone(){return done;}
 protected:
@@ -167,12 +168,16 @@ public:
 	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
-
+	///////////////////////////////////////////
 	virtual void mouseL(bool down, int x, int y){if(popup!=NULL)popup->mouseL(down,x,y);}
 	virtual void mouseR(bool down, int x, int y){if(popup!=NULL)popup->mouseR(down,x,y);}
+	virtual void mouseC(bool down, int x, int y){}
+
 	virtual void keyDown(int vkey){if(popup!=NULL)popup->keyDown(vkey);}
 	virtual void keyUp(int vkey){if(popup!=NULL)popup->keyUp(vkey);}
 
+	virtual void scroll(float rotations){}
+	///////////////////////////////////////////
 	bool popupActive(){return popup != NULL;}
 protected:
 	static bool loadBackground();
@@ -193,7 +198,8 @@ public:
 	void render();
 
 	void mouseL(bool down, int x, int y);
-
+	void scroll(float rotations);
+	void mouseC(bool down, int x, int y);
 	Tab getTab();
 	int getShader();//gets  
 protected:
@@ -249,8 +255,12 @@ public:
 	int update();
 	void render();
 
-	void mouseUpdate(bool left,bool right, int x, int y);
-	void keyUpdate(bool down, int vkey);
+	//void mouseUpdate(bool left,bool right, int x, int y);
+	//void keyUpdate(bool down, int vkey);
+	//void scrollUpdate(float rotations);
+
+	void inputCallback(Input::callBack* callback);
+
 	menuScreen* getMenu(){return menu;}
 private:
 	typedef menuScreen *(*menuCreateFunc)();

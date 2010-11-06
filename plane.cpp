@@ -82,8 +82,6 @@ void planeBase::updateAll()
 		}
 		else
 		{
-
-			float r;
 			Vec3f lastPos=pos;
 			Quat4f lastRotation=rotation;
 			Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;

@@ -35,6 +35,9 @@ public:
 	T distance(Vector2 v);
 	T distanceSquared(Vector2 v);
 };
+typedef Vector2<float> Vec2f;
+typedef Vector2<double>	Vec2d;
+
 template <class T>
 class Vector3
 {

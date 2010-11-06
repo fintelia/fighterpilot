@@ -1,5 +1,5 @@
 
-const int TOTAL_LEVELS=3;
+const int TOTAL_LEVELS=4;
 
 class onePlayer: public dogFight
 {
@@ -65,34 +65,44 @@ public:
 		drawScene2(0);
 		
 		
-		//if(levelup)
-		//{
-		//	viewOrtho(sw,sh/2-2); //set view to ortho - start 2d
-		//	glDisable(GL_DEPTH_TEST);
-		//	glEnable(GL_BLEND);
-		//	glDisable(GL_LIGHTING);
-		//	glColor4f(1,1,1,1);
-		//	
-		//	glPushMatrix();
-		//		glTranslatef(sw/2,sh/2,0);
-		//		dataManager.bind("next level");
-		//		float v=(1000-countdown)/10;
-		//		glBegin(GL_QUADS);
-		//			glVertex2f(v,v*0.75);
-		//			glVertex2f(v,-v*0.75);
-		//			glVertex2f(-v,-v*0.75);
-		//			glVertex2f(-v,v*0.75);
-		//		glEnd();
-		//	glPopMatrix();
+		if(levelup)
+		{
+			viewOrtho(sw,sh); //set view to ortho - start 2d
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glDisable(GL_LIGHTING);
+			glColor4f(1,1,1,1);
+			
+			glPushMatrix();
+				dataManager.bind("next level");
+				if(countdown > 250)
+				{
+					float v=(750-(countdown-250))/750;
+					glBegin(GL_QUADS);
+						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
+						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh);
+						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh);
+						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
+					glEnd();
+				}
+				else
+				{
+					float v=countdown/250;
+					glBegin(GL_QUADS);
+						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
+						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh);
+						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh);
+						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
+					glEnd();
+				}
+			glPopMatrix();
 
-		//	glDisable(GL_BLEND);
-		//	glBindTexture(GL_TEXTURE_2D, 0);
-		//	glEnable(GL_DEPTH_TEST);
-		//	glEnable(GL_LIGHTING);
-		//	viewPerspective();//end 2d
-		//	char* i=(char*)gluErrorString(glGetError());
-		//	i=i;
-		//}
+			glDisable(GL_BLEND);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_LIGHTING);
+			viewPerspective();//end 2d
+		}
 	}
 
 	int update(float value) {
@@ -130,10 +140,10 @@ public:
 		{
 			newLevel(levelNum);
 		}
-		if(100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED && levelNum<TOTAL_LEVELS && !levelup)
-		{		
+		if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
+		{
 			levelup=true;//newLevel(level+1);
-			countdown=1500;
+			countdown=1000;
 		}
 
 		radarAng+=45.0*value/1000;
