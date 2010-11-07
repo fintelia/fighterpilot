@@ -48,9 +48,12 @@ int DataManager::loadShader(string vert, string frag)
 	glAttachShader(p,v);
 
 	glLinkProgram(p);
-	glUseProgram(0);
-	if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-	if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+	glUseProgram(0); 
+
+	if(lv != 0)		messageBox(string(vert)+": "+string(cv));
+	if(lf != 0) 	messageBox(string(frag)+": "+string(cf));
+	//if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+	//if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
 	return p;
 }
 int DataManager::loadTerrainShader(string frag)
@@ -68,7 +71,11 @@ int DataManager::loadTerrainShader(string frag)
 		int lv;
 		char* cv=(char*)malloc(512); memset(cv,0,512);
 		glGetShaderInfoLog(v,512,&lv,cv);
-		if(lv != 0) MessageBoxA(NULL,(string("media/terrain.vert")+"f: "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+		if(lv != 0){
+			//MessageBoxA(NULL,(string("media/terrain.vert")+"f: "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+			messageBox(string("media/terrain.vert")+"f: "+string(cv));
+			return 0;
+		}
 	}
 
 	GLuint	f = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB),
@@ -92,7 +99,11 @@ int DataManager::loadTerrainShader(string frag)
 	}
 	glUseProgram(0);
 
-	if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+	if(lf != 0){
+		//MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+		messageBox(string(frag)+": "+string(cf));
+		return 0;
+	}
 	return p;
 }
 
@@ -319,7 +330,7 @@ int DataManager::loadOBJ(string filename)
 				file=mtlFile.substr(0,i+1);
 			if(!fin.is_open())
 			{
-				MessageBox(NULL,L"mtl file could not be loaded",L"error",0);
+				messageBox("mtl file could not be loaded");
 				exit(0);
 			}
 			while (!fin.eof())
@@ -667,7 +678,7 @@ bool DataManager::registerAssets()
 }
 void DataManager::registerAsset(string name, string filename)
 {//shaders must be registered by hand right now
-	if(assets.find(name) != assets.end()) MessageBoxA(NULL,(LPCSTR)(string("name clash: ") + name).c_str(),"error",0);
+	if(assets.find(name) != assets.end()) messageBox(string("name clash: ") + name);
 	string ext=filesystem::extension(filename);
 	if(ext.compare(".tga") == 0)		registerTexture(name,loadTGA(filename));
 	else if(ext.compare(".mmp") == 0)	registerTexture(name,loadMMP(filename));

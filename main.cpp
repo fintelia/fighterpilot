@@ -215,13 +215,12 @@ int update(float v)
 	lastValue=value;
 
 	input->update();
-	int i=0;
-	int l = Cmenu->update(v);
+	menuManager.update();
+
+	int i = Cmenu->update(v);
 	if(!gameTime.isPaused())
 		i = mode->update(v);
-	else
-		i=l;
-	
+
 	modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
 	menuType nMenu=Cmenu->newMenu;
 	if(nMode != (modeType)0)
@@ -243,7 +242,7 @@ int update(float v)
 		else if(nMenu==START)			Cmenu=new m_start;
 		else if(nMenu==CHOOSE_MODE)		Cmenu=new m_chooseMode;
 	}
-	menuManager.update();
+
 	return i;
 }
 //GLvoid BuildFont()								// Build Our Bitmap Font

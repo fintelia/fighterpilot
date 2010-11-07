@@ -42,19 +42,47 @@ bool MenuManager::init()
 }
 void MenuManager::render()
 {
+	mDrawCursor = false;
 	if(menu != NULL)
-	menu->render();
+		menu->render();
+	for(vector<menuPopup*>::iterator i = popups.begin(); i!=popups.end();i++)
+		(*i)->render();
+	if(mDrawCursor)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		glColor3f(0,0,0);
+		glBegin(GL_TRIANGLES);
+			glVertex2f((float)cursorPos.x,(float)cursorPos.y);
+			glVertex2f((float)cursorPos.x,(float)cursorPos.y+20);
+			glVertex2f((float)cursorPos.x+10,(float)cursorPos.y+16);
+		glEnd();
+		glDisable(GL_BLEND);
+	}
 }
 int MenuManager::update()
 {
-	if(menu != NULL)
-	menu->update();
+	if(!popups.empty())
+	{
+		popups.back()->update();
+		if(popups.back()->isDone())
+		{
+			if(popups.back()->callback != NULL)
+				(*popups.back()->callback)(popups.back());
+			delete popups.back();
+			popups.erase(popups.end()-1);
+		}
+	}
+	else if(menu != NULL)
+		menu->update();
 	return 0;
 }
 void MenuManager::shutdown()
 {
+	for(vector<menuPopup*>::iterator i = popups.begin(); i!=popups.end();i++)
+		delete (*i);
 	if(menu != NULL)
-	delete menu;
+		delete menu;
 }
 bool MenuManager::setMenu(string menuName)
 {
@@ -118,24 +146,46 @@ void MenuManager::inputCallback(Input::callBack* callback)
 {
 	if(callback->type == KEY_STROKE){
 		Input::keyStroke* call = (Input::keyStroke*)callback;
-		if(!call->up && menu!=NULL)
-			menu->keyDown(call->vkey);
-		if(call->up && menu!=NULL)
-			menu->keyUp(call->vkey);
+		if(!popups.empty())
+		{
+			if(!call->up)
+				popups.back()->keyDown(call->vkey);
+			else
+				popups.back()->keyUp(call->vkey);
+		}
+		else if(menu!=NULL)
+		{
+			if(!call->up)
+				menu->keyDown(call->vkey);
+			else
+				menu->keyUp(call->vkey);
+		}
 	}
 	else if(callback->type == MOUSE_CLICK){
 		Input::mouseClick* call = (Input::mouseClick*)callback;
-		if(call->button == LEFT_BUTTON && menu!=NULL)
-			menu->mouseL(call->down,call->x,call->y);
-		else if(call->button == MIDDLE_BUTTON && menu!=NULL)
-			menu->mouseC(call->down,call->x,call->y);
-		else if(call->button == RIGHT_BUTTON && menu!=NULL)
-			menu->mouseR(call->down,call->x,call->y);
+		if(!popups.empty())
+		{
+			if(call->button == LEFT_BUTTON)
+				popups.back()->mouseL(call->down,call->x,call->y);
+			else if(call->button == RIGHT_BUTTON)
+				popups.back()->mouseR(call->down,call->x,call->y);
+		}
+		else if(menu!=NULL)
+		{
+			if(call->button == LEFT_BUTTON)
+				menu->mouseL(call->down,call->x,call->y);
+			else if(call->button == MIDDLE_BUTTON)
+				menu->mouseC(call->down,call->x,call->y);
+			else if(call->button == RIGHT_BUTTON)
+				menu->mouseR(call->down,call->x,call->y);
+		}
 
 	}
 	else if(callback->type == MOUSE_SCROLL){
 		Input::mouseScroll* call = (Input::mouseScroll*)callback;
-		if(menu!=NULL)
+		if(!popups.empty())
+			popups.back()->scroll(call->rotations);
+		else if(menu!=NULL)
 			menu->scroll(call->rotations);
 	}
 }
@@ -226,6 +276,7 @@ void menuChooseFile::render()
 	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	glPopMatrix();
 	glDisable(GL_BLEND);
+	menuManager.drawCursor();
 }
 void menuChooseFile::keyDown(int vkey)
 {
@@ -255,6 +306,78 @@ void menuChooseFile::mouseL(bool down, int x, int y)
 	{
 		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
 		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
+	}
+}
+
+bool menuMessageBox::init(string t)
+{
+	return init(t,vector<string>(1,"OK"));
+}
+bool menuMessageBox::init(string t, vector<string> options)
+{
+	width = max(textManager->getTextWidth(t)+20,options.size()*200);
+
+	height = textManager->getTextHeight(t)+110;
+	x = (sw-width)/2;
+	y = (sh-height)/2;
+	if(x < 5) x = 5;
+
+	label = new menuLabel;
+	label->init((width-textManager->getTextWidth(t))/2,20,t);
+
+	int xv = (width - options.size()*200)/2+25;
+	for(vector<string>::iterator i = options.begin();i !=options.end(); i++)
+	{
+		menuButton* b = new menuButton;
+		b->init(xv,textManager->getTextHeight(t)+40,150,50,*i,Color(0.3,0.3,0.3));
+		buttons.push_back(b);
+		xv += 200;
+	}
+	value=-1;
+	return true;
+}
+void menuMessageBox::render()
+{
+	glColor3f(0.5,0.5,0.5);
+	glBegin(GL_QUADS);
+		glVertex2f(x,y);
+		glVertex2f(x,y+height);
+		glVertex2f(x+width,y+height);
+		glVertex2f(x+width,y);
+	glEnd();
+	glEnable(GL_BLEND);
+	glPushMatrix();
+	glTranslatef(x,y,0);
+	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+	{
+		(*i)->render();
+	}
+	if(label != NULL) label->render();
+	glPopMatrix();
+	glDisable(GL_BLEND);
+	menuManager.drawCursor();
+}
+void menuMessageBox::mouseL(bool down, int X, int Y)
+{
+	if(down)
+	{
+		for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+		{
+			(*i)->mouseDownL(X-x,Y-y);
+		}
+	}
+	else
+	{
+		int n=0;
+		for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+		{
+			(*i)->mouseUpL(X-x,Y-y);
+			if((*i)->getChanged() && value != n)
+			{
+				value=n;
+				done=true;
+			}
+		}
 	}
 }
 
@@ -337,36 +460,28 @@ bool menuLevelEditor::init()
 	bTabs = new menuToggle();			bTabs->init(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),0);
 	return true;
 }
+void menuLevelEditor::operator() (menuPopup* p)
+{
+	if(awaitingShaderFile)
+	{
+		string f=((menuChooseFile*)p)->getFile();
+		addShader(f);
+		awaitingShaderFile=false;
+	}
+	else if(awaitingMapFile)
+	{
+		string f=((menuChooseFile*)p)->getFile();
+		((mapBuilder*)mode)->fromFile(f);
+		awaitingMapFile=false;
+	}
+	//else if(...)
+	//   .
+	//   .
+	//   .
+}
 int menuLevelEditor::update()
 {
-	static bool awaitingShaderFile = false;
-	static bool awaitingMapFile = false;
-	if(popup != NULL)
-	{
-		popup->update();
-		if(popup->isDone())
-		{
-			if(awaitingShaderFile)
-			{
-				string f=((menuChooseFile*)popup)->getFile();
-				addShader(f);
-				awaitingShaderFile=false;
-			}
-			else if(awaitingMapFile)
-			{
-				string f=((menuChooseFile*)popup)->getFile();
-				((mapBuilder*)mode)->fromFile(f);
-				awaitingMapFile=false;
-			}
-			//else if(...)
-			//   .
-			//   .
-			//   .
-			popup = NULL;
-		}
-		
-	}
-	else if(bExit->getChanged())
+	if(bExit->getChanged())
 	{
 		delete mode;
 		mode=new blankMode;
@@ -390,15 +505,19 @@ int menuLevelEditor::update()
 		{
 			awaitingMapFile = true;
 			bFromFile->resetChanged();
-			popup = new menuChooseFile;
-			((menuChooseFile*)popup)->init(".bmp");
+			menuPopup* p = new menuChooseFile;
+			p->callback = (functor<void,menuPopup*>*)this;
+			((menuChooseFile*)p)->init(".bmp");
+			menuManager.setPopup(p);
 		}
 		else if(bNewShader->getChanged())
 		{
 			awaitingShaderFile=true;
 			bNewShader->resetChanged();
-			popup = new menuChooseFile;
-			((menuChooseFile*)popup)->init(".frag");
+			menuPopup* p = new menuChooseFile;
+			p->callback = (functor<void,menuPopup*>*)this;
+			((menuChooseFile*)p)->init(".frag");
+			menuManager.setPopup(p);
 		}
 		else
 		{
@@ -466,25 +585,11 @@ void menuLevelEditor::render()
 	}
 	bTabs->render();
 	bExit->render();
-
-	if(popup != NULL)
-		popup->render();
-
-	POINT cursorPos;
-    GetCursorPos(&cursorPos);
-	glColor3f(0,0,0);
-	glBegin(GL_TRIANGLES);
-		glVertex2f((float)cursorPos.x,(float)cursorPos.y);
-		glVertex2f((float)cursorPos.x,(float)cursorPos.y+20);
-		glVertex2f((float)cursorPos.x+10,(float)cursorPos.y+16);
-	glEnd();
-	glDisable(GL_BLEND);
+	menuManager.drawCursor();
 }
 void menuLevelEditor::mouseL(bool down, int x, int y)
 {
-	if(popup!=NULL)
-		popup->mouseL(down,x,y);
-	else if(down)
+	if(down)
 	{
 		if(getTab() == TERRAIN)
 		{
@@ -759,4 +864,10 @@ void menuToggle::updateColors()
 		if(value==n)	(*i)->setElementColor(clicked);
 		else			(*i)->setElementColor(unclicked);
 	}
+}
+void messageBox(string text)
+{
+	menuMessageBox* m = new menuMessageBox;
+	m->init(text);
+	menuManager.setPopup(m);
 }
