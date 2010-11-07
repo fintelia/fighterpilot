@@ -6,7 +6,7 @@ public:
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
-	menuElement(elementType t): type(t), x(0), y(0), active(true), view(true) {}
+	menuElement(elementType t): type(t), x(0), y(0), active(true), view(true), changed(false) {}
 	virtual ~menuElement(){}
 
 	virtual void render()=0;
@@ -15,7 +15,6 @@ public:
 	virtual void setElementXY(int X, int Y)	{x=X; y=Y;}
 	virtual void setElementText(string t) {text=t;}
 	virtual void setElementColor(Color c) {color=c;}
-	int getType() {return type;}
 
 	//state
 	void activateElement()	{active = true;}
@@ -27,6 +26,11 @@ public:
 	bool getElementView()	{return view;}
 
 	string getText()		{return text;}
+	
+	//changed
+	bool getChanged()		{return changed;}
+	void resetChanged()		{changed = false;}
+
 	//events
 	virtual void mouseDownR(int X, int Y){}
 	virtual void mouseDownL(int X, int Y){}
@@ -34,8 +38,9 @@ public:
 	virtual void mouseUpL(int X, int Y){}
 	virtual void keyDown(int vkey){}
 	virtual void keyUp(int vkey){}
+
+	const elementType type;
 protected:
-	elementType type;
 	int x;
 	int y;
 	int width;
@@ -45,6 +50,7 @@ protected:
 
 	bool active;
 	bool view;
+	bool changed;
 };
 
 class menuLabel: public menuElement
@@ -62,7 +68,7 @@ class menuButton: public menuElement
 {
 public:
 
-	menuButton(): menuElement(BUTTON), pressed(false){}
+	menuButton(): menuElement(BUTTON){}
 	virtual ~menuButton(){}
 
 	void init(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0));
@@ -71,8 +77,8 @@ public:
 	void mouseDownL(int X, int Y);
 	void mouseUpL(int X, int Y);
 
-	bool getPressed(){return pressed;}
-	void reset(){pressed=false;}
+	//bool getPressed(){return pressed;}
+	//void reset(){pressed=false;}
 
 	void setElementText(string t);
 	void setElementXYWH(int X, int Y, int Width, int Height);
@@ -82,7 +88,7 @@ protected:
 	void click();
 	void unclick();
 
-	bool pressed;
+	//bool pressed;
 	bool clicking;
 };
 class menuToggle: public menuElement
@@ -102,8 +108,11 @@ public:
 	void mouseUpL(int X, int Y);
 
 	int getValue(){return value;}
+	void setValue(int v){value = clamp(v,0,buttons.size()-1);updateColors();}
 	unsigned int getSize(){return buttons.size();}
 protected:
+	void updateColors();
+
 	vector<menuButton*> buttons;
 	menuLabel* label;
 	int value;

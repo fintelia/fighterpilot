@@ -190,7 +190,7 @@ int menuChooseFile::update()
 {
 	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
 	{
-		if((*i)->getPressed())
+		if((*i)->getChanged())
 		{
 			directory/=(*i)->getText();
 			refreshView();
@@ -199,7 +199,7 @@ int menuChooseFile::update()
 	}
 	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
 	{
-		if((*i)->getPressed())
+		if((*i)->getChanged())
 		{
 			file=(*i)->getText();
 			done=true;
@@ -318,7 +318,6 @@ bool menuLevelEditor::init()
 	l=new menuLabel;
 	v.push_back(new menuButton());		v[0]->init(120,170,100,30,"water");
 	v.push_back(new menuButton());		v[1]->init(225,170,100,30,"land");
-	v.push_back(new menuButton());		v[2]->init(330,170,100,30,"snow");
 	bMapType = new menuToggle();		bMapType->init(v,Color(0,0,1),Color(0.3,0.3,0.5));
 	l->setElementText("map type:");		l->setElementXY(5,170);
 	bMapType->setLabel(l);
@@ -367,7 +366,7 @@ int menuLevelEditor::update()
 		}
 		
 	}
-	else if(bExit->getPressed())
+	else if(bExit->getChanged())
 	{
 		delete mode;
 		mode=new blankMode;
@@ -377,27 +376,27 @@ int menuLevelEditor::update()
 	}
 	else if(getTab() == TERRAIN)
 	{
-		if(bFaultLine->getPressed())
+		if(bFaultLine->getChanged())
 		{
 			((mapBuilder*)mode)->faultLine();
-			bFaultLine->reset();
+			bFaultLine->resetChanged();
 		}
-		else if(bDiamondSquare->getPressed())
+		else if(bDiamondSquare->getChanged())
 		{
 			((mapBuilder*)mode)->diamondSquare(0.9);
-			bDiamondSquare->reset();
+			bDiamondSquare->resetChanged();
 		}
-		else if(bFromFile->getPressed())
+		else if(bFromFile->getChanged())
 		{
 			awaitingMapFile = true;
-			bFromFile->reset();
+			bFromFile->resetChanged();
 			popup = new menuChooseFile;
 			((menuChooseFile*)popup)->init(".bmp");
 		}
-		else if(bNewShader->getPressed())
+		else if(bNewShader->getChanged())
 		{
 			awaitingShaderFile=true;
-			bNewShader->reset();
+			bNewShader->resetChanged();
 			popup = new menuChooseFile;
 			((menuChooseFile*)popup)->init(".frag");
 		}
@@ -494,6 +493,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 			bFaultLine->mouseDownL(x,y);
 			bShaders->mouseDownL(x,y);
 			bFromFile->mouseDownL(x,y);
+
 		}
 		else if(getTab() == ZONES)
 		{
@@ -520,6 +520,13 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 			bShaders->mouseUpL(x,y);
 			bTabs->mouseUpL(x,y);
 			bFromFile->mouseUpL(x,y);
+			if(bShaders->getChanged())
+			{
+				bShaders->resetChanged();
+				if(bShaders->getValue() == 0)		bMapType->setValue(0);
+				else if(bShaders->getValue() == 1)	bMapType->setValue(1);
+				else if(bShaders->getValue() == 2)	bMapType->setValue(0);
+			}
 		}
 		else if(getTab() == ZONES)
 		{
@@ -589,10 +596,11 @@ void menuInGame::keyDown(int vkey)
 	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME)
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME || vkey==0x31)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
+		input->up(0x31);
 		gameTime.unpause();
 		menuManager.setMenu("");
 	}
@@ -668,34 +676,12 @@ void menuButton::render()
 void menuButton::mouseDownL(int X, int Y)
 {
 	if(x < X && y < Y && x+width > X && y+height > Y)
-	{
-		pressed = false;
 		clicking = true;
-	}
-	else 
-	{
-		unclick();
-	}
 }
 void menuButton::mouseUpL(int X, int Y)
 {
 	if(clicking && x < X && y < Y && x+width > X && y+height > Y)
-	{
-		click();
-	}
-	else 
-	{
-		unclick();
-	}
-}
-void menuButton::click()
-{
-	pressed = true;
-	clicking = false;
-}
-void menuButton::unclick()
-{
-	pressed = false;
+		changed = true;
 	clicking = false;
 }
 void menuLabel::render()
@@ -755,17 +741,22 @@ void menuToggle::mouseUpL(int X, int Y)
 	int n=0;
 	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
-		(*i)->reset();
+		(*i)->resetChanged();
 		(*i)->mouseUpL(X,Y);
-		if((*i)->getPressed())
+		if((*i)->getChanged() && value != n)
+		{
 			value=n;
+			changed=true;
+		}
 	}
-	n=0;
+	updateColors();
+}
+void menuToggle::updateColors()
+{
+	int n=0;
 	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
-		if(value==n)
-			(*i)->setElementColor(clicked);
-		else
-			(*i)->setElementColor(unclicked);
+		if(value==n)	(*i)->setElementColor(clicked);
+		else			(*i)->setElementColor(unclicked);
 	}
 }
