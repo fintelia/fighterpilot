@@ -215,26 +215,50 @@ public:
 	{
 		glDisable(GL_MULTISAMPLE);
 		int xpos=x;
+		int height=maxCharHeight(text);
+		int line=0;
 		for(string::iterator i = text.begin();i != text.end();i++)
 		{
 			if(*i>=32 && *i < 128)
 			{
-				renderCharacter(*i,xpos,y);
+				renderCharacter(*i,xpos,y+height*line);
 				xpos+=chars[*i].width;
+			}
+			else if(*i == '\n')
+			{
+				xpos = x;
+				line++;
 			}
 		}
 		glEnable(GL_MULTISAMPLE);
 	}
 	int getTextWidth(string text)
 	{
+		int totalWidth=0;
 		int width=0;
 		for(string::iterator i = text.begin();i != text.end();i++)
 		{
 			if(*i>=32 && *i < 128)	width+=chars[*i].width;
+			if(*i == '\n')
+			{
+				totalWidth = max(totalWidth,width);
+				width = 0;
+			}
 		}
-		return width;
+		return max(totalWidth,width);
 	}
 	int getTextHeight(string text)
+	{
+		int height=0;
+		int lines=1;
+		for(string::iterator i = text.begin();i != text.end();i++)
+		{
+			if(*i>=32 && *i < 128 && chars[*i].height>height)	height=chars[*i].height;
+			if(*i == '\n') lines++;
+		}
+		return lines*height;
+	}
+	int maxCharHeight(string text)
 	{
 		int height=0;
 		for(string::iterator i = text.begin();i != text.end();i++)

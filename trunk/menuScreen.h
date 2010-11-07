@@ -121,7 +121,7 @@ protected:
 class menuPopup
 {
 public:
-	menuPopup(): done(false){}
+	menuPopup(): done(false),callback(NULL){}
 	virtual ~menuPopup(){}
 
 	virtual int update()=0;
@@ -134,7 +134,9 @@ public:
 	virtual void scroll(float rotations){}
 
 	bool isDone(){return done;}
+	functor<void,menuPopup*>* callback;
 protected:
+	
 	bool done;
 };
 
@@ -168,30 +170,49 @@ protected:
 	vector<menuButton*> fileButtons;
 
 };
-
-class menuScreen
+class menuMessageBox: public menuPopup
 {
 public:
-	menuScreen(): popup(NULL){}
+	menuMessageBox():value(-1){}
+	~menuMessageBox(){}
+
+	bool init(string t);
+	bool init(string t, vector<string> buttons);
+	int update(){return 0;}
+	void render();
+
+	void mouseL(bool down, int x, int y);
+protected:
+	vector<menuButton*> buttons;
+	menuLabel* label;
+	int value;
+
+	int x, y, width, height;
+};
+class menuScreen: functor<void,menuPopup*>
+{
+public:
+	menuScreen(){}
 	virtual ~menuScreen(){}
 	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
 	///////////////////////////////////////////
-	virtual void mouseL(bool down, int x, int y){if(popup!=NULL)popup->mouseL(down,x,y);}
-	virtual void mouseR(bool down, int x, int y){if(popup!=NULL)popup->mouseR(down,x,y);}
+	virtual void mouseL(bool down, int x, int y){}
+	virtual void mouseR(bool down, int x, int y){}
 	virtual void mouseC(bool down, int x, int y){}
 
-	virtual void keyDown(int vkey){if(popup!=NULL)popup->keyDown(vkey);}
-	virtual void keyUp(int vkey){if(popup!=NULL)popup->keyUp(vkey);}
+	virtual void keyDown(int vkey){}
+	virtual void keyUp(int vkey){}
 
 	virtual void scroll(float rotations){}
 	///////////////////////////////////////////
-	bool popupActive(){return popup != NULL;}
+	virtual void operator() (menuPopup* p){}
+	//bool popupActive(){return popup != NULL;}
 protected:
 	static bool loadBackground();
 	static int backgroundImage;
-	menuPopup* popup;
+	//menuPopup* popup;
 
 };
 
@@ -200,7 +221,7 @@ class menuLevelEditor: public menuScreen
 public:
 	friend class mapBuilder;
 	enum Tab{NO_TAB, TERRAIN,ZONES,SETTINGS};
-	menuLevelEditor(){}
+	menuLevelEditor():awaitingShaderFile(false),awaitingMapFile(false){}
 	~menuLevelEditor(){}
 	bool init();
 	int update();
@@ -210,7 +231,8 @@ public:
 	void scroll(float rotations);
 	void mouseC(bool down, int x, int y);
 	Tab getTab();
-	int getShader();//gets  
+	int getShader();//gets
+	void operator() (menuPopup* p);
 protected:
 	//Tab currentTab;
 
@@ -233,6 +255,8 @@ protected:
 
 	menuToggle* bTabs;
 
+	bool awaitingShaderFile;
+	bool awaitingMapFile;
 };
 
 class menuInGame: public menuScreen
@@ -258,6 +282,7 @@ public:
 	}
 
 	bool setMenu(string menuName);
+	bool setPopup(menuPopup* p){if(p != NULL)popups.push_back(p);return p!=NULL;}
 
 	bool init();
 	void shutdown();
@@ -271,22 +296,29 @@ public:
 	void inputCallback(Input::callBack* callback);
 
 	menuScreen* getMenu(){return menu;}
+	menuPopup* getPopup(){return popups.empty() ? NULL : popups.back();}
+
+	void drawCursor(){mDrawCursor = true;}
 private:
 	typedef menuScreen *(*menuCreateFunc)();
 	//static MenuManager* pInstance;
-	MenuManager* popupMenu;
-	bool popupActive;
+	vector<menuPopup*> popups;
 	menuScreen* menu;
 
 	//vector<menuScreen*> menuTrail
 	//#define REGISTERMENU(a) registerMenu(#a, &CreateObject<a>);
 
-	MenuManager():popupMenu(NULL), popupActive(false), menu(NULL){}
+	MenuManager(): menu(NULL){}
 	~MenuManager();
-	map<string,menuCreateFunc> menuList;
 	void registerMenu(string menuName,menuCreateFunc menuFunc);
 	menuScreen* createMenu(string menuName);
 	void destroyMenu(menuScreen* menu);
+
+	map<string,menuCreateFunc> menuList;
+
+	bool mDrawCursor;
 };
 
 extern MenuManager& menuManager;
+
+void messageBox(string text);

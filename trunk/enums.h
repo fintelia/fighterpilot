@@ -90,3 +90,48 @@ extern char* errorString;
 	if(string(errorString).compare("no error") != 0)\
 		__debugbreak();								\
 }
+
+//struct polyType
+//{
+//	union{
+//		int i;
+//		long l;
+//		signed char c;
+//		unsigned int ui;
+//		unsigned long ul;
+//		unsigned char uc;
+//		float f;
+//		double d;
+//		bool b;
+//		string s;
+//		Vec2f f2;
+//		Vec3f f3;
+//		Quat4f f4;
+//		Vec2d d2;
+//		Vec3d d3;
+//		Quat4d d4;
+//		Angle a;
+//		void* vPtr;
+//	} value;
+//	enum{
+//		NONE		=0x00000,
+//		CHAR		=0x00001,
+//		INT			=0x00002,
+//		LONG		=0x00004,
+//		UCHAR		=0x00008,
+//		UINT		=0x00010,
+//		ULONG		=0x00020,
+//		FLOAT		=0x00040,
+//		DOUBLE		=0x00080,
+//		BOOLEAN		=0x00100,
+//		STRING		=0x00200,
+//		VEC2F		=0x00400,
+//		VEC3F		=0x00800,
+//		QUATF		=0x01000,
+//		VEC2D		=0x02000,
+//		VEC3D		=0x04000,
+//		QUAT4D		=0x08000,
+//		ANGLE		=0x10000,
+//		VOID_PTR	=0x20000
+//	} type;
+//}

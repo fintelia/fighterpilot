@@ -30,7 +30,11 @@ private:
 		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
 		rot = Quat4f(axis,ang) * rot;
 	}
-
+	void resetView()
+	{
+		rot = Quat4f(Vec3f(1,0,0),1.0);		
+		center = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+	}
 	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	{
 		int v=level->ground()->getSize();
@@ -152,8 +156,7 @@ private:
 				if(h<minHeight) minHeight=h;
 			}
 		}
-		rot = Quat4f(Vec3f(1,0,0),1.0);		
-		center = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+		resetView();
 	}
 	void faultLine()
 	{
@@ -197,8 +200,7 @@ private:
 			}
 		}
 		level->ground()->setMinMaxHeights();
-		rot = Quat4f(Vec3f(1,0,0),1.0);		
-		center = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+		resetView();
 	}
 	void fromFile(string filename)
 	{
@@ -217,8 +219,7 @@ private:
 			delete[] t;
 			delete image;
 		}
-		rot = Quat4f(Vec3f(1,0,0),1.0);		
-		center = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+		resetView();
 	}
 	vector<int> shaderButtons;
 	friend class menuLevelEditor;
@@ -316,7 +317,6 @@ public:
 		level->newGround(65);
 		faultLine();
 
-		rot = Quat4f(Vec3f(1,0,0),1.0);		
-		center = Vec3f(level->ground()->getSize()/2,0,level->ground()->getSize()/2)*size;
+		resetView();
 	}
 };
