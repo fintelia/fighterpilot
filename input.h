@@ -26,6 +26,7 @@ protected:
 	{
 		long x,y;
 		bool down;
+		mouseButtonState(): x(0), y(0), down(false){}
 	};
 
 public:

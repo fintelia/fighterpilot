@@ -289,6 +289,7 @@ public:
 		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
 
 		glEnable(GL_DEPTH_TEST);
+		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
 		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 			level->ground()->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 		level->render();

@@ -32,10 +32,10 @@ void Level::heightmap::setTex() const
 		for(z=0; z<size; z++)
 		{
 			n = getNormal(x,z);
-			if(x > 0)		n += getNormal(x-1,z) * 0.5;
-			if(x < size-1)	n += getNormal(x+1,z) * 0.5;
-			if(x > 0)		n += getNormal(x-1,z) * 0.5;
-			if(x < size-1)	n += getNormal(x+1,z) * 0.5;
+			//if(x > 0)		n += getNormal(x-1,z) * 0.5;
+			//if(x < size-1)	n += getNormal(x+1,z) * 0.5;
+			//if(x > 0)		n += getNormal(x-1,z) * 0.5;
+			//if(x < size-1)	n += getNormal(x+1,z) * 0.5;
 			if(n.magnitude() < 0.0001) n = Vec3f(0.0,1.0,0.0);
 			n = n.normalize();
 
@@ -46,9 +46,8 @@ void Level::heightmap::setTex() const
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, groundTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, 4 , size, size, 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glTexImage2D(GL_TEXTURE_2D, 0, 4 , size, size, 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
 	texValid = true;
 }
 void Level::heightmap::init(float* heights)
@@ -101,7 +100,13 @@ void Level::heightmap::init(float* heights)
 	VBOvalid = true;
 	/////////////////////////////////TEXTURES//////////////////////////////////
 	glGenTextures(1,(GLuint*)&groundTex);
-	groundValues = (unsigned char*)malloc(size*size*sizeof(char)*4);
+	groundValues = (unsigned char*)malloc(size*size*sizeof(unsigned char)*4);
+	memset(groundValues,0,size*size*sizeof(unsigned char)*4);
+	glBindTexture(GL_TEXTURE_2D, groundTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, 4 , size, size, 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	setTex();
 	if(!dynamic)
 	{
@@ -382,32 +387,42 @@ void Level::render()
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	float h = mSettings.water ? mWater.seaLevel : mGround->minHeight-20.0;
 
 	glDisable(GL_LIGHTING);
-	glColor3f(0.73,0.6,0.47);
-	glColor3f(0.4,0.27,0.13);
 	glBegin(GL_TRIANGLE_STRIP);
 	for(int i = 0; i < mGround->size-1; i++)
 	{
-		glColor3f(0.73,0.6,0.47);glVertex3f(i,mWater.seaLevel,0);
-		glColor3f(0.4,0.27,0.13);glVertex3f(i,max(mGround->vertices[i*mGround->size+0].y,mWater.seaLevel) ,0);
+		glColor3f(0.73,0.6,0.47);glVertex3f(i,h,0);
+		glColor3f(0.4,0.27,0.13);glVertex3f(i,max(mGround->vertices[i*mGround->size+0].y,h) ,0);
 	}
 	for(int i = 0; i < mGround->size-1; i++)
 	{
-		glColor3f(0.73,0.6,0.47);glVertex3f(mGround->size-1,mWater.seaLevel,i);
-		glColor3f(0.4,0.27,0.13);glVertex3f(mGround->size-1,max(mGround->vertices[(mGround->size-1)*mGround->size+i].y,mWater.seaLevel),i);
+		glColor3f(0.73,0.6,0.47);glVertex3f(mGround->size-1,h,i);
+		glColor3f(0.4,0.27,0.13);glVertex3f(mGround->size-1,max(mGround->vertices[(mGround->size-1)*mGround->size+i].y,h),i);
 	}
 	for(int i = mGround->size-1; i > 0; i--)
 	{
-		glColor3f(0.73,0.6,0.47);glVertex3f(i,mWater.seaLevel,mGround->size-1);
-		glColor3f(0.4,0.27,0.13);glVertex3f(i,max(mGround->vertices[i*mGround->size+mGround->size-1].y,mWater.seaLevel),mGround->size-1);
+		glColor3f(0.73,0.6,0.47);glVertex3f(i,h,mGround->size-1);
+		glColor3f(0.4,0.27,0.13);glVertex3f(i,max(mGround->vertices[i*mGround->size+mGround->size-1].y,h),mGround->size-1);
 	}
 	for(int i = mGround->size-1; i >= 0; i--)
 	{
-		glColor3f(0.73,0.6,0.47);glVertex3f(0,mWater.seaLevel,i);
-		glColor3f(0.4,0.27,0.13);glVertex3f(0,max(mGround->vertices[0*mGround->size+i].y,mWater.seaLevel),i);
+		glColor3f(0.73,0.6,0.47);glVertex3f(0,h,i);
+		glColor3f(0.4,0.27,0.13);glVertex3f(0,max(mGround->vertices[0*mGround->size+i].y,h),i);
 	}
 	glEnd();
+
+	if(!mSettings.water)
+	{
+		glColor3f(0.73,0.6,0.47);
+		glBegin(GL_QUADS);
+			glVertex3f(0,h,0);
+			glVertex3f(0,h,mGround->size-1);
+			glVertex3f(mGround->size-1,h,mGround->size-1);
+			glVertex3f(mGround->size-1,h,0);
+		glEnd();
+	}
 
 	//mGround->draw(dataManager.getId("grass new terrain"));
 	glPopMatrix();

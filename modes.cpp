@@ -7,7 +7,7 @@ void twoPlayerVs::drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)
 	if(players[acplayer].firstPerson() && !p.controled)
 	{
 		texturedQuad("cockpit",0,0,sw,sh/2);
-		targeter(400,150,50,0.0);
+		targeter(400,150,50,p.turn);
 		drawRadar(176, 200, 64, 64, true);
 		healthBar(140, 40, 200, 200, p.health/p.maxHealth,true);
 
@@ -30,7 +30,7 @@ void onePlayer::drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)
 	if(players[acplayer].firstPerson() && !p.controled)
 	{
 		texturedQuad("cockpit square",0,0,sw,sh);
-		targeter(400,300,50,0.0);
+		targeter(400,300,50,p.turn);
 		drawRadar(176, 350, 64, 64, true);
 		healthBar(140, 190, 200, 200, p.health/p.maxHealth,true);
 

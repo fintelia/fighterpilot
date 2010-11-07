@@ -46,5 +46,7 @@ void main()
 	color = color*(1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
 	if(dist>8000.0) color.a*=1.0-(dist-8000.0)/1000.0;
 
-	gl_FragColor = color;
+	float NdotL = dot(normal,lightDir);
+
+	gl_FragColor = color * (0.9 + clamp(NdotL*0.5,0.0,0.1));
 }
