@@ -6,7 +6,7 @@ uniform float time;
 uniform sampler2D sand;
 uniform sampler2D grass;
 uniform sampler2D rock;
-uniform sampler2D snow;asdfb4a t
+uniform sampler2D snow;
 uniform sampler2D LCnoise;
 uniform sampler2D groundTex;
 
