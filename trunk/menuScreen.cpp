@@ -766,17 +766,20 @@ void menuButton::init(int X, int Y, int Width, int Height, string t, Color c)
 }
 void menuButton::render()
 {
-	glColor3f(color.r,color.g,color.b);
-	glBegin(GL_QUADS);
-	glVertex2f(x,y);
-	glVertex2f(x+width,y);
-	glVertex2f(x+width,y+height);
-	glVertex2f(x,y+height);
-	glEnd();
 	glEnable(GL_BLEND);
+	glColor4f(color.r,color.g,color.b,1.0);
+	dataManager.bind("button");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,1);	glVertex2f(x,y);
+		glTexCoord2f(1,1);	glVertex2f(x+width,y);
+		glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
+		glTexCoord2f(0,0);	glVertex2f(x,y+height);
+	glEnd();
+	dataManager.bindTex(0);
 	glColor4f(0,0,0,1);
 	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
 	glDisable(GL_BLEND);
+
 }
 void menuButton::mouseDownL(int X, int Y)
 {

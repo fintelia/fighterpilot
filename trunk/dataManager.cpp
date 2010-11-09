@@ -646,6 +646,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
 	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.tga");
 	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
+	if(callNum==n++)	registerAsset("button",				"media/button.tga");
 
 	//if(callNum==n++)	registerAsset("menu main",			"media/mainMenu.tga");
 	//if(callNum==n++)	registerAsset("menu controls",		"media/controlsMenu.tga");
