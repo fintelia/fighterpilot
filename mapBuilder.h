@@ -24,9 +24,8 @@ private:
 		Vec2f newP(2.0*newX/sw-sw/2.0,2.0*newY/sh-sh/2.0);
 
 		Vec3f xAxis = rot * Vec3f(-1,0,0);
-		Vec3f yAxis = rot * Vec3f(0,0,1);
 
-		Vec3f axis = xAxis * (newP.y-oldP.y) + yAxis * (newP.x-oldP.x);
+		Vec3f axis = xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x);
 		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
 		rot = Quat4f(axis,ang) * rot;
 	}
@@ -263,9 +262,8 @@ public:
 			
 			
 			Vec3f xAxis = rot * Vec3f(-1,0,0);
-			Vec3f yAxis = rot * Vec3f(0,0,1);
 
-			Vec3f axis = xAxis * (newP.y-oldP.y) + yAxis * (newP.x-oldP.x);
+			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
 			Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
 
 			Quat4f tmpRot;
@@ -274,6 +272,8 @@ public:
 
 			e = c + tmpRot * Vec3f(0,0.75,0) * level->ground()->getSize() * size * pow(1.1f,-scroll);
 			u = tmpRot * Vec3f(0,0,-1);
+ 
+
 		}
 		else
 		{
@@ -294,9 +294,13 @@ public:
 		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 			level->ground()->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 		level->render();
-
+		
 		glDisable(GL_LIGHTING);
 		glDisable(GL_DEPTH_TEST);
+
+		Vec3f	left = rot * Vec3f(-1,0,0) * 1000,
+				fwd = rot * Vec3f(0,0,1) * 1000,
+				up = rot * Vec3f(0,1,0) * 1000;
 		//viewOrtho(sw,sh);
 		//menuManager.render();
 		//viewPerspective();
