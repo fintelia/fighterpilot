@@ -28,7 +28,7 @@ map<int,planeBase*> planes;
 vector<turret*> turrets;
 TextManager* textManager;
 
-menus *Cmenu;
+//menus *Cmenu;
 modes *mode;
 #if defined USING_XINPUT
 	Input *input=new xinput_input;
@@ -39,7 +39,7 @@ Controls controls(2);
 Settings settings;
 
 map<planeType,int> planeModels;
-GLuint menuBack;
+//GLuint menuBack;
 int disp[3];//should be combined with model
 float radarAng=0;
 
@@ -147,7 +147,7 @@ bool draw()
 	//}
 	
 	mode->draw();
-	Cmenu->draw();
+	//Cmenu->draw();
 	glViewport(0,0,sw,sh);
 	viewOrtho(sw,sh);
 	menuManager.render();
@@ -217,31 +217,31 @@ int update(float v)
 	input->update();
 	menuManager.update();
 
-	int i = Cmenu->update(v);
+	int i = 30;//Cmenu->update(v);
 	if(!gameTime.isPaused())
 		i = mode->update(v);
 
-	modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
-	menuType nMenu=Cmenu->newMenu;
-	if(nMode != (modeType)0)
-	{
-		delete mode;
-		if(nMode==LOADING)				mode=new loading;
-		else if(nMode==TWO_PLAYER_VS)	mode=new twoPlayerVs;
-		else if(nMode==ONE_PLAYER)		mode=new onePlayer;
-		else if(nMode==BLANK_MODE)		mode=new blankMode;
-		else if(nMode==MAP_BUILDER)		mode=new mapBuilder;
-		mode->init();
-	}
-	else if(nMenu != (menuType)0)
-	{
-		delete Cmenu;
-		if(nMenu==MAIN_MENU)			Cmenu=new closedMenu;
-		else if(nMenu==CLOSED)			Cmenu=new mainMenu;
-		else if(nMenu==SET_CONTROLS)	Cmenu=new setControls;
-		else if(nMenu==START)			Cmenu=new m_start;
-		else if(nMenu==CHOOSE_MODE)		Cmenu=new m_chooseMode;
-	}
+	//modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
+	//menuType nMenu=Cmenu->newMenu;
+	//if(nMode != (modeType)0)
+	//{
+	//	delete mode;
+	//	if(nMode==LOADING)				mode=new loading;
+	//	else if(nMode==TWO_PLAYER_VS)	mode=new twoPlayerVs;
+	//	else if(nMode==ONE_PLAYER)		mode=new onePlayer;
+	//	else if(nMode==BLANK_MODE)		mode=new blankMode;
+	//	else if(nMode==MAP_BUILDER)		mode=new mapBuilder;
+	//	mode->init();
+	//}
+	//else if(nMenu != (menuType)0)
+	//{
+	//	delete Cmenu;
+	//	if(nMenu==MAIN_MENU)			Cmenu=new closedMenu;
+	//	else if(nMenu==CLOSED)			Cmenu=new mainMenu;
+	//	else if(nMenu==SET_CONTROLS)	Cmenu=new setControls;
+	//	else if(nMenu==START)			Cmenu=new m_start;
+	//	else if(nMenu==CHOOSE_MODE)		Cmenu=new m_chooseMode;
+	//}
 
 	return i;
 }
@@ -811,7 +811,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	ShowHideTaskBar(false);
 //////
 	srand ((unsigned int)time(NULL));
-	Cmenu=new closedMenu;
+	//Cmenu=new closedMenu;
 	mode=new loading;
 	textManager = new TextManager();
 	menuManager.init();

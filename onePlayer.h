@@ -115,6 +115,7 @@ public:
 			}
 		}
 		if(input->getKey(F1)){players[0].toggleFirstPerson();input->getKey(F1);input->up(F1);}
+		if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
 		//for(int i=0;i<1;i++)
 		//{
 		//	planes[i]->Accelerate	(value*controls[i][CON_ACCEL]);
@@ -199,7 +200,15 @@ public:
 		players[1].planeNum(0);
 		players[1].active(false);
 		newMode=(modeType)0;
-		Cmenu=new closedMenu;
+		//Cmenu=new closedMenu;
 		newLevel(1);
+	}
+	~onePlayer()
+	{
+		terrain=NULL;
+		planes.clear();
+		bullets.clear();
+		missiles.clear();
+		newExaust.clear();
 	}
 };

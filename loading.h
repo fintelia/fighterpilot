@@ -251,7 +251,7 @@ public:
 		glEnable(GL_BLEND);
 		glColor3f(1,1,1);
 		
-		glBindTexture(GL_TEXTURE_2D, menuBack); // We set the active texture
+		dataManager.bind("menu background");
 		glBegin(GL_QUADS);
 			glTexCoord2f(0,1);	glVertex2f(0,0);
 			glTexCoord2f(0,0);	glVertex2f(0,sh);
@@ -260,7 +260,7 @@ public:
 		glEnd();
 		
 		glDisable(GL_BLEND);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		dataManager.bindTex(0);
 		viewPerspective();
 		
 	}
@@ -268,10 +268,11 @@ public:
 	{
 		if(toLoad==0)
 		{
-			menuBack=-1;
-			menuBack=dataManager.loadTexture("media/menu/menu background2.tga");
-			if(menuBack==-1)
-				exitProgram();
+			//menuBack=-1;
+			//menuBack=dataManager.loadTexture("media/menu/menu background2.tga");
+			//if(menuBack==-1)
+			//	exitProgram();
+			dataManager.registerAsset("menu background", "media/menu/menu background2.tga");
 			Redisplay=true;
 			toLoad++;
 		}
@@ -286,7 +287,8 @@ public:
 		interleavedLoad();
 		if(dataManager.registerAssets())
 		{
-			Cmenu=new m_start;
+			//Cmenu=new m_start;
+			menuManager.setMenu("menuChooseMode");
 			newMode=BLANK_MODE;
 		}
 		Redisplay=true;
@@ -296,7 +298,7 @@ public:
 	loading()
 	{
 		newMode=(modeType)0;
-		Cmenu=new closedMenu;
+		//Cmenu=new closedMenu;
 		toLoad=0;
 	}
 };

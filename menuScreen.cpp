@@ -36,7 +36,7 @@ bool MenuManager::init()
 	// must call register before it can be used
 	registerMenu("menuLevelEditor", &CreateObject<menuLevelEditor>);
 	registerMenu("menuInGame", &CreateObject<menuInGame>);
-
+	registerMenu("menuChooseMode", &CreateObject<menuChooseMode>);
 	//return setMenu("menuLevelEditor");
 	return true;
 }
@@ -392,8 +392,16 @@ bool menuScreen::loadBackground()
 
 bool menuLevelEditor::init()
 {
+	Color white(1,1,1);
+	Color black(0,0,0);
+	Color darkBlue(0.11,0.35,0.52);
+	Color lightBlue(0.19,0.58,0.78);
+	Color darkGreen(0,0.7,0);
+	Color lightGreen(0,1,0);
+
 	vector<menuButton*> v;//for toggles
 	menuLabel* l;
+
 	//terrain
 	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader");
 	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square");
@@ -402,55 +410,55 @@ bool menuLevelEditor::init()
 
 	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,30,"Exit",Color(0.8,0.8,0.8));
 
-	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),Color(0,0.7,0),Color(0,1,0),0);
+	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),darkGreen,lightGreen,0);
 	addShader("media/terrain.frag");
 	addShader("media/snow.frag");
 	addShader("media/grass.frag");
 	//zones
 
 	//settings
-	
+
 	v.clear();
 	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,50,100,30,"respawn");
-	v.push_back(new menuButton());		v[1]->init(225,50,100,30,"restart");
-	v.push_back(new menuButton());		v[2]->init(330,50,100,30,"die");
-	bOnHit = new menuToggle();			bOnHit->init(v,Color(0,0,1),Color(0,0,0.5));
-	l->setElementText("player hit:");	l->setElementXY(5,50);
+	v.push_back(new menuButton());		v[0]->init(120,5,100,30,"respawn",black,white);
+	v.push_back(new menuButton());		v[1]->init(225,5,100,30,"restart",black,white);
+	v.push_back(new menuButton());		v[2]->init(330,5,100,30,"die",black,white);
+	bOnHit = new menuToggle();			bOnHit->init(v,darkBlue,lightBlue);
+	l->setElementText("player hit:");	l->setElementXY(5,5);
 	bOnHit->setLabel(l);
 
 	v.clear();
 	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,90,100,30,"respawn");
-	v.push_back(new menuButton());		v[1]->init(225,90,100,30,"restart");
-	v.push_back(new menuButton());		v[2]->init(330,90,100,30,"die");
-	bOnAIHit = new menuToggle();		bOnAIHit->init(v,Color(0,0,1),Color(0.3,0.3,0.5));
-	l->setElementText("AI hit:");		l->setElementXY(5,90);
+	v.push_back(new menuButton());		v[0]->init(120,45,100,30,"respawn",black,white);
+	v.push_back(new menuButton());		v[1]->init(225,45,100,30,"restart",black,white);
+	v.push_back(new menuButton());		v[2]->init(330,45,100,30,"die",black,white);
+	bOnAIHit = new menuToggle();		bOnAIHit->init(v,darkBlue,lightBlue);
+	l->setElementText("AI hit:");		l->setElementXY(5,45);
 	bOnAIHit->setLabel(l);
 
 	v.clear();
 	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,130,100,30,"ffa");
-	v.push_back(new menuButton());		v[1]->init(225,130,100,30,"teams");
-	v.push_back(new menuButton());		v[2]->init(330,130,100,30,"player vs");
-	bGameType = new menuToggle();		bGameType->init(v,Color(0,0,1),Color(0.3,0.3,0.5));
-	l->setElementText("game type:");	l->setElementXY(5,130);
+	v.push_back(new menuButton());		v[0]->init(120,85,100,30,"ffa",black,white);
+	v.push_back(new menuButton());		v[1]->init(225,85,100,30,"teams",black,white);
+	v.push_back(new menuButton());		v[2]->init(330,85,100,30,"player vs",black,white);
+	bGameType = new menuToggle();		bGameType->init(v,darkBlue,lightBlue);
+	l->setElementText("game type:");	l->setElementXY(5,85);
 	bGameType->setLabel(l);
 
 	v.clear();
 	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,170,100,30,"water");
-	v.push_back(new menuButton());		v[1]->init(225,170,100,30,"land");
-	bMapType = new menuToggle();		bMapType->init(v,Color(0,0,1),Color(0.3,0.3,0.5));
-	l->setElementText("map type:");		l->setElementXY(5,170);
+	v.push_back(new menuButton());		v[0]->init(120,125,100,30,"water",black,white);
+	v.push_back(new menuButton());		v[1]->init(225,125,100,30,"land",black,white);
+	bMapType = new menuToggle();		bMapType->init(v,darkBlue,lightBlue);
+	l->setElementText("map type:");		l->setElementXY(5,125);
 	bMapType->setLabel(l);
 
 	v.clear();
 	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,210,100,30,"rock");
-	v.push_back(new menuButton());		v[1]->init(225,210,100,30,"sand");
-	bSeaFloorType = new menuToggle();	bSeaFloorType->init(v,Color(0,0,1),Color(0.3,0.3,0.5));
-	l->setElementText("sea floor:");	l->setElementXY(5,210);
+	v.push_back(new menuButton());		v[0]->init(120,165,100,30,"rock",black,white);
+	v.push_back(new menuButton());		v[1]->init(225,165,100,30,"sand",black,white);
+	bSeaFloorType = new menuToggle();	bSeaFloorType->init(v,darkBlue,lightBlue);
+	l->setElementText("sea floor:");	l->setElementXY(5,165);
 	bSeaFloorType->setLabel(l);
 
 	v.clear();
@@ -486,8 +494,8 @@ int menuLevelEditor::update()
 		delete mode;
 		mode=new blankMode;
 		mode->init();
-		Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
-		menuManager.setMenu("");
+		//Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
+		menuManager.setMenu("menuChooseMode");
 	}
 	else if(getTab() == TERRAIN)
 	{
@@ -682,7 +690,91 @@ menuLevelEditor::Tab menuLevelEditor::getTab()
 	if(t == 2) return SETTINGS;
 	return NO_TAB;
 }
+void menuChooseMode::render()
+{
+	glDisable(GL_DEPTH_TEST);
+	glColor3f(1,1,1);
+	dataManager.bind("menu background");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,1);	glVertex2f(0,0);
+		glTexCoord2f(0,0);	glVertex2f(0,sh);
+		glTexCoord2f(1,0);	glVertex2f(sw,sh);		
+		glTexCoord2f(1,1);	glVertex2f(sw,0);
+	glEnd();
 
+	glPushMatrix();
+	glScalef((float)sw/800,(float)sh/600,1);
+	glEnable(GL_BLEND);
+	dataManager.bind("menu slot");
+	glBegin(GL_QUADS);
+	for(int i=1;i<=5;i++)
+	{
+		if(i!=activeChoice+2)
+		{
+			glTexCoord2f(0,1);	glVertex2f(-325+i*210		,300);
+			glTexCoord2f(1,1);	glVertex2f(-325+i*210+205	,300);
+			glTexCoord2f(1,0);	glVertex2f(-325+i*210+205	,300+150);
+			glTexCoord2f(0,0);	glVertex2f(-325+i*210		,300+150);
+		}
+	}
+	glEnd();
+	dataManager.bind("menu mode choices");
+	glBegin(GL_QUADS);
+	for(int i=1;i<=3;i++)
+	{
+		glTexCoord2f(0,1-0.33*(i-1));	glVertex2f(-325+(i+1)*210		,300);
+		glTexCoord2f(1,1-0.33*(i-1));	glVertex2f(-325+(i+1)*210+205	,300);
+		glTexCoord2f(1,1-0.33*(i));	glVertex2f(-325+(i+1)*210+205	,300+25);
+		glTexCoord2f(0,1-0.33*(i));	glVertex2f(-325+(i+1)*210		,300+25);
+	}
+	glEnd();
+	glPopMatrix();
+	dataManager.bindTex(0);
+	glDisable(GL_BLEND);
+}
+void menuChooseMode::keyDown(int vkey)
+{
+	if(vkey==VK_LEFT)	activeChoice = choice(int(activeChoice)-1);
+	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
+	if(activeChoice<MULTIPLAYER) activeChoice=MAP_EDITOR;
+	if(activeChoice>MAP_EDITOR) activeChoice=MULTIPLAYER;
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
+	{
+		input->up(VK_SPACE);
+		input->up(VK_RETURN);
+		menuManager.setMenu("");
+
+		delete mode;
+		mode = new twoPlayerVs;
+		mode->init();
+	}
+	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
+	{
+		input->up(VK_SPACE);
+		input->up(VK_RETURN);
+		menuManager.setMenu("");
+
+		delete mode;
+		mode = new onePlayer;
+		mode->init();
+	}
+	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
+	{
+		input->up(VK_SPACE);
+		input->up(VK_RETURN);
+		menuManager.setMenu("");
+
+		delete mode;
+		mode = new mapBuilder;
+		mode->init();
+	}
+}
+bool menuInGame::init()
+{
+	activeChoice=RESUME;
+	gameTime.pause();
+	return true;
+}
 void menuInGame::render()
 {
 	glEnable(GL_BLEND);
@@ -723,8 +815,9 @@ void menuInGame::keyDown(int vkey)
 		delete mode;
 		mode=new blankMode;
 		mode->init();
-		Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
-		menuManager.setMenu("");
+
+		//Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
+		menuManager.setMenu("menuChooseMode");
 	}
 }
 
@@ -750,6 +843,10 @@ void menuButton::setElementText(string t)
 	}
 
 }
+void menuButton::setElementTextColor(Color c)
+{
+	textColor = c;
+}
 void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
 {
 	x=X;
@@ -758,10 +855,11 @@ void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
 	height=Height;
 	setElementText(text);//update clampedText
 }
-void menuButton::init(int X, int Y, int Width, int Height, string t, Color c)
+void menuButton::init(int X, int Y, int Width, int Height, string t, Color c, Color textC)
 {
 	setElementXYWH(X, Y, Width, Height);
-	color=c;
+	color = c;
+	textColor = textC;
 	setElementText(t);
 }
 void menuButton::render()
@@ -776,7 +874,7 @@ void menuButton::render()
 		glTexCoord2f(0,0);	glVertex2f(x,y+height);
 	glEnd();
 	dataManager.bindTex(0);
-	glColor4f(0,0,0,1);
+	glColor4f(textColor.r,textColor.g,textColor.b,1.0);
 	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
 	glDisable(GL_BLEND);
 

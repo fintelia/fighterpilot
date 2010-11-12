@@ -21,7 +21,7 @@ public:
 	int getId(string name);
 
 	bool registerAssets();
-
+	void registerAsset(string name, string filename);
 
 
 private:
@@ -30,7 +30,6 @@ private:
 	int loadShader(string filename);
 	int loadOBJ(string filename);
 
-	void registerAsset(string name, string filename);
 	void registerTexture(string name, int id);
 	void registerShader(string name, int id);
 	void registerShader(string name, string vert, string frag);
