@@ -317,6 +317,7 @@ public:
 	virtual int update(float value)=0;
 	virtual void draw()=0;
 	virtual void init(){}
+	virtual ~modes(){}
 };
 class blankMode: public modes
 {
@@ -332,7 +333,7 @@ public:
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_BLEND);
 		glColor3f(1,1,1);
-		glBindTexture(GL_TEXTURE_2D, menuBack);
+		dataManager.bind("menu background");
 		glBegin(GL_QUADS);
 			glTexCoord2f(0,1);	glVertex2f(0,0);
 			glTexCoord2f(0,0);	glVertex2f(0,sh);
@@ -341,7 +342,7 @@ public:
 		glEnd();
 		glPopMatrix();
 		glDisable(GL_BLEND);
-		dataManager.bindTex(0,0);
+		dataManager.bindTex(0);
 		viewPerspective();
 	}
 	int update(float value)

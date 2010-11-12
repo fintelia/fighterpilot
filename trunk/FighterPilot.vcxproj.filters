@@ -81,9 +81,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="menuScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -198,12 +195,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mainMenu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="menu.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="menuScreen.h">

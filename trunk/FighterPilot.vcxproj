@@ -124,7 +124,6 @@
     <ClCompile Include="level.cpp" />
     <ClCompile Include="load_save.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="menu.cpp" />
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="modes.cpp" />
@@ -165,9 +164,7 @@
     <ClInclude Include="loading.h" />
     <ClInclude Include="load_save.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="mainMenu.h" />
     <ClInclude Include="mapBuilder.h" />
-    <ClInclude Include="menu.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
     <ClInclude Include="modes.h" />

@@ -244,7 +244,7 @@ public:
 	{
 		
 		//glDisable(GL_DEPTH_TEST);
-		glClearColor(0.5f,0.8f,0.9f,1.0f);
+		glClearColor(0.47f,0.57f,0.63f,1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, sw, sh);
 		gluPerspective(80.0, (double)sw / ((double)sh),10.0, 50000.0);

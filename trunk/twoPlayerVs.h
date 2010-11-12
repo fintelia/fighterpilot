@@ -22,9 +22,9 @@ public:
 	}
 
 	int update(float ms) {
-		if(input->getKey(F1)){	players[0].toggleFirstPerson(); input->up(F1);}
-		if(input->getKey(F2)){	players[1].toggleFirstPerson(); input->up(F2);}
-
+		if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
+		if(input->getKey(F2))	{	players[1].toggleFirstPerson(); input->up(F2);}
+		if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
 
 		//for(int i=0;i<2;i++)
 		//{
@@ -78,5 +78,13 @@ public:
 		//{
 		//	turrets.push_back(new turret(i));
 		//}
+	}
+	~twoPlayerVs()
+	{
+		terrain=NULL;
+		planes.clear();
+		bullets.clear();
+		missiles.clear();
+		newExaust.clear();
 	}
 };

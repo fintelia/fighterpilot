@@ -68,10 +68,10 @@ class menuButton: public menuElement
 {
 public:
 
-	menuButton(): menuElement(BUTTON){}
+	menuButton(): menuElement(BUTTON),textColor(Color(0,0,0)){}
 	virtual ~menuButton(){}
 
-	void init(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0));
+	void init(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0));
 	void render();
 
 	void mouseDownL(int X, int Y);
@@ -81,8 +81,10 @@ public:
 	//void reset(){pressed=false;}
 
 	void setElementText(string t);
+	void setElementTextColor(Color c);
 	void setElementXYWH(int X, int Y, int Width, int Height);
 protected:
+	Color textColor;
 	string clampedText;
 
 	void click();
@@ -258,14 +260,26 @@ protected:
 	bool awaitingShaderFile;
 	bool awaitingMapFile;
 };
-
+class menuChooseMode: public menuScreen 
+{
+public:
+	enum choice{MULTIPLAYER=0,SINGLE_PLAYER=1,MAP_EDITOR=2};
+	menuChooseMode():activeChoice(MULTIPLAYER){}
+	~menuChooseMode(){}
+	bool init(){activeChoice=MULTIPLAYER;return true;}
+	int update(){Redisplay=true;return 30;}
+	void render();
+	void keyDown(int vkey);
+protected:
+	choice activeChoice;
+};
 class menuInGame: public menuScreen
 {
 public:
 	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
 	menuInGame(): activeChoice(RESUME){}
 	~menuInGame(){}
-	bool init(){activeChoice=RESUME;return true;}
+	bool init();
 	int update(){Redisplay=true;return 30;}
 	void render();
 	void keyDown(int vkey);

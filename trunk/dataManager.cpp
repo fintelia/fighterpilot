@@ -648,11 +648,11 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
 	if(callNum==n++)	registerAsset("button",				"media/button.tga");
 
-	//if(callNum==n++)	registerAsset("menu main",			"media/mainMenu.tga");
-	//if(callNum==n++)	registerAsset("menu controls",		"media/controlsMenu.tga");
+	//if(callNum==n++)	registerAsset("menu background",			"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.tga");
 	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.tga");
 	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.tga");
+
 
 	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
 	if(callNum==n++)	registerShader("radar",				"media/radar.vert","media/radar.frag");

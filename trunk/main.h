@@ -115,7 +115,6 @@ extern vector<turret*> turrets;
 //extern vector<int> tex;
 //extern vector<int> menusTx;
 //extern vector<int> shaders;
-extern GLuint menuBack;
 extern int disp[3];//should be combined with model
 extern float radarAng;
 
@@ -132,5 +131,5 @@ extern float fps;
 //extern objModel m;
 
 #include "menuScreen.h"
-#include "menu.h"
+//#include "menu.h"
 #include "modes.h"
