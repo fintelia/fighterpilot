@@ -63,6 +63,13 @@ struct Color
 	Color(): r(0), g(0), b(0){}
 };
 
+extern const Color white;
+extern const Color black;
+extern const Color darkBlue;
+extern const Color lightBlue;
+extern const Color darkGreen;
+extern const Color lightGreen;
+
 template<class A, class B>
 class functor
 {

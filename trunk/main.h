@@ -35,6 +35,7 @@ using namespace boost::filesystem;
 #pragma comment (lib, "glu32.lib")
 
 #include <windows.h>
+#include <Shlobj.h>
 #include <process.h>
 #include "GL/glee.h"
 #include <GL/glu.h>
