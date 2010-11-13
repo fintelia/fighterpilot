@@ -11,15 +11,16 @@ void twoPlayerVs::drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)
 		drawRadar(176, 200, 64, 64, true);
 		healthBar(140, 40, 200, 200, p.health/p.maxHealth,true);
 
-
 		//speedMeter(16,16,80,80,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(368,215,432,279,p.altitude);
 
 	}
 	else
 	{
-		drawRadar(730, 230, 64, 64, false);
+		drawRadar(730, 230, 64, 64, false);	
+		glDisable(GL_MULTISAMPLE);
 		healthBar(614, 25, 150, 25, p.health/p.maxHealth,false);
+		glEnable(GL_MULTISAMPLE);
 	}
 	planeIdBoxes(p,eye);
 }
@@ -32,6 +33,8 @@ void onePlayer::drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)
 		texturedQuad("cockpit square",0,0,sw,sh);
 		targeter(400,300,50,p.turn);
 		drawRadar(176, 350, 64, 64, true);
+		
+
 		healthBar(140, 190, 200, 200, p.health/p.maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
@@ -40,7 +43,11 @@ void onePlayer::drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)
 	else
 	{
 		drawRadar(700, 500, 96, 96, false);
+
+		glDisable(GL_MULTISAMPLE);
 		healthBar(614, 25, 150, 25, p.health/p.maxHealth,false);
+		glEnable(GL_MULTISAMPLE);
+
 	}
 	planeIdBoxes(p,eye);
 

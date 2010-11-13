@@ -762,34 +762,33 @@ bool DataManager::registerAssets()
 	//if(callNum==n++)	registerAsset("dialSpeed",			"media/speed2.tga");
 	//if(callNum==n++)	registerAsset("dialAltitude",		"media/altitude.tga");
 	//if(callNum==n++)	registerAsset("needle",				"media/needle2.tga");	
-	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.tga");
+	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.png");
 	if(callNum==n++)	registerAsset("particle",			"media/particle4.mmp");	
-	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.tga");
+	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
 	if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.mmp");
-	if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.tga");
-	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball2.tga");
-	if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.tga");
-	if(callNum==n++)	registerAsset("explosion smoke",	"media/explosion/smoke5.tga");
-	if(callNum==n++)	registerAsset("cockpit",			"media/cockpit.tga");
-	if(callNum==n++)	registerAsset("health bar",			"media/health bar.tga");
-	if(callNum==n++)	registerAsset("tilt",				"media/tilt.tga");
-	if(callNum==n++)	registerAsset("targeter",			"media/targeter.tga");
+	if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
+	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball2.png");
+	if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");
+	if(callNum==n++)	registerAsset("explosion smoke",	"media/explosion/smoke5.png");
+	if(callNum==n++)	registerAsset("cockpit",			"media/cockpit.png");
+	if(callNum==n++)	registerAsset("health bar",			"media/health bar.png");
+	if(callNum==n++)	registerAsset("tilt",				"media/tilt.png");
+	if(callNum==n++)	registerAsset("targeter",			"media/targeter.png");
 	//if(callNum==n++)	registerAsset("speed",				"media/speed2.tga");
 	//if(callNum==n++)	registerAsset("altitude",			"media/altitude.tga");
-	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.tga");
-	if(callNum==n++)	registerAsset("key",				"media/key.tga");
-	if(callNum==n++)	registerAsset("letters",			"media/letters.tga");
-	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.tga");
-	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.tga");
-	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
-	if(callNum==n++)	registerAsset("button",				"media/button.tga");
-	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.tga");
-	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.tga");
+	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.png");
+	if(callNum==n++)	registerAsset("key",				"media/key.png");
+	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.png");
+	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.png");
+	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.png");
+	if(callNum==n++)	registerAsset("button",				"media/button.png");
+	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
+	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
 
 	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
-	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.tga");
-	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.tga");
-	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.tga");
+	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");
+	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.png");
+	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.png");
 
 
 	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
