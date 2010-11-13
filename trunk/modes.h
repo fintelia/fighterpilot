@@ -923,10 +923,10 @@ protected:
 	{
 		dataManager.bind(t);
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x,y);
-			glTexCoord2f(0,0);	glVertex2f(x,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y);
+			glTexCoord2f(0,0);	glVertex2f(x,y);
+			glTexCoord2f(0,1);	glVertex2f(x,y+height);
+			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+			glTexCoord2f(1,0);	glVertex2f(x+width,y);
 		glEnd();
 	}
 	//void drawgauge(float x1,float y1,float x2,float y2,int texBack,int texFront,float rBack,float rFront)
@@ -983,10 +983,10 @@ protected:
 			for(float y=-0.5;y<0.9;y+=0.5)
 			{
 				glBegin(GL_QUADS);
-					glTexCoord2f(0,1);	glVertex2f(x1+x,y1+y);
-					glTexCoord2f(0,0);	glVertex2f(x1+x,y2+y);
-					glTexCoord2f(1,0);	glVertex2f(x2+x,y2+y);
-					glTexCoord2f(1,1);	glVertex2f(x2+x,y1+y);
+					glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
+					glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
+					glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
+					glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
 				glEnd();
 			}
 		}
@@ -1002,10 +1002,10 @@ protected:
 			for(float y=-0.5;y<0.9;y+=0.5)
 			{
 				glBegin(GL_QUADS);
-					glTexCoord2f(0,1);	glVertex2f(x1+x,y1+y);
-					glTexCoord2f(0,0);	glVertex2f(x1+x,y2+y);
-					glTexCoord2f(1,0);	glVertex2f(x2+x,y2+y);
-					glTexCoord2f(1,1);	glVertex2f(x2+x,y1+y);
+					glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
+					glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
+					glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
+					glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
 				glEnd();
 			}
 		}
@@ -1021,13 +1021,13 @@ protected:
 		if(!firstPerson)
 		{
 			dataManager.bind("health bar");
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 			glBegin(GL_QUADS);
-				glTexCoord2f(0,1);	glVertex2f(x,y);
-				glTexCoord2f(0,0);	glVertex2f(x,y+height);
-				glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-				glTexCoord2f(1,1);	glVertex2f(x+width,y);
+				glTexCoord2f(0.01,0.01);	glVertex2f(x,y);
+				glTexCoord2f(0.01,0.99);	glVertex2f(x,y+height);
+				glTexCoord2f(0.99,0.99);	glVertex2f(x+width,y+height);
+				glTexCoord2f(0.99,0.01);	glVertex2f(x+width,y);
 			glEnd();
 			dataManager.bindTex(0);
 			glBegin(GL_QUADS);
@@ -1064,19 +1064,19 @@ protected:
 		glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
 		dataManager.bind("tilt back");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 		glPopMatrix();
 
 		dataManager.bind("tilt front");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 	}
 	void speedMeter(float x1,float y1,float x2,float y2,float degrees)
@@ -1088,10 +1088,10 @@ protected:
 
 		dataManager.bind("speed");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 
 		glPushMatrix();
@@ -1100,10 +1100,10 @@ protected:
 		glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
 		dataManager.bind("needle");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 		glPopMatrix();
 	}
@@ -1116,10 +1116,10 @@ protected:
 
 		dataManager.bind("altitude");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 
 		glPushMatrix();
@@ -1128,10 +1128,10 @@ protected:
 		glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
 		dataManager.bind("needle");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+			glTexCoord2f(0,0);	glVertex2f(x1,y1);
+			glTexCoord2f(0,1);	glVertex2f(x1,y2);
+			glTexCoord2f(1,1);	glVertex2f(x2,y2);
+			glTexCoord2f(1,0);	glVertex2f(x2,y1);
 		glEnd();
 		glPopMatrix();
 	}
@@ -1255,10 +1255,10 @@ protected:
 		glUniform1f(glGetUniformLocation(shader, "radarAng"), radarAng);
 
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x,y);
-			glTexCoord2f(0,0);	glVertex2f(x,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y);
+			glTexCoord2f(0,0);	glVertex2f(x,y);
+			glTexCoord2f(0,1);	glVertex2f(x,y+height);
+			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+			glTexCoord2f(1,0);	glVertex2f(x+width,y);
 		glEnd();
 		glUseProgram(0);
 
@@ -1295,10 +1295,10 @@ protected:
 			glColor4f(1,1,1,1);
 			dataManager.bind("radar frame");
 			glBegin(GL_QUADS);
-				glTexCoord2f(0,1);	glVertex2f(x,y);
-				glTexCoord2f(0,0);	glVertex2f(x,y+height);
-				glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-				glTexCoord2f(1,1);	glVertex2f(x+width,y);
+				glTexCoord2f(0,0);	glVertex2f(x,y);
+				glTexCoord2f(0,1);	glVertex2f(x,y+height);
+				glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+				glTexCoord2f(1,0);	glVertex2f(x+width,y);
 			glEnd();
 		}
 	}
@@ -1315,10 +1315,10 @@ protected:
 		glTranslatef(-x,-y,0);
 		dataManager.bind("tilt");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x-width,y-height);
-			glTexCoord2f(0,0);	glVertex2f(x-width,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y-height);
+			glTexCoord2f(0,0);	glVertex2f(x-width,y-height);
+			glTexCoord2f(0,1);	glVertex2f(x-width,y+height);
+			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+			glTexCoord2f(1,0);	glVertex2f(x+width,y-height);
 		glEnd();
 		glPopMatrix();
 

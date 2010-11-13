@@ -779,10 +779,10 @@ void menuChooseMode::render()
 	{
 		if(i!=activeChoice+2)
 		{
-			glTexCoord2f(0,1);	glVertex2f(-325+i*210		,300);
-			glTexCoord2f(1,1);	glVertex2f(-325+i*210+205	,300);
-			glTexCoord2f(1,0);	glVertex2f(-325+i*210+205	,300+150);
-			glTexCoord2f(0,0);	glVertex2f(-325+i*210		,300+150);
+			glTexCoord2f(0,0);	glVertex2f(-325+i*210		,300);
+			glTexCoord2f(1,0);	glVertex2f(-325+i*210+205	,300);
+			glTexCoord2f(1,1);	glVertex2f(-325+i*210+205	,300+150);
+			glTexCoord2f(0,1);	glVertex2f(-325+i*210		,300+150);
 		}
 	}
 	glEnd();
@@ -790,10 +790,10 @@ void menuChooseMode::render()
 	glBegin(GL_QUADS);
 	for(int i=1;i<=3;i++)
 	{
-		glTexCoord2f(0,1-0.33*(i-1));	glVertex2f(-325+(i+1)*210		,300);
-		glTexCoord2f(1,1-0.33*(i-1));	glVertex2f(-325+(i+1)*210+205	,300);
-		glTexCoord2f(1,1-0.33*(i));	glVertex2f(-325+(i+1)*210+205	,300+25);
-		glTexCoord2f(0,1-0.33*(i));	glVertex2f(-325+(i+1)*210		,300+25);
+		glTexCoord2f(0,0.33*(i-1));	glVertex2f(-325+(i+1)*210		,300);
+		glTexCoord2f(1,0.33*(i-1));	glVertex2f(-325+(i+1)*210+205	,300);
+		glTexCoord2f(1,0.33*(i));	glVertex2f(-325+(i+1)*210+205	,300+25);
+		glTexCoord2f(0,0.33*(i));	glVertex2f(-325+(i+1)*210		,300+25);
 	}
 	glEnd();
 	glPopMatrix();
