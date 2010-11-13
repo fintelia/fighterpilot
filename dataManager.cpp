@@ -1,5 +1,7 @@
 
+#include "png\png.h"
 #include "main.h"
+
 
 DataManager::~DataManager()
 {
@@ -14,6 +16,7 @@ int DataManager::loadTexture(string filename)
 	string ext=filesystem::extension(filename);
 	if(ext.compare(".tga") == 0)	return loadTGA(filename);
 	if(ext.compare(".mmp") == 0)	return loadMMP(filename);
+	if(ext.compare(".png") == 0)	return loadPNG(filename);
 	return 0;
 }
 int DataManager::loadModel(string filename)
@@ -573,7 +576,140 @@ int DataManager::loadOBJ(string filename)
 	
 	return d;
 }
+int DataManager::loadPNG(string filename)
+{
+	png_uint_32		i, 
+					width,
+					height,
+					rowbytes;
+	int				bit_depth,
+					color_type,
+					colorChannels;
+	unsigned char*	image_data;
+	png_bytep*		row_pointers;
 
+	/* Open the PNG file. */
+	FILE *infile;
+	fopen_s(&infile,filename.c_str(), "rb");
+
+	if (!infile) {
+	  return 0;
+	}
+
+	unsigned char sig[8];
+	/* Check for the 8-byte signature */
+	fread(sig, 1, 8, infile);
+	if (!png_check_sig((unsigned char *) sig, 8)) {
+	  fclose(infile);
+	  return 0;
+	}
+	/* 
+	 * Set up the PNG structs 
+	 */
+	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr) {
+	  fclose(infile);
+	  return 0; /* out of memory */
+	}
+
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr) {
+	  png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+	  fclose(infile);
+	  return 0; /* out of memory */
+	}
+
+	png_infop end_ptr = png_create_info_struct(png_ptr);
+	if (!end_ptr) {
+	  png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+	  fclose(infile);
+	  return 0; /* out of memory */
+	}
+
+	/*
+	 * block to handle libpng errors, 
+	 * then check whether the PNG file had a bKGD chunk
+	 */
+	if (setjmp(png_jmpbuf(png_ptr))) {
+	  png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
+	  fclose(infile);
+	  return 0;
+	}
+
+	/*
+	 * takes our file stream pointer (infile) and 
+	 * stores it in the png_ptr struct for later use.
+	 */
+	png_init_io(png_ptr, infile);
+
+	/*
+	 * lets libpng know that we already checked the 8 
+	 * signature bytes, so it should not expect to find 
+	 * them at the current file pointer location
+	 */
+	png_set_sig_bytes(png_ptr, 8);
+
+	png_read_info(png_ptr, info_ptr);
+	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+
+
+    if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
+	if (bit_depth == 16)																png_set_strip_16(png_ptr);
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
+
+	/* snipped out the color type code, see source pngLoad.c */
+	/* Update the png info struct.*/
+	png_read_update_info(png_ptr, info_ptr);
+	
+	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
+	
+	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		return 0;
+	}
+	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		return 0;
+	}	
+	for (i = 0;  i < height;  ++i)
+		row_pointers[i] = image_data + i*rowbytes;
+
+	png_read_image(png_ptr, row_pointers);
+	png_read_end(png_ptr, NULL);
+	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+	fclose(infile);
+
+
+	int format;
+	if(colorChannels == 1)		format = GL_LUMINANCE;
+	else if(colorChannels == 2)	format = GL_LUMINANCE_ALPHA;
+	else if(colorChannels == 3) format = GL_RGB;
+	else if(colorChannels == 4) format = GL_RGBA;
+
+	bool NPOT = GLEE_ARB_texture_non_power_of_two && !((width & (width-1)) && (height & (height-1)));
+	glError()
+
+	GLuint texV;
+	glGenTextures(1,&texV);glError();
+    glBindTexture(GL_TEXTURE_2D, texV);glError();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	glError();
+	if(NPOT)	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	else		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);glError();
+	
+
+	if(NPOT)	glTexImage2D(GL_TEXTURE_2D,0, colorChannels, width, height,0, format, GL_UNSIGNED_BYTE, image_data);
+	else		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);glError();
+	
+    free(image_data);
+	free(row_pointers);
+    return texV;
+}
 int DataManager::loadShader(string filename){return 0;}
 
 void DataManager::bind(string name, int textureUnit)
@@ -650,7 +786,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.tga");
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.tga");
 
-	//if(callNum==n++)	registerAsset("menu background",			"media/menu/menu background2.tga"); registered earlier in loading
+	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.tga");
 	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.tga");
 	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.tga");
@@ -685,6 +821,7 @@ void DataManager::registerAsset(string name, string filename)
 	string ext=filesystem::extension(filename);
 	if(ext.compare(".tga") == 0)		registerTexture(name,loadTGA(filename));
 	else if(ext.compare(".mmp") == 0)	registerTexture(name,loadMMP(filename));
+	else if(ext.compare(".png") == 0)	registerTexture(name,loadPNG(filename));
 	else if(ext.compare(".obj") == 0)	registerModel(name,loadOBJ(filename));
 	else if(ext.compare(".frag") == 0)	registerShader(name,loadTerrainShader(filename));
 }

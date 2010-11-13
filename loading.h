@@ -253,10 +253,10 @@ public:
 		
 		dataManager.bind("menu background");
 		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(0,0);
-			glTexCoord2f(0,0);	glVertex2f(0,sh);
-			glTexCoord2f(1,0);	glVertex2f(sw,sh);		
-			glTexCoord2f(1,1);	glVertex2f(sw,0);
+			glTexCoord2f(0,0);	glVertex2f(0,0);
+			glTexCoord2f(0,1);	glVertex2f(0,sh);
+			glTexCoord2f(1,1);	glVertex2f(sw,sh);		
+			glTexCoord2f(1,0);	glVertex2f(sw,0);
 		glEnd();
 		
 		glDisable(GL_BLEND);
@@ -272,7 +272,7 @@ public:
 			//menuBack=dataManager.loadTexture("media/menu/menu background2.tga");
 			//if(menuBack==-1)
 			//	exitProgram();
-			dataManager.registerAsset("menu background", "media/menu/menu background2.tga");
+			dataManager.registerAsset("menu background", "media/menu/menu background.png");
 			Redisplay=true;
 			toLoad++;
 		}

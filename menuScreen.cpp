@@ -764,10 +764,10 @@ void menuChooseMode::render()
 	glColor3f(1,1,1);
 	dataManager.bind("menu background");
 	glBegin(GL_QUADS);
-		glTexCoord2f(0,1);	glVertex2f(0,0);
-		glTexCoord2f(0,0);	glVertex2f(0,sh);
-		glTexCoord2f(1,0);	glVertex2f(sw,sh);		
-		glTexCoord2f(1,1);	glVertex2f(sw,0);
+		glTexCoord2f(0,0);	glVertex2f(0,0);
+		glTexCoord2f(0,1);	glVertex2f(0,sh);
+		glTexCoord2f(1,1);	glVertex2f(sw,sh);		
+		glTexCoord2f(1,0);	glVertex2f(sw,0);
 	glEnd();
 
 	glPushMatrix();

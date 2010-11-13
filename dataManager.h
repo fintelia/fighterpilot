@@ -29,6 +29,7 @@ private:
 	int loadMMP(string filename);
 	int loadShader(string filename);
 	int loadOBJ(string filename);
+	int loadPNG(string filename);
 
 	void registerTexture(string name, int id);
 	void registerShader(string name, int id);

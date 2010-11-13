@@ -49,6 +49,9 @@
     <Filter Include="shaders\radar">
       <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="libpng">
+      <UniqueIdentifier>{a741da3b-2684-4290-b03d-dade5aebbed4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dataManager.cpp">
@@ -143,6 +146,57 @@
     </ClCompile>
     <ClCompile Include="input.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\png.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngread.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngerror.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngget.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngmem.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngpread.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrio.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrtran.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrutil.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngset.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngtrans.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\inflate.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\zutil.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\inffast.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\inftrees.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\adler32.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="png\crc32.c">
+      <Filter>libpng</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
