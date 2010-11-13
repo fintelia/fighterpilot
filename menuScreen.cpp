@@ -195,6 +195,11 @@ bool menuChooseFile::init()
 }
 bool menuChooseFile::init(string ExtFilter)
 {
+	desktop		= new menuButton; desktop->init(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
+	myDocuments = new menuButton; myDocuments->init(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
+	myComputer	= new menuButton; myComputer->init(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
+	myNetwork	= new menuButton; myNetwork->init(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
+
 	extFilter=ExtFilter;
 	directory=".";
 	refreshView();
@@ -226,18 +231,62 @@ void menuChooseFile::refreshView()
 	for(vector<string>::iterator i=folders.begin();i!=folders.end();i++)	
 	{
 		folderButtons.push_back(new menuButton());
-		folderButtons.back()->init(10+145*column,5+40*row,140,35,(*i),Color(0.4,0.4,0.4));
+		folderButtons.back()->init(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4));
 		if(++column==4){column=0;row++;}
 	}
 	for(vector<string>::iterator i=files.begin();i!=files.end();i++)
 	{
 		fileButtons.push_back(new menuButton());
-		fileButtons.back()->init(10+145*column,5+40*row,140,35,(*i),Color(0.6,0.6,0.6));
+		fileButtons.back()->init(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6));
 		if(++column==4){column=0;row++;}
 	}
 }
 int menuChooseFile::update()
 {
+	if(desktop->getChanged())
+	{
+		desktop->resetChanged();
+		char aFolder[MAX_PATH]; 
+		if(SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		{
+			directory = aFolder;
+			refreshView();
+		}
+		return 0;
+	}
+	else if(myDocuments->getChanged())
+	{
+		myDocuments->resetChanged();
+		char aFolder[MAX_PATH]; 
+		if(SHGetFolderPathA(0, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		{
+			directory = aFolder;
+			refreshView();
+		}
+		return 0;
+	}
+	else if(myComputer->getChanged())
+	{
+		myComputer->resetChanged();
+		char aFolder[MAX_PATH]; 
+		if(SHGetFolderPathA(0, CSIDL_DRIVES, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		{
+			directory = aFolder;
+			refreshView();
+		}
+		return 0;
+	}
+	else if(myNetwork->getChanged())
+	{
+		myNetwork->resetChanged();
+		char aFolder[MAX_PATH]; 
+		if(SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		{
+			directory = aFolder;
+			refreshView();
+		}
+		return 0;
+	}
 	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
 	{
 		if((*i)->getChanged())
@@ -260,21 +309,35 @@ int menuChooseFile::update()
 }
 void menuChooseFile::render()
 {
-	glColor3f(0,0,1);
-	glBegin(GL_QUADS);
-		glVertex2f(sw/2-300,sh/2+200);
-		glVertex2f(sw/2+300,sh/2+200);
-		glVertex2f(sw/2+300,sh/2-200);
-		glVertex2f(sw/2-300,sh/2-200);
-	glEnd();
 	glEnable(GL_BLEND);
+	dataManager.bind("file viewer");
+	glColor4f(1,1,1,1);
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,0);	glVertex2f(sw/2-420,sh/2+262);
+		glTexCoord2f(1,0);	glVertex2f(sw/2+421,sh/2+262);
+		glTexCoord2f(1,1);	glVertex2f(sw/2+421,sh/2-261);
+		glTexCoord2f(0,1);	glVertex2f(sw/2-420,sh/2-261);
+	glEnd();
+
+	dataManager.bind("entry bar");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,0);	glVertex2f(sw/2-180,sh/2+235);
+		glTexCoord2f(1,0);	glVertex2f(sw/2+190,sh/2+235);
+		glTexCoord2f(1,1);	glVertex2f(sw/2+190,sh/2+189);
+		glTexCoord2f(0,1);	glVertex2f(sw/2-180,sh/2+189);
+	glEnd();
+
 	glColor4f(0,0,0,1);
-	textManager->renderText(file,(sw-textManager->getTextWidth(file))/2,sh/2+195-textManager->getTextHeight(file));
+	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
 	glPushMatrix();
-	glTranslatef((sw/2-300),(sh/2-200),0);
+	glTranslatef((sw/2-190),(sh/2-246),0);
 	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
 	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	glPopMatrix();
+	desktop->render();
+	myDocuments->render();
+	myComputer->render();
+	myNetwork->render();
 	glDisable(GL_BLEND);
 	menuManager.drawCursor();
 }
@@ -297,15 +360,27 @@ void menuChooseFile::keyDown(int vkey)
 }
 void menuChooseFile::mouseL(bool down, int x, int y)
 {
+	static bool clicking = false;
 	if(down)
 	{
-		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-300),y-(sh/2-200));
-		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-300),y-(sh/2-200));
+		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
+		desktop->mouseDownL(x,y);
+		myDocuments->mouseDownL(x,y);
+		myComputer->mouseDownL(x,y);
+		myNetwork->mouseDownL(x,y);///y=451
+		clicking = (x>sw/2+144) && (x<sw/2+184) && (y>sh/2+190) && (y<sh/2+230);
 	}
 	else
 	{
-		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
-		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-300),y-(sh/2-200));
+		if(clicking) done = true;
+		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
+		desktop->mouseUpL(x,y);
+		myDocuments->mouseUpL(x,y);
+		myComputer->mouseUpL(x,y);
+		myNetwork->mouseUpL(x,y);
+		clicking = false;
 	}
 }
 
@@ -392,21 +467,14 @@ bool menuScreen::loadBackground()
 
 bool menuLevelEditor::init()
 {
-	Color white(1,1,1);
-	Color black(0,0,0);
-	Color darkBlue(0.11,0.35,0.52);
-	Color lightBlue(0.19,0.58,0.78);
-	Color darkGreen(0,0.7,0);
-	Color lightGreen(0,1,0);
-
 	vector<menuButton*> v;//for toggles
 	menuLabel* l;
 
 	//terrain
-	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader");
-	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square");
-	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line");
-	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file");
+	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader",lightGreen);
+	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square",lightGreen);
+	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line",lightGreen);
+	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file",lightGreen);
 
 	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,30,"Exit",Color(0.8,0.8,0.8));
 

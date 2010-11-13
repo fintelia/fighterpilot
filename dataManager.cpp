@@ -79,7 +79,7 @@ int DataManager::loadTerrainShader(string frag)
 	}
 
 	GLuint	f = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB),
-			p;
+			p = 0;
 	char	*ff = textFileRead((char*)frag.c_str()),
 			*cf=(char*)malloc(512);
 	int		lf=0;
@@ -647,6 +647,8 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.tga");
 	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.tga");
 	if(callNum==n++)	registerAsset("button",				"media/button.tga");
+	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.tga");
+	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.tga");
 
 	//if(callNum==n++)	registerAsset("menu background",			"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.tga");

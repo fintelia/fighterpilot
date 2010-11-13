@@ -152,7 +152,6 @@ public:
 	bool init(string ExtFilter);
 	int update();
 	void render();
-
 	
 	void refreshView();
 	string getFile() {return (directory/file).string();}
@@ -171,6 +170,10 @@ protected:
 	vector<menuButton*> folderButtons;
 	vector<menuButton*> fileButtons;
 
+	menuButton* desktop;
+	menuButton* myDocuments;
+	menuButton* myComputer;
+	menuButton* myNetwork;
 };
 class menuMessageBox: public menuPopup
 {

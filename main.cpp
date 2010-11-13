@@ -16,6 +16,13 @@ extern const double PI = 3.14159265358979323846264338327950288419716939937510582
 extern const float size=128;
 char* errorString;
 
+const Color white(1.0f,1.0f,1.0f);
+const Color black(0.0f,0.0f,0.0f);
+const Color darkBlue(0.11f,0.35f,0.52f);
+const Color lightBlue(0.19f,0.58f,0.78f);
+const Color darkGreen(0.49f,0.57f,0.06f);
+const Color lightGreen(0.68f,0.76f,0.12f);
+
 int sh=1024;
 int sw=1280;
 
