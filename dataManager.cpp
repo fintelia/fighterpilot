@@ -784,6 +784,8 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("button",				"media/button.png");
 	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
+	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
+	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 
 	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");

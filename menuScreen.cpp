@@ -37,11 +37,11 @@ bool MenuManager::init()
 	registerMenu("menuLevelEditor", &CreateObject<menuLevelEditor>);
 	registerMenu("menuInGame", &CreateObject<menuInGame>);
 	registerMenu("menuChooseMode", &CreateObject<menuChooseMode>);
-	//return setMenu("menuLevelEditor");
 	return true;
 }
 void MenuManager::render()
 {
+	glEnable(GL_BLEND);
 	mDrawCursor = false;
 	if(menu != NULL)
 		menu->render();
@@ -51,14 +51,15 @@ void MenuManager::render()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		glColor3f(0,0,0);
+		dataManager.bindTex(0);
+		glColor4f(0,0,0,1);
 		glBegin(GL_TRIANGLES);
 			glVertex2f((float)cursorPos.x,(float)cursorPos.y);
 			glVertex2f((float)cursorPos.x,(float)cursorPos.y+20);
 			glVertex2f((float)cursorPos.x+10,(float)cursorPos.y+16);
 		glEnd();
-		glDisable(GL_BLEND);
 	}
+	glDisable(GL_BLEND);
 }
 int MenuManager::update()
 {
@@ -309,7 +310,6 @@ int menuChooseFile::update()
 }
 void menuChooseFile::render()
 {
-	glEnable(GL_BLEND);
 	dataManager.bind("file viewer");
 	glColor4f(1,1,1,1);
 	glBegin(GL_QUADS);
@@ -338,7 +338,6 @@ void menuChooseFile::render()
 	myDocuments->render();
 	myComputer->render();
 	myNetwork->render();
-	glDisable(GL_BLEND);
 	menuManager.drawCursor();
 }
 void menuChooseFile::keyDown(int vkey)
@@ -386,73 +385,102 @@ void menuChooseFile::mouseL(bool down, int x, int y)
 
 bool menuMessageBox::init(string t)
 {
-	return init(t,vector<string>(1,"OK"));
+	return init(t, vector<string>(1,"OK"));
 }
-bool menuMessageBox::init(string t, vector<string> options)
+bool menuMessageBox::init(string t, vector<string> names)
 {
-	width = max(textManager->getTextWidth(t)+20,options.size()*200);
+	if(names.empty()) return init(t);//watch out for infinite loop!!
 
-	height = textManager->getTextHeight(t)+110;
+	width = max(textManager->getTextWidth(t)+40,715);
+	height = max(textManager->getTextHeight(t)-170,0) + 295;
 	x = (sw-width)/2;
 	y = (sh-height)/2;
 	if(x < 5) x = 5;
+	if(y < 5) y = 5;
 
 	label = new menuLabel;
-	label->init((width-textManager->getTextWidth(t))/2,20,t);
+	label->init(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
 
-	int xv = (width - options.size()*200)/2+25;
-	for(vector<string>::iterator i = options.begin();i !=options.end(); i++)
+	float slotWidth = (685.0*715/width) / names.size();
+	int slotNum = 0;
+	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
-		menuButton* b = new menuButton;
-		b->init(xv,textManager->getTextHeight(t)+40,150,50,*i,Color(0.3,0.3,0.3));
-		buttons.push_back(b);
-		xv += 200;
+		menuLabel* l = new menuLabel;
+		l->init(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white);
+		options.push_back(l);
 	}
 	value=-1;
+	clicking=-1;
 	return true;
 }
 void menuMessageBox::render()
 {
-	glColor3f(0.5,0.5,0.5);
+	glColor4f(1,1,1,1);
+	dataManager.bind("dialog box");
 	glBegin(GL_QUADS);
-		glVertex2f(x,y);
-		glVertex2f(x,y+height);
-		glVertex2f(x+width,y+height);
-		glVertex2f(x+width,y);
+		glTexCoord2f(0,0);	glVertex2f(x,y);
+		glTexCoord2f(0,1);	glVertex2f(x,y+height);
+		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+		glTexCoord2f(1,0);	glVertex2f(x+width,y);
 	glEnd();
-	glEnable(GL_BLEND);
-	glPushMatrix();
-	glTranslatef(x,y,0);
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+	dataManager.bindTex(0);
+
+	int startX = (15.0/715*width)+x;
+	int startY = (193.0/295*height)+y;
+	float slotWidth = (685.0*715/width) / options.size();
+	float slotHeight = (84.0/295*height);
+	int slotNum=0;
+	POINT cursorPos;
+	GetCursorPos(&cursorPos);
+	for(vector<menuLabel*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
+		if(cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
+		{
+			dataManager.bind("glow");
+			glBegin(GL_QUADS);
+				glTexCoord2f(0,0);	glVertex2f(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5-35);
+				glTexCoord2f(0,1);	glVertex2f(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5+35);
+				glTexCoord2f(1,1);	glVertex2f(startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,startY+slotHeight*0.5+35);
+				glTexCoord2f(1,0);	glVertex2f(startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,startY+slotHeight*0.5-35);
+			glEnd();
+		}
 		(*i)->render();
 	}
 	if(label != NULL) label->render();
-	glPopMatrix();
-	glDisable(GL_BLEND);
 	menuManager.drawCursor();
+
 }
 void menuMessageBox::mouseL(bool down, int X, int Y)
 {
+	if(done) return;
+
+	int startX = (15.0/715*width)+x;
+	int startY = (193.0/295*height)+y;
+	float slotWidth = (685.0*715/width) / options.size();
+	float slotHeight = (84.0/295*height)+y;
 	if(down)
 	{
-		for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+		clicking=-1;
+		for(int slotNum = 0; slotNum < options.size();slotNum++)
 		{
-			(*i)->mouseDownL(X-x,Y-y);
+			if(X > startX && X < startX+slotWidth && Y > startY && Y < startY+slotHeight)
+				clicking = slotNum;
 		}
+
 	}
 	else
 	{
-		int n=0;
-		for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+		int slotNum = 0;
+		for(int slotNum = 0; slotNum < options.size();slotNum++)
 		{
-			(*i)->mouseUpL(X-x,Y-y);
-			if((*i)->getChanged() && value != n)
+			if(X > startX && X < startX+slotWidth && Y > startY && Y < startY+slotHeight && clicking == slotNum)
 			{
-				value=n;
+				value=clicking;
 				done=true;
+				return;
 			}
 		}
+		clicking = -1;
 	}
 }
 
@@ -471,12 +499,12 @@ bool menuLevelEditor::init()
 	menuLabel* l;
 
 	//terrain
-	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader",lightGreen);
-	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square",lightGreen);
-	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line",lightGreen);
-	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file",lightGreen);
+	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader",lightGreen,white);
+	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square",lightGreen,white);
+	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line",lightGreen,white);
+	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file",lightGreen,white);
 
-	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,30,"Exit",Color(0.8,0.8,0.8));
+	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
 
 	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),darkGreen,lightGreen,0);
 	addShader("media/terrain.frag");
@@ -530,9 +558,9 @@ bool menuLevelEditor::init()
 	bSeaFloorType->setLabel(l);
 
 	v.clear();
-	v.push_back(new menuButton());		v[0]->init(5,sh-35,100,30,"Terrain");
-	v.push_back(new menuButton());		v[1]->init(110,sh-35,100,30,"Zones");
-	v.push_back(new menuButton());		v[2]->init(215,sh-35,100,30,"Settings");
+	v.push_back(new menuButton());		v[0]->init(5,sh-40,100,35,"Terrain",black,white);
+	v.push_back(new menuButton());		v[1]->init(110,sh-40,100,35,"Zones",black,white);
+	v.push_back(new menuButton());		v[2]->init(215,sh-40,100,35,"Settings",black,white);
 	bTabs = new menuToggle();			bTabs->init(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),0);
 	return true;
 }
@@ -637,7 +665,6 @@ int menuLevelEditor::update()
 }
 void menuLevelEditor::render()
 {
-	glEnable(GL_BLEND);
 	glColor3f(0,1,0);
 	if(getTab() == TERRAIN)
 	{
@@ -741,7 +768,7 @@ void menuLevelEditor::addShader(string filename)
 	((mapBuilder*)mode)->shaderButtons.push_back(s);
 
 	menuButton* b = new menuButton();
-	b->init(5,bShaders->getSize()*35+5,200,30,filename);
+	b->init(5,bShaders->getSize()*35+5,200,30,filename,black,white);
 	bShaders->addButton(b);
 	//shaders.push_back(b);
 	bNewShader->setElementXY(5,bShaders->getSize()*35+5);
@@ -772,7 +799,6 @@ void menuChooseMode::render()
 
 	glPushMatrix();
 	glScalef((float)sw/800,(float)sh/600,1);
-	glEnable(GL_BLEND);
 	dataManager.bind("menu slot");
 	glBegin(GL_QUADS);
 	for(int i=1;i<=5;i++)
@@ -798,7 +824,6 @@ void menuChooseMode::render()
 	glEnd();
 	glPopMatrix();
 	dataManager.bindTex(0);
-	glDisable(GL_BLEND);
 }
 void menuChooseMode::keyDown(int vkey)
 {
@@ -845,14 +870,12 @@ bool menuInGame::init()
 }
 void menuInGame::render()
 {
-	glEnable(GL_BLEND);
 	if(activeChoice==RESUME)	glColor3f(1,1,0); else glColor3f(1,1,1);
 	textManager->renderText("resume",sw/2-(textManager->getTextWidth("resume"))/2,sh/2-75);
 	if(activeChoice==OPTIONS)	glColor3f(1,1,0); else glColor3f(1,1,1);
 	textManager->renderText("options",sw/2-(textManager->getTextWidth("options"))/2,sh/2);
 	if(activeChoice==QUIT)	glColor3f(1,1,0); else glColor3f(1,1,1);
 	textManager->renderText("quit",sw/2-(textManager->getTextWidth("quit"))/2,sh/2+75);
-	glDisable(GL_BLEND);
 	Redisplay=true;
 }
 void menuInGame::keyDown(int vkey)
@@ -932,20 +955,67 @@ void menuButton::init(int X, int Y, int Width, int Height, string t, Color c, Co
 }
 void menuButton::render()
 {
-	glEnable(GL_BLEND);
-	glColor4f(color.r,color.g,color.b,1.0);
+	glColor4f(color.r,color.g,color.b,color.a);
 	dataManager.bind("button");
 	glBegin(GL_QUADS);
-		glTexCoord2f(0,1);	glVertex2f(x,y);
-		glTexCoord2f(1,1);	glVertex2f(x+width,y);
-		glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-		glTexCoord2f(0,0);	glVertex2f(x,y+height);
+	float tx,ty,twidth,theight;
+	float rx,ry,rwidth,rheight;
+	for(int ix=0;ix<3;ix++)
+	{
+		for(int iy=0;iy<3;iy++)
+		{
+			if(ix==0)
+			{
+				tx=0.0;
+				twidth=10.0/140;
+				rx=x;
+				rwidth=min(10,width/2);
+			}
+			else if(ix==1)
+			{
+				tx=10.0/140;
+				twidth=1.0-20.0/140;
+				rx=x+10;
+				rwidth=max(width-20,0);
+			}
+			else if(ix==2)
+			{
+				tx=1.0-10.0/140;
+				twidth=10.0/140;
+				rx=x+width-min(10,width/2);
+				rwidth=min(10,width/2);
+			}
+			if(iy==0)
+			{
+				ty=0.0;
+				theight=10.0/45;
+				ry=y;
+				rheight=min(10,height/2);
+			}
+			else if(iy==1)
+			{
+				ty=10.0/45;
+				theight=1.0-20.0/45;
+				ry=y+10;
+				rheight=max(height-20,0);
+			}
+			else if(iy==2)
+			{
+				ty=1.0-10.0/45;
+				theight=10.0/45;
+				ry=y+height-min(10,height/2);
+				rheight=min(10,height/2);
+			}
+			glTexCoord2f(tx,		ty);			glVertex2f(rx,ry);
+			glTexCoord2f(tx+twidth,	ty);			glVertex2f(rx+rwidth,ry);
+			glTexCoord2f(tx+twidth,	ty+theight);	glVertex2f(rx+rwidth,ry+rheight);
+			glTexCoord2f(tx,		ty+theight);	glVertex2f(rx,ry+rheight);	
+		}
+	}
 	glEnd();
 	dataManager.bindTex(0);
-	glColor4f(textColor.r,textColor.g,textColor.b,1.0);
+	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
 	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
-	glDisable(GL_BLEND);
-
 }
 void menuButton::mouseDownL(int X, int Y)
 {
@@ -960,10 +1030,8 @@ void menuButton::mouseUpL(int X, int Y)
 }
 void menuLabel::render()
 {
-	glEnable(GL_BLEND);
-	glColor4f(color.r,color.g,color.b,1);
+	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x,y);
-	glDisable(GL_BLEND);
 }
 void menuToggle::init(vector<menuButton*> b, Color clickedC, Color unclickedC, int startValue)
 {

@@ -79,20 +79,20 @@ public:
 				{
 					float v=(750-(countdown-250))/750;
 					glBegin(GL_QUADS);
-						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
-						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh);
-						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh);
-						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
+						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
+						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh);
+						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh);
+						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
 					glEnd();
 				}
 				else
 				{
 					float v=countdown/250;
 					glBegin(GL_QUADS);
-						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
-						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh);
-						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh);
-						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
+						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
+						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh);
+						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh);
+						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
 					glEnd();
 				}
 			glPopMatrix();

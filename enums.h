@@ -58,9 +58,9 @@ struct controlState
 
 struct Color
 {
-	float r,g,b;
-	Color(float R, float G, float B): r(R), g(G), b(B){}
-	Color(): r(0), g(0), b(0){}
+	float r,g,b,a;
+	Color(float R, float G, float B, float A=1.0): r(R), g(G), b(B), a(A){}
+	Color(): r(0), g(0), b(0),a(0){}
 };
 
 extern const Color white;

@@ -59,7 +59,7 @@ public:
 	menuLabel(): menuElement(LABEL){}
 	virtual ~menuLabel(){}
 
-	void init(int X, int Y, string t){x=X;y=Y;text=t;}
+	void init(int X, int Y, string t,Color c=Color(0,0,0)){x=X;y=Y;text=t;color=c;}
 	void render();
 
 protected:
@@ -178,7 +178,7 @@ protected:
 class menuMessageBox: public menuPopup
 {
 public:
-	menuMessageBox():value(-1){}
+	menuMessageBox():value(-1),clicking(-1){}
 	~menuMessageBox(){}
 
 	bool init(string t);
@@ -188,11 +188,14 @@ public:
 
 	void mouseL(bool down, int x, int y);
 protected:
-	vector<menuButton*> buttons;
+	vector<menuLabel*> options;
 	menuLabel* label;
 	int value;
 
 	int x, y, width, height;
+
+	int clicking;
+
 };
 class menuScreen: functor<void,menuPopup*>
 {
