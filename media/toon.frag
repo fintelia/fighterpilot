@@ -10,6 +10,7 @@ uniform sampler2D myTexture[5];
 varying float height;
 void main()
 {
+	if(height<0.0) discard; 
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
 	//Normal = normalize(Normal);
 

@@ -55,6 +55,7 @@ MenuManager& menuManager=MenuManager::getInstance();
 DataManager& dataManager=DataManager::getInstance();
 WorldManager& worldManager=WorldManager::getInstance();
 CollisionChecker& collisionCheck=CollisionChecker::getInstance();
+GraphicsManager* graphics=OpenGLgraphics::getInstance();
 Terrain* terrain;
 bool Redisplay=false;
 bool hasContext=true;
@@ -68,6 +69,9 @@ bool lowQuality;
 player players[NumPlayers];
 GameTime gameTime;
 
+GraphicsManager::gID fireParticleEffect;
+GraphicsManager::gID smokeParticleEffect;
+GraphicsManager::gID exaustParticleEffect;
 struct resize_t
 {
 	resize_t(): mutex(CreateMutex(NULL,false,NULL)), needResize(false), x(0), y(0) {}
@@ -119,7 +123,14 @@ bool initRendering() {
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
-	
+
+	glEnable(GL_POINT_SPRITE_ARB);
+	float quadratic[] =  { 0.0f, 0.0f, 0.000001f };
+	glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION_ARB, quadratic );
+	glPointParameterf( GL_POINT_SIZE_MIN_ARB, 1 );
+	glPointParameterf( GL_POINT_SIZE_MAX_ARB, 8192 );
+	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+
 	return true;
 }
 void handleResize(int w, int h) {
@@ -153,13 +164,14 @@ bool draw()
 	//	frame = 0;
 	//}
 	
-	mode->draw();
+	mode->draw();glError();
 	//Cmenu->draw();
 	glViewport(0,0,sw,sh);
 	viewOrtho(sw,sh);
 	menuManager.render();
 	viewPerspective();
 	Profiler.endElement("mainDraw");
+	graphics->reset();
 	glError();
 	return true;
 }
@@ -564,7 +576,7 @@ bool InitMultisample(HINSTANCE hInstance,HWND hWnd,PIXELFORMATDESCRIPTOR pfd)
 		WGL_STENCIL_BITS_ARB,0,
 		WGL_DOUBLE_BUFFER_ARB,GL_TRUE,
 		WGL_SAMPLE_BUFFERS_ARB,GL_TRUE,
-		WGL_SAMPLES_ARB, 16 ,						// Check For 4x Multisampling
+		WGL_SAMPLES_ARB, 16 ,						// Check For 16x Multisampling
 		0,0};
 
 	while(iAttributes[19] > 1)
@@ -822,6 +834,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	mode=new loading;
 	textManager = new TextManager();
 	menuManager.init();
+
+	fireParticleEffect = graphics->newParticleEffect("explosion fireball",120);
+	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",200);
+	exaustParticleEffect = graphics->newParticleEffect("missile smoke",20 );
 //////
 
 //#define MULTITHREADED

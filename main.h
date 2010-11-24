@@ -13,7 +13,7 @@
 #include <iostream>
 #include <random>
 #include <cstdarg>
-#include "debug.h"
+#include <iomanip>
 #include <cassert>
 //--Boost C++ Library
 #include <boost/filesystem.hpp>
@@ -71,7 +71,7 @@ void viewPerspective();
 #include "gameMath.h"
 #include "random.h"
 
-
+#include "graphicsManager.h"
 #include "dataManager.h"
 #include "load_save.h"
 #include "path.h"
@@ -106,6 +106,10 @@ extern vector<bullet> bullets;
 extern vector<missile> missiles;
 extern Smoke newSmoke;
 extern Smoke newExaust;
+
+extern GraphicsManager::gID fireParticleEffect;
+extern GraphicsManager::gID smokeParticleEffect;
+extern GraphicsManager::gID exaustParticleEffect;
 
 extern map<int,planeBase*> planes;
 extern vector<turret*> turrets;

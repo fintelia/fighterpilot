@@ -77,3 +77,8 @@ bool SegmentSphereIntersect(Vector3<T> A, Vector3<T> B, Vector3<T> P, U r)
 
     return P.distanceSquared(Q) < r*r;
 }
+template <class T, class U, class V>
+T lerp(T a, U b, V t)
+{
+	return a+(b-a)*t;
+}

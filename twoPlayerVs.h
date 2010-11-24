@@ -57,7 +57,7 @@ public:
 	{
 		prepareMap("media/mapfile.txt");
 		waterDisp();
-		
+		treesDisp();
 		//level = new Level(settings.MAP_FILE.c_str());
 
 		newMode=(modeType)0;

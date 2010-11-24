@@ -892,6 +892,52 @@ protected:
 	//		glEnd();
 	//	}
 	//}
+	void drawWater5(Vec3f eye)
+	{
+		double sl=settings.SEA_LEVEL;
+		Vec3d center(eye.x,sl,eye.z);
+		double radius = (eye.y-sl)*tan(asin(6000000/(6000000+eye.y-sl)));
+		float cAng,sAng;
+
+		int s=dataManager.getId("horizon2");
+		dataManager.bind("horizon2");
+
+	 	dataManager.bind("hardNoise",0);
+		dataManager.bindTex(terrain->textureId,1);
+		if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
+		else								dataManager.bind("sand",2);
+
+		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+		glUniform1i(glGetUniformLocation(s, "ground"), 1);
+		glUniform1i(glGetUniformLocation(s, "tex"), 2);
+		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2); glError();
+		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); glError();
+
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glPushMatrix();
+		
+		glBegin(GL_TRIANGLE_FAN);
+			glTexCoord2f(center.x/(terrain->width()*size),center.z/(terrain->length()*size));	
+			glVertex3f(center.x,center.y,center.z);
+
+			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
+			{
+				cAng=cos(ang);
+				sAng=sin(ang);
+				glTexCoord2f((center.x-cAng*radius)/(terrain->width()*size),(center.z-sAng*radius)/(terrain->length()*size));
+				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
+			}
+		glEnd();
+		glPopMatrix();glError();
+
+		dataManager.bindTex(0,2);
+		dataManager.bindTex(0,1);
+		dataManager.bindTex(0,0);
+		dataManager.bindShader(0);glError();
+	}
 	void seaFloor()
 	{
 		dataManager.bind("sea floor");
@@ -1514,10 +1560,10 @@ protected:
 			s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
 			s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
-			s[i*4+0].r=0.25;	s[i*4+0].g=0.25;	s[i*4+0].b=0.25;	s[i*4+0].a=0.5*newSmoke.life[i]*newSmoke.life[i];
-			s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*newSmoke.life[i]*newSmoke.life[i];
-			s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*newSmoke.life[i]*newSmoke.life[i];
-			s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*newSmoke.life[i]*newSmoke.life[i];
+			s[i*4+0].r=0.25;	s[i*4+0].g=0.25;	s[i*4+0].b=0.25;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
 
 			s[i*4+0].s=0;	s[i*4+0].t=1;
 			s[i*4+1].s=1;	s[i*4+1].t=1;
@@ -1575,10 +1621,10 @@ protected:
 			s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
 			s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
-			s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*newExaust.life[i]*newExaust.life[i];
-			s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*newExaust.life[i]*newExaust.life[i];
-			s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*newExaust.life[i]*newExaust.life[i];
-			s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*newExaust.life[i]*newExaust.life[i];
+			s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+			s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
 
 			s[i*4+0].s=0;	s[i*4+0].t=1;
 			s[i*4+1].s=1;	s[i*4+1].t=1;
@@ -1610,6 +1656,18 @@ protected:
 		glDisableClientState(GL_VERTEX_ARRAY);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glDisableClientState(GL_COLOR_ARRAY);
+	}
+	void graphicsExaust()
+	{
+		Profiler.setOutput("smoke sprites", newExaust.getSize());
+		if(newExaust.getSize()==0) return;
+		float life;
+		for(int i=0;i<newExaust.getSize();i++)
+		{
+			life = gameTime()-newExaust.startTime[i];
+			if(life > 0 && newExaust.startTime[i] + life < newExaust.endTime[i])
+			graphics->drawParticle(exaustParticleEffect,newExaust.positions[i]+newExaust.velocity[i]*(life)/1000,Color(0.5,0.5,0.5,0.5/(2.0-life/newExaust.endTime[1])));
+		}
 	}
 	//void billboardParticles()
 	//{
@@ -1756,6 +1814,70 @@ protected:
 	//	glPointParameterfvARB( GL_POINT_DISTANCE_ATTENUATION,normal);
 	//	//glDepthFunc(GL_LESS);
 	//}
+	int treeDisp;
+	void treesDisp()
+	{
+		int i;
+		float h;
+
+
+
+		Vec2f* trees = new Vec2f[40000];
+		for(i=0;i<10000;i++)
+		{
+			trees[i].x = float(rand()%(terrain->width()*8))/8.0f;
+			trees[i].y = float(rand()%(terrain->length()*8))/8.0f;
+		}
+
+		treeDisp = glGenLists(1);
+		glNewList(treeDisp,GL_COMPILE);
+
+		glColor3f(1,1,1);
+
+		dataManager.bind("tree front");
+		glBegin(GL_QUADS);
+		for(i=0;i<40000;i++)
+		{
+			h = terrain->getHeight(floor(trees[i].x),floor(trees[i].y));
+			if(h > 60){
+				glTexCoord2f(0,1);	glVertex3f(trees[i].x*size-45,	h-10,	trees[i].y*size);
+				glTexCoord2f(0,0);	glVertex3f(trees[i].x*size-45,	h+100,	trees[i].y*size);
+				glTexCoord2f(1,0);	glVertex3f(trees[i].x*size+45,	h+100,	trees[i].y*size);
+				glTexCoord2f(1,1);	glVertex3f(trees[i].x*size+45,	h-10,	trees[i].y*size);
+			}
+		}
+		glEnd();
+		dataManager.bind("tree right");
+		glBegin(GL_QUADS);
+		for(i=0;i<40000;i++)
+		{
+			h = terrain->getHeight(floor(trees[i].x),floor(trees[i].y));
+				if(h > 60){
+					glTexCoord2f(0,1);	glVertex3f(trees[i].x*size,	h-10,	trees[i].y*size-45);
+					glTexCoord2f(0,0);	glVertex3f(trees[i].x*size,	h+100,	trees[i].y*size-45);
+					glTexCoord2f(1,0);	glVertex3f(trees[i].x*size,	h+100,	trees[i].y*size+45);
+					glTexCoord2f(1,1);	glVertex3f(trees[i].x*size,	h-10,	trees[i].y*size+45);
+				}
+		}
+		glEnd();
+		dataManager.bind("tree top");
+		//glBegin(GL_QUADS);
+		//for(i=0;i<40000;i++)
+		//{
+		//	h = terrain->getHeight(floor(trees[i].x),floor(trees[i].y));
+		//	if(h > 60){
+		//		glTexCoord2f(0,0);	glVertex3f(trees[i].x*size-45,	h+40,	trees[i].y*size-45);
+		//		glTexCoord2f(0,1);	glVertex3f(trees[i].x*size-45,	h+40,	trees[i].y*size+45);
+		//		glTexCoord2f(1,1);	glVertex3f(trees[i].x*size+45,	h+40,	trees[i].y*size+45);
+		//		glTexCoord2f(1,0);	glVertex3f(trees[i].x*size+45,	h+40,	trees[i].y*size-45);
+		//	}
+		//}
+		//glEnd();
+
+		glEndList();
+		free(trees);
+							
+	}
 	void drawPlanes(int acplayer,Vec3f e,bool showBehind=false,bool showDead=false)
 	{
 		plane p=*(plane*)planes[players[acplayer].planeNum()];
@@ -1924,9 +2046,9 @@ protected:
 		if(!players[acplayer].firstPerson() || p.controled)
 		{
 			Vec3f vel2D = p.rotation * Vec3f(0,0,1); vel2D.y=0;
-			e=Vec3f(p.pos.x - vel2D.normalize().x*175, p.pos.y + sin(45.0)*175 , p.pos.z - vel2D.normalize().z*175);
+			e=Vec3f(p.pos.x - vel2D.normalize().x*105, p.pos.y + sin(45.0)*105 , p.pos.z - vel2D.normalize().z*105);
 			if(p.controled) e=p.camera;
-			c=Vec3f(p.pos.x + vel2D.normalize().x*175, p.pos.y, p.pos.z + vel2D.normalize().z*175);
+			c=Vec3f(p.pos.x + vel2D.normalize().x*105, p.pos.y, p.pos.z + vel2D.normalize().z*105);
 			if(p.controled) c=p.center;
 			u=Vec3f(0,1,0);
 
@@ -1979,25 +2101,30 @@ protected:
 		glPopMatrix();
 		glDepthRange(0,1);
 		Profiler.endElement("dome");
+
 		Profiler.startElement("water");
 		if(settings.MAP_TYPE==WATER && level == NULL)
 		{
 			//if(lowQuality)
 				drawWater3(e);
+				//drawWater5(e);
 			//else
 			//	drawWater4(e);
+			
 		}
 		Profiler.endElement("water");
-
-		Profiler.startElement("ground");
+		Profiler.startElement("land");
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(1.0,1.0);
 		if(level != NULL)
 			level->render();
 		else
 			glCallList(disp[0]);
-		Profiler.endElement("ground");
-
-		Profiler.startElement("models");
-		//missiles
+		glPolygonOffset(0.0,0.0);
+		glDisable(GL_POLYGON_OFFSET_FILL);
+		Profiler.endElement("land");
+		Profiler.startElement("missiles");
+	glError();	//missiles
 		glColor3f(1,0,0);
 		Vec3f axis;
 		for(int i=0;i<(signed int )missiles.size();i++)
@@ -2015,6 +2142,8 @@ protected:
 				glCallList(missiles[i].displayList);
 			glPopMatrix();
 		}
+
+		Profiler.endElement("missiles");
 		glColor3f(0,1,0);
 		for(int i=0;i<(signed int )turrets.size();i++)
 		{
@@ -2024,10 +2153,10 @@ protected:
 				//glCallList(model[4]);   need to load model
 			glPopMatrix();
 		}
-
+		Profiler.startElement("planes");
 		//planes
 		drawPlanes(acplayer,e,false);
-		Profiler.endElement("models");
+		Profiler.endElement("planes");glError();
 #ifdef AI_TARGET_LINES 
 		glBegin(GL_LINES);
 		int t;
@@ -2052,18 +2181,25 @@ protected:
 		Profiler.startElement("trans");	
 		glDepthMask(false);
 		glEnable(GL_BLEND);
-		glDisable(GL_LIGHTING);
+		glDisable(GL_LIGHTING);glError();
 
-		bulletTrails();
+		//glCallList(treeDisp);
 
+		
+		Profiler.startElement("particles");
 		for(map<int,planeBase*>::iterator i=planes.begin();i!=planes.end();i++)
 			i->second->drawExplosion(p.id==i->second->id);
 		//vertexArrayParticles();
 
-		vertexArrayExaust();
+
+	
+		graphicsExaust();
+		graphics->render3D();
+		Profiler.endElement("particles");
 
 		//drawOrthoView(acplayer,e);
 
+		bulletTrails();
 
 		//////////////2D/////////////
 		glDisable(GL_DEPTH_TEST);
@@ -2078,11 +2214,11 @@ protected:
 
  			if(acplayer==0) textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
 				//textManager->renderText(string((char*)gluErrorString(glGetError())),sw/2-25,25);
-			//if(acplayer==0) Profiler.draw();
+			if(acplayer==0) Profiler.draw();
 		#endif
 		glEnable(GL_DEPTH_TEST);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
 		viewPerspective();
 		///////////2D end//////////////
 
@@ -2092,7 +2228,7 @@ protected:
 		glDepthMask(true);
 		Profiler.endElement("trans");
 
-		lastDraw[acplayer] = time;
+		lastDraw[acplayer] = time;glError();
 	}
 	void updateWorld(float ms)
 	{
@@ -2139,7 +2275,7 @@ protected:
 				{
 					if(p.distance(missiles[l].pos)<32 && missiles[l].owner != (*i).first)
 					{
-						(*i).second->loseHealth(35.0);
+						(*i).second->loseHealth(55.0);
 						if((*i).second->dead) 
 						{
 							if(missiles[l].owner==players[0].planeNum() && players[0].active()) players[0].addKill();

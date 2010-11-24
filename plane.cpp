@@ -89,7 +89,7 @@ void planeBase::updateAll()
 			altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
 			if(altitude<3.0){die();pos.y-=altitude-3;hitGround=true;}
 			
-			speed = clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,300.0,700.0);
+			speed = clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,500.0,1000.0);
 			climb = clamp(climb + 0.9*controller.climb*(ms/1000) - 0.9*controller.dive*(ms/1000),-PI/3,PI/4);
 			turn  = clamp(turn  + 0.9*controller.right*(ms/1000) - 0.9*controller.left*(ms/1000),-1.0,1.0);
 			direction -= turn/120;
@@ -287,7 +287,7 @@ void planeBase::returnToBattle()
 	Quat4f newRot(Vec3f(0,1,0),atan2A(pos.x-size*64,pos.z-size*64));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
-	camera=Vec3f(pos.x - fwd.x*175, pos.y + sin(45.0)*175,	 pos.z - fwd.z*175);
+	camera=Vec3f(pos.x - fwd.x*100, pos.y + sin(45.0)*100,	 pos.z - fwd.z*100);
 	center=Vec3f(pos.x + fwd.x*175, pos.y, pos.z + fwd.z*175);
 	
 
@@ -463,7 +463,7 @@ void plane::spawn()
 	turn = 0;
 	climb = 0;
 	direction = 0;
-	speed=300.0;
+	speed=500.0;
 
 	dead = false;
 	controled=false;
@@ -525,7 +525,7 @@ void AIplane::spawn()
 	turn = 0;
 	climb = 0;
 	direction = 0;
-	speed=300.0;
+	speed=750.0;
 
 	dead = false;
 	controled=false;

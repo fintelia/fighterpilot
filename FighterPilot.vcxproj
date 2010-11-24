@@ -117,6 +117,7 @@
       <FloatingPointExceptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </FloatingPointExceptions>
     </ClCompile>
+    <ClCompile Include="graphicsManager.cpp" />
     <ClCompile Include="gridFloat.cpp" />
     <ClCompile Include="gui.cpp" />
     <ClCompile Include="imageloader.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="FrustumG.h" />
     <ClInclude Include="gameMath.h" />
     <ClInclude Include="geoPlane.h" />
+    <ClInclude Include="graphicsManager.h" />
     <ClInclude Include="gridFloat.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="imageloader.h" />
@@ -207,6 +209,8 @@
     <ClInclude Include="XboxContInput.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="horizon2.frag" />
+    <None Include="horizon2.vert" />
     <None Include="media\grass.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
