@@ -51,6 +51,13 @@
     </Filter>
     <Filter Include="libpng">
       <UniqueIdentifier>{a741da3b-2684-4290-b03d-dade5aebbed4}</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files\graphicsManager">
+      <UniqueIdentifier>{28695228-5191-4f36-80fe-9e7a88adfc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\horizon2">
+      <UniqueIdentifier>{3f4def0e-7e89-4d54-aa74-ba9504830540}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +205,9 @@
     <ClCompile Include="png\crc32.c">
       <Filter>libpng</Filter>
     </ClCompile>
+    <ClCompile Include="graphicsManager.cpp">
+      <Filter>Source Files\graphicsManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h">
@@ -341,6 +351,9 @@
     <ClInclude Include="path.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="graphicsManager.h">
+      <Filter>Source Files\graphicsManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -393,6 +406,12 @@
     </None>
     <None Include="media\ocean.frag">
       <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="horizon2.vert">
+      <Filter>shaders\horizon2</Filter>
+    </None>
+    <None Include="horizon2.frag">
+      <Filter>shaders\horizon2</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

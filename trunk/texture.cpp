@@ -36,7 +36,7 @@ typedef struct
 GLuint LoadBitMap(char *filename,bool NPOT)
 {
 	double t=GetTime();
-	static bool ext_NPOT = GLEE_ARB_texture_non_power_of_two;//0!=strstr((char*)glGetString(GL_EXTENSIONS), "GL_ARB_texture_non_power_of_two");
+	static bool ext_NPOT = (bool)GLEE_ARB_texture_non_power_of_two;//0!=strstr((char*)glGetString(GL_EXTENSIONS), "GL_ARB_texture_non_power_of_two");
 	GLuint texV[1]={-1};
     int j=0; //Index variables
     //unsigned char *l_texture; //The pointer to the memory zone in which we will load the texture

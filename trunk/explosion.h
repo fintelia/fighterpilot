@@ -13,6 +13,7 @@ private:
 		Vec3f initialVelocity;
 	};
 	vector<smokeParticle> smokeParticles;
+	vector<smokeParticle> fireParticles;
 public:
 	Vec3f pos;
 	explosion(Vec3f Pos);
@@ -25,4 +26,6 @@ public:
 		up.set(		modelview[1],modelview[5],modelview[9]);
 	}
 	void render(bool flash);
+	void render2();
+	void render3();
 };

@@ -593,37 +593,37 @@ int DataManager::loadPNG(string filename)
 	fopen_s(&infile,filename.c_str(), "rb");
 
 	if (!infile) {
-	  return 0;
+		return 0;
 	}
 
 	unsigned char sig[8];
 	/* Check for the 8-byte signature */
 	fread(sig, 1, 8, infile);
 	if (!png_check_sig((unsigned char *) sig, 8)) {
-	  fclose(infile);
-	  return 0;
+		fclose(infile);
+		return 0;
 	}
 	/* 
 	 * Set up the PNG structs 
 	 */
 	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!png_ptr) {
-	  fclose(infile);
-	  return 0; /* out of memory */
+		fclose(infile);
+		return 0; /* out of memory */
 	}
 
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
-	  png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
-	  fclose(infile);
-	  return 0; /* out of memory */
+		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+		fclose(infile);
+		return 0; /* out of memory */
 	}
 
 	png_infop end_ptr = png_create_info_struct(png_ptr);
 	if (!end_ptr) {
-	  png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
-	  fclose(infile);
-	  return 0; /* out of memory */
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+		fclose(infile);
+		return 0; /* out of memory */
 	}
 
 	/*
@@ -631,9 +631,9 @@ int DataManager::loadPNG(string filename)
 	 * then check whether the PNG file had a bKGD chunk
 	 */
 	if (setjmp(png_jmpbuf(png_ptr))) {
-	  png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
-	  fclose(infile);
-	  return 0;
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
+		fclose(infile);
+		return 0;
 	}
 
 	/*
@@ -752,7 +752,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerTexture("noTexture",		0);
 	if(callNum==n++)	registerShader("noShader",			0);
 	if(callNum==n++)	registerAsset("grass",				"media/grass3.mmp");
-	if(callNum==n++)	registerAsset("rock",				"media/rock4.mmp");
+	if(callNum==n++)	registerAsset("rock",				"media/rock.png");
 	if(callNum==n++)	registerAsset("sand",				"media/sand.mmp");
 	if(callNum==n++)	registerAsset("snow",				"media/snow.mmp");
 	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.mmp");
@@ -766,9 +766,9 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("particle",			"media/particle4.mmp");	
 	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
 	if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.mmp");
-	if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
-	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball2.png");
-	if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");
+	//if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
+	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball4.png");
+	//if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");
 	if(callNum==n++)	registerAsset("explosion smoke",	"media/explosion/smoke5.png");
 	if(callNum==n++)	registerAsset("cockpit",			"media/cockpit.png");
 	if(callNum==n++)	registerAsset("health bar",			"media/health bar.png");
@@ -786,6 +786,12 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
 	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
+	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
+	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
+
+	if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
+	if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
+	if(callNum==n++)	registerAsset("tree front",			"media/tree/front.png");
 
 	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");
@@ -799,6 +805,7 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerShader("water",				"media/water.vert","media/water.frag");
 	if(callNum==n++)	registerShader("sea floor",			"media/sea floor.vert","media/sea floor.frag");
 	if(callNum==n++)	registerShader("horizon",			"media/horizon.vert","media/horizon.frag");//was water2
+	if(callNum==n++)	registerShader("horizon2",			"media/horizon2.vert","media/horizon2.frag");//was water2
 	if(callNum==n++)	registerShader("island terrain",	"media/island.vert","media/island.frag");
 	if(callNum==n++)	registerShader("rock terrain",		"media/rock.vert","media/rock.frag");
 	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");

@@ -51,12 +51,13 @@ void MenuManager::render()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		dataManager.bindTex(0);
-		glColor4f(0,0,0,1);
-		glBegin(GL_TRIANGLES);
-			glVertex2f((float)cursorPos.x,(float)cursorPos.y);
-			glVertex2f((float)cursorPos.x,(float)cursorPos.y+20);
-			glVertex2f((float)cursorPos.x+10,(float)cursorPos.y+16);
+		dataManager.bind("cursor");
+		glColor4f(1,1,1,1);
+		glBegin(GL_QUADS);
+			glTexCoord2f(0,0);	glVertex2f((float)cursorPos.x,(float)cursorPos.y);
+			glTexCoord2f(0,1);	glVertex2f((float)cursorPos.x,(float)cursorPos.y+25);
+			glTexCoord2f(1,1);	glVertex2f((float)cursorPos.x+21,(float)cursorPos.y+25);
+			glTexCoord2f(1,0);	glVertex2f((float)cursorPos.x+21,(float)cursorPos.y);
 		glEnd();
 	}
 	glDisable(GL_BLEND);
@@ -248,7 +249,7 @@ int menuChooseFile::update()
 	{
 		desktop->resetChanged();
 		char aFolder[MAX_PATH]; 
-		if(SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		if(!SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -259,7 +260,7 @@ int menuChooseFile::update()
 	{
 		myDocuments->resetChanged();
 		char aFolder[MAX_PATH]; 
-		if(SHGetFolderPathA(0, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		if(!SHGetFolderPathA(0, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -270,7 +271,7 @@ int menuChooseFile::update()
 	{
 		myComputer->resetChanged();
 		char aFolder[MAX_PATH]; 
-		if(SHGetFolderPathA(0, CSIDL_DRIVES, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		if(!SHGetFolderPathA(0, CSIDL_DRIVES, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -281,7 +282,7 @@ int menuChooseFile::update()
 	{
 		myNetwork->resetChanged();
 		char aFolder[MAX_PATH]; 
-		if(SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		if(!SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -313,18 +314,18 @@ void menuChooseFile::render()
 	dataManager.bind("file viewer");
 	glColor4f(1,1,1,1);
 	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(sw/2-420,sh/2+262);
-		glTexCoord2f(1,0);	glVertex2f(sw/2+421,sh/2+262);
-		glTexCoord2f(1,1);	glVertex2f(sw/2+421,sh/2-261);
-		glTexCoord2f(0,1);	glVertex2f(sw/2-420,sh/2-261);
+		glTexCoord2f(0,1);	glVertex2f(sw/2-420,sh/2+262);
+		glTexCoord2f(1,1);	glVertex2f(sw/2+421,sh/2+262);
+		glTexCoord2f(1,0);	glVertex2f(sw/2+421,sh/2-261);
+		glTexCoord2f(0,0);	glVertex2f(sw/2-420,sh/2-261);
 	glEnd();
 
 	dataManager.bind("entry bar");
 	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(sw/2-180,sh/2+235);
-		glTexCoord2f(1,0);	glVertex2f(sw/2+190,sh/2+235);
-		glTexCoord2f(1,1);	glVertex2f(sw/2+190,sh/2+189);
-		glTexCoord2f(0,1);	glVertex2f(sw/2-180,sh/2+189);
+		glTexCoord2f(0,1);	glVertex2f(sw/2-180,sh/2+235);
+		glTexCoord2f(1,1);	glVertex2f(sw/2+190,sh/2+235);
+		glTexCoord2f(1,0);	glVertex2f(sw/2+190,sh/2+189);
+		glTexCoord2f(0,0);	glVertex2f(sw/2-180,sh/2+189);
 	glEnd();
 
 	glColor4f(0,0,0,1);
@@ -602,7 +603,7 @@ int menuLevelEditor::update()
 		}
 		else if(bDiamondSquare->getChanged())
 		{
-			((mapBuilder*)mode)->diamondSquare(0.9);
+			((mapBuilder*)mode)->diamondSquare(0.49);
 			bDiamondSquare->resetChanged();
 		}
 		else if(bFromFile->getChanged())

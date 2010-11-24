@@ -10,7 +10,7 @@ uniform sampler2D myTexture[5];
 varying float height;
 void main()
 {
-	if(height<0.0)discard;
+	if(height<0.05)discard;
 
 	vec4 color;
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
@@ -18,6 +18,7 @@ void main()
 	float rock=0.0;
 	float s1=1.53;//1.55
 	float s2=1.48;//1.4
+
 	if(slope>s1 		) 	rock=1.0;
 	else if(slope>s2 	)	rock=(slope-s2)/(s1-s2);
 

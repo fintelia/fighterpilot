@@ -89,8 +89,8 @@ public:
 
 	Vec3f *positions;
 	Vec3f *velocity;
-	float *maxLife; //time
-	float *life; //from 0-1
+	float *startTime;
+	float *endTime;
 	SVertex *mem;
 
 private:
@@ -120,12 +120,12 @@ private:
 		//free(TmaxLife);
 		//free(Tlife);
 		mem =		(SVertex*)realloc(mem,(compacity+newItems)*sizeof(SVertex)*4);
-		life =		(float*)realloc(life,(compacity+newItems)*sizeof(float));
-		maxLife =	(float*)realloc(maxLife,(compacity+newItems)*sizeof(float));
+		startTime =	(float*)realloc(startTime,(compacity+newItems)*sizeof(float));
+		endTime =	(float*)realloc(endTime,(compacity+newItems)*sizeof(float));
 		velocity =	(Vec3f*)realloc(velocity,(compacity+newItems)*sizeof(Vec3f));
 		positions = (Vec3f*)realloc(positions,(compacity+newItems)*sizeof(Vec3f));
 
-		if(positions==NULL || velocity==NULL || maxLife==NULL || life==NULL || mem==NULL)
+		if(positions==NULL || velocity==NULL || startTime==NULL || endTime==NULL || mem==NULL)
 		{
 			assert(0 || "could not allocate memory for smoke");
 		}
@@ -139,16 +139,16 @@ public:
 		compacity = 3000;
 		positions = (Vec3f*)malloc(compacity*sizeof(Vec3f));
 		velocity =	(Vec3f*)malloc(compacity*sizeof(Vec3f));
-		maxLife =	(float*)malloc(compacity*sizeof(Vec3f));
-		life =		(float*)malloc(compacity*sizeof(Vec3f));
+		startTime =	(float*)malloc(compacity*sizeof(float));
+		endTime =	(float*)malloc(compacity*sizeof(float));
 		mem =		(SVertex*)malloc(compacity*sizeof(SVertex)*4);
 	}
 	~Smoke()
 	{
 		free(positions);
 		free(velocity);
-		free(maxLife);
-		free(life);
+		free(startTime);
+		free(endTime);
 		free(mem);
 	}
 	void clean()
@@ -157,25 +157,19 @@ public:
 		vector<int> clear;
 		for(i=0;i<size;i++)
 		{
-			if(life[i]<=0)	clear.push_back(i);
+			if(gameTime() > endTime[i])	clear.push_back(i);
 		}
 		for(i=0;i<clear.size() && clear[i]<size-1;i++)
 		{
 			memcpy(positions+clear[i],positions+clear[i]+1,(size-clear[i]-1)*sizeof(Vec3f));
 			memcpy(velocity+clear[i],velocity+clear[i]+1  ,(size-clear[i]-1)*sizeof(Vec3f));
-			memcpy(maxLife+clear[i]	,maxLife+clear[i]+1	  ,(size-clear[i]-1)*sizeof(float));
-			memcpy(life+clear[i]	,life+clear[i]+1	  ,(size-clear[i]-1)*sizeof(float));
+			memcpy(startTime+clear[i],startTime+clear[i]+1 ,(size-clear[i]-1)*sizeof(float));
+			memcpy(endTime+clear[i],endTime+clear[i]+1  ,(size-clear[i]-1)*sizeof(float));
 		}
 		size-=clear.size();
 	}
 	void update(float ms)
 	{
-		for(int i=0;i<size;i++)
-		{
-			positions[i]+=velocity[i]*ms/1000*life[i];
-			life[i]-=(ms/1000)/maxLife[i];
-		}
-
 		static float cleanCount=3.0;
 		cleanCount-=ms/1000;
 		if(cleanCount<=0.0)
@@ -184,13 +178,15 @@ public:
 			clean();
 		}
 	}
-	void insert(Vec3f pos,float random,float spread,float Life)
+	void insert(Vec3f pos,float random,float spread,float startT, float life)
 	{
-		if(size>=compacity) resize(1000);
+		if(size>=compacity) resize(compacity);
+
 		positions[size] = pos + Vec3f(rand()%200/100,rand()%200/100,rand()%200/100).normalize()*random;
 		velocity[size] = Vec3f(rand()%200/100,rand()%200/100+0.8,rand()%200/100).normalize()*spread;
-		maxLife[size] =	Life;
-		life[size] = 1.0;
+
+		startTime[size] = startT;
+		endTime[size] = startT + life;
 		size++;
 	}
 	void clear()

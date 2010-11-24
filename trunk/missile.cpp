@@ -42,7 +42,7 @@ bool missile::Update(float ms)
 		difAng=acosA((e-pos).normalize().dot(velocity.normalize()));
 		if(difAng.inRange(5.24,1.05))
 		{
-			accel=(accel.normalize()*0.8+(e-pos).normalize()*0.2)*accel.magnitude();
+			accel=(accel.normalize()*0.0+(e-pos).normalize()*1.0)*accel.magnitude();
 			//velocity=(pos-e).normalize()*velocity.magnitude();
 		}
 		//if(abs(lastAng-(angle-difAng)/5)>7.5)
@@ -65,19 +65,19 @@ bool missile::Update(float ms)
 		findTarget();
 	}
 	//////////////////Accelerate//////////////
-	accel=accel.normalize()*(accel.magnitude()+ms*30);
+	accel=accel.normalize()*(accel.magnitude()+ms*70);
 	
 	velocity+=accel*(ms/1000);
-	if(velocity.magnitude()>2500) velocity=velocity.normalize()*2500;
+	if(velocity.magnitude()>2500) velocity=velocity.normalize()*7500;
 	/////////////////////move///////////////////////////
 	pos+=velocity*(ms/1000);
 	////////////////////sparks//////////////////////////
 	static float distLeft=0.0;
 	distLeft += ms/1000;
-	while(distLeft > 0.005)
+	while(distLeft > 0.009)
 	{
-		newExaust.insert(pos-velocity*distLeft,0,0,10.0-distLeft);
-		distLeft-=0.005;
+		newExaust.insert(pos-velocity*distLeft,0,0,gameTime()-distLeft*1000,3000);
+		distLeft-=0.009;
 	}
 	//for(int i=0;i<1;i++)
 	//{
