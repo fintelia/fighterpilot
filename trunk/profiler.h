@@ -25,7 +25,7 @@ public:
 	}
 	void draw()
 	{
-		glColor3f(0,0,0);
+		glColor3f(1,0,0);
 		int y=25;
 		float v=0;
 		for(map<string,vector<float> >::iterator i=elements.begin();i!=elements.end();i++,y+=20)

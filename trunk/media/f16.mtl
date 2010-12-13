@@ -1,7 +1,7 @@
 # 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
-# File Created: 01.07.2010 14:09:02
+# File Created: 01.12.2010 21:27:48
 
-newmtl 23___Default
+newmtl 10___Default
 Ns 10.0000
 Ni 1.5000
 d 1.0000
@@ -12,17 +12,5 @@ Ka 1.0000 1.0000 1.0000
 Kd 1.0000 1.0000 1.0000
 Ks 0.0000 0.0000 0.0000
 Ke 0.0000 0.0000 0.0000
-map_Ka f16.mmp
-map_Kd f16.mmp
-
-newmtl 23___Default2
-Ns 30.0000
-Ni 1.5000
-d 0.5000
-Tr 0.5000
-Tf 0.5000 0.5000 0.5000 
-illum 2
-Ka 0.0000 0.0000 0.0000
-Kd 0.0000 0.0000 0.0000
-Ks 0.8640 0.8640 0.8640
-Ke 0.0000 0.0000 0.0000
+map_Ka f16texture.png
+map_Kd f16texture.png

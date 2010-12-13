@@ -1,9 +1,5 @@
 #include "main.h"
 
-//const int PLANE		=0x01;
-const int PLAYER_PLANE	=0x02;
-const int AI_PLANE		=0x04;
-
 void planeBase::updateAll()
 {
 	double time=gameTime();
@@ -89,31 +85,22 @@ void planeBase::updateAll()
 			altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
 			if(altitude<3.0){die();pos.y-=altitude-3;hitGround=true;}
 			
-			speed = clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,500.0,1000.0);
-			climb = clamp(climb + 0.9*controller.climb*(ms/1000) - 0.9*controller.dive*(ms/1000),-PI/3,PI/4);
-			turn  = clamp(turn  + 0.9*controller.right*(ms/1000) - 0.9*controller.left*(ms/1000),-1.0,1.0);
-			direction -= turn/120;
+			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,500.0,1000.0));
+			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
+			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
+			direction -= turn/100;
+			speed += 400.0 * (ms/1000) * -sin(climb);//gravity
 
 			rotation = Quat4f(0,0,0,1);
 			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
-
 			fwd = rotation * Vec3f(0,0,1);
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)
 			{
-				//Vec3f up,right,move(0,0,0);					//define our vectors		
-				//upAndRight(velocity,roll,up,right);			//set up and right
-				//move+=Vec3f(0,-50*(ms/1000),0);				//gravity
-				//move+=velocity*(ms/1000);					//thrust
-				//move+=up*velocity.magnitude()*(ms/1000)*0.2;//lift
-				//move*=0.95;									//
-				//pos+=move;									//increase position
-
-				Vec3f move = rotation * Vec3f(0,0,1) * speed * (ms/1000);
-				pos+=move;
+				pos += rotation * Vec3f(0,0,1) * speed * (ms/1000);
 			}
 			////////////////////end move////////////////////////////////////
 			bool setAutoPilot=false;

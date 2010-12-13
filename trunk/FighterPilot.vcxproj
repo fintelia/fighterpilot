@@ -107,8 +107,10 @@
   <ItemGroup>
     <ClCompile Include="AABox.cpp" />
     <ClCompile Include="Angle.cpp" />
+    <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="dataManager.cpp" />
+    <ClCompile Include="enums.cpp" />
     <ClCompile Include="explosion.cpp" />
     <ClCompile Include="FrustumG.cpp" />
     <ClCompile Include="GameMath.cpp" />
@@ -151,6 +153,7 @@
     <ClCompile Include="random.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
+    <ClCompile Include="shader.cpp" />
     <ClCompile Include="Terain.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="texture.cpp" />
@@ -163,6 +166,7 @@
     <ClInclude Include="Angle.h" />
     <ClInclude Include="basicMath.h" />
     <ClInclude Include="bullet.h" />
+    <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
     <ClInclude Include="controls.h" />
     <ClInclude Include="dataManager.h" />
@@ -178,7 +182,6 @@
     <ClInclude Include="gui.h" />
     <ClInclude Include="imageloader.h" />
     <ClInclude Include="input.h" />
-    <ClInclude Include="keys.h" />
     <ClInclude Include="level.h" />
     <ClInclude Include="loading.h" />
     <ClInclude Include="load_save.h" />
@@ -198,6 +201,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="shader.h" />
     <ClInclude Include="Terain.h" />
     <ClInclude Include="text.h" />
     <ClInclude Include="texture2.h" />
@@ -209,13 +213,13 @@
     <ClInclude Include="XboxContInput.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="horizon2.frag" />
-    <None Include="horizon2.vert" />
     <None Include="media\grass.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
     <None Include="media\horizon.frag" />
     <None Include="media\horizon.vert" />
+    <None Include="media\horizon2.frag" />
+    <None Include="media\horizon2.vert" />
     <None Include="media\icon.ico" />
     <None Include="media\island.frag" />
     <None Include="media\island.vert" />

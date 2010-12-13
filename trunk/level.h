@@ -1,26 +1,31 @@
 
 struct LevelFile
 {
-	float*					heights;
+	struct Header{
+		__int64 magicNumber;
+		unsigned int version;
+	}header;
 
-	enum levelEnum			{DIE,RESPAWN,RESTART,FFA,TEAMS,PLAYER_VS,WATER,LAND,SAND,ROCK }
-							onHit,
-							onAiHit,
-							gameType,
-							mapType,
-							seaFloorType;
+	struct Info{//V1
+		float			seaLevel;	
+		Vec3f			mapSize;
+		Vec2u			mapResolution;
+		unsigned int	numObjects;
+		Info(): seaLevel(0), mapSize(1,1,1), mapResolution(0,0), numObjects(0){}
+	}*info;
+	struct Object{
+		int				type;
+		int				team;
+		Vec3f			startloc;
+		Quat4f			startRot;
+	}*objects;
 
-	unsigned int			enemyPlanes,
-							killPercentNeeded,
-							heightRange;
+	float* heights;//in a V1 file this there would then just be a (mapSize.x) x (mapSize.y) grid of floats
 
-	int						seaLevel;	
-
-	Vector2<unsigned int>	min,
-							max,
-							mapSize;
-
-	string					levelName;
+	void load(string filename);
+	void save(string filename);
+	LevelFile();
+	LevelFile(string filename);
 };
 
 class Level
@@ -39,11 +44,18 @@ public:
 	public:
 		virtual unsigned int getResolutionX() const {return resolution.x;}
 		virtual unsigned int getResolutionZ() const {return resolution.y;}
+		virtual Vec2u getResolution() const {return resolution;}
+		virtual Vec3f getSize()const{return size;}
+		virtual Vec2f getSizeXZ()const{return Vec2f(size.x,size.z);}
+		virtual float getSizeX()const{return size.x;}
+		virtual float getSizeY()const{return size.y;}
+		virtual float getSizeZ()const{return size.z;}
 		virtual float getRasterHeight(unsigned int x,unsigned int z) const;
 		virtual Vec3f getRasterNormal(unsigned int x, unsigned int z) const;
 		virtual Vec3f getNormal(float x, float z) const;
 		virtual float getHeight(float x, float z) const;
 		virtual void setMinMaxHeights() const;
+
 
 		virtual void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] = height;}
 		virtual void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] += height;}
@@ -53,13 +65,14 @@ public:
 		virtual void setSizeXZ(Vec2f s){size.x=s.x,size.z=s.y;}
 		
 
-		heightmapBase(Vector2<unsigned int> Resolution);
-		heightmapBase(Vector2<unsigned int> Resolution, float* heights);
+		heightmapBase(Vec2u Resolution);
+		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
 		virtual void render() const =0;
 	protected:
-		Vec3f position,			size;
-		Vector2<unsigned int>	resolution;//y value is z axis
+		Vec3f					position,
+								size;
+		Vec2u					resolution;//y value is z axis
 		float*					heights;
 		mutable float			minHeight,
 								maxHeight;
@@ -83,52 +96,9 @@ public:
 		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] += height; valid=false;}		
 		void render() const;
 
-		heightmapGL(Vector2<unsigned int> Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}
-		heightmapGL(Vector2<unsigned int> Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),shader(0),dispList(0){init();}
+		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}
+		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),shader(0),dispList(0){init();}
 		~heightmapGL(){glDeleteLists(dispList,1);}
-	};
-	class heightmap
-	{
-	private:
-		typedef Vec3f vertex;
-		typedef unsigned int index;
-
-		vertex*			vertices;
-		index*			indices;
-		unsigned int	size,
-						numVerts,
-						numIdices;
-		int				VBOvert,
-						VBOindex;
-		mutable float	minHeight,
-						maxHeight;
-		int				shader;
-
-		int				groundTex;
-		mutable unsigned char *groundValues;//needed only if dynamic; (R,G,B) = normal and (A) = height
-
-		void setVBO() const;
-		void setTex() const;
-		void init(float* heights);
-
-		bool dynamic;
-		mutable bool VBOvalid;
-		mutable bool minMaxValid;
-		mutable bool texValid;
-	public:
-		heightmap(int Size, bool Dynamic=false);
-		heightmap(int Size, float* heights, bool Dynamic=false);
-		void setHeight(unsigned int x, float height, unsigned int z);
-		void increaseHeight(unsigned int x, float height, unsigned int z);
-		void setShader(int s){shader=s;}
-
-		float getHeight(unsigned int x, unsigned int z) const;
-		Vec3f getNormal(unsigned int x, unsigned int z) const;
-		//void draw(int shader=0) const;
-		unsigned int getSize() const;
-		void setMinMaxHeights() const;
-
-
 		friend class Level;
 	};
 	class waterPlane
@@ -138,20 +108,24 @@ public:
 		string shader;
 		int oceanID;
 	};
-	struct zone
+	class object
 	{
-		float x,z,width,length;
+	public:
+		int				type;
+		int				team;
+		Vec3f			startloc;
+		Quat4f			startRot;
 	};
 	struct levelSettings
 	{
-		textureType seaFloor;
+		//textureType seaFloor;
 		bool water;
 	};
 protected:
 	heightmapBase*	mGround;
 	waterPlane		mWater;
-	vector<zone>	mZones;
 	levelSettings	mSettings;
+	vector<object>	mObjects;
 	int				groundShader;
 
 	Level(): mGround(NULL), groundShader(0) {}
@@ -160,6 +134,9 @@ public:
 	Level(string BMP);
 	const heightmapBase* const ground() const;
 	void render();
+
+	LevelFile getLevelFile();
+	void exportBMP(string filename);
 };
 
 class editLevel: public Level
@@ -167,9 +144,14 @@ class editLevel: public Level
 public:
 	editLevel();
 	heightmapBase*	ground();
-	vector<zone>*	zones();
 	levelSettings*	settings();
 
 	void addZone(float x, float z, float width, float length);
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
+	void addObject(int type,int team, Vec3f pos);
+	void renderObjects();
+
+
+	editLevel(LevelFile file):Level(file){}
+	editLevel(string BMP):Level(BMP){}
 };

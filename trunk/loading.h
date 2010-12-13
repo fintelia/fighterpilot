@@ -232,37 +232,13 @@ public:
 		t=GetTime()-t;
 		t=GetTime();
 	}
-
-	void draw()
+	void draw3D()
 	{
-		static int s = 0;
-		s++;
-		//if(s<10)return;
-		s=0;
 
-
-		glClearColor(0.5f,0.5f,0.9f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0 , sw, sh);
-		glLoadIdentity();
-		
-		//gluPerspective(80.0, (double)sw / ((double)sh/2),0.999, 10000.0);
-		viewOrtho(sw,sh);
-		glEnable(GL_BLEND);
-		glColor3f(1,1,1);
-		
-		dataManager.bind("menu background");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);	glVertex2f(0,0);
-			glTexCoord2f(0,1);	glVertex2f(0,sh);
-			glTexCoord2f(1,1);	glVertex2f(sw,sh);		
-			glTexCoord2f(1,0);	glVertex2f(sw,0);
-		glEnd();
-		
-		glDisable(GL_BLEND);
-		dataManager.bindTex(0);
-		viewPerspective();
-		
+	}
+	void draw2D()
+	{
+		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
 	}
 	int update(float value)
 	{
@@ -289,16 +265,12 @@ public:
 		{
 			//Cmenu=new m_start;
 			menuManager.setMenu("menuChooseMode");
-			newMode=BLANK_MODE;
 		}
 		Redisplay=true;
-		
 		return 0;
 	}
 	loading()
 	{
-		newMode=(modeType)0;
-		//Cmenu=new closedMenu;
 		toLoad=0;
 	}
 };

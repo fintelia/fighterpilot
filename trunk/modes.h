@@ -311,39 +311,22 @@ protected:
 	}
 
 public:
-	//modeType newMode;
-		modeType newMode;
-	menuType newMenu;
 	virtual int update(float value)=0;
-	virtual void draw()=0;
+	virtual void draw2D()=0;
+	virtual void draw3D()=0;
 	virtual void init(){}
 	virtual ~modes(){}
 };
 class blankMode: public modes
 {
 public:
-	void draw()
+	void draw2D()
 	{
-		glClearColor(0.5f,0.5f,0.9f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0 , sw, sh);
-		glLoadIdentity();
-		viewOrtho(sw,sh);
-		glPushMatrix();
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_BLEND);
-		glColor3f(1,1,1);
-		dataManager.bind("menu background");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(0,0);
-			glTexCoord2f(0,0);	glVertex2f(0,sh);
-			glTexCoord2f(1,0);	glVertex2f(sw,sh);		
-			glTexCoord2f(1,1);	glVertex2f(sw,0);
-		glEnd();
-		glPopMatrix();
-		glDisable(GL_BLEND);
-		dataManager.bindTex(0);
-		viewPerspective();
+
+	}
+	void draw3D()
+	{
+
 	}
 	int update(float value)
 	{
@@ -353,7 +336,6 @@ public:
 	blankMode()
 	{
 		Redisplay=true;
-		newMode=(modeType)0;
 	}
 };
 class dogFight: public modes
@@ -473,405 +455,405 @@ protected:
 
 
 	//}
-	void drawWater3(Vec3f eye)
-	{
-		double sl=settings.SEA_LEVEL;
-		
-		int s=dataManager.getId("horizon");
-		dataManager.bind("horizon");
+	//void drawWater3(Vec3f eye)
+	//{
+	//	double sl=settings.SEA_LEVEL;
+	//	
+	//	int s=dataManager.getId("horizon");
+	//	dataManager.bind("horizon");
 
-		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(terrain->textureId,1);
-		if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
-		else								dataManager.bind("sand",2);
+	//	dataManager.bind("hardNoise",0);
+	//	dataManager.bindTex(terrain->textureId,1);
+	//	if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
+	//	else								dataManager.bind("sand",2);
 
-		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
-		glUniform1i(glGetUniformLocation(s, "ground"), 1);
-		glUniform1i(glGetUniformLocation(s, "tex"), 2);
-		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
-		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
-		glUniform3f(glGetUniformLocation(s, "center"),terrain->width()/2*size,settings.SEA_LEVEL-1000,terrain->width()/2*size);
+	//	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+	//	glUniform1i(glGetUniformLocation(s, "ground"), 1);
+	//	glUniform1i(glGetUniformLocation(s, "tex"), 2);
+	//	glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+	//	glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
+	//	glUniform3f(glGetUniformLocation(s, "center"),terrain->width()/2*size,settings.SEA_LEVEL-1000,terrain->width()/2*size);
 
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		glPushMatrix();
-		glBegin(GL_QUADS);
-			glTexCoord2f(-4.0,-4.0);		glVertex3d(-4.0*terrain->width()*size,sl,-4.0*terrain->length()*size);
-			glTexCoord2f( 5.0,-4.0);		glVertex3d(5.0*terrain->width()*size,sl,-4.0*terrain->length()*size);
-			glTexCoord2f( 5.0, 5.0);		glVertex3d(5.0*terrain->width()*size,sl,5.0*terrain->length()*size);
-			glTexCoord2f(-4.0, 5.0);		glVertex3d(-4.0*terrain->width()*size,sl,5.0*terrain->length()*size);
-		glEnd();
-		glPopMatrix();
+	//	glPushMatrix();
+	//	glBegin(GL_QUADS);
+	//		glTexCoord2f(-4.0,-4.0);		glVertex3d(-4.0*terrain->width()*size,sl,-4.0*terrain->length()*size);
+	//		glTexCoord2f( 5.0,-4.0);		glVertex3d(5.0*terrain->width()*size,sl,-4.0*terrain->length()*size);
+	//		glTexCoord2f( 5.0, 5.0);		glVertex3d(5.0*terrain->width()*size,sl,5.0*terrain->length()*size);
+	//		glTexCoord2f(-4.0, 5.0);		glVertex3d(-4.0*terrain->width()*size,sl,5.0*terrain->length()*size);
+	//	glEnd();
+	//	glPopMatrix();
 
-		dataManager.bindTex(0,2);
-		dataManager.bindTex(0,1);
-		dataManager.bindTex(0,0);
-		dataManager.bindShader(0);
-	}
-	double PoS(double x,double z,Vec3f center, double radius) const
-	{
-		return sqrt(radius*radius-(x-center.x)*(x-center.x)-(z-center.z)*(z-center.z))+center.y;
-	}
-	void waterDisp()
-	{
-		
+	//	dataManager.bindTex(0,2);
+	//	dataManager.bindTex(0,1);
+	//	dataManager.bindTex(0,0);
+	//	dataManager.bindShader(0);
+	//}
+	//double PoS(double x,double z,Vec3f center, double radius) const
+	//{
+	//	return sqrt(radius*radius-(x-center.x)*(x-center.x)-(z-center.z)*(z-center.z))+center.y;
+	//}
+	//void waterDisp()
+	//{
+	//	
 
-		int tilesize = 32;
+	//	int tilesize = 32;
 
-		double sl=settings.SEA_LEVEL;
-		double m=terrain->width(), im=1.0/m;
-		double r=sqrt((float)terrain->width()*terrain->width()+terrain->width()*terrain->width())/2;
-		double r2=400000;
-		double sqrt2=1.41421;
-		Vec3f center(m/2*size,sl-r2*cos(asin(r/r2)),m/2*size);
-		int i;
-		double f;
-		double x,z;
+	//	double sl=settings.SEA_LEVEL;
+	//	double m=terrain->width(), im=1.0/m;
+	//	double r=sqrt((float)terrain->width()*terrain->width()+terrain->width()*terrain->width())/2;
+	//	double r2=400000;
+	//	double sqrt2=1.41421;
+	//	Vec3f center(m/2*size,sl-r2*cos(asin(r/r2)),m/2*size);
+	//	int i;
+	//	double f;
+	//	double x,z;
 
-		disp[1] = glGenLists(1);
-		glNewList(disp[1],GL_COMPILE);
-		//	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//	disp[1] = glGenLists(1);
+	//	glNewList(disp[1],GL_COMPILE);
+	//	//	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-		glPushMatrix();
-		glBegin(GL_QUADS);
-			glTexCoord2f(0.0,0.0);		glVertex3d(0,sl,0);
-			glTexCoord2f(1.0,0.0);		glVertex3d(m*size,sl,0);
-			glTexCoord2f(1.0,1.0);		glVertex3d(m*size,sl,m*size);
-			glTexCoord2f(0.0,1.0);		glVertex3d(0,sl,m*size);
-		glEnd();
-
-
-
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
-			glTexCoord2f(0.0,0.0);	glVertex3f(0,sl,0);
-			for(i = 0; i <= m; i+=tilesize){
-				glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));
-				glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
-			}
-		glEnd();
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
-			glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
-			for(i = 0; i <= m; i+=tilesize){
-				glTexCoord2f(im*i,im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m));
-				glVertex3f(i*size,sl,(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size);
-			}
-		glEnd();
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
-			glTexCoord2f(0,0);		glVertex3f(0,sl,0);
-			for(i = 0; i <= m; i+=tilesize){
-				glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);
-				glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
-			}
-		glEnd();
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
-			glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
-			for(i = 0; i <= m; i+=tilesize){
-				glTexCoord2f(im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m),im*i);
-				glVertex3f((-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size,sl,i*size);
-			}
-		glEnd();
+	//	glPushMatrix();
+	//	glBegin(GL_QUADS);
+	//		glTexCoord2f(0.0,0.0);		glVertex3d(0,sl,0);
+	//		glTexCoord2f(1.0,0.0);		glVertex3d(m*size,sl,0);
+	//		glTexCoord2f(1.0,1.0);		glVertex3d(m*size,sl,m*size);
+	//		glTexCoord2f(0.0,1.0);		glVertex3d(0,sl,m*size);
+	//	glEnd();
 
 
 
-		//glEnable(GL_BLEND);
-		//glEnable(GL_LINE_SMOOTH);
-		//glLineWidth(1);
-
-		//glVertex3f(x*size,sl,-3000);
-
-		//for(ang=0;ang<PI*2;ang+=PI/256)
-		//	glVertex3f((l*cos(ang)+size*m/2),sl-0.5,(l*sin(ang)+size*m/2));
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		//glBegin(GL_POLYGON);
-		//for(ang=PI*3/4;ang<PI*5/4;ang+=PI/256)
-		//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
-		//glEnd();
-		//glBegin(GL_POLYGON);
-		//for(ang=PI*5/4;ang<PI*7/4;ang+=PI/256)
-		//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
-		//glEnd();
-		//glBegin(GL_POLYGON);
-		//for(ang=PI*7/4;ang<PI*9/4;ang+=PI/256)
-		//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2)); 
-		//glEnd();
-
-		//r=sqrt((float)m*m+m*m)/2;
-
-
-		for(i=0;i<m;i+=tilesize)
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));				glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
-			glTexCoord2f(im*(i+tilesize),im*(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))));	glVertex3f((i+tilesize)*size,sl,(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2)))*size);
-			for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
-			{
-				glTexCoord2f(im*i,im*f);			glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
-				glTexCoord2f(im*(i+tilesize),im*f);	glVertex3f((i+tilesize)*size,PoS((i+tilesize)*size,f*size,center,r2),f*size);
-			}
-			glEnd();
-
-			glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(im*i,im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m));				glVertex3f(i*size,sl,-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size);
-			glTexCoord2f(im*(i+tilesize),im*-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m));	glVertex3f((i+tilesize)*size,sl,-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m)*size);
-			for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
-			{
-				glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
-				glTexCoord2f(im*(i+tilesize),im*f);	glVertex3f((i+tilesize)*size,PoS((i+tilesize)*size,f*size,center,r2),f*size);
-			}
-			glEnd();
-
-
-			glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);				glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
-			glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))),im*(i+tilesize));	glVertex3f((sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2)))*size,sl,(i+tilesize)*size);
-			for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
-			{
-				glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
-				glTexCoord2f(im*f,im*(i+tilesize));	glVertex3f(f*size,PoS((i+tilesize)*size,f*size,center,r2),(i+tilesize)*size);
-			}
-			glEnd();
-
-			glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m),im*i);				glVertex3f(-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size,sl,i*size);
-			glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m),im*(i+tilesize));	glVertex3f(-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m)*size,sl,(i+tilesize)*size);
-			for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
-			{
-				glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
-				glTexCoord2f(im*f,im*(i+tilesize));	glVertex3f(f*size,PoS((i+tilesize)*size,f*size,center,r2),(i+tilesize)*size);
-			}
-			glEnd();
-
-		}
-
-		for(z=-tilesize;z>-m*10;z-=tilesize)
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-			for(x=0;x>-m*10;x-=tilesize)
-			{
-				glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-				glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
-			}
-			glEnd();
-			glBegin(GL_TRIANGLE_STRIP);
-			for(x=m;x<m*10;x+=tilesize)
-			{
-				glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-				glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
-			}
-			glEnd();
-		}
-		for(z=m;z<m*10;z+=tilesize)
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-			for(x=0;x>-m*10;x-=tilesize)
-			{
-				glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-				glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
-			}
-			glEnd();
-			glBegin(GL_TRIANGLE_STRIP);
-			for(x=m;x<m*10;x+=tilesize)
-			{
-				glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-				glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
-			}
-			glEnd();
-		}
-		glPopMatrix();	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		glEndList();
-
-	}
-	void drawWater4(Vec3f eye)
-	{
-		double sl=settings.SEA_LEVEL;
-		double m=terrain->width(), im=1.0/m;
-		double r=sqrt((float)terrain->width()*terrain->width()+terrain->width()*terrain->width())/2;
-		double r2=400000;
-		double sqrt2=1.41421;
-		Vec3f center(m/2*size,sl-r2*cos(asin(r/r2)),m/2*size);
-
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-		//glEnable(GL_BLEND);
-
-		int s=dataManager.getId("horizon");
-		dataManager.bind("horizon");
-			
-		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(terrain->textureId,1);
-		if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
-		else								dataManager.bind("sand",2);
-
-		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
-		glUniform1i(glGetUniformLocation(s, "ground"), 1);
-		glUniform1i(glGetUniformLocation(s, "tex"), 2);
-		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
-		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
-		glUniform3f(glGetUniformLocation(s, "center"),center.x,center.y,center.z);
-
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glCallList(disp[1]);
-
-		//glPushMatrix();
-		//glBegin(GL_QUADS);
-		//	glTexCoord2f(0.0,0.0);		glVertex3d(0,sl,0);
-		//	glTexCoord2f(1.0,0.0);		glVertex3d(m*size,sl,0);
-		//	glTexCoord2f(1.0,1.0);		glVertex3d(m*size,sl,m*size);
-		//	glTexCoord2f(0.0,1.0);		glVertex3d(0,sl,m*size);
-		//glEnd();
+	//	glBegin(GL_TRIANGLE_FAN);
+	//		glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
+	//		glTexCoord2f(0.0,0.0);	glVertex3f(0,sl,0);
+	//		for(i = 0; i <= m; i+=tilesize){
+	//			glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));
+	//			glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
+	//		}
+	//	glEnd();
+	//	glBegin(GL_TRIANGLE_FAN);
+	//		glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
+	//		glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
+	//		for(i = 0; i <= m; i+=tilesize){
+	//			glTexCoord2f(im*i,im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m));
+	//			glVertex3f(i*size,sl,(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size);
+	//		}
+	//	glEnd();
+	//	glBegin(GL_TRIANGLE_FAN);
+	//		glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
+	//		glTexCoord2f(0,0);		glVertex3f(0,sl,0);
+	//		for(i = 0; i <= m; i+=tilesize){
+	//			glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);
+	//			glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
+	//		}
+	//	glEnd();
+	//	glBegin(GL_TRIANGLE_FAN);
+	//		glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
+	//		glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
+	//		for(i = 0; i <= m; i+=tilesize){
+	//			glTexCoord2f(im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m),im*i);
+	//			glVertex3f((-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size,sl,i*size);
+	//		}
+	//	glEnd();
 
 
 
-		//glBegin(GL_TRIANGLE_FAN);
-		//	glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
-		//	glTexCoord2f(0.0,0.0);	glVertex3f(0,sl,0);
-		//	for(i = 0; i <= m; i+=8){
-		//		glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));
-		//		glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
-		//	}
-		//glEnd();
-		//glBegin(GL_TRIANGLE_FAN);
-		//	glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
-		//	glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
-		//	for(i = 0; i <= m; i+=8){
-		//		glTexCoord2f(im*i,im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m));
-		//		glVertex3f(i*size,sl,(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size);
-		//	}
-		//glEnd();
-		//glBegin(GL_TRIANGLE_FAN);
-		//	glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
-		//	glTexCoord2f(0,0);		glVertex3f(0,sl,0);
-		//	for(i = 0; i <= m; i+=8){
-		//		glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);
-		//		glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
-		//	}
-		//glEnd();
-		//glBegin(GL_TRIANGLE_FAN);
-		//	glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
-		//	glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
-		//	for(i = 0; i <= m; i+=8){
-		//		glTexCoord2f(im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m),im*i);
-		//		glVertex3f((-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size,sl,i*size);
-		//	}
-		//glEnd();
-		//glPopMatrix();
+	//	//glEnable(GL_BLEND);
+	//	//glEnable(GL_LINE_SMOOTH);
+	//	//glLineWidth(1);
+
+	//	//glVertex3f(x*size,sl,-3000);
+
+	//	//for(ang=0;ang<PI*2;ang+=PI/256)
+	//	//	glVertex3f((l*cos(ang)+size*m/2),sl-0.5,(l*sin(ang)+size*m/2));
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//	//glBegin(GL_POLYGON);
+	//	//for(ang=PI*3/4;ang<PI*5/4;ang+=PI/256)
+	//	//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
+	//	//glEnd();
+	//	//glBegin(GL_POLYGON);
+	//	//for(ang=PI*5/4;ang<PI*7/4;ang+=PI/256)
+	//	//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
+	//	//glEnd();
+	//	//glBegin(GL_POLYGON);
+	//	//for(ang=PI*7/4;ang<PI*9/4;ang+=PI/256)
+	//	//	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2)); 
+	//	//glEnd();
+
+	//	//r=sqrt((float)m*m+m*m)/2;
 
 
-		////glEnable(GL_BLEND);
-		////glEnable(GL_LINE_SMOOTH);
-		////glLineWidth(1);
+	//	for(i=0;i<m;i+=tilesize)
+	//	{
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));				glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
+	//		glTexCoord2f(im*(i+tilesize),im*(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))));	glVertex3f((i+tilesize)*size,sl,(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2)))*size);
+	//		for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
+	//		{
+	//			glTexCoord2f(im*i,im*f);			glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
+	//			glTexCoord2f(im*(i+tilesize),im*f);	glVertex3f((i+tilesize)*size,PoS((i+tilesize)*size,f*size,center,r2),f*size);
+	//		}
+	//		glEnd();
 
-		////glVertex3f(x*size,sl,-3000);
-
-		////for(ang=0;ang<PI*2;ang+=PI/256)
-		////	glVertex3f((l*cos(ang)+size*m/2),sl-0.5,(l*sin(ang)+size*m/2));
-		////glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		////glBegin(GL_POLYGON);
-		////for(ang=PI*3/4;ang<PI*5/4;ang+=PI/256)
-		////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
-		////glEnd();
-		////glBegin(GL_POLYGON);
-		////for(ang=PI*5/4;ang<PI*7/4;ang+=PI/256)
-		////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
-		////glEnd();
-		////glBegin(GL_POLYGON);
-		////for(ang=PI*7/4;ang<PI*9/4;ang+=PI/256)
-		////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2)); 
-		////glEnd();
-
-		////r=sqrt((float)m*m+m*m)/2;
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		glTexCoord2f(im*i,im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m));				glVertex3f(i*size,sl,-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size);
+	//		glTexCoord2f(im*(i+tilesize),im*-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m));	glVertex3f((i+tilesize)*size,sl,-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m)*size);
+	//		for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
+	//		{
+	//			glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
+	//			glTexCoord2f(im*(i+tilesize),im*f);	glVertex3f((i+tilesize)*size,PoS((i+tilesize)*size,f*size,center,r2),f*size);
+	//		}
+	//		glEnd();
 
 
-		//for(i=0;i<m;i+=8)
-		//{
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));				glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
-		//	glTexCoord2f(im*(i+8),im*(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))));	glVertex3f((i+8)*size,sl,(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2)))*size);
-		//	for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
-		//	{
-		//		glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
-		//		glTexCoord2f(im*(i+8),im*f);	glVertex3f((i+8)*size,PoS((i+8)*size,f*size,center,r2),f*size);
-		//	}
-		//	glEnd();
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);				glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
+	//		glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))),im*(i+tilesize));	glVertex3f((sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2)))*size,sl,(i+tilesize)*size);
+	//		for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
+	//		{
+	//			glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
+	//			glTexCoord2f(im*f,im*(i+tilesize));	glVertex3f(f*size,PoS((i+tilesize)*size,f*size,center,r2),(i+tilesize)*size);
+	//		}
+	//		glEnd();
 
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	glTexCoord2f(im*i,im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m));				glVertex3f(i*size,sl,-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size);
-		//	glTexCoord2f(im*(i+8),im*-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m));	glVertex3f((i+8)*size,sl,-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m)*size);
-		//	for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
-		//	{
-		//		glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
-		//		glTexCoord2f(im*(i+8),im*f);	glVertex3f((i+8)*size,PoS((i+8)*size,f*size,center,r2),f*size);
-		//	}
-		//	glEnd();
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m),im*i);				glVertex3f(-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size,sl,i*size);
+	//		glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m),im*(i+tilesize));	glVertex3f(-(sqrt2/2*r-sqrt(r*r-((i+tilesize)-m/2)*((i+tilesize)-m/2))-m)*size,sl,(i+tilesize)*size);
+	//		for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
+	//		{
+	//			glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
+	//			glTexCoord2f(im*f,im*(i+tilesize));	glVertex3f(f*size,PoS((i+tilesize)*size,f*size,center,r2),(i+tilesize)*size);
+	//		}
+	//		glEnd();
+
+	//	}
+
+	//	for(z=-tilesize;z>-m*10;z-=tilesize)
+	//	{
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		for(x=0;x>-m*10;x-=tilesize)
+	//		{
+	//			glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//			glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
+	//		}
+	//		glEnd();
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		for(x=m;x<m*10;x+=tilesize)
+	//		{
+	//			glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//			glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
+	//		}
+	//		glEnd();
+	//	}
+	//	for(z=m;z<m*10;z+=tilesize)
+	//	{
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		for(x=0;x>-m*10;x-=tilesize)
+	//		{
+	//			glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//			glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
+	//		}
+	//		glEnd();
+	//		glBegin(GL_TRIANGLE_STRIP);
+	//		for(x=m;x<m*10;x+=tilesize)
+	//		{
+	//			glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//			glTexCoord2f(im*x,im*(z+tilesize));	glVertex3f(x*size,PoS(x*size,(z+tilesize)*size,center,r2),(z+tilesize)*size);
+	//		}
+	//		glEnd();
+	//	}
+	//	glPopMatrix();	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//	glEndList();
+
+	//}
+	//void drawWater4(Vec3f eye)
+	//{
+	//	double sl=settings.SEA_LEVEL;
+	//	double m=terrain->width(), im=1.0/m;
+	//	double r=sqrt((float)terrain->width()*terrain->width()+terrain->width()*terrain->width())/2;
+	//	double r2=400000;
+	//	double sqrt2=1.41421;
+	//	Vec3f center(m/2*size,sl-r2*cos(asin(r/r2)),m/2*size);
+
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//	//glEnable(GL_BLEND);
+
+	//	int s=dataManager.getId("horizon");
+	//	dataManager.bind("horizon");
+	//		
+	//	dataManager.bind("hardNoise",0);
+	//	dataManager.bindTex(terrain->textureId,1);
+	//	if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
+	//	else								dataManager.bind("sand",2);
+
+	//	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+	//	glUniform1i(glGetUniformLocation(s, "ground"), 1);
+	//	glUniform1i(glGetUniformLocation(s, "tex"), 2);
+	//	glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+	//	glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
+	//	glUniform3f(glGetUniformLocation(s, "center"),center.x,center.y,center.z);
+
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//	glCallList(disp[1]);
+
+	//	//glPushMatrix();
+	//	//glBegin(GL_QUADS);
+	//	//	glTexCoord2f(0.0,0.0);		glVertex3d(0,sl,0);
+	//	//	glTexCoord2f(1.0,0.0);		glVertex3d(m*size,sl,0);
+	//	//	glTexCoord2f(1.0,1.0);		glVertex3d(m*size,sl,m*size);
+	//	//	glTexCoord2f(0.0,1.0);		glVertex3d(0,sl,m*size);
+	//	//glEnd();
 
 
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);				glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
-		//	glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))),im*(i+8));	glVertex3f((sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2)))*size,sl,(i+8)*size);
-		//	for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
-		//	{
-		//		glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
-		//		glTexCoord2f(im*f,im*(i+8));	glVertex3f(f*size,PoS((i+8)*size,f*size,center,r2),(i+8)*size);
-		//	}
-		//	glEnd();
 
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m),im*i);				glVertex3f(-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size,sl,i*size);
-		//	glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m),im*(i+8));	glVertex3f(-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m)*size,sl,(i+8)*size);
-		//	for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
-		//	{
-		//		glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
-		//		glTexCoord2f(im*f,im*(i+8));	glVertex3f(f*size,PoS((i+8)*size,f*size,center,r2),(i+8)*size);
-		//	}
-		//	glEnd();
+	//	//glBegin(GL_TRIANGLE_FAN);
+	//	//	glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
+	//	//	glTexCoord2f(0.0,0.0);	glVertex3f(0,sl,0);
+	//	//	for(i = 0; i <= m; i+=8){
+	//	//		glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));
+	//	//		glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
+	//	//	}
+	//	//glEnd();
+	//	//glBegin(GL_TRIANGLE_FAN);
+	//	//	glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
+	//	//	glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
+	//	//	for(i = 0; i <= m; i+=8){
+	//	//		glTexCoord2f(im*i,im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m));
+	//	//		glVertex3f(i*size,sl,(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size);
+	//	//	}
+	//	//glEnd();
+	//	//glBegin(GL_TRIANGLE_FAN);
+	//	//	glTexCoord2f(0,1.0);	glVertex3f(0,sl,m*size);
+	//	//	glTexCoord2f(0,0);		glVertex3f(0,sl,0);
+	//	//	for(i = 0; i <= m; i+=8){
+	//	//		glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);
+	//	//		glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
+	//	//	}
+	//	//glEnd();
+	//	//glBegin(GL_TRIANGLE_FAN);
+	//	//	glTexCoord2f(1.0,1.0);	glVertex3f(m*size,sl,m*size);
+	//	//	glTexCoord2f(1.0,0);	glVertex3f(m*size,sl,0);
+	//	//	for(i = 0; i <= m; i+=8){
+	//	//		glTexCoord2f(im*(-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m),im*i);
+	//	//		glVertex3f((-sqrt2/2*r+sqrt(r*r-(i-m/2)*(i-m/2))+m)*size,sl,i*size);
+	//	//	}
+	//	//glEnd();
+	//	//glPopMatrix();
 
-		//}
 
-		//for(z=-8;z>-m*10;z-=8)
-		//{
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	for(x=0;x>-m*10;x-=8)
-		//	{
-		//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-		//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
-		//	}
-		//	glEnd();
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	for(x=m;x<m*10;x+=8)
-		//	{
-		//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-		//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
-		//	}
-		//	glEnd();
-		//}
-		//for(z=m;z<m*10;z+=8)
-		//{
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	for(x=0;x>-m*10;x-=8)
-		//	{
-		//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-		//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
-		//	}
-		//	glEnd();
-		//	glBegin(GL_TRIANGLE_STRIP);
-		//	for(x=m;x<m*10;x+=8)
-		//	{
-		//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
-		//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
-		//	}
-		//	glEnd();
-		//}
-		dataManager.bindTex(0,2);
-		dataManager.bindTex(0,1);
-		dataManager.bindTex(0,0);
-		dataManager.bindShader(0);
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-	}
+	//	////glEnable(GL_BLEND);
+	//	////glEnable(GL_LINE_SMOOTH);
+	//	////glLineWidth(1);
+
+	//	////glVertex3f(x*size,sl,-3000);
+
+	//	////for(ang=0;ang<PI*2;ang+=PI/256)
+	//	////	glVertex3f((l*cos(ang)+size*m/2),sl-0.5,(l*sin(ang)+size*m/2));
+	//	////glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//	////glBegin(GL_POLYGON);
+	//	////for(ang=PI*3/4;ang<PI*5/4;ang+=PI/256)
+	//	////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
+	//	////glEnd();
+	//	////glBegin(GL_POLYGON);
+	//	////for(ang=PI*5/4;ang<PI*7/4;ang+=PI/256)
+	//	////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2));
+	//	////glEnd();
+	//	////glBegin(GL_POLYGON);
+	//	////for(ang=PI*7/4;ang<PI*9/4;ang+=PI/256)
+	//	////	glVertex3f((l*cos(ang)+size*m/2),sl,(l*sin(ang)+size*m/2)); 
+	//	////glEnd();
+
+	//	////r=sqrt((float)m*m+m*m)/2;
+
+
+	//	//for(i=0;i<m;i+=8)
+	//	//{
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	glTexCoord2f(im*i,im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))));				glVertex3f(i*size,sl,(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size);
+	//	//	glTexCoord2f(im*(i+8),im*(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))));	glVertex3f((i+8)*size,sl,(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2)))*size);
+	//	//	for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
+	//	//	{
+	//	//		glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
+	//	//		glTexCoord2f(im*(i+8),im*f);	glVertex3f((i+8)*size,PoS((i+8)*size,f*size,center,r2),f*size);
+	//	//	}
+	//	//	glEnd();
+
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	glTexCoord2f(im*i,im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m));				glVertex3f(i*size,sl,-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size);
+	//	//	glTexCoord2f(im*(i+8),im*-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m));	glVertex3f((i+8)*size,sl,-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m)*size);
+	//	//	for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
+	//	//	{
+	//	//		glTexCoord2f(im*i,im*f);		glVertex3f(i*size,PoS(i*size,f*size,center,r2),f*size);
+	//	//		glTexCoord2f(im*(i+8),im*f);	glVertex3f((i+8)*size,PoS((i+8)*size,f*size,center,r2),f*size);
+	//	//	}
+	//	//	glEnd();
+
+
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))),im*i);				glVertex3f((sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))*size,sl,i*size);
+	//	//	glTexCoord2f(im*(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))),im*(i+8));	glVertex3f((sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2)))*size,sl,(i+8)*size);
+	//	//	for(f=(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))-16;f>-m*10;f-=10)
+	//	//	{
+	//	//		glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
+	//	//		glTexCoord2f(im*f,im*(i+8));	glVertex3f(f*size,PoS((i+8)*size,f*size,center,r2),(i+8)*size);
+	//	//	}
+	//	//	glEnd();
+
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m),im*i);				glVertex3f(-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2))-m)*size,sl,i*size);
+	//	//	glTexCoord2f(im*-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m),im*(i+8));	glVertex3f(-(sqrt2/2*r-sqrt(r*r-((i+8)-m/2)*((i+8)-m/2))-m)*size,sl,(i+8)*size);
+	//	//	for(f=-(sqrt2/2*r-sqrt(r*r-(i-m/2)*(i-m/2)))+16+m;f<m*10;f+=10)
+	//	//	{
+	//	//		glTexCoord2f(im*f,im*i);		glVertex3f(f*size,PoS(i*size,f*size,center,r2),i*size);
+	//	//		glTexCoord2f(im*f,im*(i+8));	glVertex3f(f*size,PoS((i+8)*size,f*size,center,r2),(i+8)*size);
+	//	//	}
+	//	//	glEnd();
+
+	//	//}
+
+	//	//for(z=-8;z>-m*10;z-=8)
+	//	//{
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	for(x=0;x>-m*10;x-=8)
+	//	//	{
+	//	//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//	//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
+	//	//	}
+	//	//	glEnd();
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	for(x=m;x<m*10;x+=8)
+	//	//	{
+	//	//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//	//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
+	//	//	}
+	//	//	glEnd();
+	//	//}
+	//	//for(z=m;z<m*10;z+=8)
+	//	//{
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	for(x=0;x>-m*10;x-=8)
+	//	//	{
+	//	//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//	//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
+	//	//	}
+	//	//	glEnd();
+	//	//	glBegin(GL_TRIANGLE_STRIP);
+	//	//	for(x=m;x<m*10;x+=8)
+	//	//	{
+	//	//		glTexCoord2f(im*x,im*z);		glVertex3f(x*size,PoS(x*size,z*size,center,r2),z*size);
+	//	//		glTexCoord2f(im*x,im*(z+8));	glVertex3f(x*size,PoS(x*size,(z+8)*size,center,r2),(z+8)*size);
+	//	//	}
+	//	//	glEnd();
+	//	//}
+	//	dataManager.bindTex(0,2);
+	//	dataManager.bindTex(0,1);
+	//	dataManager.bindTex(0,0);
+	//	dataManager.bindShader(0);
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//}
 	//void drawWater4(Vec3f eye)
 	//{
 	//	for(float z = -0.5f; z <= 0.5; z+=0.01) 
@@ -911,8 +893,8 @@ protected:
 		glUniform1i(glGetUniformLocation(s, "ground"), 1);
 		glUniform1i(glGetUniformLocation(s, "tex"), 2);
 		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
-		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2); glError();
-		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); glError();
+		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
+		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -920,7 +902,7 @@ protected:
 		glPushMatrix();
 		
 		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(center.x/(terrain->width()*size),center.z/(terrain->length()*size));	
+			glTexCoord2f(center.x/(terrain->width()*size),center.z/(terrain->length()*size));
 			glVertex3f(center.x,center.y,center.z);
 
 			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
@@ -931,30 +913,30 @@ protected:
 				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
 			}
 		glEnd();
-		glPopMatrix();glError();
+		glPopMatrix();
 
 		dataManager.bindTex(0,2);
 		dataManager.bindTex(0,1);
 		dataManager.bindTex(0,0);
-		dataManager.bindShader(0);glError();
-	}
-	void seaFloor()
-	{
-		dataManager.bind("sea floor");
-
-		dataManager.bind("rock");
-		glUniform1i(glGetUniformLocation(dataManager.getId("sea floor"), "tex"), 0);
-		glPushMatrix();
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);		glVertex3f( -terrain->width()*size,-settings.HEIGHT_RANGE/2, -terrain->length()*size);
-			glTexCoord2f(5,0);		glVertex3f(2*terrain->width()*size,-settings.HEIGHT_RANGE/2, -terrain->length()*size);
-			glTexCoord2f(5,5);		glVertex3f(2*terrain->width()*size,-settings.HEIGHT_RANGE/2,2*terrain->length()*size);
-			glTexCoord2f(0,5);		glVertex3f( -terrain->width()*size,-settings.HEIGHT_RANGE/2,2*terrain->length()*size);
-		glEnd();
-		glPopMatrix();
-		dataManager.bindTex(0);
 		dataManager.bindShader(0);
 	}
+	//void seaFloor()
+	//{
+	//	dataManager.bind("sea floor");
+
+	//	dataManager.bind("rock");
+	//	glUniform1i(glGetUniformLocation(dataManager.getId("sea floor"), "tex"), 0);
+	//	glPushMatrix();
+	//	glBegin(GL_QUADS);
+	//		glTexCoord2f(0,0);		glVertex3f( -terrain->width()*size,-settings.HEIGHT_RANGE/2, -terrain->length()*size);
+	//		glTexCoord2f(5,0);		glVertex3f(2*terrain->width()*size,-settings.HEIGHT_RANGE/2, -terrain->length()*size);
+	//		glTexCoord2f(5,5);		glVertex3f(2*terrain->width()*size,-settings.HEIGHT_RANGE/2,2*terrain->length()*size);
+	//		glTexCoord2f(0,5);		glVertex3f( -terrain->width()*size,-settings.HEIGHT_RANGE/2,2*terrain->length()*size);
+	//	glEnd();
+	//	glPopMatrix();
+	//	dataManager.bindTex(0);
+	//	dataManager.bindShader(0);
+	//}
 	//void texturedQuad(int t,float x1,float x2,float y1,float y2)
 	//{
 	//	glBindTexture(GL_TEXTURE_2D, t);
@@ -965,16 +947,16 @@ protected:
 	//		glTexCoord2f(1,1);	glVertex2f(x2,y1);
 	//	glEnd();
 	//}
-	void texturedQuad(string t,float x,float y,float width,float height)
-	{
-		dataManager.bind(t);
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);	glVertex2f(x,y);
-			glTexCoord2f(0,1);	glVertex2f(x,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y);
-		glEnd();
-	}
+	//void texturedQuad(string t,float x,float y,float width,float height)
+	//{
+	//	dataManager.bind(t);
+	//	glBegin(GL_QUADS);
+	//		glTexCoord2f(0,0);	glVertex2f(x,y);
+	//		glTexCoord2f(0,1);	glVertex2f(x,y+height);
+	//		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+	//		glTexCoord2f(1,0);	glVertex2f(x+width,y);
+	//	glEnd();
+	//}
 	//void drawgauge(float x1,float y1,float x2,float y2,int texBack,int texFront,float rBack,float rFront)
 	//{
 	//	glColor4f(1,1,1,0.22);
@@ -1016,47 +998,47 @@ protected:
 	//	}
 	//	glPopMatrix();
 	//}
-	void drawgauge(float x1,float y1,float x2,float y2,string texBack,string texFront,float rBack,float rFront)
-	{
-		glColor4f(1,1,1,0.22);
-		glPushMatrix();
-		glTranslatef((x1+x2)/2,(y1+y2)/2,0);
-		glRotatef(rBack,0,0,1);
-		glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
-		dataManager.bind(texBack);
-		for(float x=-0.5;x<0.9;x+=0.5)
-		{
-			for(float y=-0.5;y<0.9;y+=0.5)
-			{
-				glBegin(GL_QUADS);
-					glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
-					glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
-					glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
-					glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
-				glEnd();
-			}
-		}
-		glPopMatrix();
+	//void drawgauge(float x1,float y1,float x2,float y2,string texBack,string texFront,float rBack,float rFront)
+	//{
+	//	glColor4f(1,1,1,0.22);
+	//	glPushMatrix();
+	//	glTranslatef((x1+x2)/2,(y1+y2)/2,0);
+	//	glRotatef(rBack,0,0,1);
+	//	glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
+	//	dataManager.bind(texBack);
+	//	for(float x=-0.5;x<0.9;x+=0.5)
+	//	{
+	//		for(float y=-0.5;y<0.9;y+=0.5)
+	//		{
+	//			glBegin(GL_QUADS);
+	//				glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
+	//				glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
+	//				glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
+	//				glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
+	//			glEnd();
+	//		}
+	//	}
+	//	glPopMatrix();
 
-		glPushMatrix();
-		glTranslatef((x1+x2)/2,(y1+y2)/2,0);
-		glRotatef(rFront,0,0,1);
-		glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
-		dataManager.bind(texFront);
-		for(float x=-0.5;x<0.9;x+=0.5)
-		{
-			for(float y=-0.5;y<0.9;y+=0.5)
-			{
-				glBegin(GL_QUADS);
-					glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
-					glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
-					glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
-					glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
-				glEnd();
-			}
-		}
-		glPopMatrix();
-	}
+	//	glPushMatrix();
+	//	glTranslatef((x1+x2)/2,(y1+y2)/2,0);
+	//	glRotatef(rFront,0,0,1);
+	//	glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
+	//	dataManager.bind(texFront);
+	//	for(float x=-0.5;x<0.9;x+=0.5)
+	//	{
+	//		for(float y=-0.5;y<0.9;y+=0.5)
+	//		{
+	//			glBegin(GL_QUADS);
+	//				glTexCoord2f(0,0);	glVertex2f(x1+x,y1+y);
+	//				glTexCoord2f(0,1);	glVertex2f(x1+x,y2+y);
+	//				glTexCoord2f(1,1);	glVertex2f(x2+x,y2+y);
+	//				glTexCoord2f(1,0);	glVertex2f(x2+x,y1+y);
+	//			glEnd();
+	//		}
+	//	}
+	//	glPopMatrix();
+	//}
 	void healthBar(float x, float y, float width, float height, float health, bool firstPerson)
 	{
 		x *=	0.00125*sw;
@@ -1066,22 +1048,8 @@ protected:
 
 		if(!firstPerson)
 		{
-			dataManager.bind("health bar");
-			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-			glBegin(GL_QUADS);
-				glTexCoord2f(0.01,0.01);	glVertex2f(x,y);
-				glTexCoord2f(0.01,0.99);	glVertex2f(x,y+height);
-				glTexCoord2f(0.99,0.99);	glVertex2f(x+width,y+height);
-				glTexCoord2f(0.99,0.01);	glVertex2f(x+width,y);
-			glEnd();
-			dataManager.bindTex(0);
-			glBegin(GL_QUADS);
-				glVertex2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health),	y + height/25*7.25);
-				glVertex2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health),	y + height/25*15.75);
-				glVertex2f(x + width/150*125,												y + height/25*15.75);
-				glVertex2f(x + width/150*125,												y + height/25*7.25);
-			glEnd();
+			graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height),"health bar");
+			graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), Vec2f(x + width/150*125 - ((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health)), height/25*8.5), "noTexture");
 		}
 		else
 		{
@@ -1095,6 +1063,10 @@ protected:
 			glTexCoord2f(1,1);	glVertex2f(x+width,y);
 			glEnd();
 			dataManager.bindShader(0);
+			//hShader->setValue1f("health",health);
+			//hShader->bind();
+			//graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height));
+			//hShader->unbind();
 		}
 	}
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees)
@@ -1181,100 +1153,99 @@ protected:
 		glEnd();
 		glPopMatrix();
 	}
-	virtual void drawRadar(int acplayer,float viewX=1.0,float viewY=0.5)
-	{
-		plane p = *(plane*)planes[players[acplayer].planeNum()];
-		int x1,x2,y1,y2,xc,yc;
-		float s=(float)sw/800.0;
-		//x1=720*s*viewX,x2=x1+64*s,y1=430*s*viewY,y2=y1+64*s;
+	//virtual void drawRadar(int acplayer,float viewX=1.0,float viewY=0.5)
+	//{
+	//	plane p = *(plane*)planes[players[acplayer].planeNum()];
+	//	int x1,x2,y1,y2,xc,yc;
+	//	float s=(float)sw/800.0;
+	//	//x1=720*s*viewX,x2=x1+64*s,y1=430*s*viewY,y2=y1+64*s;
 
-		//glColor4f(0.05,0.79,0.04,1);
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-		//glPushMatrix();
-		//glTranslatef(-p.x/size+xc,-p.z/size+yc,0);
-		//for(int z = p.z/size-8; z < terrain->length() && p.z/size+8; z++) {
-		//	glBegin(GL_QUAD_STRIP);
-		//		for(int x = p.x/size-8; x < terrain->width() && p.x/size+8; x++) {
-		//			glVertex3f(x*4,		z * 4,		terrain->getHeight(x,z)/300.0);
-		//			glVertex3f(x*4,		(z+1) * 4,	terrain->getHeight(x,z+1)/300.0);
-		//			glVertex3f((x+1)*4,	z * 4,		terrain->getHeight(x+1,z)/300.0);
-		//			glVertex3f((x+1)*4,	(z+1) * 4,	terrain->getHeight(x+1,z+1)/300.0);
-		//		}
-		//	glEnd();
-		//}
-		//glPopMatrix();
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		//glOrtho( 0, sw*viewX , sh*viewY-(1.0/viewY-1)*2 , 0, -1, 1 );
+	//	//glColor4f(0.05,0.79,0.04,1);
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//	//glPushMatrix();
+	//	//glTranslatef(-p.x/size+xc,-p.z/size+yc,0);
+	//	//for(int z = p.z/size-8; z < terrain->length() && p.z/size+8; z++) {
+	//	//	glBegin(GL_QUAD_STRIP);
+	//	//		for(int x = p.x/size-8; x < terrain->width() && p.x/size+8; x++) {
+	//	//			glVertex3f(x*4,		z * 4,		terrain->getHeight(x,z)/300.0);
+	//	//			glVertex3f(x*4,		(z+1) * 4,	terrain->getHeight(x,z+1)/300.0);
+	//	//			glVertex3f((x+1)*4,	z * 4,		terrain->getHeight(x+1,z)/300.0);
+	//	//			glVertex3f((x+1)*4,	(z+1) * 4,	terrain->getHeight(x+1,z+1)/300.0);
+	//	//		}
+	//	//	glEnd();
+	//	//}
+	//	//glPopMatrix();
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//	//glOrtho( 0, sw*viewX , sh*viewY-(1.0/viewY-1)*2 , 0, -1, 1 );
 
-		int shader;
-		if(players[acplayer].firstPerson()==true && !p.controled)
-		{
-			shader=dataManager.getId("radar");
-			x2=(sw/2-s*160)*viewX,x1=x2-64*s,y2=(sh-s*80)*viewY,y1=y2-64*s;
-			xc=(x1+x2)/2,yc=(y1+y2)/2;
-		}
-		else
-		{
-			shader=dataManager.getId("radar2");
-			dataManager.bind("radarTex");
-			x2=(sw-32)*viewX,x1=x2-64*s,y2=(sh-32)*viewY,y1=y2-64*s;
-			xc=(x1+x2)/2,yc=(y1+y2)/2;
-		}
-		glUseProgram(shader);
-		int location = glGetUniformLocation(shader, "radarTexture");
-		glUniform1i(location, 0);
-		location = glGetUniformLocation(shader, "radarAng");
-		glUniform1f(location, radarAng);
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x1,y1);
-			glTexCoord2f(0,0);	glVertex2f(x1,y2);
-			glTexCoord2f(1,0);	glVertex2f(x2,y2);
-			glTexCoord2f(1,1);	glVertex2f(x2,y1);
-		glEnd();
-		glUseProgram(0);
-		glColor4f(1,1,1,0.25);
+	//	int shader;
+	//	if(players[acplayer].firstPerson()==true && !p.controled)
+	//	{
+	//		shader=dataManager.getId("radar");
+	//		x2=(sw/2-s*160)*viewX,x1=x2-64*s,y2=(sh-s*80)*viewY,y1=y2-64*s;
+	//		xc=(x1+x2)/2,yc=(y1+y2)/2;
+	//	}
+	//	else
+	//	{
+	//		shader=dataManager.getId("radar2");
+	//		dataManager.bind("radarTex");
+	//		x2=(sw-32)*viewX,x1=x2-64*s,y2=(sh-32)*viewY,y1=y2-64*s;
+	//		xc=(x1+x2)/2,yc=(y1+y2)/2;
+	//	}
+	//	glUseProgram(shader);
+	//	int location = glGetUniformLocation(shader, "radarTexture");
+	//	glUniform1i(location, 0);
+	//	location = glGetUniformLocation(shader, "radarAng");
+	//	glUniform1f(location, radarAng);
+	//	glBegin(GL_QUADS);
+	//		glTexCoord2f(0,1);	glVertex2f(x1,y1);
+	//		glTexCoord2f(0,0);	glVertex2f(x1,y2);
+	//		glTexCoord2f(1,0);	glVertex2f(x2,y2);
+	//		glTexCoord2f(1,1);	glVertex2f(x2,y1);
+	//	glEnd();
+	//	glUseProgram(0);
+	//	glColor4f(1,1,1,0.25);
 
-		//dataManager.bind("radar plane");
-		//Vec3f trans;
-		//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-		//{
-		//	int d=p.pos.distance((*i).second->pos);
-		//	if(d<3733 && acplayer!=(*i).first && !(*i).second->dead)
-		//	{
-		//		glPushMatrix();
-		//		glTranslatef(xc,yc,0);
-		//		glRotatef(acosA(Vec3f(p.velocity.x,0,p.velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
-		//		glTranslatef(((*i).second->pos.x-p.pos.x)*(x2-xc)/(16384),((*i).second->pos.z-p.pos.z)*(x2-xc)/(16384),0);
-		//		glRotatef(acosA(Vec3f((*i).second->velocity.x,0,(*i).second->velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
+	//	//dataManager.bind("radar plane");
+	//	//Vec3f trans;
+	//	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
+	//	//{
+	//	//	int d=p.pos.distance((*i).second->pos);
+	//	//	if(d<3733 && acplayer!=(*i).first && !(*i).second->dead)
+	//	//	{
+	//	//		glPushMatrix();
+	//	//		glTranslatef(xc,yc,0);
+	//	//		glRotatef(acosA(Vec3f(p.velocity.x,0,p.velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
+	//	//		glTranslatef(((*i).second->pos.x-p.pos.x)*(x2-xc)/(16384),((*i).second->pos.z-p.pos.z)*(x2-xc)/(16384),0);
+	//	//		glRotatef(acosA(Vec3f((*i).second->velocity.x,0,(*i).second->velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
 
-		//		for(float x=-0.5;x<0.9;x+=0.5)
-		//		{
-		//			for(float y=-0.5;y<0.9;y+=0.5)
-		//			{
-		//				glBegin(GL_QUADS);
-		//					glTexCoord2f(0,1);	glVertex2f(4+x,4+y);
-		//					glTexCoord2f(0,0);	glVertex2f(4+x,-4+y);
-		//					glTexCoord2f(1,0);	glVertex2f(-4+x,-4+y);
-		//					glTexCoord2f(1,1);	glVertex2f(-4+x,4+y);
-		//				glEnd();
-		//			}
-		//		}
-		//		glPopMatrix();
-		//	}
-		//}
-		if(!players[acplayer].firstPerson() || p.controled)
-		{
-			glColor4f(1,1,1,1);
-			dataManager.bind("radar frame");
-			glBegin(GL_QUADS);
-				glTexCoord2f(0,1);	glVertex2f(x1,y1);
-				glTexCoord2f(0,0);	glVertex2f(x1,y2);
-				glTexCoord2f(1,0);	glVertex2f(x2,y2);
-				glTexCoord2f(1,1);	glVertex2f(x2,y1);
-			glEnd();
-		}
-	}
-
+	//	//		for(float x=-0.5;x<0.9;x+=0.5)
+	//	//		{
+	//	//			for(float y=-0.5;y<0.9;y+=0.5)
+	//	//			{
+	//	//				glBegin(GL_QUADS);
+	//	//					glTexCoord2f(0,1);	glVertex2f(4+x,4+y);
+	//	//					glTexCoord2f(0,0);	glVertex2f(4+x,-4+y);
+	//	//					glTexCoord2f(1,0);	glVertex2f(-4+x,-4+y);
+	//	//					glTexCoord2f(1,1);	glVertex2f(-4+x,4+y);
+	//	//				glEnd();
+	//	//			}
+	//	//		}
+	//	//		glPopMatrix();
+	//	//	}
+	//	//}
+	//	if(!players[acplayer].firstPerson() || p.controled)
+	//	{
+	//		glColor4f(1,1,1,1);
+	//		dataManager.bind("radar frame");
+	//		glBegin(GL_QUADS);
+	//			glTexCoord2f(0,1);	glVertex2f(x1,y1);
+	//			glTexCoord2f(0,0);	glVertex2f(x1,y2);
+	//			glTexCoord2f(1,0);	glVertex2f(x2,y2);
+	//			glTexCoord2f(1,1);	glVertex2f(x2,y1);
+	//		glEnd();
+	//	}
+	//}
 	void drawRadar(float x, float y, float width, float height,bool firstPerson)
 	{
 		x *=	0.00125*sw;
@@ -1355,26 +1326,8 @@ protected:
 		x *=	0.00125*sw;
 		y *=	0.00167*sh;
 
-		glPushMatrix();
-		glTranslatef(x,y,0);
-		glRotatef(tilt.degrees(),0,0,-1);
-		glTranslatef(-x,-y,0);
-		dataManager.bind("tilt");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);	glVertex2f(x-width,y-height);
-			glTexCoord2f(0,1);	glVertex2f(x-width,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y-height);
-		glEnd();
-		glPopMatrix();
-
-		dataManager.bind("targeter");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,1);	glVertex2f(x-width,y+height);
-			glTexCoord2f(0,0);	glVertex2f(x-width,y-height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y-height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-		glEnd();
+		graphics->drawRotatedOverlay(Vec2f(x-width,y-height),Vec2f(width*2,height*2),tilt,"tilt");
+		graphics->drawOverlay(Vec2f(x-width,y-height),Vec2f(width*2,height*2),"targeter");
 	}
 	//void targeter(float x,float y,float width,float height,const planeBase& p)
 	//{
@@ -1428,7 +1381,6 @@ protected:
 
 		#endif
 	}
-	virtual void drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up)=0;
 	//virtual void drawOrthoView(int acplayer, Vec3f eye)
 	//{
 	//	plane p=*(plane*)planes[players[acplayer].planeNum()];
@@ -1531,132 +1483,132 @@ protected:
 	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//	viewPerspective();//end 2d
 	//}
-	void l3dBillboardGetUpRightVector(Vec3f &up,Vec3f &right) 
-	{ //http://www.lighthouse3d.com/opengl/billboarding/
-		
-		float modelview[16];
-		glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-		right.set(	modelview[0],modelview[4],modelview[8]);
-		up.set(		modelview[1],modelview[5],modelview[9]);
-	}
-	void vertexArrayParticles()
-	{
-		if(newSmoke.getSize()==0) return;
-		Vec3f up,right;
-		Vec3f a,b,c,d;
-		Vec3f p;
-		l3dBillboardGetUpRightVector(up,right);
-		SVertex *s=(SVertex*)malloc(newSmoke.getSize()*sizeof(SVertex)*4);
+	//void l3dBillboardGetUpRightVector(Vec3f &up,Vec3f &right) 
+	//{ //http://www.lighthouse3d.com/opengl/billboarding/
+	//	
+	//	float modelview[16];
+	//	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	//	right.set(	modelview[0],modelview[4],modelview[8]);
+	//	up.set(		modelview[1],modelview[5],modelview[9]);
+	//}
+	//void vertexArrayParticles()
+	//{
+	//	if(newSmoke.getSize()==0) return;
+	//	Vec3f up,right;
+	//	Vec3f a,b,c,d;
+	//	Vec3f p;
+	//	l3dBillboardGetUpRightVector(up,right);
+	//	SVertex *s=(SVertex*)malloc(newSmoke.getSize()*sizeof(SVertex)*4);
 
-		for(int i=0;i<newSmoke.getSize();i++)
-		{
-			a = newSmoke.positions[i] - (right + up) * 65.0;
-			b = newSmoke.positions[i] + (right - up) * 65.0;
-			c = newSmoke.positions[i] + (right + up) * 65.0;
-			d = newSmoke.positions[i] - (right - up) * 65.0;
+	//	for(int i=0;i<newSmoke.getSize();i++)
+	//	{
+	//		a = newSmoke.positions[i] - (right + up) * 65.0;
+	//		b = newSmoke.positions[i] + (right - up) * 65.0;
+	//		c = newSmoke.positions[i] + (right + up) * 65.0;
+	//		d = newSmoke.positions[i] - (right - up) * 65.0;
 
-			s[i*4+0].x=a[0];	s[i*4+0].y=a[1];	s[i*4+0].z=a[2];
-			s[i*4+1].x=b[0];	s[i*4+1].y=b[1];	s[i*4+1].z=b[2];
-			s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
-			s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
+	//		s[i*4+0].x=a[0];	s[i*4+0].y=a[1];	s[i*4+0].z=a[2];
+	//		s[i*4+1].x=b[0];	s[i*4+1].y=b[1];	s[i*4+1].z=b[2];
+	//		s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
+	//		s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
-			s[i*4+0].r=0.25;	s[i*4+0].g=0.25;	s[i*4+0].b=0.25;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+0].r=0.25;	s[i*4+0].g=0.25;	s[i*4+0].b=0.25;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
 
-			s[i*4+0].s=0;	s[i*4+0].t=1;
-			s[i*4+1].s=1;	s[i*4+1].t=1;
-			s[i*4+2].s=1;	s[i*4+2].t=0;
-			s[i*4+3].s=0;	s[i*4+3].t=0;
-		}
-		unsigned short *indexes=(unsigned short*)malloc(newSmoke.getSize()*sizeof(unsigned short)*4);
-		for(int i=0;i<newSmoke.getSize()*4;i++) indexes[i]=i;
+	//		s[i*4+0].s=0;	s[i*4+0].t=1;
+	//		s[i*4+1].s=1;	s[i*4+1].t=1;
+	//		s[i*4+2].s=1;	s[i*4+2].t=0;
+	//		s[i*4+3].s=0;	s[i*4+3].t=0;
+	//	}
+	//	unsigned short *indexes=(unsigned short*)malloc(newSmoke.getSize()*sizeof(unsigned short)*4);
+	//	for(int i=0;i<newSmoke.getSize()*4;i++) indexes[i]=i;
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(SVertex), &s[0].x);
+	//	glEnableClientState(GL_VERTEX_ARRAY);
+	//	glVertexPointer(3, GL_FLOAT, sizeof(SVertex), &s[0].x);
 
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertex), &s[0].s);
+	//	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	//	glTexCoordPointer(2, GL_FLOAT, sizeof(SVertex), &s[0].s);
 
-		glEnableClientState(GL_COLOR_ARRAY);
-		glColorPointer(4,GL_FLOAT, sizeof(SVertex), &s[0].r);
+	//	glEnableClientState(GL_COLOR_ARRAY);
+	//	glColorPointer(4,GL_FLOAT, sizeof(SVertex), &s[0].r);
 
-		glEnable(GL_CULL_FACE);
-		dataManager.bind("missile smoke");
-		glDisable(GL_LIGHTING);
-		glDisable(GL_NORMALIZE);
+	//	glEnable(GL_CULL_FACE);
+	//	dataManager.bind("missile smoke");
+	//	glDisable(GL_LIGHTING);
+	//	glDisable(GL_NORMALIZE);
 
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-		glDrawRangeElements(GL_QUADS, 0, newSmoke.getSize()*4-1, newSmoke.getSize()*4, GL_UNSIGNED_SHORT, indexes);
-		//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-		glEnable(GL_NORMALIZE);
-	//	glEnable(GL_LIGHTING);   Is it used?
-		glDisable(GL_CULL_FACE); 
+	//	glDrawRangeElements(GL_QUADS, 0, newSmoke.getSize()*4-1, newSmoke.getSize()*4, GL_UNSIGNED_SHORT, indexes);
+	//	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//	glEnable(GL_NORMALIZE);
+	////	glEnable(GL_LIGHTING);   Is it used?
+	//	glDisable(GL_CULL_FACE); 
 
-		free(s);
-		//const GLubyte *i= gluErrorString(glGetError());
-	}
-	void vertexArrayExaust()
-	{
-		if(newExaust.getSize()==0) return;
-		Vec3f up,right;
-		Vec3f a,b,c,d;
-		Vec3f p;
-		l3dBillboardGetUpRightVector(up,right);
-		SVertex *s=newExaust.getMem();
+	//	free(s);
+	//	//const GLubyte *i= gluErrorString(glGetError());
+	//}
+	//void vertexArrayExaust()
+	//{
+	//	if(newExaust.getSize()==0) return;
+	//	Vec3f up,right;
+	//	Vec3f a,b,c,d;
+	//	Vec3f p;
+	//	l3dBillboardGetUpRightVector(up,right);
+	//	SVertex *s=newExaust.getMem();
 
-		for(int i=0;i<newExaust.getSize();i++)
-		{
-			a = newExaust.positions[i] - (right + up) * 15.0;
-			b = newExaust.positions[i] + (right - up) * 15.0;
-			c = newExaust.positions[i] + (right + up) * 15.0;
-			d = newExaust.positions[i] - (right - up) * 15.0;
+	//	for(int i=0;i<newExaust.getSize();i++)
+	//	{
+	//		a = newExaust.positions[i] - (right + up) * 15.0;
+	//		b = newExaust.positions[i] + (right - up) * 15.0;
+	//		c = newExaust.positions[i] + (right + up) * 15.0;
+	//		d = newExaust.positions[i] - (right - up) * 15.0;
 
-			s[i*4+0].x=a[0];	s[i*4+0].y=a[1];	s[i*4+0].z=a[2];
-			s[i*4+1].x=b[0];	s[i*4+1].y=b[1];	s[i*4+1].z=b[2];
-			s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
-			s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
+	//		s[i*4+0].x=a[0];	s[i*4+0].y=a[1];	s[i*4+0].z=a[2];
+	//		s[i*4+1].x=b[0];	s[i*4+1].y=b[1];	s[i*4+1].z=b[2];
+	//		s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
+	//		s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
-			s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-			s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
 
-			s[i*4+0].s=0;	s[i*4+0].t=1;
-			s[i*4+1].s=1;	s[i*4+1].t=1;
-			s[i*4+2].s=1;	s[i*4+2].t=0;
-			s[i*4+3].s=0;	s[i*4+3].t=0;
-		}
-		unsigned short *indexes=(unsigned short*)malloc(newExaust.getSize()*sizeof(unsigned short)*4);
-		for(int i=0;i<newExaust.getSize()*4;i++) indexes[i]=i;
+	//		s[i*4+0].s=0;	s[i*4+0].t=1;
+	//		s[i*4+1].s=1;	s[i*4+1].t=1;
+	//		s[i*4+2].s=1;	s[i*4+2].t=0;
+	//		s[i*4+3].s=0;	s[i*4+3].t=0;
+	//	}
+	//	unsigned short *indexes=(unsigned short*)malloc(newExaust.getSize()*sizeof(unsigned short)*4);
+	//	for(int i=0;i<newExaust.getSize()*4;i++) indexes[i]=i;
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
+	//	glEnableClientState(GL_VERTEX_ARRAY);
+	//	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	//	glEnableClientState(GL_COLOR_ARRAY);
 
-		glVertexPointer(3, GL_FLOAT, sizeof(SVertex), &s[0].x);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertex), &s[0].s);
-		glColorPointer(4,GL_FLOAT, sizeof(SVertex), &s[0].r);
+	//	glVertexPointer(3, GL_FLOAT, sizeof(SVertex), &s[0].x);
+	//	glTexCoordPointer(2, GL_FLOAT, sizeof(SVertex), &s[0].s);
+	//	glColorPointer(4,GL_FLOAT, sizeof(SVertex), &s[0].r);
 
-		glEnable(GL_CULL_FACE);
-		dataManager.bind("missile smoke");
-		glDisable(GL_LIGHTING);
-		glDisable(GL_NORMALIZE);
+	//	glEnable(GL_CULL_FACE);
+	//	dataManager.bind("missile smoke");
+	//	glDisable(GL_LIGHTING);
+	//	glDisable(GL_NORMALIZE);
 
-		glDrawRangeElements(GL_QUADS, 0, newExaust.getSize()*4-1, newExaust.getSize()*4, GL_UNSIGNED_SHORT, indexes);
-		glEnable(GL_NORMALIZE);
-		glDisable(GL_CULL_FACE);
+	//	glDrawRangeElements(GL_QUADS, 0, newExaust.getSize()*4-1, newExaust.getSize()*4, GL_UNSIGNED_SHORT, indexes);
+	//	glEnable(GL_NORMALIZE);
+	//	glDisable(GL_CULL_FACE);
 
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_COLOR_ARRAY);
-	}
+	//	glDisableClientState(GL_VERTEX_ARRAY);
+	//	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	//	glDisableClientState(GL_COLOR_ARRAY);
+	//}
 	void graphicsExaust()
 	{
 		Profiler.setOutput("smoke sprites", newExaust.getSize());
@@ -1968,10 +1920,10 @@ protected:
 					
 					
 					//m.draw();
-					glCallList(planeModels[defaultPlane]);
+					dataManager.draw(cPlane->type);
 					int ml=1;
 					glEnable(GL_LIGHTING);
-					for(vector<Settings::planeStat::hardpoint>::reverse_iterator m = settings.planeStats[defaultPlane].hardpoints.rbegin(); m!= settings.planeStats[defaultPlane].hardpoints.rend(); m++, ml++)
+					for(vector<Settings::planeStat::hardpoint>::reverse_iterator m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
 					{
 						if(i->second->rockets.left>=ml)
 						{
@@ -2019,6 +1971,19 @@ protected:
 		glEnd();
 		glLineWidth(1);
 	}
+	void satellite()
+	{
+		glEnable(GL_BLEND);
+		dataManager.bind("satellite");
+		glBegin(GL_QUADS);
+			glTexCoord2f(0,0);	glVertex3f(0,settings.SEA_LEVEL,0);
+			glTexCoord2f(1,0);	glVertex3f(58232,settings.SEA_LEVEL,0);
+			glTexCoord2f(1,1);	glVertex3f(58232,settings.SEA_LEVEL,49180);
+			glTexCoord2f(0,1);	glVertex3f(0,settings.SEA_LEVEL,49180);
+		glEnd();
+		dataManager.bindTex(0);
+		glDisable(GL_BLEND);
+	}
 	void drawScene2(int acplayer) {
 		Profiler.startElement("beginRender");
 
@@ -2033,7 +1998,7 @@ protected:
 		GLfloat ambientColor[] = {0.85f, 0.85f, 0.85f, 1.0f};
 		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
 		
-		GLfloat lightColor0[] = {0.6f, 0.6f, 0.6f, 1.0f};
+		GLfloat lightColor0[] = {0.6f, 0.6f, 0.6f, 0.0f};
 		GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
@@ -2046,9 +2011,9 @@ protected:
 		if(!players[acplayer].firstPerson() || p.controled)
 		{
 			Vec3f vel2D = p.rotation * Vec3f(0,0,1); vel2D.y=0;
-			e=Vec3f(p.pos.x - vel2D.normalize().x*105, p.pos.y + sin(45.0)*105 , p.pos.z - vel2D.normalize().z*105);
+			e=Vec3f(p.pos.x - vel2D.normalize().x*135, p.pos.y + sin(45.0)*135 , p.pos.z - vel2D.normalize().z*135);
 			if(p.controled) e=p.camera;
-			c=Vec3f(p.pos.x + vel2D.normalize().x*105, p.pos.y, p.pos.z + vel2D.normalize().z*105);
+			c=Vec3f(p.pos.x + vel2D.normalize().x*135, p.pos.y, p.pos.z + vel2D.normalize().z*135);
 			if(p.controled) c=p.center;
 			u=Vec3f(0,1,0);
 
@@ -2095,7 +2060,7 @@ protected:
 		glTranslatef(e[0],e[1],e[2]);
 		glScalef(3000,800,3000);
 		glTranslatef(0,-0.7,0);
-		dataManager.drawModel("sky dome");
+		dataManager.draw("sky dome");
 		glEnable(GL_LIGHTING);
 		glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
@@ -2106,8 +2071,8 @@ protected:
 		if(settings.MAP_TYPE==WATER && level == NULL)
 		{
 			//if(lowQuality)
-				drawWater3(e);
-				//drawWater5(e);
+				//drawWater3(e);
+				drawWater5(e);
 			//else
 			//	drawWater4(e);
 			
@@ -2120,6 +2085,8 @@ protected:
 			level->render();
 		else
 			glCallList(disp[0]);
+		//satellite();
+
 		glPolygonOffset(0.0,0.0);
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		Profiler.endElement("land");
@@ -2202,24 +2169,24 @@ protected:
 		bulletTrails();
 
 		//////////////2D/////////////
-		glDisable(GL_DEPTH_TEST);
-		glColor4f(1,1,1,1);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		drawHUD(acplayer,e,c,u);
-		glBindTexture(GL_TEXTURE_2D,0);
-		#ifdef _DEBUG
-			if(fps<29.0)glColor4f(1,0,0,1);
-			else glColor4f(0,0,0,1);
+		//glDisable(GL_DEPTH_TEST);
+		//glColor4f(1,1,1,1);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		//drawHUD(acplayer,e,c,u);
+		//glBindTexture(GL_TEXTURE_2D,0);
+		//#ifdef _DEBUG
+		//	if(fps<29.0)glColor4f(1,0,0,1);
+		//	else glColor4f(0,0,0,1);
 
- 			if(acplayer==0) textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
-				//textManager->renderText(string((char*)gluErrorString(glGetError())),sw/2-25,25);
-			if(acplayer==0) Profiler.draw();
-		#endif
-		glEnable(GL_DEPTH_TEST);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
-		viewPerspective();
+ 		//	if(acplayer==0) textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
+		//		//textManager->renderText(string((char*)gluErrorString(glGetError())),sw/2-25,25);
+		//	if(acplayer==0) Profiler.draw();
+		//#endif
+		//glEnable(GL_DEPTH_TEST);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
+		//viewPerspective();
 		///////////2D end//////////////
 
 		glEnable(GL_LIGHTING);

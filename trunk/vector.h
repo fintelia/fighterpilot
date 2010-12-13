@@ -35,9 +35,11 @@ public:
 	T distance(Vector2 v);
 	T distanceSquared(Vector2 v);
 };
-typedef Vector2<float> Vec2f;
-typedef Vector2<double>	Vec2d;
-
+typedef Vector2<float>			Vec2f;
+typedef Vector2<double>			Vec2d;
+typedef Vector2<int>			Vec2i;
+typedef Vector2<unsigned int>	Vec2u;
+typedef Vector2<long>			Vec2l;
 template <class T>
 class Vector3
 {
@@ -75,9 +77,11 @@ public:
 	T distance(Vector3 v);
 	T distanceSquared(Vector3 v);
 };
-typedef Vector3<float> Vec3f;
-typedef Vector3<double>	Vec3d;
-
+typedef Vector3<float>			Vec3f;
+typedef Vector3<double>			Vec3d;
+typedef Vector3<int>			Vec3i;
+typedef Vector3<unsigned int>	Vec3u;
+typedef Vector3<long>			Vec3l;
 /////////////////////////////////////////////////////////////definitions///////////////////////////////////////////////////////////////////////
 template <class T>
 Vector3<T>::Vector3(): x(0), y(0), z(0)

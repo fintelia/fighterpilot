@@ -179,7 +179,7 @@ Image* loadBMP(const char* filename) {
 	}
 	
 	//Read the data
-	int bytesPerRow = ((width * 3 + 3) / 4) * 4 - (width * 3 % 4);
+	int bytesPerRow = width*3 + width%4;//((width * 3 + 3) / 4) * 4 - (width * 3 % 4);
 	int size = bytesPerRow * height;
 	auto_array<char> pixels(new char[size]);
 	input.seekg(dataOffset, ios_base::beg);

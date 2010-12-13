@@ -34,7 +34,6 @@ public:
 
 	struct planeStat
 	{
-		int dispList;
 		struct hardpoint
 		{
 			int missileNum;
@@ -42,7 +41,7 @@ public:
 			hardpoint(): missileNum(-1), offset(0,0,0) {}
 		};
 		vector<hardpoint> hardpoints;
-		planeStat(): dispList() {}
+		planeStat(){}
 	};
 	map<planeType,planeStat> planeStats;
 	struct missileStat

@@ -27,6 +27,7 @@ using namespace boost::filesystem;
 #pragma warning( disable : 4305)
 #pragma warning( disable : 4244)
 #pragma warning( disable : 4018)
+#pragma warning( disable : 4250)
 
 #pragma comment (linker, "/SUBSYSTEM:WINDOWS")
 #pragma comment (linker, "/ENTRY:WinMainCRTStartup")
@@ -39,12 +40,11 @@ using namespace boost::filesystem;
 #include <process.h>
 #include "GL/glee.h"
 #include <GL/glu.h>
-extern HDC			hDC;						// Private GDI Device Context
-extern HGLRC		hRC;						// Permanent Rendering Context
-extern HWND			hWnd;						// Holds Our Window Handle
-extern HINSTANCE	hInstance;					// Holds The Instance Of The Application
+//extern HDC			hDC;						// Private GDI Device Context
+//extern HGLRC		hRC;						// Permanent Rendering Context
+//extern HWND			hWnd;						// Holds Our Window Handle
+//extern HINSTANCE	hInstance;					// Holds The Instance Of The Application
 extern bool			active;						// Window Active Flag
-extern bool			fullscreen;					// Fullscreen Flag Set To TRUE By Default
 //extern int fontBase;
 
 extern const double PI;
@@ -56,8 +56,6 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 void cleanup();
 char *textFileRead(char *fn);
 bool checkExtension(char* extensions, char* checkFor);
-void viewOrtho(int x, int y);
-void viewPerspective();
 
 #include "enums.h"
 //#include "debug.h"
@@ -71,8 +69,10 @@ void viewPerspective();
 #include "gameMath.h"
 #include "random.h"
 
+#include "shader.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
+#include "cameraManager.h"
 #include "load_save.h"
 #include "path.h"
 #include "level.h"

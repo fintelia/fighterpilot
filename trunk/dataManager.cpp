@@ -33,6 +33,8 @@ int DataManager::loadShader(string vert, string frag)
 
 	char * ff = textFileRead((char*)frag.c_str());
 	char * vv = textFileRead((char*)vert.c_str());
+	if(ff == NULL || vv == NULL) return 0;
+
 	glShaderSource(v, 1, (const char **)&vv, NULL);
 	glShaderSource(f, 1, (const char **)&ff, NULL);
 	glCompileShader(v);
@@ -68,6 +70,7 @@ int DataManager::loadTerrainShader(string frag)
 	{
 		v = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
 		char * vv = textFileRead("media/terrain.vert");
+		if(vv == NULL) return 0;
 		glShaderSource(v, 1, (const char **)&vv, NULL);
 		glCompileShader(v);
 		free(vv);
@@ -225,12 +228,12 @@ int DataManager::loadMMP(string filename)
 	MMPheader h;
 	ifstream fin;
 	fin.open(filename,ios::binary);
-	if(!fin.is_open()) return -1;
+	if(!fin.is_open()) return 0;
 	fin.read((char*)&h,sizeof(h));
-	if(h.channels != 3 && h.channels != 4) return -1;
+	if(h.channels != 3 && h.channels != 4) return 0;
 
 	unsigned char* imageData=(unsigned char*)malloc(h.size_x*h.size_y*h.channels);
-	if(imageData==NULL) return -1;
+	if(imageData==NULL) return 0;
 	
 	GLuint texV;
 	glGenTextures(1,&texV);
@@ -720,26 +723,73 @@ void DataManager::bind(string name, int textureUnit)
 	{
 		glActiveTexture(GL_TEXTURE0+textureUnit);
 		glBindTexture(GL_TEXTURE_2D,assets[name].id);
+		boundTextures[textureUnit] = name;
 	}
 	else if(assets[name].type==asset::SHADER)
 	{
 		glUseProgram(assets[name].id);
+		boundShader = name;
 	}
 }
 void DataManager::bindTex(int id, int textureUnit)
 {
 	glActiveTexture(GL_TEXTURE0+textureUnit);
 	glBindTexture(GL_TEXTURE_2D,id);
+	boundTextures[textureUnit] = "";
 }
 void DataManager::bindShader(int id)
 {
 	glUseProgram(id);
+	boundShader = "";
 }
-void DataManager::drawModel(string name)
+void DataManager::unbind(string name)
+{
+	if(boundShader.compare(name) == 0)
+	{
+		glUseProgram(0);
+		boundShader = "";
+	}
+	else
+	{
+		for(map<int,string>::iterator i = boundTextures.begin();i!=boundTextures.end();i++)
+		{
+			if(i->second.compare(name) == 0)
+			{
+				glActiveTexture(GL_TEXTURE0+i->first);
+				glBindTexture(GL_TEXTURE_2D,0);
+				return;
+			}
+		}
+	}
+}
+void DataManager::unbindTextures()
+{
+	for(map<int,string>::iterator i = boundTextures.begin();i!=boundTextures.end();i++)
+	{
+		glActiveTexture(GL_TEXTURE0+i->first);
+		glBindTexture(GL_TEXTURE_2D,0);
+	}
+	boundTextures.end();
+}
+void DataManager::unbindShader()
+{
+	glUseProgram(0);
+	boundShader = "";
+}
+void DataManager::draw(string name)
 {
 	if(assets.find(name)==assets.end() || assets[name].type != asset::MODEL)
 		return;
 	glCallList(assets[name].id);
+}
+void DataManager::draw(planeType p)
+{
+	if(p==F12)	draw("f12");
+	if(p==F16)	draw("f16");
+	if(p==F18)	draw("f18");
+	if(p==F22)	draw("f22");
+	if(p==UAV)	draw("UAV");
+	if(p==B2)	draw("B2");
 }
 bool DataManager::registerAssets()
 {
@@ -788,15 +838,18 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
 	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
+	if(callNum==n++)	registerAsset("satellite",			"media/satellite.png");
 
-	if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
-	if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
-	if(callNum==n++)	registerAsset("tree front",			"media/tree/front.png");
+
+	//if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
+	//if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
+	//if(callNum==n++)	registerAsset("tree front",			"media/tree/front.png");
 
 	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
 	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");
 	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.png");
 	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.png");
+	if(callNum==n++)	registerAsset("menu pictures",		"media/menu/choice pics.png");
 
 
 	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
@@ -814,6 +867,11 @@ bool DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass.frag");
 
 	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
+	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
+	if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");
+	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
+	if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
+	if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
 	//				.					.
 	//				.					.
 	//				.					.
@@ -866,4 +924,31 @@ int DataManager::getId(string name)
 	if(assets.find(name)==assets.end())
 		return 0;
 	return assets[name].id;
+}
+char* DataManager::textFileRead(char *fn) {
+	FILE *fp;
+	char *content = NULL;
+
+	int count=0;
+
+	if (fn != NULL) 
+	{
+		fopen_s(&fp,fn,"rt");
+
+		if (fp != NULL) 
+		{
+			fseek(fp, 0, SEEK_END);
+			count = ftell(fp);
+			rewind(fp);
+
+			if (count > 0) {
+				content = (char *)malloc(sizeof(char) * (count+1));
+				memset(content,0,sizeof(char) * (count+1));
+				count = fread(content,sizeof(char),count,fp);
+				content[count] = '\0';
+			}
+			fclose(fp);
+		}
+	}
+	return content;
 }

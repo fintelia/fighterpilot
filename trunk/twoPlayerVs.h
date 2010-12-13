@@ -1,18 +1,11 @@
 
-extern BOOL CreateGLWindow(char* title, RECT WindowRect, int bits, bool fullscreenflag, bool checkMultisample);
-extern void KillGLWindow();
-
 class twoPlayerVs: public dogFight
 {
 public:
-	void drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up);
-	void draw()//MAIN DRAW FUNCTION
+	void draw3D()//MAIN DRAW FUNCTION
 	{
 		glClearColor(0.5f,0.8f,0.9f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, sh/2, sw, sh/2);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
 		gluPerspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 		frustum.setCamInternals(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 		drawScene2(0);
@@ -20,6 +13,7 @@ public:
 		glViewport(0, 0, sw, sh/2);
 		drawScene2(1);
 	}
+	void draw2D();
 
 	int update(float ms) {
 		if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
@@ -51,17 +45,15 @@ public:
 			radarAng-=360;
 
 		Redisplay=true;
-		return 16;
+		return 7;
 	}
 	twoPlayerVs()
 	{
 		prepareMap("media/mapfile.txt");
-		waterDisp();
-		treesDisp();
+		//waterDisp();
+		//treesDisp();
 		//level = new Level(settings.MAP_FILE.c_str());
 
-		newMode=(modeType)0;
-		//newMode=BLANK_MODE;
 
 		int i;
 		for(i=0;i<2;i++)

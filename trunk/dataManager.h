@@ -16,7 +16,12 @@ public:
 	void bindTex(int id, int textureUnit=0);
 	void bindShader(int id);
 
-	void drawModel(string name);
+	void unbind(string name);
+	void unbindTextures();
+	void unbindShader();
+
+	void draw(planeType p);
+	void draw(string name);
 
 	int getId(string name);
 
@@ -36,15 +41,8 @@ private:
 	void registerShader(string name, string vert, string frag);
 	void registerModel(string name, int id);
 
-	//struct model
-	//{
-	//	Vec3f*			vertices;
-	//	unsigned int*	faces;
-	//	unsigned int	nVertices,
-	//					nFaces;
+	char *textFileRead(char *fn);//for shaders
 
-	//	model(): vertices(NULL), faces(NULL), nVertices(0), nFaces(0){}
-	//};
 	map<int, CollisionChecker::triangleList> models;// <id,model>
 	struct asset
 	{
@@ -52,6 +50,11 @@ private:
 		int id;
 	};
 	map<string,asset> assets;
+
+	map<int,string> boundTextures;
+	string			boundShader;
+
+
 	DataManager(){}
 	~DataManager();
 };

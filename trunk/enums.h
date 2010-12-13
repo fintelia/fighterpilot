@@ -3,45 +3,30 @@
 #include <map>
 
 
-enum menuType{
-	MENU			=0x0100,
-	MAIN_MENU		=0x0101,
-	CLOSED			=0x0102,
-	SET_CONTROLS	=0x0104,
-	START			=0x0108,
-	CHOOSE_MODE		=0x0110
-};
-enum modeType{
-	MODE			=0x0200,
-	LOADING 		=0x0201,
-	BLANK_MODE		=0x0202,
-	TWO_PLAYER_VS	=0x0204,
-	ONE_PLAYER		=0x0208,
-	MAP_BUILDER		=0x0210
-};
-
 enum planeType{
-	F12				=0x0401,
-	F16				=0x0402,
-	F18				=0x0404,
-	F22				=0x0408,
-	UAV				=0x0410,
-	B2				=0x0420
+	PLANE			=0x1000,
+	F12				=0x1001,
+	F16				=0x1002,
+	F18				=0x1003,
+	F22				=0x1004,
+	UAV				=0x1005,
+	B2				=0x1006
 };
 
 enum inputCallbackType{
-	KEY_STROKE		=0x0801,
-	MOUSE_CLICK		=0x0802,
-	MOUSE_SCROLL	=0x0804
+	INPUT_CALLBACK	=0x2000,
+	KEY_STROKE		=0x2001,
+	MOUSE_CLICK		=0x2002,
+	MOUSE_SCROLL	=0x2003
 };
 enum mouseButton{
-	LEFT_BUTTON		=0x1001,
-	MIDDLE_BUTTON	=0x1002,
-	RIGHT_BUTTON	=0x1004
+	MOUSE_BUTTON	=0x2000,
+	LEFT_BUTTON		=0x2001,
+	MIDDLE_BUTTON	=0x2002,
+	RIGHT_BUTTON	=0x2003
 };
 
 extern planeType defaultPlane;
-extern map<planeType,int> planeModels;
 
 struct controlState
 {
@@ -98,6 +83,16 @@ extern char* errorString;
 		__debugbreak();								\
 }
 
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
+extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);
+extern unsigned __int16 uPowerOfTwo(unsigned __int16 i);
+extern unsigned __int32 uPowerOfTwo(unsigned __int32 i);
+extern unsigned __int64 uPowerOfTwo(unsigned __int64 i);
+extern __int8 uPowerOfTwo(__int8 i);
+extern __int16 uPowerOfTwo(__int16 i);
+extern __int32 uPowerOfTwo(__int32 i);
+extern __int64 uPowerOfTwo(__int64 i);
 //struct polyType
 //{
 //	union{
