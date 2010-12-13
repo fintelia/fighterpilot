@@ -45,9 +45,8 @@ void main()
 		if(slope>s1 		) 	r=1.0;
 		else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
-		
-
 		seaFloor = texture2D(rock,position.xz*4.0,depth*2.0) * (r)  + texture2D(sand,position.xz*4.0,depth*2.0) * (1.0-r);
 		gl_FragColor = mix(seaFloor,    waves,    depth );//vec4(mix(      mix(texture2D(sand,position.xz*4.0,depth*2.0).rgb, texture2D(rock,position.xz*4.0,depth*2.0).rgb, r),    color.rgb,    depth ),1.0);
+			gl_FragColor = vec4(depth,depth,depth,1.0);
 	}
 }

@@ -142,11 +142,11 @@ protected:
 	bool done;
 };
 
-class menuChooseFile: public menuPopup
+class menuOpenFile: public menuPopup
 {
 public:
-	menuChooseFile(){}
-	~menuChooseFile(){}
+	menuOpenFile(){}
+	~menuOpenFile(){}
 
 	bool init();
 	bool init(string ExtFilter);
@@ -159,6 +159,7 @@ public:
 	void keyDown(int vkey);
 	void mouseL(bool down, int x, int y);
 protected:
+	virtual void fileSelected(){done=true;}
 	string file;
 
 	filesystem::path directory;
@@ -175,6 +176,15 @@ protected:
 	menuButton* myComputer;
 	menuButton* myNetwork;
 };
+class menuSaveFile: public menuOpenFile, functor<void,menuPopup*>
+{
+public:
+	void operator() (menuPopup* p);
+	menuSaveFile():replaceDialog(false){}
+protected:
+	bool replaceDialog;
+	void fileSelected();
+};
 class menuMessageBox: public menuPopup
 {
 public:
@@ -187,6 +197,7 @@ public:
 	void render();
 
 	void mouseL(bool down, int x, int y);
+	int getValue(){return value;}
 protected:
 	vector<menuLabel*> options;
 	menuLabel* label;
@@ -196,6 +207,19 @@ protected:
 
 	int clicking;
 
+};
+class menuNewObject: public menuPopup
+{
+public:
+	menuNewObject():type(defaultPlane),team(0){done=true;}
+	~menuNewObject(){}
+	int update(){return 0;}
+	void render(){}
+	int getObjectType(){return type;}
+	int getObjectTeam(){return team;}
+protected:
+	int type;
+	int team;
 };
 class menuScreen: functor<void,menuPopup*>
 {
@@ -228,8 +252,8 @@ class menuLevelEditor: public menuScreen
 {
 public:
 	friend class mapBuilder;
-	enum Tab{NO_TAB, TERRAIN,ZONES,SETTINGS};
-	menuLevelEditor():awaitingShaderFile(false),awaitingMapFile(false){}
+	enum Tab{NO_TAB, TERRAIN,OBJECTS,SETTINGS};
+	menuLevelEditor():awaitingShaderFile(false),awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
 	~menuLevelEditor(){}
 	bool init();
 	int update();
@@ -251,8 +275,13 @@ protected:
 	menuButton* bDiamondSquare;
 	menuButton* bFaultLine;
 	menuButton* bFromFile;
+	menuButton* bExportBMP;
 
+	menuButton* bLoad;
+	menuButton* bSave;
 	menuButton* bExit;
+
+	menuButton* bAddPlane;
 
 	menuToggle* bOnHit;
 	menuToggle* bOnAIHit;
@@ -265,14 +294,20 @@ protected:
 
 	bool awaitingShaderFile;
 	bool awaitingMapFile;
+	bool awaitingMapSave;
+	bool awaitingLevelFile;
+	bool awaitingLevelSave;
+	bool awaitingNewObject;
+
+	int newObjectType;
 };
 class menuChooseMode: public menuScreen 
 {
 public:
-	enum choice{MULTIPLAYER=0,SINGLE_PLAYER=1,MAP_EDITOR=2};
+	enum choice{SINGLE_PLAYER=0,MULTIPLAYER=1,MAP_EDITOR=2};
 	menuChooseMode():activeChoice(MULTIPLAYER){}
 	~menuChooseMode(){}
-	bool init(){activeChoice=MULTIPLAYER;return true;}
+	bool init(){activeChoice=SINGLE_PLAYER;return true;}
 	int update(){Redisplay=true;return 30;}
 	void render();
 	void keyDown(int vkey);

@@ -4,12 +4,13 @@ class mapBuilder: public modes
 private:
 	Quat4f rot;
 	Vec3f center;
-
 	editLevel* level;
 	float maxHeight;
 	float minHeight;
-
 	float scroll;
+
+
+
 	void zoom(float rotations)
 	{
 		scroll = clamp(scroll + rotations,-8,25);
@@ -31,7 +32,7 @@ private:
 	}
 	void resetView()
 	{
-		rot = Quat4f(Vec3f(1,0,0),1.0);		
+		rot = Quat4f(Vec3f(1,0,0),1.0);
 		center = Vec3f(level->ground()->getResolutionX()/2,0,level->ground()->getResolutionZ()/2)*size;
 	}
 	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
@@ -224,6 +225,16 @@ private:
 
 		resetView();
 	}
+	void addObject(int type, int team, int x, int y)//in screen coordinates
+	{
+		Vec3f eye = center + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+		Vec3f origin = lerp(eye,center,0.5);
+		Vec3f xAxis = rot * Vec3f(1,0,0);
+		Vec3f yAxis = rot * Vec3f(0,1,0);
+		Vec3f pos = xAxis * (x-sw/2) + yAxis * (y-sh/2) + origin;
+		((editLevel*)level)->addObject(type,team,pos);
+
+	}
 	vector<int> shaderButtons;
 	friend class menuLevelEditor;
 public:
@@ -242,75 +253,86 @@ public:
 		}
 		Redisplay=true;
 		menuManager.update();
-		return 15;
+		return 7;
 	}
-	virtual void draw() 
+	virtual void draw3D() 
 	{
-		
-		glDisable(GL_CULL_FACE);
-		glClearColor(0.47f,0.57f,0.63f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glViewport(0, 0, sw, sh);
-		gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-		//Vec3f e = Vec3f(level->ground()->getSize()/2+level->ground()->getSize()/2*sin(rot), 50, level->ground()->getSize()/2+level->ground()->getSize()/2*cos(rot))*size;
-
-		Vec3f e,c,u;
-		c = center;
-		if(input->getMouseState(MIDDLE_BUTTON).down)
+		glDisable(GL_CULL_FACE);	
+		if(((menuLevelEditor*)menuManager.getMenu())->getTab() == menuLevelEditor::OBJECTS)
 		{
-			POINT p;
-			GetCursorPos(&p);
+					
+			//glMatrixMode(GL_PROJECTION);
+			//glLoadIdentity();
+			//glOrtho(-size,size*65,0,maxHeight*3,-10,10000000);
+			//glFrustum(-size,size*65,-size,size*65,1,100000);
+			//glMatrixMode(GL_MODELVIEW);
+			gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+			//glLoadIdentity();
 
-			Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
-			Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
+
+			gluLookAt(0,maxHeight*3,0,  size*32,0,size*32,  0,0,1);
+
+			glEnable(GL_DEPTH_TEST);
+			level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
+			if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
+				((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 			
-			
-			Vec3f xAxis = rot * Vec3f(-1,0,0);
-
-			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-			Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
-
-			Quat4f tmpRot;
-			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
-			else			tmpRot = rot;
-
-			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
-			u = tmpRot * Vec3f(0,0,-1);
- 
+			level->render();
+			((editLevel*)level)->renderObjects();
+			glDisable(GL_DEPTH_TEST);
 		}
 		else
 		{
-			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
-			u = rot * Vec3f(0,0,-1);
+			gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+			Vec3f e,c,u;
+			c = center;
+			if(input->getMouseState(MIDDLE_BUTTON).down)
+			{
+				POINT p;
+				GetCursorPos(&p);
+
+				Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
+				Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
+			
+			
+				Vec3f xAxis = rot * Vec3f(-1,0,0);
+
+				Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
+				Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
+
+				Quat4f tmpRot;
+				if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
+				else			tmpRot = rot;
+
+				e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+				u = tmpRot * Vec3f(0,0,-1);
+ 
+			}
+			else
+			{
+				e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+				u = rot * Vec3f(0,0,-1);
+			}
+			gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
+		
+
+			glEnable(GL_LIGHTING);
+			GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
+			glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+		
+			//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
+
+			glEnable(GL_DEPTH_TEST);
+			level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
+			if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
+				((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
+			level->render();
+			glDisable(GL_LIGHTING);
+			glDisable(GL_DEPTH_TEST);
 		}
-		gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
 		
-
-		glEnable(GL_LIGHTING);
-		GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
-		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-		
-		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
-
-		glEnable(GL_DEPTH_TEST);
-		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
-		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
-			((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
-		level->render();
-		
-		glDisable(GL_LIGHTING);
-		glDisable(GL_DEPTH_TEST);
-
-		Vec3f	left = rot * Vec3f(-1,0,0) * 1000,
-				fwd = rot * Vec3f(0,0,1) * 1000,
-				up = rot * Vec3f(0,1,0) * 1000;
-
-		//viewOrtho(sw,sh);
-		//menuManager.render();
-		//viewPerspective();
 	}
+	void draw2D(){}
 	mapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0) {}
 	void init()
 	{
@@ -323,7 +345,6 @@ public:
 
 		scroll=0.0;
 		Redisplay=true;
-		newMode=(modeType)0;
 		level->newGround(65,65);
 		faultLine();
 

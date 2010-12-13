@@ -14,6 +14,11 @@ void main()
 {
 	vec4 color, TexValues;
 	if(position.x < 0.0 || position.x > 1.0 || position.y < 0.0 || position.y > 1.0 || position.z < 0.0 || position.z > 1.0) discard;
+	//if(!gl_FrontFacing)
+	//{
+		//gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+		//return;
+	//}
 
 	if(position.y<0.1)
 		TexValues=vec4(1.0,0.0,0.0,0.0);

@@ -150,16 +150,18 @@ void Settings::loadModelData(char* filename)
 						defaultPlane=B2;
 					else
 						defaultPlane=(planeType)lexical_cast<int>(value); // Try to avoid
-				}
-				else if(var.compare("MODEL") == 0)
-				{
-					//int mId=objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());//load_model((char*)lexical_cast<string>(value).c_str());
-					int mId=dataManager.loadModel(value);
-					planeModels.insert(pair<planeType,int>(cP,mId));
-					planeStats[cP].dispList=mId;
 					hMirror=false;
 					cH=-1;
 				}
+				//else if(var.compare("MODEL") == 0)
+				//{
+				//	//int mId=objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());//load_model((char*)lexical_cast<string>(value).c_str());
+				//	int mId=dataManager.loadModel(value);
+				//	planeModels.insert(pair<planeType,int>(cP,mId));
+				//	planeStats[cP].dispList=mId;
+				//	hMirror=false;
+				//	cH=-1;
+				//}
 				else if(var.compare("MISSILE") == 0)
 				{
 					cM++;

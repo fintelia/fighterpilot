@@ -53,58 +53,13 @@ public:
 //		viewPerspective();//end 2d
 //	}
 	void drawHUD(int acplayer, Vec3f eye, Vec3f center, Vec3f up);
-	void draw()//MAIN DRAW FUNCTION
+	void draw3D()//MAIN DRAW FUNCTION
 	{
-		glClearColor(0.5f,0.8f,0.9f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, sw, sh);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(80.0, (double)sw / ((double)sh),1.0, 25000.0);
-		frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 25000.0);
+		gluPerspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+		frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 		drawScene2(0);
-		
-		
-		if(levelup)
-		{
-			viewOrtho(sw,sh); //set view to ortho - start 2d
-			glDisable(GL_DEPTH_TEST);
-			glEnable(GL_BLEND);
-			glDisable(GL_LIGHTING);
-			glColor4f(1,1,1,1);
-			
-			glPushMatrix();
-				dataManager.bind("next level");
-				if(countdown > 250)
-				{
-					float v=(750-(countdown-250))/750;
-					glBegin(GL_QUADS);
-						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
-						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh);
-						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh);
-						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
-					glEnd();
-				}
-				else
-				{
-					float v=countdown/250;
-					glBegin(GL_QUADS);
-						glTexCoord2f(1,0);	glVertex2f(sw/2+v*sw/2,sh-v*sh);
-						glTexCoord2f(1,1);	glVertex2f(sw/2+v*sw/2,sh);
-						glTexCoord2f(0,1);	glVertex2f(sw/2-v*sw/2,sh);
-						glTexCoord2f(0,0);	glVertex2f(sw/2-v*sw/2,sh-v*sh);
-					glEnd();
-				}
-			glPopMatrix();
-
-			glDisable(GL_BLEND);
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_LIGHTING);
-			viewPerspective();//end 2d
-		}
 	}
-
+	void draw2D();
 	int update(float value) {
 		if(levelup)
 		{
@@ -199,8 +154,6 @@ public:
 		levelup=false;
 		players[1].planeNum(0);
 		players[1].active(false);
-		newMode=(modeType)0;
-		//Cmenu=new closedMenu;
 		newLevel(1);
 	}
 	~onePlayer()

@@ -59,11 +59,14 @@
     <Filter Include="shaders\horizon2">
       <UniqueIdentifier>{3f4def0e-7e89-4d54-aa74-ba9504830540}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\dataManager">
+      <UniqueIdentifier>{77f31af8-6dec-4928-910b-7c3eeb004224}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\camera">
+      <UniqueIdentifier>{0ec79459-15bd-48ee-8cc7-87a6791ea212}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dataManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="explosion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -208,15 +211,24 @@
     <ClCompile Include="graphicsManager.cpp">
       <Filter>Source Files\graphicsManager</Filter>
     </ClCompile>
+    <ClCompile Include="dataManager.cpp">
+      <Filter>Source Files\dataManager</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>Source Files\dataManager</Filter>
+    </ClCompile>
+    <ClCompile Include="cameraManager.cpp">
+      <Filter>Source Files\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="enums.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bullet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="controls.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dataManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="debug.h">
@@ -247,9 +259,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="input.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="keys.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="level.h">
@@ -354,6 +363,15 @@
     <ClInclude Include="graphicsManager.h">
       <Filter>Source Files\graphicsManager</Filter>
     </ClInclude>
+    <ClInclude Include="dataManager.h">
+      <Filter>Source Files\dataManager</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Source Files\dataManager</Filter>
+    </ClInclude>
+    <ClInclude Include="cameraManager.h">
+      <Filter>Source Files\camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -407,10 +425,10 @@
     <None Include="media\ocean.frag">
       <Filter>shaders\terrain</Filter>
     </None>
-    <None Include="horizon2.vert">
+    <None Include="media\horizon2.frag">
       <Filter>shaders\horizon2</Filter>
     </None>
-    <None Include="horizon2.frag">
+    <None Include="media\horizon2.vert">
       <Filter>shaders\horizon2</Filter>
     </None>
   </ItemGroup>

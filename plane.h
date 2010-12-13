@@ -5,11 +5,6 @@ using namespace std;
 void spawn();
 void die();
 
-
-extern const int PLANE;
-extern const int PLAYER_PLANE;
-extern const int AI_PLANE;
-
 class planeBase:public entity
 {
 private:
