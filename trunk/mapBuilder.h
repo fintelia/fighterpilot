@@ -227,12 +227,21 @@ private:
 	}
 	void addObject(int type, int team, int x, int y)//in screen coordinates
 	{
-		Vec3f eye = center + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
-		Vec3f origin = lerp(eye,center,0.5);
-		Vec3f xAxis = rot * Vec3f(1,0,0);
-		Vec3f yAxis = rot * Vec3f(0,1,0);
-		Vec3f pos = xAxis * (x-sw/2) + yAxis * (y-sh/2) + origin;
-		((editLevel*)level)->addObject(type,team,pos);
+		double mViewMat[16];
+		double projMat[16];
+		int viewport[4]  = {0,0,sw,sh};
+		glGetDoublev(GL_MODELVIEW_MATRIX,mViewMat);
+		glGetDoublev(GL_PROJECTION_MATRIX,projMat);
+
+		Vec3d P0, P1, dir;
+
+		gluUnProject(x,sh-y,0.0,mViewMat,projMat,viewport,&P0.x,&P0.y,&P0.z);
+		gluUnProject(x,sh-y,1.0,mViewMat,projMat,viewport,&P1.x,&P1.y,&P1.z);
+		dir = P0-P1;
+
+		if(abs(dir.y) < 0.001) return;
+		Vec3d val = P1 + dir*(maxHeight*2+10-P1.y)/dir.y;
+		((editLevel*)level)->addObject(type,team,Vec3f(val.x,val.y,val.z));
 
 	}
 	vector<int> shaderButtons;
@@ -256,81 +265,89 @@ public:
 		return 7;
 	}
 	virtual void draw3D() 
-	{
-		glDisable(GL_CULL_FACE);	
+	{	
+		gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+		Vec3f e,c,u;
+		c = center;
+		if(input->getMouseState(MIDDLE_BUTTON).down)
+		{
+			POINT p;
+			GetCursorPos(&p);
+
+			Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
+			Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
+			
+			
+			Vec3f xAxis = rot * Vec3f(-1,0,0);
+
+			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
+			Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
+
+			Quat4f tmpRot;
+			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
+			else			tmpRot = rot;
+
+			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+			u = tmpRot * Vec3f(0,0,-1);
+ 
+		}
+		else
+		{
+			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+			u = rot * Vec3f(0,0,-1);
+		}
+		gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
+		GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+		
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+
+
+
 		if(((menuLevelEditor*)menuManager.getMenu())->getTab() == menuLevelEditor::OBJECTS)
 		{
-					
-			//glMatrixMode(GL_PROJECTION);
-			//glLoadIdentity();
-			//glOrtho(-size,size*65,0,maxHeight*3,-10,10000000);
-			//glFrustum(-size,size*65,-size,size*65,1,100000);
-			//glMatrixMode(GL_MODELVIEW);
-			gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-			//glLoadIdentity();
-
-
-			gluLookAt(0,maxHeight*3,0,  size*32,0,size*32,  0,0,1);
-
 			glEnable(GL_DEPTH_TEST);
 			level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
 			if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 				((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
-			
+
 			level->render();
+			//glEnable(GL_BLEND);	
+			//glColor4f(0.1,0.3,1.0,0.4);
+
+			//glBegin(GL_QUADS);
+			//glVertex3f(0,										maxHeight*3,	0);
+			//glVertex3f(0,										maxHeight*3,	level->ground()->getResolutionZ()*size);
+			//glVertex3f(level->ground()->getResolutionX()*size,	maxHeight*3,	level->ground()->getResolutionZ()*size);
+			//glVertex3f(level->ground()->getResolutionX()*size,	maxHeight*3,	0);
+			//glEnd();
+
+			//glColor4f(0.3,0.5,1.0,0.4);
+			//glBegin(GL_LINES);
+			//for(int i=0;i<level->ground()->getResolutionZ()*size; i+=size*4)
+			//{
+			//	glVertex3f(i,maxHeight*3,0);
+			//	glVertex3f(i,maxHeight*3,level->ground()->getResolutionZ()*size);
+			//}
+			//for(int i=0;i<level->ground()->getResolutionX()*size; i+=size*4)
+			//{
+			//	glVertex3f(0,maxHeight*3,i);
+			//	glVertex3f(level->ground()->getResolutionX()*size,maxHeight*3,i);
+			//}
+			//glEnd();
 			((editLevel*)level)->renderObjects();
 			glDisable(GL_DEPTH_TEST);
 		}
 		else
 		{
-			gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-			Vec3f e,c,u;
-			c = center;
-			if(input->getMouseState(MIDDLE_BUTTON).down)
-			{
-				POINT p;
-				GetCursorPos(&p);
-
-				Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
-				Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
-			
-			
-				Vec3f xAxis = rot * Vec3f(-1,0,0);
-
-				Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-				Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
-
-				Quat4f tmpRot;
-				if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
-				else			tmpRot = rot;
-
-				e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
-				u = tmpRot * Vec3f(0,0,-1);
- 
-			}
-			else
-			{
-				e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
-				u = rot * Vec3f(0,0,-1);
-			}
-			gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
-		
-
-			glEnable(GL_LIGHTING);
-			GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
-			glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-		
 			//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
-
-			glEnable(GL_DEPTH_TEST);
 			level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
 			if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 				((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 			level->render();
-			glDisable(GL_LIGHTING);
-			glDisable(GL_DEPTH_TEST);
 		}
-		
+		glDisable(GL_DEPTH_TEST);
 	}
 	void draw2D(){}
 	mapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0) {}
