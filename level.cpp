@@ -238,6 +238,42 @@ void Level::heightmapGL::render() const
 		dataManager.bindTex(0,0);
 		glUseProgram(0);
 	}
+	//glDisable(GL_LIGHTING);
+	//glEnable(GL_BLEND);	
+	//glPushMatrix();
+	//glColor4f(0.1,0.3,1.0,0.6);
+	//glTranslatef(position.x,position.y,position.z);
+	//glScalef(size.x,size.y,size.z);
+	//for(unsigned int z=0;z<resolution.y-1;z++)
+	//{
+	//	glBegin(GL_TRIANGLE_STRIP);
+	//	for(unsigned int x=0;x<resolution.x;x++)
+	//	{
+	//		glVertex3f(x,heights[x+z*resolution.x],z);
+	//		glVertex3f(x,heights[x+(z+1)*resolution.x],z+1);
+	//	}
+	//	glEnd();
+	//}
+	//glColor4f(0.3,0.5,1.0,0.8);
+	//glBegin(GL_LINES);
+	//for(int x=0;x<resolution.x; x+=4)
+	//{
+	//	for(int y=0;y<resolution.y-1; y+=1)
+	//	{
+	//		glVertex3f(x,getRasterHeight(x,y),y);
+	//		glVertex3f(x,getRasterHeight(x,y+1),y+1);
+	//	}
+	//}
+	//for(int y=0;y<resolution.y; y+=4)
+	//{
+	//	for(int x=0;x<resolution.x-1; x+=1)
+	//	{
+	//		glVertex3f(x,getRasterHeight(x,y),y);
+	//		glVertex3f(x+1,getRasterHeight(x+1,y),y);
+	//	}
+	//}
+	//glEnd();
+	//glPopMatrix();
 }
 void Level::heightmapBase::setMinMaxHeights() const
 {
@@ -467,57 +503,56 @@ void Level::render()
 	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//}
-	glScalef(mGround->getSizeX(),mGround->getSizeY(),mGround->getSizeZ());
-	float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
-	dataManager.bind("layers");
-	glDisable(GL_LIGHTING);
-	glColor3f(1,1,1);
-	float t=0.0;
 
-	glBegin(GL_TRIANGLES);
-	glVertex3f(0,0,0);
-	glVertex3f(20,0,0);
-	glVertex3f(20,200,-1);
-	glEnd();
 
-	glBegin(GL_TRIANGLE_STRIP);
-	for(int i = 0; i < mGround->getResolutionX()-1; i++)
-	{
-		glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
-		glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/1024);		glVertex3f(i,max(mGround->getRasterHeight(i,0),h) ,0);
-		t+=0.2;
-	}
-	for(int i = 0; i < mGround->getResolutionZ()-1; i++)
-	{
-		glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/256);	glVertex3f(mGround->getResolutionX()-1,h,i);
-		glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/1024);	glVertex3f(mGround->getResolutionX()-1,max(mGround->getRasterHeight(mGround->getResolutionX()-1,i),h),i);
-		t+=0.2;	
-	}
-	t+=0.2;
-	for(int i = mGround->getResolutionX()-1; i > 0; i--)
-	{
-		t-=0.2;
-		glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->getResolutionZ()-1);
-		glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/1024);	glVertex3f(i,max(mGround->getRasterHeight(i,mGround->getResolutionZ()-1),h),mGround->getResolutionZ()-1);
-	}
-	for(int i = mGround->getResolutionZ()-1; i >= 0; i--)
-	{
-		t-=0.2;
-		glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
-		glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/1024);		glVertex3f(0,max(mGround->getRasterHeight(0,i),h),i);
-	}
-	glEnd();
-	dataManager.bindTex(0);
-	if(!mSettings.water)
-	{
-		glColor3f(0.73,0.6,0.47);
-		glBegin(GL_QUADS);
-			glVertex3f(0,h,0);
-			glVertex3f(0,h,mGround->getResolutionZ()-1);
-			glVertex3f(mGround->getResolutionX()-1,h,mGround->getResolutionZ()-1);
-			glVertex3f(mGround->getResolutionX()-1,h,0);
-		glEnd();
-	}
+
+
+
+	//glScalef(mGround->getSizeX(),mGround->getSizeY(),mGround->getSizeZ());
+	//float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
+	//dataManager.bind("layers");
+	//glDisable(GL_LIGHTING);
+	//glColor3f(1,1,1);
+	//float t=0.0;
+
+	//glBegin(GL_TRIANGLE_STRIP);
+	//for(int i = 0; i < mGround->getResolutionX()-1; i++)
+	//{
+	//	glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
+	//	glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/1024);		glVertex3f(i,max(mGround->getRasterHeight(i,0),h) ,0);
+	//	t+=0.2;
+	//}
+	//for(int i = 0; i < mGround->getResolutionZ()-1; i++)
+	//{
+	//	glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/256);	glVertex3f(mGround->getResolutionX()-1,h,i);
+	//	glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/1024);	glVertex3f(mGround->getResolutionX()-1,max(mGround->getRasterHeight(mGround->getResolutionX()-1,i),h),i);
+	//	t+=0.2;	
+	//}
+	//t+=0.2;
+	//for(int i = mGround->getResolutionX()-1; i > 0; i--)
+	//{
+	//	t-=0.2;
+	//	glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->getResolutionZ()-1);
+	//	glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/1024);	glVertex3f(i,max(mGround->getRasterHeight(i,mGround->getResolutionZ()-1),h),mGround->getResolutionZ()-1);
+	//}
+	//for(int i = mGround->getResolutionZ()-1; i >= 0; i--)
+	//{
+	//	t-=0.2;
+	//	glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
+	//	glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/1024);		glVertex3f(0,max(mGround->getRasterHeight(0,i),h),i);
+	//}
+	//glEnd();
+	//dataManager.bindTex(0);
+	//if(!mSettings.water)
+	//{
+	//	glColor3f(0.73,0.6,0.47);
+	//	glBegin(GL_QUADS);
+	//		glVertex3f(0,h,0);
+	//		glVertex3f(0,h,mGround->getResolutionZ()-1);
+	//		glVertex3f(mGround->getResolutionX()-1,h,mGround->getResolutionZ()-1);
+	//		glVertex3f(mGround->getResolutionX()-1,h,0);
+	//	glEnd();
+	//}
 	glPopMatrix();
 }
 //__________________________________________________________________________________________________________________________________________________________//

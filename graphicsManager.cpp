@@ -188,7 +188,6 @@ bool OpenGLgraphics::init()
 {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_COLOR_MATERIAL);
-	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
 
@@ -277,7 +276,6 @@ void OpenGLgraphics::render()
 	glMatrixMode(GL_MODELVIEW);				// Select Modelview Matrix
 	glLoadIdentity();						// Reset The Matrix
 	glEnable(GL_BLEND);
-	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
 	glColor3f(1,1,1);
 	mode->draw2D();
@@ -291,7 +289,6 @@ void OpenGLgraphics::render()
 	#endif
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glMatrixMode( GL_PROJECTION );			// Select Projection
 	glPopMatrix();							// Pop The Matrix
