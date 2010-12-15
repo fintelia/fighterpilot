@@ -42,27 +42,30 @@ public:
 	class heightmapBase
 	{
 	public:
-		virtual unsigned int getResolutionX() const {return resolution.x;}
-		virtual unsigned int getResolutionZ() const {return resolution.y;}
-		virtual Vec2u getResolution() const {return resolution;}
-		virtual Vec3f getSize()const{return size;}
-		virtual Vec2f getSizeXZ()const{return Vec2f(size.x,size.z);}
-		virtual float getSizeX()const{return size.x;}
-		virtual float getSizeY()const{return size.y;}
-		virtual float getSizeZ()const{return size.z;}
-		virtual float getRasterHeight(unsigned int x,unsigned int z) const;
-		virtual Vec3f getRasterNormal(unsigned int x, unsigned int z) const;
-		virtual Vec3f getNormal(float x, float z) const;
-		virtual float getHeight(float x, float z) const;
+		virtual unsigned int resolutionX() const {return mResolution.x;}
+		virtual unsigned int resolutionZ() const {return mResolution.y;}
+		virtual Vec2u resolution() const {return mResolution;}
+		virtual Vec3f size()const{return mSize;}
+		virtual Vec2f sizeXZ()const{return Vec2f(mSize.x,mSize.z);}
+		virtual float sizeX()const{return mSize.x;}
+		virtual float sizeY()const{return mSize.y;}
+		virtual float sizeZ()const{return mSize.z;}
+		virtual float rasterHeight(unsigned int x,unsigned int z) const;
+		virtual float interpolatedHeight(float x, float z) const;
+		virtual float height(float x, float z) const;
+		virtual Vec3f rasterNormal(unsigned int x, unsigned int z) const;
+		virtual Vec3f interpolatedNormal(float x, float z) const;
+		virtual Vec3f normal(float x, float z) const;
+
 		virtual void setMinMaxHeights() const;
 
 
-		virtual void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] = height;}
-		virtual void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] += height;}
-		virtual void setPos(Vec3f pos){position = pos;}
-		virtual void setSize(Vec3f s){size = s;}
-		virtual void setSizeY(float s){size.y=s;}
-		virtual void setSizeXZ(Vec2f s){size.x=s.x,size.z=s.y;}
+		virtual void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height;}
+		virtual void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height;}
+		virtual void setPos(Vec3f pos){mPosition = pos;}
+		virtual void setSize(Vec3f s){mSize = s;}
+		virtual void setSizeY(float s){mSize.y=s;}
+		virtual void setSizeXZ(Vec2f s){mSize.x=s.x,mSize.z=s.y;}
 		
 
 		heightmapBase(Vec2u Resolution);
@@ -70,9 +73,9 @@ public:
 		~heightmapBase(){delete[] heights;}
 		virtual void render() const =0;
 	protected:
-		Vec3f					position,
-								size;
-		Vec2u					resolution;//y value is z axis
+		Vec3f					mPosition,
+								mSize;
+		Vec2u					mResolution;//y value is z axis
 		float*					heights;
 		mutable float			minHeight,
 								maxHeight;
@@ -92,8 +95,8 @@ public:
 		void createList() const;
 	public:
 		void setShader(int s){shader=s;}
-		void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] = height; valid=false;}
-		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()] += height; valid=false;}		
+		void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height; valid=false;}
+		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height; valid=false;}		
 		void render() const;
 
 		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}

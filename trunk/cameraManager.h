@@ -12,7 +12,11 @@ private:
 				zFar;
 		Vec2f	origin,
 				size;
+
 		view();
+		Vec3f project(Vec3f point);
+		Vec3f unproject(Vec3f screenPos);
+		bool inSight(Vec3f point);
 	};
 	vector<view> views;
 	unsigned int currentView;
