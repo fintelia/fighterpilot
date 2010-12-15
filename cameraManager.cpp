@@ -5,7 +5,20 @@ CameraManager::view::view():eye(0,0,0), center(0,0,-1), up(0,1,0), fovy(80.0*PI/
 {
 
 }
-
+bool CameraManager::view::inSight(Vec3f point)
+{
+	return true;
+}
+Vec3f CameraManager::view::project(Vec3f point)
+{
+	Vec3f projection;
+	Quat4f q((center-eye).cross(up),asinA((center-eye).dot(up)));
+	return Vec3f();
+}
+Vec3f CameraManager::view::unproject(Vec3f screenPoint)
+{
+	return Vec3f();
+}
 CameraManager::CameraManager(): currentView(0)
 {
 	view v;

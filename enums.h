@@ -2,7 +2,6 @@
 #pragma once
 #include <map>
 
-
 enum planeType{
 	PLANE			=0x1000,
 	F12				=0x1001,

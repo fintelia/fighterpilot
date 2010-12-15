@@ -46,98 +46,105 @@ LevelFile::LevelFile(string filename): info(NULL), heights(NULL)
 	load(filename);
 }
 //_______________________________________________________________________________________________________________________________________________________________
-float Level::heightmapBase::getRasterHeight(unsigned int x,unsigned int z) const
+float Level::heightmapBase::rasterHeight(unsigned int x,unsigned int z) const
 {
-	return heights[clamp(x,0,getResolutionX()-1) + clamp(z,0,getResolutionZ()-1)*getResolutionX()];
+	return heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()];
 }
-float Level::heightmapBase::getHeight(float x, float z) const
-{	//    A------D		.-----x+
-	//	  |      |		|
-	//    |      |		|
-	//    B------C		z+
-
-	x -= position.x;
-	z -= position.z;
-	x *= resolution.x/size.x;
-	z *= resolution.y/size.z;
-
+float Level::heightmapBase::interpolatedHeight(float x, float z) const
+{
 	if(x-floor(x)+z-floor(z)<1.0)
 	{
-		float A = position.y+size.y*heights[clamp((int)floor(x),0,getResolutionX()-1) + clamp((int)floor(z),0,getResolutionZ()-1)*getResolutionX()];
-		float B = position.y+size.y*heights[clamp((int)floor(x),0,getResolutionX()-1) + clamp((int)floor(z)+1,0,getResolutionZ()-1)*getResolutionX()];
-		float D = position.y+size.y*heights[clamp((int)floor(x)+1,0,getResolutionX()-1) + clamp((int)floor(z),0,getResolutionZ()-1)*getResolutionX()];
+		float A = rasterHeight(floor(x),floor(z));
+		float B = rasterHeight(floor(x),floor(z+1));
+		float D = rasterHeight(floor(x+1),floor(z));
 		return lerp(lerp(A,B,z-floor(z)),D,x-floor(x));
 	}
 	else
 	{
-		float B = position.y+size.y*heights[clamp((int)floor(x),0,getResolutionX()-1) + clamp((int)floor(z)+1,0,getResolutionZ()-1)*getResolutionX()];
-		float C = position.y+size.y*heights[clamp((int)floor(x)+1,0,getResolutionX()-1) + clamp((int)floor(z)+1,0,getResolutionZ()-1)*getResolutionX()];
-		float D = position.y+size.y*heights[clamp((int)floor(x)+1,0,getResolutionX()-1) + clamp((int)floor(z),0,getResolutionZ()-1)*getResolutionX()];
+		float B = rasterHeight(floor(x),floor(z+1));
+		float C = rasterHeight(floor(x+1),floor(z+1));
+		float D = rasterHeight(floor(x+1),floor(z));
 		return lerp(lerp(B,C,x-floor(x)),D,1.0-(z-floor(z)));
 	}
 }
-
-Vec3f Level::heightmapBase::getRasterNormal(unsigned int h, unsigned int k) const
-{
-	unsigned int x=h; unsigned int z=k;
-	float Cy = (z < getResolutionZ()-1)	? ((float)heights[x	+(z+1)*getResolutionX()	]	- heights[x+z*getResolutionX()])/255.0  : 0.0f;
-	float Ay = (x < getResolutionX()-1)	? ((float)heights[(x+1)+z*getResolutionX()	]	- heights[x+z*getResolutionX()])/255.0  : 0.0f;
-	float Dy = (  z > 0	)				? ((float)heights[x	+(z-1)*getResolutionX()	]	- heights[x+z*getResolutionX()])/255.0  : 0.0f;
-	float By = (  x > 0	)				? ((float)heights[(x-1)+z*getResolutionX()	]	- heights[x+z*getResolutionX()])/255.0  : 0.0f;
-	//if(z >= getResolutionZ()-1) Cy=Dy;
-	//if(x >= getResolutionX()-1) Ay=By;
-	//if(z <= 0) Dy = Cy;
-	//if(x <= 0) By = Ay;
-	return Vec3f(Cy - Ay, 3.0 / 15.0, Dy - By).normalize();	
-}
-Vec3f Level::heightmapBase::getNormal(float x, float z) const
+float Level::heightmapBase::height(float x, float z) const
 {	//    A------D		.-----x+
 	//	  |      |		|
 	//    |      |		|
 	//    B------C		z+
 
-	x -= position.x;
-	z -= position.z;
-	x *= resolution.x/size.x;
-	z *= resolution.y/size.z;
+	x -= mPosition.x;
+	z -= mPosition.z;
+	x *= mSize.x/mResolution.x;
+	z *= mSize.z/mResolution.y;
+	return interpolatedHeight(x,z);
+}
 
+Vec3f Level::heightmapBase::rasterNormal(unsigned int h, unsigned int k) const
+{
+	unsigned int x=h; unsigned int z=k;
+	float Cy = (z < resolutionZ()-1)	? ((float)heights[x	+(z+1)*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	float Ay = (x < resolutionX()-1)	? ((float)heights[(x+1)+z*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	float Dy = (  z > 0	)				? ((float)heights[x	+(z-1)*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	float By = (  x > 0	)				? ((float)heights[(x-1)+z*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	//if(z >= resolutionZ()-1) Cy=Dy;
+	//if(x >= resolutionX()-1) Ay=By;
+	//if(z <= 0) Dy = Cy;
+	//if(x <= 0) By = Ay;
+	return Vec3f(Cy - Ay, 3.0 / 15.0, Dy - By).normalize();	
+}
+Vec3f Level::heightmapBase::interpolatedNormal(float x, float z) const
+{
 	if(x-floor(x)+z-floor(z)<1.0)
 	{
-		Vec3f A = getRasterNormal(clamp((int)floor(x),0,getResolutionX()-1), clamp((int)floor(z),0,getResolutionZ()-1));
-		Vec3f B = getRasterNormal(clamp((int)floor(x),0,getResolutionX()-1), clamp((int)floor(z)+1,0,getResolutionZ()-1));
-		Vec3f D = getRasterNormal(clamp((int)floor(x)+1,0,getResolutionX()-1), clamp((int)floor(z),0,getResolutionZ()-1));
-		return lerp(lerp(A,B,z-floor(z)),D,x-floor(x)).normalize();
+		Vec3f A = rasterNormal(floor(x),floor(z));
+		Vec3f B = rasterNormal(floor(x),floor(z+1));
+		Vec3f D = rasterNormal(floor(x+1),floor(z));
+		return lerp(lerp(A,B,z-floor(z)),D,x-floor(x));
 	}
 	else
 	{
-		Vec3f B = getRasterNormal(clamp((int)floor(x),0,getResolutionX()-1), clamp((int)floor(z)+1,0,getResolutionZ()-1));
-		Vec3f C = getRasterNormal(clamp((int)floor(x)+1,0,getResolutionX()-1), clamp((int)floor(z)+1,0,getResolutionZ()-1));
-		Vec3f D = getRasterNormal(clamp((int)floor(x)+1,0,getResolutionX()-1), clamp((int)floor(z),0,getResolutionZ()-1));
-		return lerp(lerp(B,C,x-floor(x)),D,1.0-(z-floor(z))).normalize();
+		Vec3f B = rasterNormal(floor(x),floor(z+1));
+		Vec3f C = rasterNormal(floor(x+1),floor(z+1));
+		Vec3f D = rasterNormal(floor(x+1),floor(z));
+		return lerp(lerp(B,C,x-floor(x)),D,1.0-(z-floor(z)));
 	}
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution): resolution(Resolution), position(0,0,0), size(Resolution.x,1,Resolution.y), heights(NULL)
+Vec3f Level::heightmapBase::normal(float x, float z) const
+{	//    A------D		.-----x+
+	//	  |      |		|
+	//    |      |		|
+	//    B------C		z+
+
+	x -= mPosition.x;
+	z -= mPosition.z;
+	x *= mSize.x/mResolution.x;
+	z *= mSize.z/mResolution.y;
+	return interpolatedNormal(x,z);
+}
+Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(mResolution.x,1,mResolution.y), heights(NULL)
 {
-	heights = new float[resolution.x*resolution.y];
+	heights = new float[mResolution.x*mResolution.y];
+	memset(heights,0,mResolution.x*mResolution.y*sizeof(float));
 
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): resolution(Resolution), position(0,0,0), size(Resolution.x,1,Resolution.y), heights(NULL)
+Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(mResolution.x,1,mResolution.y), heights(NULL)
 {
-	heights = new float[resolution.x*resolution.y];
-	memcpy(heights,hts,resolution.x*resolution.y*sizeof(float));
+	heights = new float[mResolution.x*mResolution.y];
+	memcpy(heights,hts,mResolution.x*mResolution.y*sizeof(float));
 }
 void Level::heightmapGL::init()
 {
 	glGenTextures(1,(GLuint*)&groundTex);
-	groundValues = (unsigned char*)malloc(uPowerOfTwo(resolution.x)*uPowerOfTwo(resolution.y)*sizeof(unsigned char)*4);
-	memset(groundValues,0,uPowerOfTwo(resolution.x)*uPowerOfTwo(resolution.y)*sizeof(unsigned char)*4);
+	groundValues = (unsigned char*)malloc(uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
+	memset(groundValues,0,uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
 	glBindTexture(GL_TEXTURE_2D, groundTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(resolution.x), uPowerOfTwo(resolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	setTex();
+	//setTex();
 	//if(!dynamic)
 	//{
 	//	delete groundValues;
@@ -151,42 +158,42 @@ void Level::heightmapGL::setTex() const
 	//		D		//		+z		//
 	//////////////////////////////////
 	int x,z;
-
 	Vec3f n;
-	Vec2f bSize((float)(resolution.x)/uPowerOfTwo(resolution.x),(float)(resolution.y)/uPowerOfTwo(resolution.y));
+	Vec2f bSize((float)(mResolution.x)/uPowerOfTwo(mResolution.x),(float)(mResolution.y)/uPowerOfTwo(mResolution.y));
 
-	for(x=0; x < uPowerOfTwo(resolution.x); x += 1)
+	for(x=0; x < uPowerOfTwo(mResolution.x); x += 1)
 	{
-		for(z=0; z< uPowerOfTwo(resolution.y); z += 1)
+		for(z=0; z< uPowerOfTwo(mResolution.y); z += 1)
 		{
-			n = getNormal(bSize.x*x,bSize.y*z);
+			n = interpolatedNormal(bSize.x*x,bSize.y*z);
 			//if(x > 0.99)					n += getNormal(bSize.x*x-1,	bSize.y*z) * 0.5;
-			//if(x < getResolutionX()-0.99)	n += getNormal(bSize.x*x+1,	bSize.y*z) * 0.5;
+			//if(x < resolutionX()-0.99)	n += getNormal(bSize.x*x+1,	bSize.y*z) * 0.5;
 			//if(z > 0.99)					n += getNormal(bSize.x*x,	bSize.y*z-1) * 0.5;
-			//if(z < getResolutionZ()-0.99)	n += getNormal(bSize.x*x,	bSize.y*z+1) * 0.5;
+			//if(z < resolutionZ()-0.99)	n += getNormal(bSize.x*x,	bSize.y*z+1) * 0.5;
 			if(n.magnitudeSquared() < 0.001)n = Vec3f(0.0,1.0,0.0);
 			n = n.normalize();
 
-			groundValues[(x+z*uPowerOfTwo(resolution.x))*4+0] = (unsigned char)(127.0+n.x*128.0);
-			groundValues[(x+z*uPowerOfTwo(resolution.x))*4+1] = (unsigned char)(n.y*255.0);
-			groundValues[(x+z*uPowerOfTwo(resolution.x))*4+2] = (unsigned char)(127.0+n.z*128.0);
-			groundValues[(x+z*uPowerOfTwo(resolution.x))*4+3] = (unsigned char)(255.0*(heights[x+z*getResolutionX()]-minHeight)/(maxHeight-minHeight));//(255.0*(getHeight(bSize.x*x,bSize.y*z)/size.y-minHeight)/(maxHeight-minHeight));
+			groundValues[(x+z*uPowerOfTwo(mResolution.x))*4+0] = (unsigned char)(127.0+n.x*128.0);
+			groundValues[(x+z*uPowerOfTwo(mResolution.x))*4+1] = (unsigned char)(n.y*255.0);
+			groundValues[(x+z*uPowerOfTwo(mResolution.x))*4+2] = (unsigned char)(127.0+n.z*128.0);
+			groundValues[(x+z*uPowerOfTwo(mResolution.x))*4+3] = (unsigned char)(255.0*(interpolatedHeight(bSize.x*x,bSize.y*z)-minHeight)/(maxHeight-minHeight));//(255.0*(getHeight(bSize.x*x,bSize.y*z)/size.y-minHeight)/(maxHeight-minHeight));
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, groundTex);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uPowerOfTwo(resolution.x), uPowerOfTwo(resolution.y), GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
 }
 void Level::heightmapGL::createList() const
 {
 	dispList = glGenLists(1);
 	glNewList(dispList,GL_COMPILE);
-	for(unsigned int z=0;z<resolution.y-1;z++)
+	for(unsigned int z=0;z<mResolution.y-1;z++)
 	{
 		glBegin(GL_TRIANGLE_STRIP);
-		for(unsigned int x=0;x<resolution.x;x++)
+		for(unsigned int x=0;x<mResolution.x;x++)
 		{
-			glVertex3f(x,heights[x+z*resolution.x],z);
-			glVertex3f(x,heights[x+(z+1)*resolution.x],z+1);
+			glVertex3f(x,heights[x+z*mResolution.x],z);
+			glVertex3f(x,heights[x+(z+1)*mResolution.x],z+1);
 		}
 		glEnd();
 	}
@@ -214,7 +221,7 @@ void Level::heightmapGL::render() const
 
 		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
 		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight + (maxHeight-minHeight)/3);
-		glUniform1f(glGetUniformLocation(shader, "XZscale"),	resolution.x*size.x);
+		glUniform1f(glGetUniformLocation(shader, "XZscale"),	mResolution.x*mSize.x);
 		glUniform1f(glGetUniformLocation(shader, "time"),		gameTime());
 		glUniform1i(glGetUniformLocation(shader, "sand"),		0);
 		glUniform1i(glGetUniformLocation(shader, "grass"),		1);
@@ -224,8 +231,8 @@ void Level::heightmapGL::render() const
 		glUniform1i(glGetUniformLocation(shader, "groundTex"),	5);
 
 		glPushMatrix();
-		glTranslatef(position.x,position.y,position.z);
-		glScalef(size.x,size.y,size.z);
+		glTranslatef(mPosition.x,mPosition.y,mPosition.z);
+		glScalef(mSize.x,mSize.y,mSize.z);
 		glCallList(dispList);
 		glPopMatrix();
 
@@ -260,16 +267,16 @@ void Level::heightmapGL::render() const
 	//{
 	//	for(int y=0;y<resolution.y-1; y+=1)
 	//	{
-	//		glVertex3f(x,getRasterHeight(x,y),y);
-	//		glVertex3f(x,getRasterHeight(x,y+1),y+1);
+	//		glVertex3f(x,rasterHeight(x,y),y);
+	//		glVertex3f(x,rasterHeight(x,y+1),y+1);
 	//	}
 	//}
 	//for(int y=0;y<resolution.y; y+=4)
 	//{
 	//	for(int x=0;x<resolution.x-1; x+=1)
 	//	{
-	//		glVertex3f(x,getRasterHeight(x,y),y);
-	//		glVertex3f(x+1,getRasterHeight(x+1,y),y);
+	//		glVertex3f(x,rasterHeight(x,y),y);
+	//		glVertex3f(x+1,rasterHeight(x+1,y),y);
 	//	}
 	//}
 	//glEnd();
@@ -277,15 +284,15 @@ void Level::heightmapGL::render() const
 }
 void Level::heightmapBase::setMinMaxHeights() const
 {
-	if(heights == NULL || getResolutionX()==0 || getResolutionZ()==0) return;
+	if(heights == NULL || resolutionX()==0 || resolutionZ()==0) return;
 	maxHeight=heights[0]+0.001;
 	minHeight=heights[0];
-	for(int x=0;x<getResolutionX();x++)
+	for(int x=0;x<resolutionX();x++)
 	{
-		for(int z=0;z<getResolutionZ();z++)
+		for(int z=0;z<resolutionZ();z++)
 		{
-			if(heights[x+z*getResolutionX()]>maxHeight) maxHeight=heights[x+z*getResolutionX()];
-			if(heights[x+z*getResolutionX()]<minHeight) minHeight=heights[x+z*getResolutionX()];
+			if(heights[x+z*resolutionX()]>maxHeight) maxHeight=heights[x+z*resolutionX()];
+			if(heights[x+z*resolutionX()]<minHeight) minHeight=heights[x+z*resolutionX()];
 		}
 	}
 }
@@ -317,16 +324,16 @@ LevelFile Level::getLevelFile()
 	f.header.magicNumber = 0x454c49465f4c564c;
 	f.header.version = 1;
 	f.info = new LevelFile::Info;
-	f.info->mapSize = mGround->getSize();
-	f.info->mapResolution = mGround->getResolution();
+	f.info->mapSize = mGround->size();
+	f.info->mapResolution = mGround->resolution();
 	f.info->seaLevel = mWater.seaLevel;
 	f.heights = mGround->heights;
 	return f;
 }
 void Level::exportBMP(string filename)
 {
-	int width = mGround->getResolutionX();
-	int size = (3*width+width%4)*mGround->getResolutionZ() + 3*width*mGround->getResolutionZ()%4;
+	int width = mGround->resolutionX();
+	int size = (3*width+width%4)*mGround->resolutionZ() + 3*width*mGround->resolutionZ()%4;
 
 
 	BITMAPFILEHEADER header;
@@ -338,8 +345,8 @@ void Level::exportBMP(string filename)
 
 	BITMAPINFO info;
 	info.bmiHeader.biSize			= sizeof(BITMAPINFOHEADER);
-	info.bmiHeader.biWidth			= mGround->getResolutionX();
-	info.bmiHeader.biHeight			= mGround->getResolutionZ();
+	info.bmiHeader.biWidth			= mGround->resolutionX();
+	info.bmiHeader.biHeight			= mGround->resolutionZ();
 	info.bmiHeader.biPlanes			= 1;
 	info.bmiHeader.biBitCount		= 24;
 	info.bmiHeader.biCompression	= BI_RGB;
@@ -353,13 +360,13 @@ void Level::exportBMP(string filename)
 	mGround->setMinMaxHeights();
 	unsigned char* colors = new unsigned char[size];
 	memset(colors,0,size);
-	for(int z=0;z<mGround->getResolutionZ();z++)
+	for(int z=0;z<mGround->resolutionZ();z++)
 	{
-		for(int x=0;x<mGround->getResolutionX();x++)
+		for(int x=0;x<mGround->resolutionX();x++)
 		{
-			colors[(z*(3*width+width%4) + 3*x) + 0] = 255.0*(mGround->getRasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
-			colors[(z*(3*width+width%4) + 3*x) + 1] = 255.0*(mGround->getRasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
-			colors[(z*(3*width+width%4) + 3*x) + 2] = 255.0*(mGround->getRasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
+			colors[(z*(3*width+width%4) + 3*x) + 0] = 255.0*(mGround->rasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
+			colors[(z*(3*width+width%4) + 3*x) + 1] = 255.0*(mGround->rasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
+			colors[(z*(3*width+width%4) + 3*x) + 2] = 255.0*(mGround->rasterHeight(x,z)-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight);
 		}
 	}
 	ofstream fout(filename,ios::out|ios::binary|ios::trunc);
@@ -390,7 +397,7 @@ void Level::render()
 	//	mGround->setTex();
 	if(mSettings.water)
 	{
-		mWater.seaLevel = (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3)*mGround->getSizeY();
+		mWater.seaLevel = (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3)*mGround->sizeY();
 
 		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
@@ -406,14 +413,14 @@ void Level::render()
 		glUniform1i(glGetUniformLocation(s, "sand"), 3);
 		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
 		glUniform1f(glGetUniformLocation(s, "seaLevel"), 0.333f);
-		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->size.x*mGround->resolution.x);
-		glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->resolution.x)/uPowerOfTwo(mGround->resolution.x),(float)(mGround->resolution.y)/uPowerOfTwo(mGround->resolution.y));
+		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x*mGround->mResolution.x);
+		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
 		glBegin(GL_QUADS);
 			glVertex3f(0,mWater.seaLevel,0);
-			glVertex3f(0,mWater.seaLevel,mGround->size.z*(mGround->getResolutionZ()-1));
-			glVertex3f(mGround->size.x*(mGround->getResolutionX()-1),mWater.seaLevel,mGround->size.z*(mGround->getResolutionZ()-1));
-			glVertex3f(mGround->size.x*(mGround->getResolutionX()-1),mWater.seaLevel,0);
+			glVertex3f(0,mWater.seaLevel,mGround->mSize.z*(mGround->resolutionZ()-1));
+			glVertex3f(mGround->mSize.x*(mGround->resolutionX()-1),mWater.seaLevel,mGround->mSize.z*(mGround->resolutionZ()-1));
+			glVertex3f(mGround->mSize.x*(mGround->resolutionX()-1),mWater.seaLevel,0);
 		glEnd();
 
 		dataManager.bindTex(0,3);
@@ -508,51 +515,51 @@ void Level::render()
 
 
 
-	//glScalef(mGround->getSizeX(),mGround->getSizeY(),mGround->getSizeZ());
-	//float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
-	//dataManager.bind("layers");
-	//glDisable(GL_LIGHTING);
-	//glColor3f(1,1,1);
-	//float t=0.0;
+	glScalef(mGround->sizeX(),mGround->sizeY(),mGround->sizeZ());
+	float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
+	dataManager.bind("layers");
+	glDisable(GL_LIGHTING);
+	glColor3f(1,1,1);
+	float t=0.0;
 
-	//glBegin(GL_TRIANGLE_STRIP);
-	//for(int i = 0; i < mGround->getResolutionX()-1; i++)
-	//{
-	//	glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
-	//	glTexCoord2f(t,(mGround->getRasterHeight(i,0)-h)/1024);		glVertex3f(i,max(mGround->getRasterHeight(i,0),h) ,0);
-	//	t+=0.2;
-	//}
-	//for(int i = 0; i < mGround->getResolutionZ()-1; i++)
-	//{
-	//	glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/256);	glVertex3f(mGround->getResolutionX()-1,h,i);
-	//	glTexCoord2f(t,(mGround->getRasterHeight(mGround->getResolutionX()-1,i)-h)/1024);	glVertex3f(mGround->getResolutionX()-1,max(mGround->getRasterHeight(mGround->getResolutionX()-1,i),h),i);
-	//	t+=0.2;	
-	//}
-	//t+=0.2;
-	//for(int i = mGround->getResolutionX()-1; i > 0; i--)
-	//{
-	//	t-=0.2;
-	//	glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->getResolutionZ()-1);
-	//	glTexCoord2f(t,(mGround->getRasterHeight(i,mGround->getResolutionZ()-1)-h)/1024);	glVertex3f(i,max(mGround->getRasterHeight(i,mGround->getResolutionZ()-1),h),mGround->getResolutionZ()-1);
-	//}
-	//for(int i = mGround->getResolutionZ()-1; i >= 0; i--)
-	//{
-	//	t-=0.2;
-	//	glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
-	//	glTexCoord2f(t,(mGround->getRasterHeight(0,i)-h)/1024);		glVertex3f(0,max(mGround->getRasterHeight(0,i),h),i);
-	//}
-	//glEnd();
-	//dataManager.bindTex(0);
-	//if(!mSettings.water)
-	//{
-	//	glColor3f(0.73,0.6,0.47);
-	//	glBegin(GL_QUADS);
-	//		glVertex3f(0,h,0);
-	//		glVertex3f(0,h,mGround->getResolutionZ()-1);
-	//		glVertex3f(mGround->getResolutionX()-1,h,mGround->getResolutionZ()-1);
-	//		glVertex3f(mGround->getResolutionX()-1,h,0);
-	//	glEnd();
-	//}
+	glBegin(GL_TRIANGLE_STRIP);
+	for(int i = 0; i < mGround->resolutionX()-1; i++)
+	{
+		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
+		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/1024);		glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
+		t+=0.2;
+	}
+	for(int i = 0; i < mGround->resolutionZ()-1; i++)
+	{
+		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
+		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/1024);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i),h),i);
+		t+=0.2;	
+	}
+	t+=0.2;
+	for(int i = mGround->resolutionX()-1; i > 0; i--)
+	{
+		t-=0.2;
+		glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
+		glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/1024);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1),h),mGround->resolutionZ()-1);
+	}
+	for(int i = mGround->resolutionZ()-1; i >= 0; i--)
+	{
+		t-=0.2;
+		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
+		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/1024);		glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
+	}
+	glEnd();
+	dataManager.bindTex(0);
+	if(!mSettings.water)
+	{
+		glColor3f(0.73,0.6,0.47);
+		glBegin(GL_QUADS);
+			glVertex3f(0,h,0);
+			glVertex3f(0,h,mGround->resolutionZ()-1);
+			glVertex3f(mGround->resolutionX()-1,h,mGround->resolutionZ()-1);
+			glVertex3f(mGround->resolutionX()-1,h,0);
+		glEnd();
+	}
 	glPopMatrix();
 }
 //__________________________________________________________________________________________________________________________________________________________//

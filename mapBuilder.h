@@ -33,12 +33,12 @@ private:
 	void resetView()
 	{
 		rot = Quat4f(Vec3f(1,0,0),1.0);
-		center = Vec3f(level->ground()->getResolutionX()/2,0,level->ground()->getResolutionZ()/2)*size;
+		center = Vec3f(level->ground()->resolutionX()/2,0,level->ground()->resolutionZ()/2)*size;
 	}
 	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	{
-		int sLen=max(level->ground()->getResolutionX(),level->ground()->getResolutionZ());
-		if( !(!((sLen-1) & (sLen-2) ) && sLen > 1) || level->ground()->getResolutionX() != level->ground()->getResolutionZ())//if v is not one more than a power of 2
+		int sLen=max(level->ground()->resolutionX(),level->ground()->resolutionZ());
+		if( !(!((sLen-1) & (sLen-2) ) && sLen > 1) || level->ground()->resolutionX() != level->ground()->resolutionZ())//if v is not one more than a power of 2
 		{
 			sLen--;
 			sLen |= sLen >> 1;
@@ -71,10 +71,10 @@ private:
 
 		level->ground()->setHeight(0,0,0);
 		level->ground()->setHeight(0,0,sLen-1);
-		level->ground()->setHeight(sLen-1,0,level->ground()->getResolutionZ()-1);
+		level->ground()->setHeight(sLen-1,0,level->ground()->resolutionZ()-1);
 		level->ground()->setHeight(sLen-1,0,0);
 
-		for(int itt=0; (0x1 << itt) < (level->ground()->getResolutionX()-1);itt++, rVal*=h)
+		for(int itt=0; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=h)
 		{
 			numSquares = 0x1 << itt;
 			squareSize = (sLen-1)/numSquares;
@@ -83,10 +83,10 @@ private:
 			{
 				for(z = 0; z < numSquares; z++)
 				{
-					y = (level->ground()->getRasterHeight(x*squareSize,z*squareSize)+
-						level->ground()->getRasterHeight(x*squareSize+squareSize,z*squareSize)+
-						level->ground()->getRasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
-						level->ground()->getRasterHeight(x*squareSize,z*squareSize+squareSize))/4;
+					y = (level->ground()->rasterHeight(x*squareSize,z*squareSize)+
+						level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
+						level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
+						level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
 					y += float(rand()%2000-1000)/500.0f*rVal * 100.0;
 
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
@@ -98,40 +98,40 @@ private:
 				for(z = 0; z < numSquares; z++)
 				{
 					//left
-					c[0]=level->ground()->getRasterHeight(x*squareSize,z*squareSize);
-					c[1]=level->ground()->getRasterHeight(x*squareSize,z*squareSize+squareSize);
-					c[2]=level->ground()->getRasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=level->ground()->getRasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
+					c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
+					c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
+					c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+					c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
 					if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
 					else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal * 500.0;
 					level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 
 
 					//top
-					c[0]=level->ground()->getRasterHeight(x*squareSize,z*squareSize);
-					c[1]=level->ground()->getRasterHeight(x*squareSize+squareSize,z*squareSize);
-					c[2]=level->ground()->getRasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=level->ground()->getRasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
+					c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
+					c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
+					c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
 					if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
 					else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal * 500.0;
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
 
 					if(x == numSquares-1)//right
 					{
-						c[0]=level->ground()->getRasterHeight((x+1)*squareSize,z*squareSize);
-						c[1]=level->ground()->getRasterHeight((x+1)*squareSize,z*squareSize+squareSize);
+						c[0]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize);
+						c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
 						//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
-						c[3]=level->ground()->getRasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+						c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 						y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
 						//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 						level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
 					}
 					if(z == numSquares-1)//bottom
 					{
-						c[0]=level->ground()->getRasterHeight(x*squareSize,z*squareSize+squareSize);
-						c[1]=level->ground()->getRasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
+						c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
+						c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
 						//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-						c[3]=level->ground()->getRasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+						c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 						y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
 						//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 						level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
@@ -147,11 +147,11 @@ private:
 		maxHeight=-9999;
 		minHeight=9999;
 		float h;
-		for(x=0;x<level->ground()->getResolutionX();x++)
+		for(x=0;x<level->ground()->resolutionX();x++)
 		{
-			for(y=0;y<level->ground()->getResolutionZ();y++)
+			for(y=0;y<level->ground()->resolutionZ();y++)
 			{
-				h = level->ground()->getRasterHeight(x,y);
+				h = level->ground()->rasterHeight(x,y);
 				if(h>maxHeight) maxHeight=h;
 				if(h<minHeight) minHeight=h;
 			}
@@ -165,9 +165,9 @@ private:
 		float a,b,c;
 		float disp=0.5  * 100.0;
 		float x,y;
-		for(x=0;x<level->ground()->getResolutionX();x++)
+		for(x=0;x<level->ground()->resolutionX();x++)
 		{
-			for(y=0;y<level->ground()->getResolutionZ();y++)
+			for(y=0;y<level->ground()->resolutionZ();y++)
 			{
 				level->ground()->setHeight(x,0,y);
 			}
@@ -176,12 +176,12 @@ private:
 		{
 			a = float(rand()%1000)/500.0-1.0;
 			b = float(rand()%1000)/500.0-1.0;
-			c = rand()%level->ground()->getResolutionX()-level->ground()->getResolutionX()/2;
-			for(x=0;x<level->ground()->getResolutionX();x++)
+			c = rand()%level->ground()->resolutionX()-level->ground()->resolutionX()/2;
+			for(x=0;x<level->ground()->resolutionX();x++)
 			{
-				for(y=0;y<level->ground()->getResolutionZ();y++)
+				for(y=0;y<level->ground()->resolutionZ();y++)
 				{
-					pd = ((x-level->ground()->getResolutionX()/2) * a + (y-level->ground()->getResolutionZ()/2) * b + c)/(128.0/30)/2;//  ***/2500
+					pd = ((x-level->ground()->resolutionX()/2) * a + (y-level->ground()->resolutionZ()/2) * b + c)/(128.0/30)/2;//  ***/2500
 					if (pd > 1.57) pd = 1.57;
 					else if (pd < 0.05) pd = 0.05;
 					level->ground()->increaseHeight(x,-disp/2 + sin(pd)*disp,y);
@@ -191,11 +191,11 @@ private:
 		maxHeight=-9999;
 		minHeight=9999;
 		float h;
-		for(x=0;x<level->ground()->getResolutionX();x++)
+		for(x=0;x<level->ground()->resolutionX();x++)
 		{
-			for(y=0;y<level->ground()->getResolutionZ();y++)
+			for(y=0;y<level->ground()->resolutionZ();y++)
 			{
-				h = level->ground()->getRasterHeight(x,y);
+				h = level->ground()->rasterHeight(x,y);
 				if(h>maxHeight) maxHeight=h;
 				if(h<minHeight) minHeight=h;
 			}
@@ -255,10 +255,10 @@ public:
 		GetCursorPos(&p);
 		if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 		{
-			if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->getResolutionX() * size * pow(1.1f,-scroll) * value / 1000;
-			if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->getResolutionX() * size * pow(1.1f,-scroll) * value / 1000;
-			if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->getResolutionZ() * size * pow(1.1f,-scroll) * value / 1000;
-			if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->getResolutionZ() * size * pow(1.1f,-scroll) * value / 1000;
+			if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * value / 1000;
+			if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * value / 1000;
+			if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * value / 1000;
+			if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * value / 1000;
 		}
 		Redisplay=true;
 		menuManager.update();
@@ -287,13 +287,13 @@ public:
 			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
 			else			tmpRot = rot;
 
-			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->resolutionX(),level->ground()->resolutionZ()) * size * pow(1.1f,-scroll);
 			u = tmpRot * Vec3f(0,0,-1);
  
 		}
 		else
 		{
-			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->getResolutionX(),level->ground()->getResolutionZ()) * size * pow(1.1f,-scroll);
+			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->resolutionX(),level->ground()->resolutionZ()) * size * pow(1.1f,-scroll);
 			u = rot * Vec3f(0,0,-1);
 		}
 		gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
@@ -313,31 +313,62 @@ public:
 				((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 
 			level->render();
-			//glEnable(GL_BLEND);	
-			//glColor4f(0.1,0.3,1.0,0.4);
-
-			//glBegin(GL_QUADS);
-			//glVertex3f(0,										maxHeight*3,	0);
-			//glVertex3f(0,										maxHeight*3,	level->ground()->getResolutionZ()*size);
-			//glVertex3f(level->ground()->getResolutionX()*size,	maxHeight*3,	level->ground()->getResolutionZ()*size);
-			//glVertex3f(level->ground()->getResolutionX()*size,	maxHeight*3,	0);
-			//glEnd();
-
-			//glColor4f(0.3,0.5,1.0,0.4);
-			//glBegin(GL_LINES);
-			//for(int i=0;i<level->ground()->getResolutionZ()*size; i+=size*4)
-			//{
-			//	glVertex3f(i,maxHeight*3,0);
-			//	glVertex3f(i,maxHeight*3,level->ground()->getResolutionZ()*size);
-			//}
-			//for(int i=0;i<level->ground()->getResolutionX()*size; i+=size*4)
-			//{
-			//	glVertex3f(0,maxHeight*3,i);
-			//	glVertex3f(level->ground()->getResolutionX()*size,maxHeight*3,i);
-			//}
-			//glEnd();
 			((editLevel*)level)->renderObjects();
 			glDisable(GL_DEPTH_TEST);
+
+			if(((menuLevelEditor*)menuManager.getMenu())->placingObject() != 0)
+			{
+				////////////////////////////////draw object//////////////////////////////////
+				POINT cursorPos;
+				GetCursorPos(&cursorPos);
+				double mViewMat[16];
+				double projMat[16];
+				int viewport[4]  = {0,0,sw,sh};
+				glGetDoublev(GL_MODELVIEW_MATRIX,mViewMat);
+				glGetDoublev(GL_PROJECTION_MATRIX,projMat);
+
+				Vec3d P0, P1, dir;
+
+				gluUnProject(cursorPos.x,sh-cursorPos.y,0.0,mViewMat,projMat,viewport,&P0.x,&P0.y,&P0.z);
+				gluUnProject(cursorPos.x,sh-cursorPos.y,1.0,mViewMat,projMat,viewport,&P1.x,&P1.y,&P1.z);
+				dir = P0-P1;
+				
+				if(abs(dir.y) < 0.001) return;
+				Vec3d val = P1 + dir*(maxHeight*2+10-P1.y)/dir.y;
+				glPushMatrix();
+				glTranslatef(val.x,val.y,val.z);
+				glScalef(10,10,10);
+				dataManager.draw((planeType)((menuLevelEditor*)menuManager.getMenu())->placingObject());
+				glPopMatrix();
+				////////////////////////////////draw grid//////////////////////////////////
+				glDepthMask(false);
+				glDisable(GL_LIGHTING);
+				glEnable(GL_BLEND);	
+				glColor4f(0.1,0.3,1.0,0.3);
+				
+				glBegin(GL_QUADS);
+				glVertex3f(0,										maxHeight*2+10,	0);
+				glVertex3f(0,										maxHeight*2+10,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+10,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+10,	0);
+				glEnd();
+
+				glColor4f(0.3,0.5,1.0,0.2);
+				glBegin(GL_LINES);
+				for(int i=0;i<level->ground()->resolutionZ()*size; i+=size*4)
+				{
+					glVertex3f(i,maxHeight*2+10,0);
+					glVertex3f(i,maxHeight*2+10,level->ground()->resolutionZ()*size);
+				}
+				for(int i=0;i<level->ground()->resolutionX()*size; i+=size*4)
+				{
+					glVertex3f(0,maxHeight*2+10,i);
+					glVertex3f(level->ground()->resolutionX()*size,maxHeight*2+10,i);
+				}
+				glEnd();
+				glDepthMask(true);
+				////////////////////////////////end grid///////////////////////////////////
+			}	
 		}
 		else
 		{
@@ -362,7 +393,7 @@ public:
 
 		scroll=0.0;
 		Redisplay=true;
-		level->newGround(65,65);
+		level->newGround(80,80);
 		faultLine();
 
 		resetView();

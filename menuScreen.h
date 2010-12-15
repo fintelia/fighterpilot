@@ -264,6 +264,7 @@ public:
 	void mouseC(bool down, int x, int y);
 	Tab getTab();
 	int getShader();//gets
+	int placingObject(){return newObjectType;}
 	void operator() (menuPopup* p);
 protected:
 	//Tab currentTab;
