@@ -14,7 +14,6 @@ void twoPlayerVs::draw2D()
 
 			//speedMeter(16,16,80,80,p.accel.magnitude()*30.5+212);
 			//altitudeMeter(368,215,432,279,p.altitude);
-
 		}
 		else
 		{
@@ -33,8 +32,7 @@ void onePlayer::draw2D()
 		targeter(400,300,50,p.turn);
 		drawRadar(176, 350, 64, 64, true);
 		
-
-		healthBar(140, 190, 200, 200, p.health/p.maxHealth,true);
+		healthBar(140, 390, 200, -200, p.health/p.maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);

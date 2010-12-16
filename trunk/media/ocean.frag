@@ -31,7 +31,6 @@ void main()
 	else
 	{
 		float depth = clamp((seaLevel-texture2D(groundTex,position.xz).a)*2.5,0.0,1.0);
-		//if(depth < -0.2) discard;
 		//depth = max(depth,0.0);
 
 		vec3 normal = texture2D(groundTex,position.xz).xyz;

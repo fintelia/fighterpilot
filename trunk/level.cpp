@@ -75,17 +75,17 @@ float Level::heightmapBase::height(float x, float z) const
 
 	x -= mPosition.x;
 	z -= mPosition.z;
-	x *= mSize.x/mResolution.x;
-	z *= mSize.z/mResolution.y;
+	x *= mResolution.x/mSize.x;
+	z *= mResolution.y/mSize.y;
 	return interpolatedHeight(x,z);
 }
 
 Vec3f Level::heightmapBase::rasterNormal(unsigned int h, unsigned int k) const
 {
 	unsigned int x=h; unsigned int z=k;
-	float Cy = (z < resolutionZ()-1)	? ((float)heights[x	+(z+1)*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	float Cy = (z < resolutionZ()-1)	? ((float)heights[x	+(z+1)*resolutionX()]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
 	float Ay = (x < resolutionX()-1)	? ((float)heights[(x+1)+z*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
-	float Dy = (  z > 0	)				? ((float)heights[x	+(z-1)*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
+	float Dy = (  z > 0	)				? ((float)heights[x	+(z-1)*resolutionX()]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
 	float By = (  x > 0	)				? ((float)heights[(x-1)+z*resolutionX()	]	- heights[x+z*resolutionX()])/255.0  : 0.0f;
 	//if(z >= resolutionZ()-1) Cy=Dy;
 	//if(x >= resolutionX()-1) Ay=By;
@@ -118,17 +118,16 @@ Vec3f Level::heightmapBase::normal(float x, float z) const
 
 	x -= mPosition.x;
 	z -= mPosition.z;
-	x *= mSize.x/mResolution.x;
-	z *= mSize.z/mResolution.y;
+	x *= mResolution.x/mSize.x;
+	z *= mResolution.y/mSize.y;
 	return interpolatedNormal(x,z);
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(mResolution.x,1,mResolution.y), heights(NULL)
+Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memset(heights,0,mResolution.x*mResolution.y*sizeof(float));
-
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(mResolution.x,1,mResolution.y), heights(NULL)
+Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memcpy(heights,hts,mResolution.x*mResolution.y*sizeof(float));
@@ -192,8 +191,8 @@ void Level::heightmapGL::createList() const
 		glBegin(GL_TRIANGLE_STRIP);
 		for(unsigned int x=0;x<mResolution.x;x++)
 		{
-			glVertex3f(x,heights[x+z*mResolution.x],z);
-			glVertex3f(x,heights[x+(z+1)*mResolution.x],z+1);
+			glVertex3f((float)x/(mResolution.x-1),heights[x+z*mResolution.x],	(float)(z)/(mResolution.y-1));
+			glVertex3f((float)x/(mResolution.x-1),heights[x+(z+1)*mResolution.x],(float)(z+1)/(mResolution.y-1));
 		}
 		glEnd();
 	}
@@ -221,7 +220,7 @@ void Level::heightmapGL::render() const
 
 		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
 		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight + (maxHeight-minHeight)/3);
-		glUniform1f(glGetUniformLocation(shader, "XZscale"),	mResolution.x*mSize.x);
+		glUniform1f(glGetUniformLocation(shader, "XZscale"),	1);
 		glUniform1f(glGetUniformLocation(shader, "time"),		gameTime());
 		glUniform1i(glGetUniformLocation(shader, "sand"),		0);
 		glUniform1i(glGetUniformLocation(shader, "grass"),		1);
@@ -232,7 +231,7 @@ void Level::heightmapGL::render() const
 
 		glPushMatrix();
 		glTranslatef(mPosition.x,mPosition.y,mPosition.z);
-		glScalef(mSize.x,mSize.y,mSize.z);
+		glScalef(mSize.x,1,mSize.y);
 		glCallList(dispList);
 		glPopMatrix();
 
@@ -386,8 +385,6 @@ void Level::render()
 	
 
 	glPushMatrix();
-	glScalef(size,1,size);
-
 	
 	//if(!mGround->VBOvalid && mGround->dynamic)
 	//	mGround->setVBO();
@@ -397,7 +394,7 @@ void Level::render()
 	//	mGround->setTex();
 	if(mSettings.water)
 	{
-		mWater.seaLevel = (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3)*mGround->sizeY();
+		mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
 
 		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
@@ -413,14 +410,14 @@ void Level::render()
 		glUniform1i(glGetUniformLocation(s, "sand"), 3);
 		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
 		glUniform1f(glGetUniformLocation(s, "seaLevel"), 0.333f);
-		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x*mGround->mResolution.x);
+		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x);
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
 		glBegin(GL_QUADS);
 			glVertex3f(0,mWater.seaLevel,0);
-			glVertex3f(0,mWater.seaLevel,mGround->mSize.z*(mGround->resolutionZ()-1));
-			glVertex3f(mGround->mSize.x*(mGround->resolutionX()-1),mWater.seaLevel,mGround->mSize.z*(mGround->resolutionZ()-1));
-			glVertex3f(mGround->mSize.x*(mGround->resolutionX()-1),mWater.seaLevel,0);
+			glVertex3f(0,mWater.seaLevel,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,mWater.seaLevel,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,mWater.seaLevel,0);
 		glEnd();
 
 		dataManager.bindTex(0,3);
@@ -515,7 +512,7 @@ void Level::render()
 
 
 
-	glScalef(mGround->sizeX(),mGround->sizeY(),mGround->sizeZ());
+	glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
 	float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
 	dataManager.bind("layers");
 	glDisable(GL_LIGHTING);
@@ -526,7 +523,7 @@ void Level::render()
 	for(int i = 0; i < mGround->resolutionX()-1; i++)
 	{
 		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
-		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/1024);		glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
+		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/1024);	glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
 		t+=0.2;
 	}
 	for(int i = 0; i < mGround->resolutionZ()-1; i++)
@@ -546,7 +543,7 @@ void Level::render()
 	{
 		t-=0.2;
 		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
-		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/1024);		glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
+		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/1024);	glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
 	}
 	glEnd();
 	dataManager.bindTex(0);

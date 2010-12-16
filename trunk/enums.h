@@ -2,28 +2,28 @@
 #pragma once
 #include <map>
 
-enum planeType{
-	PLANE			=0x1000,
-	F12				=0x1001,
-	F16				=0x1002,
-	F18				=0x1003,
-	F22				=0x1004,
-	UAV				=0x1005,
-	B2				=0x1006
-};
+const int PLANE				= 0x1000;
+const int F12				= 0x1000;
+const int F16				= 0x1000;
+const int F18				= 0x1000;
+const int F22				= 0x1004;
+const int UAV				= 0x1005;
+const int B2				= 0x1006;
 
-enum inputCallbackType{
-	INPUT_CALLBACK	=0x2000,
-	KEY_STROKE		=0x2001,
-	MOUSE_CLICK		=0x2002,
-	MOUSE_SCROLL	=0x2003
-};
-enum mouseButton{
-	MOUSE_BUTTON	=0x2000,
-	LEFT_BUTTON		=0x2001,
-	MIDDLE_BUTTON	=0x2002,
-	RIGHT_BUTTON	=0x2003
-};
+const int INPUT_CALLBACK	= 0x2000;
+const int KEY_STROKE		= 0x2001;
+const int MOUSE_CLICK		= 0x2002;
+const int MOUSE_SCROLL		= 0x2003;
+
+const int MOUSE_BUTTON		= 0x2100;
+const int LEFT_BUTTON		= 0x2101;
+const int MIDDLE_BUTTON		= 0x2102;
+const int RIGHT_BUTTON		= 0x2103;
+
+
+typedef int planeType;
+typedef int inputCallbackType;
+typedef int mouseButton;
 
 extern planeType defaultPlane;
 
@@ -92,47 +92,3 @@ extern __int8 uPowerOfTwo(__int8 i);
 extern __int16 uPowerOfTwo(__int16 i);
 extern __int32 uPowerOfTwo(__int32 i);
 extern __int64 uPowerOfTwo(__int64 i);
-//struct polyType
-//{
-//	union{
-//		int i;
-//		long l;
-//		signed char c;
-//		unsigned int ui;
-//		unsigned long ul;
-//		unsigned char uc;
-//		float f;
-//		double d;
-//		bool b;
-//		string s;
-//		Vec2f f2;
-//		Vec3f f3;
-//		Quat4f f4;
-//		Vec2d d2;
-//		Vec3d d3;
-//		Quat4d d4;
-//		Angle a;
-//		void* vPtr;
-//	} value;
-//	enum{
-//		NONE		=0x00000,
-//		CHAR		=0x00001,
-//		INT			=0x00002,
-//		LONG		=0x00004,
-//		UCHAR		=0x00008,
-//		UINT		=0x00010,
-//		ULONG		=0x00020,
-//		FLOAT		=0x00040,
-//		DOUBLE		=0x00080,
-//		BOOLEAN		=0x00100,
-//		STRING		=0x00200,
-//		VEC2F		=0x00400,
-//		VEC3F		=0x00800,
-//		QUATF		=0x01000,
-//		VEC2D		=0x02000,
-//		VEC3D		=0x04000,
-//		QUAT4D		=0x08000,
-//		ANGLE		=0x10000,
-//		VOID_PTR	=0x20000
-//	} type;
-//}

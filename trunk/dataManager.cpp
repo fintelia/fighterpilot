@@ -801,11 +801,11 @@ bool DataManager::registerAssets()
 
 	if(callNum==n++)	registerTexture("noTexture",		0);
 	if(callNum==n++)	registerShader("noShader",			0);
-	if(callNum==n++)	registerAsset("grass",				"media/grass3.mmp");
+	if(callNum==n++)	registerAsset("grass",				"media/grass.png");
 	if(callNum==n++)	registerAsset("rock",				"media/rock.png");
-	if(callNum==n++)	registerAsset("sand",				"media/sand.mmp");
-	if(callNum==n++)	registerAsset("snow",				"media/snow.mmp");
-	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.mmp");
+	if(callNum==n++)	registerAsset("sand",				"media/sand.png");
+	if(callNum==n++)	registerAsset("snow",				"media/snow.png");
+	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.png");
 	//if(callNum==n++)	registerAsset("aimer",				"media/aimer.tga");
 	//if(callNum==n++)	registerAsset("dialFront",			"media/dial front.tga");
 	//if(callNum==n++)	registerAsset("dialBAck",			"media/dial back.tga");	
@@ -813,9 +813,9 @@ bool DataManager::registerAssets()
 	//if(callNum==n++)	registerAsset("dialAltitude",		"media/altitude.tga");
 	//if(callNum==n++)	registerAsset("needle",				"media/needle2.tga");	
 	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.png");
-	if(callNum==n++)	registerAsset("particle",			"media/particle4.mmp");	
+	if(callNum==n++)	registerAsset("particle",			"media/particle4.png");	
 	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
-	if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.mmp");
+	if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.png");
 	//if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
 	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball4.png");
 	//if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");

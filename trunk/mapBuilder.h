@@ -8,8 +8,7 @@ private:
 	float maxHeight;
 	float minHeight;
 	float scroll;
-
-
+	float objPlacementAlt;
 
 	void zoom(float rotations)
 	{
@@ -33,7 +32,7 @@ private:
 	void resetView()
 	{
 		rot = Quat4f(Vec3f(1,0,0),1.0);
-		center = Vec3f(level->ground()->resolutionX()/2,0,level->ground()->resolutionZ()/2)*size;
+		center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
 	}
 	void diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	{
@@ -156,8 +155,8 @@ private:
 				if(h<minHeight) minHeight=h;
 			}
 		}
-		level->ground()->setSize(Vec3f(1,2,1));
 		resetView();
+		level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 	}
 	void faultLine()
 	{
@@ -201,7 +200,7 @@ private:
 			}
 		}
 		//level->ground()->setMinMaxHeights();
-		level->ground()->setSize(Vec3f(1,2,1));
+		level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 		resetView();
 	}
 	void fromFile(string filename)
@@ -218,7 +217,7 @@ private:
 			}
 			//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
 			level->newGround(image->height,image->width,t);
-			level->ground()->setSize(Vec3f(1,2,1));
+			level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 			delete[] t;
 			delete image;
 		}
@@ -240,7 +239,7 @@ private:
 		dir = P0-P1;
 
 		if(abs(dir.y) < 0.001) return;
-		Vec3d val = P1 + dir*(maxHeight*2+10-P1.y)/dir.y;
+		Vec3d val = P1 + dir*(maxHeight*2+objPlacementAlt-P1.y)/dir.y;
 		((editLevel*)level)->addObject(type,team,Vec3f(val.x,val.y,val.z));
 
 	}
@@ -287,13 +286,13 @@ public:
 			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
 			else			tmpRot = rot;
 
-			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->resolutionX(),level->ground()->resolutionZ()) * size * pow(1.1f,-scroll);
+			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scroll);
 			u = tmpRot * Vec3f(0,0,-1);
  
 		}
 		else
 		{
-			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->resolutionX(),level->ground()->resolutionZ()) * size * pow(1.1f,-scroll);
+			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scroll);
 			u = rot * Vec3f(0,0,-1);
 		}
 		gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
@@ -334,7 +333,7 @@ public:
 				dir = P0-P1;
 				
 				if(abs(dir.y) < 0.001) return;
-				Vec3d val = P1 + dir*(maxHeight*2+10-P1.y)/dir.y;
+				Vec3d val = P1 + dir*(maxHeight*2+objPlacementAlt-P1.y)/dir.y;
 				glPushMatrix();
 				glTranslatef(val.x,val.y,val.z);
 				glScalef(10,10,10);
@@ -347,10 +346,10 @@ public:
 				glColor4f(0.1,0.3,1.0,0.3);
 				
 				glBegin(GL_QUADS);
-				glVertex3f(0,										maxHeight*2+10,	0);
-				glVertex3f(0,										maxHeight*2+10,	level->ground()->resolutionZ()*size);
-				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+10,	level->ground()->resolutionZ()*size);
-				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+10,	0);
+				glVertex3f(0,									maxHeight*2+objPlacementAlt,	0);
+				glVertex3f(0,									maxHeight*2+objPlacementAlt,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+objPlacementAlt,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+objPlacementAlt,	0);
 				glEnd();
 
 				glColor4f(0.3,0.5,1.0,0.2);
@@ -381,7 +380,7 @@ public:
 		glDisable(GL_DEPTH_TEST);
 	}
 	void draw2D(){}
-	mapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0) {}
+	mapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0), objPlacementAlt(10.0) {}
 	void init()
 	{
 		menuManager.setMenu("menuLevelEditor");
