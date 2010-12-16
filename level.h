@@ -8,10 +8,10 @@ struct LevelFile
 
 	struct Info{//V1
 		float			seaLevel;	
-		Vec3f			mapSize;
+		Vec2f			mapSize;
 		Vec2u			mapResolution;
 		unsigned int	numObjects;
-		Info(): seaLevel(0), mapSize(1,1,1), mapResolution(0,0), numObjects(0){}
+		Info(): seaLevel(0), mapSize(1,1), mapResolution(0,0), numObjects(0){}
 	}*info;
 	struct Object{
 		int				type;
@@ -45,11 +45,9 @@ public:
 		virtual unsigned int resolutionX() const {return mResolution.x;}
 		virtual unsigned int resolutionZ() const {return mResolution.y;}
 		virtual Vec2u resolution() const {return mResolution;}
-		virtual Vec3f size()const{return mSize;}
-		virtual Vec2f sizeXZ()const{return Vec2f(mSize.x,mSize.z);}
+		virtual Vec2f size()const{return Vec2f(mSize);}
 		virtual float sizeX()const{return mSize.x;}
-		virtual float sizeY()const{return mSize.y;}
-		virtual float sizeZ()const{return mSize.z;}
+		virtual float sizeZ()const{return mSize.y;}
 		virtual float rasterHeight(unsigned int x,unsigned int z) const;
 		virtual float interpolatedHeight(float x, float z) const;
 		virtual float height(float x, float z) const;
@@ -63,18 +61,17 @@ public:
 		virtual void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height;}
 		virtual void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height;}
 		virtual void setPos(Vec3f pos){mPosition = pos;}
-		virtual void setSize(Vec3f s){mSize = s;}
-		virtual void setSizeY(float s){mSize.y=s;}
-		virtual void setSizeXZ(Vec2f s){mSize.x=s.x,mSize.z=s.y;}
-		
+		virtual void setSize(Vec2f s){mSize = s;}
+		virtual void setSizeX(float s){mSize.x=s;}
+		virtual void setSizeZ(float s){mSize.y=s;}
 
 		heightmapBase(Vec2u Resolution);
 		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
 		virtual void render() const =0;
 	protected:
-		Vec3f					mPosition,
-								mSize;
+		Vec3f					mPosition;
+		Vec2f					mSize;
 		Vec2u					mResolution;//y value is z axis
 		float*					heights;
 		mutable float			minHeight,
@@ -130,7 +127,7 @@ protected:
 	levelSettings	mSettings;
 	vector<object>	mObjects;
 	int				groundShader;
-
+	int				onDeath;//1=RESPAWN; 2=RESTART; 3=DIE
 	Level(): mGround(NULL), groundShader(0) {}
 public:
 	Level(LevelFile file);
