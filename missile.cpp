@@ -74,10 +74,10 @@ bool missile::Update(float ms)
 	////////////////////sparks//////////////////////////
 	static float distLeft=0.0;
 	distLeft += ms/1000;
-	while(distLeft > 0.009)
+	while(distLeft > 0.006)
 	{
 		newExaust.insert(pos-velocity*distLeft,0,0,gameTime()-distLeft*1000,3000);
-		distLeft-=0.009;
+		distLeft-=0.006;
 	}
 	//for(int i=0;i<1;i++)
 	//{

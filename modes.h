@@ -1611,14 +1611,15 @@ protected:
 	//}
 	void graphicsExaust()
 	{
+		float time = gameTime();
 		Profiler.setOutput("smoke sprites", newExaust.getSize());
 		if(newExaust.getSize()==0) return;
 		float life;
 		for(int i=0;i<newExaust.getSize();i++)
 		{
-			life = gameTime()-newExaust.startTime[i];
+			life = time-newExaust.startTime[i];
 			if(life > 0 && newExaust.startTime[i] + life < newExaust.endTime[i])
-			graphics->drawParticle(exaustParticleEffect,newExaust.positions[i]+newExaust.velocity[i]*(life)/1000,Color(0.5,0.5,0.5,0.5/(2.0-life/newExaust.endTime[1])));
+			graphics->drawParticle(exaustParticleEffect,newExaust.positions[i]+newExaust.velocity[i]*(life)/1000,Color(0.5,0.5,0.5,0.5*(newExaust.endTime[i]-time)/(newExaust.endTime[i]-newExaust.startTime[i])));
 		}
 	}
 	//void billboardParticles()
