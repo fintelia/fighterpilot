@@ -303,7 +303,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	fireParticleEffect = graphics->newParticleEffect("explosion fireball",120);
 	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",200);
-	exaustParticleEffect = graphics->newParticleEffect("missile smoke",20 );
+	exaustParticleEffect = graphics->newParticleEffect("missile smoke",35);
 
 //////
 

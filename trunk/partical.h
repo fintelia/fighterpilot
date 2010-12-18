@@ -180,7 +180,7 @@ public:
 	}
 	void insert(Vec3f pos,float random,float spread,float startT, float life)
 	{
-		if(size>=compacity) resize(compacity);
+		if(size>=compacity) resize(size);
 
 		positions[size] = pos + Vec3f(rand()%200/100,rand()%200/100,rand()%200/100).normalize()*random;
 		velocity[size] = Vec3f(rand()%200/100,rand()%200/100+0.8,rand()%200/100).normalize()*spread;
