@@ -2,7 +2,7 @@
 #include "main.h"
 explosion::explosion(Vec3f Pos): pos(Pos), coreSize(0.0), fireballSize(0.0)
 {
-	StartTime=gameTime();
+	StartTime=world.time();
 	smokeParticle s;
 	for(int i=0;i<10;i++)
 	{
@@ -19,7 +19,7 @@ explosion::explosion(Vec3f Pos): pos(Pos), coreSize(0.0), fireballSize(0.0)
 void explosion::render(bool flash)
 {
 	render3(); return;
-	float time=gameTime()-StartTime;//in ms
+	float time=world.time()-StartTime;//in ms
 	if(time < 0) return;
 
 	Vec3f up, right;
@@ -99,7 +99,7 @@ void explosion::render(bool flash)
 }
 void explosion::render2()
 {
-	float time=gameTime()-StartTime;//in ms
+	float time=world.time()-StartTime;//in ms
 	if(time < 0) return;
 
 	float s=max((1.0-pow(2.718f,-(time-100)/20))*200.0,0.0);
@@ -158,7 +158,7 @@ void explosion::render2()
 }
 void explosion::render3()
 {
-	float time=gameTime()-StartTime;//in ms
+	float time=world.time()-StartTime;//in ms
 	if(time < 0) return;
 	Vec3f loc;
 	for(vector<smokeParticle>::iterator i=fireParticles.begin();i!=fireParticles.end();i++)

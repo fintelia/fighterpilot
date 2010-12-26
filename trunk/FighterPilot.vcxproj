@@ -107,7 +107,9 @@
   <ItemGroup>
     <ClCompile Include="AABox.cpp" />
     <ClCompile Include="Angle.cpp" />
+    <ClCompile Include="bullet.cpp" />
     <ClCompile Include="cameraManager.cpp" />
+    <ClCompile Include="campaign.cpp" />
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="enums.cpp" />
@@ -127,9 +129,12 @@
     <ClCompile Include="level.cpp" />
     <ClCompile Include="load_save.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mapBuilder.cpp" />
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
-    <ClCompile Include="modes.cpp" />
+    <ClCompile Include="dogFight.cpp" />
+    <ClCompile Include="modeManager.cpp" />
+    <ClCompile Include="particle.cpp" />
     <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="player.cpp" />
@@ -154,6 +159,7 @@
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="Terain.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="texture.cpp" />
@@ -189,7 +195,9 @@
     <ClInclude Include="mapBuilder.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
+    <ClInclude Include="modeManager.h" />
     <ClInclude Include="modes.h" />
+    <ClInclude Include="objectList.h" />
     <ClInclude Include="onePlayer.h" />
     <ClInclude Include="partical.h" />
     <ClInclude Include="path.h" />
@@ -213,6 +221,7 @@
     <ClInclude Include="XboxContInput.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
     <None Include="media\grass.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />

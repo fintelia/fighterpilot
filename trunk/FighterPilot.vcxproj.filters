@@ -65,6 +65,15 @@
     <Filter Include="Source Files\camera">
       <UniqueIdentifier>{0ec79459-15bd-48ee-8cc7-87a6791ea212}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\modeManager">
+      <UniqueIdentifier>{49d6f32f-8280-433d-acd6-67b4cadcd7a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\bullet">
+      <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\particle">
+      <UniqueIdentifier>{4fcb2ece-878e-4287-a7db-6b63d38a63e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="explosion.cpp">
@@ -145,9 +154,6 @@
     <ClCompile Include="GameMath.cpp">
       <Filter>Source Files\math</Filter>
     </ClCompile>
-    <ClCompile Include="modes.cpp">
-      <Filter>Source Files\modes</Filter>
-    </ClCompile>
     <ClCompile Include="worldManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -223,11 +229,29 @@
     <ClCompile Include="enums.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="modeManager.cpp">
+      <Filter>Source Files\modeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="splitScreen.cpp">
+      <Filter>Source Files\modeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="campaign.cpp">
+      <Filter>Source Files\modeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="dogFight.cpp">
+      <Filter>Source Files\modeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="mapBuilder.cpp">
+      <Filter>Source Files\modeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="bullet.cpp">
+      <Filter>Source Files\bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="particle.cpp">
+      <Filter>Source Files\particle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bullet.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="controls.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -274,9 +298,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="missile.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="partical.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="plane.h">
@@ -372,6 +393,18 @@
     <ClInclude Include="cameraManager.h">
       <Filter>Source Files\camera</Filter>
     </ClInclude>
+    <ClInclude Include="modeManager.h">
+      <Filter>Source Files\modeManager</Filter>
+    </ClInclude>
+    <ClInclude Include="objectList.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bullet.h">
+      <Filter>Source Files\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="partical.h">
+      <Filter>Source Files\particle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -431,6 +464,7 @@
     <None Include="media\horizon2.vert">
       <Filter>shaders\horizon2</Filter>
     </None>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

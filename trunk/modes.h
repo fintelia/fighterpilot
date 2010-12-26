@@ -275,7 +275,7 @@ protected:
 		//	glUniform1i(texture_location++, 0);
 		//	
 		//	texture_location = glGetUniformLocation(shaders[3], "time");
-		//	float t=gameTime();
+		//	float t=world.time();
 		//	glUniform1f(texture_location, t);
 
 		//	tileSize=16;
@@ -341,7 +341,7 @@ public:
 class dogFight: public modes
 {
 public:
-	dogFight():level(NULL){}
+	dogFight(Level* lvl=NULL):level(lvl){}
 
 protected:
 	FrustumG frustum;
@@ -349,7 +349,7 @@ protected:
 	//{
 	//	float sl=settings.SEA_LEVEL;
 	//	int tileSize=16;
-	//	float t=gameTime()*0.0001;
+	//	float t=world.time()*0.0001;
 
 	//	glBindTexture(GL_TEXTURE_2D,tex[25]);
 	//	for(float z = 0; z <= terrain->length(); z+=1) 
@@ -409,7 +409,7 @@ protected:
 	//	glUniform1i(glGetUniformLocation(shaders[3], "noise"), 0);
 	//	glUniform1i(glGetUniformLocation(shaders[3], "ground"), 1);
 	//	glUniform1i(glGetUniformLocation(shaders[3], "tex"), 2);
-	//	glUniform1f(glGetUniformLocation(shaders[3], "time"), gameTime());
+	//	glUniform1f(glGetUniformLocation(shaders[3], "time"), world.time());
 	//	glUniform1f(glGetUniformLocation(shaders[3], "heightRange"), settings.HEIGHT_RANGE*2);
 
 	//	glUniform3f(glGetUniformLocation(shaders[3], "eyePos"), eye.x, eye.y, eye.z);
@@ -470,7 +470,7 @@ protected:
 	//	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
 	//	glUniform1i(glGetUniformLocation(s, "ground"), 1);
 	//	glUniform1i(glGetUniformLocation(s, "tex"), 2);
-	//	glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+	//	glUniform1f(glGetUniformLocation(s, "time"), world.time());
 	//	glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
 	//	glUniform3f(glGetUniformLocation(s, "center"),terrain->width()/2*size,settings.SEA_LEVEL-1000,terrain->width()/2*size);
 
@@ -691,7 +691,7 @@ protected:
 	//	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
 	//	glUniform1i(glGetUniformLocation(s, "ground"), 1);
 	//	glUniform1i(glGetUniformLocation(s, "tex"), 2);
-	//	glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+	//	glUniform1f(glGetUniformLocation(s, "time"), world.time());
 	//	glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
 	//	glUniform3f(glGetUniformLocation(s, "center"),center.x,center.y,center.z);
 
@@ -892,7 +892,7 @@ protected:
 		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
 		glUniform1i(glGetUniformLocation(s, "ground"), 1);
 		glUniform1i(glGetUniformLocation(s, "tex"), 2);
-		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+		glUniform1f(glGetUniformLocation(s, "time"), world.time());
 		glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
 		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
 
@@ -1474,7 +1474,7 @@ protected:
 	//		glBindTexture(GL_TEXTURE_2D,0);
  //			//if(acplayer==0) RenderText(375,25,fps);
 	//		//if(acplayer==0) Profiler.draw();
-	//		//RenderText(175,25,(float)gameTime());
+	//		//RenderText(175,25,(float)world.time());
 	//	//#endif
 
 
@@ -1513,9 +1513,9 @@ protected:
 	//		s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
 	//		s[i*4+0].r=0.25;	s[i*4+0].g=0.25;	s[i*4+0].b=0.25;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+1].r=0.25;	s[i*4+1].g=0.25;	s[i*4+1].b=0.25;	s[i*4+1].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+2].r=0.25;	s[i*4+2].g=0.25;	s[i*4+2].b=0.25;	s[i*4+2].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+3].r=0.25;	s[i*4+3].g=0.25;	s[i*4+3].b=0.25;	s[i*4+3].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
 
 	//		s[i*4+0].s=0;	s[i*4+0].t=1;
 	//		s[i*4+1].s=1;	s[i*4+1].t=1;
@@ -1573,10 +1573,10 @@ protected:
 	//		s[i*4+2].x=c[0];	s[i*4+2].y=c[1];	s[i*4+2].z=c[2];
 	//		s[i*4+3].x=d[0];	s[i*4+3].y=d[1];	s[i*4+3].z=d[2];
 
-	//		s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
-	//		s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*(1.0-gameTime()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+0].r=0.5;	s[i*4+0].g=0.5;	s[i*4+0].b=0.5;	s[i*4+0].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+1].r=0.5;	s[i*4+1].g=0.5;	s[i*4+1].b=0.5;	s[i*4+1].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+2].r=0.5;	s[i*4+2].g=0.5;	s[i*4+2].b=0.5;	s[i*4+2].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
+	//		s[i*4+3].r=0.5;	s[i*4+3].g=0.5;	s[i*4+3].b=0.5;	s[i*4+3].a=0.5*(1.0-world.time()-newExaust.startTime[i]/newExaust.endTime[1]);
 
 	//		s[i*4+0].s=0;	s[i*4+0].t=1;
 	//		s[i*4+1].s=1;	s[i*4+1].t=1;
@@ -1611,7 +1611,7 @@ protected:
 	//}
 	void graphicsExaust()
 	{
-		float time = gameTime();
+		float time = world.time();
 		Profiler.setOutput("smoke sprites", newExaust.getSize());
 		if(newExaust.getSize()==0) return;
 		float life;
@@ -1912,7 +1912,7 @@ protected:
 					Angle ang = acosA(cPlane->rotation.w);
 					glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
 
-					glScalef(5,5,5);
+					//glScalef(5,5,5);
 
 
 
@@ -1949,7 +1949,7 @@ protected:
 	}
 	void bulletTrails()
 	{
-		double time=gameTime();
+		double time=world.time();
 		//float length;
 		Vec3f start, end, end2;
 		glLineWidth(2);
@@ -1989,7 +1989,7 @@ protected:
 		Profiler.startElement("beginRender");
 
 		static map<int,double> lastDraw;
-		double time=gameTime();
+		double time=world.time();
 
 
 		plane p = *(plane*)planes[players[acplayer].planeNum()];
@@ -2012,9 +2012,9 @@ protected:
 		if(!players[acplayer].firstPerson() || p.controled)
 		{
 			Vec3f vel2D = p.rotation * Vec3f(0,0,1); vel2D.y=0;
-			e=Vec3f(p.pos.x - vel2D.normalize().x*135, p.pos.y + sin(45.0)*135 , p.pos.z - vel2D.normalize().z*135);
+			e=Vec3f(p.pos.x - vel2D.normalize().x*30, p.pos.y + sin(45.0)*30 , p.pos.z - vel2D.normalize().z*30);
 			if(p.controled) e=p.camera;
-			c=Vec3f(p.pos.x + vel2D.normalize().x*135, p.pos.y, p.pos.z + vel2D.normalize().z*135);
+			c=Vec3f(p.pos.x + vel2D.normalize().x*30, p.pos.y, p.pos.z + vel2D.normalize().z*30);
 			if(p.controled) c=p.center;
 			u=Vec3f(0,1,0);
 
@@ -2103,7 +2103,7 @@ protected:
 				Angle a=acosA((missiles[i].velocity.normalize()).dot(Vec3f(0,0,1)));
 				glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
 				//glScalef(0.25f,0.25f,0.15f);
-				glScalef(5,5,5);
+				//glScalef(5,5,5);
 				//if(missiles[i].target!=-1)glColor3f(0,0,1);
 				//else glColor3f(0,1,0);
 				//glCallList(model[1]);
@@ -2112,15 +2112,15 @@ protected:
 		}
 
 		Profiler.endElement("missiles");
-		glColor3f(0,1,0);
-		for(int i=0;i<(signed int )turrets.size();i++)
-		{
-			glPushMatrix();
-				glTranslatef(turrets[i]->pos.x,turrets[i]->pos.y,turrets[i]->pos.z);
-				glScalef(100,100,100);
-				//glCallList(model[4]);   need to load model
-			glPopMatrix();
-		}
+		//glColor3f(0,1,0);
+		//for(int i=0;i<(signed int )turrets.size();i++)
+		//{
+		//	glPushMatrix();
+		//		glTranslatef(turrets[i]->pos.x,turrets[i]->pos.y,turrets[i]->pos.z);
+		//		glScalef(100,100,100);
+		//		//glCallList(model[4]);   need to load model
+		//	glPopMatrix();
+		//}
 		Profiler.startElement("planes");
 		//planes
 		drawPlanes(acplayer,e,false);
@@ -2200,7 +2200,7 @@ protected:
 	}
 	void updateWorld(float ms)
 	{
-		double time=gameTime();
+		double time=world.time();
 		vector<int> toDelete;
 		for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
 		{

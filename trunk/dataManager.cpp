@@ -791,10 +791,8 @@ void DataManager::draw(planeType p)
 	if(p==UAV)	draw("UAV");
 	if(p==B2)	draw("B2");
 }
-bool DataManager::registerAssets()
+int DataManager::registerAssets()
 {
-	double t=GetTime();
-
 	static int callNum=0;
 	callNum++;
 	int n=1;
@@ -875,11 +873,10 @@ bool DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	//				.					.
-	if(callNum==n)	return true; //done
+	if(callNum==n++)	settings.loadModelData("media/modelData.txt");
+	if(callNum==n++)	textManager->init("media/ascii");
 
-	t=GetTime()-t;
-	return false;
-
+	return (n-1)-callNum;//number left
 }
 void DataManager::registerAsset(string name, string filename)
 {//shaders must be registered by hand right now

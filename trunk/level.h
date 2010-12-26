@@ -69,6 +69,7 @@ public:
 		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
 		virtual void render() const =0;
+		virtual void init()=0;
 	protected:
 		Vec3f					mPosition;
 		Vec2f					mSize;
@@ -100,6 +101,7 @@ public:
 		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),shader(0),dispList(0){init();}
 		~heightmapGL(){glDeleteLists(dispList,1);}
 		friend class Level;
+		friend class modeDogFight;
 	};
 	class waterPlane
 	{
@@ -113,6 +115,7 @@ public:
 	public:
 		int				type;
 		int				team;
+		bool			playerControlled;
 		Vec3f			startloc;
 		Quat4f			startRot;
 	};
@@ -128,12 +131,17 @@ protected:
 	vector<object>	mObjects;
 	int				groundShader;
 	int				onDeath;//1=RESPAWN; 2=RESTART; 3=DIE
+	string			nextLevel;
 	Level(): mGround(NULL), groundShader(0) {}
 public:
 	Level(LevelFile file);
-	Level(string BMP);
-	const heightmapBase* const ground() const;
+	Level(string BMP, float scale=1.0f);
+
+	heightmapBase* const ground() const{return mGround;}
+	const vector<object>& objects() const {return mObjects;}
+	const waterPlane& water() const {return mWater;}
 	void render();
+	void render(Vec3f eye);
 
 	LevelFile getLevelFile();
 	void exportBMP(string filename);

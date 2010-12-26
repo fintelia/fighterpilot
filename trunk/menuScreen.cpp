@@ -37,6 +37,7 @@ bool MenuManager::init()
 	registerMenu("menuLevelEditor", &CreateObject<menuLevelEditor>);
 	registerMenu("menuInGame", &CreateObject<menuInGame>);
 	registerMenu("menuChooseMode", &CreateObject<menuChooseMode>);
+	registerMenu("menuLoading", &CreateObject<menuLoading>);
 
 	return true;
 }
@@ -616,27 +617,27 @@ void menuLevelEditor::operator() (menuPopup* p)
 	else if(awaitingMapFile)
 	{
 		string f=((menuOpenFile*)p)->getFile();
-		((mapBuilder*)mode)->fromFile(f);
+		((modeMapBuilder*)modeManager.getMode())->fromFile(f);
 		awaitingMapFile=false;
 	}
 	else if(awaitingMapSave)
 	{
 		string f=((menuSaveFile*)p)->getFile();
-		((mapBuilder*)mode)->level->exportBMP(f);
+		((modeMapBuilder*)modeManager.getMode())->level->exportBMP(f);
 		awaitingMapSave=false;
 	}
 	else if(awaitingLevelFile)
 	{
 		string f=((menuOpenFile*)p)->getFile();
-		delete ((mapBuilder*)mode)->level;
+		delete ((modeMapBuilder*)modeManager.getMode())->level;
 		LevelFile l(f);
-		((mapBuilder*)mode)->level = new editLevel(l);
+		((modeMapBuilder*)modeManager.getMode())->level = new editLevel(l);
 		awaitingLevelFile=false;
 	}
 	else if(awaitingLevelSave)
 	{
 		string f=((menuSaveFile*)p)->getFile();
-		LevelFile l = ((mapBuilder*)mode)->level->getLevelFile();
+		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile();
 		l.save(f);
 		awaitingLevelSave=false;
 	}
@@ -672,22 +673,19 @@ int menuLevelEditor::update()
 	}
 	else if(bExit->getChanged())
 	{
-		delete mode;
-		mode=new blankMode;
-		mode->init();
-		//Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
+		modeManager.setMode(NULL);
 		menuManager.setMenu("menuChooseMode");
 	}
 	else if(getTab() == TERRAIN)
 	{
 		if(bFaultLine->getChanged())
 		{
-			((mapBuilder*)mode)->faultLine();
+			((modeMapBuilder*)modeManager.getMode())->faultLine();
 			bFaultLine->resetChanged();
 		}
 		else if(bDiamondSquare->getChanged())
 		{
-			((mapBuilder*)mode)->diamondSquare(0.49);
+			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.49);
 			bDiamondSquare->resetChanged();
 		}
 		else if(bFromFile->getChanged())
@@ -813,8 +811,10 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 				bAddPlane->mouseDownL(x,y);
 			if(newObjectType != 0)
 			{
-				((mapBuilder*)mode)->addObject(newObjectType, 0, x, y);
+				static int teamNum=0;
+				((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, x, y);
 				newObjectType = 0;
+				teamNum++;
 			}
 		}
 		else if(getTab() == SETTINGS)
@@ -870,17 +870,17 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 }
 void menuLevelEditor::scroll(float rotations)
 {
-	((mapBuilder*)mode)->zoom(rotations);
+	((modeMapBuilder*)modeManager.getMode())->zoom(rotations);
 }
 void menuLevelEditor::mouseC(bool down, int x, int y)
 {
 	if(!down)
-		((mapBuilder*)mode)->trackBallUpdate(x,y);
+		((modeMapBuilder*)modeManager.getMode())->trackBallUpdate(x,y);
 }
 void menuLevelEditor::addShader(string filename)
 {
 	int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
-	((mapBuilder*)mode)->shaderButtons.push_back(s);
+	((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
 
 	menuButton* b = new menuButton();
 	b->init(5,bShaders->getSize()*35+5,200,30,filename,black,white);
@@ -930,9 +930,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		delete mode;
-		mode = new onePlayer;
-		mode->init();
+		modeManager.setMode(new modeCampaign);
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
@@ -940,9 +938,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		delete mode;
-		mode = new twoPlayerVs;
-		mode->init();
+		modeManager.setMode(new modeSplitScreen);
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
@@ -950,15 +946,13 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		delete mode;
-		mode = new mapBuilder;
-		mode->init();
+		modeManager.setMode(new modeMapBuilder);
 	}
 }
 bool menuInGame::init()
 {
 	activeChoice=RESUME;
-	gameTime.pause();
+	world.time.pause();
 	return true;
 }
 void menuInGame::render()
@@ -982,7 +976,7 @@ void menuInGame::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 		input->up(0x31);
-		gameTime.unpause();
+		world.time.unpause();
 		menuManager.setMenu("");
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
@@ -994,17 +988,41 @@ void menuInGame::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 
-		gameTime.unpause();
+		world.time.unpause();
 
-		delete mode;
-		mode=new blankMode;
-		mode->init();
-
-		//Cmenu=new m_chooseMode(*((m_chooseMode*)Cmenu));
+		modeManager.setMode(NULL);
 		menuManager.setMenu("menuChooseMode");
 	}
 }
+bool menuLoading::init()
+{
+	progress = 0.0f;
+	return true;
+}
+int menuLoading::update()
+{
+	static bool toLoad = true;
+	if(toLoad)
+	{
+		dataManager.registerAsset("menu background", "media/menu/menu background.png");
+		toLoad=false;
+	}
 
+	static int totalAssets = -1;
+	int assetsLeft = dataManager.registerAssets();
+	if(totalAssets == -1) totalAssets = assetsLeft+1;
+	progress = 1.0-(float)assetsLeft/totalAssets;
+	if(assetsLeft==0)	menuManager.setMenu("menuChooseMode");
+
+	Redisplay=true;
+	return 30;
+}
+void menuLoading::render()
+{
+	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
+	glColor3f(1,1,1);	graphics->drawOverlay(Vec2f(sw*0.4,sh*0.96),Vec2f(sw*0.2,sh*0.02));
+	glColor3f(0,1,0);	graphics->drawOverlay(Vec2f(sw*0.4,sh*0.96),Vec2f(sw*0.2*progress,sh*0.02));
+}
 void menuButton::setElementText(string t)
 {
 	text=t;

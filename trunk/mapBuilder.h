@@ -239,7 +239,7 @@ private:
 		dir = P0-P1;
 
 		if(abs(dir.y) < 0.001) return;
-		Vec3d val = P1 + dir*(maxHeight*2+objPlacementAlt-P1.y)/dir.y;
+		Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 		((editLevel*)level)->addObject(type,team,Vec3f(val.x,val.y,val.z));
 
 	}
@@ -333,7 +333,7 @@ public:
 				dir = P0-P1;
 				
 				if(abs(dir.y) < 0.001) return;
-				Vec3d val = P1 + dir*(maxHeight*2+objPlacementAlt-P1.y)/dir.y;
+				Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 				glPushMatrix();
 				glTranslatef(val.x,val.y,val.z);
 				glScalef(10,10,10);
@@ -346,23 +346,23 @@ public:
 				glColor4f(0.1,0.3,1.0,0.3);
 				
 				glBegin(GL_QUADS);
-				glVertex3f(0,									maxHeight*2+objPlacementAlt,	0);
-				glVertex3f(0,									maxHeight*2+objPlacementAlt,	level->ground()->resolutionZ()*size);
-				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+objPlacementAlt,	level->ground()->resolutionZ()*size);
-				glVertex3f(level->ground()->resolutionX()*size,	maxHeight*2+objPlacementAlt,	0);
+				glVertex3f(0,									maxHeight+objPlacementAlt,	0);
+				glVertex3f(0,									maxHeight+objPlacementAlt,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight+objPlacementAlt,	level->ground()->resolutionZ()*size);
+				glVertex3f(level->ground()->resolutionX()*size,	maxHeight+objPlacementAlt,	0);
 				glEnd();
 
 				glColor4f(0.3,0.5,1.0,0.2);
 				glBegin(GL_LINES);
 				for(int i=0;i<level->ground()->resolutionZ()*size; i+=size*4)
 				{
-					glVertex3f(i,maxHeight*2+10,0);
-					glVertex3f(i,maxHeight*2+10,level->ground()->resolutionZ()*size);
+					glVertex3f(i,maxHeight+10,0);
+					glVertex3f(i,maxHeight+10,level->ground()->resolutionZ()*size);
 				}
 				for(int i=0;i<level->ground()->resolutionX()*size; i+=size*4)
 				{
-					glVertex3f(0,maxHeight*2+10,i);
-					glVertex3f(level->ground()->resolutionX()*size,maxHeight*2+10,i);
+					glVertex3f(0,maxHeight+10,i);
+					glVertex3f(level->ground()->resolutionX()*size,maxHeight+10,i);
 				}
 				glEnd();
 				glDepthMask(true);
