@@ -1,8 +1,14 @@
+
 #include "main.h"
+
+planeBase::planeBase(int Id, planeType Type, int Team):entity(Id,Type,Team), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0)
+{
+
+}
 
 void planeBase::updateAll()
 {
-	double time=gameTime();
+	double time=world.time();
 	double ms=time-lastUpdateTime;
 	lastUpdateTime=time;
 
@@ -26,7 +32,7 @@ void planeBase::updateAll()
 
 	if(respawning)
 	{
-		altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
+		altitude=world.altitude(pos);
 	 	if(altitude<3.0||hitGround)
 		{
 			pos.y=pos.y-altitude+3;
@@ -82,7 +88,7 @@ void planeBase::updateAll()
 			Quat4f lastRotation=rotation;
 			Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
 
-			altitude=pos.y-terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
+			altitude=world.altitude(pos);
 			if(altitude<3.0){die();pos.y-=altitude-3;hitGround=true;}
 			
 			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,500.0,1000.0));
@@ -131,7 +137,7 @@ void planeBase::updateAll()
 					machineGun.roundsLeft--;
 					Vec3f l=pos*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
 					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms;//+Vec3f(float(rand()%1000)/50000,float(rand()%1000-500)/50000,float(rand()%1000)/50000);
-					bullets.push_back(bullet(l,t,id,time-extraShootTime-machineGun.coolDown));
+					world.bullets.push_back(bullet(l,t,id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
@@ -165,7 +171,7 @@ void planeBase::autoPilotUpdate(float value)
 {
 	wayPoint w1;
 	wayPoint w2;
-	double time=gameTime();
+	double time=world.time();
 	float t;
 	if(time>(wayPoints.back()).time)
 	{
@@ -211,7 +217,7 @@ void planeBase::exitAutoPilot()
 {
 	wayPoint w1;
 	wayPoint w2;
-	double time=gameTime();
+	double time=world.time();
 	float t;
 	if(wayPoints.size()==0)//no waypoints
 	{
@@ -264,7 +270,7 @@ void planeBase::returnToBattle()
 
 	wayPoints.clear();
 	controled =true;
-	double time=gameTime();
+	double time=world.time();
 
 	Vec3f fwd	= rotation * Vec3f(0,0,1);
 	Vec3f up	= rotation * Vec3f(0,1,0);
@@ -274,8 +280,8 @@ void planeBase::returnToBattle()
 	Quat4f newRot(Vec3f(0,1,0),atan2A(pos.x-size*64,pos.z-size*64));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
-	camera=Vec3f(pos.x - fwd.x*100, pos.y + sin(45.0)*100,	 pos.z - fwd.z*100);
-	center=Vec3f(pos.x + fwd.x*175, pos.y, pos.z + fwd.z*175);
+	camera=Vec3f(pos.x - fwd.x*20, pos.y + sin(45.0)*20,	 pos.z - fwd.z*20);
+	center=Vec3f(pos.x + fwd.x*35, pos.y, pos.z + fwd.z*35);
 	
 
 	wayPoints.push_back(wayPoint(time,				pos,								rotation								));
@@ -317,7 +323,7 @@ void planeBase::die()
 	}
 
 	if(!respawning)
-		respawnTime=gameTime()+5000;
+		respawnTime=world.time()+5000;
 	respawning=true;
 }
 void planeBase::findTargetVector()
@@ -349,7 +355,7 @@ void planeBase::ShootMissile()
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	missiles.push_back(missile(pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd*speed,id,d));
+	world.objectList.newMissile(MISSILE,team,pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd*speed,d);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -400,14 +406,14 @@ void plane::die()
 	//controled=true;
 
 	if(!respawning)
-		respawnTime=gameTime()+5000;
+		respawnTime=world.time()+5000;
 	respawning=true;
 }
 bool plane::Update(float ms)
 {
 	//updatePos(ms);
 	updateAll();
-	if(respawning && respawnTime<gameTime())
+	if(respawning && respawnTime<world.time())
 	{
 		if(settings.ON_HIT==RESPAWN)
 		{
@@ -436,15 +442,7 @@ void plane::spawn()
 	}
 	pos.x = rand() % int((settings.MAX_X-settings.MIN_X)*size)+settings.MIN_X*size;
 	pos.z = rand() % int((settings.MAX_Y-settings.MIN_Y)*size)+settings.MIN_Y*size;
-	float h=terrain->getHeight(pos.x/size, pos.z/size);
-	//float h=y-terrain->getHeight(pos.x/size, pos.z/size);
-	if(h<terrain->getHeight(pos.x/size+1, pos.z/size))		h=terrain->getHeight(pos.x/size+1, pos.z/size);
-	if(h<terrain->getHeight(pos.x/size, pos.z/size+1))		h=terrain->getHeight(pos.x/size, pos.z/size+1);
-	if(h<terrain->getHeight(pos.x/size+1, pos.z/size+1))	h=terrain->getHeight(pos.x/size+1, pos.z/size+1);
-	float height=terrain->getInterpolatedHeight(pos.x/size,pos.z/size);
-	pos.y = height+65;
-	if(pos.y<settings.SEA_LEVEL+35)
-		pos.y=settings.SEA_LEVEL+35;
+	pos.y = world.elevation(pos.x,pos.z)+35;
 
 	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
 	turn = 0;
@@ -465,14 +463,9 @@ void plane::setControlState(controlState c)
 {
 	controller=c;
 }
-plane::plane(int Id,int Team)
+plane::plane(int Id, planeType Type, int Team):planeBase(Id,Type,Team)
 {
 	maxHealth=100;
-	id = Id;
-	team=Team;
-	dead=false;
-	type=defaultPlane;
-
 	spawn();
 	Update(0);
 }
@@ -480,14 +473,9 @@ plane::plane(int Id,int Team)
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><>
 
-AIplane::AIplane(int Id,int Team)
+AIplane::AIplane(int Id, planeType Type, int Team):planeBase(Id,Type,Team),target(0)
 {
 	maxHealth=50;
-	id = Id;
-	team=Team;
-	dead=false;
-	type=defaultPlane;
-
 	spawn();
 	Update(0);
 }
@@ -495,18 +483,10 @@ AIplane::AIplane(int Id,int Team)
 void AIplane::spawn()
 {
 	initArmaments();
+
 	pos.x = rand() % int((settings.MAX_X-settings.MIN_X)*size)+settings.MIN_X*size;
 	pos.z = rand() % int((settings.MAX_Y-settings.MIN_Y)*size)+settings.MIN_Y*size;
-	float h=terrain->getHeight(pos.x/size, pos.z/size);
-	//float h=y-terrain->getHeight(pos.x/size, pos.z/size);
-	if(h<terrain->getHeight(pos.x/size+1, pos.z/size))		h=terrain->getHeight(pos.x/size+1, pos.z/size);
-	if(h<terrain->getHeight(pos.x/size, pos.z/size+1))		h=terrain->getHeight(pos.x/size, pos.z/size+1);
-	if(h<terrain->getHeight(pos.x/size+1, pos.z/size+1))		h=terrain->getHeight(pos.x/size+1, pos.z/size+1);
-	//float h=terrain->distanceToGround(pos.x/size,0,pos.z/size);
-	pos.y = 35+h;
-	if(pos.y<settings.SEA_LEVEL+35)
-		pos.y=settings.SEA_LEVEL+35;
-
+	pos.y = world.elevation(pos.x,pos.z)+35;
 
 	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
 	turn = 0;
@@ -622,7 +602,7 @@ void AIplane::calcMove(int value)
 }
 bool AIplane::Update(float value)
 {
-	if(respawning && respawnTime<gameTime())
+	if(respawning && respawnTime<world.time())
 	{
 		if(settings.ON_AI_HIT==RESPAWN)
 		{

@@ -221,7 +221,7 @@ void Level::heightmapGL::render() const
 		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
 		glUniform1f(glGetUniformLocation(shader, "minHeight"),	minHeight + (maxHeight-minHeight)/3);
 		glUniform1f(glGetUniformLocation(shader, "XZscale"),	1);
-		glUniform1f(glGetUniformLocation(shader, "time"),		gameTime());
+		glUniform1f(glGetUniformLocation(shader, "time"),		world.time());
 		glUniform1i(glGetUniformLocation(shader, "sand"),		0);
 		glUniform1i(glGetUniformLocation(shader, "grass"),		1);
 		glUniform1i(glGetUniformLocation(shader, "rock"),		2);
@@ -301,21 +301,28 @@ Level::Level(LevelFile file)
 {
 	mGround = new heightmapGL(file.info->mapResolution,file.heights);
 	mGround->setSize(file.info->mapSize);
+	mGround->init();
 	mWater.seaLevel = file.info->seaLevel;
 }
-Level::Level(string bmp)
+Level::Level(string BMP, float scale)
 {
-	Image* image = loadBMP(bmp.c_str());
+	Image* image = loadBMP(BMP.c_str());
 	float* t = new float[image->width * image->height];
 	for(int y = 0; y < image->height; y++) {
 		for(int x = 0; x < image->width; x++) {
-			t[y * image->width + x] = (float)image->pixels[3 * (y * image->width + x)]/255.0;
+			t[y * image->width + x] = (float)((unsigned char)image->pixels[3 * (y * image->width + x)])/255.0*scale;
 		}
 	}
 	//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
 	mGround = new heightmapGL(Vec2u(image->height,image->width),t);
+	mGround->init();
+
 	delete[] t;
 	delete image;
+
+	mGround->setMinMaxHeights();
+	mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
+	mSettings.water = true;
 }
 LevelFile Level::getLevelFile() 
 {
@@ -375,10 +382,6 @@ void Level::exportBMP(string filename)
 	delete[] colors;
 	fout.close();
 }
-const Level::heightmapBase* const Level::ground() const
-{
-	return mGround;
-}
 void Level::render()
 {
 	glColor3f(1,1,0);
@@ -408,7 +411,7 @@ void Level::render()
 		glUniform1i(glGetUniformLocation(s, "groundTex"), 1);
 		glUniform1i(glGetUniformLocation(s, "rock"), 2);
 		glUniform1i(glGetUniformLocation(s, "sand"), 3);
-		glUniform1f(glGetUniformLocation(s, "time"), gameTime());
+		glUniform1f(glGetUniformLocation(s, "time"), world.time());
 		glUniform1f(glGetUniformLocation(s, "seaLevel"), 0.333f);
 		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x);
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
@@ -443,7 +446,7 @@ void Level::render()
 	//	glUniform1f(glGetUniformLocation(mGround->shader, "maxHeight"),	mGround->maxHeight);
 	//	glUniform1f(glGetUniformLocation(mGround->shader, "minHeight"),	mWater.seaLevel);//mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3);
 	//	glUniform1f(glGetUniformLocation(mGround->shader, "XZscale"),	mGround->size);
-	//	glUniform1f(glGetUniformLocation(mGround->shader, "time"),		gameTime());
+	//	glUniform1f(glGetUniformLocation(mGround->shader, "time"),		world.time());
 	//	glUniform1i(glGetUniformLocation(mGround->shader, "sand"),		textures[0]);
 	//	glUniform1i(glGetUniformLocation(mGround->shader, "grass"),		textures[1]);
 	//	glUniform1i(glGetUniformLocation(mGround->shader, "rock"),		textures[2]);
@@ -557,6 +560,96 @@ void Level::render()
 			glVertex3f(mGround->resolutionX()-1,h,0);
 		glEnd();
 	}
+	glPopMatrix();
+}
+void Level::render(Vec3f eye)
+{
+	glDisable(GL_CULL_FACE);
+	glPushMatrix();
+	
+	if(mSettings.water)
+	{
+		mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
+
+		//int s=dataManager.getId("ocean");
+		//dataManager.bind("ocean");
+
+		//dataManager.bind("hardNoise",0);
+		//dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+		//dataManager.bind("rock",2);
+		//dataManager.bind("sand",3);
+
+		//glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+		//glUniform1i(glGetUniformLocation(s, "groundTex"), 1);
+		//glUniform1i(glGetUniformLocation(s, "rock"), 2);
+		//glUniform1i(glGetUniformLocation(s, "sand"), 3);
+		//glUniform1f(glGetUniformLocation(s, "time"), world.time());
+		//glUniform1f(glGetUniformLocation(s, "seaLevel"), 0.333f);
+		//glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x);
+		////glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
+
+		//glBegin(GL_QUADS);
+		//	glVertex3f(0,mWater.seaLevel,0);
+		//	glVertex3f(0,mWater.seaLevel,mGround->mSize.y);
+		//	glVertex3f(mGround->mSize.x,mWater.seaLevel,mGround->mSize.y);
+		//	glVertex3f(mGround->mSize.x,mWater.seaLevel,0);
+		//glEnd();
+
+		//dataManager.bindTex(0,3);
+		//dataManager.bindTex(0,2); 
+		//dataManager.bindTex(0,1);
+		//dataManager.bindTex(0,0);
+		//dataManager.bindShader(0);
+		//--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\
+		//--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||
+		//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//
+
+		Vec3d center(eye.x,mWater.seaLevel,eye.z);
+		double radius = (eye.y-mWater.seaLevel)*tan(asin(6000000/(6000000+eye.y-mWater.seaLevel)));
+		float cAng,sAng;
+
+		int s=dataManager.getId("horizon2");
+		dataManager.bind("horizon2");
+
+		dataManager.bind("hardNoise",0);
+		dataManager.bindTex(((Level::heightmapGL*)mGround)->groundTex,1);
+		dataManager.bind("rock",2);
+		//dataManager.bind("sand",2);
+
+		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
+		glUniform1i(glGetUniformLocation(s, "ground"), 1);
+		glUniform1i(glGetUniformLocation(s, "tex"), 2);
+		glUniform1f(glGetUniformLocation(s, "time"), world.time());
+		glUniform1f(glGetUniformLocation(s, "seaLevel"), (mWater.seaLevel-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
+
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glPushMatrix();
+		
+		glBegin(GL_TRIANGLE_FAN);
+			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
+			glVertex3f(center.x,center.y,center.z);
+
+			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
+			{
+				cAng=cos(ang);
+				sAng=sin(ang);
+				glTexCoord2f((center.x-cAng*radius)/mGround->sizeX(),(center.z-sAng*radius)/mGround->sizeZ());
+				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
+			}
+		glEnd();
+		glPopMatrix();
+
+		dataManager.bindTex(0,2);
+		dataManager.bindTex(0,1);
+		dataManager.bindTex(0,0);
+		dataManager.bindShader(0);
+	}
+
+	mGround->render();
+
 	glPopMatrix();
 }
 //__________________________________________________________________________________________________________________________________________________________//

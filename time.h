@@ -12,7 +12,7 @@ private:
 	__int64 startTime;
 	__int64 ticksPerSecond;
 
-	__int64 totalTicks()
+	__int64 totalTicks() const
 	{
 		__int64 ticks;
 		if( !QueryPerformanceCounter((LARGE_INTEGER *)&ticks) )
@@ -20,18 +20,24 @@ private:
 		return ticks;
 	}
 public:
-	GameTime(): timeSpeed(1.0), paused(false)
+	void reset()
+	{
+		startTime=totalTicks();
+		timeSpeed=1.0;
+		paused=false;
+	}
+	GameTime()
 	{
 		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
 			ticksPerSecond = 1000;
-		startTime=totalTicks();
+		reset();
 	}
-	double getTime()
+	double getTime() const
 	{
 		if(paused)	return 1000.0*pauseTime/ticksPerSecond;
 		return 1000.0*(totalTicks()-startTime)*timeSpeed/ticksPerSecond;
 	}
-	double operator() ()
+	double operator() () const
 	{
 		return getTime();
 	}
@@ -58,7 +64,7 @@ public:
 			startTime+=currentTime-(pauseTime+startTime);
 		}
 	}
-	bool isPaused()
+	bool isPaused() const
 	{
 		return paused;
 	}
@@ -69,4 +75,3 @@ public:
 		if(startTime > t)	startTime = t;
 	}
 };
-extern GameTime gameTime;

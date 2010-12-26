@@ -1,10 +1,10 @@
 
 varying vec3 lightDir,halfVector;
-varying float height, rad;
+varying float rad;
 varying vec3 pos;
 
 uniform sampler2D bumpMap, ground, tex;
-uniform float time;
+uniform float time, seaLevel;
 
 void main()
 {
@@ -19,7 +19,7 @@ void main()
 	NdotL = dot(n,lightDir);
 	
 	if (NdotL > 0.0) //vec4(10000,10000,10000,0.0)*pow(max(dot(n,normalize(halfVector)),0.0),32.0);//
-		color = vec4(0.1,0.2,0.3,1.0) + 0.8 * NdotL + vec4(300000000000.0,300000000000.0,300000000000.0,0.0) * pow(max(dot(n,normalize(halfVector)),0.0),100.0);
+		color = vec4(0.1,0.2,0.3,1.0) + 0.8 * NdotL;// + vec4(300000000000.0,300000000000.0,300000000000.0,0.0) * pow(max(dot(n,normalize(halfVector)),0.0),100.0);
 	else
 		color = vec4(0.1,0.2,0.2,1.0);
 
@@ -27,7 +27,7 @@ void main()
 	
 	if(gl_TexCoord[0].s<1.0 && gl_TexCoord[0].s>0.0 && gl_TexCoord[0].t<1.0 && gl_TexCoord[0].t>0.0)
 	{
-		float depth = clamp((height-texture2D(ground,gl_TexCoord[0].st).r)*2.5+0.3,0.0,1.0);
+		float depth = clamp((seaLevel-texture2D(ground,gl_TexCoord[0].st).a)*2.5+0.3,0.0,1.0);
 		color = mix(texture2D(tex,gl_TexCoord[0].st*25.0,depth*2.0), color, depth );
 	}
 	gl_FragColor = color;

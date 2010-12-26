@@ -25,7 +25,7 @@ public:
 
 	int getId(string name);
 
-	bool registerAssets();
+	int registerAssets();
 	void registerAsset(string name, string filename);
 
 

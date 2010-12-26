@@ -252,6 +252,7 @@ class menuLevelEditor: public menuScreen
 {
 public:
 	friend class mapBuilder;
+	friend class modeMapBuilder;
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,SETTINGS};
 	menuLevelEditor():awaitingShaderFile(false),awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
 	~menuLevelEditor(){}
@@ -327,6 +328,17 @@ public:
 	void keyDown(int vkey);
 protected:
 	choice activeChoice;
+};
+class menuLoading:public menuScreen
+{
+public:
+	menuLoading():progress(0.0f){}
+	~menuLoading(){}
+	bool init();
+	int update();
+	void render();
+protected:
+	float progress;
 };
 class MenuManager
 {

@@ -265,7 +265,7 @@ void OpenGLgraphics::render()
 	glViewport(0, 0, sw, sh);
 /////////////////////////////////////START 3D////////////////////////////////////
 
-	mode->draw3D();
+	modeManager.render3D();
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
@@ -278,13 +278,13 @@ void OpenGLgraphics::render()
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glColor3f(1,1,1);
-	mode->draw2D();
+	modeManager.render2D();
 	menuManager.render();
 
 	#ifdef _DEBUG
 		if(fps<29.0)glColor4f(1,0,0,1);
 		else glColor4f(0,0,0,1);
- 		textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
+ 		//textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
 		Profiler.draw();
 	#endif
 

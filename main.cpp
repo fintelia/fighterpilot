@@ -1,8 +1,8 @@
 
 #include "main.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//														DEFINITIONS																				//////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//														DEFINITIONS																				    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //HDC			hDC=NULL;						// Private GDI Device Context																	//	//
 //HGLRC		hRC=NULL;						// Permanent Rendering Context																		//	//
 //HWND		hWnd=NULL;						// Holds Our Window Handle																			//	//
@@ -19,17 +19,15 @@ char* errorString;																																//	//
 int sh=1024;																																	//	//
 int sw=1280;																																	//	//
 																																				//	//
-vector<bullet> bullets;																															//	//
-vector<missile> missiles;																														//	//
-Smoke newSmoke;																																	//	//
-Smoke newExaust;																																//	//
-profiler Profiler;																																//	//
-map<int,planeBase*> planes;																														//	//
-vector<turret*> turrets;																														//	//
+//vector<bullet> bullets;																														//	//
+//vector<missile> missiles;																														//	//
+//Smoke newSmoke;																																//	//
+//Smoke newExaust;																																//	//
+profiler Profiler;																															//	//
+//map<int,planeBase*> planes;																													//	//
+//vector<turret*> turrets;																														//	//
 TextManager* textManager;																														//	//
 																																				//	//
-//menus *Cmenu;																																	//	//
-modes *mode;																																	//	//
 #if defined USING_XINPUT																														//	//
 	Input *input=new xinput_input;																												//	//
 #else																																			//	//
@@ -43,12 +41,12 @@ float radarAng=0;																																//	//
 																																				//	//
 guiBase* GUI=NULL;																																//	//
 MenuManager& menuManager=MenuManager::getInstance();																							//	//
+ModeManager& modeManager=ModeManager::getInstance();																							//	//
 DataManager& dataManager=DataManager::getInstance();																							//	//
-WorldManager& worldManager=WorldManager::getInstance();																							//	//
+WorldManager& world=WorldManager::getInstance();																							//	//
 CollisionChecker& collisionCheck=CollisionChecker::getInstance();																				//	//
 GraphicsManager* graphics=OpenGLgraphics::getInstance();																						//	//
 CameraManager cameraManager=CameraManager::getInstance();																						//	//
-Terrain* terrain;																																//	//
 bool Redisplay=false;																															//	//
 bool hasContext=true;																															//	//
 bool getContext=false;																															//	//
@@ -59,8 +57,7 @@ bool lowQuality;																																//	//
 //objModel m;																																	//	//
 																																				//	//
 player players[NumPlayers];																														//	//
-GameTime gameTime;																																//	//
-																																				//	//
+																																			//	//
 GraphicsManager::gID fireParticleEffect;																										//	//
 GraphicsManager::gID smokeParticleEffect;																										//	//
 GraphicsManager::gID exaustParticleEffect;																										//	//
@@ -77,22 +74,22 @@ struct resize_t																																	//	//
 int frame=0,Time,timebase=0;																													//	//
 float fps;																																		//	//
 planeType defaultPlane;																															//	//
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//																																				//////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
+//																																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int update(float v)
 {
-	double value=gameTime();
-	static double lastValue=value;
-	value=value-lastValue;
-	lastValue=value;
+	double time=world.time();
+	static double lastTime=time;
+	double ms=time-lastTime;
+	lastTime=time;
 
 	input->update();
 	menuManager.update();
 
 	int i = 30;//Cmenu->update(v);
-	if(!gameTime.isPaused())
-		i = mode->update(v);
+	if(!world.time.isPaused())
+		modeManager.update(ms);
 
 	//modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
 	//menuType nMenu=Cmenu->newMenu;
@@ -297,9 +294,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	ShowHideTaskBar(false);
 //////
 	srand ((unsigned int)time(NULL));
-	mode=new loading;
 	textManager = new TextManager();
 	menuManager.init();
+	menuManager.setMenu("menuLoading");
 
 	fireParticleEffect = graphics->newParticleEffect("explosion fireball",120);
 	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",200);
@@ -386,7 +383,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		
 	}
 
-	delete terrain;
 	//planes.clear();
 	//missiles.clear();
 	//bullets.clear();

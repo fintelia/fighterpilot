@@ -92,6 +92,7 @@ bool checkExtension(char* extensions, char* checkFor);
 #include "settings.h"
 #include "player.h"
 #include "gui.h"
+#include "objectList.h"
 #include "worldManager.h"
 
 const int NumPlayers = 2;
@@ -102,17 +103,17 @@ extern player players[NumPlayers];
 
 extern int sh;
 extern int sw;
-extern vector<bullet> bullets;
-extern vector<missile> missiles;
-extern Smoke newSmoke;
-extern Smoke newExaust;
+//extern vector<bullet> bullets;
+//extern vector<missile> missiles;
+//extern Smoke newSmoke;
+//extern Smoke newExaust;
 
 extern GraphicsManager::gID fireParticleEffect;
 extern GraphicsManager::gID smokeParticleEffect;
 extern GraphicsManager::gID exaustParticleEffect;
 
-extern map<int,planeBase*> planes;
-extern vector<turret*> turrets;
+//extern map<int,planeBase*> planes;
+//extern vector<turret*> turrets;
 
 //extern bool firstP[NumPlayers];
 //extern vector<int> model;
@@ -123,7 +124,6 @@ extern vector<turret*> turrets;
 extern int disp[3];//should be combined with model
 extern float radarAng;
 
-extern Terrain* terrain;
 //extern Terrain* sea;
 extern bool Redisplay;
 extern bool hasContext;
@@ -135,6 +135,8 @@ extern float fps;
 
 //extern objModel m;
 
+
 #include "menuScreen.h"
+#include "modeManager.h"
 //#include "menu.h"
-#include "modes.h"
+//#include "modes.h"

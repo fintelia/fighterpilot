@@ -261,7 +261,7 @@ public:
 		//}
 
 		interleavedLoad();
-		if(dataManager.registerAssets())
+		if(dataManager.registerAssets()==0)
 		{
 			//Cmenu=new m_start;
 			menuManager.setMenu("menuChooseMode");

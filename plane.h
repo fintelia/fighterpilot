@@ -36,7 +36,7 @@ public:
 	virtual void spawn()=0;
 	void drawExplosion(bool flash);
 	void initArmaments();
-	planeBase():explode(NULL), lastUpdateTime(gameTime()), extraShootTime(0.0){}
+	planeBase(int Id, planeType Type, int Team);
 //////////////structs//////////////
 	struct wayPoint
 	{
@@ -46,7 +46,6 @@ public:
 		wayPoint(double Time,Vec3f pos,Quat4f rot): time(Time), position(pos), rotation(rot){}
 		wayPoint(){}
 	};
-
 	struct armament
 	{
 		bool firing;
@@ -77,8 +76,8 @@ public:
 	armament rockets;
 ////////////identity///////////////
 	//int id; (from entity)
-	int team;
-	planeType type;
+	//int team;
+	//planeType type;
 ////////////life///////////////////
 	//bool dead; (from entity)
 	//int respawn;
@@ -108,18 +107,17 @@ public:
 	bool Update(float value);
 	void spawn();
 	void die();
-	plane(int Player,int Team);
-	plane();
+	plane(int Id, planeType Type, int Team);
 };
 
 class AIplane:public planeBase
 {
 public:
+	enum planeState{PARTOL,FOLLOW_TARGET,FINISH_TARGET} state;
 	int target; //plane being hunted
 	vector<Vec3f> path;//a general path to get the plane to its target
 
-	AIplane();
-	AIplane(int _player,int _team);
+	AIplane(int Id, planeType Type, int Team);
 
 	bool Update(float value);
 	void spawn();

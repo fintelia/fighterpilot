@@ -1,0 +1,112 @@
+
+#include "main.h"
+
+modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000)), levelup(false), countdown(0.0)
+{
+	settings.ENEMY_PLANES=2;
+	settings.GAME_TYPE=FFA;
+	settings.HEIGHT_RANGE=1000;
+	settings.KILL_PERCENT_NEEDED=100;
+	settings.LEVEL_NAME="unnamed";
+	settings.MAP_FILE="media/heightmap5.bmp";
+	settings.MAP_TYPE=WATER;
+	settings.MAX_X=world.level->ground()->sizeX();
+	settings.MAX_Y=world.level->ground()->sizeZ();
+	settings.MIN_X=0;
+	settings.MIN_Y=0;
+	settings.ON_AI_HIT=RESPAWN;
+	settings.ON_HIT=RESPAWN;
+	settings.SEA_FLOOR_TYPE=ROCK;
+	settings.SEA_LEVEL=-150;
+
+	world.level->ground()->setSize(world.level->ground()->size()*128);
+	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
+
+	int planeNum = world.objectList.newPlane(defaultPlane,TEAM0,false);
+	players[0].active(true);
+	players[0].planeNum(planeNum);
+	for(int i = 0; i < 2; i++)
+	{
+		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
+	}
+}
+int modeCampaign::update(float ms)
+{
+	if(levelup)
+	{
+		countdown-=ms;
+		if(countdown<0)
+		{
+			//need to add code to mode onto the next level
+			return 30;
+		}
+	}
+	if(input->getKey(F1)){players[0].toggleFirstPerson();input->getKey(F1);input->up(F1);}
+	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
+	((plane*)world.objectList[players[0].planeNum()])->setControlState(players[0].getControlState());
+	world.update(ms);
+
+	int enemies_left=0;
+	const map<objId,planeBase*>& planes = world.planes();
+	for(map<objId,planeBase*>::const_iterator i = planes.begin(); i != planes.end();i++)
+	{
+		if((*i).second->team != world.objectList[players[0].planeNum()]->team)
+			enemies_left++;
+	}
+
+	if(settings.ON_HIT==RESTART && world.objectList[players[0].planeNum()]->dead)
+	{
+		//need to add code to restart the level
+		return 30;
+	}
+	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
+	//{
+	//	levelup=true;//newLevel(level+1);
+	//	countdown=1000;
+	//}
+
+	radarAng+=45.0*ms/1000;
+	if(radarAng>=360)
+		radarAng-=360;
+
+	Redisplay=true;
+	return 30;
+}
+void modeCampaign::draw2D()
+{
+	plane* p=(plane*)world.objectList[players[0].planeNum()];
+	Profiler.setOutput("altitude",p->altitude);
+	if(players[0].firstPerson() && !p->controled)
+	{
+		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");
+		targeter(400,300,50,p->turn);
+		radar(176, 350, 64, 64, true);
+		
+		healthBar(140, 390, 200, -200, p->health/p->maxHealth,true);
+
+		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
+		//altitudeMeter(456,533,520,597,p.altitude);
+	}
+	else
+	{
+		radar(700, 500, 96, 96, false);
+
+		glDisable(GL_MULTISAMPLE);
+		healthBar(614, 25, 150, 25, p->health/p->maxHealth,false);
+		glEnable(GL_MULTISAMPLE);
+
+	}
+	//planeIdBoxes(p,eye);
+
+	if(levelup)
+	{
+		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+		graphics->drawOverlay(Vec2f(sw/2-v*sw/2,sh-v*sh),Vec2f(sw,sh)*v,"next level");
+	}
+}
+void modeCampaign::draw3D()
+{
+	gluPerspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	drawScene(0);
+}
