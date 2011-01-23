@@ -5,6 +5,7 @@ class profiler
 	map<string,float> start;
 
 	map<string,int> output;
+	map<string,double> outputd;
 public:
 	void startElement(string n)
 	{
@@ -22,6 +23,10 @@ public:
 	void setOutput(string n, int i)
 	{
 		output[n] = i;
+	}
+	void setOutput(string n, double d)
+	{
+		outputd[n] = d;
 	}
 	void draw()
 	{
@@ -42,6 +47,13 @@ public:
 		{
 			textManager->renderText(i->first,10,y);
 			textManager->renderText(lexical_cast<string>(i->second),200,y);
+		}
+		for(map<string,double>::iterator i=outputd.begin();i!=outputd.end();i++,y+=20)
+		{
+			textManager->renderText(i->first,10,y);
+			ostringstream buffer;
+			buffer << std::fixed << std::setprecision(2) << i->second;
+			textManager->renderText(buffer.str(),200,y);
 		}
 		output.clear();
 	}

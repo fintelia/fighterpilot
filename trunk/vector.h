@@ -62,8 +62,8 @@ public:
 	const Vector3 &operator+=(const Vector3 &other);
 	const Vector3 &operator-=(const Vector3 &other);
 
-	bool operator!=(const Vector3 &other);
-	bool operator==(const Vector3 &other);
+	bool operator!=(const Vector3 &other) const;
+	bool operator==(const Vector3 &other) const;
 
 	T magnitude() const;
 	T magnitudeSquared() const;
@@ -73,9 +73,9 @@ public:
 	T dot(const Vector3 &other) const;
 	Vector3 cross(const Vector3 &other) const;
 	void set(T x, T y, T z);
-	bool equal(Vector3 v,T maxDifference=0.01);
-	T distance(Vector3 v);
-	T distanceSquared(Vector3 v);
+	bool equal(Vector3 v,T maxDifference=0.01) const;
+	T distance(Vector3 v) const;
+	T distanceSquared(Vector3 v) const;
 };
 typedef Vector3<float>			Vec3f;
 typedef Vector3<double>			Vec3d;
@@ -171,12 +171,12 @@ const Vector3<T>& Vector3<T>::operator-=(const Vector3 &other)
 	return *this;
 }
 template <class T>
-bool Vector3<T>::operator!=(const Vector3 &other)
+bool Vector3<T>::operator!=(const Vector3 &other) const
 {
 	return !equal(other);
 }
 template <class T>
-bool Vector3<T>::operator==(const Vector3 &other)
+bool Vector3<T>::operator==(const Vector3 &other) const
 {
 	return equal(other);
 }
@@ -229,17 +229,17 @@ void Vector3<T>::set(T X, T Y, T Z)
 	z=Z;
 }
 template <class T>
-bool Vector3<T>::equal(Vector3 v,T maxDifference=0.01)
+bool Vector3<T>::equal(Vector3 v,T maxDifference=0.01) const
 {
 	return (abs(x-v.x)< maxDifference && abs(y-v.y)< maxDifference && abs(z-v.z)< maxDifference);
 }
 template <class T>
-T Vector3<T>::distance(Vector3 v)
+T Vector3<T>::distance(Vector3 v) const
 {
 	return sqrt((v.x-x)*(v.y-y)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z));
 }
 template <class T>
-T Vector3<T>::distanceSquared(Vector3 v)
+T Vector3<T>::distanceSquared(Vector3 v) const
 {
 	return (v.x-x)*(v.y-y)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
 }

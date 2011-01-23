@@ -2,7 +2,7 @@
 class modeScreen
 {
 public:
-	virtual int update(float value)=0;
+	virtual int update()=0;
 	virtual void draw2D()=0;
 	virtual void draw3D()=0;
 	virtual bool init(){return true;}
@@ -21,7 +21,7 @@ public:
 
 	bool init();
 	void shutdown();
-	int update(float ms);
+	int update();
 
 	void render2D();
 	void render3D();
@@ -57,7 +57,7 @@ class modeMapBuilder: public modeScreen
 	vector<int> shaderButtons;
 	friend class menuLevelEditor;
 public:
-	virtual int update(float value);
+	virtual int update();
 	virtual void draw3D();
 	void draw2D();
 	modeMapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0), objPlacementAlt(10.0) {}
@@ -89,7 +89,7 @@ class modeSplitScreen: public modeDogFight
 public:
 	modeSplitScreen(Level* lvl): modeDogFight(lvl){}
 	modeSplitScreen();
-	int update(float value);
+	int update();
 	void draw2D();
 	void draw3D();
 };
@@ -102,7 +102,7 @@ protected:
 public:
 	modeCampaign(Level* lvl): modeDogFight(lvl), levelup(false), countdown(0.0){}
 	modeCampaign();
-	int update(float value);
+	int update();
 	void draw2D();
 	void draw3D();
 };

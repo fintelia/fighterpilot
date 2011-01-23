@@ -12,9 +12,10 @@ void main()
 	float NdotL;
 	vec4 color;
 	
-	n =  normalize(		texture2D(bumpMap,gl_TexCoord[0].st*1.0	 + vec2(-time*0.50*0.0000016, time*0.87*0.0000016)).rgb*0.1 +
-						texture2D(bumpMap,gl_TexCoord[0].st*8.0 + vec2(time*0.70*0.000004	, time*0.71*0.000004)).rgb*0.2 +
-						texture2D(bumpMap,gl_TexCoord[0].st*32.0 + vec2(-time*0.3*0.000001	, -time*0.95*0.000001)).rgb*0.1		);
+	n =  normalize(		texture2D(bumpMap,gl_TexCoord[0].st*1.0		+ vec2(-time*0.50*0.000016	, time*0.87*0.000016)).rgb*0.1 +
+						texture2D(bumpMap,gl_TexCoord[0].st*3.0		+ vec2(time*0.70*0.00004	, time*0.71*0.00004)).rgb*0.2 +
+						texture2D(bumpMap,gl_TexCoord[0].st*8.0		+ vec2(-time*0.3*0.00001	, -time*0.95*0.00001)).rgb*0.3 +
+						texture2D(bumpMap,gl_TexCoord[0].st*32.0	+ vec2(-time*0.1*0.0001		, -time*0.995*0.0001)).rgb*0.3);
 	
 	NdotL = dot(n,lightDir);
 	

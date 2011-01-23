@@ -836,8 +836,8 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
 	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
-	if(callNum==n++)	registerAsset("satellite",			"media/satellite.png");
-
+	if(callNum==n++)	registerAsset("check",				"media/check.png");
+	if(callNum==n++)	registerAsset("check box",			"media/check box.png");
 
 	//if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
 	//if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
@@ -921,6 +921,16 @@ int DataManager::getId(string name)
 	if(assets.find(name)==assets.end())
 		return 0;
 	return assets[name].id;
+}
+int DataManager::getId(objectType t)
+{
+	if(t==F12)	return getId("f12");
+	if(t==F16)	return getId("f16");
+	if(t==F18)	return getId("f18");
+	if(t==F22)	return getId("f22");
+	if(t==UAV)	return getId("UAV");
+	if(t==B2)	return getId("B2");
+	return 0;
 }
 char* DataManager::textFileRead(char *fn) {
 	FILE *fp;

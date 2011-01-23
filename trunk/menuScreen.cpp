@@ -604,6 +604,9 @@ bool menuLevelEditor::init()
 	v.push_back(new menuButton());		v[1]->init(110,sh-40,100,35,"Objects",black,white);
 	v.push_back(new menuButton());		v[2]->init(215,sh-40,100,35,"Settings",black,white);
 	bTabs = new menuToggle();			bTabs->init(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),0);
+
+	check = new menuCheckBox();			check->init(400,50,"this is a\ntest",true);
+
 	return true;
 }
 void menuLevelEditor::operator() (menuPopup* p)
@@ -790,6 +793,7 @@ void menuLevelEditor::render()
 	bLoad->render();
 	bSave->render();
 	bExit->render();
+	check->render();
 	menuManager.drawCursor();
 }
 void menuLevelEditor::mouseL(bool down, int x, int y)
@@ -829,6 +833,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		bSave->mouseDownL(x,y);
 		bExit->mouseDownL(x,y);
 		bTabs->mouseDownL(x,y);
+		check->mouseDownL(x,y);
 	}
 	else
 	{
@@ -865,6 +870,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		bLoad->mouseUpL(x,y);
 		bSave->mouseUpL(x,y);
 		bExit->mouseUpL(x,y);
+		check->mouseUpL(x,y);
 	}
 
 }
@@ -1139,6 +1145,57 @@ void menuButton::mouseUpL(int X, int Y)
 		changed = true;
 	clicking = false;
 }
+
+void menuCheckBox::init(int X, int Y, string t, bool startChecked, Color c)
+{
+	checked=startChecked;
+	x = X;
+	y = Y;
+	width = textManager->getTextWidth(t) + 30;
+	height = textManager->getTextHeight(t);
+	color = c;
+	text = t;
+}
+void menuCheckBox::render()
+{
+	glColor4f(1,1,1,1);
+	dataManager.bind("check box");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,	0);	glVertex2f(x,y);		
+		glTexCoord2f(1,	0);	glVertex2f(x+26,y);		
+		glTexCoord2f(1,	1);	glVertex2f(x+26,y+26);	
+		glTexCoord2f(0,	1);	glVertex2f(x,y+26);	
+	glEnd();
+	if(checked)
+	{
+		dataManager.bind("check");
+		glBegin(GL_QUADS);
+			glTexCoord2f(0,	0);	glVertex2f(x,y);		
+			glTexCoord2f(1,	0);	glVertex2f(x+26,y);		
+			glTexCoord2f(1,	1);	glVertex2f(x+26,y+26);	
+			glTexCoord2f(0,	1);	glVertex2f(x,y+26);	
+		glEnd();
+	}
+	dataManager.bindTex(0);
+
+	glColor4f(color.r,color.g,color.b,color.a);
+	textManager->renderText(text,x+30,y);
+}
+void menuCheckBox::mouseDownL(int X, int Y)
+{
+	if((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y))
+		clicking = true;
+}
+void menuCheckBox::mouseUpL(int X, int Y)
+{
+	if(clicking && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)) )
+	{
+		changed = true;
+		checked = !checked;
+	}
+	clicking = false;
+}
+
 void menuLabel::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);

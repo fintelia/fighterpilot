@@ -4,14 +4,24 @@ double GetTime();
 class GameTime
 {
 private:
+
+	__int64 sReal, eReal;
+	double sGame;
+	double sSpeed, eSpeed;
+	bool changingSpeed;
+
+
 	double timeSpeed;
-	__int64 pauseTime;
 	bool paused;
 
+	__int64 lReal;
+	double lGame;
 
-	__int64 startTime;
+	__int64 cReal;
+	double cGame;
+
+
 	__int64 ticksPerSecond;
-
 	__int64 totalTicks() const
 	{
 		__int64 ticks;
@@ -20,58 +30,105 @@ private:
 		return ticks;
 	}
 public:
-	void reset()
-	{
-		startTime=totalTicks();
-		timeSpeed=1.0;
-		paused=false;
-	}
-	GameTime()
+	GameTime(): changingSpeed(false), timeSpeed(1.0), paused(false), lGame(0.0), cGame(0.0)
 	{
 		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
 			ticksPerSecond = 1000;
-		reset();
+
+		lReal = totalTicks();
+		cReal = lReal;
 	}
-	double getTime() const
+	void reset()
 	{
-		if(paused)	return 1000.0*pauseTime/ticksPerSecond;
-		return 1000.0*(totalTicks()-startTime)*timeSpeed/ticksPerSecond;
+		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
+			ticksPerSecond = 1000;
+
+		lReal = cReal = totalTicks();
+		lGame = cGame = 0.0;
+		timeSpeed=1.0;
+		paused = false;
+		changingSpeed = false;
 	}
-	double operator() () const
+	void nextFrame()
 	{
-		return getTime();
+		lReal = cReal;
+		lGame = cGame;
+
+		cReal = totalTicks();
+		
+		if(changingSpeed)
+		{
+			if(paused)
+			{
+				sReal += cReal - lReal;
+				eReal += cReal - lReal;
+			}
+			else
+			{
+				double t = 1000.0*(cReal-sReal)/ticksPerSecond;
+				if(cReal < eReal)
+				{
+					cGame = sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond);
+				}
+				else
+				{
+					timeSpeed = eSpeed;
+					changingSpeed = false;
+					cGame = sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond) + timeSpeed*(1000.0*(cReal - eReal)/ticksPerSecond);
+				}
+			}
+		}
+		else
+		{
+			if(paused)
+			{
+				cGame = lGame;
+			}
+			else
+			{
+				cGame = lGame + timeSpeed*(1000*(cReal - lReal)/ticksPerSecond);
+			}		
+		}
 	}
-	void setSpeed(double speed)
+
+	void ChangeSpeed(double speed, double changeRate)//change rate in ms^2(gametime) / ms(realtime)
 	{
-		__int64 currentTime=totalTicks();
-		startTime=currentTime-(currentTime-startTime)*speed/timeSpeed;
-		timeSpeed=speed;
+		sReal = cReal;
+		sGame = cGame;
+		sSpeed = timeSpeed;
+
+		eSpeed = speed;
+		eReal = sReal + ticksPerSecond*abs((eSpeed - sSpeed)/changeRate);
+		changingSpeed = true;
 	}
 	void pause()
 	{
-		if(!paused)
-		{
-			paused=true;
-			pauseTime=totalTicks()-startTime;
-		}
+		paused = true;
 	}
 	void unpause()
 	{
-		if(paused)
-		{
-			paused=false;
-			__int64 currentTime=totalTicks();
-			startTime+=currentTime-(pauseTime+startTime);
-		}
+		paused = false;
 	}
+
 	bool isPaused() const
 	{
 		return paused;
 	}
-	void addTime(double ms)
+
+	double getLength() const
 	{
-		startTime -= ms / 1000.0 * ticksPerSecond;
-		__int64 t = totalTicks();
-		if(startTime > t)	startTime = t;
+		return cGame-lGame;
+	}
+	double getLastTime() const
+	{
+		return lGame;
+	}
+	double getTime() const
+	{
+		return cGame;
+	}
+	double operator() () const
+	{
+		return cGame;
 	}
 };

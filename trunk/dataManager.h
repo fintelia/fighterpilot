@@ -24,6 +24,7 @@ public:
 	void draw(string name);
 
 	int getId(string name);
+	int getId(objectType t);
 
 	int registerAssets();
 	void registerAsset(string name, string filename);
@@ -57,6 +58,8 @@ private:
 
 	DataManager(){}
 	~DataManager();
+
+	friend class CollisionChecker;
 };
 
 extern DataManager& dataManager;

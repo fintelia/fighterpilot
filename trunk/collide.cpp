@@ -1,13 +1,13 @@
 
 #include "main.h"
 
-bool CollisionChecker::boundingCollision(triangle& tri1, triangle& tri2)
+bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
 {
 	tri1.findRadius();
 	tri2.findRadius();
 	return tri1.center.distanceSquared(tri2.center) < (tri1.radius+tri2.radius)*(tri1.radius+tri2.radius);
 }
-Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1)
+Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const
 {
 	float final_x,final_y,final_z,final_t;
 	float t,i;
@@ -40,7 +40,7 @@ Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const
 
 	return(temp);
 }
-bool CollisionChecker::pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1)
+bool CollisionChecker::pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const
 {
 	float t,i,final_t;
 
@@ -54,7 +54,7 @@ bool CollisionChecker::pointBetweenVertices(const Vec3f& a,const Vec3f& b, const
 
 	return  (final_t >= 0) && (final_t <= 1);
 }
-bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z)
+bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z) const
 {
 	triangle tri2=tri;
 	Vec3f p=vert;
@@ -84,7 +84,7 @@ bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert, bo
 				acosA((tri2.c-p).normalize().dot((tri2.a-p).normalize()));
 	return ang > 2.0 * PI - 0.01;
 }
-bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2)
+bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2) const
 {
 	Vec3f p;
 	bool temp = false;
@@ -170,8 +170,9 @@ CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* face
 	}
 	radius = sqrt(radiusSquared);
 }
-void CollisionChecker::triangle::findRadius()
+void CollisionChecker::triangle::findRadius() const
 {
+	if(radiusValid) return;
 	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
 
 	minx = maxx = a.x;
@@ -203,9 +204,10 @@ void CollisionChecker::triangle::findRadius()
 		radiusSquared = center.distanceSquared(c);
 
 	radius = sqrt(radiusSquared);
+	radiusValid=true;
 }
 
-bool CollisionChecker::operator() (triangleList t1, triangleList t2)
+bool CollisionChecker::operator() (const triangleList& t1, const triangleList& t2) const
 {
 	if(t1.center.distanceSquared(t2.center) < (t1.radius+t2.radius)*(t1.radius+t2.radius))
 	{
@@ -226,4 +228,46 @@ bool CollisionChecker::operator() (triangleList t1, triangleList t2)
 		}
 	}
 	return false;
+}
+bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float radius) const
+{
+	if(t1.center.distanceSquared(center) < (t1.radius+radius)*(t1.radius+radius))
+	{
+		int i1;
+		for(i1=0; i1 < t1.numTriangles; i1++)
+		{
+			if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
+			{
+				if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
+				{
+					//we should also check that the triangle itself (not just its bounding sphere) intersects the shpere
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
+{
+	if(t1.center.distanceSquared(lineStart) < t1.radius || t1.center.distanceSquared(lineEnd) < t1.radius)
+		return true;
+
+	float u = (t1.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+
+	if(u < 0.0 || u > 1.0) return false;
+	return t1.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < t1.radius;
+}
+
+bool CollisionChecker::operator() (objectType t1, objectType t2) const
+{
+	return operator()(dataManager.models[dataManager.getId(t1)],dataManager.models[dataManager.getId(t2)]);
+}
+bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) const
+{
+	return operator()(dataManager.models[dataManager.getId(t1)], center, radius);
+}
+bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const
+{
+	return operator()(dataManager.models[dataManager.getId(t1)], lineStart, lineEnd);
 }

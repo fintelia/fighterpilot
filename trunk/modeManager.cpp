@@ -31,10 +31,10 @@ void ModeManager::render3D()
 	if(mode != NULL)
 		mode->draw3D();
 }
-int ModeManager::update(float ms)
+int ModeManager::update()
 {
 	if(mode != NULL)
-		return mode->update(ms);
+		return mode->update();
 	return 0;
 }
 void ModeManager::shutdown()

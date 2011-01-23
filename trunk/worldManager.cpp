@@ -115,34 +115,35 @@ const map<objId,missile*>& WorldManager::missiles()const
 	return objectList.missiles();
 }
 
-void WorldManager::update(float ms)
+void WorldManager::update()
 {
+	double ms = time.getLength();
 	//Vec3f sp;
 	//Vec3f v;
 	//Vec3f p;			MUST CHECK FOR BULLET/MISSILE HITS
 	//int l;
 
-	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	//{
-	//	if(!(*i).second->dead)
-	//	{
-	//		p=(*i).second->pos;
-	//		for(l=0;l<(signed int)bullets.size();l++)
-	//		{
-	//			sp=bullets[l].startPos;
-	//			v=bullets[l].velocity;
-	//			if(SegmentSphereIntersect(sp+v*(time-bullets[l].startTime-ms)/1000,sp+v*(time-bullets[l].startTime)/1000,p,12) && bullets[l].owner != (*i).first)
-	//			{
-	//				(*i).second->loseHealth(5.0);
-	//				if((*i).second->dead)
-	//				{
-	//					if(bullets[l].owner==players[0].planeNum() && players[0].active()) players[0].addKill();
-	//					if(bullets[l].owner==players[1].planeNum() && players[1].active()) players[1].addKill();
-	//				}
-	//				bullets.erase(bullets.begin()+l);
-	//				l--;
-	//			}
-	//		}
+	for(map<unsigned int,planeBase*>::const_iterator i = objectList.planes().begin(); i != objectList.planes().end();i++)
+	{
+		if(!(*i).second->dead)
+		{
+			for(int l=0;l<(signed int)bullets.size();l++)
+			{
+				if(bullets[l].startTime < time.getLastTime() && bullets[l].startTime + bullets[l].life > time())
+				{
+					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)-i->second->pos, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)-i->second->pos))
+					{
+						(*i).second->loseHealth(250.0);
+						if((*i).second->dead)
+						{
+							if(bullets[l].owner==players[0].planeNum() && players[0].active()) players[0].addKill();
+							if(bullets[l].owner==players[1].planeNum() && players[1].active()) players[1].addKill();
+						}
+						bullets.erase(bullets.begin()+l);
+						l--;
+					}
+				}
+			}
 	//		for(l=0;l<(signed int)missiles.size();l++)
 	//		{
 	//			if(p.distance(missiles[l].pos)<32 && missiles[l].owner != (*i).first)
@@ -156,15 +157,14 @@ void WorldManager::update(float ms)
 	//				missiles.erase(missiles.begin()+l);
 	//				l--;
 	//			}
-	//		}
-	//	}
-	//}
-	objectList.update(ms);
-	for(int i=0;i<(signed int)bullets.size();i++)
-	{
-		if(!bullets[i].update(ms))
-			bullets.erase(bullets.begin()+i);
+		}
 	}
+
+	objectList.update(ms);
+	//for(int i=0;i<(signed int)bullets.size();i++)
+	//{
+	//	bullets.erase(bullets.begin()+i);
+	//}
 	smoke.update(ms);
 	exaust.update(ms);
 }
