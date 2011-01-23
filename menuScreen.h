@@ -2,7 +2,7 @@
 class menuElement
 {
 public:
-	enum elementType{NONE=-1,BUTTON=0,STATIC,SLIDER,LIST,TOGGLE,LABEL};
+	enum elementType{NONE=-1,BUTTON=0,STATIC,SLIDER,LIST,TOGGLE,LABEL,CHECKBOX};
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
@@ -93,10 +93,30 @@ protected:
 	//bool pressed;
 	bool clicking;
 };
+class menuCheckBox:public menuElement
+{
+public:
+	menuCheckBox(): menuElement(CHECKBOX),checked(false),clicking(false){}
+	virtual ~menuCheckBox(){}
+
+	void init(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0));
+	void render();
+
+	void mouseDownL(int X, int Y);
+	void mouseUpL(int X, int Y);
+protected:
+
+
+	void click();
+	void unclick();
+
+	bool checked;
+	bool clicking;
+};
 class menuToggle: public menuElement
 {
 public:
-	public:
+
 
 	menuToggle(): menuElement(TOGGLE), value(-1), label(NULL){}
 	virtual ~menuToggle(){}
@@ -293,6 +313,8 @@ protected:
 	//...
 
 	menuToggle* bTabs;
+
+	menuCheckBox* check;
 
 	bool awaitingShaderFile;
 	bool awaitingMapFile;

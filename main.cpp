@@ -79,17 +79,21 @@ planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int update(float v)
 {
-	double time=world.time();
-	static double lastTime=time;
-	double ms=time-lastTime;
-	lastTime=time;
+	world.time.nextFrame();
+
+	double time = GetTime();
+	static double lt = time;
+	double length = time-lt;
+	lt = time;
+
+	Profiler.setOutput("time speed", world.time.getLength()/length);
 
 	input->update();
 	menuManager.update();
 
 	int i = 30;//Cmenu->update(v);
 	if(!world.time.isPaused())
-		modeManager.update(ms);
+		modeManager.update();
 
 	//modeType nMode=(mode->newMode != (modeType)0) ? mode->newMode : Cmenu->newMode;
 	//menuType nMenu=Cmenu->newMenu;

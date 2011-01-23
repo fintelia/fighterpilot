@@ -310,7 +310,7 @@ void modeDogFight::drawScene(int acplayer) {
 	Vec3f u;
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
-		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
+ 		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
 		e=Vec3f(p->pos.x - vel2D.normalize().x*135, p->pos.y + sin(45.0)*135 , p->pos.z - vel2D.normalize().z*135);
 		if(p->controled) e=p->camera;
 		c=Vec3f(p->pos.x + vel2D.normalize().x*135, p->pos.y, p->pos.z + vel2D.normalize().z*135);

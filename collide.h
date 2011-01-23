@@ -9,12 +9,17 @@ public:
 	}
 	struct triangle
 	{
+	private:
+		mutable bool radiusValid;
+	public:
 		Vec3f a,b,c;
-		Vec3f center;
 		float pA,pB,pC,pD; // Plane normals
-		float radius;
+		mutable Vec3f center;
+		mutable float radius;
 
-		void findRadius();
+		void findRadius() const;
+		triangle(Vec3f A,Vec3f B,Vec3f C):radiusValid(false),a(A),b(B),c(C),center(0,0,0),radius(0.0){findRadius();}
+		triangle():radiusValid(false),a(0,0,0),b(0,0,0),c(0,0,0),center(0,0,0),radius(0.0){}
 	};
 	class triangleList
 	{
@@ -34,14 +39,22 @@ private:
 	CollisionChecker(){}
 	~CollisionChecker(){}
 
-	Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1);
-	bool pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1);
-	bool pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z);
-	bool triangleCollision(const triangle& tri1, const triangle& tri2);
+	Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const;
+	bool pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const;
+	bool pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z) const;
+	bool triangleCollision(const triangle& tri1, const triangle& tri2) const;
 public:
 	
 	//void findPolygonRadius(triangle& tri);
-	bool boundingCollision(triangle& tri1, triangle& tri2);
-	bool operator() (triangleList t1, triangleList t2);
+	bool boundingCollision(const triangle& tri1, const triangle& tri2) const;
+	bool operator() (const triangleList& t1, const triangleList& t2) const;
+	bool operator() (const triangleList& t1, Vec3f center, float radius) const;
+	bool operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const;
+
+	bool operator() (objectType t1, objectType t2) const;
+	bool operator() (objectType t1, Vec3f center, float radius) const;
+	bool operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const;
+
+
 };
 extern CollisionChecker& collisionCheck;

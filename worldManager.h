@@ -21,7 +21,7 @@ public:
 	const map<objId,planeBase*>& planes()const;
 	const map<objId,missile*>& missiles()const;
 
-	void update(float ms);
+	void update();
 
 	Level*				level;
 	vector<bullet>		bullets;

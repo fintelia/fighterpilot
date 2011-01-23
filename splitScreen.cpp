@@ -33,17 +33,25 @@ modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp
 		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
 	}
 }
-int modeSplitScreen::update(float ms)
+int modeSplitScreen::update()
 {
 	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
 	if(input->getKey(F2))	{	players[1].toggleFirstPerson(); input->up(F2);}
 	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
 
+	static bool slow = false;
+	if(input->getKey(0x54))
+	{
+		input->up(0x54);
+		slow = !slow;
+		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
+	}
+
 	((plane*)world.objectList[players[0].planeNum()])->setControlState(players[0].getControlState());
 	((plane*)world.objectList[players[1].planeNum()])->setControlState(players[1].getControlState());
 
-	world.update(ms);
-	radarAng+=45.0*ms/1000;
+	world.update();
+	radarAng+=45.0*world.time.getLength()/1000;
 	if(radarAng>=360)
 		radarAng-=360;
 
@@ -60,7 +68,7 @@ void modeSplitScreen::draw2D()
 			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2+sh/2*acplayer),"cockpit");
 			targeter(400,150+300*acplayer,50,p->turn);
 			radar(176, 200+300*acplayer, 64, 64, true);
-			healthBar(140, 40+300*acplayer, 200, 200, p->health/p->maxHealth,true);
+			healthBar(340, 40+300*acplayer, -200, 200, p->health/p->maxHealth,true);
 
 			//speedMeter(16,16,80,80,p.accel.magnitude()*30.5+212);
 			//altitudeMeter(368,215,432,279,p.altitude);

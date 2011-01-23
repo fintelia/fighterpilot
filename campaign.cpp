@@ -30,11 +30,11 @@ modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000
 		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
 	}
 }
-int modeCampaign::update(float ms)
+int modeCampaign::update()
 {
 	if(levelup)
 	{
-		countdown-=ms;
+		countdown-=world.time.getLength();
 		if(countdown<0)
 		{
 			//need to add code to mode onto the next level
@@ -44,7 +44,7 @@ int modeCampaign::update(float ms)
 	if(input->getKey(F1)){players[0].toggleFirstPerson();input->getKey(F1);input->up(F1);}
 	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
 	((plane*)world.objectList[players[0].planeNum()])->setControlState(players[0].getControlState());
-	world.update(ms);
+	world.update();
 
 	int enemies_left=0;
 	const map<objId,planeBase*>& planes = world.planes();
@@ -65,7 +65,7 @@ int modeCampaign::update(float ms)
 	//	countdown=1000;
 	//}
 
-	radarAng+=45.0*ms/1000;
+	radarAng+=45.0*world.time.getLength()/1000;
 	if(radarAng>=360)
 		radarAng-=360;
 

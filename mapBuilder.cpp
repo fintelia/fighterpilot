@@ -234,7 +234,7 @@ void modeMapBuilder::addObject(int type, int team, int x, int y)//in screen coor
 	((editLevel*)level)->addObject(type,team,Vec3f(val.x,val.y,val.z));
 
 }
-int modeMapBuilder::update(float ms)
+int modeMapBuilder::update()
 {
 	//if(input->getKey(0x52) && !menuManager.getMenu()->popupActive())//r key
 	//	rot+=value/1000;
@@ -242,10 +242,10 @@ int modeMapBuilder::update(float ms)
 	GetCursorPos(&p);
 	if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 	{
-		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * ms / 1000;
-		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * ms / 1000;
-		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * ms / 1000;
-		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * ms / 1000;
+		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
+		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
+		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
+		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
 	}
 	Redisplay=true;
 	menuManager.update();

@@ -1,5 +1,7 @@
 #include "windows.h"
+#include <cmath>
 #include "time.h"
+
 
 double GetTime()
 {
