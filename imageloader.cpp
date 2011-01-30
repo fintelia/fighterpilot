@@ -24,7 +24,6 @@
 
 #include <cassert>
 #include <fstream>
-#include "debug.h"
 #include "imageloader.h"
 
 using namespace std;

@@ -346,7 +346,15 @@ void menuOpenFile::render()
 void menuOpenFile::keyDown(int vkey)
 {
 	if(vkey == VK_RETURN)
+	{
 		fileSelected();
+	}
+	else if(vkey == VK_ESCAPE)
+	{
+		file = "";
+		fileSelected();
+		input->up(VK_ESCAPE);//so the program will not quit
+	}
 	else if(vkey == VK_BACK)
 	{
 		if(file.size() != 0)
@@ -613,41 +621,47 @@ void menuLevelEditor::operator() (menuPopup* p)
 {
 	if(awaitingShaderFile)
 	{
+		awaitingShaderFile=false;
+		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuOpenFile*)p)->getFile();
 		addShader(f);
-		awaitingShaderFile=false;
+
 	}
 	else if(awaitingMapFile)
 	{
+		awaitingMapFile=false;
+		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuOpenFile*)p)->getFile();
 		((modeMapBuilder*)modeManager.getMode())->fromFile(f);
-		awaitingMapFile=false;
 	}
 	else if(awaitingMapSave)
 	{
+		awaitingMapSave=false;
+		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuSaveFile*)p)->getFile();
 		((modeMapBuilder*)modeManager.getMode())->level->exportBMP(f);
-		awaitingMapSave=false;
 	}
 	else if(awaitingLevelFile)
 	{
+		awaitingLevelFile=false;
+		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuOpenFile*)p)->getFile();
 		delete ((modeMapBuilder*)modeManager.getMode())->level;
 		LevelFile l(f);
 		((modeMapBuilder*)modeManager.getMode())->level = new editLevel(l);
-		awaitingLevelFile=false;
 	}
 	else if(awaitingLevelSave)
 	{
+		awaitingLevelSave=false;
+		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuSaveFile*)p)->getFile();
 		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile();
 		l.save(f);
-		awaitingLevelSave=false;
 	}
 	else if(awaitingNewObject)
 	{
-		newObjectType=((menuNewObject*)p)->getObjectType();
 		awaitingNewObject = false;
+		newObjectType=((menuNewObject*)p)->getObjectType();
 	}
 	//else if(...)
 	//   .
@@ -977,11 +991,12 @@ void menuInGame::keyDown(int vkey)
 	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME || vkey==0x31)
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME || vkey==0x31 || vkey==VK_ESCAPE)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 		input->up(0x31);
+		input->up(VK_ESCAPE);
 		world.time.unpause();
 		menuManager.setMenu("");
 	}

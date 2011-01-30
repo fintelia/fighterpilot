@@ -40,103 +40,59 @@ using namespace boost::filesystem;
 #include <process.h>
 #include "GL/glee.h"
 #include <GL/glu.h>
-//extern HDC			hDC;						// Private GDI Device Context
-//extern HGLRC		hRC;						// Permanent Rendering Context
-//extern HWND			hWnd;						// Holds Our Window Handle
-//extern HINSTANCE	hInstance;					// Holds The Instance Of The Application
-extern bool			active;						// Window Active Flag
-//extern int fontBase;
 
+extern bool	active;		// Window Active Flag
 extern const double PI;
 extern const float size;
-
 extern bool lowQuality;
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-void cleanup();
-char *textFileRead(char *fn);
-bool checkExtension(char* extensions, char* checkFor);
 
 #include "enums.h"
-//#include "debug.h"
 #include "time.h"
 #include "input.h"
 #ifdef _DEBUG
 #include "XboxContInput.h"
 #endif
-#include "controls.h"
 #include "text.h"
 #include "gameMath.h"
 #include "random.h"
-
 #include "shader.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
 #include "cameraManager.h"
-#include "load_save.h"
 #include "path.h"
 #include "level.h"
 #include "script.h"
 #include "profiler.h"
 #include "explosion.h"
-#include "Terain.h"
-#include "gridFloat.h"
-#include "imageloader.h"
+#include "imageloader.h"//should be replaced!!!
 #include "partical.h"
 #include "entity.h"
 #include "bullet.h" 
 #include "missile.h"
 #include "plane.h"
 #include "turret.h"
-#include "texture2.h"
 #include "settings.h"
 #include "player.h"
-#include "gui.h"
 #include "objectList.h"
 #include "worldManager.h"
 
 const int NumPlayers = 2;
-const double DegToRad = 3.14159265358979323846264/180;
-const double RadToDeg = 180.0/3.14159265358979323846264;
-
 extern player players[NumPlayers];
 
-extern int sh;
-extern int sw;
-//extern vector<bullet> bullets;
-//extern vector<missile> missiles;
-//extern Smoke newSmoke;
-//extern Smoke newExaust;
+extern int sh, sw;
 
 extern GraphicsManager::gID fireParticleEffect;
 extern GraphicsManager::gID smokeParticleEffect;
 extern GraphicsManager::gID exaustParticleEffect;
 
-//extern map<int,planeBase*> planes;
-//extern vector<turret*> turrets;
+extern float radarAng;//should be replaced by gameTime()
 
-//extern bool firstP[NumPlayers];
-//extern vector<int> model;
-
-//extern vector<int> tex;
-//extern vector<int> menusTx;
-//extern vector<int> shaders;
-extern int disp[3];//should be combined with model
-extern float radarAng;
-
-//extern Terrain* sea;
 extern bool Redisplay;
-extern bool hasContext;
-extern bool getContext;
 
 extern int frame,Time,timebase;
 extern float fps;
 
-
-//extern objModel m;
-
-
 #include "menuScreen.h"
 #include "modeManager.h"
-//#include "menu.h"
-//#include "modes.h"

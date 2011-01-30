@@ -16,9 +16,6 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\modes">
-      <UniqueIdentifier>{4e6d1f52-c4f5-45f8-b232-1d478fe84c2a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\math">
       <UniqueIdentifier>{0b20f20e-370d-4e36-9b55-c464e5757731}</UniqueIdentifier>
     </Filter>
@@ -74,6 +71,9 @@
     <Filter Include="Source Files\particle">
       <UniqueIdentifier>{4fcb2ece-878e-4287-a7db-6b63d38a63e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\control">
+      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="explosion.cpp">
@@ -85,19 +85,10 @@
     <ClCompile Include="geoPlane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gridFloat.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="gui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imageloader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="level.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="load_save.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -112,9 +103,6 @@
     <ClCompile Include="plane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -122,15 +110,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="settings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Terain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="time.cpp">
@@ -250,14 +229,11 @@
     <ClCompile Include="particle.cpp">
       <Filter>Source Files\particle</Filter>
     </ClCompile>
+    <ClCompile Include="player.cpp">
+      <Filter>Source Files\control</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="controls.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="debug.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="entity.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -273,12 +249,6 @@
     <ClInclude Include="geoPlane.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="gridFloat.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="gui.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="imageloader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -286,9 +256,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="level.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="load_save.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
@@ -301,9 +268,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="plane.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="player.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="profiler.h">
@@ -321,13 +285,7 @@
     <ClInclude Include="settings.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Terain.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="text.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="texture2.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="time.h">
@@ -344,18 +302,6 @@
     </ClInclude>
     <ClInclude Include="vector.h">
       <Filter>Source Files\math\vector</Filter>
-    </ClInclude>
-    <ClInclude Include="modes.h">
-      <Filter>Source Files\modes</Filter>
-    </ClInclude>
-    <ClInclude Include="onePlayer.h">
-      <Filter>Source Files\modes</Filter>
-    </ClInclude>
-    <ClInclude Include="twoPlayerVs.h">
-      <Filter>Source Files\modes</Filter>
-    </ClInclude>
-    <ClInclude Include="loading.h">
-      <Filter>Source Files\modes</Filter>
     </ClInclude>
     <ClInclude Include="AABox.h">
       <Filter>Source Files\math\AAbox</Filter>
@@ -374,9 +320,6 @@
     </ClInclude>
     <ClInclude Include="worldManager.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mapBuilder.h">
-      <Filter>Source Files\modes</Filter>
     </ClInclude>
     <ClInclude Include="path.h">
       <Filter>Source Files</Filter>
@@ -404,6 +347,9 @@
     </ClInclude>
     <ClInclude Include="partical.h">
       <Filter>Source Files\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Source Files\control</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

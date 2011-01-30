@@ -122,12 +122,9 @@
       </FloatingPointExceptions>
     </ClCompile>
     <ClCompile Include="graphicsManager.cpp" />
-    <ClCompile Include="gridFloat.cpp" />
-    <ClCompile Include="gui.cpp" />
     <ClCompile Include="imageloader.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
-    <ClCompile Include="load_save.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mapBuilder.cpp" />
     <ClCompile Include="menuScreen.cpp" />
@@ -160,9 +157,6 @@
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="splitScreen.cpp" />
-    <ClCompile Include="Terain.cpp" />
-    <ClCompile Include="terrain.cpp" />
-    <ClCompile Include="texture.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="turret.cpp" />
     <ClCompile Include="worldManager.cpp" />
@@ -174,9 +168,7 @@
     <ClInclude Include="bullet.h" />
     <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
-    <ClInclude Include="controls.h" />
     <ClInclude Include="dataManager.h" />
-    <ClInclude Include="debug.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="explosion.h" />
@@ -184,21 +176,14 @@
     <ClInclude Include="gameMath.h" />
     <ClInclude Include="geoPlane.h" />
     <ClInclude Include="graphicsManager.h" />
-    <ClInclude Include="gridFloat.h" />
-    <ClInclude Include="gui.h" />
     <ClInclude Include="imageloader.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="level.h" />
-    <ClInclude Include="loading.h" />
-    <ClInclude Include="load_save.h" />
     <ClInclude Include="main.h" />
-    <ClInclude Include="mapBuilder.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
     <ClInclude Include="modeManager.h" />
-    <ClInclude Include="modes.h" />
     <ClInclude Include="objectList.h" />
-    <ClInclude Include="onePlayer.h" />
     <ClInclude Include="partical.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
@@ -210,12 +195,9 @@
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="shader.h" />
-    <ClInclude Include="Terain.h" />
     <ClInclude Include="text.h" />
-    <ClInclude Include="texture2.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="turret.h" />
-    <ClInclude Include="twoPlayerVs.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="worldManager.h" />
     <ClInclude Include="XboxContInput.h" />
