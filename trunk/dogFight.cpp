@@ -383,8 +383,6 @@ void modeDogFight::drawScene(int acplayer) {
 	glPolygonOffset(1.0,1.0);
 	if(world.level != NULL)
 		world.level->render(e);
-	else
-		glCallList(disp[0]);
 	//satellite();
 
 	glPolygonOffset(0.0,0.0);

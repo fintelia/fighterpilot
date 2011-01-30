@@ -174,6 +174,7 @@ public:
 	void render();
 	
 	void refreshView();
+	bool validFile() {return file.compare("") != 0;}
 	string getFile() {return (directory/file).string();}
 
 	void keyDown(int vkey);
