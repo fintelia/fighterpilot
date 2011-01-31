@@ -4,7 +4,7 @@
 modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp",1000))
 {
 	settings.ENEMY_PLANES=8;
-	settings.GAME_TYPE=
+	settings.GAME_TYPE=FFA;
 	settings.HEIGHT_RANGE=1000;
 	settings.KILL_PERCENT_NEEDED=100;
 	settings.LEVEL_NAME="unnamed";
@@ -19,7 +19,7 @@ modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp
 	settings.SEA_FLOOR_TYPE=ROCK;
 	settings.SEA_LEVEL=-150;
 
-	world.level->ground()->setSize(world.level->ground()->size()*128);
+	world.level->ground()->setSize(world.level->ground()->size()*size);
 	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
 
 	for(int i = 0; i < 2; i++)

@@ -181,9 +181,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	menuManager.init();
 	menuManager.setMenu("menuLoading");
 
-	fireParticleEffect = graphics->newParticleEffect("explosion fireball",120);
-	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",200);
-	exaustParticleEffect = graphics->newParticleEffect("missile smoke",35);
+	fireParticleEffect = graphics->newParticleEffect("explosion fireball",24);
+	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",40);
+	exaustParticleEffect = graphics->newParticleEffect("missile smoke",7);
 
 //////
 	float nextUpdate=0;
