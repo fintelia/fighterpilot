@@ -233,10 +233,6 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 				Angle ang = acosA(cPlane->rotation.w);
 				glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
 
-				glScalef(5,5,5);
-
-
-
 				//if(dist_squared(a,e)<2000*2000)	glCallList(model[0]);
 				//else if(!(*i).second->dead)		glCallList(model[2]);
 					
@@ -272,8 +268,8 @@ void modeDogFight::drawBullets()
 			{
 				start=i->startPos+i->velocity*(time-i->startTime)/1000;
 				//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
-				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*40;
-				end2=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*140;
+				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*8;
+				end2=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*28;
 
 				glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
 				glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
@@ -311,9 +307,9 @@ void modeDogFight::drawScene(int acplayer) {
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
  		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
-		e=Vec3f(p->pos.x - vel2D.normalize().x*135, p->pos.y + sin(45.0)*135 , p->pos.z - vel2D.normalize().z*135);
+		e=Vec3f(p->pos.x - vel2D.normalize().x*25, p->pos.y + sin(45.0)*25 , p->pos.z - vel2D.normalize().z*25);
 		if(p->controled) e=p->camera;
-		c=Vec3f(p->pos.x + vel2D.normalize().x*135, p->pos.y, p->pos.z + vel2D.normalize().z*135);
+		c=Vec3f(p->pos.x + vel2D.normalize().x*25, p->pos.y, p->pos.z + vel2D.normalize().z*25);
 		if(p->controled) c=p->center;
 		u=Vec3f(0,1,0);
 
@@ -401,7 +397,6 @@ glError();	//missiles
 			Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
 			glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
 			//glScalef(0.25f,0.25f,0.15f);
-			glScalef(5,5,5);
 			//if(missiles[i].target!=-1)glColor3f(0,0,1);
 			//else glColor3f(0,1,0);
 			//glCallList(model[1]);

@@ -91,11 +91,11 @@ void planeBase::updateAll()
 			altitude=world.altitude(pos);
 			if(altitude<3.0){die();pos.y-=altitude-3;hitGround=true;}
 			
-			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,500.0,1000.0));
+			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
 			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
 			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
 			direction -= turn/100;
-			speed += 400.0 * (ms/1000) * -sin(climb);//gravity
+			speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
 			rotation = Quat4f(0,0,0,1);
 			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
@@ -355,7 +355,7 @@ void planeBase::ShootMissile()
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	world.objectList.newMissile(MISSILE,team,pos+right*o.x*5+up*o.y*5+fwd*o.z*5,fwd*speed,d);
+	world.objectList.newMissile(MISSILE,team,pos+right*o.x+up*o.y+fwd*o.z,fwd*speed,d);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -448,7 +448,7 @@ void plane::spawn()
 	turn = 0;
 	climb = 0;
 	direction = 0;
-	speed=500.0;
+	speed=400.0;
 
 	dead = false;
 	controled=false;
@@ -492,7 +492,7 @@ void AIplane::spawn()
 	turn = 0;
 	climb = 0;
 	direction = 0;
-	speed=750.0;
+	speed=400.0;
 
 	dead = false;
 	controled=false;

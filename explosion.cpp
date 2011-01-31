@@ -6,13 +6,13 @@ explosion::explosion(Vec3f Pos): pos(Pos), coreSize(0.0), fireballSize(0.0)
 	smokeParticle s;
 	for(int i=0;i<10;i++)
 	{
-		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/7+25.0);
+		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/35.0+5.0);
 		//s.position=Pos+Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*10;
 		smokeParticles.push_back(s);
 	}
 	for(int i=0;i<5;i++)
 	{
-		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/7+25.0);
+		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/35.0+5.0);
 		fireParticles.push_back(s);
 	}
 }
