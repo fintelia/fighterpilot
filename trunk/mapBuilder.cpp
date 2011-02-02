@@ -295,7 +295,7 @@ void modeMapBuilder::draw3D()
 	if(((menuLevelEditor*)menuManager.getMenu())->getTab() == menuLevelEditor::OBJECTS)
 	{
 		glEnable(GL_DEPTH_TEST);
-		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
+		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->toggles["mapType"]->getValue()==0;
 		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 			((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 
@@ -360,7 +360,7 @@ void modeMapBuilder::draw3D()
 	else
 	{
 		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
-		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue()==0;
+		level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->toggles["mapType"]->getValue()==0;
 		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
 			((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
 		level->render();
