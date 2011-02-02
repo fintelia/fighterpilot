@@ -45,10 +45,44 @@ void MenuManager::render()
 {
 	mDrawCursor = false;
 	if(menu != NULL)
+	{
 		menu->render();
-
-	for(vector<menuPopup*>::iterator i = popups.begin(); i!=popups.end();i++)
+		for(auto e = menu->labels.begin(); e != menu->labels.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = menu->buttons.begin(); e != menu->buttons.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = menu->toggles.begin(); e != menu->toggles.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+	}
+	for(auto i = popups.begin(); i!=popups.end();i++)
+	{
 		(*i)->render();
+
+		for(auto e = (*i)->labels.begin(); e != (*i)->labels.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = (*i)->buttons.begin(); e != (*i)->buttons.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = (*i)->toggles.begin(); e != (*i)->toggles.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+	}
 	if(mDrawCursor)
 	{
 		POINT cursorPos;
@@ -77,7 +111,9 @@ int MenuManager::update()
 		}
 	}
 	else if(menu != NULL)
+	{
 		menu->update();
+	}
 	return 0;
 }
 void MenuManager::shutdown()
@@ -108,43 +144,6 @@ bool MenuManager::setMenu(string menuName)
 	}
 	return true;
 }
-//void MenuManager::mouseUpdate(bool left,bool right, int x, int y)
-//{
-//	static bool lLeft=left;
-//	static bool lRight=right;
-//	static int lX=x;
-//	static int lY=y;
-//
-//	if(menu == NULL) return;
-//
-//	if(left && !lLeft) menu->mouseL(true,x,y);
-//	if(!left && lLeft) menu->mouseL(false,x,y);
-//	if(right && !lRight) menu->mouseR(true,x,y);
-//	if(!right && lRight) menu->mouseR(false,x,y);
-//
-//	lLeft=left;
-//	lRight=right;
-//	lX=x;
-//	lY=y;
-//}
-//void MenuManager::keyUpdate(bool down, int vkey)
-//{
-//	if(down)
-//	{
-//		if(menu!=NULL)
-//			menu->keyDown(vkey);
-//	}
-//	else
-//	{
-//		if(menu!=NULL)
-//			menu->keyUp(vkey);
-//	}
-//}
-//void MenuManager::scrollUpdate(float rotations)
-//{
-//	if(menu!=NULL)
-//		menu->scroll(rotations);
-//}
 void MenuManager::inputCallback(Input::callBack* callback)
 {
 	if(callback->type == KEY_STROKE){
@@ -155,6 +154,17 @@ void MenuManager::inputCallback(Input::callBack* callback)
 				popups.back()->keyDown(call->vkey);
 			else
 				popups.back()->keyUp(call->vkey);
+
+			for(auto e = popups.back()->buttons.begin(); e != popups.back()->buttons.end(); e++)
+			{
+				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+			}
+			for(auto e = popups.back()->toggles.begin(); e != popups.back()->toggles.end(); e++)
+			{
+				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+			}
 		}
 		else if(menu!=NULL)
 		{
@@ -162,6 +172,16 @@ void MenuManager::inputCallback(Input::callBack* callback)
 				menu->keyDown(call->vkey);
 			else
 				menu->keyUp(call->vkey);
+			for(auto e = menu->buttons.begin(); e != menu->buttons.end(); e++)
+			{
+				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+			}
+			for(auto e = menu->toggles.begin(); e != menu->toggles.end(); e++)
+			{
+				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+			}
 		}
 	}
 	else if(callback->type == MOUSE_CLICK){
@@ -172,6 +192,27 @@ void MenuManager::inputCallback(Input::callBack* callback)
 				popups.back()->mouseL(call->down,call->x,call->y);
 			else if(call->button == RIGHT_BUTTON)
 				popups.back()->mouseR(call->down,call->x,call->y);
+
+			for(auto e = popups.back()->buttons.begin(); e != popups.back()->buttons.end(); e++)
+			{
+				if(e->second != NULL)
+				{
+					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+				}
+			}
+			for(auto e = popups.back()->toggles.begin(); e != popups.back()->toggles.end(); e++)
+			{
+				if(e->second != NULL)
+				{
+					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+				}
+			}
 		}
 		else if(menu!=NULL)
 		{
@@ -181,6 +222,27 @@ void MenuManager::inputCallback(Input::callBack* callback)
 				menu->mouseC(call->down,call->x,call->y);
 			else if(call->button == RIGHT_BUTTON)
 				menu->mouseR(call->down,call->x,call->y);
+
+			for(auto e = menu->buttons.begin(); e != menu->buttons.end(); e++)
+			{
+				if(e->second != NULL)
+				{
+					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+				}
+			}
+			for(auto e = menu->toggles.begin(); e != menu->toggles.end(); e++)
+			{
+				if(e->second != NULL)
+				{
+					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+				}
+			}
 		}
 
 	}
@@ -190,6 +252,7 @@ void MenuManager::inputCallback(Input::callBack* callback)
 			popups.back()->scroll(call->rotations);
 		else if(menu!=NULL)
 			menu->scroll(call->rotations);
+
 	}
 }
 bool menuOpenFile::init()
@@ -198,10 +261,10 @@ bool menuOpenFile::init()
 }
 bool menuOpenFile::init(string ExtFilter)
 {
-	desktop		= new menuButton; desktop->init(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
-	myDocuments = new menuButton; myDocuments->init(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
-	myComputer	= new menuButton; myComputer->init(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
-	myNetwork	= new menuButton; myNetwork->init(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
+	buttons["desktop"]		= new menuButton(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
+	buttons["myDocuments"]	= new menuButton(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
+	buttons["myComputer"]	= new menuButton(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
+	buttons["myNetwork"]	= new menuButton(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
 
 	extFilter=ExtFilter;
 	directory=".";
@@ -233,22 +296,19 @@ void menuOpenFile::refreshView()
 	int row=0, column=0;
 	for(vector<string>::iterator i=folders.begin();i!=folders.end();i++)	
 	{
-		folderButtons.push_back(new menuButton());
-		folderButtons.back()->init(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4));
+		folderButtons.push_back(new menuButton(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4)));
 		if(++column==4){column=0;row++;}
 	}
 	for(vector<string>::iterator i=files.begin();i!=files.end();i++)
 	{
-		fileButtons.push_back(new menuButton());
-		fileButtons.back()->init(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6));
+		fileButtons.push_back(new menuButton(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6)));
 		if(++column==4){column=0;row++;}
 	}
 }
 int menuOpenFile::update()
 {
-	if(desktop->getChanged())
+	if(buttons["desktop"]->checkChanged())
 	{
-		desktop->resetChanged();
 		char aFolder[MAX_PATH]; 
 		if(!SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
@@ -257,9 +317,8 @@ int menuOpenFile::update()
 		}
 		return 0;
 	}
-	else if(myDocuments->getChanged())
+	else if(buttons["myDocuments"]->checkChanged())
 	{
-		myDocuments->resetChanged();
 		char aFolder[MAX_PATH]; 
 		if(!SHGetFolderPathA(0, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
@@ -268,9 +327,8 @@ int menuOpenFile::update()
 		}
 		return 0;
 	}
-	else if(myComputer->getChanged())
+	else if(buttons["myComputer"]->checkChanged())
 	{
-		myComputer->resetChanged();
 		char aFolder[MAX_PATH]; 
 		if(!SHGetFolderPathA(0, CSIDL_DRIVES, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
@@ -279,9 +337,8 @@ int menuOpenFile::update()
 		}
 		return 0;
 	}
-	else if(myNetwork->getChanged())
+	else if(buttons["myNetwork"]->checkChanged())
 	{
-		myNetwork->resetChanged();
 		char aFolder[MAX_PATH]; 
 		if(!SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, SHGFP_TYPE_CURRENT, aFolder))
 		{
@@ -292,7 +349,7 @@ int menuOpenFile::update()
 	}
 	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
 	{
-		if((*i)->getChanged())
+		if((*i)->checkChanged())
 		{
 			directory/=(*i)->getText();
 			refreshView();
@@ -301,10 +358,9 @@ int menuOpenFile::update()
 	}
 	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
 	{
-		if((*i)->getChanged())
+		if((*i)->checkChanged())
 		{
 			file=(*i)->getText();
-			(*i)->resetChanged();
 			fileSelected();
 			return 0;
 		}
@@ -337,10 +393,6 @@ void menuOpenFile::render()
 	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
 	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	glPopMatrix();
-	desktop->render();
-	myDocuments->render();
-	myComputer->render();
-	myNetwork->render();
 	menuManager.drawCursor();
 }
 void menuOpenFile::keyDown(int vkey)
@@ -375,10 +427,6 @@ void menuOpenFile::mouseL(bool down, int x, int y)
 	{
 		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
 		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
-		desktop->mouseDownL(x,y);
-		myDocuments->mouseDownL(x,y);
-		myComputer->mouseDownL(x,y);
-		myNetwork->mouseDownL(x,y);///y=451
 		clicking = (x>sw/2+144) && (x<sw/2+184) && (y>sh/2+190) && (y<sh/2+230);
 	}
 	else
@@ -387,10 +435,6 @@ void menuOpenFile::mouseL(bool down, int x, int y)
 			fileSelected();
 		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
 		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
-		desktop->mouseUpL(x,y);
-		myDocuments->mouseUpL(x,y);
-		myComputer->mouseUpL(x,y);
-		myNetwork->mouseUpL(x,y);
 		clicking = false;
 	}
 }
@@ -444,16 +488,13 @@ bool menuMessageBox::init(string t, vector<string> names)
 	if(x < 5) x = 5;
 	if(y < 5) y = 5;
 
-	label = new menuLabel;
-	label->init(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
+	labels["label"] = new menuLabel(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
 
 	float slotWidth = (685.0*715/width) / names.size();
 	int slotNum = 0;
 	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
-		menuLabel* l = new menuLabel;
-		l->init(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white);
-		options.push_back(l);
+		options.push_back(new menuLabel(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white));
 	}
 	value=-1;
 	clicking=-1;
@@ -492,9 +533,7 @@ void menuMessageBox::render()
 		}
 		(*i)->render();
 	}
-	if(label != NULL) label->render();
 	menuManager.drawCursor();
-
 }
 void menuMessageBox::mouseL(bool down, int X, int Y)
 {
@@ -542,78 +581,62 @@ bool menuScreen::loadBackground()
 bool menuLevelEditor::init()
 {
 	vector<menuButton*> v;//for toggles
-	menuLabel* l;
 
 	//terrain
-	bNewShader = new menuButton();		bNewShader->init(5,5,200,30,"new shader",lightGreen,white);
-	bDiamondSquare = new menuButton();	bDiamondSquare->init(sw-105,5,100,30,"d-square",lightGreen,white);
-	bFaultLine = new menuButton();		bFaultLine->init(sw-105,40,100,30,"fault line",lightGreen,white);
-	bFromFile = new menuButton();		bFromFile->init(sw-105,75,100,30,"from file",lightGreen,white);
-	bExportBMP = new menuButton();		bExportBMP->init(sw-105,110,100,30,"export",lightGreen,white);
 
-	bLoad = new menuButton();			bLoad->init(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
-	bSave = new menuButton();			bSave->init(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
-	bExit = new menuButton();			bExit->init(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
+	buttons["newShader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
+	buttons["dSquare"]		= new menuButton(sw-105,5,100,30,"d-square",lightGreen,white);
+	buttons["faultLine"]	= new menuButton(sw-105,40,100,30,"fault line",lightGreen,white);
+	buttons["fromFile"]		= new menuButton(sw-105,75,100,30,"from file",lightGreen,white);
+	buttons["exportBMP"]	= new menuButton(sw-105,110,100,30,"export",lightGreen,white);
 
-	bShaders = new menuToggle();		bShaders->init(vector<menuButton*>(),darkGreen,lightGreen,0);
+	buttons["load"]			= new menuButton(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
+	buttons["save"]			= new menuButton(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
+	buttons["exit"]			= new menuButton(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
+
+	toggles["shaders"]		= new menuToggle(vector<menuButton*>(),darkGreen,lightGreen,NULL,0);
+	buttons["new shader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
 	addShader("media/terrain.frag");
 	addShader("media/snow.frag");
 	addShader("media/grass.frag");
 	//objects
-	bAddPlane = new menuButton();		bAddPlane->init(5,5,100,30,"new plane",lightGreen,white);
+	buttons["addPlane"]		= new menuButton(5,5,100,30,"new plane",lightGreen,white);
 
 	//settings
 
 	v.clear();
-	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,5,100,30,"respawn",black,white);
-	v.push_back(new menuButton());		v[1]->init(225,5,100,30,"restart",black,white);
-	v.push_back(new menuButton());		v[2]->init(330,5,100,30,"die",black,white);
-	bOnHit = new menuToggle();			bOnHit->init(v,darkBlue,lightBlue);
-	l->setElementText("player hit:");	l->setElementXY(5,5);
-	bOnHit->setLabel(l);
+	v.push_back(new menuButton(120,5,100,30,"respawn",black,white));
+	v.push_back(new menuButton(225,5,100,30,"restart",black,white));
+	v.push_back(new menuButton(330,5,100,30,"die",black,white));
+	toggles["onHit"]		= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,5,"player hit:"));
 
 	v.clear();
-	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,45,100,30,"respawn",black,white);
-	v.push_back(new menuButton());		v[1]->init(225,45,100,30,"restart",black,white);
-	v.push_back(new menuButton());		v[2]->init(330,45,100,30,"die",black,white);
-	bOnAIHit = new menuToggle();		bOnAIHit->init(v,darkBlue,lightBlue);
-	l->setElementText("AI hit:");		l->setElementXY(5,45);
-	bOnAIHit->setLabel(l);
+	v.push_back(new menuButton(120,45,100,30,"respawn",black,white));
+	v.push_back(new menuButton(225,45,100,30,"restart",black,white));
+	v.push_back(new menuButton(330,45,100,30,"die",black,white));
+	toggles["onAIHit"]		= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,45,"AI hit:"));
 
 	v.clear();
-	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,85,100,30,"ffa",black,white);
-	v.push_back(new menuButton());		v[1]->init(225,85,100,30,"teams",black,white);
-	v.push_back(new menuButton());		v[2]->init(330,85,100,30,"player vs",black,white);
-	bGameType = new menuToggle();		bGameType->init(v,darkBlue,lightBlue);
-	l->setElementText("game type:");	l->setElementXY(5,85);
-	bGameType->setLabel(l);
+	v.push_back(new menuButton(120,85,100,30,"ffa",black,white));
+	v.push_back(new menuButton(225,85,100,30,"teams",black,white));
+	v.push_back(new menuButton(330,85,100,30,"player vs",black,white));
+	toggles["gameType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,85,"game type:"));
 
 	v.clear();
-	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,125,100,30,"water",black,white);
-	v.push_back(new menuButton());		v[1]->init(225,125,100,30,"land",black,white);
-	bMapType = new menuToggle();		bMapType->init(v,darkBlue,lightBlue);
-	l->setElementText("map type:");		l->setElementXY(5,125);
-	bMapType->setLabel(l);
+	v.push_back(new menuButton(120,125,100,30,"water",black,white));
+	v.push_back(new menuButton(225,125,100,30,"land",black,white));
+	toggles["mapType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,125,"map type:"));
 
 	v.clear();
-	l=new menuLabel;
-	v.push_back(new menuButton());		v[0]->init(120,165,100,30,"rock",black,white);
-	v.push_back(new menuButton());		v[1]->init(225,165,100,30,"sand",black,white);
-	bSeaFloorType = new menuToggle();	bSeaFloorType->init(v,darkBlue,lightBlue);
-	l->setElementText("sea floor:");	l->setElementXY(5,165);
-	bSeaFloorType->setLabel(l);
+	v.push_back(new menuButton(120,165,100,30,"rock",black,white));
+	v.push_back(new menuButton(225,165,100,30,"sand",black,white));
+	toggles["seaFloorType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,165,"sea floor:"));
 
 	v.clear();
-	v.push_back(new menuButton());		v[0]->init(5,sh-40,100,35,"Terrain",black,white);
-	v.push_back(new menuButton());		v[1]->init(110,sh-40,100,35,"Objects",black,white);
-	v.push_back(new menuButton());		v[2]->init(215,sh-40,100,35,"Settings",black,white);
-	bTabs = new menuToggle();			bTabs->init(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),0);
-
-	check = new menuCheckBox();			check->init(400,50,"this is a\ntest",true);
+	v.push_back(new menuButton(5,sh-40,100,35,"Terrain",black,white));
+	v.push_back(new menuButton(110,sh-40,100,35,"Objects",black,white));
+	v.push_back(new menuButton(215,sh-40,100,35,"Settings",black,white));
+	toggles["tabs"]	= new menuToggle(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
 
 	return true;
 }
@@ -625,7 +648,6 @@ void menuLevelEditor::operator() (menuPopup* p)
 		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuOpenFile*)p)->getFile();
 		addShader(f);
-
 	}
 	else if(awaitingMapFile)
 	{
@@ -670,89 +692,67 @@ void menuLevelEditor::operator() (menuPopup* p)
 }
 int menuLevelEditor::update()
 {
-	if(bLoad->getChanged())
+	if(buttons["load"]->checkChanged())
 	{
 		awaitingLevelFile = true;
-		bLoad->resetChanged();
 		menuPopup* p = new menuOpenFile;
 		p->callback = (functor<void,menuPopup*>*)this;
 		((menuOpenFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
-	else if(bSave->getChanged())
+	else if(buttons["save"]->checkChanged())
 	{
 		awaitingLevelSave = true;
-		bSave->resetChanged();
 		menuPopup* p = new menuSaveFile;
 		p->callback = (functor<void,menuPopup*>*)this;
 		((menuSaveFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
-	else if(bExit->getChanged())
+	else if(buttons["exit"]->checkChanged())
 	{
 		modeManager.setMode(NULL);
 		menuManager.setMenu("menuChooseMode");
 	}
 	else if(getTab() == TERRAIN)
 	{
-		if(bFaultLine->getChanged())
+		if(buttons["faultLine"]->checkChanged())
 		{
 			((modeMapBuilder*)modeManager.getMode())->faultLine();
-			bFaultLine->resetChanged();
 		}
-		else if(bDiamondSquare->getChanged())
+		else if(buttons["dSquare"]->checkChanged())
 		{
 			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.49);
-			bDiamondSquare->resetChanged();
 		}
-		else if(bFromFile->getChanged())
+		else if(buttons["fromFile"]->checkChanged())
 		{
 			awaitingMapFile = true;
-			bFromFile->resetChanged();
 			menuPopup* p = new menuOpenFile;
 			p->callback = (functor<void,menuPopup*>*)this;
 			((menuOpenFile*)p)->init(".bmp");
 			menuManager.setPopup(p);
 		}
-		else if(bExportBMP->getChanged())
+		else if(buttons["exportBMP"]->checkChanged())
 		{
 			awaitingMapSave = true;
-			bExportBMP->resetChanged();
 			menuPopup* p = new menuSaveFile;
 			p->callback = (functor<void,menuPopup*>*)this;
 			((menuSaveFile*)p)->init(".bmp");
 			menuManager.setPopup(p);
 		}
-		else if(bNewShader->getChanged())
+		else if(buttons["newShader"]->checkChanged())
 		{
 			awaitingShaderFile=true;
-			bNewShader->resetChanged();
 			menuPopup* p = new menuOpenFile;
 			p->callback = (functor<void,menuPopup*>*)this;
 			((menuOpenFile*)p)->init(".frag");
 			menuManager.setPopup(p);
 		}
-		else
-		{
-			//int n=0;
-			//for(vector<menuButton*>::iterator i=bShaders.begin(); i != shaders.end();i++,n++)
-			//{
-			//	if((*i)->getPressed())
-			//	{
-			//		shaders[((mapBuilder*)mode)->currentShader]->setElementColor(Color(0,1,0));
-			//		((mapBuilder*)mode)->currentShader=n;
-			//		(*i)->setElementColor(Color(0,0.7,0));
-			//		(*i)->reset();
-			//	}
-			//}
-		}
 	}
 	else if(getTab() == OBJECTS)
 	{
-		if(bAddPlane->getChanged())
+		if(buttons["addPlane"]->checkChanged())
 		{
 			awaitingNewObject=true;
-			bAddPlane->resetChanged();
 			menuPopup* p = new menuNewObject;
 			p->callback = (functor<void,menuPopup*>*)this;
 			menuManager.setPopup(p);
@@ -762,131 +762,53 @@ int menuLevelEditor::update()
 	{
 
 	}
-	//if(bTerrain->getPressed())
-	//{
-	//	currentTab=TERRAIN;
-	//	bTerrain->reset();
-	//}
-	//if(bZones->getPressed())
-	//{
-	//	currentTab=ZONES;
-	//	bZones->reset();
-	//}
-	//if(bSettings->getPressed())
-	//{
-	//	currentTab=SETTINGS;
-	//	bSettings->reset();
-	//}
+
+	static Tab lastTab = (Tab)-1;
+	Tab newTab = getTab();
+	if(lastTab != newTab)
+	{
+		if(lastTab == TERRAIN || newTab==TERRAIN || lastTab == (Tab)-1)
+		{
+			buttons["newShader"]->setVisibility(newTab==TERRAIN);
+			buttons["dSquare"]->setVisibility(newTab==TERRAIN);
+			buttons["faultLine"]->setVisibility(newTab==TERRAIN);
+			buttons["fromFile"]->setVisibility(newTab==TERRAIN);
+			buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
+			toggles["shaders"]->setVisibility(newTab==TERRAIN);
+			buttons["new shader"]->setVisibility(newTab==TERRAIN);
+		}
+		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
+		{
+			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
+		}
+		if(lastTab == SETTINGS || newTab==SETTINGS || lastTab == (Tab)-1)
+		{
+			toggles["onHit"]->setVisibility(newTab==SETTINGS);
+			toggles["onAIHit"]->setVisibility(newTab==SETTINGS);
+			toggles["gameType"]->setVisibility(newTab==SETTINGS);
+			toggles["mapType"]->setVisibility(newTab==SETTINGS);
+			toggles["seaFloorType"]->setVisibility(newTab==SETTINGS);
+		}
+	}
+	lastTab = newTab;
 	return 0;
 }
 void menuLevelEditor::render()
 {
-	glColor3f(0,1,0);
-	if(getTab() == TERRAIN)
-	{
-		bShaders->render();
-		bNewShader->render();
-		bDiamondSquare->render();
-		bFaultLine->render();
-		bFromFile->render();
-		bExportBMP->render();
-	}
-	else if(getTab() == OBJECTS)
-	{
-		bAddPlane->render();
-	}
-	else if(getTab() == SETTINGS)
-	{
-		bOnHit->render();
-		bOnAIHit->render();
-		bGameType->render();
-		bMapType->render();
-		bSeaFloorType->render();
-	}
-	bTabs->render();
-	bLoad->render();
-	bSave->render();
-	bExit->render();
-	check->render();
 	menuManager.drawCursor();
 }
 void menuLevelEditor::mouseL(bool down, int x, int y)
 {
-	if(down)
+	if(getTab() == OBJECTS)
 	{
-		if(getTab() == TERRAIN)
+		if(newObjectType != 0)
 		{
-			bNewShader->mouseDownL(x,y);
-			bDiamondSquare->mouseDownL(x,y);
-			bFaultLine->mouseDownL(x,y);
-			bShaders->mouseDownL(x,y);
-			bFromFile->mouseDownL(x,y);
-			bExportBMP->mouseDownL(x,y);
+			static int teamNum=0;
+			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, x, y);
+			newObjectType = 0;
+			teamNum++;
 		}
-		else if(getTab() == OBJECTS)
-		{
-			if(!input->getMouseState(MIDDLE_BUTTON).down)
-				bAddPlane->mouseDownL(x,y);
-			if(newObjectType != 0)
-			{
-				static int teamNum=0;
-				((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, x, y);
-				newObjectType = 0;
-				teamNum++;
-			}
-		}
-		else if(getTab() == SETTINGS)
-		{
-			bOnHit->mouseDownL(x,y);
-			bOnAIHit->mouseDownL(x,y);
-			bGameType->mouseDownL(x,y);
-			bMapType->mouseDownL(x,y);
-			bSeaFloorType->mouseDownL(x,y);
-		}
-		bLoad->mouseDownL(x,y);
-		bSave->mouseDownL(x,y);
-		bExit->mouseDownL(x,y);
-		bTabs->mouseDownL(x,y);
-		check->mouseDownL(x,y);
 	}
-	else
-	{
-		if(getTab() == TERRAIN)
-		{
-			bNewShader->mouseUpL(x,y);
-			bDiamondSquare->mouseUpL(x,y);
-			bFaultLine->mouseUpL(x,y);
-			bShaders->mouseUpL(x,y);
-			bTabs->mouseUpL(x,y);
-			bFromFile->mouseUpL(x,y);
-			bExportBMP->mouseUpL(x,y);
-			if(bShaders->getChanged())
-			{
-				bShaders->resetChanged();
-				if(bShaders->getValue() == 0)		bMapType->setValue(0);
-				else if(bShaders->getValue() == 1)	bMapType->setValue(1);
-				else if(bShaders->getValue() == 2)	bMapType->setValue(0);
-			}
-		}
-		else if(getTab() == OBJECTS)
-		{
-			bAddPlane->mouseUpL(x,y);
-		}
-		else if(getTab() == SETTINGS)
-		{
-			bOnHit->mouseUpL(x,y);
-			bOnAIHit->mouseUpL(x,y);
-			bGameType->mouseUpL(x,y);
-			bMapType->mouseUpL(x,y);
-			bSeaFloorType->mouseUpL(x,y);
-		}
-		bTabs->mouseUpL(x,y);
-		bLoad->mouseUpL(x,y);
-		bSave->mouseUpL(x,y);
-		bExit->mouseUpL(x,y);
-		check->mouseUpL(x,y);
-	}
-
 }
 void menuLevelEditor::scroll(float rotations)
 {
@@ -902,19 +824,16 @@ void menuLevelEditor::addShader(string filename)
 	int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
 	((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
 
-	menuButton* b = new menuButton();
-	b->init(5,bShaders->getSize()*35+5,200,30,filename,black,white);
-	bShaders->addButton(b);
-	//shaders.push_back(b);
-	bNewShader->setElementXY(5,bShaders->getSize()*35+5);
+	toggles["shaders"]->addButton(new menuButton(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
+	buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
 }
 int menuLevelEditor::getShader()
 {
-	return bShaders->getValue();
+	return toggles["shaders"]->getValue();
 }
 menuLevelEditor::Tab menuLevelEditor::getTab()
 {
-	int t =  bTabs->getValue();
+	int t =  toggles["tabs"]->getValue();
 	if(t == 0) return TERRAIN;
 	if(t == 1) return OBJECTS;
 	if(t == 2) return SETTINGS;
@@ -940,6 +859,7 @@ void menuChooseMode::render()
 }
 void menuChooseMode::keyDown(int vkey)
 {
+	if(vkey==VK_ESCAPE)	done = true;//end the program
 	if(vkey==VK_LEFT)	activeChoice = choice(int(activeChoice)-1);
 	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
@@ -1078,13 +998,6 @@ void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
 	height=Height;
 	setElementText(text);//update clampedText
 }
-void menuButton::init(int X, int Y, int Width, int Height, string t, Color c, Color textC)
-{
-	setElementXYWH(X, Y, Width, Height);
-	color = c;
-	textColor = textC;
-	setElementText(t);
-}
 void menuButton::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
@@ -1160,17 +1073,6 @@ void menuButton::mouseUpL(int X, int Y)
 		changed = true;
 	clicking = false;
 }
-
-void menuCheckBox::init(int X, int Y, string t, bool startChecked, Color c)
-{
-	checked=startChecked;
-	x = X;
-	y = Y;
-	width = textManager->getTextWidth(t) + 30;
-	height = textManager->getTextHeight(t);
-	color = c;
-	text = t;
-}
 void menuCheckBox::render()
 {
 	glColor4f(1,1,1,1);
@@ -1216,7 +1118,7 @@ void menuLabel::render()
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x,y);
 }
-void menuToggle::init(vector<menuButton*> b, Color clickedC, Color unclickedC, int startValue)
+menuToggle::menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, menuLabel* l, int startValue): menuElement(TOGGLE,0,0), value(startValue), label(l)
 {
 	buttons=b;
 	if(startValue >= 0 && startValue < buttons.size())

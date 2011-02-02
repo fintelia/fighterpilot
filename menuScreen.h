@@ -7,6 +7,9 @@ public:
 	enum elementView{VISABLE=0,HIDDEN};
 
 	menuElement(elementType t): type(t), x(0), y(0), active(true), view(true), changed(false) {}
+	menuElement(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), text(Text), color(c), active(true), view(true), changed(false) {}
+	menuElement(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), width(Width), height(Height), text(Text), color(c), active(true), view(true), changed(false) {}
+
 	virtual ~menuElement(){}
 
 	virtual void render()=0;
@@ -17,19 +20,21 @@ public:
 	virtual void setElementColor(Color c) {color=c;}
 
 	//state
-	void activateElement()	{active = true;}
-	void disableElement()	{active = false;}
-	bool getElementState()	{return active;}
+	void activateElement()		{active = true;}
+	void disableElement()		{active = false;}
+	bool getElementState()		{return active;}
 
-	void showElement()		{view = true;}
-	void hideElement()		{view = false;}
-	bool getElementView()	{return view;}
+	void showElement()			{view = true;}
+	void hideElement()			{view = false;}
+	bool getVisibility()		{return view;}
+	void setVisibility(bool v)	{view = v;}
 
-	string getText()		{return text;}
+	string getText()			{return text;}
 	
 	//changed
-	bool getChanged()		{return changed;}
-	void resetChanged()		{changed = false;}
+	bool getChanged()			{return changed;}
+	bool checkChanged()			{bool b = changed; changed=false; return b;}//returns changed then sets it to false
+	void resetChanged()			{changed = false;}
 
 	//events
 	virtual void mouseDownR(int X, int Y){}
@@ -56,29 +61,22 @@ protected:
 class menuLabel: public menuElement
 {
 public:
-	menuLabel(): menuElement(LABEL){}
+	menuLabel(int X, int Y, string t,Color c=Color(0,0,0)): menuElement(LABEL, X, Y,t,c){}
 	virtual ~menuLabel(){}
 
-	void init(int X, int Y, string t,Color c=Color(0,0,0)){x=X;y=Y;text=t;color=c;}
 	void render();
-
-protected:
 };
 class menuButton: public menuElement
 {
 public:
 
-	menuButton(): menuElement(BUTTON),textColor(Color(0,0,0)){}
+	menuButton(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0)): menuElement(BUTTON,X,Y,Width,Height,t,c),textColor(textC){setElementText(text);}
 	virtual ~menuButton(){}
 
-	void init(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0));
 	void render();
 
 	void mouseDownL(int X, int Y);
 	void mouseUpL(int X, int Y);
-
-	//bool getPressed(){return pressed;}
-	//void reset(){pressed=false;}
 
 	void setElementText(string t);
 	void setElementTextColor(Color c);
@@ -90,16 +88,14 @@ protected:
 	void click();
 	void unclick();
 
-	//bool pressed;
 	bool clicking;
 };
 class menuCheckBox:public menuElement
 {
 public:
-	menuCheckBox(): menuElement(CHECKBOX),checked(false),clicking(false){}
+	menuCheckBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): menuElement(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(false),clicking(false){}
 	virtual ~menuCheckBox(){}
 
-	void init(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0));
 	void render();
 
 	void mouseDownL(int X, int Y);
@@ -116,12 +112,9 @@ protected:
 class menuToggle: public menuElement
 {
 public:
-
-
-	menuToggle(): menuElement(TOGGLE), value(-1), label(NULL){}
+	menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, menuLabel* l = NULL, int startValue=0);
 	virtual ~menuToggle(){}
 
-	void init(vector<menuButton*> b, Color clickedC, Color unclickedC, int startValue=0);
 	int addButton(menuButton* button);
 	void setLabel(menuLabel* l){label=l;}
 	void render();
@@ -158,8 +151,12 @@ public:
 	bool isDone(){return done;}
 	functor<void,menuPopup*>* callback;
 protected:
-	
 	bool done;
+	map<string,menuButton*> buttons;
+	map<string,menuLabel*> labels;
+	map<string,menuToggle*> toggles;
+
+	friend class MenuManager;
 };
 
 class menuOpenFile: public menuPopup
@@ -192,10 +189,10 @@ protected:
 	vector<menuButton*> folderButtons;
 	vector<menuButton*> fileButtons;
 
-	menuButton* desktop;
-	menuButton* myDocuments;
-	menuButton* myComputer;
-	menuButton* myNetwork;
+	//menuButton* desktop;
+	//menuButton* myDocuments;
+	//menuButton* myComputer;
+	//menuButton* myNetwork;
 };
 class menuSaveFile: public menuOpenFile, functor<void,menuPopup*>
 {
@@ -221,7 +218,7 @@ public:
 	int getValue(){return value;}
 protected:
 	vector<menuLabel*> options;
-	menuLabel* label;
+	//menuLabel* label;
 	int value;
 
 	int x, y, width, height;
@@ -265,8 +262,11 @@ public:
 protected:
 	static bool loadBackground();
 	static int backgroundImage;
-	//menuPopup* popup;
 
+	map<string,menuButton*> buttons;
+	map<string,menuLabel*> labels;
+	map<string,menuToggle*> toggles;
+	friend class MenuManager;
 };
 
 class menuLevelEditor: public menuScreen
@@ -292,30 +292,27 @@ protected:
 	//Tab currentTab;
 
 	void addShader(string filename);
-	menuToggle* bShaders;
-	menuButton* bNewShader;
+	//menuToggle* bShaders;
+	//menuButton* bNewShader;
 
-	menuButton* bDiamondSquare;
-	menuButton* bFaultLine;
-	menuButton* bFromFile;
-	menuButton* bExportBMP;
+	//menuButton* bDiamondSquare;
+	//menuButton* bFaultLine;
+	//menuButton* bFromFile;
+	//menuButton* bExportBMP;
 
-	menuButton* bLoad;
-	menuButton* bSave;
-	menuButton* bExit;
+	//menuButton* bLoad;
+	//menuButton* bSave;
+	//menuButton* bExit;
 
-	menuButton* bAddPlane;
+	//menuButton* bAddPlane;
 
-	menuToggle* bOnHit;
-	menuToggle* bOnAIHit;
-	menuToggle* bGameType;
-	menuToggle* bMapType;
-	menuToggle* bSeaFloorType;
-	//...
+	//menuToggle* bOnHit;
+	//menuToggle* bOnAIHit;
+	//menuToggle* bGameType;
+	//menuToggle* bMapType;
+	//menuToggle* bSeaFloorType;
 
-	menuToggle* bTabs;
-
-	menuCheckBox* check;
+	//menuToggle* bTabs;
 
 	bool awaitingShaderFile;
 	bool awaitingMapFile;

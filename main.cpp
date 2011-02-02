@@ -213,11 +213,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			nextUpdate += time;
 			lastUpdate = time;
 
+#ifdef _DEBUG
 			if(input->getKey(VK_ESCAPE))
 			{
 				done=true;
 			}
-			else if(hasContext)
+			else 
+#endif
+			if(hasContext)
 			{
 				if(Redisplay && active)
 				{

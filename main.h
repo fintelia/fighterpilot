@@ -45,6 +45,7 @@ extern bool	active;		// Window Active Flag
 extern const double PI;
 extern const float size;
 extern bool lowQuality;
+extern bool done;//setting this to true will terminate the program
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 
