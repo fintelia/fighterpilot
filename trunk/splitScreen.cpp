@@ -33,6 +33,25 @@ modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp
 		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
 	}
 }
+modeSplitScreen::modeSplitScreen(Level* lvl): modeDogFight(lvl)
+{
+	settings.ENEMY_PLANES=world.level->objects().size();
+	settings.GAME_TYPE=TEAMS;
+	settings.HEIGHT_RANGE=1000;
+	settings.KILL_PERCENT_NEEDED=100;
+	settings.LEVEL_NAME="unnamed";
+	settings.MAP_TYPE=WATER;
+	settings.MAX_X=world.level->ground()->sizeX();
+	settings.MAX_Y=world.level->ground()->sizeZ();
+	settings.MIN_X=0;
+	settings.MIN_Y=0;
+	settings.ON_AI_HIT=RESPAWN;
+	settings.ON_HIT=RESPAWN;
+	settings.SEA_FLOOR_TYPE=ROCK;
+	settings.SEA_LEVEL=world.level->water().seaLevel;
+
+	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
+}
 int modeSplitScreen::update()
 {
 	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}

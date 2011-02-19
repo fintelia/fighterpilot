@@ -131,7 +131,13 @@ public:
 	}
 };
 
-class player
+class objectController
+{
+public:
+	virtual controlState getControlState()=0;
+};
+
+class player: public objectController
 {
 private:
 	int				PlaneNum,
@@ -170,6 +176,26 @@ public:
 		c.right=controls[CON_RIGHT];
 		c.shoot1=controls[CON_SHOOT];
 		c.shoot2=controls[CON_MISSILE];
+		return c;
+	}
+
+};
+
+class AIplayer: public objectController
+{
+private:
+	int target;
+public:
+	controlState getControlState(){
+		controlState c;
+		c.accelerate=0.0;
+		c.brake=0.0;
+		c.climb=0.0;
+		c.dive=0.0;
+		c.left=0.0;
+		c.right=0.0;
+		c.shoot1=0.0;
+		c.shoot2=0.0;
 		return c;
 	}
 

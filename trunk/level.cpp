@@ -13,9 +13,10 @@ void LevelFile::load(string filename)
 	{
 		info = new Info;
 		fin.read((char*)info,sizeof(Info));
+
 		objects = new Object[info->numObjects];
-		for(int i=0;i<info->numObjects;i++)
-			fin.read((char*)&objects[i],sizeof(Object));
+		fin.read((char*)objects,info->numObjects*sizeof(Object));
+
 		heights = new float[info->mapResolution.x*info->mapResolution.y];
 		fin.read((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
 	}
@@ -28,24 +29,23 @@ void LevelFile::save(string filename)
 	if(header.version == 1 && info!=NULL && heights!=NULL && (objects!=NULL || info->numObjects==0))
 	{
 		fout.write((char*)info,sizeof(Info));
-		for(int i=0;i<info->numObjects;i++)
-			fout.write((char*)&objects[i],sizeof(Object));
+		fout.write((char*)objects,info->numObjects*sizeof(Object));
 		fout.write((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
 	}
 	fout.close();
 }
-LevelFile::LevelFile(): info(NULL), heights(NULL)
+LevelFile::LevelFile(): info(NULL), objects(NULL), heights(NULL)
 {
 	header.magicNumber = 0x454c49465f4c564c;
 	header.version = 0;
 }
-LevelFile::LevelFile(string filename): info(NULL), heights(NULL)
+LevelFile::LevelFile(string filename): info(NULL), objects(NULL), heights(NULL)
 {
 	header.magicNumber = 0x454c49465f4c564c;
 	header.version = 0;
 	load(filename);
 }
-//_______________________________________________________________________________________________________________________________________________________________
+//________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 float Level::heightmapBase::rasterHeight(unsigned int x,unsigned int z) const
 {
 	return heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()];
@@ -295,7 +295,7 @@ void Level::heightmapBase::setMinMaxHeights() const
 		}
 	}
 }
-//__________________________________________________________________________________________________________________________________________________________//
+//________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 
 Level::Level(LevelFile file)
 {
@@ -303,6 +303,8 @@ Level::Level(LevelFile file)
 	mGround->setSize(file.info->mapSize);
 	mGround->init();
 	mWater.seaLevel = file.info->seaLevel;
+	for(int i=0; i < file.info->numObjects; i++)
+		mObjects.push_back(file.objects[i]);
 }
 Level::Level(string BMP, float scale)
 {
@@ -333,7 +335,11 @@ LevelFile Level::getLevelFile()
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
 	f.info->seaLevel = mWater.seaLevel;
+	f.info->numObjects = mObjects.size();
 	f.heights = mGround->heights;
+	f.objects = new LevelFile::Object[mObjects.size()];
+	memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
+
 	return f;
 }
 void Level::exportBMP(string filename)
@@ -652,8 +658,7 @@ void Level::render(Vec3f eye)
 
 	glPopMatrix();
 }
-//__________________________________________________________________________________________________________________________________________________________//
-
+//________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 editLevel::editLevel()
 {
 
@@ -675,17 +680,19 @@ void editLevel::newGround(unsigned int x, unsigned int z, float* heights)
 	else
 		mGround = new heightmapGL(Vec2u(x,z));
 }
-void editLevel::addObject(int type,int team, Vec3f pos)
+void editLevel::addObject(int type,int team,int controlType,Vec3f pos, Quat4f rot)
 {
-	object o;
+	LevelFile::Object o;
 	o.type=type;
 	o.team=team;
+	o.controlType=controlType;
 	o.startloc=pos;
+	o.startRot=rot;
 	mObjects.push_back(o);
 }
 void editLevel::renderObjects()
 {
-	for(vector<object>::iterator i=mObjects.begin();i!=mObjects.end();i++)
+	for(auto i=mObjects.begin();i!=mObjects.end();i++)
 	{
 		if(i->type & PLANE)
 		{
