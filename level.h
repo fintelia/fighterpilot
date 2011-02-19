@@ -14,13 +14,14 @@ struct LevelFile
 		Info(): seaLevel(0), mapSize(1,1), mapResolution(0,0), numObjects(0){}
 	}*info;
 	struct Object{
-		int				type;
-		int				team;
-		Vec3f			startloc;
-		Quat4f			startRot;
+		int				type;			//the type of object
+		int				team;			//what team it is part of
+		int				controlType;	//how this object is being controlled
+		Vec3f			startloc;		//the location where the object will spawn
+		Quat4f			startRot;		//what direction the object will face when it spawns
 	}*objects;
 
-	float* heights;//in a V1 file this there would then just be a (mapSize.x) x (mapSize.y) grid of floats
+	float* heights;						//in a V1 file this there would then just be a (mapSize.x) x (mapSize.y) grid of floats
 
 	void load(string filename);
 	void save(string filename);
@@ -110,35 +111,27 @@ public:
 		string shader;
 		int oceanID;
 	};
-	class object
-	{
-	public:
-		int				type;
-		int				team;
-		bool			playerControlled;
-		Vec3f			startloc;
-		Quat4f			startRot;
-	};
 	struct levelSettings
 	{
 		//textureType seaFloor;
 		bool water;
 	};
 protected:
-	heightmapBase*	mGround;
-	waterPlane		mWater;
-	levelSettings	mSettings;
-	vector<object>	mObjects;
-	int				groundShader;
-	int				onDeath;//1=RESPAWN; 2=RESTART; 3=DIE
-	string			nextLevel;
+	heightmapBase*				mGround;
+	waterPlane					mWater;
+	levelSettings				mSettings;
+	vector<LevelFile::Object>	mObjects;
+	int							groundShader;	
+	int							onDeath;		//1=RESPAWN; 2=RESTART; 3=DIE
+	string						nextLevel;
+
 	Level(): mGround(NULL), groundShader(0) {}
 public:
 	Level(LevelFile file);
 	Level(string BMP, float scale=1.0f);
 
 	heightmapBase* const ground() const{return mGround;}
-	const vector<object>& objects() const {return mObjects;}
+	const vector<LevelFile::Object>& objects() const {return mObjects;}
 	const waterPlane& water() const {return mWater;}
 	void render();
 	void render(Vec3f eye);
@@ -156,7 +149,7 @@ public:
 
 	void addZone(float x, float z, float width, float length);
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
-	void addObject(int type,int team, Vec3f pos);
+	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
 	void renderObjects();
 
 

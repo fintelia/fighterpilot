@@ -199,16 +199,20 @@ void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 }
 void modeDogFight::drawExaust()
 {
+	int numSprites=0;
 	float time = world.time();
-	Profiler.setOutput("smoke sprites", world.exaust.getSize());
-	if(world.exaust.getSize()==0) return;
-	float life;
-	for(int i=0;i<world.exaust.getSize();i++)
+	if(world.exaust.getSize()!=0)
 	{
-		life = time-world.exaust.startTime[i];
-		if(life > 0 && time < world.exaust.endTime[i])
-		graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(life)/1000,Color(0.5,0.5,0.5,0.5*(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i])));
+		for(int i=0;i<world.exaust.getSize();i++)
+		{
+			if(world.exaust.startTime[i] < time && time < world.exaust.endTime[i])
+			{
+				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,Color(0.5,0.5,0.5,0.5*(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i])));
+				numSprites++;
+			} 
+		}
 	}
+	Profiler.setOutput("smoke sprites", numSprites);
 }
 void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead)
 {

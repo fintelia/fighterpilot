@@ -215,7 +215,7 @@ void modeMapBuilder::fromFile(string filename)
 
 	resetView();
 }
-void modeMapBuilder::addObject(int type, int team, int x, int y)//in screen coordinates
+void modeMapBuilder::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
 {
 	double mViewMat[16];
 	double projMat[16];
@@ -231,7 +231,7 @@ void modeMapBuilder::addObject(int type, int team, int x, int y)//in screen coor
 
 	if(abs(dir.y) < 0.001) return;
 	Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
-	((editLevel*)level)->addObject(type,team,Vec3f(val.x,val.y,val.z));
+	((editLevel*)level)->addObject(type,team,controlType,Vec3f(val.x,val.y,val.z));
 
 }
 int modeMapBuilder::update()

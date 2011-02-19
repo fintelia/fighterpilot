@@ -10,11 +10,11 @@ void WorldManager::create(Level* lvl)
 	((Level::heightmapGL*)level->ground())->setShader(dataManager.getId("grass new terrain"));
 
 	int playerNum=0;
-	for(vector<Level::object>::const_iterator i = level->objects().begin(); i != level->objects().end(); i++)
+	for(auto i = level->objects().begin(); i != level->objects().end(); i++)
 	{
-		if(i->playerControlled)
+		if(i->controlType & PLAYER_HUMAN)
 		{
-			if(playerNum < 1)
+			if(playerNum <= 1)
 			{
 				int planeNum = world.objectList.newPlane(defaultPlane,i->team,false);
 				players[playerNum].active(true);

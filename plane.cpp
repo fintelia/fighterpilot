@@ -440,8 +440,8 @@ void plane::spawn()
 		delete explode;
 		explode=NULL;
 	}
-	pos.x = rand() % int((settings.MAX_X-settings.MIN_X)*size)+settings.MIN_X*size;
-	pos.z = rand() % int((settings.MAX_Y-settings.MIN_Y)*size)+settings.MIN_Y*size;
+	pos.x = rand() % int(world.ground()->sizeX());
+	pos.z = rand() % int(world.ground()->sizeZ());
 	pos.y = world.elevation(pos.x,pos.z)+35;
 
 	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
@@ -484,8 +484,8 @@ void AIplane::spawn()
 {
 	initArmaments();
 
-	pos.x = rand() % int((settings.MAX_X-settings.MIN_X)*size)+settings.MIN_X*size;
-	pos.z = rand() % int((settings.MAX_Y-settings.MIN_Y)*size)+settings.MIN_Y*size;
+	pos.x = rand() % int(world.ground()->sizeX());
+	pos.z = rand() % int(world.ground()->sizeZ());
 	pos.y = world.elevation(pos.x,pos.z)+35;
 
 	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
@@ -595,27 +595,17 @@ void AIplane::teams_calcMove(int value)
 }
 void AIplane::calcMove(int value)
 {
-	if(settings.GAME_TYPE==PLAYER_VS) playerVs_calcMove(value);
-	else if(settings.GAME_TYPE==FFA) freeForAll_calcMove(value);
-	else if(settings.GAME_TYPE==TEAMS) teams_calcMove(value);
-	else cout << "Error: new game type!" << endl; 
+	teams_calcMove(value);
+	//if(settings.GAME_TYPE==PLAYER_VS) playerVs_calcMove(value);
+	//else if(settings.GAME_TYPE==FFA) freeForAll_calcMove(value);
+	//else if(settings.GAME_TYPE==TEAMS) teams_calcMove(value);
+	//else cout << "Error: new game type!" << endl; 
 }
 bool AIplane::Update(float value)
 {
 	if(respawning && respawnTime<world.time())
 	{
-		if(settings.ON_AI_HIT==RESPAWN)
-		{
-			spawn();
-		}
-		else if(settings.ON_AI_HIT==RESTART)
-		{
-			//not yet (or possibly ever) handled
-		}
-		else if(settings.ON_AI_HIT==DIE)
-		{
-			return false;
-		}
+		spawn();
 	}
 
 	if(!dead)

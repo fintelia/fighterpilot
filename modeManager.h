@@ -53,7 +53,7 @@ class modeMapBuilder: public modeScreen
 	void diamondSquare(float h);
 	void faultLine();
 	void fromFile(string filename);
-	void addObject(int type, int team, int x, int y);
+	void addObject(int type, int team, int controlType, int x, int y);
 	vector<int> shaderButtons;
 	friend class menuLevelEditor;
 public:
@@ -87,7 +87,7 @@ public:
 class modeSplitScreen: public modeDogFight
 {
 public:
-	modeSplitScreen(Level* lvl): modeDogFight(lvl){}
+	modeSplitScreen(Level* lvl);
 	modeSplitScreen();
 	int update();
 	void draw2D();

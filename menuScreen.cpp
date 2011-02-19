@@ -150,67 +150,87 @@ void MenuManager::inputCallback(Input::callBack* callback)
 		Input::keyStroke* call = (Input::keyStroke*)callback;
 		if(!popups.empty())
 		{
+			int pSize = popups.size();
 			if(!call->up)
 				popups.back()->keyDown(call->vkey);
 			else
 				popups.back()->keyUp(call->vkey);
-
-			for(auto e = popups.back()->buttons.begin(); e != popups.back()->buttons.end(); e++)
+			if(pSize==popups.size())
 			{
-				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)
+				{
+					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				}
 			}
-			for(auto e = popups.back()->toggles.begin(); e != popups.back()->toggles.end(); e++)
+			if(pSize==popups.size())
 			{
-				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)
+				{
+					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				}
 			}
 		}
 		else if(menu!=NULL)
 		{
-			if(!call->up)
-				menu->keyDown(call->vkey);
-			else
-				menu->keyUp(call->vkey);
-			for(auto e = menu->buttons.begin(); e != menu->buttons.end(); e++)
+			if(!call->up)	menu->keyDown(call->vkey);
+			else			menu->keyUp(call->vkey);
+
+			if(menu!=NULL)//if menu is still not NULL (could have changed due to this keystroke)
 			{
-				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)
+				{
+					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				}
 			}
-			for(auto e = menu->toggles.begin(); e != menu->toggles.end(); e++)
+			if(menu!=NULL)
 			{
-				if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-				else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)
+				{
+					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
+					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
+				}
 			}
+
 		}
 	}
 	else if(callback->type == MOUSE_CLICK){
 		Input::mouseClick* call = (Input::mouseClick*)callback;
+		
 		if(!popups.empty())
 		{
+			int pSize = popups.size();
 			if(call->button == LEFT_BUTTON)
 				popups.back()->mouseL(call->down,call->x,call->y);
 			else if(call->button == RIGHT_BUTTON)
 				popups.back()->mouseR(call->down,call->x,call->y);
-
-			for(auto e = popups.back()->buttons.begin(); e != popups.back()->buttons.end(); e++)
+			
+			if(pSize==popups.size())
 			{
-				if(e->second != NULL)
+				for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)
 				{
-					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
+						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
+					}
 				}
 			}
-			for(auto e = popups.back()->toggles.begin(); e != popups.back()->toggles.end(); e++)
+			if(pSize==popups.size())
 			{
-				if(e->second != NULL)
+				for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)
 				{
-					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
+						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
+					}
 				}
 			}
 		}
@@ -223,24 +243,30 @@ void MenuManager::inputCallback(Input::callBack* callback)
 			else if(call->button == RIGHT_BUTTON)
 				menu->mouseR(call->down,call->x,call->y);
 
-			for(auto e = menu->buttons.begin(); e != menu->buttons.end(); e++)
+			if(menu!=NULL)
 			{
-				if(e->second != NULL)
+				for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)
 				{
-					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					}
 				}
 			}
-			for(auto e = menu->toggles.begin(); e != menu->toggles.end(); e++)
+			if(menu!=NULL)
 			{
-				if(e->second != NULL)
+				for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)
 				{
-					if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-					if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-					if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					}
 				}
 			}
 		}
@@ -804,7 +830,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		if(newObjectType != 0)
 		{
 			static int teamNum=0;
-			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, x, y);
+			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, teamNum<=1 ? PLAYER_HUMAN : PLAYER_COMPUTER, x, y);
 			newObjectType = 0;
 			teamNum++;
 		}
@@ -878,7 +904,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeSplitScreen);
+		modeManager.setMode(new modeSplitScreen(new Level(LevelFile("media/map file.lvl"))));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
