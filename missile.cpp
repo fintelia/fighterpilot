@@ -54,7 +54,7 @@ bool missile::Update(float ms)
 	accel=accel.normalize()*(accel.magnitude()+ms*70);
 	
 	velocity+=accel*(ms/1000);
-	if(velocity.magnitude()>2500) velocity=velocity.normalize()*7500;
+	if(velocity.magnitude()>MISSILE_SPEED) velocity=velocity.normalize()*MISSILE_SPEED;
 	/////////////////////move///////////////////////////
 	pos+=velocity*(ms/1000);
 	////////////////////sparks//////////////////////////

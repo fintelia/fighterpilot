@@ -48,6 +48,8 @@ typedef int mouseButton;
 
 extern planeType defaultPlane;
 
+const int MISSILE_SPEED		= 1700;// 1700 m/s = mach 5
+
 struct controlState
 {
 	float	climb;
