@@ -164,11 +164,11 @@ void explosion::render3()
 	for(vector<smokeParticle>::iterator i=fireParticles.begin();i!=fireParticles.end();i++)
 	{
 		loc = pos + i->initialVelocity*(1.0-pow(2.718f,-(time)/100))*0.3;
-		graphics->drawParticle(fireParticleEffect,loc,Color(1,1,1,max(0.6-time/750*0.6,0.0)));
+		graphics->drawParticle(fireParticleEffect,loc,max(0.6-time/750*0.6,0.0));
 	}
 	for(vector<smokeParticle>::iterator i=smokeParticles.begin();i!=smokeParticles.end();i++)
 	{
 		loc = pos + i->initialVelocity*(1.0-pow(2.718f,-(time)/100))*0.7;
-		graphics->drawParticle(smokeParticleEffect,loc,Color(1,1,1,max(0.4-time/1500*0.4,0.0)));
+		graphics->drawParticle(smokeParticleEffect,loc,max(0.4-time/1500*0.4,0.0));
 	}
 }

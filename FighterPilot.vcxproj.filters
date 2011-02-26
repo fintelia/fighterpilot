@@ -83,6 +83,9 @@
     <Filter Include="Source Files\object\object list">
       <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\smoke">
+      <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="explosion.cpp">
@@ -426,6 +429,12 @@
       <Filter>shaders\horizon2</Filter>
     </None>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\smoke.frag">
+      <Filter>shaders\smoke</Filter>
+    </None>
+    <None Include="media\smoke.vert">
+      <Filter>shaders\smoke</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

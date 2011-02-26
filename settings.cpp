@@ -1,89 +1,89 @@
 
 #include "main.h"
-
-void Settings::loadMap(char *filename)
-{
-	string line;
-	ifstream fin(filename, ios::in);
-	if(fin.is_open())
-	{
-		while(!fin.eof())
-		{	
-			getline(fin,line);
-			if(line.find_first_of("=")==-1) continue;
-
-			int f=line.find_first_of("=");				
-			string var = line.substr(line.find_first_not_of(" \t"),f);
-			string value = line.substr(f+1,line.size());
-			if (var.compare("MAP_FILE") == 0)
-			{
-				MAP_FILE=value;
-			}
-			else if(var.compare("ENEMY_PLANES") == 0)
-			{
-				ENEMY_PLANES=lexical_cast<int>(value);
-			}
-			else if(var.compare("ON_HIT")==0)
-			{
-				if(value.compare("RESPAWN")==0)
-					ON_HIT=RESPAWN;
-				else if(value.compare("RESTART")==0)
-					ON_HIT=RESTART;
-				else if(value.compare("DIE")==0)
-					ON_HIT=DIE;
-			}
-			else if(var.compare("ON_AI_HIT")==0)
-			{
-				if(value.compare("RESPAWN")==0)
-					ON_AI_HIT=RESPAWN;
-				else if(value.compare("RESTART")==0)
-					ON_AI_HIT=RESTART;
-				else if(value.compare("DIE")==0)
-					ON_AI_HIT=DIE;
-			}
-			else if(var.compare("GAME_TYPE")==0)
-			{
-				if(value.compare("FFA")==0)
-					GAME_TYPE=FFA;
-				else if(value.compare("TEAMS")==0)
-					GAME_TYPE=TEAMS;
-				else if(value.compare("PLAYER_VS")==0)
-					GAME_TYPE=PLAYER_VS;
-			}
-			else if(var.compare("MAP_TYPE")==0)
-			{
-				if(value.compare("WATER")==0)
-					MAP_TYPE=WATER;
-				else if(value.compare("LAND")==0)
-					MAP_TYPE=LAND;
-				else if(value.compare("SNOW")==0)
-					MAP_TYPE=SNOW;
-			}
-			else if(var.compare("SEA_FLOOR_TYPE")==0)
-			{
-				if(value.compare("ROCK")==0)
-					SEA_FLOOR_TYPE=ROCK;
-				else if(value.compare("SAND")==0)
-					SEA_FLOOR_TYPE=SAND;
-			}
-			else if(var.compare("LEVEL_NAME")==0)
-			{
-				LEVEL_NAME=value;
-			}
-			else if(var.compare("KILL_PERCENT_NEEDED")==0)
-			{
-				KILL_PERCENT_NEEDED=lexical_cast<int>(value);
-			}
-			else if(var.compare("MIN_X")==0)		MIN_X=lexical_cast<int>(value);
-			else if(var.compare("MIN_Y")==0)		MIN_Y=lexical_cast<int>(value);
-			else if(var.compare("MAX_X")==0)		MAX_X=lexical_cast<int>(value);
-			else if(var.compare("MAX_Y")==0)		MAX_Y=lexical_cast<int>(value);
-			else if(var.compare("HEIGHT_RANGE")==0)	HEIGHT_RANGE=(float)lexical_cast<int>(value);
-			else if(var.compare("SEA_LEVEL")==0)	SEA_LEVEL=(float)lexical_cast<int>(value);
-		}
-		fin.close();
-	}
-}
+//
+//void Settings::loadMap(char *filename)
+//{
+//	string line;
+//	ifstream fin(filename, ios::in);
+//	if(fin.is_open())
+//	{
+//		while(!fin.eof())
+//		{	
+//			getline(fin,line);
+//			if(line.find_first_of("=")==-1) continue;
+//
+//			int f=line.find_first_of("=");				
+//			string var = line.substr(line.find_first_not_of(" \t"),f);
+//			string value = line.substr(f+1,line.size());
+//			if (var.compare("MAP_FILE") == 0)
+//			{
+//				MAP_FILE=value;
+//			}
+//			else if(var.compare("ENEMY_PLANES") == 0)
+//			{
+//				ENEMY_PLANES=lexical_cast<int>(value);
+//			}
+//			else if(var.compare("ON_HIT")==0)
+//			{
+//				if(value.compare("RESPAWN")==0)
+//					ON_HIT=RESPAWN;
+//				else if(value.compare("RESTART")==0)
+//					ON_HIT=RESTART;
+//				else if(value.compare("DIE")==0)
+//					ON_HIT=DIE;
+//			}
+//			else if(var.compare("ON_AI_HIT")==0)
+//			{
+//				if(value.compare("RESPAWN")==0)
+//					ON_AI_HIT=RESPAWN;
+//				else if(value.compare("RESTART")==0)
+//					ON_AI_HIT=RESTART;
+//				else if(value.compare("DIE")==0)
+//					ON_AI_HIT=DIE;
+//			}
+//			else if(var.compare("GAME_TYPE")==0)
+//			{
+//				if(value.compare("FFA")==0)
+//					GAME_TYPE=FFA;
+//				else if(value.compare("TEAMS")==0)
+//					GAME_TYPE=TEAMS;
+//				else if(value.compare("PLAYER_VS")==0)
+//					GAME_TYPE=PLAYER_VS;
+//			}
+//			else if(var.compare("MAP_TYPE")==0)
+//			{
+//				if(value.compare("WATER")==0)
+//					MAP_TYPE=WATER;
+//				else if(value.compare("LAND")==0)
+//					MAP_TYPE=LAND;
+//				else if(value.compare("SNOW")==0)
+//					MAP_TYPE=SNOW;
+//			}
+//			else if(var.compare("SEA_FLOOR_TYPE")==0)
+//			{
+//				if(value.compare("ROCK")==0)
+//					SEA_FLOOR_TYPE=ROCK;
+//				else if(value.compare("SAND")==0)
+//					SEA_FLOOR_TYPE=SAND;
+//			}
+//			else if(var.compare("LEVEL_NAME")==0)
+//			{
+//				LEVEL_NAME=value;
+//			}
+//			else if(var.compare("KILL_PERCENT_NEEDED")==0)
+//			{
+//				KILL_PERCENT_NEEDED=lexical_cast<int>(value);
+//			}
+//			else if(var.compare("MIN_X")==0)		MIN_X=lexical_cast<int>(value);
+//			else if(var.compare("MIN_Y")==0)		MIN_Y=lexical_cast<int>(value);
+//			else if(var.compare("MAX_X")==0)		MAX_X=lexical_cast<int>(value);
+//			else if(var.compare("MAX_Y")==0)		MAX_Y=lexical_cast<int>(value);
+//			else if(var.compare("HEIGHT_RANGE")==0)	HEIGHT_RANGE=(float)lexical_cast<int>(value);
+//			else if(var.compare("SEA_LEVEL")==0)	SEA_LEVEL=(float)lexical_cast<int>(value);
+//		}
+//		fin.close();
+//	}
+//}
 void Settings::loadModelData(char* filename)
 {
 	string line;

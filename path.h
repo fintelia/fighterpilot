@@ -1,15 +1,13 @@
 
 class objectPath
 {
-
-
 public:
 	struct point
 	{
 		Vec3f	position;
 		Quat4f	rotation;
-		float	ms;
-		point(Vec3f pos, Quat4f rot, float time): position(pos), rotation(rot), ms(time){}
+		float	time;
+		point(Vec3f pos, Quat4f rot, float t): position(pos), rotation(rot), time(t){}
 		point(){}
 	};
 	class pathSegment
@@ -35,102 +33,49 @@ public:
 			size = sizeof(*this);
 			type = LINEAR;
 		}
-		point getPoint(float ms)
+		point getPoint(float time)
 		{
-			float t = 1.0- (end.ms-ms)/(end.ms-start.ms);
+			float t = 1.0- (end.time-time)/(end.time-start.time);
 			if(t < 0.0)		return start;
 			if(t > 1.0)		return end;
 
 			point p;
 			p.position = lerp(start.position, end.position, t);
 			p.rotation = slerp(start.rotation, end.rotation, t);
-			p.ms = ms;
+			p.time = time;
 			return p;
 		}
 		float startTime()
 		{
-			return start.ms;
+			return start.time;
 		}
 		float endTime()
 		{
-			return end.ms;
+			return end.time;
 		}
 	};
+
 private:
-	bool startValid;
+	bool pointsValid;
 	point startPoint;
+	bool endValid;
+	point endPoint;
 	vector<pathSegment*> segments;
+	float timeResolution;
 
 public:
-	objectPath(): startValid(false)
-	{
-	
-	}
-	void addWaypoint(point p)
-	{
-		if(!startValid)
-		{
-			startPoint=p;
-			startValid=true;
-		}
-		else if(segments.empty())
-		{
-			segments.push_back(new linearPath(startPoint,p));
-		}
-		else
-		{
-			segments.push_back(new linearPath(segments.back()->getPoint(segments.back()->endTime()),p));
-		}
-	}
-	point operator() (float ms)
-	{
-		if(ms > segments.back()->endTime())
-		{
-			return segments.back()->getPoint(ms);
-		}
-		else if(ms < segments.front()->startTime() + 0.1)
-		{
-			return segments.front()->getPoint(ms);
-		}
+	objectPath(float tResolution=1000): pointsValid(false),timeResolution(tResolution){}
+	objectPath(Vec3f sPos,Quat4f sRot, float tResolution=1000);
+	objectPath(Vec3f sPos,Quat4f sRot, float time, float tResolution);
 
-		for(vector<pathSegment*>::iterator i = segments.begin(); i != segments.end(); i++)
-		{
-			if(ms > (*i)->startTime() && ms < (*i)->endTime())
-				return (*i)->getPoint(ms);
-		}
-		
-		debugBreak();
-		return point();
-	}
-	float startTime()
-	{
-		if(!startValid)
-		{
-			return 0;
-		}
-		else if(segments.empty())
-		{
-			return startPoint.ms;
-		}
-		else
-		{
-			return segments.front()->startTime();
-		}
-	}
-	float endTime()
-	{
-		if(!startValid)
-		{
-			return 0;
-		}
-		else if(segments.empty())
-		{
-			return startPoint.ms;
-		}
-		else
-		{
-			return segments.back()->endTime();
-		}
-	}
+	void addWaypoint(point p);
+	void addWaypoint(Vec3f sPos,Quat4f sRot, float time);
+	void addWaypoint(Vec3f sPos,Quat4f sRot);
+	point operator() (float time);
+	float startTime();
+	float endTime();
+	void currentPoint(point p);
+	void currentPoint(Vec3f sPos,Quat4f sRot);
+	void currentPoint(Vec3f sPos,Quat4f sRot, float time);
 };
 objectPath& operator<<( objectPath& op, const objectPath::point& p );

@@ -222,6 +222,8 @@
     <None Include="media\radar.vert" />
     <None Include="media\radar2.frag" />
     <None Include="media\radar2.vert" />
+    <None Include="media\smoke.frag" />
+    <None Include="media\smoke.vert" />
     <None Include="media\snow.frag" />
     <None Include="media\terrain.frag" />
     <None Include="media\terrain.vert" />

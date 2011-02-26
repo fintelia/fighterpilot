@@ -34,8 +34,9 @@ public:
 	int team;
 	bool awaitingDelete;
 
-	object(Vec3f sPos, Quat4f sRot, objectType Type): startPos(sPos), startRot(sRot), type(Type), id(++currentId),awaitingDelete(false){}
+	object(Vec3f sPos, Quat4f sRot, objectType Type): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(NEUTRAL), awaitingDelete(false){}
 	virtual void update(double time, double ms)=0;
+	virtual ~object(){}
 };
 
 class controlledObject: public object
@@ -72,6 +73,8 @@ protected:
 	{
 		if(ownsControl && control != NULL)
 			delete control;
+		else if(control != NULL)
+			control->objectNum(0);
 	}
 
 public:

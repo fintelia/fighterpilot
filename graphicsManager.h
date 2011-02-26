@@ -41,7 +41,8 @@ public:
 	bool drawObject(gID obj);
 	virtual bool drawModel(gID obj, Vec3f pos, Quat4f rot)=0;
 	virtual bool drawModel(gID obj)=0;
-	virtual bool drawParticle(gID id, Vec3f pos, Color c)=0;
+	//virtual bool drawParticle(gID id, Vec3f pos, Color c)=0;
+	virtual	bool drawParticle(gID id, Vec3f pos, float life)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size, string tex)=0;
 	virtual bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex)=0;
@@ -83,13 +84,13 @@ protected:
 		struct particle{
 			Vec3f vert;
 			float r,g,b,a;
-			float padding;
+			float life;
 		} *particles;
 
 		particleEffect(string tex, int s);
 		~particleEffect();
 		void reset();
-		bool setParticle(Vec3f point, Color c);
+		bool setParticle(Vec3f p, float life);
 		void render();
 	};
 
@@ -100,7 +101,8 @@ public:
 
 	bool drawModel(gID obj, Vec3f pos, Quat4f rot);
 	bool drawModel(gID obj);
-	bool drawParticle(gID id, Vec3f pos, Color c);
+	bool drawParticle(gID id, Vec3f pos, float life);
+	//bool drawParticle(gID id, Vec3f pos, Color c)=0;
 	bool drawOverlay(Vec2f Origin, Vec2f Size);
 	bool drawOverlay(Vec2f Origin, Vec2f Size,string tex);
 	bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex);

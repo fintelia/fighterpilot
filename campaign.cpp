@@ -1,43 +1,43 @@
 
 #include "main.h"
 
-modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000)), levelup(false), countdown(0.0)
-{
-	settings.ENEMY_PLANES=2;
-	settings.GAME_TYPE=FFA;
-	settings.HEIGHT_RANGE=1000;
-	settings.KILL_PERCENT_NEEDED=100;
-	settings.LEVEL_NAME="unnamed";
-	settings.MAP_FILE="media/heightmap5.bmp";
-	settings.MAP_TYPE=WATER;
-	settings.MAX_X=world.level->ground()->sizeX();
-	settings.MAX_Y=world.level->ground()->sizeZ();
-	settings.MIN_X=0;
-	settings.MIN_Y=0;
-	settings.ON_AI_HIT=RESPAWN;
-	settings.ON_HIT=RESPAWN;
-	settings.SEA_FLOOR_TYPE=ROCK;
-	settings.SEA_LEVEL=-150;
-
-	world.level->ground()->setSize(world.level->ground()->size()*128);
-	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
-
-	LevelFile::Object obj;
-	obj.controlType = CONTROL_HUMAN;
-	obj.startRot = Quat4f();
-	obj.type = defaultPlane;
-	obj.team = TEAM0;
-	obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
-	world.objectList.newObject(obj);
-
-	obj.controlType = CONTROL_COMPUTER;
-	for(int i = 0; i < 2; i++)
-	{
-		obj.team = TEAM0<<(i+1);
-		obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
-		world.objectList.newObject(obj);
-	}
-}
+//modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000)), levelup(false), countdown(0.0)
+//{
+//	//settings.ENEMY_PLANES=2;
+//	//settings.GAME_TYPE=FFA;
+//	//settings.HEIGHT_RANGE=1000;
+//	//settings.KILL_PERCENT_NEEDED=100;
+//	//settings.LEVEL_NAME="unnamed";
+//	//settings.MAP_FILE="media/heightmap5.bmp";
+//	//settings.MAP_TYPE=WATER;
+//	//settings.MAX_X=world.level->ground()->sizeX();
+//	//settings.MAX_Y=world.level->ground()->sizeZ();
+//	//settings.MIN_X=0;
+//	//settings.MIN_Y=0;
+//	//settings.ON_AI_HIT=RESPAWN;
+//	//settings.ON_HIT=RESPAWN;
+//	//settings.SEA_FLOOR_TYPE=ROCK;
+//	//settings.SEA_LEVEL=-150;
+//
+//	world.level->ground()->setSize(world.level->ground()->size()*128);
+//	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
+//
+//	LevelFile::Object obj;
+//	obj.controlType = CONTROL_HUMAN;
+//	obj.startRot = Quat4f();
+//	obj.type = defaultPlane;
+//	obj.team = TEAM0;
+//	obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
+//	world.objectList.newObject(obj);
+//
+//	obj.controlType = CONTROL_COMPUTER;
+//	for(int i = 0; i < 2; i++)
+//	{
+//		obj.team = TEAM0<<(i+1);
+//		obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
+//		world.objectList.newObject(obj);
+//	}
+//}
 int modeCampaign::update()
 {
 	if(levelup)
@@ -62,11 +62,11 @@ int modeCampaign::update()
 			enemies_left++;
 	}
 
-	if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
-	{
-		//need to add code to restart the level
-		return 30;
-	}
+	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
+	//{
+	//	//need to add code to restart the level
+	//	return 30;
+	//}
 	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
 	//{
 	//	levelup=true;//newLevel(level+1);

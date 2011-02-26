@@ -896,7 +896,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeCampaign);
+		modeManager.setMode(new modeCampaign("media/map file.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
@@ -904,7 +904,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeSplitScreen(new Level(LevelFile("media/map file.lvl"))));
+		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
