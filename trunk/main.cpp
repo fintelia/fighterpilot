@@ -36,7 +36,7 @@ bool getContext=false;																															//	//
 bool done=false;//exits program																													//	//
 																																				//	//
 bool lowQuality;																																//	//
-player players[NumPlayers];																														//	//
+humanControl players[NumPlayers];																												//	//
 																																				//	//
 GraphicsManager::gID fireParticleEffect;																										//	//
 GraphicsManager::gID smokeParticleEffect;																										//	//

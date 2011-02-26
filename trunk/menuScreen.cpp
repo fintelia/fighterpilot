@@ -830,7 +830,7 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		if(newObjectType != 0)
 		{
 			static int teamNum=0;
-			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, teamNum<=1 ? PLAYER_HUMAN : PLAYER_COMPUTER, x, y);
+			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, x, y);
 			newObjectType = 0;
 			teamNum++;
 		}

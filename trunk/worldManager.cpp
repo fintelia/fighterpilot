@@ -12,20 +12,21 @@ void WorldManager::create(Level* lvl)
 	int playerNum=0;
 	for(auto i = level->objects().begin(); i != level->objects().end(); i++)
 	{
-		if(i->controlType & PLAYER_HUMAN)
-		{
-			if(playerNum <= 1)
-			{
-				int planeNum = world.objectList.newPlane(defaultPlane,i->team,false);
-				players[playerNum].active(true);
-				players[playerNum].planeNum(planeNum);
-				playerNum++;
-			}
-		}
-		else
-		{
-			world.objectList.newPlane(defaultPlane,i->team,true);
-		}
+		world.objectList.newObject(*i);
+		//if(i->controlType & CONTROL_HUMAN)
+		//{
+		//	if(playerNum <= 1)
+		//	{
+		//		int planeNum = world.objectList.newPlane(*);
+		//		players[playerNum].active(true);
+		//		players[playerNum].objectNum(planeNum);
+		//		playerNum++;
+		//	}
+		//}
+		//else
+		//{
+		//	world.objectList.newPlane(defaultPlane,i->team,true);
+		//}
 	}
 }
 //void WorldManager::create()
@@ -102,11 +103,11 @@ Level::heightmapGL* const WorldManager::ground() const
 	return NULL;
 }
 
-const map<objId,entity*>& WorldManager::objects()const
+const map<objId,object*>& WorldManager::objects()const
 {
 	return objectList.objects();
 }
-const map<objId,planeBase*>& WorldManager::planes()const
+const map<objId,nPlane*>& WorldManager::planes()const
 {
 	return objectList.planes();
 }
@@ -123,21 +124,21 @@ void WorldManager::update()
 	//Vec3f p;			MUST CHECK FOR BULLET/MISSILE HITS
 	//int l;
 
-	for(map<unsigned int,planeBase*>::const_iterator i = objectList.planes().begin(); i != objectList.planes().end();i++)
+	for(auto i = objectList.planes().begin(); i != objectList.planes().end();i++)
 	{
-		if(!(*i).second->dead)
+		if(!i->second->dead)
 		{
 			for(int l=0;l<(signed int)bullets.size();l++)
 			{
 				if(bullets[l].startTime < time.getLastTime() && bullets[l].startTime + bullets[l].life > time())
 				{
-					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)-i->second->pos, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)-i->second->pos))
+					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)-i->second->position))
 					{
 						(*i).second->loseHealth(250.0);
 						if((*i).second->dead)
 						{
-							if(bullets[l].owner==players[0].planeNum() && players[0].active()) players[0].addKill();
-							if(bullets[l].owner==players[1].planeNum() && players[1].active()) players[1].addKill();
+							if(bullets[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+							if(bullets[l].owner==players[1].objectNum() && players[1].active()) players[1].addKill();
 						}
 						bullets.erase(bullets.begin()+l);
 						l--;
@@ -160,7 +161,7 @@ void WorldManager::update()
 		}
 	}
 
-	objectList.update(ms);
+	objectList.update(time(),ms);
 	//for(int i=0;i<(signed int)bullets.size();i++)
 	//{
 	//	bullets.erase(bullets.begin()+i);

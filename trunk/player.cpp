@@ -12,7 +12,7 @@ using namespace std;
 #include "input.h"
 #include "player.h"
 
-int player::TotalPlayers=1;
+int humanControl::TotalPlayers=1;
 
 //BOOST_PYTHON_MODULE(controllerStructs)
 //{

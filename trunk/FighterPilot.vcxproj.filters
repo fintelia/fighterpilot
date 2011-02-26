@@ -74,6 +74,15 @@
     <Filter Include="Source Files\control">
       <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\object">
+      <UniqueIdentifier>{37fc8008-e0d0-403f-ba2d-261787f57435}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\object\plane">
+      <UniqueIdentifier>{151bbd08-5cdc-4a25-97c9-be1f446ae83e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\object\object list">
+      <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="explosion.cpp">
@@ -98,9 +107,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="missile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="plane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="random.cpp">
@@ -232,11 +238,17 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files\control</Filter>
     </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files\object</Filter>
+    </ClCompile>
+    <ClCompile Include="plane.cpp">
+      <Filter>Source Files\object\plane</Filter>
+    </ClCompile>
+    <ClCompile Include="objectList.cpp">
+      <Filter>Source Files\object\object list</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="entity.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="enums.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -265,9 +277,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="missile.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="plane.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="profiler.h">
@@ -339,9 +348,6 @@
     <ClInclude Include="modeManager.h">
       <Filter>Source Files\modeManager</Filter>
     </ClInclude>
-    <ClInclude Include="objectList.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="bullet.h">
       <Filter>Source Files\bullet</Filter>
     </ClInclude>
@@ -350,6 +356,15 @@
     </ClInclude>
     <ClInclude Include="player.h">
       <Filter>Source Files\control</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Source Files\object</Filter>
+    </ClInclude>
+    <ClInclude Include="plane.h">
+      <Filter>Source Files\object\plane</Filter>
+    </ClInclude>
+    <ClInclude Include="objectList.h">
+      <Filter>Source Files\object\object list</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

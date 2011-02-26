@@ -22,15 +22,22 @@ modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp
 	world.level->ground()->setSize(world.level->ground()->size()*size);
 	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
 
+	LevelFile::Object obj;
+	obj.controlType = CONTROL_HUMAN;
+	obj.startRot = Quat4f();
+	obj.type = defaultPlane;
+	obj.team = TEAM0;
 	for(int i = 0; i < 2; i++)
 	{
-		int planeNum = world.objectList.newPlane(defaultPlane,TEAM0,false);
-		players[i].active(true);
-		players[i].planeNum(planeNum);
+		obj.startloc = Vec3f(rand()%1000,50,rand()%1000);
+		world.objectList.newObject(obj);
 	}
+	obj.controlType = CONTROL_COMPUTER;
 	for(int i = 0; i < 8; i++)
 	{
-		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
+		obj.team = TEAM0<<(i+1);
+		obj.startloc = Vec3f(rand()%1000,50,rand()%1000);
+		world.objectList.newObject(obj);
 	}
 }
 modeSplitScreen::modeSplitScreen(Level* lvl): modeDogFight(lvl)
@@ -51,7 +58,7 @@ modeSplitScreen::modeSplitScreen(Level* lvl): modeDogFight(lvl)
 	settings.SEA_LEVEL=world.level->water().seaLevel;
 
 	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
-}
+ }
 int modeSplitScreen::update()
 {
 	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
@@ -66,8 +73,8 @@ int modeSplitScreen::update()
 		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
 	}
 
-	((plane*)world.objectList[players[0].planeNum()])->setControlState(players[0].getControlState());
-	((plane*)world.objectList[players[1].planeNum()])->setControlState(players[1].getControlState());
+	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
+	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 
 	world.update();
 	radarAng+=45.0*world.time.getLength()/1000;
@@ -81,7 +88,7 @@ void modeSplitScreen::draw2D()
 {
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
-		plane* p=(plane*)world.objectList[players[acplayer].planeNum()];
+		nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 		if(players[acplayer].firstPerson() && !p->controled)
 		{
 			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2+sh/2*acplayer),"cockpit");

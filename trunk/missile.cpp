@@ -5,30 +5,30 @@ void missile::findTarget()
 	Vec3f enemy;
 	Angle ang=0.5;
 
-	const map<objId,planeBase*>& planes = world.planes();
+	const map<objId,nPlane*>& planes = world.planes();
 
-	for(map<objId,planeBase*>::const_iterator i = planes.begin(); i != planes.end();i++)
+	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		enemy=(*i).second->pos;
-		if(acosA( velocity.normalize().dot( (enemy-pos).normalize() )) < ang && /*dist(pos,enemy)<life*speed*0.4 &&*/ (*i).second->team!=team && !(*i).second->dead)
+		enemy=(*i).second->position;
+		if(acosA( velocity.normalize().dot( (enemy-position).normalize() )) < ang && /*dist(pos,enemy)<life*speed*0.4 &&*/ (*i).second->team!=team && !(*i).second->dead)
 		{
-			ang=acos( velocity.normalize().dot( (enemy-pos).normalize() ));
+			ang=acos( velocity.normalize().dot( (enemy-position).normalize() ));
 			target=(*i).first;
 		}
 	}
 }
-bool missile::Update(float ms)
+void missile::update(double time, double ms)
 {
 	/////////////////follow target////////////////////
-	planeBase* enemy = (planeBase*)world.objectList[target];
+	nPlane* enemy = (nPlane*)world.objectList[target];
 	if(enemy != NULL)
 	{
-		Vec3f e=enemy->pos;
+		Vec3f e=enemy->position;
 
-		difAng=acosA((e-pos).normalize().dot(velocity.normalize()));
+		difAng=acosA((e-position).normalize().dot(velocity.normalize()));
 		if(difAng.inRange(5.24,1.05))
 		{
-			accel=(accel.normalize()*0.0+(e-pos).normalize()*1.0)*accel.magnitude();
+			accel=(accel.normalize()*0.0+(e-position).normalize()*1.0)*accel.magnitude();
 			//velocity=(pos-e).normalize()*velocity.magnitude();
 		}
 		//if(abs(lastAng-(angle-difAng)/5)>7.5)
@@ -56,13 +56,13 @@ bool missile::Update(float ms)
 	velocity+=accel*(ms/1000);
 	if(velocity.magnitude()>MISSILE_SPEED) velocity=velocity.normalize()*MISSILE_SPEED;
 	/////////////////////move///////////////////////////
-	pos+=velocity*(ms/1000);
+	position+=velocity*(ms/1000);
 	////////////////////sparks//////////////////////////
 	static float distLeft=0.0;
 	distLeft += ms/1000;
 	while(distLeft > 0.006)
 	{
-		world.exaust.insert(pos-velocity*distLeft,0,0,world.time()-distLeft*1000,3000);
+		world.exaust.insert(position-velocity*distLeft,0,0,world.time()-distLeft*1000,3000);
 		distLeft-=0.006;
 	}
 	//for(int i=0;i<1;i++)
@@ -85,5 +85,5 @@ bool missile::Update(float ms)
 	//newExaust.insert(pos-velocity*0.015,0,0,10.0);
 
 	life-=ms/1000;
-	return life > 0.0;
+	if(life < 0.0) awaitingDelete = true;
 }

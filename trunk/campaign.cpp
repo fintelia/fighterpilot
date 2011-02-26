@@ -22,12 +22,20 @@ modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000
 	world.level->ground()->setSize(world.level->ground()->size()*128);
 	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
 
-	int planeNum = world.objectList.newPlane(defaultPlane,TEAM0,false);
-	players[0].active(true);
-	players[0].planeNum(planeNum);
+	LevelFile::Object obj;
+	obj.controlType = CONTROL_HUMAN;
+	obj.startRot = Quat4f();
+	obj.type = defaultPlane;
+	obj.team = TEAM0;
+	obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
+	world.objectList.newObject(obj);
+
+	obj.controlType = CONTROL_COMPUTER;
 	for(int i = 0; i < 2; i++)
 	{
-		world.objectList.newPlane(defaultPlane,TEAM0<<(i+1),true);
+		obj.team = TEAM0<<(i+1);
+		obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
+		world.objectList.newObject(obj);
 	}
 }
 int modeCampaign::update()
@@ -43,18 +51,18 @@ int modeCampaign::update()
 	}
 	if(input->getKey(F1)){players[0].toggleFirstPerson();input->getKey(F1);input->up(F1);}
 	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
-	((plane*)world.objectList[players[0].planeNum()])->setControlState(players[0].getControlState());
+	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	world.update();
 
 	int enemies_left=0;
-	const map<objId,planeBase*>& planes = world.planes();
-	for(map<objId,planeBase*>::const_iterator i = planes.begin(); i != planes.end();i++)
+	const map<objId,nPlane*>& planes = world.planes();
+	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		if((*i).second->team != world.objectList[players[0].planeNum()]->team)
+		if((*i).second->team != world.objectList[players[0].objectNum()]->team)
 			enemies_left++;
 	}
 
-	if(settings.ON_HIT==RESTART && world.objectList[players[0].planeNum()]->dead)
+	if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
 	{
 		//need to add code to restart the level
 		return 30;
@@ -74,7 +82,7 @@ int modeCampaign::update()
 }
 void modeCampaign::draw2D()
 {
-	plane* p=(plane*)world.objectList[players[0].planeNum()];
+	nPlane* p=(nPlane*)world.objectList[players[0].objectNum()];
 	Profiler.setOutput("altitude",p->altitude);
 	if(players[0].firstPerson() && !p->controled)
 	{

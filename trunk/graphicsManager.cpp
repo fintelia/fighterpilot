@@ -193,6 +193,8 @@ bool OpenGLgraphics::init()
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_MULTISAMPLE);
+	if(GLEE_ARB_framebuffer_sRGB)	glEnable(GL_FRAMEBUFFER_SRGB);
+
 
 	glActiveTextureARB(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
@@ -335,6 +337,28 @@ void OpenGLgraphics::destroyWindow()
 		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		hInstance=NULL;									// Set hInstance To NULL
 	}
+}
+void OpenGLgraphics::setGamma(float gamma)
+{
+	if(hDC == NULL)
+		return;
+
+	WORD gammaRamp[3][256];
+	for(int i=0;i<256;i++)
+	{
+		int value = i*((int)((gamma*0.5f+0.5f)*255)+128);
+		value = min(value,65535);
+		gammaRamp[0][i] = 
+		gammaRamp[1][i] = 
+		gammaRamp[2][i] = value;
+	}
+	
+	if (SetDeviceGammaRamp(hDC, gammaRamp))
+	{
+		currentGamma = gamma; // Store gama setting
+	}
+	else
+		assert(false);
 }
 bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultisample)
 {
@@ -535,13 +559,14 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 	SetForegroundWindow(hWnd);						// Slightly Higher Priority
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
 	graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
-
+	//setGamma(0.0);
 	if (!graphics->init())							// Initialize Our Newly Created GL Window
 	{
 		destroyWindow();					// Reset The Display
 		MessageBox(NULL,L"Initialization Failed.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
+
 	return true;									// Success
 }
 void OpenGLgraphics::swapBuffers()
