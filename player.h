@@ -133,38 +133,42 @@ public:
 
 class objectController
 {
+protected:
+	int		mObjectNum,
+			mKills;
+
 public:
+	const controlType type;
+
+	int objectNum()				{return mObjectNum;}
+	void objectNum(int value)	{mObjectNum=value;}
+	int kills()					{return mKills;}
+	void addKill()				{mKills++;}
+
+	virtual void update(){}
 	virtual controlState getControlState()=0;
+	
+	objectController(controlType t):type(t),mObjectNum(0),mKills(0){}
 };
 
-class player: public objectController
+class humanControl: public objectController
 {
 private:
-	int				PlaneNum,
-					PlayerNum,
-					Kills;
-	bool			Active,
-					FirstPerson;
+	int				PlayerNum;
+	bool			FirstPerson;
 	playerControls	controls;
 
 	static int		TotalPlayers;
 public:
-	player(): PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
-
-	int planeNum()				{return PlaneNum;}
-	void planeNum(int value)	{PlaneNum=value;}
+	humanControl():objectController(CONTROL_HUMAN), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
 
 	int playerNum()				{return PlayerNum;}
-
-	int kills()					{return Kills;}
-	void addKill()				{Kills++;}
 
 	bool firstPerson()			{return FirstPerson;}
 	void toggleFirstPerson()	{FirstPerson=!FirstPerson;}
 	void firstPerson(bool value){FirstPerson=value;}
 
-	void active(bool value)		{Active=value;}
-	bool active()				{return Active;}
+	bool active()				{return mObjectNum!=0;}
 
 	controlState getControlState(){
 		controlState c;
@@ -181,11 +185,12 @@ public:
 
 };
 
-class AIplayer: public objectController
+class AIcontrol: public objectController
 {
 private:
 	int target;
 public:
+	AIcontrol(): objectController(CONTROL_COMPUTER){}
 	controlState getControlState(){
 		controlState c;
 		c.accelerate=0.0;

@@ -48,6 +48,8 @@ extern const float size;
 extern bool lowQuality;
 extern bool done;//setting this to true will terminate the program
 
+const int NumPlayers = 2;
+
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 
 #include "enums.h"
@@ -70,18 +72,19 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "explosion.h"
 #include "imageloader.h"//should be replaced!!!
 #include "partical.h"
-#include "entity.h"
+#include "player.h"
+#include "object.h"
 #include "bullet.h" 
 #include "missile.h"
 #include "plane.h"
 #include "turret.h"
 #include "settings.h"
-#include "player.h"
+
 #include "objectList.h"
 #include "worldManager.h"
 
-const int NumPlayers = 2;
-extern player players[NumPlayers];
+
+extern humanControl players[NumPlayers];
 
 extern int sh, sw;
 

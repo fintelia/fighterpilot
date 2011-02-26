@@ -131,6 +131,8 @@
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="dogFight.cpp" />
     <ClCompile Include="modeManager.cpp" />
+    <ClCompile Include="object.cpp" />
+    <ClCompile Include="objectList.cpp" />
     <ClCompile Include="particle.cpp" />
     <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
@@ -169,7 +171,7 @@
     <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
     <ClInclude Include="dataManager.h" />
-    <ClInclude Include="entity.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="explosion.h" />
     <ClInclude Include="FrustumG.h" />

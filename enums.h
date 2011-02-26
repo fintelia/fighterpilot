@@ -34,13 +34,14 @@ const int LEFT_BUTTON		= 0x201;
 const int MIDDLE_BUTTON		= 0x202;
 const int RIGHT_BUTTON		= 0x203;
 
-const int PLAYER_NONE		= 0x001;
-const int PLAYER_HUMAN		= 0x002;
-const int PLAYER_COMPUTER	= 0x004;
+const int CONTROL_NONE		= 0x001;
+const int CONTROL_HUMAN		= 0x002;
+const int CONTROL_COMPUTER	= 0x004;
 
 typedef int objectType;
 typedef int planeType;
 typedef int missileType;
+typedef int controlType;
 
 typedef int teamNum;
 typedef int inputCallbackType;

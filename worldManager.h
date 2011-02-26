@@ -17,8 +17,8 @@ public:
 
 	Level::heightmapGL* const WorldManager::ground() const;
 
-	const map<objId,entity*>& objects()const;
-	const map<objId,planeBase*>& planes()const;
+	const map<objId,object*>& objects()const;
+	const map<objId,nPlane*>& planes()const;
 	const map<objId,missile*>& missiles()const;
 
 	void update();

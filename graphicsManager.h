@@ -28,7 +28,7 @@ protected:
 	HGLRC		hRC;
 	HWND		hWnd;
 	HINSTANCE	hInstance;			
-
+	float		currentGamma;
 	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL){}
 
 public:
@@ -51,6 +51,7 @@ public:
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
+	virtual void setGamma(float gamma)=0;
 	virtual bool createWindow(char* title, RECT WindowRect, bool checkMultisample)=0;
 	virtual void swapBuffers()=0;
 };
@@ -109,6 +110,7 @@ public:
 	void resize(int w, int h);
 	void render();
 	void destroyWindow();
+	void setGamma(float gamma);
 	bool createWindow(char* title, RECT WindowRect, bool checkMultisample);
 	void swapBuffers();
 };

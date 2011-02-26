@@ -5,38 +5,27 @@ using namespace std;
 void spawn();
 void die();
 
-class planeBase:public entity
+class nPlane: public controlledObject
 {
 private:
 	double lastUpdateTime;
 	double extraShootTime;//time since it last shot;
-	controlState lastController;
-protected:
-	controlState controller;
 public:
 //////////////functions////////////
-	//void updatePos(float ms);
-	void updateAll();
+	void update(double time, double ms);
 	void findTargetVector();
-	//virtual void Accelerate(float value);
-	//virtual void Brake(float value);
-	//virtual void Turn_Right(float value);
-	//virtual void Turn_Left(float value);
-	//virtual void Climb(float value);
-	//virtual void Dive(float value);
-	virtual void Level(float value);
-	//virtual void Shoot();
-	virtual void ShootMissile();
-	virtual void die();
-	virtual void loseHealth(float healthLoss);
-	virtual void autoPilotUpdate(float value);
-	virtual void exitAutoPilot();
-	virtual void returnToBattle();
-	virtual bool Update(float value)=0;
-	virtual void spawn()=0;
+	void level(float value);
+	void ShootMissile();
+	void die();
+	void loseHealth(float healthLoss);
+	void autoPilotUpdate(float value);
+	void exitAutoPilot();
+	void returnToBattle();
+	void spawn();
 	void drawExplosion(bool flash);
 	void initArmaments();
-	planeBase(int Id, planeType Type, int Team);
+	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
+	nPlane(Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
 	struct wayPoint
 	{
@@ -53,31 +42,18 @@ public:
 		unsigned int roundsMax, roundsLeft;//number fired before recharge must take place
 		float rechargeTime, rechargeLeft;//all in milliseconds
 		float coolDown, coolDownLeft;
-
 	};
 //////////////flight specs/////////
-	//Vec3f pos; (from entity)
-	Quat4f rotation;//for model
-
 	float speed;
 	double turn;
 	double climb;
 	Angle direction;
 
-	//Vec3f velocity;
-	//Vec3f accel;
-	//Vec3f normal;
-	//Angle roll;
 	float altitude;
-	//float turn; // -50 to 50
 /////////////weapons///////////////
 	Vec3f targeter;
 	armament machineGun;
 	armament rockets;
-////////////identity///////////////
-	//int id; (from entity)
-	//int team;
-	//planeType type;
 ////////////life///////////////////
 	//bool dead; (from entity)
 	//int respawn;
@@ -98,31 +74,31 @@ public:
 	Vec3f center;
 };
 
-class plane: public planeBase
-{
-private:
-
-public:
-	void setControlState(controlState c);
-	bool Update(float value);
-	void spawn();
-	void die();
-	plane(int Id, planeType Type, int Team);
-};
-
-class AIplane:public planeBase
-{
-public:
-	enum planeState{PARTOL,FOLLOW_TARGET,FINISH_TARGET} state;
-	int target; //plane being hunted
-	vector<Vec3f> path;//a general path to get the plane to its target
-
-	AIplane(int Id, planeType Type, int Team);
-
-	bool Update(float value);
-	void spawn();
-	void calcMove(int value);
-	void freeForAll_calcMove(int value);
-	void playerVs_calcMove(int value);
-	void teams_calcMove(int value);
-};
+//class plane: public planeBase
+//{
+//private:
+//
+//public:
+//	void setControlState(controlState c);
+//	bool Update(float value);
+//	void spawn();
+//	void die();
+//	plane(int Id, planeType Type, int Team);
+//};
+//
+//class AIplane:public planeBase
+//{
+//public:
+//	enum planeState{PARTOL,FOLLOW_TARGET,FINISH_TARGET} state;
+//	int target; //plane being hunted
+//	vector<Vec3f> path;//a general path to get the plane to its target
+//
+//	AIplane(int Id, planeType Type, int Team);
+//
+//	bool Update(float value);
+//	void spawn();
+//	void calcMove(int value);
+//	void freeForAll_calcMove(int value);
+//	void playerVs_calcMove(int value);
+//	void teams_calcMove(int value);
+//};

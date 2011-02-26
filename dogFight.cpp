@@ -216,19 +216,19 @@ void modeDogFight::drawExaust()
 }
 void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead)
 {
-	plane* p=(plane*)world.objectList[players[acplayer].planeNum()];
-	const map<objId,planeBase*>& planes = world.planes();
-	planeBase* cPlane;
+	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
+	const map<objId,nPlane*>& planes = world.planes();
+	nPlane* cPlane;
 
 
 	glColor3f(1,1,1);
 	//Vec3f axis;
 	Angle roll;
-	for(map<objId,planeBase*>::const_iterator i = planes.begin(); i != planes.end();i++)
+	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		cPlane=(*i).second;
-		Vec3f a=(*i).second->pos;
-		if((cPlane->id!=players[acplayer].planeNum() || !players[acplayer].firstPerson() || p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
+		Vec3f a=(*i).second->position;
+		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() || p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
 		{
 			glPushMatrix(); 
 				glTranslatef(a.x,a.y,a.z);
@@ -291,7 +291,7 @@ void modeDogFight::drawScene(int acplayer) {
 	double time=world.time();
 
 
-	plane* p=(plane*)world.objectList[players[acplayer].planeNum()];
+	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -311,9 +311,9 @@ void modeDogFight::drawScene(int acplayer) {
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
  		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
-		e=Vec3f(p->pos.x - vel2D.normalize().x*25, p->pos.y + sin(45.0)*25 , p->pos.z - vel2D.normalize().z*25);
+		e=Vec3f(p->position.x - vel2D.normalize().x*25, p->position.y + sin(45.0)*25 , p->position.z - vel2D.normalize().z*25);
 		if(p->controled) e=p->camera;
-		c=Vec3f(p->pos.x + vel2D.normalize().x*25, p->pos.y, p->pos.z + vel2D.normalize().z*25);
+		c=Vec3f(p->position.x + vel2D.normalize().x*25, p->position.y, p->position.z + vel2D.normalize().z*25);
 		if(p->controled) c=p->center;
 		u=Vec3f(0,1,0);
 
@@ -339,7 +339,7 @@ void modeDogFight::drawScene(int acplayer) {
 	}
 	else
 	{
-		e=p->pos;//
+		e=p->position;//
 		c=p->rotation * Vec3f(0,0,1)+e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
 		u=p->rotation * Vec3f(0,1,0);
 		//upAndRight(p->rotation * Vec3f(0,0,1),p->roll,u,Vec3f());
@@ -396,7 +396,7 @@ glError();	//missiles
 	for(map<objId,missile*>::const_iterator i=missiles.begin();i != missiles.end();i++)
 	{
 		glPushMatrix();
-			glTranslatef(i->second->pos.x,i->second->pos.y,i->second->pos.z);
+			glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
 			axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
 			Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
 			glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
@@ -452,8 +452,8 @@ glError();	//missiles
 
 		
 	Profiler.startElement("particles");
-	const map<objId,planeBase*>& planes = world.planes();
-	for(map<objId,planeBase*>::const_iterator i=planes.begin();i!=planes.end();i++)
+	const map<objId,nPlane*>& planes = world.planes();
+	for(auto i=planes.begin();i!=planes.end();i++)
 		i->second->drawExplosion(p->id==i->second->id);
 	//vertexArrayParticles();
 
