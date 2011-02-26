@@ -293,7 +293,9 @@ int DataManager::loadOBJ(string filename)
 	unsigned int	totalVerts,totalFaces;
 
 	FILE *fp;
-	fopen_s(&fp,filename.c_str(), "r");
+	if(fopen_s(&fp,filename.c_str(), "r"))
+		return 0;
+
 	char buffer[200];
 	char *token, *nextToken=NULL;
 	///////

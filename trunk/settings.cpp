@@ -214,15 +214,16 @@ void Settings::loadModelData(char* filename)
 			}
 			catch(bad_lexical_cast &)
 			{
-				__debugbreak();//boost type conversion failed
-				exit(0);
+				debugBreak();//boost type conversion failed
+				closingMessage("Error reading 'modelData.txt'. Fighter-Pilot will now close.","Error");
+				return;
 			}
 		}
 		fin.close();
 	}
 	else 
 	{
-		__debugbreak();//could not open model data file
-		exit(0);
+		debugBreak();//could not open model data file
+		closingMessage("'modelData.txt' not found. Fighter-Pilot will now close.","Missing File");
 	}
 }

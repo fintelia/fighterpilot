@@ -99,7 +99,7 @@ public:
 				return (*i)->getPoint(ms);
 		}
 		
-		__debugbreak();
+		debugBreak();
 		return point();
 	}
 	float startTime()
