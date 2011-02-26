@@ -410,3 +410,4 @@ private:
 extern MenuManager& menuManager;
 
 void messageBox(string text);
+void closingMessage(string text,string title="error");

@@ -1219,3 +1219,23 @@ void messageBox(string text)
 	m->init(text);
 	menuManager.setPopup(m);
 }
+void closingMessage(string text,string title)
+{
+	if(dataManager.getId("dialog box")==0 || !textManager->loadSuccessful())
+	{
+		graphics->destroyWindow();
+		MessageBoxA(NULL,text.c_str(),title.c_str(),MB_ICONERROR);
+		exit(0);
+	}
+	else
+	{
+		struct exitor: public functor<void,menuPopup*>
+		{
+			void operator() (menuPopup*){exit(0);}
+		};
+		menuMessageBox* m = new menuMessageBox;
+		m->init(text);
+		m->callback = (functor<void,menuPopup*>*)(new exitor);
+		menuManager.setPopup(m);
+	}
+}

@@ -8,6 +8,8 @@
 using namespace std;
 using namespace boost;
 
+
+#include "enums.h"
 #include "script.h"
 
 
@@ -53,7 +55,7 @@ void loadScript(string filename, vector<scriptVar> vars)
 
 	if(!fin.is_open())
 	{
-		__debugbreak();//could not open script file
+		debugBreak();//could not open script file
 		exit(0);
 	}
 	while(!fin.eof())
@@ -98,7 +100,7 @@ void loadScript(string filename, vector<scriptVar> vars)
 					(*i).set(tokens[2].myString);
 			}
 		}catch(bad_lexical_cast &){
-			__debugbreak();//boost type conversion failed
+			debugBreak();//boost type conversion failed
 			exit(0);
 		}
 	}

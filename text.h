@@ -98,7 +98,7 @@ private:
 		if((texture.width <= 0) || (texture.height <= 0) || ((texture.bpp != 24) && (texture.bpp !=32)))	// Make sure all information is valid
 		{
 			fin.close();
-			__debugbreak();
+			debugBreak();
 			return;
 		}
 
@@ -115,7 +115,7 @@ private:
 		if(texture.imageData == NULL)											// If no space was allocated 
 		{
 			fin.close();
-			__debugbreak();
+			debugBreak();
 			return;
 		}
 		fin.read((char *)(texture.imageData), tga.imageSize);
@@ -267,6 +267,7 @@ public:
 		}
 		return height;
 	}
+	bool loadSuccessful(){return textureId!=0;}
 };
 
 extern TextManager* textManager;
