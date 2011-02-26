@@ -50,19 +50,19 @@ void missile::update(double time, double ms)
 	{
 		findTarget();
 	}
-	//////////////////Accelerate//////////////
-	accel=accel.normalize()*(accel.magnitude()+ms*70);
-	
+	//////////////////Movement//////////////
 	velocity+=accel*(ms/1000);
 	if(velocity.magnitude()>MISSILE_SPEED) velocity=velocity.normalize()*MISSILE_SPEED;
-	/////////////////////move///////////////////////////
+	
 	position+=velocity*(ms/1000);
+
+	//path.currentPoint(position,rotation);
 	////////////////////sparks//////////////////////////
 	static float distLeft=0.0;
 	distLeft += ms/1000;
 	while(distLeft > 0.006)
 	{
-		world.exaust.insert(position-velocity*distLeft,0,0,world.time()-distLeft*1000,3000);
+		world.exaust.insert(position-velocity*distLeft,0,0.75,world.time()-distLeft*1000,3000+rand()%1000);
 		distLeft-=0.006;
 	}
 	//for(int i=0;i<1;i++)

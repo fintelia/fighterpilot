@@ -16,21 +16,21 @@ const int SAND		=1;
 class Settings
 {
 public:
-	string MAP_FILE;
-	string LEVEL_NAME;
-	int KILL_PERCENT_NEEDED;
-	int ENEMY_PLANES;
-	int ON_HIT;
-	int ON_AI_HIT;
-	int GAME_TYPE;
-	int MIN_X;
-	int MIN_Y;
-	int MAX_X;
-	int MAX_Y;
-	int MAP_TYPE;
-	int SEA_FLOOR_TYPE;
-	float HEIGHT_RANGE;
-	float SEA_LEVEL;
+	//string MAP_FILE;
+	//string LEVEL_NAME;
+	//int KILL_PERCENT_NEEDED;
+	//int ENEMY_PLANES;
+	//int ON_HIT;
+	//int ON_AI_HIT;
+	//int GAME_TYPE;
+	//int MIN_X;
+	//int MIN_Y;
+	//int MAX_X;
+	//int MAX_Y;
+	//int MAP_TYPE;
+	//int SEA_FLOOR_TYPE;
+	//float HEIGHT_RANGE;
+	//float SEA_LEVEL;
 
 	struct planeStat
 	{
@@ -51,12 +51,12 @@ public:
 	};
 	vector<missileStat> missileStats;
 
-	void loadMap(char *filename);
+	//void loadMap(char *filename);
 	void loadModelData(char* filename);
 	Settings(){}
-	Settings(char *filename)
-	{
-		loadMap(filename);
-	}
+	//Settings(char *filename)
+	//{
+	//	loadMap(filename);
+	//}
 };
 extern Settings settings;

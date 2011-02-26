@@ -69,7 +69,7 @@ void OpenGLgraphics::particleEffect::reset()
 	drawFlag=false;
 	num = 0;
 }
-bool OpenGLgraphics::particleEffect::setParticle(Vec3f p, Color c)
+bool OpenGLgraphics::particleEffect::setParticle(Vec3f p, float life)
 {
 
 	if(compacity <= num)
@@ -85,10 +85,11 @@ bool OpenGLgraphics::particleEffect::setParticle(Vec3f p, Color c)
 		compacity *= 2;
 	}
 	particles[num].vert = p;
-	particles[num].r = c.r;
-	particles[num].g = c.g;
-	particles[num].b = c.b;
-	particles[num].a = c.a;
+	//particles[num].r = c.r;
+	//particles[num].g = c.g;
+	//particles[num].b = c.b;
+	//particles[num].a = c.a;
+	particles[num].life = life;
 
 	drawFlag=true;
 	num++;
@@ -97,8 +98,12 @@ bool OpenGLgraphics::particleEffect::setParticle(Vec3f p, Color c)
 void OpenGLgraphics::particleEffect::render()
 {
 	if(num==0)return;
+
+
 	glColor4f(1,1,1,1);
 	dataManager.bind(texture);
+	dataManager.bind("partical shader");
+	glUniform1i(glGetUniformLocation(dataManager.getId("partical shader"), "tex"), 0);
 
 	glPointSize(   size   );
 
@@ -108,28 +113,31 @@ void OpenGLgraphics::particleEffect::render()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(particle)*num, particles, GL_DYNAMIC_DRAW);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	GLuint aLife = glGetAttribLocation(dataManager.getId("partical shader"),"life");
+	glEnableVertexAttribArray(aLife);
 
 	glVertexPointer(3, GL_FLOAT, sizeof(particle), 0);
-	glColorPointer(4, GL_FLOAT, sizeof(particle), (void*)sizeof(Vec3f));
+	glVertexAttribPointer(aLife,1,GL_FLOAT,false, sizeof(particle), (void*)(7*sizeof(float)));
+	//glColorPointer(4, GL_FLOAT, sizeof(particle), (void*)sizeof(Vec3f));
 
 	glDrawArrays(GL_POINTS, 0, num);
-	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableVertexAttribArray(aLife);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	dataManager.bindTex(0);
+	dataManager.bindShader(0);
 }
 OpenGLgraphics::particleEffect::~particleEffect()
 {
 	glDeleteBuffers(1,&VBO);
 	delete[] particles;
 }
-bool OpenGLgraphics::drawParticle(gID id, Vec3f pos, Color c)
+bool OpenGLgraphics::drawParticle(gID id, Vec3f pos, float life)
 {
 	if(objects.find(id) !=objects.end() && objects[id]->type==object::PARTICLE_EFFECT)
 	{
-		return ((particleEffect*)objects[id])->setParticle(pos, c);
+		return ((particleEffect*)objects[id])->setParticle(pos, life);
 	}
 	return false;
 }
@@ -222,7 +230,9 @@ bool OpenGLgraphics::init()
 		return false;
 	}
 
-	glEnable(GL_POINT_SPRITE_ARB);
+	glEnable(GL_POINT_SPRITE);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
 	float quadratic[] =  { 0.0f, 0.0f, 0.000001f };
 	glPointParameterfv( GL_POINT_DISTANCE_ATTENUATION_ARB, quadratic );
 	glPointParameterf( GL_POINT_SIZE_MIN_ARB, 1 );
@@ -268,7 +278,6 @@ void OpenGLgraphics::render()
 /////////////////////////////////////START 3D////////////////////////////////////
 
 	modeManager.render3D();
-
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
 	glMatrixMode(GL_PROJECTION);			// Select Projection

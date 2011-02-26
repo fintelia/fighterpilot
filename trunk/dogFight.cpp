@@ -12,7 +12,7 @@ modeDogFight::~modeDogFight()
 
 void modeDogFight::drawWater(Vec3f eye)
 {
-	double sl=settings.SEA_LEVEL;
+	double sl=world.level->water().seaLevel;
 	Vec3d center(eye.x,sl,eye.z);
 	double radius = (eye.y-sl)*tan(asin(6000000/(6000000+eye.y-sl)));
 	float cAng,sAng;
@@ -22,14 +22,15 @@ void modeDogFight::drawWater(Vec3f eye)
 
 	dataManager.bind("hardNoise",0);
 	dataManager.bindTex(((Level::heightmapGL*)world.level->ground())->groundTex,1);
-	if(settings.SEA_FLOOR_TYPE==ROCK)	dataManager.bind("rock",2);
-	else								dataManager.bind("sand",2);
+	dataManager.bind("sand",2);
+	//if(world.level->water().==ROCK)	dataManager.bind("rock",2);
+	//else								dataManager.bind("sand",2);
 
 	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
 	glUniform1i(glGetUniformLocation(s, "ground"), 1);
 	glUniform1i(glGetUniformLocation(s, "tex"), 2);
 	glUniform1f(glGetUniformLocation(s, "time"), world.time());
-	glUniform1f(glGetUniformLocation(s, "heightRange"), settings.HEIGHT_RANGE*2);
+	glUniform1f(glGetUniformLocation(s, "heightRange"), 0);
 	glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -207,9 +208,9 @@ void modeDogFight::drawExaust()
 		{
 			if(world.exaust.startTime[i] < time && time < world.exaust.endTime[i])
 			{
-				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,Color(0.5,0.5,0.5,0.5*(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i])));
+				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i]));
 				numSprites++;
-			} 
+			}
 		}
 	}
 	Profiler.setOutput("smoke sprites", numSprites);
@@ -368,15 +369,15 @@ void modeDogFight::drawScene(int acplayer) {
 	Profiler.endElement("dome");
 
 	Profiler.startElement("water");
-	if(settings.MAP_TYPE==WATER && world.level == NULL)
-	{
-		//if(lowQuality)
-			//drawWater3(e);
-			drawWater(e);
-		//else
-		//	drawWater4(e);
-			
-	}
+	//if(settings.MAP_TYPE==WATER && world.level == NULL)
+	//{
+	//	//if(lowQuality)
+	//		//drawWater3(e);
+	//		drawWater(e);
+	//	//else
+	//	//	drawWater4(e);
+	//		
+	//}
 	Profiler.endElement("water");
 	Profiler.startElement("land");
 	glEnable(GL_POLYGON_OFFSET_FILL);

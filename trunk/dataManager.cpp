@@ -863,8 +863,10 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerShader("rock terrain",		"media/rock.vert","media/rock.frag");
 	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
 	if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
+	if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
 	if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass.frag");
+
 
 	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
 	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");

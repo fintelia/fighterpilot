@@ -113,15 +113,15 @@ void nPlane::update(double time, double ms)
 				position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
 			}
 			////////////////////end move////////////////////////////////////
-			bool setAutoPilot=false;
-			if(position.x > settings.MAX_X * size && !controled){position.x = settings.MAX_X * size-6;setAutoPilot=true;}
-			if(position.x < settings.MIN_X * size && !controled){position.x = settings.MIN_X * size+6;setAutoPilot=true;}
-			if(position.z > settings.MAX_Y * size && !controled){position.z = settings.MAX_Y * size-6;setAutoPilot=true;}
-			if(position.z < settings.MIN_Y * size && !controled){position.z = settings.MIN_Y * size+6;setAutoPilot=true;}
-			if(setAutoPilot)
-			{
-				returnToBattle();
-			}
+			//bool setAutoPilot=false;
+			//if(position.x > settings.MAX_X * size && !controled){position.x = settings.MAX_X * size-6;setAutoPilot=true;}
+			//if(position.x < settings.MIN_X * size && !controled){position.x = settings.MIN_X * size+6;setAutoPilot=true;}
+			//if(position.z > settings.MAX_Y * size && !controled){position.z = settings.MAX_Y * size-6;setAutoPilot=true;}
+			//if(position.z < settings.MIN_Y * size && !controled){position.z = settings.MIN_Y * size+6;setAutoPilot=true;}
+			//if(setAutoPilot)
+			//{
+			//	returnToBattle();
+			//}
 
 			//if(pos.y>300 && velocity.y>0)
 			//	velocity.y=clamp(velocity.y-ms/2500,0,velocity.y);

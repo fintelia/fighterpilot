@@ -87,8 +87,8 @@ public:
 class modeSplitScreen: public modeDogFight
 {
 public:
-	modeSplitScreen(Level* lvl);
-	modeSplitScreen();
+	modeSplitScreen(Level* lvl): modeDogFight(lvl){}
+	modeSplitScreen(string lvlFile): modeDogFight(new Level(LevelFile(lvlFile))){}
 	int update();
 	void draw2D();
 	void draw3D();
@@ -101,7 +101,7 @@ protected:
 	bool levelup;
 public:
 	modeCampaign(Level* lvl): modeDogFight(lvl), levelup(false), countdown(0.0){}
-	modeCampaign();
+	modeCampaign(string lvlFile): modeDogFight(new Level(LevelFile(lvlFile))), levelup(false), countdown(0.0){}
 	int update();
 	void draw2D();
 	void draw3D();
