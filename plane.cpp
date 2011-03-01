@@ -98,7 +98,7 @@ void nPlane::update(double time, double ms)
 			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
 			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
 			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
-			direction -= turn/100;
+			direction -= turn*ms/3000.0;//needs to be adjusted to be continious
 			speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
 			rotation = Quat4f(0,0,0,1);
