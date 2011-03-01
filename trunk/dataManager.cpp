@@ -799,8 +799,13 @@ int DataManager::registerAssets()
 	callNum++;
 	int n=1;
 
+
+
+	if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
+	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
+
 	if(callNum==n++)	registerTexture("noTexture",		0);
-	if(callNum==n++)	registerShader("noShader",			0);
+	if(callNum==n++)	registerShader("noShader",			0);	
 	if(callNum==n++)	registerAsset("grass",				"media/grass.png");
 	if(callNum==n++)	registerAsset("rock",				"media/rock.png");
 	if(callNum==n++)	registerAsset("sand",				"media/sand.png");
@@ -834,7 +839,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("button",				"media/button.png");
 	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
-	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
+
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
 	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
@@ -878,7 +883,7 @@ int DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	if(callNum==n++)	settings.loadModelData("media/modelData.txt");
-	if(callNum==n++)	textManager->init("media/ascii");
+
 
 	return (n-1)-callNum;//number left
 }

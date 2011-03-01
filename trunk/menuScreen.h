@@ -330,7 +330,7 @@ public:
 	menuChooseMode():activeChoice(MULTIPLAYER){}
 	~menuChooseMode(){}
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
-	int update(){Redisplay=true;return 30;}
+	int update(){return 30;}
 	void render();
 	void keyDown(int vkey);
 protected:
@@ -343,7 +343,7 @@ public:
 	menuInGame(): activeChoice(RESUME){}
 	~menuInGame(){}
 	bool init();
-	int update(){Redisplay=true;return 30;}
+	int update(){return 30;}
 	void render();
 	void keyDown(int vkey);
 protected:

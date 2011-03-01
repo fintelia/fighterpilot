@@ -52,6 +52,8 @@ extern planeType defaultPlane;
 const int BULLET_SPEED		= 1700;
 const int MISSILE_SPEED		= 1700;// 1700 m/s = mach 5 (max speed)
 
+const double MAX_FPS		= 60.0;
+
 struct controlState
 {
 	float	climb;

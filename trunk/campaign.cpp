@@ -77,13 +77,11 @@ int modeCampaign::update()
 	if(radarAng>=360)
 		radarAng-=360;
 
-	Redisplay=true;
 	return 30;
 }
 void modeCampaign::draw2D()
 {
 	nPlane* p=(nPlane*)world.objectList[players[0].objectNum()];
-	Profiler.setOutput("altitude",p->altitude);
 	if(players[0].firstPerson() && !p->controled)
 	{
 		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");

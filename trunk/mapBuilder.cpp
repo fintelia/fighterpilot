@@ -146,8 +146,8 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 			if(h<minHeight) minHeight=h;
 		}
 	}
-	resetView();
 	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+	resetView();
 }
 void modeMapBuilder::faultLine()
 {
@@ -247,7 +247,6 @@ int modeMapBuilder::update()
 		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
 		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.getLength() / 1000;
 	}
-	Redisplay=true;
 	menuManager.update();
 	return 7;
 }
@@ -378,7 +377,6 @@ bool modeMapBuilder::init()
 	level = new editLevel;
 
 	scroll=0.0;
-	Redisplay=true;
 	level->newGround(80,80);
 	faultLine();
 
