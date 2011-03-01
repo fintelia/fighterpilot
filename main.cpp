@@ -30,7 +30,6 @@ WorldManager& world=WorldManager::getInstance();																								//	//
 CollisionChecker& collisionCheck=CollisionChecker::getInstance();																				//	//
 GraphicsManager* graphics=OpenGLgraphics::getInstance();																						//	//
 CameraManager cameraManager=CameraManager::getInstance();																						//	//
-bool Redisplay=false;																															//	//
 bool hasContext=true;																															//	//
 bool getContext=false;																															//	//
 bool done=false;//exits program																													//	//
@@ -48,22 +47,13 @@ planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //																																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int update()
+void update()
 {
 	world.time.nextFrame();
-
-	double time = GetTime();
-	static double lt = time;
-	double length = time-lt;
-	lt = time;
-
-	Profiler.setOutput("time speed", world.time.getLength()/length);
-
+	
 	input->update();
 	menuManager.update();
 	modeManager.update();
-
-	return 0;
 }
 void ShowHideTaskBar(bool bHide)
 {
@@ -104,14 +94,11 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			}
 			break;									// Exit
 		}
-		case WM_MOVE:
-		case WM_MOVING:
-		case WM_WINDOWPOSCHANGED:
-		case WM_WINDOWPOSCHANGING:
-		{
-			Redisplay=true;
-			return 0;
-		}
+		//case WM_MOVE:
+		//case WM_MOVING:
+		//case WM_WINDOWPOSCHANGED:
+		//case WM_WINDOWPOSCHANGING:
+		//	return 0;
 
 		case WM_CLOSE:								// Did We Receive A Close Message?
 		{
@@ -217,10 +204,11 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		{
 			float waitTime=nextUpdate-GetTime();
 			if(waitTime>0)	Sleep(waitTime);
-		
-			nextUpdate=update();
-			float time = GetTime();
-			nextUpdate += time;
+
+			update();
+
+			double time = GetTime();		
+			nextUpdate=1000.0/MAX_FPS + time;
 			lastUpdate = time;
 
 #ifdef _DEBUG
@@ -230,14 +218,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			}
 			else 
 #endif
-			if(hasContext)
+			if(hasContext && active)
 			{
-				if(Redisplay && active)
-				{
-					graphics->render();
-					graphics->swapBuffers();
-				}
-				Redisplay=false;
+				graphics->render();
+				graphics->swapBuffers();
 			}
 		}
 	}

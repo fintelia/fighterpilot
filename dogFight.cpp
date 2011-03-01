@@ -213,7 +213,6 @@ void modeDogFight::drawExaust()
 			}
 		}
 	}
-	Profiler.setOutput("smoke sprites", numSprites);
 }
 void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead)
 {
@@ -286,7 +285,6 @@ void modeDogFight::drawBullets()
 	glLineWidth(1);
 }
 void modeDogFight::drawScene(int acplayer) {
-	Profiler.startElement("beginRender");
 
 	static map<int,double> lastDraw;
 	double time=world.time();
@@ -349,8 +347,6 @@ void modeDogFight::drawScene(int acplayer) {
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
-	Profiler.endElement("beginRender");
-	Profiler.startElement("dome");
 	glEnable(GL_BLEND);		
 	glColor3f(1,1,1);
 	//sky dome
@@ -366,9 +362,7 @@ void modeDogFight::drawScene(int acplayer) {
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 	glDepthRange(0,1);
-	Profiler.endElement("dome");
 
-	Profiler.startElement("water");
 	//if(settings.MAP_TYPE==WATER && world.level == NULL)
 	//{
 	//	//if(lowQuality)
@@ -378,8 +372,6 @@ void modeDogFight::drawScene(int acplayer) {
 	//	//	drawWater4(e);
 	//		
 	//}
-	Profiler.endElement("water");
-	Profiler.startElement("land");
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glPolygonOffset(1.0,1.0);
 	if(world.level != NULL)
@@ -388,9 +380,7 @@ void modeDogFight::drawScene(int acplayer) {
 
 	glPolygonOffset(0.0,0.0);
 	glDisable(GL_POLYGON_OFFSET_FILL);
-	Profiler.endElement("land");
-	Profiler.startElement("missiles");
-glError();	//missiles
+	glError();	//missiles
 	glColor3f(1,0,0);
 	Vec3f axis;
 	const map<objId,missile*>& missiles = world.missiles();
@@ -409,7 +399,6 @@ glError();	//missiles
 		glPopMatrix();
 	}
 
-	Profiler.endElement("missiles");
 	//glColor3f(0,1,0);
 	//for(int i=0;i<(signed int )turrets.size();i++)
 	//{
@@ -419,10 +408,8 @@ glError();	//missiles
 	//		//glCallList(model[4]);   need to load model
 	//	glPopMatrix();
 	//}
-	Profiler.startElement("planes");
 	//planes
 	drawPlanes(acplayer,e,false);
-	Profiler.endElement("planes");glError();
 #ifdef AI_TARGET_LINES 
 	glBegin(GL_LINES);
 	int t;
@@ -444,7 +431,6 @@ glError();	//missiles
 #endif
 
 
-	Profiler.startElement("trans");	
 	glDepthMask(false);
 	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);glError();
@@ -452,7 +438,6 @@ glError();	//missiles
 	//glCallList(treeDisp);
 
 		
-	Profiler.startElement("particles");
 	const map<objId,nPlane*>& planes = world.planes();
 	for(auto i=planes.begin();i!=planes.end();i++)
 		i->second->drawExplosion(p->id==i->second->id);
@@ -462,7 +447,6 @@ glError();	//missiles
 	
 	drawExaust();
 	graphics->render3D();
-	Profiler.endElement("particles");
 
 	//drawOrthoView(acplayer,e);
 
@@ -493,7 +477,6 @@ glError();	//missiles
 	glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D,0);
 	glDepthMask(true);
-	Profiler.endElement("trans");
 
 	lastDraw[acplayer] = time;glError();
 }

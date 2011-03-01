@@ -516,7 +516,7 @@ bool menuMessageBox::init(string t, vector<string> names)
 
 	labels["label"] = new menuLabel(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
 
-	float slotWidth = (685.0*715/width) / names.size();
+	float slotWidth = (685.0*width/715) / names.size();
 	int slotNum = 0;
 	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
@@ -529,7 +529,11 @@ bool menuMessageBox::init(string t, vector<string> names)
 void menuMessageBox::render()
 {
 	glColor4f(1,1,1,1);
-	dataManager.bind("dialog box");
+	if(dataManager.getId("dialog box") != 0)
+		dataManager.bind("dialog box");
+	else
+		glColor4f(0.3,0.3,0.3,1);
+
 	glBegin(GL_QUADS);
 		glTexCoord2f(0,0);	glVertex2f(x,y);
 		glTexCoord2f(0,1);	glVertex2f(x,y+height);
@@ -538,16 +542,16 @@ void menuMessageBox::render()
 	glEnd();
 	dataManager.bindTex(0);
 
-	int startX = (15.0/715*width)+x;
-	int startY = (193.0/295*height)+y;
-	float slotWidth = (685.0*715/width) / options.size();
-	float slotHeight = (84.0/295*height);
+	int startX = (15.0*width/715)+x;
+	int startY = (193.0*height/295)+y;
+	float slotWidth = (685.0*width/715) / options.size();
+	float slotHeight = (84.0*height/295);
 	int slotNum=0;
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
 	for(vector<menuLabel*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
-		if(cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
+		if(dataManager.getId("glow") != 0 && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
 			dataManager.bind("glow");
 			glBegin(GL_QUADS);
@@ -565,10 +569,10 @@ void menuMessageBox::mouseL(bool down, int X, int Y)
 {
 	if(done) return;
 
-	int startX = (15.0/715*width)+x;
-	int startY = (193.0/295*height)+y;
-	float slotWidth = (685.0*715/width) / options.size();
-	float slotHeight = (84.0/295*height)+y;
+	int startX = (15.0*width/715)+x;
+	int startY = (193.0*height/295)+y;
+	float slotWidth = (685.0*width/715) / options.size();
+	float slotHeight = (84.0*height/295);
 	if(down)
 	{
 		clicking=-1;
@@ -929,7 +933,6 @@ void menuInGame::render()
 	textManager->renderText("options",sw/2-(textManager->getTextWidth("options"))/2,sh/2);
 	if(activeChoice==QUIT)	glColor3f(1,1,0); else glColor3f(1,1,1);
 	textManager->renderText("quit",sw/2-(textManager->getTextWidth("quit"))/2,sh/2+75);
-	Redisplay=true;
 }
 void menuInGame::keyDown(int vkey)
 {
@@ -981,7 +984,6 @@ int menuLoading::update()
 	progress = 1.0-(float)assetsLeft/totalAssets;
 	if(assetsLeft==0)	menuManager.setMenu("menuChooseMode");
 
-	Redisplay=true;
 	return 30;
 }
 void menuLoading::render()
@@ -1221,7 +1223,7 @@ void messageBox(string text)
 }
 void closingMessage(string text,string title)
 {
-	if(dataManager.getId("dialog box")==0 || !textManager->loadSuccessful())
+	if(!textManager->loadSuccessful())
 	{
 		graphics->destroyWindow();
 		MessageBoxA(NULL,text.c_str(),title.c_str(),MB_ICONERROR);

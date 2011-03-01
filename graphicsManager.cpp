@@ -267,9 +267,7 @@ void OpenGLgraphics::render()
 		spf+=(frameTimes[i]*0.001)/20;
 	fps=1.0/spf;
 
-
-	Profiler.startElement("mainDraw");
-///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
+	///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
@@ -292,6 +290,7 @@ void OpenGLgraphics::render()
 	modeManager.render2D();
 	menuManager.render();
 
+
 	#ifdef _DEBUG
 		if(fps<29.0)glColor4f(1,0,0,1);
 		else glColor4f(0,0,0,1);
@@ -304,7 +303,6 @@ void OpenGLgraphics::render()
 	glMatrixMode( GL_PROJECTION );			// Select Projection
 	glPopMatrix();							// Pop The Matrix
 	glMatrixMode( GL_MODELVIEW );			// Select Modelview
-	Profiler.endElement("mainDraw");
 ////////////////////////////////////START RESET///////////////////////////////////////
 	reset();
 	glError();

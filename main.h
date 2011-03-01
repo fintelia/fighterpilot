@@ -94,8 +94,6 @@ extern GraphicsManager::gID exaustParticleEffect;
 
 extern float radarAng;//should be replaced by gameTime()
 
-extern bool Redisplay;
-
 extern int frame,Time,timebase;
 extern float fps;
 

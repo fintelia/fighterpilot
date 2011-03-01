@@ -81,7 +81,6 @@ int modeSplitScreen::update()
 	if(radarAng>=360)
 		radarAng-=360;
 
-	Redisplay=true;
 	return 7;
 }
 void modeSplitScreen::draw2D()
