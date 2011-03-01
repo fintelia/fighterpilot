@@ -49,8 +49,24 @@ int modeCampaign::update()
 			return 30;
 		}
 	}
-	if(input->getKey(F1)){players[0].toggleFirstPerson();input->getKey(F1);input->up(F1);}
-	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
+	if(input->getKey(F1))
+	{
+		players[0].toggleFirstPerson();
+		input->getKey(F1);input->up(F1);
+	}
+#ifdef DEBUG
+	if(input->getKey(0x31))
+	{
+		menuManager.setMenu("menuInGame");
+		input->up(0x31);
+	}
+#else if
+	if(input->getKey(VK_ESCAPE))
+	{
+		menuManager.setMenu("menuInGame");
+		input->up(VK_ESCAPE);
+	}
+#endif
 	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	world.update();
 

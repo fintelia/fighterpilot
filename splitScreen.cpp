@@ -63,7 +63,19 @@ int modeSplitScreen::update()
 {
 	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
 	if(input->getKey(F2))	{	players[1].toggleFirstPerson(); input->up(F2);}
-	if(input->getKey(0x31))	{	menuManager.setMenu("menuInGame"); input->up(0x31);}
+#ifdef DEBUG
+	if(input->getKey(0x31))
+	{
+		menuManager.setMenu("menuInGame");
+		input->up(0x31);
+	}
+#else if
+	if(input->getKey(VK_ESCAPE))
+	{
+		menuManager.setMenu("menuInGame");
+		input->up(VK_ESCAPE);
+	}
+#endif
 
 	static bool slow = false;
 	if(input->getKey(0x54))
