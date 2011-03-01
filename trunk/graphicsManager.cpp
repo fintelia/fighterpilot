@@ -468,7 +468,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 		PFD_SUPPORT_COMPOSITION |					// needed for vista
 		PFD_DOUBLEBUFFER,							// Must Support Double Buffering
 		PFD_TYPE_RGBA,								// Request An RGBA Format
-		24,											// Select Our Color Depth
+		32,											// Select Our Color Depth
 		0, 0, 0, 0, 0, 0,							// Color Bits Ignored
 		0,											// Alpha Buffer
 		0,											// Shift Bit Ignored

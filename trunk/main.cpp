@@ -61,11 +61,9 @@ int update()
 
 	input->update();
 	menuManager.update();
+	modeManager.update();
 
-	int i = 30;//Cmenu->update(v);
-	if(!world.time.isPaused())
-		modeManager.update();
-	return i;
+	return 0;
 }
 void ShowHideTaskBar(bool bHide)
 {
@@ -83,14 +81,14 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	switch (uMsg)									// Check For Windows Messages
 	{
 		case WM_SHOWWINDOW:
-		{
+		{	
 			if (!HIWORD(wParam))					// Check Minimization State
 			{
-				active=TRUE;						// Program Is Active
+				active=true;						// Program Is Active
 			}
 			else
 			{
-				active=FALSE;						// Program Is No Longer Active
+				active=false;						// Program Is No Longer Active
 			}
 
 			return 0;								// Return To The Message Loop
@@ -119,8 +117,15 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			PostQuitMessage(0);						// Send A Quit Message
 			return 0;								// Jump Back
-		}
+		} 
+		case WM_ACTIVATEAPP:
+		{
+			//bool wActive = LOWORD(wParam) != 0;
+			//bool wMinimized = HIWORD(wParam) != 0;
 
+			world.time.setPaused(!(wParam != 0));
+			return 0;
+		}
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
 		case WM_KEYUP:								// Has A Key Been Released?
 		case WM_LBUTTONDOWN:
@@ -132,9 +137,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		case WM_MOUSEWHEEL:
 			input->windowsInput(uMsg,wParam,lParam);
 			return 0;
-
 		case WM_ERASEBKGND:									// Check To See If Windows Is Trying To Erase The Background
-			return 0;										// Return 0 (Prevents Flickering While Resizing A Window)
+			return 0;										// either return 0 or 1, does not seem to be much of a difference...
 		case WM_SIZE:										// Resize The OpenGL Window
 			graphics->resize(LOWORD(lParam),HIWORD(lParam));
 			return 0;										// Jump Back

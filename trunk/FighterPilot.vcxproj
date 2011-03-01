@@ -71,6 +71,7 @@
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <CustomBuildStep>
       <Command>COPY "$(OutDir)FighterPilot.exe" "$(ProjectDir)"</Command>
