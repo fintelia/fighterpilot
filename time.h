@@ -109,6 +109,10 @@ public:
 	{
 		paused = false;
 	}
+	void setPaused(bool b)
+	{
+		paused = b;
+	}
 
 	bool isPaused() const
 	{
