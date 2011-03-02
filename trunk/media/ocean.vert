@@ -1,4 +1,5 @@
 
+#version 120
 
 varying vec3 position, lightDir, halfVector;
 varying vec2 texCoord;

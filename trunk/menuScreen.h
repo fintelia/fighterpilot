@@ -133,6 +133,26 @@ protected:
 	int value;
 	Color clicked, unclicked;
 };
+class menuSlider:public menuElement
+{
+public:
+	menuSlider(int X, int Y, int Width, int Height, float uValue, float lValue = 0, Color c = Color(0,1,0)): menuElement(SLIDER,X,Y,Width,Height,"",c),minValue(lValue),maxValue(uValue),value(lValue),clicking(false),mouseOffset(0.0f){}
+	virtual ~menuSlider(){}
+
+	void render();
+
+	void mouseDownL(int X, int Y);
+	void mouseUpL(int X, int Y);
+
+	float getValue();
+protected:
+	float minValue;
+	float maxValue;
+	float value;
+
+	bool clicking;
+	float mouseOffset;
+};
 class menuPopup
 {
 public:
@@ -155,6 +175,7 @@ protected:
 	map<string,menuButton*> buttons;
 	map<string,menuLabel*> labels;
 	map<string,menuToggle*> toggles;
+	map<string,menuSlider*> sliders;
 
 	friend class MenuManager;
 };
@@ -266,6 +287,7 @@ protected:
 	map<string,menuButton*> buttons;
 	map<string,menuLabel*> labels;
 	map<string,menuToggle*> toggles;
+	map<string,menuSlider*> sliders;
 	friend class MenuManager;
 };
 

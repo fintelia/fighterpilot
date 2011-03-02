@@ -10,53 +10,6 @@ modeDogFight::~modeDogFight()
 	world.destroy();
 }
 
-void modeDogFight::drawWater(Vec3f eye)
-{
-	double sl=world.level->water().seaLevel;
-	Vec3d center(eye.x,sl,eye.z);
-	double radius = (eye.y-sl)*tan(asin(6000000/(6000000+eye.y-sl)));
-	float cAng,sAng;
-
-	int s=dataManager.getId("horizon2");
-	dataManager.bind("horizon2");
-
-	dataManager.bind("hardNoise",0);
-	dataManager.bindTex(((Level::heightmapGL*)world.level->ground())->groundTex,1);
-	dataManager.bind("sand",2);
-	//if(world.level->water().==ROCK)	dataManager.bind("rock",2);
-	//else								dataManager.bind("sand",2);
-
-	glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
-	glUniform1i(glGetUniformLocation(s, "ground"), 1);
-	glUniform1i(glGetUniformLocation(s, "tex"), 2);
-	glUniform1f(glGetUniformLocation(s, "time"), world.time());
-	glUniform1f(glGetUniformLocation(s, "heightRange"), 0);
-	glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glPushMatrix();
-		
-	glBegin(GL_TRIANGLE_FAN);
-		glTexCoord2f(center.x/world.level->ground()->sizeX(),center.z/world.level->ground()->sizeZ());
-		glVertex3f(center.x,center.y,center.z);
-
-		for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
-		{
-			cAng=cos(ang);
-			sAng=sin(ang);
-			glTexCoord2f((center.x-cAng*radius)/world.level->ground()->sizeX(),(center.z-sAng*radius)/world.level->ground()->sizeZ());
-			glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
-		}
-	glEnd();
-	glPopMatrix();
-
-	dataManager.bindTex(0,2);
-	dataManager.bindTex(0,1);
-	dataManager.bindTex(0,0);
-	dataManager.bindShader(0);
-}
 void modeDogFight::healthBar(float x, float y, float width, float height, float health, bool firstPerson)
 {
 	x *=	0.00125*sw;

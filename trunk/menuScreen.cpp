@@ -62,6 +62,11 @@ void MenuManager::render()
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
 		}
+		for(auto e = menu->sliders.begin(); e != menu->sliders.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
 	}
 	for(auto i = popups.begin(); i!=popups.end();i++)
 	{
@@ -78,6 +83,11 @@ void MenuManager::render()
 				e->second->render();
 		}
 		for(auto e = (*i)->toggles.begin(); e != (*i)->toggles.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = (*i)->sliders.begin(); e != (*i)->sliders.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
@@ -193,7 +203,6 @@ void MenuManager::inputCallback(Input::callBack* callback)
 					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
 				}
 			}
-
 		}
 	}
 	else if(callback->type == MOUSE_CLICK){
@@ -233,6 +242,19 @@ void MenuManager::inputCallback(Input::callBack* callback)
 					}
 				}
 			}
+			if(pSize==popups.size())
+			{
+				for(auto e = popups.back()->sliders.begin(); pSize==popups.size() && e != popups.back()->sliders.end(); e++)
+				{
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
+						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
+					}
+				}
+			}
 		}
 		else if(menu!=NULL)
 		{
@@ -259,6 +281,19 @@ void MenuManager::inputCallback(Input::callBack* callback)
 			if(menu!=NULL)
 			{
 				for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)
+				{
+					if(e->second != NULL)
+					{
+						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
+						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
+						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
+					}
+				}
+			}
+			if(menu!=NULL)
+			{
+				for(auto e = menu->sliders.begin(); menu!=NULL && e != menu->sliders.end(); e++)
 				{
 					if(e->second != NULL)
 					{
@@ -619,6 +654,7 @@ bool menuLevelEditor::init()
 	buttons["faultLine"]	= new menuButton(sw-105,40,100,30,"fault line",lightGreen,white);
 	buttons["fromFile"]		= new menuButton(sw-105,75,100,30,"from file",lightGreen,white);
 	buttons["exportBMP"]	= new menuButton(sw-105,110,100,30,"export",lightGreen,white);
+	sliders["sea level"]	= new menuSlider(sw-105,145,100,30,5000.0,0.0);
 
 	buttons["load"]			= new menuButton(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
 	buttons["save"]			= new menuButton(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
@@ -975,6 +1011,8 @@ int menuLoading::update()
 	if(toLoad)
 	{
 		dataManager.registerAsset("menu background", "media/menu/menu background.png");
+		dataManager.registerAsset("progress back", "media/progress back.png");
+		dataManager.registerAsset("progress front", "media/progress front.png");
 		toLoad=false;
 	}
 
@@ -989,8 +1027,14 @@ int menuLoading::update()
 void menuLoading::render()
 {
 	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
-	glColor3f(1,1,1);	graphics->drawOverlay(Vec2f(sw*0.4,sh*0.96),Vec2f(sw*0.2,sh*0.02));
-	glColor3f(0,1,0);	graphics->drawOverlay(Vec2f(sw*0.4,sh*0.96),Vec2f(sw*0.2*progress,sh*0.02));
+	graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9,sh*0.02),"progress back");
+	if(dataManager.getId("progress front") != 0)
+		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02),"progress front");
+	else
+	{
+		glColor3f(0,1,0);
+		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02));
+	}
 }
 void menuButton::setElementText(string t)
 {
@@ -1214,6 +1258,59 @@ void menuToggle::updateColors()
 		if(value==n)	(*i)->setElementColor(clicked);
 		else			(*i)->setElementColor(unclicked);
 	}
+}
+void menuSlider::render()
+{
+	if(clicking)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+	}
+	glColor4f(1,1,1,1);
+	dataManager.bind("slider bar");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,	0);	glVertex2f(x,		0.5*height+y-11);		
+		glTexCoord2f(1,	0);	glVertex2f(x+width,	0.5*height+y-11);		
+		glTexCoord2f(1,	1);	glVertex2f(x+width,	0.5*height+y+11);	
+		glTexCoord2f(0,	1);	glVertex2f(x,		0.5*height+y+11);	
+	glEnd();
+	dataManager.bind("slider");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,	0);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x - 22	, y);
+		glTexCoord2f(1,	0);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x + 22	, y);
+		glTexCoord2f(1,	1);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x + 22	, y + height);	
+		glTexCoord2f(0,	1);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x - 22	, y + height);
+	glEnd();
+	dataManager.bindTex(0);
+}
+void menuSlider::mouseDownL(int X, int Y)
+{
+	if(X > x && X < x + width && Y > y && Y < y + height)
+	{
+		clicking = true;
+		mouseOffset = 0.0f;
+		if(abs(value*width/(maxValue - minValue) + x  - X) < 22)
+			mouseOffset = value - ((maxValue - minValue) * (X - x) / width + minValue);
+	}
+}
+void menuSlider::mouseUpL(int X, int Y)
+{
+	if(clicking)
+	{
+		value = clamp((maxValue - minValue) * (X - x) / width + minValue + mouseOffset, minValue, maxValue);
+		clicking = false;
+	}
+}
+float menuSlider::getValue()
+{
+	if(clicking)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+	}
+	return value;
 }
 void messageBox(string text)
 {

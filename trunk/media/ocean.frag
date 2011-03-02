@@ -1,4 +1,6 @@
 
+#version 120
+
 varying vec3 position, lightDir, halfVector;
 
 uniform sampler2D bumpMap;

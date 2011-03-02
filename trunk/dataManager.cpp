@@ -845,6 +845,8 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
 	if(callNum==n++)	registerAsset("check",				"media/check.png");
 	if(callNum==n++)	registerAsset("check box",			"media/check box.png");
+	if(callNum==n++)	registerAsset("slider",				"media/slider.png");
+	if(callNum==n++)	registerAsset("slider bar",			"media/slider bar.png");
 
 	//if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
 	//if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
