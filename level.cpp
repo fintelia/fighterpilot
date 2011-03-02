@@ -302,29 +302,26 @@ Level::Level(LevelFile file)
 	mGround = new heightmapGL(file.info->mapResolution,file.heights);
 	mGround->setSize(file.info->mapSize);
 	mGround->init();
-	mWater.seaLevel = file.info->seaLevel;
 	for(int i=0; i < file.info->numObjects; i++)
 		mObjects.push_back(file.objects[i]);
 }
-Level::Level(string BMP, float scale)
+Level::Level(string BMP, Vec3f size, float seaLevel)
 {
 	Image* image = loadBMP(BMP.c_str());
 	float* t = new float[image->width * image->height];
 	for(int y = 0; y < image->height; y++) {
 		for(int x = 0; x < image->width; x++) {
-			t[y * image->width + x] = (float)((unsigned char)image->pixels[3 * (y * image->width + x)])/255.0*scale;
+			t[y * image->width + x] = (float)((unsigned char)image->pixels[3 * (y * image->width + x)])/255.0*size.y - seaLevel;
 		}
 	}
 	//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
 	mGround = new heightmapGL(Vec2u(image->height,image->width),t);
 	mGround->init();
+	mGround->setSize(Vec2f(size.x,size.z));
+	mGround->setMinMaxHeights();
 
 	delete[] t;
 	delete image;
-
-	mGround->setMinMaxHeights();
-	mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
-	mSettings.water = true;
 }
 LevelFile Level::getLevelFile() 
 {
@@ -334,7 +331,6 @@ LevelFile Level::getLevelFile()
 	f.info = new LevelFile::Info;
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
-	f.info->seaLevel = mWater.seaLevel;
 	f.info->numObjects = mObjects.size();
 	f.heights = mGround->heights;
 	f.objects = new LevelFile::Object[mObjects.size()];
@@ -388,23 +384,15 @@ void Level::exportBMP(string filename)
 	delete[] colors;
 	fout.close();
 }
-void Level::render()
+void Level::renderPreview()
 {
 	glColor3f(1,1,0);
 	
 
 	glPushMatrix();
 	
-	//if(!mGround->VBOvalid && mGround->dynamic)
-	//	mGround->setVBO();
-	//if(!mGround->minMaxValid && mGround->dynamic)
-	//	mGround->setMinMaxHeights();
-	//if(!mGround->texValid && mGround->dynamic)
-	//	mGround->setTex();
-	if(mSettings.water)
+	//if(water.name != "")
 	{
-		mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
-
 		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
 
@@ -423,10 +411,10 @@ void Level::render()
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
 		glBegin(GL_QUADS);
-			glVertex3f(0,mWater.seaLevel,0);
-			glVertex3f(0,mWater.seaLevel,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,mWater.seaLevel,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,mWater.seaLevel,0);
+			glVertex3f(0,0,0);
+			glVertex3f(0,0,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,0,0);
 		glEnd();
 
 		dataManager.bindTex(0,3);
@@ -522,7 +510,7 @@ void Level::render()
 
 
 	glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
-	float h = mSettings.water ? (mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3) : mGround->minHeight-20.0;
+	float h = mGround->minHeight-20.0;//needs to be adjusted for sea level
 	dataManager.bind("layers");
 	glDisable(GL_LIGHTING);
 	glColor3f(1,1,1);
@@ -556,26 +544,40 @@ void Level::render()
 	}
 	glEnd();
 	dataManager.bindTex(0);
-	if(!mSettings.water)
-	{
-		glColor3f(0.73,0.6,0.47);
-		glBegin(GL_QUADS);
-			glVertex3f(0,h,0);
-			glVertex3f(0,h,mGround->resolutionZ()-1);
-			glVertex3f(mGround->resolutionX()-1,h,mGround->resolutionZ()-1);
-			glVertex3f(mGround->resolutionX()-1,h,0);
-		glEnd();
-	}
+	//if(!mSettings.water)
+	//{
+	//	glColor3f(0.73,0.6,0.47);
+	//	glBegin(GL_QUADS);
+	//		glVertex3f(0,h,0);
+	//		glVertex3f(0,h,mGround->resolutionZ()-1);
+	//		glVertex3f(mGround->resolutionX()-1,h,mGround->resolutionZ()-1);
+	//		glVertex3f(mGround->resolutionX()-1,h,0);
+	//	glEnd();
+	//}
 	glPopMatrix();
+}
+void Level::renderObjectsPreview()
+{
+	for(auto i=mObjects.begin();i!=mObjects.end();i++)
+	{
+		if(i->type & PLANE)
+		{
+			glPushMatrix();
+			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
+			glScalef(10,10,10);
+			dataManager.draw((planeType)i->type);
+			glPopMatrix();
+		}
+	}
 }
 void Level::render(Vec3f eye)
 {
 	glDisable(GL_CULL_FACE);
 	glPushMatrix();
 	
-	if(mSettings.water)
+	//if(mSettings.water)
 	{
-		mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
+		//mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
 
 		//int s=dataManager.getId("ocean");
 		//dataManager.bind("ocean");
@@ -610,8 +612,8 @@ void Level::render(Vec3f eye)
 		//--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||--||
 		//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//--\\--//
 
-		Vec3d center(eye.x,mWater.seaLevel,eye.z);
-		double radius = (eye.y-mWater.seaLevel)*tan(asin(6000000/(6000000+eye.y-mWater.seaLevel)));
+		Vec3d center(eye.x,0,eye.z);
+		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 		float cAng,sAng;
 
 		int s=dataManager.getId("horizon2");
@@ -626,7 +628,7 @@ void Level::render(Vec3f eye)
 		glUniform1i(glGetUniformLocation(s, "ground"), 1);
 		glUniform1i(glGetUniformLocation(s, "tex"), 2);
 		glUniform1f(glGetUniformLocation(s, "time"), world.time());
-		glUniform1f(glGetUniformLocation(s, "seaLevel"), (mWater.seaLevel-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+		glUniform1f(glGetUniformLocation(s, "seaLevel"), 0);
 		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -667,10 +669,6 @@ Level::heightmapBase* editLevel::ground()
 {
 	return mGround;
 }
-Level::levelSettings* editLevel::settings()
-{
-	return &mSettings;
-}
 void editLevel::newGround(unsigned int x, unsigned int z, float* heights)
 {
 	if(mGround != NULL)
@@ -689,18 +687,4 @@ void editLevel::addObject(int type,int team,int controlType,Vec3f pos, Quat4f ro
 	o.startloc=pos;
 	o.startRot=rot;
 	mObjects.push_back(o);
-}
-void editLevel::renderObjects()
-{
-	for(auto i=mObjects.begin();i!=mObjects.end();i++)
-	{
-		if(i->type & PLANE)
-		{
-			glPushMatrix();
-			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
-			glScalef(10,10,10);
-			dataManager.draw((planeType)i->type);
-			glPopMatrix();
-		}
-	}
 }

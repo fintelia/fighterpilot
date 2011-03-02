@@ -77,7 +77,6 @@ public:
 	void radar(float x, float y, float width, float height,bool firstPerson);
 	void targeter(float x, float y, float apothem, Angle tilt);
 
-	void drawWater(Vec3f eye);
 	void drawExaust();
 	void drawPlanes(int acplayer,Vec3f e,bool showBehind=false,bool showDead=false);
 	void drawBullets();

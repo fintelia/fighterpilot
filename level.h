@@ -7,11 +7,11 @@ struct LevelFile
 	}header;
 
 	struct Info{//V1
-		float			seaLevel;	
+		float			unused;	
 		Vec2f			mapSize;
 		Vec2u			mapResolution;
 		unsigned int	numObjects;
-		Info(): seaLevel(0), mapSize(1,1), mapResolution(0,0), numObjects(0){}
+		Info(): mapSize(1,1), mapResolution(0,0), numObjects(0){}
 	}*info;
 	struct Object{
 		int				type;			//the type of object
@@ -37,8 +37,13 @@ public:
 						SAND		= 0x04,
 						SNOW		= 0x08,
 						LCNOISE		= 0x10,
-						HEIGHTMAP	= 0x20,
-						NORMALMAP	= 0x40};
+						TERRAINMAP	= 0x20};
+	struct shaderData
+	{
+		string name;
+		textureType textures;
+		shaderData():name(""),textures(textureType(0)){}
+	};
 
 	class heightmapBase
 	{
@@ -104,36 +109,23 @@ public:
 		friend class Level;
 		friend class modeDogFight;
 	};
-	class waterPlane
-	{
-	public:
-		float seaLevel;
-		string shader;
-		int oceanID;
-	};
-	struct levelSettings
-	{
-		//textureType seaFloor;
-		bool water;
-	};
+
 protected:
 	heightmapBase*				mGround;
-	waterPlane					mWater;
-	levelSettings				mSettings;
 	vector<LevelFile::Object>	mObjects;
-	int							groundShader;	
-	int							onDeath;		//1=RESPAWN; 2=RESTART; 3=DIE
-	string						nextLevel;
 
-	Level(): mGround(NULL), groundShader(0) {}
+	string						nextLevel;
+	shaderData					water;
+
+	Level(): mGround(NULL) {}
 public:
 	Level(LevelFile file);
-	Level(string BMP, float scale=1.0f);
+	Level(string BMP, Vec3f size, float seaLevel);
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
-	const waterPlane& water() const {return mWater;}
-	void render();
+	void renderPreview();//for mapbuilder
+	void renderObjectsPreview();
 	void render(Vec3f eye);
 
 	LevelFile getLevelFile();
@@ -145,12 +137,10 @@ class editLevel: public Level
 public:
 	editLevel();
 	heightmapBase*	ground();
-	levelSettings*	settings();
 
-	void addZone(float x, float z, float width, float length);
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
 	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
-	void renderObjects();
+
 
 
 	editLevel(LevelFile file):Level(file){}
