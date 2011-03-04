@@ -62,7 +62,6 @@ OpenGLgraphics::particleEffect::particleEffect(string tex, int s): object(PARTIC
 	if(particles == NULL)
 		compacity = 0;
 	glGenBuffers(1,&VBO);
-
 }
 void OpenGLgraphics::particleEffect::reset()
 {
@@ -104,8 +103,10 @@ void OpenGLgraphics::particleEffect::render()
 	dataManager.bind(texture);
 	dataManager.bind("partical shader");
 	glUniform1i(glGetUniformLocation(dataManager.getId("partical shader"), "tex"), 0);
+	glUniform1f(glGetUniformLocation(dataManager.getId("partical shader"), "size1"), size);
+	glUniform1f(glGetUniformLocation(dataManager.getId("partical shader"), "size2"), size);
 
-	glPointSize(   size   );
+	//glPointSize(   size   );
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 

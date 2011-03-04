@@ -15,11 +15,11 @@ void main()
 	vec4 color;
 	
 	if(position.x < 0.0 || position.x > 1.0 || position.y < 0.0 || position.y > 1.0 || position.z < 0.0 || position.z > 1.0) discard;
-	if(!gl_FrontFacing)
-	{
-		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-		return;
-	}
+	//if(!gl_FrontFacing)
+	//{
+	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+	//	return;
+	//}
 
 	vec3 normal = texture2D(groundTex,position.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
@@ -29,8 +29,8 @@ void main()
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
 	float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
 	float r=0.0;
-	float s1=0.90;//1.53
-	float s2=0.50;//1.48
+	float s1=1.10;//1.53
+	float s2=0.80;//1.48
 	if(slope>s1 		) 	r=1.0;
 	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 

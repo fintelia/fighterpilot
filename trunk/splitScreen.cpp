@@ -63,7 +63,7 @@ int modeSplitScreen::update()
 {
 	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
 	if(input->getKey(F2))	{	players[1].toggleFirstPerson(); input->up(F2);}
-#ifdef DEBUG
+#ifdef _DEBUG
 	if(input->getKey(0x31))
 	{
 		menuManager.setMenu("menuInGame");

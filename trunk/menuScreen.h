@@ -144,7 +144,13 @@ public:
 	void mouseDownL(int X, int Y);
 	void mouseUpL(int X, int Y);
 
+	void setMinValue(float m);
+	void setMaxValue(float m);
+	void setValue(float v){value = clamp(v,minValue,maxValue);}
+
 	float getValue();
+
+
 protected:
 	float minValue;
 	float maxValue;
@@ -297,7 +303,7 @@ public:
 	friend class mapBuilder;
 	friend class modeMapBuilder;
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,SETTINGS};
-	menuLevelEditor():awaitingShaderFile(false),awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
+	menuLevelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
 	~menuLevelEditor(){}
 	bool init();
 	int update();
@@ -336,7 +342,7 @@ protected:
 
 	//menuToggle* bTabs;
 
-	bool awaitingShaderFile;
+	//bool awaitingShaderFile;
 	bool awaitingMapFile;
 	bool awaitingMapSave;
 	bool awaitingLevelFile;

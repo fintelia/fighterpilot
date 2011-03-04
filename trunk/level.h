@@ -60,12 +60,15 @@ public:
 		virtual Vec3f rasterNormal(unsigned int x, unsigned int z) const;
 		virtual Vec3f interpolatedNormal(float x, float z) const;
 		virtual Vec3f normal(float x, float z) const;
+		virtual float getMinHeight()const{return minHeight;}
+		virtual float getMaxHeight()const{return maxHeight;}
 
 		virtual void setMinMaxHeights() const;
 
 
 		virtual void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height;}
 		virtual void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height;}
+		virtual void increaseHeights(float amount)=0;
 		virtual void setPos(Vec3f pos){mPosition = pos;}
 		virtual void setSize(Vec2f s){mSize = s;}
 		virtual void setSizeX(float s){mSize.x=s;}
@@ -74,7 +77,8 @@ public:
 		heightmapBase(Vec2u Resolution);
 		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
-		virtual void render() const =0;
+		virtual void render() const=0;
+		virtual void renderPreview(float seaLevelOffset=0.0) const=0;
 		virtual void init()=0;
 	protected:
 		Vec3f					mPosition;
@@ -101,6 +105,8 @@ public:
 		void setShader(int s){shader=s;}
 		void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height; valid=false;}
 		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height; valid=false;}		
+		void increaseHeights(float amount);
+		void renderPreview(float seaLevelOffset=0.0) const;
 		void render() const;
 
 		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}
@@ -124,11 +130,12 @@ public:
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
-	void renderPreview();//for mapbuilder
+	void renderPreview(bool drawWater, float seaLevelOffset=0.0);//for mapbuilder
 	void renderObjectsPreview();
 	void render(Vec3f eye);
 
 	LevelFile getLevelFile();
+	LevelFile getLevelFile(float seaLevelOffset);
 	void exportBMP(string filename);
 };
 
@@ -142,6 +149,7 @@ public:
 	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
 
 
+	void setWater(string shaderName);
 
 	editLevel(LevelFile file):Level(file){}
 	editLevel(string BMP):Level(BMP){}

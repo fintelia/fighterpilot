@@ -49,7 +49,7 @@ typedef int mouseButton;
 
 extern planeType defaultPlane;
 
-const int BULLET_SPEED		= 1700;
+const int BULLET_SPEED		= 1000;
 const int MISSILE_SPEED		= 1700;// 1700 m/s = mach 5 (max speed)
 
 const double MAX_FPS		= 60.0;
@@ -103,7 +103,7 @@ public:
 };
 
 
-#ifdef DEBUG
+#ifdef _DEBUG
 	#define debugBreak() __debugbreak();
 #else if
 	#define debugBreak() {}
