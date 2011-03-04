@@ -77,7 +77,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
 					level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
-				y += float(rand()%2000-1000)/500.0f*rVal * 100.0;
+				y += float(rand()%2000-1000)*rVal * 1.0;
 
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
 			}
@@ -92,8 +92,8 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 				c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
-				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal * 500.0;
+				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal * 3.0;
 				level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 
 
@@ -102,8 +102,8 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 				c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
-				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal * 500.0;
+				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal * 3.0;
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
 
 				if(x == numSquares-1)//right
@@ -112,7 +112,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
+					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
 				}
@@ -122,7 +122,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)/500.0f*rVal * 500.0;
+					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
 				}
@@ -134,19 +134,26 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	//	level->ground()->setHeight(x,getHeight(x,0),level->ground()->getSize()-2);
 	//for(z = 0; z < level->ground()->getSize(); z++)
 	//	level->ground()->setHeight(level->ground()->getSize()-2,getHeight(x,z),z);
-	maxHeight=-9999;
-	minHeight=9999;
-	float h;
-	for(x=0;x<level->ground()->resolutionX();x++)
-	{
-		for(y=0;y<level->ground()->resolutionZ();y++)
-		{
-			h = level->ground()->rasterHeight(x,y);
-			if(h>maxHeight) maxHeight=h;
-			if(h<minHeight) minHeight=h;
-		}
-	}
+	//maxHeight=-9999;
+	//minHeight=9999;
+	//float h;
+	//for(x=0;x<level->ground()->resolutionX();x++)
+	//{
+	//	for(y=0;y<level->ground()->resolutionZ();y++)
+	//	{
+	//		h = level->ground()->rasterHeight(x,y);
+	//		if(h>maxHeight) maxHeight=h;
+	//		if(h<minHeight) minHeight=h;
+	//	}
+	//}
 	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+
+	level->ground()->setMinMaxHeights();
+	maxHeight=level->ground()->getMaxHeight();
+	minHeight=level->ground()->getMinHeight();
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::faultLine()
@@ -178,20 +185,26 @@ void modeMapBuilder::faultLine()
 			}
 		}		
 	}
-	maxHeight=-9999;
-	minHeight=9999;
-	float h;
-	for(x=0;x<level->ground()->resolutionX();x++)
-	{
-		for(y=0;y<level->ground()->resolutionZ();y++)
-		{
-			h = level->ground()->rasterHeight(x,y);
-			if(h>maxHeight) maxHeight=h;
-			if(h<minHeight) minHeight=h;
-		}
-	}
-	//level->ground()->setMinMaxHeights();
+
+	//float h;
+	//for(x=0;x<level->ground()->resolutionX();x++)
+	//{
+	//	for(y=0;y<level->ground()->resolutionZ();y++)
+	//	{
+	//		h = level->ground()->rasterHeight(x,y);
+	//		if(h>maxHeight) maxHeight=h;
+	//		if(h<minHeight) minHeight=h;
+	//	}
+	//}
+
 	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+
+	level->ground()->setMinMaxHeights();
+	maxHeight=level->ground()->getMaxHeight();
+	minHeight=level->ground()->getMinHeight();
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::fromFile(string filename)
@@ -212,7 +225,13 @@ void modeMapBuilder::fromFile(string filename)
 		delete[] t;
 		delete image;
 	}
-
+	
+	level->ground()->setMinMaxHeights();
+	maxHeight=level->ground()->getMaxHeight();
+	minHeight=level->ground()->getMinHeight();
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
@@ -290,18 +309,15 @@ void modeMapBuilder::draw3D()
 	glEnable(GL_DEPTH_TEST);
 
 
+	if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
+		((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
+	bool w = ((menuLevelEditor*)menuManager.getMenu())->getShader() != 1;
+	float sl = ((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->getValue();
+	level->renderPreview(w,sl);
 
 	if(((menuLevelEditor*)menuManager.getMenu())->getTab() == menuLevelEditor::OBJECTS)
 	{
-		glEnable(GL_DEPTH_TEST);
-		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->toggles["mapType"]->getValue()==0;
-		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
-			((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
-
-		level->renderPreview();
 		level->renderObjectsPreview();
-		glDisable(GL_DEPTH_TEST);
-
 		if(((menuLevelEditor*)menuManager.getMenu())->placingObject() != 0)
 		{
 			////////////////////////////////draw object//////////////////////////////////
@@ -355,15 +371,6 @@ void modeMapBuilder::draw3D()
 			glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////
 		}	
-	}
-	else
-	{
-		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->bMapType->getValue() == 0;
-		//level->settings()->water = ((menuLevelEditor*)menuManager.getMenu())->toggles["mapType"]->getValue()==0;
-		if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
-			((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
-		//((editLevel*)level)->editWater()->seaLevel = ((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->getValue();
-		level->renderPreview();
 	}
 	glDisable(GL_DEPTH_TEST);
 }

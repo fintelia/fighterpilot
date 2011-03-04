@@ -14,7 +14,6 @@ void nPlane::update(double time, double ms)
 {
 	control->update();
 	controlState controller=control->getControlState();
-	static controlState lastController=controller;
 
 	//static bool followingPath = false;
 	//if(time < planePath.endTime())
@@ -130,17 +129,17 @@ void nPlane::update(double time, double ms)
 			//roll=turn*PI/180;
 			level(ms);
 
-			if(lastController.shoot1<=0.75)
+			if(controller.shoot1 <= 0.75)
 				extraShootTime=0.0;
-			if(controller.shoot1>0.75  )
+			else if(controller.shoot1 > 0.75)
 			{
-				extraShootTime+=ms;				
-				while(extraShootTime > machineGun.coolDown)
+				extraShootTime+=ms;
+				while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 				{
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms;//+Vec3f(float(rand()%1000)/50000,float(rand()%1000-500)/50000,float(rand()%1000)/50000);
+					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms+Vec3f(float(rand()%1000-500)/100000,float(rand()%1000-500)/100000,float(rand()%1000-500)/100000);
 					world.bullets.push_back(bullet(l,t,id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
@@ -169,7 +168,6 @@ void nPlane::update(double time, double ms)
 		//normal=Vec3f(0,1,0);
 		findTargetVector();
 	}
-	lastController = controller;
 }
 void nPlane::autoPilotUpdate(float value)
 {
@@ -332,7 +330,6 @@ void nPlane::die()
 }
 void nPlane::findTargetVector()
 {
-
 	//Vec3f enemy;
 	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
 	//{
@@ -389,52 +386,11 @@ void nPlane::initArmaments()
 	//rockets.firing										= false;	 not used
 
 	machineGun.max			= machineGun.left			= 1000; 
-	machineGun.roundsMax	= machineGun.roundsLeft		= 15;
-	machineGun.rechargeTime	= machineGun.rechargeLeft	= 300.0;
+	machineGun.roundsMax	= machineGun.roundsLeft		= 25;
+	machineGun.rechargeTime	= machineGun.rechargeLeft	= 750.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 40.0;
 	machineGun.firing									= false;
 }
-
-//<>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <><
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><>
-
-//void nPlane::die()
-//{
-//	if(!dead)	explode=new explosion(pos);
-//	dead =true;
-//	if(controled)
-//	{
-//		exitAutoPilot();
-//	}
-//	//controled=true;
-//
-//	if(!respawning)
-//		respawnTime=world.time()+5000;
-//	respawning=true;
-//}
-//bool plane::Update(float ms)
-//{
-//	//updatePos(ms);
-//	updateAll();
-//	if(respawning && respawnTime<world.time())
-//	{
-//		if(settings.ON_HIT==RESPAWN)
-//		{
-//			spawn();
-//		}
-//		else if(settings.ON_HIT==RESTART)
-//		{
-//			//not yet handled
-//		}
-//		else if(settings.ON_HIT==DIE)
-//		{
-//			//return false;
-//		}
-//	}
-//
-//	return true;
-//}
 
 void nPlane::spawn()
 {
@@ -477,161 +433,3 @@ void nPlane::spawn()
 
 	respawning=false;
 }
-//void plane::setControlState(controlState c)
-//{
-//	controller=c;
-//}
-//plane::plane(int Id, planeType Type, int Team):planeBase(Id,Type,Team)
-//{
-//	maxHealth=100;
-//	spawn();
-//	Update(0);
-//}
-//<>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <>< <><
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><>
-
-//AIplane::AIplane(int Id, planeType Type, int Team):planeBase(Id,Type,Team),target(0)
-//{
-//	maxHealth=50;
-//	spawn();
-//	Update(0);
-//}
-//
-//void AIplane::spawn()
-//{
-//	initArmaments();
-//
-//	pos.x = rand() % int(world.ground()->sizeX());
-//	pos.z = rand() % int(world.ground()->sizeZ());
-//	pos.y = world.elevation(pos.x,pos.z)+35;
-//
-//	rotation = Quat4f(Vec3f(0,1,0),atan2A(pos.x-size*32,pos.y-size*32));
-//	turn = 0;
-//	climb = 0;
-//	direction = 0;
-//	speed=400.0;
-//
-//	dead = false;
-//	controled=false;
-//	maneuver=0;
-//	hitGround=false;
-//	health=maxHealth;
-//
-//	respawning=false;
-//}
-//void AIplane::freeForAll_calcMove(int value)
-//{
-//	//controller=controlState();
-//	//Vec3f self[2]={pos,pos+velocity};//current,future
-//	//Vec3f enemy;
-//	//if(machineGun.coolDownLeft<=0.0)
-//	//{
-//	//	for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-//	//	{
-//	//		enemy=(*i).second->pos;
-//	//		if(acos( self[1].dot( (enemy-self[0]).normalize() )) < 0.5 && self[0].distance(enemy)<2000 && (*i).first!=id)
-//	//		{
-//	//			controller.shoot1=1.0;
-//	//			break;
-//	//		}
-//	//	}
-//	//}
-//	//target=-1;
-//	//float ang=999;
-//	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-//	//{
-//	//	enemy=(*i).second->pos;
-//	//	if(acos( self[1].dot( (enemy-self[0]).normalize() )) < ang && self[0].distance(enemy)<3000 && (*i).second->team!=team)
-//	//	{
-//	//		ang=acos( self[1].dot( (enemy-self[0]).normalize() ));
-//	//		target=(*i).first;
-//	//	}
-//	//}
-//	//
-//	//if(target>=0)
-//	//{
-//	//	if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-//	//		controller.left=1.0;
-//	//	else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-//	//		controller.right=1.0;
-//
-//	//	if(altitude>=30 && planes[target]->pos.y<pos.y)
-//	//		controller.dive=1.0;
-//	//	else if(planes[target]->pos.y>pos.y || altitude<25)
-//	//		controller.climb=1.0;
-//
-//	//	if(velocity.magnitude()>planes[target]->velocity.magnitude()+50)
-//	//		controller.accelerate=1.0;
-//	//	else if(velocity.magnitude()<planes[target]->velocity.magnitude()-50)
-//	//		controller.brake=1.0;
-//	//}
-//	//else
-//	//{
-//
-//	//	if(altitude<30 || pos.y<settings.SEA_LEVEL+30)
-//	//		controller.climb=1.0;
-//	//	else if(altitude>=25 && rand()%2>1)
-//	//		controller.dive=1.0;
-//
-//	//	if(velocity.magnitude()<500)
-//	//		controller.accelerate=1.0;
-//	//}
-//
-//}
-//void AIplane::playerVs_calcMove(int value)
-//{
-//	////Vec3f self[2]={		Vec3f(x,y,z), 		Vec3f(sin(angle*PI/180),climb,cos(angle*PI/180)).normalize()};//current,future
-//	//controller=controlState();
-//
-//	//Vec3f enemy;
-//
-//	//target	=planes.begin()->first;
-//	//Vec3f loc(planes[target]->pos);
-//
-//	//if(acos( velocity.dot( (loc-pos).normalize() )) < 0.5 && pos.distance(loc)<2000)
-//	//	controller.shoot1=1.0;
-//
-//	//if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-//	//	controller.left=1.0;
-//	//else if(atan2(pos.z-planes[target]->pos.z,pos.x-planes[target]->pos.x)<0)
-//	//	controller.right=1.0;
-//
-//	//if(altitude>=30 && planes[target]->pos.y<pos.y)
-//	//	controller.dive=1.0;
-//	//else if(planes[target]->pos.y>pos.y || altitude<25)
-//	//	controller.climb=1.0;
-//
-//	//if(velocity.magnitude()<planes[target]->velocity.magnitude()+50)
-//	//	controller.accelerate=1.0;
-//	//else if(velocity.magnitude()>planes[target]->velocity.magnitude()-50)
-//	//	controller.brake=1.0;
-//}
-//void AIplane::teams_calcMove(int value)
-//{
-//	//todo: add code
-//}
-//void AIplane::calcMove(int value)
-//{
-//	teams_calcMove(value);
-//	//if(settings.GAME_TYPE==PLAYER_VS) playerVs_calcMove(value);
-//	//else if(settings.GAME_TYPE==FFA) freeForAll_calcMove(value);
-//	//else if(settings.GAME_TYPE==TEAMS) teams_calcMove(value);
-//	//else cout << "Error: new game type!" << endl; 
-//}
-//bool AIplane::Update(float value)
-//{
-//	if(respawning && respawnTime<world.time())
-//	{
-//		spawn();
-//	}
-//
-//	if(!dead)
-//	{
-//		calcMove(value);
-//	}
-//
-//	//updatePos(value);
-//	updateAll();
-//	return true;
-//}

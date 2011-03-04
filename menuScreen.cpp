@@ -649,7 +649,7 @@ bool menuLevelEditor::init()
 
 	//terrain
 
-	buttons["newShader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
+	//buttons["newShader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
 	buttons["dSquare"]		= new menuButton(sw-105,5,100,30,"d-square",lightGreen,white);
 	buttons["faultLine"]	= new menuButton(sw-105,40,100,30,"fault line",lightGreen,white);
 	buttons["fromFile"]		= new menuButton(sw-105,75,100,30,"from file",lightGreen,white);
@@ -661,12 +661,12 @@ bool menuLevelEditor::init()
 	buttons["exit"]			= new menuButton(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new menuToggle(vector<menuButton*>(),darkGreen,lightGreen,NULL,0);
-	buttons["new shader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
-	addShader("media/terrain.frag");
-	addShader("media/snow.frag");
+
 	addShader("media/grass.frag");
+	addShader("media/snow.frag");
+
 	//objects
-	buttons["addPlane"]		= new menuButton(5,5,100,30,"new plane",lightGreen,white);
+	buttons["addPlane"]		= new menuButton(5,5,200,30,"new plane",lightGreen,white);
 
 	//settings
 
@@ -708,20 +708,20 @@ bool menuLevelEditor::init()
 }
 void menuLevelEditor::operator() (menuPopup* p)
 {
-	if(awaitingShaderFile)
-	{
-		awaitingShaderFile=false;
-		if(!((menuSaveFile*)p)->validFile()) return;
-		string f=((menuOpenFile*)p)->getFile();
-		addShader(f);
-	}
-	else if(awaitingMapFile)
+	if(awaitingMapFile)
 	{
 		awaitingMapFile=false;
 		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuOpenFile*)p)->getFile();
 		((modeMapBuilder*)modeManager.getMode())->fromFile(f);
 	}
+	//else if(awaitingShaderFile)
+	//{
+	//	awaitingShaderFile=false;
+	//	if(!((menuSaveFile*)p)->validFile()) return;
+	//	string f=((menuOpenFile*)p)->getFile();
+	//	addShader(f);
+	//}
 	else if(awaitingMapSave)
 	{
 		awaitingMapSave=false;
@@ -743,7 +743,7 @@ void menuLevelEditor::operator() (menuPopup* p)
 		awaitingLevelSave=false;
 		if(!((menuSaveFile*)p)->validFile()) return;
 		string f=((menuSaveFile*)p)->getFile();
-		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile();
+		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile(sliders["sea level"]->getValue());
 		l.save(f);
 	}
 	else if(awaitingNewObject)
@@ -805,14 +805,14 @@ int menuLevelEditor::update()
 			((menuSaveFile*)p)->init(".bmp");
 			menuManager.setPopup(p);
 		}
-		else if(buttons["newShader"]->checkChanged())
-		{
-			awaitingShaderFile=true;
-			menuPopup* p = new menuOpenFile;
-			p->callback = (functor<void,menuPopup*>*)this;
-			((menuOpenFile*)p)->init(".frag");
-			menuManager.setPopup(p);
-		}
+		//else if(buttons["newShader"]->checkChanged())
+		//{
+		//	awaitingShaderFile=true;
+		//	menuPopup* p = new menuOpenFile;
+		//	p->callback = (functor<void,menuPopup*>*)this;
+		//	((menuOpenFile*)p)->init(".frag");
+		//	menuManager.setPopup(p);
+		//}
 	}
 	else if(getTab() == OBJECTS)
 	{
@@ -835,13 +835,13 @@ int menuLevelEditor::update()
 	{
 		if(lastTab == TERRAIN || newTab==TERRAIN || lastTab == (Tab)-1)
 		{
-			buttons["newShader"]->setVisibility(newTab==TERRAIN);
+			//buttons["newShader"]->setVisibility(newTab==TERRAIN);
 			buttons["dSquare"]->setVisibility(newTab==TERRAIN);
 			buttons["faultLine"]->setVisibility(newTab==TERRAIN);
 			buttons["fromFile"]->setVisibility(newTab==TERRAIN);
 			buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
 			toggles["shaders"]->setVisibility(newTab==TERRAIN);
-			buttons["new shader"]->setVisibility(newTab==TERRAIN);
+			sliders["sea level"]->setVisibility(newTab==TERRAIN);
 		}
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
@@ -891,7 +891,7 @@ void menuLevelEditor::addShader(string filename)
 	((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
 
 	toggles["shaders"]->addButton(new menuButton(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
-	buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
+	//buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
 }
 int menuLevelEditor::getShader()
 {
@@ -1286,12 +1286,15 @@ void menuSlider::render()
 }
 void menuSlider::mouseDownL(int X, int Y)
 {
-	if(X > x && X < x + width && Y > y && Y < y + height)
+	if(abs(value*width/(maxValue - minValue) + x  - X) < 22 && Y > y && Y < y + height)	
+	{
+		clicking = true;
+		mouseOffset = value - ((maxValue - minValue) * (X - x) / width + minValue);
+	}
+	else if(X > x && X < x + width && Y > y && Y < y + height)
 	{
 		clicking = true;
 		mouseOffset = 0.0f;
-		if(abs(value*width/(maxValue - minValue) + x  - X) < 22)
-			mouseOffset = value - ((maxValue - minValue) * (X - x) / width + minValue);
 	}
 }
 void menuSlider::mouseUpL(int X, int Y)
@@ -1312,6 +1315,33 @@ float menuSlider::getValue()
 	}
 	return value;
 }
+void menuSlider::setMinValue(float m)
+{
+	if(clicking)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		clicking = false;
+	}
+	minValue = m;
+	if(value < minValue)
+		value = minValue;
+}
+void menuSlider::setMaxValue(float m)
+{
+	if(clicking)
+	{
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		clicking = false;
+	}
+	maxValue = m;
+	if(value > maxValue)
+		value = maxValue;
+}
+
 void messageBox(string text)
 {
 	menuMessageBox* m = new menuMessageBox;

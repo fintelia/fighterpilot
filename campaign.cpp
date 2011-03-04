@@ -54,7 +54,7 @@ int modeCampaign::update()
 		players[0].toggleFirstPerson();
 		input->getKey(F1);input->up(F1);
 	}
-#ifdef DEBUG
+#ifdef _DEBUG
 	if(input->getKey(0x31))
 	{
 		menuManager.setMenu("menuInGame");
