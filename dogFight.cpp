@@ -161,7 +161,7 @@ void modeDogFight::drawExaust()
 		{
 			if(world.exaust.startTime[i] < time && time < world.exaust.endTime[i])
 			{
-				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i]));
+				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,0.5*(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i]));
 				numSprites++;
 			}
 		}
@@ -263,9 +263,9 @@ void modeDogFight::drawScene(int acplayer) {
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
  		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
-		e=Vec3f(p->position.x - vel2D.normalize().x*25, p->position.y + sin(45.0)*25 , p->position.z - vel2D.normalize().z*25);
+		e=Vec3f(p->position.x - vel2D.normalize().x*30, p->position.y + 0.60*30 , p->position.z - vel2D.normalize().z*30);
 		if(p->controled) e=p->camera;
-		c=Vec3f(p->position.x + vel2D.normalize().x*25, p->position.y, p->position.z + vel2D.normalize().z*25);
+		c=Vec3f(p->position.x + vel2D.normalize().x*30, p->position.y, p->position.z + vel2D.normalize().z*30);
 		if(p->controled) c=p->center;
 		u=Vec3f(0,1,0);
 
@@ -337,19 +337,18 @@ void modeDogFight::drawScene(int acplayer) {
 	glColor3f(1,0,0);
 	Vec3f axis;
 	const map<objId,missile*>& missiles = world.missiles();
-	for(map<objId,missile*>::const_iterator i=missiles.begin();i != missiles.end();i++)
+	for(auto i=missiles.begin();i != missiles.end();i++)
 	{
-		glPushMatrix();
-			glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
-			axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
-			Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
-			glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
-			//glScalef(0.25f,0.25f,0.15f);
-			//if(missiles[i].target!=-1)glColor3f(0,0,1);
-			//else glColor3f(0,1,0);
-			//glCallList(model[1]);
-			glCallList(i->second->displayList);
-		glPopMatrix();
+		if(!i->second->awaitingDelete && !i->second->dead)
+		{
+			glPushMatrix();
+				glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
+				axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
+				Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
+				glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
+				glCallList(i->second->displayList);
+			glPopMatrix();
+		}
 	}
 
 	//glColor3f(0,1,0);
