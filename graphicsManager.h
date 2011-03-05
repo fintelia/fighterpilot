@@ -55,6 +55,7 @@ public:
 	virtual void setGamma(float gamma)=0;
 	virtual bool createWindow(char* title, RECT WindowRect, bool checkMultisample)=0;
 	virtual void swapBuffers()=0;
+	virtual void takeScreenshot()=0;
 };
 
 class OpenGLgraphics: public GraphicsManager
@@ -115,5 +116,6 @@ public:
 	void setGamma(float gamma);
 	bool createWindow(char* title, RECT WindowRect, bool checkMultisample);
 	void swapBuffers();
+	void takeScreenshot();
 };
 extern GraphicsManager* graphics;

@@ -575,9 +575,59 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 		return false;								// Return false
 	}
 
+	RegisterHotKey(hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
+	RegisterHotKey(hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
+
 	return true;									// Success
 }
 void OpenGLgraphics::swapBuffers()
 {
 	SwapBuffers(hDC);
+}
+void OpenGLgraphics::takeScreenshot()
+{
+	int size = (3*sw+sw%4)*sh + 3*sw*sh%4;
+
+
+	BITMAPFILEHEADER header;
+	header.bfType					= 0x4D42;
+	header.bfSize					= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) + size;
+	header.bfReserved1				= 0;
+	header.bfReserved2				= 0;
+	header.bfOffBits				= sizeof(BITMAPINFO)+sizeof(BITMAPFILEHEADER);
+
+	BITMAPINFO info;
+	info.bmiHeader.biSize			= sizeof(BITMAPINFOHEADER);
+	info.bmiHeader.biWidth			= sw;
+	info.bmiHeader.biHeight			= sh;
+	info.bmiHeader.biPlanes			= 1;
+	info.bmiHeader.biBitCount		= 24;
+	info.bmiHeader.biCompression	= BI_RGB;
+	info.bmiHeader.biSizeImage		= 0;
+	info.bmiHeader.biXPelsPerMeter	= 100;
+	info.bmiHeader.biYPelsPerMeter	= 100;
+	info.bmiHeader.biClrUsed		= 0;
+	info.bmiHeader.biClrImportant	= 0;
+	memset(&info.bmiColors,0,sizeof(info.bmiColors));
+
+	unsigned char* colors = new unsigned char[size];
+	memset(colors,0,size);
+	glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors); 
+
+	for(int x=0;x<sw;x++)
+	{
+		for(int y=0;y<sh;y++)
+		{
+			swap(   colors[(y*(3*sw+sw%4) + 3*x) + 0]   ,    colors[(y*(3*sw+sw%4) + 3*x) + 2]   );
+			//colors[(y*(3*sw+sw%4) + 3*x) + 0] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 0];
+			//colors[(y*(3*sw+sw%4) + 3*x) + 1] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 1];
+			//colors[(y*(3*sw+sw%4) + 3*x) + 2] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 2];
+		}
+	}
+	ofstream fout("screen shot.bmp",ios::out|ios::binary|ios::trunc);
+	fout.write((char*)&header,sizeof(header));
+	fout.write((char*)&info,sizeof(info));
+	fout.write((char*)colors,size);
+	delete[] colors;
+	fout.close();
 }
