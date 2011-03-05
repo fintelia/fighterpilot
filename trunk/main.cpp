@@ -111,6 +111,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			//bool wMinimized = HIWORD(wParam) != 0;
 
 			world.time.setPaused(!(wParam != 0));
+			active = wParam != 0;
 			return 0;
 		}
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
@@ -129,6 +130,17 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		case WM_SIZE:										// Resize The OpenGL Window
 			graphics->resize(LOWORD(lParam),HIWORD(lParam));
 			return 0;										// Jump Back
+	//	case WM_APPCOMMAND:
+	//	case WM_SYSKEYDOWN:
+		case WM_HOTKEY:
+		{
+			if(active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
+			{
+				graphics->takeScreenshot();
+				return 0;
+			}
+			break;
+		}
 	}
 
 	// Pass All Unhandled Messages To DefWindowProc

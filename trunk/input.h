@@ -81,105 +81,13 @@ protected:
 
 
 public:
-	standard_input(): Input()
-	{
-		int i;
-		for(i=0;i<256;i++)
-			keys[i]=false;
-		inputMutex=CreateMutex(NULL,false,NULL);
-		tPresses=0;
-	}
-	~standard_input()
-	{
-		CloseHandle( inputMutex );
-	}
-	virtual void down(int k)
-	{
-		if(k>=256 || k<0) return;
-		WaitForSingleObject( inputMutex, INFINITE );
-		keys[k]=true;
-		tPresses++;
-		lastKey=k;
-		ReleaseMutex( inputMutex );
-
-
-	}
-	virtual void up(int k)
-	{
-		if(k>=256 || k<0) return;
-		WaitForSingleObject( inputMutex, INFINITE );
-		keys[k]=false;
-		ReleaseMutex( inputMutex );
-
-
-	}
-	virtual bool getKey(int key)
-	{
-		if(key>=256 || key<0) false;
-		WaitForSingleObject( inputMutex, INFINITE );
-		bool b=keys[key];
-		ReleaseMutex( inputMutex );
-		return b;
-	}
-	virtual const mouseButtonState& getMouseState(mouseButton m)
-	{
-		if(m == LEFT_BUTTON)		return leftMouse;
-		else if(m == MIDDLE_BUTTON) return middleMouse;
-		else						return rightMouse;
-	}
-	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
-	{
-		switch(uMsg)
-		{
-			case WM_KEYDOWN:
-				if((lParam & 0x40000000)==0)
-				{
-					down(wParam);
-					sendCallbacks(new keyStroke(false, wParam));
-				}
-				return;
-
-			case WM_KEYUP:
-				up(wParam);
-				sendCallbacks(new keyStroke(true, wParam));
-				return;
-
-			case WM_LBUTTONDOWN:
-				leftMouse.down = true;
-				leftMouse.x = LOWORD(lParam);
-				leftMouse.y = HIWORD(lParam);
-				sendCallbacks(new mouseClick(true, LEFT_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;
-			case WM_MBUTTONDOWN:
-				middleMouse.down = true;
-				middleMouse.x = LOWORD(lParam);
-				middleMouse.y = HIWORD(lParam);
-				sendCallbacks(new mouseClick(true, MIDDLE_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;
-			case WM_RBUTTONDOWN:
-				rightMouse.down = true;
-				rightMouse.x = LOWORD(lParam);
-				rightMouse.y = HIWORD(lParam);
-				sendCallbacks(new mouseClick(true, RIGHT_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;	
-			case WM_LBUTTONUP:
-				leftMouse.down = false;
-				sendCallbacks(new mouseClick(false, LEFT_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;
-			case WM_MBUTTONUP:
-				middleMouse.down = false;
-				sendCallbacks(new mouseClick(false, MIDDLE_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;
-			case WM_RBUTTONUP:
-				rightMouse.down = false;
-				sendCallbacks(new mouseClick(false, RIGHT_BUTTON, LOWORD(lParam), HIWORD(lParam)));
-				return;
-
-			case WM_MOUSEWHEEL:
-				sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
-				return;
-		}
-	}
+	standard_input();
+	~standard_input();
+	virtual void down(int k);
+	virtual void up(int k);
+	virtual bool getKey(int key);
+	virtual const mouseButtonState& getMouseState(mouseButton m);
+	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual void update(){}
 	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
 };
