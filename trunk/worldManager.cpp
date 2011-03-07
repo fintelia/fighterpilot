@@ -145,19 +145,19 @@ void WorldManager::update()
 					}
 				}
 			}
-			for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
-			{
-				if(l->second->owner != i->second->id && i->second->position.distance(l->second->position) < 32.0 && l->second->owner != (*i).first)
-				{
-					(*i).second->loseHealth(55.0);
-					if((*i).second->dead) 
-					{
-						if(l->second->owner==players[0].objectNum() && players[0].active()) players[0].addKill();
-						if(l->second->owner==players[1].objectNum() && players[1].active()) players[1].addKill();
-					}
-					l->second->awaitingDelete = true;
-				}
-			}
+			//for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
+			//{
+			//	if(l->second->owner != i->second->id && i->second->position.distance(l->second->position) < 32.0 && l->second->owner != (*i).first)
+			//	{
+			//		(*i).second->loseHealth(55.0);
+			//		if((*i).second->dead) 
+			//		{
+			//			if(l->second->owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+			//			if(l->second->owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+			//		}
+			//		l->second->awaitingDelete = true;
+			//	}
+			//}
 		}
 	}
 
