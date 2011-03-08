@@ -20,7 +20,7 @@ TextManager* textManager;																														//	//
 #else																																			//	//
 	Input *input=new standard_input;																											//	//
 #endif																																			//	//
-Settings settings;																																//	//
+ObjectStats settings;																																//	//
 float radarAng=0;																																//	//
 																																				//	//
 MenuManager& menuManager=MenuManager::getInstance();																							//	//
@@ -190,9 +190,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	menuManager.init();
 	menuManager.setMenu("menuLoading");
 
-	fireParticleEffect = graphics->newParticleEffect("explosion fireball",500);
-	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750);
-	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100);
+	fireParticleEffect = graphics->newParticleEffect("explosion fireball",500.0*r.right/1280);
+	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280);
+	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280);
 
 //////
 	float nextUpdate=0;

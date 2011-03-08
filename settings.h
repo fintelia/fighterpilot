@@ -13,7 +13,7 @@ const int SNOW		=3;
 
 const int ROCK		=0;
 const int SAND		=1;
-class Settings
+class ObjectStats
 {
 public:
 	//string MAP_FILE;
@@ -39,8 +39,10 @@ public:
 			int missileNum;
 			Vec3f offset;
 			hardpoint(): missileNum(-1), offset(0,0,0) {}
+			hardpoint(int mNum,Vec3f Offset): missileNum(mNum), offset(Offset) {}
 		};
-		vector<hardpoint> hardpoints;
+		vector<hardpoint> hardpoints;//offsets
+		vector<Vec3f> machineGuns;
 		planeStat(){}
 	};
 	map<planeType,planeStat> planeStats;
@@ -53,10 +55,6 @@ public:
 
 	//void loadMap(char *filename);
 	void loadModelData(char* filename);
-	Settings(){}
-	//Settings(char *filename)
-	//{
-	//	loadMap(filename);
-	//}
+	void load(string filename);
 };
-extern Settings settings;
+extern ObjectStats settings;

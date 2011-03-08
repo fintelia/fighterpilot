@@ -198,7 +198,7 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 				dataManager.draw(cPlane->type);
 				int ml=1;
 				glEnable(GL_LIGHTING);
-				for(vector<Settings::planeStat::hardpoint>::reverse_iterator m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
+				for(auto m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
 				{
 					if(i->second->rockets.left>=ml)
 					{
@@ -214,10 +214,11 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 }
 void modeDogFight::drawBullets()
 {
-	double time=world.time();
+	double time = world.time();
+	double lTime = time - 20.0;//world.time.getLastTime();
 	//float length;
 	Vec3f start, end, end2;
-	glLineWidth(2);
+	//glLineWidth(3);
 	glBegin(GL_LINES);
 		for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
 		{
@@ -225,17 +226,17 @@ void modeDogFight::drawBullets()
 			{
 				start=i->startPos+i->velocity*(time-i->startTime)/1000;
 				//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
-				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*8;
-				end2=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*28;
+				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
+				end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
 
-				glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
-				glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
-				glColor4f(0.6,0.6,0.6,0.7);		glVertex3f(end.x,end.y,end.z);
+				glColor4f(1.0,0.9,0.6,0.6);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
+				glColor4f(0.6,0.6,0.6,0.6);		glVertex3f(end.x,end.y,end.z);
+				glColor4f(0.6,0.6,0.6,0.6);		glVertex3f(start.x,start.y,start.z);
 				glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
 			}
 		}
 	glEnd();
-	glLineWidth(1);
+	//glLineWidth(1);
 }
 void modeDogFight::drawScene(int acplayer) {
 

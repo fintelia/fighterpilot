@@ -884,7 +884,7 @@ int DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	//				.					.
-	if(callNum==n++)	settings.loadModelData("media/modelData.txt");
+	if(callNum==n++)	settings.load("media/modelData.txt");
 
 
 	return (n-1)-callNum;//number left

@@ -49,10 +49,12 @@ typedef int mouseButton;
 
 extern planeType defaultPlane;
 
-const int BULLET_SPEED		= 1000;
-const int MISSILE_SPEED		= 1700;// 1700 m/s = mach 5 (max speed)
+extern const int BULLET_SPEED;
+extern const int MISSILE_SPEED;
 
 const double MAX_FPS		= 60.0;
+
+extern planeType planeTypeFromString(string s);
 
 struct controlState
 {
@@ -126,3 +128,4 @@ extern __int8 uPowerOfTwo(__int8 i);
 extern __int16 uPowerOfTwo(__int16 i);
 extern __int32 uPowerOfTwo(__int32 i);
 extern __int64 uPowerOfTwo(__int64 i);
+
