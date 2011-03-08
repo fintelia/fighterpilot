@@ -1,11 +1,11 @@
 
 #include "main.h"
 
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
@@ -75,6 +75,7 @@ void nPlane::update(double time, double ms)
 			machineGun.left+=machineGun.roundsMax;
 			machineGun.roundsLeft=machineGun.roundsMax;
 			machineGun.rechargeLeft=machineGun.rechargeTime;
+			extraShootTime = 0.0;
 		}
 		machineGun.coolDownLeft-=ms;
 
@@ -139,8 +140,10 @@ void nPlane::update(double time, double ms)
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms+Vec3f(float(rand()%1000-500)/100000,float(rand()%1000-500)/100000,float(rand()%1000-500)/100000);
-					world.bullets.push_back(bullet(l,t,id,time-extraShootTime-machineGun.coolDown));
+					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms+Vec3f(float(rand()%1000-500)/300000,float(rand()%1000-500)/300000,float(rand()%1000-500)/300000);
+					
+					shotsFired++;
+					world.bullets.push_back(bullet(rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]) + l,t,id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
@@ -386,9 +389,9 @@ void nPlane::initArmaments()
 	//rockets.firing										= false;	 not used
 
 	machineGun.max			= machineGun.left			= 1000; 
-	machineGun.roundsMax	= machineGun.roundsLeft		= 25;
-	machineGun.rechargeTime	= machineGun.rechargeLeft	= 750.0;
-	machineGun.coolDown		= machineGun.coolDownLeft	= 40.0;
+	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
+	machineGun.rechargeTime	= machineGun.rechargeLeft	= 450.0;
+	machineGun.coolDown		= machineGun.coolDownLeft	= 6.0;
 	machineGun.firing									= false;
 }
 
@@ -432,4 +435,5 @@ void nPlane::spawn()
 	//updateAll(controlState());
 
 	respawning=false;
+	shotsFired = 0;
 }

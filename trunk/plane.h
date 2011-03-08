@@ -10,6 +10,7 @@ class nPlane: public controlledObject
 private:
 	double lastUpdateTime;
 	double extraShootTime;//time since it last shot;
+	unsigned long shotsFired;
 public:
 //////////////functions////////////
 	void update(double time, double ms);
