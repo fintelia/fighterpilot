@@ -56,6 +56,8 @@ public:
 	virtual bool createWindow(char* title, RECT WindowRect, bool checkMultisample)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
+
+	void flashTaskBar(int times, int length=0);
 };
 
 class OpenGLgraphics: public GraphicsManager

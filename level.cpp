@@ -410,8 +410,11 @@ LevelFile Level::getLevelFile(float seaLevelOffset)
 	f.info->mapResolution = mGround->resolution();
 	f.info->numObjects = mObjects.size();
 	f.heights = mGround->heights;
-	f.objects = new LevelFile::Object[mObjects.size()];
-	memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
+	if(mObjects.size() > 0)
+	{
+		f.objects = new LevelFile::Object[mObjects.size()];
+		memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
+	}
 
 	int x,z;
 	for(x=0;x<mGround->resolutionX();x++)
@@ -580,9 +583,13 @@ void Level::render(Vec3f eye)
 {
 	glDisable(GL_CULL_FACE);
 	glPushMatrix();
-	
+
+	mGround->render();
+
 	//if(mSettings.water)
 	{
+		glDepthMask(false);
+		glEnable(GL_BLEND);
 		//mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
 
 		//int s=dataManager.getId("ocean");
@@ -660,9 +667,12 @@ void Level::render(Vec3f eye)
 		dataManager.bindTex(0,1);
 		dataManager.bindTex(0,0);
 		dataManager.bindShader(0);
+
+		glDepthMask(true);
+		glDisable(GL_BLEND);
 	}
 
-	mGround->render();
+
 
 	glPopMatrix();
 }

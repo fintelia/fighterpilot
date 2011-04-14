@@ -250,7 +250,9 @@ bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float r
 }
 bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	if(t1.center.distanceSquared(lineStart) < t1.radius || t1.center.distanceSquared(lineEnd) < t1.radius)
+	double d1 = t1.center.distanceSquared(lineStart);
+	double d2 = t1.center.distanceSquared(lineEnd);
+	if(d1 < t1.radius*t1.radius || d2 < t1.radius*t1.radius)
 		return true;
 
 	float u = (t1.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);

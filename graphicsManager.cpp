@@ -36,6 +36,16 @@ void GraphicsManager::reset()
 		i->second->reset(); 
 	}
 }
+void GraphicsManager::flashTaskBar(int times, int length)
+{
+	FLASHWINFO f;
+	f.cbSize = sizeof(FLASHWINFO);
+	f.hwnd = hWnd;
+	f.dwFlags = FLASHW_TRAY;
+	f.dwTimeout = length;
+	f.uCount = times;
+	FlashWindowEx(&f);
+}
 bool OpenGLgraphics::drawModel(gID obj, Vec3f pos, Quat4f rot)
 {
 	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)

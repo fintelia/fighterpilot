@@ -13,8 +13,7 @@ uniform sampler2D groundTex;
 void main()
 {
 	vec4 color;
-	
-	if(position.x < 0.0 || position.x > 1.0 || position.y < 0.0 || position.y > 1.0 || position.z < 0.0 || position.z > 1.0) discard;
+	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0) discard;
 	//if(!gl_FrontFacing)
 	//{
 	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
@@ -52,6 +51,8 @@ void main()
 	if(dist>8000.0) color.a*=1.0-(dist-8000.0)/1000.0;
 
 	float NdotL = dot(normal,lightDir);
+
+	//color.a *= clamp(1.0+position.y,1.0,0.0);
 
 	gl_FragColor = color; //* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }

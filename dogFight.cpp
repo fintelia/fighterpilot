@@ -215,7 +215,7 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 void modeDogFight::drawBullets()
 {
 	double time = world.time();
-	double lTime = time - 20.0;//world.time.getLastTime();
+	double lTime = time - 5.0;//world.time.getLastTime();
 	//float length;
 	Vec3f start, end, end2;
 	//glLineWidth(3);
@@ -229,9 +229,9 @@ void modeDogFight::drawBullets()
 				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
 				end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
 
-				glColor4f(1.0,0.9,0.6,0.6);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
-				glColor4f(0.6,0.6,0.6,0.6);		glVertex3f(end.x,end.y,end.z);
-				glColor4f(0.6,0.6,0.6,0.6);		glVertex3f(start.x,start.y,start.z);
+				glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
+				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(end.x,end.y,end.z);
+				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(start.x,start.y,start.z);
 				glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
 			}
 		}
@@ -326,14 +326,14 @@ void modeDogFight::drawScene(int acplayer) {
 	//	//	drawWater4(e);
 	//		
 	//}
-	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(1.0,1.0);
+	//glEnable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(1.0,1.0);
 	if(world.level != NULL)
 		world.level->render(e);
 	//satellite();
 
-	glPolygonOffset(0.0,0.0);
-	glDisable(GL_POLYGON_OFFSET_FILL);
+	//glPolygonOffset(0.0,0.0);
+	//glDisable(GL_POLYGON_OFFSET_FILL);
 	glError();	//missiles
 	glColor3f(1,0,0);
 	Vec3f axis;
