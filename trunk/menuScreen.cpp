@@ -787,7 +787,7 @@ int menuLevelEditor::update()
 		}
 		else if(buttons["dSquare"]->checkChanged())
 		{
-			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.49);
+			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.17,0.5);
 		}
 		else if(buttons["fromFile"]->checkChanged())
 		{
@@ -936,7 +936,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeCampaign("media/map file.lvl"));
+		modeManager.setMode(new modeCampaign("media/map file2.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
@@ -944,7 +944,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
+		modeManager.setMode(new modeSplitScreen("media/map file2.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{

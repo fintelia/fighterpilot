@@ -25,7 +25,7 @@ void modeMapBuilder::resetView()
 	rot = Quat4f(Vec3f(1,0,0),1.0);
 	center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
 }
-void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
+void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^x+1)!!!
 {
 	int sLen=max(level->ground()->resolutionX(),level->ground()->resolutionZ());
 	if( !(!((sLen-1) & (sLen-2) ) && sLen > 1) || level->ground()->resolutionX() != level->ground()->resolutionZ())//if v is not one more than a power of 2
@@ -40,7 +40,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 		level->newGround(sLen,sLen);
 	}
 
-		
+	
 	//set corners
 
 	int x, z, numSquares, squareSize;
@@ -59,12 +59,12 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 		}
 	}
 
-	level->ground()->setHeight(0,0,0);
-	level->ground()->setHeight(0,0,sLen-1);
-	level->ground()->setHeight(sLen-1,0,level->ground()->resolutionZ()-1);
-	level->ground()->setHeight(sLen-1,0,0);
+	//level->ground()->setHeight(0,0,0);
+	//level->ground()->setHeight(0,0,sLen-1);
+	//level->ground()->setHeight(sLen-1,0,level->ground()->resolutionZ()-1);
+	//level->ground()->setHeight(sLen-1,0,0);
 
-	for(int itt=0; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=h)
+	for(int itt=3; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=m)
 	{
 		numSquares = 0x1 << itt;
 		squareSize = (sLen-1)/numSquares;
@@ -77,7 +77,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
 					level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
-				y += float(rand()%2000-1000)*rVal * 1.0;
+				y += float(rand()%2000-1000)*rVal;
 
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
 			}
@@ -92,8 +92,8 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 				c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
-				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal * 3.0;
+				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal;
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal;
 				level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 
 
@@ -102,8 +102,8 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 				c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
-				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal * 3.0;
+				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal;
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal;
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
 
 				if(x == numSquares-1)//right
@@ -112,7 +112,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
+					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal;
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
 				}
@@ -122,7 +122,7 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 					c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal * 3.0;
+					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal;
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
 				}
@@ -146,7 +146,21 @@ void modeMapBuilder::diamondSquare(float h)//mapsize must be (2^x+1, 2^x+1)!!!
 	//		if(h<minHeight) minHeight=h;
 	//	}
 	//}
+	level->ground()->setMinMaxHeights();
+	minHeight=level->ground()->getMinHeight();
+
+	for(x=0;x<sLen;x++)
+	{
+		for(y=0;y<sLen;y++)
+		{
+			level->ground()->setHeight(x,(level->ground()->height(x,y)-minHeight)*clamp(2.0-2.0*sqrt((x-sLen/2)*(x-sLen/2)+(y-sLen/2)*(y-sLen/2))/(sLen/2),1.0,0.0),y);
+		}
+	}
+	
+
 	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+
+
 
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
@@ -216,7 +230,7 @@ void modeMapBuilder::fromFile(string filename)
 		float* t = new float[image->width * image->height];
 		for(int y = 0; y < image->height; y++) {
 			for(int x = 0; x < image->width; x++) {
-				t[y * image->width + x] = (unsigned char)image->pixels[3 * (y * image->width + x)];
+				t[y * image->width + x] = (unsigned char)image->pixels[3 * (y * image->width + x)] * 10.0;
 			}
 		}
 		//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
@@ -385,8 +399,8 @@ bool modeMapBuilder::init()
 	level = new editLevel;
 
 	scroll=0.0;
-	level->newGround(80,80);
-	faultLine();
+	level->newGround(513,513);
+	diamondSquare(0.17,0.5);
 
 	resetView();
 	return true;

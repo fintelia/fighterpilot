@@ -241,7 +241,7 @@ T Vector3<T>::distance(Vector3 v) const
 template <class T>
 T Vector3<T>::distanceSquared(Vector3 v) const
 {
-	return (v.x-x)*(v.y-y)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
+	return (v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
 }
 
 template <class T>

@@ -20,7 +20,7 @@ TextManager* textManager;																														//	//
 #else																																			//	//
 	Input *input=new standard_input;																											//	//
 #endif																																			//	//
-ObjectStats settings;																																//	//
+ObjectStats settings;																															//	//
 float radarAng=0;																																//	//
 																																				//	//
 MenuManager& menuManager=MenuManager::getInstance();																							//	//
@@ -91,7 +91,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				case SC_SCREENSAVE:					// Screensaver Trying To Start?
 				case SC_MONITORPOWER:				// Monitor Trying To Enter Powersave?
 					return 0;						// Prevent From Happening
-			}
+			} 
 			break;									// Exit
 		}
 		//case WM_MOVE:
@@ -109,7 +109,6 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			//bool wActive = LOWORD(wParam) != 0;
 			//bool wMinimized = HIWORD(wParam) != 0;
-
 			world.time.setPaused(!(wParam != 0));
 			active = wParam != 0;
 			return 0;

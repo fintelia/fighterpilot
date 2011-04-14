@@ -50,7 +50,7 @@ class modeMapBuilder: public modeScreen
 	void zoom(float rotations);
 	void trackBallUpdate(int newX, int newY);
 	void resetView();
-	void diamondSquare(float h);
+	void diamondSquare(float h, float m);
 	void faultLine();
 	void fromFile(string filename);
 	void addObject(int type, int team, int controlType, int x, int y);

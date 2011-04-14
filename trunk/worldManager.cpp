@@ -132,9 +132,9 @@ void WorldManager::update()
 			{
 				if(bullets[l].owner != i->second->id && bullets[l].startTime < time.getLastTime() && bullets[l].startTime + bullets[l].life > time())
 				{
-					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)-i->second->position))
+					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)/1000-i->second->position))
 					{
-						(*i).second->loseHealth(250.0);
+						(*i).second->loseHealth(25);
 						if((*i).second->dead)
 						{
 							if(bullets[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();

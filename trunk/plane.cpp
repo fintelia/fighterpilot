@@ -1,11 +1,11 @@
 
 #include "main.h"
 
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
@@ -139,11 +139,12 @@ void nPlane::update(double time, double ms)
 				{
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
+					Vec3f o=rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms+Vec3f(float(rand()%1000-500)/300000,float(rand()%1000-500)/300000,float(rand()%1000-500)/300000);
+					Vec3f t=((fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms)*1000-o).normalize() + Vec3f(float(rand()%1000-500)/200000,float(rand()%1000-500)/200000,float(rand()%1000-500)/200000);
 					
 					shotsFired++;
-					world.bullets.push_back(bullet(rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]) + l,t,id,time-extraShootTime-machineGun.coolDown));
+					world.bullets.push_back(bullet(o + l,t,id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
