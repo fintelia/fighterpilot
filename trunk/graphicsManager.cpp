@@ -46,6 +46,10 @@ void GraphicsManager::flashTaskBar(int times, int length)
 	f.uCount = times;
 	FlashWindowEx(&f);
 }
+void GraphicsManager::minimizeWindow()
+{
+	ShowWindow(hWnd, SW_MINIMIZE);
+}
 bool OpenGLgraphics::drawModel(gID obj, Vec3f pos, Quat4f rot)
 {
 	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
@@ -209,6 +213,7 @@ bool OpenGLgraphics::init()
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
+	glEnable(GL_BLEND);
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_MULTISAMPLE);
@@ -295,7 +300,6 @@ void OpenGLgraphics::render()
 	glOrtho( 0, sw , sh , 0, -1, 1 );		// Select Ortho Mode
 	glMatrixMode(GL_MODELVIEW);				// Select Modelview Matrix
 	glLoadIdentity();						// Reset The Matrix
-	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glColor3f(1,1,1);
 	modeManager.render2D();
@@ -310,7 +314,6 @@ void OpenGLgraphics::render()
 	#endif
 
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
 	glMatrixMode( GL_PROJECTION );			// Select Projection
 	glPopMatrix();							// Pop The Matrix
 	glMatrixMode( GL_MODELVIEW );			// Select Modelview

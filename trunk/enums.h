@@ -104,18 +104,22 @@ public:
 	virtual void operator() (B b)=0;
 };
 
-
+extern void minimizeWindow();
 #ifdef _DEBUG
-	#define debugBreak() __debugbreak();
+	#define debugBreak(){			\
+		minimizeWindow();			\
+		__debugbreak();				\
+	}
 #else if
 	#define debugBreak() {}
 #endif
 
 extern char* errorString;
-#define glError(){									\
-	errorString=(char*)gluErrorString(glGetError());\
-	if(string(errorString).compare("no error") != 0)\
-		debugBreak();			\
+#define glError(){										\
+	errorString=(char*)gluErrorString(glGetError());	\
+	if(string(errorString).compare("no error") != 0){	\
+		debugBreak()									\
+	}													\
 }
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))

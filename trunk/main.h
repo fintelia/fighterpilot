@@ -1,4 +1,15 @@
 
+extern void minimizeWindow();
+#include <xutility>
+#if _ITERATOR_DEBUG_LEVEL == 2			//_ITERATOR_DEBUG_LEVEL == 2 when compiling in DEBUG mode
+	#undef _DEBUG_ERROR2				//we are redefining _DEBUG_ERROR2 so that the window is minimized and then the error message is displayed 
+	#define _DEBUG_ERROR2(mesg, file, line){		\
+		minimizeWindow();							\
+		_Debug_message(L ## mesg, file, line);		\
+	}
+ #endif /* _ITERATOR_DEBUG_LEVEL == 2 */
+
+
 #include <cstdio>
 #include <ctime>
 #include <cstdlib>

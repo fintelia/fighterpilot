@@ -6,7 +6,7 @@ varying vec3 pos;
 uniform vec2 center;
 
 void main()
-{	
+{
 	lightDir = normalize(vec3(gl_LightSource[0].position));
 	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
 

@@ -359,7 +359,6 @@ void modeMapBuilder::draw3D()
 			////////////////////////////////draw grid//////////////////////////////////
 			glDepthMask(false);
 			glDisable(GL_LIGHTING);
-			glEnable(GL_BLEND);	
 			glColor4f(0.1,0.3,1.0,0.3);
 				
 			glBegin(GL_QUADS);

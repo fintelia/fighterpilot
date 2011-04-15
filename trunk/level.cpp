@@ -245,7 +245,6 @@ void Level::heightmapGL::render() const
 		glUseProgram(0);
 	}
 	//glDisable(GL_LIGHTING);
-	//glEnable(GL_BLEND);	
 	//glPushMatrix();
 	//glColor4f(0.1,0.3,1.0,0.6);
 	//glTranslatef(position.x,position.y,position.z);
@@ -585,11 +584,10 @@ void Level::render(Vec3f eye)
 	glPushMatrix();
 
 	mGround->render();
-
+		glDepthMask(false);
 	//if(mSettings.water)
 	{
-		glDepthMask(false);
-		glEnable(GL_BLEND);
+
 		//mWater.seaLevel = mGround->minHeight + (mGround->maxHeight-mGround->minHeight)/3;
 
 		//int s=dataManager.getId("ocean");
@@ -669,7 +667,6 @@ void Level::render(Vec3f eye)
 		dataManager.bindShader(0);
 
 		glDepthMask(true);
-		glDisable(GL_BLEND);
 	}
 
 

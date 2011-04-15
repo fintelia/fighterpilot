@@ -63,6 +63,10 @@ void ShowHideTaskBar(bool bHide)
 	if(bHide)	ShowWindow(pWnd,SW_HIDE);
 	else		ShowWindow(pWnd,SW_SHOW);
 }
+void minimizeWindow()
+{
+	graphics->minimizeWindow();
+}
 LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							UINT	uMsg,			// Message For This Window
 							WPARAM	wParam,			// Additional Message Information
@@ -196,7 +200,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 //////
 	float nextUpdate=0;
 	float lastUpdate=0;
-
+	try{
 	while(!done)									// Loop That Runs While done=FALSE
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
@@ -236,7 +240,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			}
 		}
 	}
-
+	}
+	catch(...){graphics->minimizeWindow(); }
 	graphics->destroyWindow();
 	return 0;
 }

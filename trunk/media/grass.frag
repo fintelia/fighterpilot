@@ -13,7 +13,8 @@ uniform sampler2D groundTex;
 void main()
 {
 	vec4 color;
-	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0) discard;
+	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
+	 discard;
 	//if(!gl_FrontFacing)
 	//{
 	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
@@ -46,13 +47,13 @@ void main()
 	color = ( texture2D(rock,position.xz*4.0		)*TexValues[0]
 			+ texture2D(sand,position.xz*4.0		)*TexValues[1]
 			+ texture2D(grass,position.xz*4.0*2.0	)*TexValues[2]);
-	color = color*(1.0+0.5*TexValues[0]-texture2D(LCnoise,position.xz*4.0*4.0).r*0.8*TexValues[0]);
-	color = color*(1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
-	if(dist>8000.0) color.a*=1.0-(dist-8000.0)/1000.0;
+	color.rgb *= (1.0+0.5*TexValues[0]-texture2D(LCnoise,position.xz*4.0*4.0).r*0.8*TexValues[0]);
+	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
+	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
 
 	float NdotL = dot(normal,lightDir);
 
-	//color.a *= clamp(1.0+position.y,1.0,0.0);
-
-	gl_FragColor = color; //* (0.9 + clamp(NdotL*0.5,0.0,0.5));
+	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
+	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
+	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }

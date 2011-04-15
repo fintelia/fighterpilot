@@ -238,8 +238,8 @@ void modeDogFight::drawBullets()
 	glEnd();
 	//glLineWidth(1);
 }
-void modeDogFight::drawScene(int acplayer) {
-
+void modeDogFight::drawScene(int acplayer) 
+{
 	static map<int,double> lastDraw;
 	double time=world.time();
 
@@ -250,7 +250,7 @@ void modeDogFight::drawScene(int acplayer) {
 
 	GLfloat ambientColor[] = {0.85f, 0.85f, 0.85f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
-		
+	
 	GLfloat lightColor0[] = {0.6f, 0.6f, 0.6f, 0.0f};
 	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
@@ -301,7 +301,6 @@ void modeDogFight::drawScene(int acplayer) {
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
-	glEnable(GL_BLEND);		
 	glColor3f(1,1,1);
 	//sky dome
 	glDepthRange(0.99,1.0);
@@ -385,7 +384,6 @@ void modeDogFight::drawScene(int acplayer) {
 
 
 	glDepthMask(false);
-	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);glError();
 
 	//glCallList(treeDisp);
@@ -427,7 +425,6 @@ void modeDogFight::drawScene(int acplayer) {
 	///////////2D end//////////////
 
 	glEnable(GL_LIGHTING);
-	glDisable(GL_BLEND);
 	glBindTexture(GL_TEXTURE_2D,0);
 	glDepthMask(true);
 

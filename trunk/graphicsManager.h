@@ -58,6 +58,7 @@ public:
 	virtual void takeScreenshot()=0;
 
 	void flashTaskBar(int times, int length=0);
+	void minimizeWindow();
 };
 
 class OpenGLgraphics: public GraphicsManager
