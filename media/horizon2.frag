@@ -5,10 +5,8 @@ varying vec3 pos;
 
 uniform sampler2D bumpMap, ground, tex;
 uniform float time, seaLevel;
-
 void main()
 {
-
 	vec3 n;
 	float NdotL;
 	vec4 color;
@@ -33,7 +31,9 @@ void main()
 		//color = mix(texture2D(tex,gl_TexCoord[0].st*25.0,depth*2.0), color, depth );
 		//color += clamp(sin(depth*30.0+time/1000.0)*0.1,0.0,1.0)*(1.0-depth);
 		color.a *= depth;
-		color += vec4(1.0,1.0,1.0,0.03)*(1.0-depth)*(1.0-depth);
+		color.rgb = mix(color.rgb,vec3(1.0,1.0,1.0),(1.0-depth)*(1.0-depth));
+		color.a += 0.03;
 	}
+	//if(dist>8000.0) color.a*=1.0-(dist-8000.0)/1000.0;
 	gl_FragColor = color;
 }

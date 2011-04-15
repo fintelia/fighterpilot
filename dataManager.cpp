@@ -509,7 +509,6 @@ int DataManager::loadOBJ(string filename)
 	{
 		if(pass==1)
 		{
-			glEnable(GL_BLEND);
 			glDepthMask(false);
 		}
 		for(int l=0; l<numMtls; l++)
@@ -557,7 +556,6 @@ int DataManager::loadOBJ(string filename)
 			}
 		}
 	}
-	glDisable(GL_BLEND);
 	glDepthMask(true);
 	glEndList();
 
@@ -695,7 +693,7 @@ int DataManager::loadPNG(string filename)
 	else if(colorChannels == 4) format = GL_RGBA;
 
 	bool NPOT = GLEE_ARB_texture_non_power_of_two && !((width & (width-1)) && (height & (height-1)));
-	glError()
+	glError();
 
 	GLuint texV;
 	glGenTextures(1,&texV);glError();
