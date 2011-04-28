@@ -98,8 +98,10 @@ int modeCampaign::update()
 void modeCampaign::draw2D()
 {
 	nPlane* p=(nPlane*)world.objectList[players[0].objectNum()];
+	
 	if(players[0].firstPerson() && !p->controled)
 	{
+		planeIdBoxes(p,0,0,sw,sh);
 		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");
 		targeter(400,300,50,p->turn);
 		radar(176, 350, 64, 64, true);
@@ -118,7 +120,7 @@ void modeCampaign::draw2D()
 		glEnable(GL_MULTISAMPLE);
 
 	}
-	//planeIdBoxes(p,eye);
+	
 
 	if(levelup)
 	{

@@ -2,16 +2,18 @@
 #pragma once
 #include <map>
 
-//nst int TYPE				= 0xXXxxx;
-const int PLANE				= 0x01000;
-const int F12				= 0x01000;
-const int F16				= 0x01000;
-const int F18				= 0x01000;
-const int F22				= 0x01004;
-const int UAV				= 0x01005;
-const int B2				= 0x01006;
+//nst int TYPE				= 0xXXxx;
+const int PLANE				= 0x0100;
+const int F12				= 0x0100;
+const int F16				= 0x0100;
+const int F18				= 0x0100;
+const int F22				= 0x0104;
+const int UAV				= 0x0105;
+const int B2				= 0x0106;
 
-const int MISSILE			= 0x02000;
+const int AA_GUN			= 0x0200;
+
+const int MISSILE			= 0x0400;
 
 
 const int NEUTRAL			= 0x00;
@@ -58,10 +60,22 @@ extern planeType planeTypeFromString(string s);
 
 struct controlState
 {
-	float	climb;
-	float	dive;
-	float	accelerate;
-	float	brake;
+	union{
+		float climb;
+		float up;
+	};
+	union{
+		float dive;
+		float down;
+	};
+	union{
+		float accelerate;
+		float forward;
+	};
+	union{
+		float brake;
+		float reverse;
+	};
 	float	right;
 	float	left;
 	float	shoot1;

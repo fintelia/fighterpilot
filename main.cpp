@@ -193,9 +193,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	menuManager.init();
 	menuManager.setMenu("menuLoading");
 
-	fireParticleEffect = graphics->newParticleEffect("explosion fireball",500.0*r.right/1280);
-	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280);
-	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280);
+	fireParticleEffect = graphics->newParticleEffect("explosion fireball",500.0*r.right/1280,"partical shader");
+	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280,"partical shader");
+	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280,"partical shader");
 
 //////
 	float nextUpdate=0;
@@ -219,7 +219,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		{
 			float waitTime=nextUpdate-GetTime();
 			if(waitTime>0)	Sleep(waitTime);
-
 			update();
 
 			double time = GetTime();		

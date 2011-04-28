@@ -4,6 +4,7 @@ class objectList
 private:
 	map<objId,object*>		mObjects;
 	map<objId,nPlane*>		mPlanes;
+	map<objId,aaGun*>		mAAguns;
 	map<objId,missile*>		mMissiles;
 
 public:
@@ -22,6 +23,10 @@ public:
 	const map<objId,nPlane*>& planes()const
 	{
 		return mPlanes;
+	}
+	const map<objId,aaGun*>& aaGuns()const
+	{
+		return mAAguns;
 	}
 	const map<objId,missile*>& missiles()const
 	{

@@ -111,6 +111,10 @@ const map<objId,nPlane*>& WorldManager::planes()const
 {
 	return objectList.planes();
 }
+const map<objId,aaGun*>& WorldManager::aaGuns() const
+{
+	return objectList.aaGuns();
+}
 const map<objId,missile*>& WorldManager::missiles()const
 {
 	return objectList.missiles();
@@ -134,7 +138,7 @@ void WorldManager::update()
 				{
 					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)/1000-i->second->position))
 					{
-						(*i).second->loseHealth(25);
+						(*i).second->loseHealth(0.25);
 						if((*i).second->dead)
 						{
 							if(bullets[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();

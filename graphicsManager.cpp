@@ -23,10 +23,10 @@ GraphicsManager::gID OpenGLgraphics::newModel(string disp)
 	objects.insert(pair<gID,object*>(nID, new model(disp)));
 	return nID;
 }
-GraphicsManager::gID OpenGLgraphics::newParticleEffect(string texture, int size)
+GraphicsManager::gID OpenGLgraphics::newParticleEffect(string texture, int size, string shader)
 {
 	gID nID = idGen();
-	objects.insert(pair<gID,object*>(nID, new particleEffect(texture,size)));
+	objects.insert(pair<gID,object*>(nID, new particleEffect(texture,shader,size)));
 	return nID;
 }
 void GraphicsManager::reset()
@@ -70,7 +70,7 @@ bool OpenGLgraphics::drawModel(gID obj)
 	}
 	return false;
 }
-OpenGLgraphics::particleEffect::particleEffect(string tex, int s): object(PARTICLE_EFFECT,true), texture(tex), size(s), num(0), compacity(32), particles(NULL)
+OpenGLgraphics::particleEffect::particleEffect(string tex, string Shader, int s): object(PARTICLE_EFFECT,true), texture(tex), shader(Shader), size(s), num(0), compacity(32), particles(NULL)
 {
 	particles = new (nothrow) particle[compacity];
 	if(particles == NULL)
@@ -112,36 +112,37 @@ void OpenGLgraphics::particleEffect::render()
 {
 	if(num==0)return;
 
-
 	glColor4f(1,1,1,1);
 	dataManager.bind(texture);
-	dataManager.bind("partical shader");
-	glUniform1i(glGetUniformLocation(dataManager.getId("partical shader"), "tex"), 0);
-	glUniform1f(glGetUniformLocation(dataManager.getId("partical shader"), "size1"), size);
-	glUniform1f(glGetUniformLocation(dataManager.getId("partical shader"), "size2"), size);
 
-	//glPointSize(   size   );
+	if(shader == "partical shader")
+	{
+		dataManager.bind(shader);
+		glUniform1i(glGetUniformLocation(dataManager.getId(shader), "tex"), 0);
+		glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size1"), size * 1.00);
+		glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size2"), size * 0.05);//not currently used
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(particle)*num, particles, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(particle)*num, particles, GL_DYNAMIC_DRAW);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	GLuint aLife = glGetAttribLocation(dataManager.getId("partical shader"),"life");
-	glEnableVertexAttribArray(aLife);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		GLuint aLife = glGetAttribLocation(dataManager.getId("partical shader"),"life");
+		glEnableVertexAttribArray(aLife);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(particle), 0);
-	glVertexAttribPointer(aLife,1,GL_FLOAT,false, sizeof(particle), (void*)(7*sizeof(float)));
-	//glColorPointer(4, GL_FLOAT, sizeof(particle), (void*)sizeof(Vec3f));
+		glVertexPointer(3, GL_FLOAT, sizeof(particle), 0);
+		glVertexAttribPointer(aLife,1,GL_FLOAT,false, sizeof(particle), (void*)(7*sizeof(float)));
+		//glColorPointer(4, GL_FLOAT, sizeof(particle), (void*)sizeof(Vec3f));
 
-	glDrawArrays(GL_POINTS, 0, num);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableVertexAttribArray(aLife);
+		glDrawArrays(GL_POINTS, 0, num);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableVertexAttribArray(aLife);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	dataManager.bindTex(0);
 	dataManager.bindShader(0);
+	dataManager.bindTex(0);
 }
 OpenGLgraphics::particleEffect::~particleEffect()
 {
@@ -643,4 +644,31 @@ void OpenGLgraphics::takeScreenshot()
 	fout.write((char*)colors,size);
 	delete[] colors;
 	fout.close();
+
+	//FILE *fp = fopen("screen shot.png", "wb");
+	//if(true)
+	//{
+	//	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)user_error_ptr,	user_error_fn, user_warning_fn);
+	//	if (!png_ptr)
+	//	{
+	//		fclose(fp);
+	//		return;
+	//	}
+	//	png_infop info_ptr = png_create_info_struct(png_ptr);
+	//	if (!info_ptr)
+	//	{
+	//		png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+	//		fclose(fp);
+	//		return;
+	//	}
+	//	if (setjmp(png_jmpbuf(png_ptr)))
+	//	{
+	//		png_destroy_write_struct(&png_ptr, &info_ptr);
+	//		fclose(fp);
+	//		return;
+	//	}
+	//	png_init_io(png_ptr, fp);
+	//	png_set_sig_bytes(png_ptr, 8);
+	//	png_set_write_status_fn(png_ptr, [&write_row_callback](png_ptr, png_uint_32 row, int pass){});
+	//}
 }

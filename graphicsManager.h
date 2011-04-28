@@ -36,7 +36,7 @@ public:
 	virtual void reset();
 
 	virtual gID newModel(string disp)=0;
-	virtual gID newParticleEffect(string texture, int size)=0;
+	virtual gID newParticleEffect(string texture, int size, string shader = "")=0;
 
 	bool drawObject(gID obj);
 	virtual bool drawModel(gID obj, Vec3f pos, Quat4f rot)=0;
@@ -80,7 +80,8 @@ protected:
 	};
 	struct particleEffect: public object
 	{
-		string			texture;
+		string			texture,
+						shader;
 		int				size;
 		unsigned int	num,
 						compacity;
@@ -91,7 +92,7 @@ protected:
 			float life;
 		} *particles;
 
-		particleEffect(string tex, int s);
+		particleEffect(string tex, string Shader, int s);
 		~particleEffect();
 		void reset();
 		bool setParticle(Vec3f p, float life);
@@ -101,7 +102,7 @@ protected:
 public:
 
 	gID newModel(string disp);
-	gID newParticleEffect(string texture, int size);
+	gID newParticleEffect(string texture, int size, string shader = "");
 
 	bool drawModel(gID obj, Vec3f pos, Quat4f rot);
 	bool drawModel(gID obj);

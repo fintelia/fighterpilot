@@ -98,7 +98,7 @@ public:
 		sSpeed = timeSpeed;
 
 		eSpeed = speed;
-		eReal = sReal + ticksPerSecond*abs((eSpeed - sSpeed)/changeRate);
+		eReal = sReal + ticksPerSecond*(__int64)abs((eSpeed - sSpeed)/changeRate);
 		changingSpeed = true;
 	}
 	void pause()

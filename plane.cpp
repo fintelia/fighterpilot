@@ -95,7 +95,7 @@ void nPlane::update(double time, double ms)
 			altitude=world.altitude(position);
 			if(altitude<3.0){die();position.y-=altitude-3;hitGround=true;}
 			
-			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
+			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,25.0,69.0));
 			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
 			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
 			direction -= turn*ms/3000.0;//needs to be adjusted to be continious
@@ -148,15 +148,18 @@ void nPlane::update(double time, double ms)
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
-
-			//static double lastWaypoint = 9999.9;
+			
+			planePath.currentPoint(position,rotation);
+			//static double lastWaypoint = 0.0;
 			//lastWaypoint += ms;
+
 			//if(lastWaypoint >= 100.0)
 			//{
+			//	lastWaypoint -= 1000.0;
 			//	objectPath::point p;
-			//	p.position = pos;
+			//	p.position = position;
 			//	p.rotation = rotation;
-			//	p.ms = time;
+			//	p.time = world.time();
 			//	planePath << p;
 			//}
 		}
@@ -434,6 +437,8 @@ void nPlane::spawn()
 	hitGround=false;
 	health=maxHealth;
 	//updateAll(controlState());
+
+	planePath.currentPoint(position,rotation);
 
 	respawning=false;
 	shotsFired = 0;

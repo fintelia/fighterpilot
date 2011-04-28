@@ -236,7 +236,7 @@ bool Vector3<T>::equal(Vector3 v,T maxDifference=0.01) const
 template <class T>
 T Vector3<T>::distance(Vector3 v) const
 {
-	return sqrt((v.x-x)*(v.y-y)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z));
+	return sqrt((v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z));
 }
 template <class T>
 T Vector3<T>::distanceSquared(Vector3 v) const

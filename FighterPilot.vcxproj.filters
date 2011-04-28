@@ -46,10 +46,6 @@
     <Filter Include="shaders\radar">
       <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="libpng">
-      <UniqueIdentifier>{a741da3b-2684-4290-b03d-dade5aebbed4}</UniqueIdentifier>
-      <ParseFiles>false</ParseFiles>
-    </Filter>
     <Filter Include="Source Files\graphicsManager">
       <UniqueIdentifier>{28695228-5191-4f36-80fe-9e7a88adfc77}</UniqueIdentifier>
     </Filter>
@@ -86,11 +82,14 @@
     <Filter Include="shaders\smoke">
       <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\enums">
+      <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\explosion">
+      <UniqueIdentifier>{a150796c-d644-436a-9afb-24e0352bcc5f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="explosion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FrustumG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -124,9 +123,6 @@
     <ClCompile Include="time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="turret.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GLee.c">
       <Filter>glee</Filter>
     </ClCompile>
@@ -151,57 +147,6 @@
     <ClCompile Include="input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="png\png.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngread.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngerror.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngget.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngmem.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngpread.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngrio.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngrtran.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngrutil.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngset.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\pngtrans.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\inflate.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\zutil.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\inffast.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\inftrees.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\adler32.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
-    <ClCompile Include="png\crc32.c">
-      <Filter>libpng</Filter>
-    </ClCompile>
     <ClCompile Include="graphicsManager.cpp">
       <Filter>Source Files\graphicsManager</Filter>
     </ClCompile>
@@ -213,9 +158,6 @@
     </ClCompile>
     <ClCompile Include="cameraManager.cpp">
       <Filter>Source Files\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="enums.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="modeManager.cpp">
       <Filter>Source Files\modeManager</Filter>
@@ -250,14 +192,17 @@
     <ClCompile Include="objectList.cpp">
       <Filter>Source Files\object\object list</Filter>
     </ClCompile>
+    <ClCompile Include="aaGun.cpp">
+      <Filter>Source Files\object</Filter>
+    </ClCompile>
+    <ClCompile Include="enums.cpp">
+      <Filter>Source Files\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="explosion.cpp">
+      <Filter>Source Files\explosion</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="enums.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="explosion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="FrustumG.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -301,9 +246,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="time.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="turret.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="XboxContInput.h">
@@ -368,6 +310,15 @@
     </ClInclude>
     <ClInclude Include="objectList.h">
       <Filter>Source Files\object\object list</Filter>
+    </ClInclude>
+    <ClInclude Include="aaGun.h">
+      <Filter>Source Files\object</Filter>
+    </ClInclude>
+    <ClInclude Include="enums.h">
+      <Filter>Source Files\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="explosion.h">
+      <Filter>Source Files\explosion</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

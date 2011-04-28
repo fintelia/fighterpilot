@@ -77,5 +77,6 @@ public:
 	void currentPoint(point p);
 	void currentPoint(Vec3f sPos,Quat4f sRot);
 	void currentPoint(Vec3f sPos,Quat4f sRot, float time);
+	const vector<pathSegment*>& getPath() {return segments;}
 };
 objectPath& operator<<( objectPath& op, const objectPath::point& p );

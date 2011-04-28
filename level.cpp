@@ -134,6 +134,7 @@ Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(R
 }
 void Level::heightmapGL::init()
 {
+	setMinMaxHeights();
 	glGenTextures(1,(GLuint*)&groundTex);
 	groundValues = (unsigned char*)malloc(uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
 	memset(groundValues,0,uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
@@ -230,9 +231,9 @@ void Level::heightmapGL::render() const
 		glUniform1i(glGetUniformLocation(shader, "groundTex"),	5);
 
 		glPushMatrix();
-		glTranslatef(mPosition.x,mPosition.y,mPosition.z);
-		glScalef(mSize.x,1,mSize.y);
-		glCallList(dispList);
+			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
+			glScalef(mSize.x,1,mSize.y);
+			glCallList(dispList);
 		glPopMatrix();
 
 		dataManager.bindTex(0,6);
@@ -377,8 +378,9 @@ Level::Level(string BMP, Vec3f size, float seaLevel)
 	}
 	//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
 	mGround = new heightmapGL(Vec2u(image->height,image->width),t);
-	mGround->init();
 	mGround->setSize(Vec2f(size.x,size.z));
+	mGround->init();
+
 	mGround->setMinMaxHeights();
 
 	delete[] t;
@@ -535,7 +537,7 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 	{
 		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
 		glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i),h),i);
-		t+=0.2;	
+		t+=0.2;
 	}
 	t+=0.2;
 	for(int i = mGround->resolutionX()-1; i > 0; i--)
@@ -572,7 +574,7 @@ void Level::renderObjectsPreview()
 		{
 			glPushMatrix();
 			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
-			glScalef(10,10,10);
+			//glScalef(10,10,10);
 			dataManager.draw((planeType)i->type);
 			glPopMatrix();
 		}
@@ -639,7 +641,7 @@ void Level::render(Vec3f eye)
 		glUniform1i(glGetUniformLocation(s, "ground"), 1);
 		glUniform1i(glGetUniformLocation(s, "tex"), 2);
 		glUniform1f(glGetUniformLocation(s, "time"), world.time());
-		glUniform1f(glGetUniformLocation(s, "seaLevel"), -mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
+		glUniform1f(glGetUniformLocation(s, "seaLevel"), mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
 		glUniform2f(glGetUniformLocation(s, "center"), center.x,center.z); 
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

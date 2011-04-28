@@ -27,13 +27,14 @@ void main()
 	
 	if(gl_TexCoord[0].s<1.0 && gl_TexCoord[0].s>0.0 && gl_TexCoord[0].t<1.0 && gl_TexCoord[0].t>0.0)
 	{
-		float depth = clamp((seaLevel-texture2D(ground,gl_TexCoord[0].st).a)*2.5,0.0,1.0);
+		float depth = clamp(((-seaLevel-texture2D(ground,gl_TexCoord[0].st).a))/-seaLevel,0.0,1.0);
 		//color = mix(texture2D(tex,gl_TexCoord[0].st*25.0,depth*2.0), color, depth );
 		//color += clamp(sin(depth*30.0+time/1000.0)*0.1,0.0,1.0)*(1.0-depth);
-		color.a *= depth;
-		color.rgb = mix(color.rgb,vec3(1.0,1.0,1.0),(1.0-depth)*(1.0-depth));
-		color.a += 0.03;
+		color.a *= mix(depth,1.0,rad);
+		color.rgb = mix(color.rgb,vec3(1.0,1.0,1.0),(1.0-depth)*(1.0-depth)*0.6);
+		
 	}
+	color.a += 0.03;
 	//if(dist>8000.0) color.a*=1.0-(dist-8000.0)/1000.0;
 	gl_FragColor = color;
 }

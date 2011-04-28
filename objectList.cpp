@@ -3,7 +3,7 @@
 
 objId objectList::newObject(LevelFile::Object obj)
 {
-	if((obj.type & PLANE))
+	if(obj.type & PLANE)
 	{
 		nPlane* p = NULL;
 		//if(obj.controlType == CONTROL_HUMAN)
@@ -26,6 +26,24 @@ objId objectList::newObject(LevelFile::Object obj)
 		p->team = obj.team;
 		mObjects[p->id] = p;
 		mPlanes[p->id] = p;
+		return p->id;
+	}
+	else if(obj.type & AA_GUN)
+	{
+		aaGun* p = NULL;
+		for(int i=0;i<NumPlayers;i++)
+		{
+			if(players[i].objectNum()==0)
+			{
+				p = new aaGun(obj.startloc,obj.startRot,obj.type,&players[i]);
+				break;
+			}
+			else if(i == NumPlayers-1)
+				p = new aaGun(obj.startloc,obj.startRot,obj.type);
+		}
+		p->team = obj.team;
+		mObjects[p->id] = p;
+		mAAguns[p->id] = p;
 		return p->id;
 	}
 	return 0;
