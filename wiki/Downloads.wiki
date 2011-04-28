@@ -7,7 +7,7 @@ The latest version of Fighter-Pilot can be downloaded [http://code.google.com/p/
   * OpenGL 2.0 compatible graphics card
   * Xbox 360 controllers are optional
 
-Simply unzip the file and run `FighterPilot.exe`. Then choose high graphics settings (if this runs too slowly, then try low graphics settings). Once the loading bar finishes you will see the main menu. Use the arrow keys and Space/Enter to navigate the menu. To exit from the main menu, press the escape key. Pressing the escape key while in the game will bring up the in-game menu. The flight controls are as follows:
+Simply unzip the file and run `FighterPilot.exe`. Then choose high graphics settings (if this runs too slowly, then try low graphics settings). Once the loading bar finishes you will see the main menu. Use the arrow keys and Space/Enter to navigate the menu. To exit from the main menu, press the escape key. Pressing escape while in the game will bring up the in-game menu. The flight controls are as follows:
 
 || *Action* || *Player 1 Controls* || *Player 2 Controls* ||
 || Accelerate || Up Arrow ||   W Key ||
