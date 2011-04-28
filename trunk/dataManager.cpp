@@ -1,5 +1,4 @@
 
-#include "png\png.h"
 #include "main.h"
 
 
@@ -538,15 +537,15 @@ int DataManager::loadOBJ(string filename)
 						}
 						else
 						{
-							glNormal3fv(&normals[faces[f].n[0]].x);
+					//		glNormal3fv(&normals[faces[f].n[0]].x);
 							glTexCoord2fv(&texCoords[faces[f].t[0]].u);
 							glVertex3fv(&vertices[	faces[f].v[0]].x);
 
-							glNormal3fv(&normals[	faces[f].n[1]].x);
+					//		glNormal3fv(&normals[	faces[f].n[1]].x);
 							glTexCoord2fv(&texCoords[faces[f].t[1]].u);
 							glVertex3fv(&vertices[	faces[f].v[1]].x);
 							
-							glNormal3fv(&normals[	faces[f].n[2]].x);
+					//		glNormal3fv(&normals[	faces[f].n[2]].x);
 							glTexCoord2fv(&texCoords[faces[f].t[2]].u);
 							glVertex3fv(&vertices[	faces[f].v[2]].x);
 						}
@@ -837,6 +836,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("button",				"media/button.png");
 	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
+	if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
 
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
@@ -879,6 +879,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
 	if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
 	if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
+	//if(callNum==n++)	registerAsset("AA gun",				"media/AAGun_Mobile_01.obj"); <---- WE HAVE NO MODEL YET!!!
 	//				.					.
 	//				.					.
 	//				.					.

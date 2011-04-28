@@ -1,4 +1,6 @@
 
+class object;//needs to know about the object class to control it
+
 const int CON_CLIMB=0;
 const int CON_DIVE=1;
 const int CON_RIGHT=2;
@@ -145,22 +147,26 @@ public:
 	int kills()					{return mKills;}
 	void addKill()				{mKills++;}
 
+	object* getObject();
+
 	virtual void update(){}
 	virtual controlState getControlState()=0;
 	
-	objectController(controlType t):type(t),mObjectNum(0),mKills(0){}
+	objectController(controlType t, int objectNum):type(t),mObjectNum(objectNum),mKills(0){}
 };
 
 class humanControl: public objectController
 {
 private:
+
 	int				PlayerNum;
 	bool			FirstPerson;
 	playerControls	controls;
 
 	static int		TotalPlayers;
 public:
-	humanControl():objectController(CONTROL_HUMAN), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
+	humanControl(int objectNum):objectController(CONTROL_HUMAN,objectNum), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
+	humanControl():objectController(CONTROL_HUMAN,0), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
 
 	int playerNum()				{return PlayerNum;}
 
@@ -182,26 +188,28 @@ public:
 		c.shoot2=controls[CON_MISSILE];
 		return c;
 	}
-
 };
 
 class AIcontrol: public objectController
 {
 private:
-	int target;
+	int	target;
+	controlState contState;
 public:
-	AIcontrol(): objectController(CONTROL_COMPUTER){}
-	controlState getControlState(){
-		controlState c;
-		c.accelerate=0.0;
-		c.brake=0.0;
-		c.climb=0.0;
-		c.dive=0.0;
-		c.left=0.0;
-		c.right=0.0;
-		c.shoot1=0.0;
-		c.shoot2=0.0;
-		return c;
+	AIcontrol(int objectNum): objectController(CONTROL_COMPUTER,objectNum)
+	{
+		contState.accelerate=0.0;
+		contState.brake=0.0;
+		contState.climb=0.0;
+		contState.dive=0.0;
+		contState.left=0.0;
+		contState.right=0.0;
+		contState.shoot1=0.0;
+		contState.shoot2=0.0;
 	}
-
+	controlState getControlState()
+	{
+		return contState;
+	}
+	void update();
 };

@@ -64,7 +64,7 @@ void explosion::render(bool flash)
 		glEnd();
 	}
 	//////////////////////////////////////////SMOKE/////////////////////////////////////////////////////////////
-	glColor4f(1,1,1,max(0.4-time/2500*0.4,0.0));
+	glColor4f(1,1,1,max(0.4-(time)/2500*0.4,0.0));
 	dataManager.bind("explosion smoke");
 	for(vector<smokeParticle>::iterator i=smokeParticles.begin();i!=smokeParticles.end();i++)
 	{

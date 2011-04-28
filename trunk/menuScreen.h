@@ -256,7 +256,7 @@ protected:
 class menuNewObject: public menuPopup
 {
 public:
-	menuNewObject():type(defaultPlane),team(0){done=true;}
+	menuNewObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
 	~menuNewObject(){}
 	int update(){return 0;}
 	void render(){}

@@ -36,18 +36,31 @@ void objectPath::addWaypoint(Vec3f sPos,Quat4f sRot, float time)
 }
 objectPath::point objectPath::operator() (float time)
 {
-	if(time > segments.back()->endTime())
+	if(!pointsValid)
+	{
+		debugBreak();
+		return point();
+	}
+	else if(segments.empty())
+	{
+		return startPoint;
+	}
+	else if(time >= segments.back()->endTime())
+	{
+		return point(endPoint.position,endPoint.rotation,time);//should interpolate with segments.back()
+	}
+	else if(time >= segments.back()->endTime())
 	{
 		return segments.back()->getPoint(time);
 	}
-	else if(time < segments.front()->startTime() + 0.1)
+	else if(time <= segments.front()->startTime() + 0.1)
 	{
 		return segments.front()->getPoint(time);
 	}
 
 	for(vector<pathSegment*>::iterator i = segments.begin(); i != segments.end(); i++)
 	{
-		if(time > (*i)->startTime() && time < (*i)->endTime())
+		if(time >= (*i)->startTime() && time <= (*i)->endTime())
 			return (*i)->getPoint(time);
 	}
 		

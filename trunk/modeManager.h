@@ -76,9 +76,10 @@ public:
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
 	void radar(float x, float y, float width, float height,bool firstPerson);
 	void targeter(float x, float y, float apothem, Angle tilt);
+	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
 
 	void drawExaust();
-	void drawPlanes(int acplayer,Vec3f e,bool showBehind=false,bool showDead=false);
+	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawBullets();
 	void drawScene(int acplayer);
 };

@@ -57,16 +57,11 @@ protected:
 	{
 		if(c == CONTROL_HUMAN)
 		{
-			control = new humanControl();
+			control = new humanControl(id);
 		}
 		else if(c == CONTROL_COMPUTER)
 		{
-			control = new humanControl();
-		}
-
-		if(control != NULL)
-		{
-			control->objectNum(id);
+			control = new AIcontrol(id);
 		}
 	}
 	~controlledObject()

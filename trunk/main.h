@@ -47,11 +47,17 @@ using namespace boost::filesystem;
 #pragma comment (lib, "OpenGL32.lib")
 #pragma comment (lib, "glu32.lib")
 
+#pragma comment (lib, "zlib.lib")
+#pragma comment (lib, "libpng.lib")
+
+
 #include <windows.h>
 #include <Shlobj.h>
 #include <process.h>
 #include "GL/glee.h"
 #include <GL/glu.h>
+//#include "zlib/zlib.h"
+#include "png/png.h"
 
 extern bool	active;		// Window Active Flag
 extern const double PI;
@@ -88,9 +94,8 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "bullet.h" 
 #include "missile.h"
 #include "plane.h"
-#include "turret.h"
+#include "aaGun.h"
 #include "settings.h"
-
 #include "objectList.h"
 #include "worldManager.h"
 

@@ -141,6 +141,30 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		glEnd();
 	}
 }
+void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
+{
+	dataManager.bind("target ring");
+	for(auto i = world.planes().begin(); i != world.planes().end();i++)
+	{
+		if(p->id!=i->second->id &&     frustum.sphereInFrustum(i->second->position,8) != FrustumG::OUTSIDE)
+		{
+			Vec2f s = frustum.project(i->second->position);
+			if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
+			{
+				if(i->second->id<=1)		glColor3f(0,1,0);
+				else if(i->second->dead)	glColor3f(0.5,0.5,0.5);
+				else						glColor3f(0.5,0,0);
+				glBegin(GL_QUADS);
+					glTexCoord2f(0.0,1.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
+					glTexCoord2f(1.0,1.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
+					glTexCoord2f(1.0,0.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
+					glTexCoord2f(0.0,0.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
+				glEnd();
+			}
+		}
+	}
+	glColor3f(1,1,1);
+}
 void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 {
 	float width = apothem*0.00125*sw;
@@ -167,12 +191,11 @@ void modeDogFight::drawExaust()
 		}
 	}
 }
-void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead)
+void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 {
 	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 	const map<objId,nPlane*>& planes = world.planes();
 	nPlane* cPlane;
-
 
 	glColor3f(1,1,1);
 	//Vec3f axis;
@@ -181,21 +204,27 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 	{
 		cPlane=(*i).second;
 		Vec3f a=(*i).second->position;
-		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() || p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
+		if((cPlane->id!=players[acplayer].objectNum() || /*!players[acplayer].firstPerson() ||*/  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
 		{
+			//glColor3f(0,0,0);
+			//Vec3f fwd = (*i).second->rotation * Vec3f(0,0,100);
+			//glBegin(GL_LINES);
+			//glVertex3f(a.x,a.y,a.z);
+			//glVertex3f(a.x+fwd.x,a.y+fwd.y,a.z+fwd.z);
+			//glEnd();
+			//glColor3f(1,1,1);
 			glPushMatrix(); 
 				glTranslatef(a.x,a.y,a.z);
-
 
 				Angle ang = acosA(cPlane->rotation.w);
 				glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
 
 				//if(dist_squared(a,e)<2000*2000)	glCallList(model[0]);
 				//else if(!(*i).second->dead)		glCallList(model[2]);
-					
-					
+				
 				//m.draw();
 				dataManager.draw(cPlane->type);
+
 				int ml=1;
 				glEnable(GL_LIGHTING);
 				for(auto m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
@@ -209,6 +238,28 @@ void modeDogFight::drawPlanes(int acplayer,Vec3f e,bool showBehind,bool showDead
 					}
 				}
 			glPopMatrix();
+			//Vec3f p;
+			//glLineWidth(3);
+			//glColor4f(1,1,1,0.4);
+			//glBegin(GL_LINE_STRIP);
+			//int n=0;
+			//for(double n = 0.0; n < 300.0 && i->second->planePath.startTime() < world.time()-n; n+=10.0)
+			//{
+			//	p = i->second->planePath(world.time()-n).position + i->second->planePath(world.time()-n).rotation * Vec3f(7.3,0,-2);
+			//	glColor4f(1,1,1,0.4*(300.0-n)/300.0);
+			//	glVertex3f(p.x,p.y,p.z);
+			//}
+			//glEnd();
+			//glBegin(GL_LINE_STRIP);
+			//n=0;
+			//for(double n = 0.0; n < 300.0 && i->second->planePath.startTime() < world.time()-n; n+=10.0)
+			//{
+			//	p = i->second->planePath(world.time()-n).position + i->second->planePath(world.time()-n).rotation * Vec3f(-7.3,0,-2);
+			//	glColor4f(1,1,1,0.4*(300.0-n)/300.0);
+			//	glVertex3f(p.x,p.y,p.z);
+			//}
+			//glEnd();
+			//glLineWidth(1);
 		}
 	}
 }
@@ -218,7 +269,7 @@ void modeDogFight::drawBullets()
 	double lTime = time - 5.0;//world.time.getLastTime();
 	//float length;
 	Vec3f start, end, end2;
-	//glLineWidth(3);
+	glLineWidth(3);
 	glBegin(GL_LINES);
 		for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
 		{
@@ -233,10 +284,12 @@ void modeDogFight::drawBullets()
 				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(end.x,end.y,end.z);
 				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(start.x,start.y,start.z);
 				glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
+
+
 			}
 		}
 	glEnd();
-	//glLineWidth(1);
+	glLineWidth(1);
 }
 void modeDogFight::drawScene(int acplayer) 
 {
@@ -255,7 +308,7 @@ void modeDogFight::drawScene(int acplayer)
 	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-		
+	
 	float ly= 0.5;
 	Vec3f cam;
 	Vec3f e;
@@ -263,12 +316,12 @@ void modeDogFight::drawScene(int acplayer)
 	Vec3f u;
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
- 		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;
-		e=Vec3f(p->position.x - vel2D.normalize().x*30, p->position.y + 0.60*30 , p->position.z - vel2D.normalize().z*30);
-		if(p->controled) e=p->camera;
-		c=Vec3f(p->position.x + vel2D.normalize().x*30, p->position.y, p->position.z + vel2D.normalize().z*30);
+ 		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;vel2D = vel2D.normalize();
+		e = p->position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+		if(p->controled) e = p->camera;
+		c = p->position + vel2D * 45.0;
 		if(p->controled) c=p->center;
-		u=Vec3f(0,1,0);
+		u = Vec3f(0,1,0);
 
 		//glMatrixMode(GL_PROJECTION);
 		//glLoadIdentity();
@@ -286,18 +339,18 @@ void modeDogFight::drawScene(int acplayer)
 
 
 
-		gluLookAt(e[0],e[1],e[2],c[0],c[1],c[2],u[0],u[1],u[2]);
+		gluLookAt(e.x,e.y,e.z, c.x,c.y,c.z, u.x,u.y,u.z);
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
 	else
 	{
-		e=p->position;//
-		c=p->rotation * Vec3f(0,0,1)+e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
+		e=p->position;
+		c=p->rotation * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
 		u=p->rotation * Vec3f(0,1,0);
 		//upAndRight(p->rotation * Vec3f(0,0,1),p->roll,u,Vec3f());
 			
-		gluLookAt(e[0],e[1],e[2],c[0],c[1],c[2],u[0],u[1],u[2]);
+		gluLookAt(e.x,e.y,e.z, c.x,c.y,c.z, u.x,u.y,u.z);
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
@@ -351,17 +404,31 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	//glColor3f(0,1,0);
-	//for(int i=0;i<(signed int )turrets.size();i++)
+	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
+	{
+		glPushMatrix();	
+		glTranslatef(i->second->position.x,i->second->position.y+50.0,i->second->position.z);
+		glScalef(5,5,5);
+
+
+		//dataManager.draw("AA gun");       WE DO NOT HAVE A MODEL YET!!!!
+		glPopMatrix();
+	}
+
+	//glBindTexture(GL_TEXTURE_2D,0);
+	//glBegin(GL_LINES);
+	//for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
 	//{
-	//	glPushMatrix();
-	//		glTranslatef(turrets[i]->pos.x,turrets[i]->pos.y,turrets[i]->pos.z);
-	//		glScalef(100,100,100);
-	//		//glCallList(model[4]);   need to load model
-	//	glPopMatrix();
+	//	glColor3f(1,0,0);
+	//	glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
+	//	glVertex3f(i->second->position.x+cos(i->second->angle)*1000,i->second->position.y+sin(i->second->elevation)*1000,i->second->position.z+sin(i->second->angle)*1000);
+	//	//glColor3f(0,1,0);
+	//	//glVertex3f(i->second->position.x,i->second->position.y+300,i->second->position.z);
+	//	//glVertex3f(i->second->position.x+1000,i->second->position.y+300,i->second->position.z);
+	////	glColor3f(0,1,0);
 	//}
-	//planes
-	drawPlanes(acplayer,e,false);
+	//glEnd();
+	drawPlanes(acplayer,false);
 #ifdef AI_TARGET_LINES 
 	glBegin(GL_LINES);
 	int t;
@@ -384,7 +451,8 @@ void modeDogFight::drawScene(int acplayer)
 
 
 	glDepthMask(false);
-	glDisable(GL_LIGHTING);glError();
+	glDisable(GL_LIGHTING);
+	glError();
 
 	//glCallList(treeDisp);
 
@@ -422,11 +490,30 @@ void modeDogFight::drawScene(int acplayer)
 	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
 	//viewPerspective();
-	///////////2D end//////////////
-
-	glEnable(GL_LIGHTING);
-	glBindTexture(GL_TEXTURE_2D,0);
+	///////////2D end//////////////	
 	glDepthMask(true);
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D,0);
 
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, 1, 1.0/frustum.ratio, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	planeIdBoxes(p, 0.0, 0.0, 1.0, 1.0/frustum.ratio);
+		
+	glMatrixMode( GL_PROJECTION );			// Select Projection
+	glPopMatrix();							// Pop The Matrix
+	glMatrixMode( GL_MODELVIEW );			// Select Modelview
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	
+	
 	lastDraw[acplayer] = time;glError();
+
+
+
 }

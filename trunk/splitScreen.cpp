@@ -102,6 +102,7 @@ void modeSplitScreen::draw2D()
 		nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 		if(players[acplayer].firstPerson() && !p->controled)
 		{
+			//planeIdBoxes(p, 0.0, sh/2*acplayer, sw, sh/2);
 			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2+sh/2*acplayer),"cockpit");
 			targeter(400,150+300*acplayer,50,p->turn);
 			radar(176, 200+300*acplayer, 64, 64, true);
@@ -115,7 +116,6 @@ void modeSplitScreen::draw2D()
 			radar(730, 230+300*acplayer, 64, 64, false);	
 			healthBar(614, 25+300*acplayer, 150, 25, p->health/p->maxHealth,false);
 		}
-		//planeIdBoxes(p,eye);
 	}
 }
 void modeSplitScreen::draw3D()

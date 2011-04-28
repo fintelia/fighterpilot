@@ -667,7 +667,7 @@ bool menuLevelEditor::init()
 
 	//objects
 	buttons["addPlane"]		= new menuButton(5,5,200,30,"new plane",lightGreen,white);
-
+	buttons["addAAgun"]		= new menuButton(5,40,200,30,"new AA gun",lightGreen,white);
 	//settings
 
 	v.clear();
@@ -823,6 +823,13 @@ int menuLevelEditor::update()
 			p->callback = (functor<void,menuPopup*>*)this;
 			menuManager.setPopup(p);
 		}
+		else if(buttons["addAAgun"]->checkChanged())
+		{
+			awaitingNewObject=true;
+			menuPopup* p = new menuNewObject(AA_GUN);
+			p->callback = (functor<void,menuPopup*>*)this;
+			menuManager.setPopup(p);
+		}
 	}
 	else if(getTab() == SETTINGS)
 	{
@@ -846,6 +853,7 @@ int menuLevelEditor::update()
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
 			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
+			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
 		}
 		if(lastTab == SETTINGS || newTab==SETTINGS || lastTab == (Tab)-1)
 		{
@@ -936,7 +944,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeCampaign("media/map file2.lvl"));
+		modeManager.setMode(new modeCampaign("media/map file.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
@@ -944,7 +952,7 @@ void menuChooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu("");
 
-		modeManager.setMode(new modeSplitScreen("media/map file2.lvl"));
+		modeManager.setMode(new modeSplitScreen("media/map file3.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
