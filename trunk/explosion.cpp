@@ -6,13 +6,12 @@ explosion::explosion(Vec3f Pos): pos(Pos), coreSize(0.0), fireballSize(0.0)
 	smokeParticle s;
 	for(int i=0;i<10;i++)
 	{
-		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/35.0+5.0);
-		//s.position=Pos+Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*10;
+		s.initialVelocity=random<Vec3f>()*random(5.0,75.0);
 		smokeParticles.push_back(s);
 	}
 	for(int i=0;i<5;i++)
 	{
-		s.initialVelocity=Vec3f((float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500,(float)(rand()%1000-500)/500).normalize()*((float)(rand()%2000)/35.0+5.0);
+		s.initialVelocity=random<Vec3f>()*random(5.0,200.0);
 		fireParticles.push_back(s);
 	}
 }
@@ -166,9 +165,9 @@ void explosion::render3()
 		loc = pos + i->initialVelocity*(1.0-pow(2.718f,-(time)/100))*0.3;
 		graphics->drawParticle(fireParticleEffect,loc,max(0.6-time/750*0.6,0.0));
 	}
-	for(vector<smokeParticle>::iterator i=smokeParticles.begin();i!=smokeParticles.end();i++)
-	{
-		loc = pos + i->initialVelocity*(1.0-pow(2.718f,-(time)/100))*0.7;
-		graphics->drawParticle(smokeParticleEffect,loc,max(0.4-time/1500*0.4,0.0));
-	}
+	//for(vector<smokeParticle>::iterator i=smokeParticles.begin();i!=smokeParticles.end();i++)
+	//{
+	//	loc = pos + i->initialVelocity*(1.0-pow(2.718f,-(time)/100))*0.7;
+	//	graphics->drawParticle(smokeParticleEffect,loc,max(0.4-time/1500*0.4,0.0));
+	//}
 }

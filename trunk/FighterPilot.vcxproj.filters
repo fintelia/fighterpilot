@@ -88,6 +88,9 @@
     <Filter Include="Source Files\explosion">
       <UniqueIdentifier>{a150796c-d644-436a-9afb-24e0352bcc5f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\particleManager">
+      <UniqueIdentifier>{3c904835-fb15-4159-8d41-8b98ccf73a1d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -200,6 +203,12 @@
     </ClCompile>
     <ClCompile Include="explosion.cpp">
       <Filter>Source Files\explosion</Filter>
+    </ClCompile>
+    <ClCompile Include="particleManager.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
+    <ClCompile Include="blackSmoke.cpp">
+      <Filter>Source Files\particleManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -320,6 +329,9 @@
     <ClInclude Include="explosion.h">
       <Filter>Source Files\explosion</Filter>
     </ClInclude>
+    <ClInclude Include="particleManager.h">
+      <Filter>Source Files\particleManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -379,13 +391,13 @@
     <None Include="media\horizon2.vert">
       <Filter>shaders\horizon2</Filter>
     </None>
-    <None Include="ClassDiagram1.cd" />
     <None Include="media\smoke.frag">
       <Filter>shaders\smoke</Filter>
     </None>
     <None Include="media\smoke.vert">
       <Filter>shaders\smoke</Filter>
     </None>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

@@ -29,6 +29,7 @@ public:
 	int registerAssets();
 	void registerAsset(string name, string filename);
 
+	void shutdown();
 
 private:
 	int loadTGA(string filename);
@@ -44,7 +45,7 @@ private:
 
 	char *textFileRead(char *fn);//for shaders
 
-	map<int, CollisionChecker::triangleList> models;// <id,model>
+	map<int, CollisionChecker::triangleList*> models;// <id,model>
 	struct asset
 	{
 		enum assetType{SHADER, TEXTURE, MODEL}type;

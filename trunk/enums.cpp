@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-const int BULLET_SPEED		= 2000;
+const int BULLET_SPEED		= 2000;// 2000 m/s
 const int MISSILE_SPEED		= 1180;// 1180 m/s = mach 4 (max speed)
 
 const Color white(1.0f,1.0f,1.0f);

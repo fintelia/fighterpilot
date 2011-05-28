@@ -250,26 +250,34 @@ bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float r
 }
 bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
 {
+	static double smallestD = 1000000000000000000.0;
 	double d1 = t1.center.distanceSquared(lineStart);
 	double d2 = t1.center.distanceSquared(lineEnd);
-	if(d1 < t1.radius*t1.radius || d2 < t1.radius*t1.radius)
+
+	//if(d1 < smallestD) smallestD = d1;
+	//if(d2 < smallestD) smallestD = d2;
+	//Profiler.setOutput("d value",sqrt(smallestD));
+
+ 	if(d1 < t1.radius*t1.radius || d2 < t1.radius*t1.radius)
 		return true;
 
 	float u = (t1.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
 
 	if(u < 0.0 || u > 1.0) return false;
-	return t1.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < t1.radius;
+	double d3 = t1.center.distanceSquared(lineStart+(lineEnd-lineStart)*u);
+	//if(d3 < smallestD) smallestD = d3;
+	return d3 < t1.radius*t1.radius;
 }
 
 bool CollisionChecker::operator() (objectType t1, objectType t2) const
 {
-	return operator()(dataManager.models[dataManager.getId(t1)],dataManager.models[dataManager.getId(t2)]);
+	return operator()(*dataManager.models[dataManager.getId(t1)],*dataManager.models[dataManager.getId(t2)]);
 }
 bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) const
 {
-	return operator()(dataManager.models[dataManager.getId(t1)], center, radius);
+	return operator()(*dataManager.models[dataManager.getId(t1)], center, radius);
 }
 bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	return operator()(dataManager.models[dataManager.getId(t1)], lineStart, lineEnd);
+	return operator()(*dataManager.models[dataManager.getId(t1)], lineStart, lineEnd);
 }

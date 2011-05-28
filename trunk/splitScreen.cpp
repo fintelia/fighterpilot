@@ -66,13 +66,13 @@ int modeSplitScreen::update()
 #ifdef _DEBUG
 	if(input->getKey(0x31))
 	{
-		menuManager.setMenu("menuInGame");
+		menuManager.setMenu(new menu::inGame);
 		input->up(0x31);
 	}
 #else if
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setMenu("menuInGame");
+		menuManager.setMenu(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
 #endif
@@ -102,16 +102,12 @@ void modeSplitScreen::draw2D()
 		nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 		if(players[acplayer].firstPerson() && !p->controled)
 		{
-			//planeIdBoxes(p, 0.0, sh/2*acplayer, sw, sh/2);
-			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2+sh/2*acplayer),"cockpit");
+			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2),"cockpit");
 			targeter(400,150+300*acplayer,50,p->turn);
 			radar(176, 200+300*acplayer, 64, 64, true);
 			healthBar(340, 40+300*acplayer, -200, 200, p->health/p->maxHealth,true);
-
-			//speedMeter(16,16,80,80,p.accel.magnitude()*30.5+212);
-			//altitudeMeter(368,215,432,279,p.altitude);
 		}
-		else
+		else if(!p->dead)
 		{
 			radar(730, 230+300*acplayer, 64, 64, false);	
 			healthBar(614, 25+300*acplayer, 150, 25, p->health/p->maxHealth,false);

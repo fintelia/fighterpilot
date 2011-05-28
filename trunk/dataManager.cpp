@@ -4,10 +4,7 @@
 
 DataManager::~DataManager()
 {
-	for(map<int,CollisionChecker::triangleList>::iterator i = models.begin(); i!=models.end();i++)
-	{
-		i->second.~triangleList();
-	}
+	shutdown();
 }
 
 int DataManager::loadTexture(string filename)
@@ -566,8 +563,7 @@ int DataManager::loadOBJ(string filename)
 		fs[itt*3+1] = faces[itt].v[1];
 		fs[itt*3+2] = faces[itt].v[2];
 	}
-	CollisionChecker::triangleList tmpModel(vertices,fs,totalVerts,totalFaces);
-	models[d]=tmpModel;
+	models[d]=new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces);
 
 	delete[] fs;
 	delete[] vertices;
@@ -589,15 +585,15 @@ int DataManager::loadPNG(string filename)
 					colorChannels;
 	unsigned char*	image_data;
 	png_bytep*		row_pointers;
-
+	
 	/* Open the PNG file. */
 	FILE *infile;
 	fopen_s(&infile,filename.c_str(), "rb");
-
+	
 	if (!infile) {
 		return 0;
 	}
-
+	
 	unsigned char sig[8];
 	/* Check for the 8-byte signature */
 	fread(sig, 1, 8, infile);
@@ -613,21 +609,21 @@ int DataManager::loadPNG(string filename)
 		fclose(infile);
 		return 0; /* out of memory */
 	}
-
+	
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
 		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
 		fclose(infile);
 		return 0; /* out of memory */
 	}
-
+	
 	png_infop end_ptr = png_create_info_struct(png_ptr);
 	if (!end_ptr) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
 		fclose(infile);
 		return 0; /* out of memory */
 	}
-
+	
 	/*
 	 * block to handle libpng errors, 
 	 * then check whether the PNG file had a bKGD chunk
@@ -637,30 +633,30 @@ int DataManager::loadPNG(string filename)
 		fclose(infile);
 		return 0;
 	}
-
+	
 	/*
 	 * takes our file stream pointer (infile) and 
 	 * stores it in the png_ptr struct for later use.
 	 */
 	png_init_io(png_ptr, infile);
-
+	
 	/*
 	 * lets libpng know that we already checked the 8 
 	 * signature bytes, so it should not expect to find 
 	 * them at the current file pointer location
 	 */
 	png_set_sig_bytes(png_ptr, 8);
-
+	
 	png_read_info(png_ptr, info_ptr);
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-
-
-    if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
-    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
+	
+	
+	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
+	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
+	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
 	if (bit_depth == 16)																png_set_strip_16(png_ptr);
-    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
-
+	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
+	
 	/* snipped out the color type code, see source pngLoad.c */
 	/* Update the png info struct.*/
 	png_read_update_info(png_ptr, info_ptr);
@@ -678,39 +674,44 @@ int DataManager::loadPNG(string filename)
 	}	
 	for (i = 0;  i < height;  ++i)
 		row_pointers[i] = image_data + i*rowbytes;
-
+	
 	png_read_image(png_ptr, row_pointers);
 	png_read_end(png_ptr, NULL);
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	fclose(infile);
-
-
+	
+	
 	int format;
 	if(colorChannels == 1)		format = GL_LUMINANCE;
 	else if(colorChannels == 2)	format = GL_LUMINANCE_ALPHA;
 	else if(colorChannels == 3) format = GL_RGB;
 	else if(colorChannels == 4) format = GL_RGBA;
-
-	bool NPOT = GLEE_ARB_texture_non_power_of_two && !((width & (width-1)) && (height & (height-1)));
-	glError();
-
+	
+	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) && (height & (height-1)));
+	
 	GLuint texV;
-	glGenTextures(1,&texV);glError();
-    glBindTexture(GL_TEXTURE_2D, texV);glError();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	glError();
-	if(NPOT)	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	else		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);glError();
+	glGenTextures(1,&texV);
+	glBindTexture(GL_TEXTURE_2D, texV);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	if(NPOT)
+	{
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D,0, colorChannels, width, height,0, format, GL_UNSIGNED_BYTE, image_data);
+	}
+	else
+	{
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);
+	}
 	
-
-	if(NPOT)	glTexImage2D(GL_TEXTURE_2D,0, colorChannels, width, height,0, format, GL_UNSIGNED_BYTE, image_data);
-	else		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);glError();
-	
-    free(image_data);
+	free(image_data);
 	free(row_pointers);
-    return texV;
+	return texV;
 }
 int DataManager::loadShader(string filename){return 0;}
 
@@ -796,8 +797,6 @@ int DataManager::registerAssets()
 	callNum++;
 	int n=1;
 
-
-
 	if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
 	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
 
@@ -808,12 +807,6 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("sand",				"media/sand.png");
 	if(callNum==n++)	registerAsset("snow",				"media/snow.png");
 	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.png");
-	//if(callNum==n++)	registerAsset("aimer",				"media/aimer.tga");
-	//if(callNum==n++)	registerAsset("dialFront",			"media/dial front.tga");
-	//if(callNum==n++)	registerAsset("dialBAck",			"media/dial back.tga");	
-	//if(callNum==n++)	registerAsset("dialSpeed",			"media/speed2.tga");
-	//if(callNum==n++)	registerAsset("dialAltitude",		"media/altitude.tga");
-	//if(callNum==n++)	registerAsset("needle",				"media/needle2.tga");	
 	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.png");
 	if(callNum==n++)	registerAsset("particle",			"media/particle4.png");	
 	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
@@ -826,8 +819,6 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("health bar",			"media/health bar.png");
 	if(callNum==n++)	registerAsset("tilt",				"media/tilt.png");
 	if(callNum==n++)	registerAsset("targeter",			"media/targeter.png");
-	//if(callNum==n++)	registerAsset("speed",				"media/speed2.tga");
-	//if(callNum==n++)	registerAsset("altitude",			"media/altitude.tga");
 	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.png");
 	if(callNum==n++)	registerAsset("key",				"media/key.png");
 	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.png");
@@ -837,6 +828,8 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
 	if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
+	if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
+	//if(callNum==n++)	registerAsset("smoke2",				"media/smoke2.png");
 
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
@@ -856,6 +849,8 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.png");
 	if(callNum==n++)	registerAsset("menu pictures",		"media/menu/choice pics.png");
 
+	if(callNum==n++)	registerAsset("menu in game",		"media/menu/in game.png");
+	if(callNum==n++)	registerAsset("menu in game select","media/menu/in game select.png");
 
 	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
 	if(callNum==n++)	registerShader("radar",				"media/radar.vert","media/radar.frag");
@@ -872,7 +867,6 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass.frag");
 
-
 	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
 	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
 	if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");
@@ -884,7 +878,6 @@ int DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	if(callNum==n++)	settings.load("media/modelData.txt");
-
 
 	return (n-1)-callNum;//number left
 }
@@ -968,4 +961,22 @@ char* DataManager::textFileRead(char *fn) {
 		}
 	}
 	return content;
+}
+
+void DataManager::shutdown()
+{
+	boundShader = "";
+	boundTextures.clear();
+	for(auto i = assets.begin(); i != assets.end(); i++)
+	{
+		if(i->second.type == asset::SHADER)			glDeleteProgram(i->second.id);
+		else if(i->second.type == asset::MODEL)		glDeleteLists(i->second.id,1);
+		else if(i->second.type == asset::TEXTURE)	glDeleteTextures(1,(const GLuint*)&i->second.id);
+	}
+	assets.clear();
+	for(auto i = models.begin(); i!=models.end();i++)
+	{
+		i->second->~triangleList();
+	}
+	models.clear();
 }

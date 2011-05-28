@@ -40,6 +40,7 @@ using namespace boost::filesystem;
 #pragma warning( disable : 4244)
 #pragma warning( disable : 4018)
 #pragma warning( disable : 4250)
+#pragma warning( disable : 4996)
 
 #pragma comment (linker, "/SUBSYSTEM:WINDOWS")
 #pragma comment (linker, "/ENTRY:WinMainCRTStartup")
@@ -81,6 +82,7 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "shader.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
+#include "particleManager.h"
 #include "cameraManager.h"
 #include "path.h"
 #include "level.h"

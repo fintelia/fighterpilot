@@ -3,45 +3,10 @@
 
 
 //typedef map<string,MenuCreateFunc>::iterator Iterator;
-//MenuManager* pInstance=NULL;
-template<typename T>
-menuScreen* CreateObject()
+//manager* pInstance=NULL;
+namespace menu
 {
-	return (menuScreen*)(new T);
-}
-void MenuManager::registerMenu(string menuName,menuCreateFunc menuFunc)
-{
-	menuList[menuName] = menuFunc;
-}
-menuScreen* MenuManager::createMenu(string menuName)
-{
-	map<string,menuCreateFunc>::iterator iter = menuList.find(menuName);
-	if(iter==menuList.end())
-		return NULL;
-	return ((*iter).second)();
-}
-void MenuManager::destroyMenu(menuScreen* menu)
-{
-	if(menu != NULL)
-	{
-		delete menu;
-		menu = NULL;
-	}
-}
-bool MenuManager::init()
-{
-	menuScreen *menu = NULL;
-
-	// register all the menus, each new menu
-	// must call register before it can be used
-	registerMenu("menuLevelEditor", &CreateObject<menuLevelEditor>);
-	registerMenu("menuInGame", &CreateObject<menuInGame>);
-	registerMenu("menuChooseMode", &CreateObject<menuChooseMode>);
-	registerMenu("menuLoading", &CreateObject<menuLoading>);
-
-	return true;
-}
-void MenuManager::render()
+void manager::render()
 {
 	mDrawCursor = false;
 	if(menu != NULL)
@@ -107,7 +72,7 @@ void MenuManager::render()
 		glEnd();
 	}
 }
-int MenuManager::update()
+int manager::update()
 {
 	if(!popups.empty())
 	{
@@ -126,35 +91,21 @@ int MenuManager::update()
 	}
 	return 0;
 }
-void MenuManager::shutdown()
+void manager::shutdown()
 {
-	for(vector<menuPopup*>::iterator i = popups.begin(); i!=popups.end();i++)
+	for(vector<popup*>::iterator i = popups.begin(); i!=popups.end();i++)
 		delete (*i);
 	if(menu != NULL)
 		delete menu;
 }
-bool MenuManager::setMenu(string menuName)
+void manager::setMenu(screen* m)
 {
-	if(menuName.compare("")==0)
-	{
-		menu = NULL;
-		return true;
-	}
-	// set the first menu to the mainMenu
-	menu = createMenu(menuName);
-	if (menu == NULL)
-		return false;
+	if(menu != NULL)
+		delete menu;
 
-	// initialize the menu
-	if (!menu->init())
-	{
-		// shutdown the menu system
-		shutdown();
-		return false;
-	}
-	return true;
+	menu = m;
 }
-void MenuManager::inputCallback(Input::callBack* callback)
+void manager::inputCallback(Input::callBack* callback)
 {
 	if(callback->type == KEY_STROKE){
 		Input::keyStroke* call = (Input::keyStroke*)callback;
@@ -316,26 +267,26 @@ void MenuManager::inputCallback(Input::callBack* callback)
 
 	}
 }
-bool menuOpenFile::init()
+bool openFile::init()
 {
 	return true;
 }
-bool menuOpenFile::init(string ExtFilter)
+bool openFile::init(string ExtFilter)
 {
-	buttons["desktop"]		= new menuButton(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
-	buttons["myDocuments"]	= new menuButton(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
-	buttons["myComputer"]	= new menuButton(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
-	buttons["myNetwork"]	= new menuButton(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
+	buttons["desktop"]		= new button(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
+	buttons["myDocuments"]	= new button(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
+	buttons["myComputer"]	= new button(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
+	buttons["myNetwork"]	= new button(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
 
 	extFilter=ExtFilter;
 	directory=".";
 	refreshView();
 	return true;
 }
-void menuOpenFile::refreshView()
+void openFile::refreshView()
 {
-	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if(*i!=NULL) delete (*i);
-	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if(*i!=NULL) delete (*i);
+	for(auto i=folderButtons.begin();i!=folderButtons.end();i++)		if(*i!=NULL) delete (*i);
+	for(auto i=fileButtons.begin();i!=fileButtons.end();i++)			if(*i!=NULL) delete (*i);
 	files.clear();
 	folders.clear();
 	folderButtons.clear();
@@ -355,18 +306,18 @@ void menuOpenFile::refreshView()
 		}
 	}
 	int row=0, column=0;
-	for(vector<string>::iterator i=folders.begin();i!=folders.end();i++)	
+	for(auto i=folders.begin();i!=folders.end();i++)	
 	{
-		folderButtons.push_back(new menuButton(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4)));
+		folderButtons.push_back(new button(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4)));
 		if(++column==4){column=0;row++;}
 	}
-	for(vector<string>::iterator i=files.begin();i!=files.end();i++)
+	for(auto i=files.begin();i!=files.end();i++)
 	{
-		fileButtons.push_back(new menuButton(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6)));
+		fileButtons.push_back(new button(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6)));
 		if(++column==4){column=0;row++;}
 	}
 }
-int menuOpenFile::update()
+int openFile::update()
 {
 	if(buttons["desktop"]->checkChanged())
 	{
@@ -408,7 +359,7 @@ int menuOpenFile::update()
 		}
 		return 0;
 	}
-	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
+	for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
 	{
 		if((*i)->checkChanged())
 		{
@@ -417,7 +368,7 @@ int menuOpenFile::update()
 			return 0;
 		}
 	}
-	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
+	for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
 	{
 		if((*i)->checkChanged())
 		{
@@ -428,7 +379,7 @@ int menuOpenFile::update()
 	}
 	return 0;
 }
-void menuOpenFile::render()
+void openFile::render()
 {
 	dataManager.bind("file viewer");
 	glColor4f(1,1,1,1);
@@ -451,12 +402,12 @@ void menuOpenFile::render()
 	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
 	glPushMatrix();
 	glTranslatef((sw/2-190),(sh/2-246),0);
-	for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
-	for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
+	for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
+	for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	glPopMatrix();
 	menuManager.drawCursor();
 }
-void menuOpenFile::keyDown(int vkey)
+void openFile::keyDown(int vkey)
 {
 	if(vkey == VK_RETURN)
 	{
@@ -481,29 +432,29 @@ void menuOpenFile::keyDown(int vkey)
 			file  += MapVirtualKey(vkey,MAPVK_VK_TO_CHAR);
 	}
 }
-void menuOpenFile::mouseL(bool down, int x, int y)
+void openFile::mouseL(bool down, int x, int y)
 {
 	static bool clicking = false;
 	if(down)
 	{
-		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
-		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246));
 		clicking = (x>sw/2+144) && (x<sw/2+184) && (y>sh/2+190) && (y<sh/2+230);
 	}
 	else
 	{
 		if(clicking) 
 			fileSelected();
-		for(vector<menuButton*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
-		for(vector<menuButton*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
+		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246));
 		clicking = false;
 	}
 }
-void menuSaveFile::operator() (menuPopup* p)
+void saveFile::operator() (popup* p)
 {
 	if(replaceDialog)
 	{
-		if(((menuMessageBox*)p)->getValue() == 0)
+		if(((messageBox*)p)->getValue() == 0)
 		{
 			done = true;
 		}
@@ -513,18 +464,18 @@ void menuSaveFile::operator() (menuPopup* p)
 		}
 	}
 }
-void menuSaveFile::fileSelected()
+void saveFile::fileSelected()
 {
 	if(file.find(".") == file.npos)
 		file += extFilter;
 	if(exists(directory/file))//if file exists
 	{
-		menuMessageBox* m = new menuMessageBox;
+		messageBox* m = new messageBox;
 		vector<string> s;
 		s.push_back("yes");
 		s.push_back("no");
 		m->init(file + " already exists. Do you want to replace it?",s);
-		m->callback = (functor<void,menuPopup*>*)this;
+		m->callback = (functor<void,popup*>*)this;
 		menuManager.setPopup(m);
 		replaceDialog = true;
 	}
@@ -534,11 +485,11 @@ void menuSaveFile::fileSelected()
 	}
 }
 
-bool menuMessageBox::init(string t)
+bool messageBox::init(string t)
 {
 	return init(t, vector<string>(1,"OK"));
 }
-bool menuMessageBox::init(string t, vector<string> names)
+bool messageBox::init(string t, vector<string> names)
 {
 	if(names.empty()) return init(t);//watch out for infinite loop!!
 
@@ -549,19 +500,19 @@ bool menuMessageBox::init(string t, vector<string> names)
 	if(x < 5) x = 5;
 	if(y < 5) y = 5;
 
-	labels["label"] = new menuLabel(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
+	labels["label"] = new label(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
 
 	float slotWidth = (685.0*width/715) / names.size();
 	int slotNum = 0;
 	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
-		options.push_back(new menuLabel(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white));
+		options.push_back(new label(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white));
 	}
 	value=-1;
 	clicking=-1;
 	return true;
 }
-void menuMessageBox::render()
+void messageBox::render()
 {
 	glColor4f(1,1,1,1);
 	if(dataManager.getId("dialog box") != 0)
@@ -584,7 +535,7 @@ void menuMessageBox::render()
 	int slotNum=0;
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
-	for(vector<menuLabel*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
+	for(vector<label*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
 		if(dataManager.getId("glow") != 0 && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
@@ -600,7 +551,7 @@ void menuMessageBox::render()
 	}
 	menuManager.drawCursor();
 }
-void menuMessageBox::mouseL(bool down, int X, int Y)
+void messageBox::mouseL(bool down, int X, int Y)
 {
 	if(done) return;
 
@@ -635,105 +586,105 @@ void menuMessageBox::mouseL(bool down, int X, int Y)
 }
 
 
-int menuScreen::backgroundImage=0;
+int screen::backgroundImage=0;
 
-bool menuScreen::loadBackground()
+bool screen::loadBackground()
 {
 	backgroundImage=dataManager.loadTexture("media/menu/menu background2.tga");
 	return backgroundImage != 0;
 }
 
-bool menuLevelEditor::init()
+bool levelEditor::init()
 {
-	vector<menuButton*> v;//for toggles
+	vector<button*> v;//for toggles
 
 	//terrain
 
-	//buttons["newShader"]	= new menuButton(5,5,200,30,"new shader",lightGreen,white);
-	buttons["dSquare"]		= new menuButton(sw-105,5,100,30,"d-square",lightGreen,white);
-	buttons["faultLine"]	= new menuButton(sw-105,40,100,30,"fault line",lightGreen,white);
-	buttons["fromFile"]		= new menuButton(sw-105,75,100,30,"from file",lightGreen,white);
-	buttons["exportBMP"]	= new menuButton(sw-105,110,100,30,"export",lightGreen,white);
-	sliders["sea level"]	= new menuSlider(sw-105,145,100,30,5000.0,0.0);
+	//buttons["newShader"]	= new button(5,5,200,30,"new shader",lightGreen,white);
+	buttons["dSquare"]		= new button(sw-105,5,100,30,"d-square",lightGreen,white);
+	buttons["faultLine"]	= new button(sw-105,40,100,30,"fault line",lightGreen,white);
+	buttons["fromFile"]		= new button(sw-105,75,100,30,"from file",lightGreen,white);
+	buttons["exportBMP"]	= new button(sw-105,110,100,30,"export",lightGreen,white);
+	sliders["sea level"]	= new slider(sw-105,145,100,30,5000.0,0.0);
 
-	buttons["load"]			= new menuButton(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
-	buttons["save"]			= new menuButton(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
-	buttons["exit"]			= new menuButton(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
+	buttons["load"]			= new button(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
+	buttons["save"]			= new button(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
+	buttons["exit"]			= new button(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
 
-	toggles["shaders"]		= new menuToggle(vector<menuButton*>(),darkGreen,lightGreen,NULL,0);
+	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
 
 	addShader("media/grass.frag");
 	addShader("media/snow.frag");
 
 	//objects
-	buttons["addPlane"]		= new menuButton(5,5,200,30,"new plane",lightGreen,white);
-	buttons["addAAgun"]		= new menuButton(5,40,200,30,"new AA gun",lightGreen,white);
+	buttons["addPlane"]		= new button(5,5,200,30,"new plane",lightGreen,white);
+	buttons["addAAgun"]		= new button(5,40,200,30,"new AA gun",lightGreen,white);
 	//settings
 
 	v.clear();
-	v.push_back(new menuButton(120,5,100,30,"respawn",black,white));
-	v.push_back(new menuButton(225,5,100,30,"restart",black,white));
-	v.push_back(new menuButton(330,5,100,30,"die",black,white));
-	toggles["onHit"]		= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,5,"player hit:"));
+	v.push_back(new button(120,5,100,30,"respawn",black,white));
+	v.push_back(new button(225,5,100,30,"restart",black,white));
+	v.push_back(new button(330,5,100,30,"die",black,white));
+	toggles["onHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,5,"player hit:"));
 
 	v.clear();
-	v.push_back(new menuButton(120,45,100,30,"respawn",black,white));
-	v.push_back(new menuButton(225,45,100,30,"restart",black,white));
-	v.push_back(new menuButton(330,45,100,30,"die",black,white));
-	toggles["onAIHit"]		= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,45,"AI hit:"));
+	v.push_back(new button(120,45,100,30,"respawn",black,white));
+	v.push_back(new button(225,45,100,30,"restart",black,white));
+	v.push_back(new button(330,45,100,30,"die",black,white));
+	toggles["onAIHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,45,"AI hit:"));
 
 	v.clear();
-	v.push_back(new menuButton(120,85,100,30,"ffa",black,white));
-	v.push_back(new menuButton(225,85,100,30,"teams",black,white));
-	v.push_back(new menuButton(330,85,100,30,"player vs",black,white));
-	toggles["gameType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,85,"game type:"));
+	v.push_back(new button(120,85,100,30,"ffa",black,white));
+	v.push_back(new button(225,85,100,30,"teams",black,white));
+	v.push_back(new button(330,85,100,30,"player vs",black,white));
+	toggles["gameType"]	= new toggle(v,darkBlue,lightBlue,new label(5,85,"game type:"));
 
 	v.clear();
-	v.push_back(new menuButton(120,125,100,30,"water",black,white));
-	v.push_back(new menuButton(225,125,100,30,"land",black,white));
-	toggles["mapType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,125,"map type:"));
+	v.push_back(new button(120,125,100,30,"water",black,white));
+	v.push_back(new button(225,125,100,30,"land",black,white));
+	toggles["mapType"]	= new toggle(v,darkBlue,lightBlue,new label(5,125,"map type:"));
 
 	v.clear();
-	v.push_back(new menuButton(120,165,100,30,"rock",black,white));
-	v.push_back(new menuButton(225,165,100,30,"sand",black,white));
-	toggles["seaFloorType"]	= new menuToggle(v,darkBlue,lightBlue,new menuLabel(5,165,"sea floor:"));
+	v.push_back(new button(120,165,100,30,"rock",black,white));
+	v.push_back(new button(225,165,100,30,"sand",black,white));
+	toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
 
 	v.clear();
-	v.push_back(new menuButton(5,sh-40,100,35,"Terrain",black,white));
-	v.push_back(new menuButton(110,sh-40,100,35,"Objects",black,white));
-	v.push_back(new menuButton(215,sh-40,100,35,"Settings",black,white));
-	toggles["tabs"]	= new menuToggle(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
+	v.push_back(new button(5,sh-40,100,35,"Terrain",black,white));
+	v.push_back(new button(110,sh-40,100,35,"Objects",black,white));
+	v.push_back(new button(215,sh-40,100,35,"Settings",black,white));
+	toggles["tabs"]	= new toggle(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
 
 	return true;
 }
-void menuLevelEditor::operator() (menuPopup* p)
+void levelEditor::operator() (popup* p)
 {
 	if(awaitingMapFile)
 	{
 		awaitingMapFile=false;
-		if(!((menuSaveFile*)p)->validFile()) return;
-		string f=((menuOpenFile*)p)->getFile();
+		if(!((saveFile*)p)->validFile()) return;
+		string f=((openFile*)p)->getFile();
 		((modeMapBuilder*)modeManager.getMode())->fromFile(f);
 	}
 	//else if(awaitingShaderFile)
 	//{
 	//	awaitingShaderFile=false;
-	//	if(!((menuSaveFile*)p)->validFile()) return;
-	//	string f=((menuOpenFile*)p)->getFile();
+	//	if(!((saveFile*)p)->validFile()) return;
+	//	string f=((openFile*)p)->getFile();
 	//	addShader(f);
 	//}
 	else if(awaitingMapSave)
 	{
 		awaitingMapSave=false;
-		if(!((menuSaveFile*)p)->validFile()) return;
-		string f=((menuSaveFile*)p)->getFile();
+		if(!((saveFile*)p)->validFile()) return;
+		string f=((saveFile*)p)->getFile();
 		((modeMapBuilder*)modeManager.getMode())->level->exportBMP(f);
 	}
 	else if(awaitingLevelFile)
 	{
 		awaitingLevelFile=false;
-		if(!((menuSaveFile*)p)->validFile()) return;
-		string f=((menuOpenFile*)p)->getFile();
+		if(!((saveFile*)p)->validFile()) return;
+		string f=((openFile*)p)->getFile();
 		delete ((modeMapBuilder*)modeManager.getMode())->level;
 		LevelFile l(f);
 		((modeMapBuilder*)modeManager.getMode())->level = new editLevel(l);
@@ -741,43 +692,43 @@ void menuLevelEditor::operator() (menuPopup* p)
 	else if(awaitingLevelSave)
 	{
 		awaitingLevelSave=false;
-		if(!((menuSaveFile*)p)->validFile()) return;
-		string f=((menuSaveFile*)p)->getFile();
+		if(!((saveFile*)p)->validFile()) return;
+		string f=((saveFile*)p)->getFile();
 		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile(sliders["sea level"]->getValue());
 		l.save(f);
 	}
 	else if(awaitingNewObject)
 	{
 		awaitingNewObject = false;
-		newObjectType=((menuNewObject*)p)->getObjectType();
+		newObjectType=((newObject*)p)->getObjectType();
 	}
 	//else if(...)
 	//   .
 	//   .
 	//   .
 }
-int menuLevelEditor::update()
+int levelEditor::update()
 {
 	if(buttons["load"]->checkChanged())
 	{
 		awaitingLevelFile = true;
-		menuPopup* p = new menuOpenFile;
-		p->callback = (functor<void,menuPopup*>*)this;
-		((menuOpenFile*)p)->init(".lvl");
+		popup* p = new openFile;
+		p->callback = (functor<void,popup*>*)this;
+		((openFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
 	else if(buttons["save"]->checkChanged())
 	{
 		awaitingLevelSave = true;
-		menuPopup* p = new menuSaveFile;
-		p->callback = (functor<void,menuPopup*>*)this;
-		((menuSaveFile*)p)->init(".lvl");
+		popup* p = new saveFile;
+		p->callback = (functor<void,popup*>*)this;
+		((saveFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
 	else if(buttons["exit"]->checkChanged())
 	{
 		modeManager.setMode(NULL);
-		menuManager.setMenu("menuChooseMode");
+		menuManager.setMenu(new menu::chooseMode);
 	}
 	else if(getTab() == TERRAIN)
 	{
@@ -792,26 +743,26 @@ int menuLevelEditor::update()
 		else if(buttons["fromFile"]->checkChanged())
 		{
 			awaitingMapFile = true;
-			menuPopup* p = new menuOpenFile;
-			p->callback = (functor<void,menuPopup*>*)this;
-			((menuOpenFile*)p)->init(".bmp");
+			popup* p = new openFile;
+			p->callback = (functor<void,popup*>*)this;
+			((openFile*)p)->init(".bmp");
 			menuManager.setPopup(p);
 		}
 		else if(buttons["exportBMP"]->checkChanged())
 		{
 			awaitingMapSave = true;
-			menuPopup* p = new menuSaveFile;
-			p->callback = (functor<void,menuPopup*>*)this;
-			((menuSaveFile*)p)->init(".bmp");
+			popup* p = new saveFile;
+			p->callback = (functor<void,popup*>*)this;
+			((saveFile*)p)->init(".bmp");
 			menuManager.setPopup(p);
 		}
 		//else if(buttons["newShader"]->checkChanged())
 		//{
 		//	awaitingShaderFile=true;
-		//	menuPopup* p = new menuOpenFile;
-		//	p->callback = (functor<void,menuPopup*>*)this;
-		//	((menuOpenFile*)p)->init(".frag");
-		//	menuManager.setPopup(p);
+		//	popup* p = new openFile;
+		//	p->callback = (functor<void,popup*>*)this;
+		//	((openFile*)p)->init(".frag");
+		//	manager.setPopup(p);
 		//}
 	}
 	else if(getTab() == OBJECTS)
@@ -819,15 +770,15 @@ int menuLevelEditor::update()
 		if(buttons["addPlane"]->checkChanged())
 		{
 			awaitingNewObject=true;
-			menuPopup* p = new menuNewObject;
-			p->callback = (functor<void,menuPopup*>*)this;
+			popup* p = new newObject;
+			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
 		else if(buttons["addAAgun"]->checkChanged())
 		{
 			awaitingNewObject=true;
-			menuPopup* p = new menuNewObject(AA_GUN);
-			p->callback = (functor<void,menuPopup*>*)this;
+			popup* p = new newObject(AA_GUN);
+			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
 	}
@@ -867,11 +818,11 @@ int menuLevelEditor::update()
 	lastTab = newTab;
 	return 0;
 }
-void menuLevelEditor::render()
+void levelEditor::render()
 {
 	menuManager.drawCursor();
 }
-void menuLevelEditor::mouseL(bool down, int x, int y)
+void levelEditor::mouseL(bool down, int x, int y)
 {
 	if(getTab() == OBJECTS)
 	{
@@ -884,28 +835,28 @@ void menuLevelEditor::mouseL(bool down, int x, int y)
 		}
 	}
 }
-void menuLevelEditor::scroll(float rotations)
+void levelEditor::scroll(float rotations)
 {
 	((modeMapBuilder*)modeManager.getMode())->zoom(rotations);
 }
-void menuLevelEditor::mouseC(bool down, int x, int y)
+void levelEditor::mouseC(bool down, int x, int y)
 {
 	if(!down)
 		((modeMapBuilder*)modeManager.getMode())->trackBallUpdate(x,y);
 }
-void menuLevelEditor::addShader(string filename)
+void levelEditor::addShader(string filename)
 {
 	int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
 	((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
 
-	toggles["shaders"]->addButton(new menuButton(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
+	toggles["shaders"]->addButton(new button(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
 	//buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
 }
-int menuLevelEditor::getShader()
+int levelEditor::getShader()
 {
 	return toggles["shaders"]->getValue();
 }
-menuLevelEditor::Tab menuLevelEditor::getTab()
+levelEditor::Tab levelEditor::getTab()
 {
 	int t =  toggles["tabs"]->getValue();
 	if(t == 0) return TERRAIN;
@@ -913,7 +864,7 @@ menuLevelEditor::Tab menuLevelEditor::getTab()
 	if(t == 2) return SETTINGS;
 	return NO_TAB;
 }
-void menuChooseMode::render()
+void chooseMode::render()
 {
 	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
 	float sx = (float)sw/800;
@@ -931,7 +882,7 @@ void menuChooseMode::render()
 		graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
 	}
 }
-void menuChooseMode::keyDown(int vkey)
+void chooseMode::keyDown(int vkey)
 {
 	if(vkey==VK_ESCAPE)	done = true;//end the program
 	if(vkey==VK_LEFT)	activeChoice = choice(int(activeChoice)-1);
@@ -942,7 +893,7 @@ void menuChooseMode::keyDown(int vkey)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu("");
+		menuManager.setMenu(NULL);
 
 		modeManager.setMode(new modeCampaign("media/map file.lvl"));
 	}
@@ -950,35 +901,51 @@ void menuChooseMode::keyDown(int vkey)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu("");
+		menuManager.setMenu(NULL);
 
-		modeManager.setMode(new modeSplitScreen("media/map file3.lvl"));
+		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu("");
+		menuManager.setMenu(NULL);
 
 		modeManager.setMode(new modeMapBuilder);
 	}
 }
-bool menuInGame::init()
+bool inGame::init()
 {
 	activeChoice=RESUME;
 	world.time.pause();
 	return true;
 }
-void menuInGame::render()
+void inGame::render()
 {
-	if(activeChoice==RESUME)	glColor3f(1,1,0); else glColor3f(1,1,1);
-	textManager->renderText("resume",sw/2-(textManager->getTextWidth("resume"))/2,sh/2-75);
-	if(activeChoice==OPTIONS)	glColor3f(1,1,0); else glColor3f(1,1,1);
-	textManager->renderText("options",sw/2-(textManager->getTextWidth("options"))/2,sh/2);
-	if(activeChoice==QUIT)	glColor3f(1,1,0); else glColor3f(1,1,1);
-	textManager->renderText("quit",sw/2-(textManager->getTextWidth("quit"))/2,sh/2+75);
+	dataManager.bind("menu in game");
+	glBegin(GL_QUADS);
+		glTexCoord2f(0,0);	glVertex2f(sw/2-77,sh/2-122);
+		glTexCoord2f(1,0);	glVertex2f(sw/2+76,sh/2-122);
+		glTexCoord2f(1,1);	glVertex2f(sw/2+76,sh/2+123);
+		glTexCoord2f(0,1);	glVertex2f(sw/2-77,sh/2+123);
+	glEnd();
+	
+	float y;
+	if(activeChoice==RESUME)	y = sh/2-123 + 17;
+	if(activeChoice==OPTIONS)	y = sh/2-122 + 92;
+	if(activeChoice==QUIT)		y = sh/2-122 + 169;
+
+	dataManager.bind("menu in game select");
+	glBegin(GL_QUADS);
+		glTexCoord2f(1,1);	glVertex2f(sw/2-70,y+50);
+		glTexCoord2f(0,1);	glVertex2f(sw/2+58,y+50);
+		glTexCoord2f(0,0);	glVertex2f(sw/2+58,y);
+		glTexCoord2f(1,0);	glVertex2f(sw/2-70,y);
+	glEnd();
+
+	dataManager.bindTex(0);
 }
-void menuInGame::keyDown(int vkey)
+void inGame::keyDown(int vkey)
 {
 	if(vkey==VK_UP)		activeChoice = choice(int(activeChoice)-1);
 	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
@@ -991,7 +958,7 @@ void menuInGame::keyDown(int vkey)
 		input->up(0x31);
 		input->up(VK_ESCAPE);
 		world.time.unpause();
-		menuManager.setMenu("");
+		menuManager.setMenu(NULL);
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
 	{
@@ -1005,15 +972,15 @@ void menuInGame::keyDown(int vkey)
 		world.time.unpause();
 
 		modeManager.setMode(NULL);
-		menuManager.setMenu("menuChooseMode");
+		menuManager.setMenu(new menu::chooseMode);
 	}
 }
-bool menuLoading::init()
+bool loading::init()
 {
 	progress = 0.0f;
 	return true;
 }
-int menuLoading::update()
+int loading::update()
 {
 	static bool toLoad = true;
 	if(toLoad)
@@ -1028,11 +995,11 @@ int menuLoading::update()
 	int assetsLeft = dataManager.registerAssets();
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 	progress = 1.0-(float)assetsLeft/totalAssets;
-	if(assetsLeft==0)	menuManager.setMenu("menuChooseMode");
+	if(assetsLeft==0)	menuManager.setMenu(new menu::chooseMode);
 
 	return 30;
 }
-void menuLoading::render()
+void loading::render()
 {
 	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
 	graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9,sh*0.02),"progress back");
@@ -1044,7 +1011,7 @@ void menuLoading::render()
 		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02));
 	}
 }
-void menuButton::setElementText(string t)
+void button::setElementText(string t)
 {
 	text=t;
 	clampedText=t;
@@ -1066,11 +1033,11 @@ void menuButton::setElementText(string t)
 	}
 
 }
-void menuButton::setElementTextColor(Color c)
+void button::setElementTextColor(Color c)
 {
 	textColor = c;
 }
-void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
+void button::setElementXYWH(int X, int Y, int Width, int Height)
 {
 	x=X;
 	y=Y;
@@ -1078,7 +1045,7 @@ void menuButton::setElementXYWH(int X, int Y, int Width, int Height)
 	height=Height;
 	setElementText(text);//update clampedText
 }
-void menuButton::render()
+void button::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
 	dataManager.bind("button");
@@ -1142,18 +1109,18 @@ void menuButton::render()
 	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
 	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
 }
-void menuButton::mouseDownL(int X, int Y)
+void button::mouseDownL(int X, int Y)
 {
 	if(x < X && y < Y && x+width > X && y+height > Y)
 		clicking = true;
 }
-void menuButton::mouseUpL(int X, int Y)
+void button::mouseUpL(int X, int Y)
 {
 	if(clicking && x < X && y < Y && x+width > X && y+height > Y)
 		changed = true;
 	clicking = false;
 }
-void menuCheckBox::render()
+void checkBox::render()
 {
 	glColor4f(1,1,1,1);
 	dataManager.bind("check box");
@@ -1178,12 +1145,12 @@ void menuCheckBox::render()
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x+30,y);
 }
-void menuCheckBox::mouseDownL(int X, int Y)
+void checkBox::mouseDownL(int X, int Y)
 {
 	if((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y))
 		clicking = true;
 }
-void menuCheckBox::mouseUpL(int X, int Y)
+void checkBox::mouseUpL(int X, int Y)
 {
 	if(clicking && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)) )
 	{
@@ -1193,12 +1160,12 @@ void menuCheckBox::mouseUpL(int X, int Y)
 	clicking = false;
 }
 
-void menuLabel::render()
+void label::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x,y);
 }
-menuToggle::menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, menuLabel* l, int startValue): menuElement(TOGGLE,0,0), value(startValue), label(l)
+toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), value(startValue), Label(l)
 {
 	buttons=b;
 	if(startValue >= 0 && startValue < buttons.size())
@@ -1209,7 +1176,7 @@ menuToggle::menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, 
 	unclicked=unclickedC;
 	
 	int n=0;
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
 		if(value==n)
 			(*i)->setElementColor(clicked);
@@ -1217,7 +1184,7 @@ menuToggle::menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, 
 			(*i)->setElementColor(unclicked);
 	}
 }
-int menuToggle::addButton(menuButton* button)
+int toggle::addButton(button* button)
 {
 	button->setElementColor(unclicked);
 	buttons.push_back(button);
@@ -1228,25 +1195,25 @@ int menuToggle::addButton(menuButton* button)
 	}
 	return buttons.size()-1;
 }
-void menuToggle::render()
+void toggle::render()
 {
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++)
 	{
 		(*i)->render();
 	}
-	if(label != NULL) label->render();
+	if(Label != NULL) Label->render();
 }
-void menuToggle::mouseDownL(int X, int Y)
+void toggle::mouseDownL(int X, int Y)
 {
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++)
 	{
 		(*i)->mouseDownL(X,Y);
 	}
 }
-void menuToggle::mouseUpL(int X, int Y)
+void toggle::mouseUpL(int X, int Y)
 {
 	int n=0;
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
 		(*i)->resetChanged();
 		(*i)->mouseUpL(X,Y);
@@ -1258,16 +1225,16 @@ void menuToggle::mouseUpL(int X, int Y)
 	}
 	updateColors();
 }
-void menuToggle::updateColors()
+void toggle::updateColors()
 {
 	int n=0;
-	for(vector<menuButton*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
 		if(value==n)	(*i)->setElementColor(clicked);
 		else			(*i)->setElementColor(unclicked);
 	}
 }
-void menuSlider::render()
+void slider::render()
 {
 	if(clicking)
 	{
@@ -1292,7 +1259,7 @@ void menuSlider::render()
 	glEnd();
 	dataManager.bindTex(0);
 }
-void menuSlider::mouseDownL(int X, int Y)
+void slider::mouseDownL(int X, int Y)
 {
 	if(abs(value*width/(maxValue - minValue) + x  - X) < 22 && Y > y && Y < y + height)	
 	{
@@ -1305,7 +1272,7 @@ void menuSlider::mouseDownL(int X, int Y)
 		mouseOffset = 0.0f;
 	}
 }
-void menuSlider::mouseUpL(int X, int Y)
+void slider::mouseUpL(int X, int Y)
 {
 	if(clicking)
 	{
@@ -1313,7 +1280,7 @@ void menuSlider::mouseUpL(int X, int Y)
 		clicking = false;
 	}
 }
-float menuSlider::getValue()
+float slider::getValue()
 {
 	if(clicking)
 	{
@@ -1323,7 +1290,7 @@ float menuSlider::getValue()
 	}
 	return value;
 }
-void menuSlider::setMinValue(float m)
+void slider::setMinValue(float m)
 {
 	if(clicking)
 	{
@@ -1336,7 +1303,7 @@ void menuSlider::setMinValue(float m)
 	if(value < minValue)
 		value = minValue;
 }
-void menuSlider::setMaxValue(float m)
+void slider::setMaxValue(float m)
 {
 	if(clicking)
 	{
@@ -1349,10 +1316,10 @@ void menuSlider::setMaxValue(float m)
 	if(value > maxValue)
 		value = maxValue;
 }
-
+}
 void messageBox(string text)
 {
-	menuMessageBox* m = new menuMessageBox;
+	menu::messageBox* m = new menu::messageBox;
 	m->init(text);
 	menuManager.setPopup(m);
 }
@@ -1366,13 +1333,13 @@ void closingMessage(string text,string title)
 	}
 	else
 	{
-		struct exitor: public functor<void,menuPopup*>
+		struct exitor: public functor<void,menu::popup*>
 		{
-			void operator() (menuPopup*){exit(0);}
+			void operator() (menu::popup*){exit(0);}
 		};
-		menuMessageBox* m = new menuMessageBox;
+		menu::messageBox* m = new menu::messageBox;
 		m->init(text);
-		m->callback = (functor<void,menuPopup*>*)(new exitor);
+		m->callback = (functor<void,menu::popup*>*)(new exitor);
 		menuManager.setPopup(m);
 	}
 }

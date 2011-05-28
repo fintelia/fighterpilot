@@ -1,22 +1,22 @@
 #include "main.h"
-
-void missile::findTarget()
-{
-	Vec3f enemy;
-	Angle ang=0.5;
-
-	const map<objId,nPlane*>& planes = world.planes();
-
-	for(auto i = planes.begin(); i != planes.end();i++)
-	{
-		enemy=(*i).second->position;
-		if(acosA( velocity.normalize().dot( (enemy-position).normalize() )) < ang && /*dist(pos,enemy)<life*speed*0.4 &&*/ (*i).second->team!=team && !(*i).second->dead)
-		{
-			ang=acos( velocity.normalize().dot( (enemy-position).normalize() ));
-			target=(*i).first;
-		}
-	}
-}
+//
+//void missile::findTarget()
+//{
+//	Vec3f enemy;
+//	Angle ang=0.5;
+//
+//	const map<objId,nPlane*>& planes = world.planes();
+//
+//	for(auto i = planes.begin(); i != planes.end();i++)
+//	{
+//		enemy=(*i).second->position;
+//		if(acosA( velocity.normalize().dot( (enemy-position).normalize() )) < ang && /*dist(pos,enemy)<life*speed*0.4 &&*/ (*i).second->team!=team && !(*i).second->dead)
+//		{
+//			ang=acos( velocity.normalize().dot( (enemy-position).normalize() ));
+//			target=(*i).first;
+//		}
+//	}
+//}
 void missile::update(double time, double ms)
 {
 	/////////////////follow target////////////////////
@@ -25,10 +25,11 @@ void missile::update(double time, double ms)
 	{
 		Vec3f e=enemy->position;
 
-		difAng=acosA((e-position).normalize().dot(velocity.normalize()));
-		if(difAng.inRange(5.24,1.05))
+		//difAng=acosA((e-position).normalize().dot(velocity.normalize()));
+		//if(difAng.inRange(5.24,1.05))
 		{
-			accel=(accel.normalize()*0.0+(e-position).normalize()*1.0)*accel.magnitude();
+			//accel=(accel.normalize()*0.0+(e-position).normalize()*1.0)*accel.magnitude();
+			velocity=(velocity.normalize()*0.96+(e-position).normalize()*0.04)*velocity.magnitude();
 			//velocity=(pos-e).normalize()*velocity.magnitude();
 		}
 		//if(abs(lastAng-(angle-difAng)/5)>7.5)
@@ -41,14 +42,6 @@ void missile::update(double time, double ms)
 		//	angle-=(angle-difAng)/2;
 		//	climbAngle-=(climbAngle-asin( (e[1]-y)/e.distance(Vec3f(x,y,z))))/5;	
 		//}
-		else
-		{
-			findTarget();
-		}
-	}
-	else
-	{
-		findTarget();
 	}
 	//////////////////Movement//////////////
 	velocity+=accel*(ms/1000);
@@ -62,7 +55,7 @@ void missile::update(double time, double ms)
 	distLeft += ms/1000;
 	while(distLeft > 0.006)
 	{
-		world.exaust.insert(position-velocity*distLeft,0,0.75,world.time()-distLeft*1000,3000+rand()%1000);
+		world.exaust.insert(position-velocity*distLeft,0,0.75,world.time()-distLeft*1000,random(3000.0,4000.0));
 		distLeft-=0.006;
 	}
 	//for(int i=0;i<1;i++)

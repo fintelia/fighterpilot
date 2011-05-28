@@ -2,8 +2,8 @@
 
 void aaGun::update(double time, double ms)
 {
-	control->update();
-	controlState controller=control->getControlState();
+	//control->update();
+	//controlState controller=control->getControlState();
 
 	/////update machine gun/////////////////
 	if(machineGun.roundsLeft==0)
@@ -19,8 +19,8 @@ void aaGun::update(double time, double ms)
 
 	Quat4f lastRotation=rotation;
 
-	elevation	+= 1.0*controller.up*(ms/1000) - 1.0*controller.down*(ms/1000);
-	angle		+= 1.5*controller.left*(ms/1000) - 1.5*controller.right*(ms/1000);
+	//elevation	+= 1.0*controller.up*(ms/1000) - 1.0*controller.down*(ms/1000);
+	//angle		+= 1.5*controller.left*(ms/1000) - 1.5*controller.right*(ms/1000);
 		
 	//speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
 	//climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
@@ -33,19 +33,58 @@ void aaGun::update(double time, double ms)
 	//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
 //	findTargetVector();
-	if(controller.shoot1 <= 0.75)
+
+	/////////////////////CONTROL//////////////////////
+	bool shoot;
+	target = 0;
+	if(target == 0)
+	{
+		float lDistSquared = 0.0;
+		float nDistSquared;
+		for(auto n = world.planes().begin(); n!=world.planes().end(); n++)
+		{
+			nDistSquared = n->second->position.distanceSquared(position);
+			if(!n->second->dead && n->second->team != team && nDistSquared < 10000 * 10000 && (target == 0 || nDistSquared < lDistSquared))
+			{
+				target = n->second->id;
+				lDistSquared = nDistSquared;
+			}
+		}
+	}
+	if(target != 0)
+	{
+		targeter = (world.objectList[target]->position - position).normalize();
+		shoot = true;
+	}
+	else
+	{
+		targeter = Vec3f();
+		shoot = false;
+	}
+	///////////////////END CONTROL////////////////////
+
+	if(!shoot)
 		extraShootTime=0.0;
-	else if(controller.shoot1 > 0.75)
+	else
 	{
 		extraShootTime+=ms;
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-			world.bullets.push_back(bullet(position,Vec3f(cos(angle),sin(elevation),sin(angle)),id,time-extraShootTime-machineGun.coolDown));
+		//	world.bullets.push_back(bullet(position,targeter,id,time-extraShootTime-machineGun.coolDown));
 
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
 			shotsFired++;
 		}
+	}
+
+	static float missileCoolDown = 3000;
+	missileCoolDown -= ms;
+	if(missileCoolDown <= 0.0 && target != 0)
+	{
+		missileCoolDown = 3000;
+		int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[0].missileNum].dispList;
+		world.objectList.newMissile(MISSILE,team,position,targeter,d,id,target);
 	}
 }
 void aaGun::findTargetVector()
@@ -100,11 +139,8 @@ void aaGun::spawn()
 	dead = false;
 	health=maxHealth;
 
-	
+	target = 0;
 	shotsFired = 0;
-
-	angle = 0.0;
-	elevation = PI/4;
 }
 void aaGun::drawExplosion(bool flash)
 {
@@ -122,11 +158,7 @@ void aaGun::initArmaments()
 	machineGun.coolDown		= machineGun.coolDownLeft	= 15.0;
 	machineGun.firing									= false;
 }
-aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type, c), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
-{
-	spawn();
-}
-aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type, CONTROL_COMPUTER), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }

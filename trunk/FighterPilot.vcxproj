@@ -38,7 +38,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\Program Files %28x86%29\boost\boost_1_44;$(IncludePath)</IncludePath>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
@@ -72,6 +72,7 @@
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
       <LargeAddressAware>true</LargeAddressAware>
+      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <CustomBuildStep>
       <Command>COPY "$(OutDir)FighterPilot.exe" "$(ProjectDir)"</Command>
@@ -111,6 +112,7 @@
     <ClCompile Include="AABox.cpp" />
     <ClCompile Include="aaGun.cpp" />
     <ClCompile Include="Angle.cpp" />
+    <ClCompile Include="blackSmoke.cpp" />
     <ClCompile Include="bullet.cpp" />
     <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="campaign.cpp" />
@@ -138,6 +140,7 @@
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
     <ClCompile Include="particle.cpp" />
+    <ClCompile Include="particleManager.cpp" />
     <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="player.cpp" />
@@ -174,6 +177,7 @@
     <ClInclude Include="modeManager.h" />
     <ClInclude Include="objectList.h" />
     <ClInclude Include="partical.h" />
+    <ClInclude Include="particleManager.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="player.h" />

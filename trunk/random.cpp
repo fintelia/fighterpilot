@@ -1,6 +1,6 @@
 
 //#include <cstdlib>
-//#include "random.h"
+#include "main.h"
 
 //float randf(float min,float max)
 //{
@@ -36,3 +36,4 @@
 //{
 //	return randi(0, max);
 //}
+Rand& randomGen = Rand::getInstance();
