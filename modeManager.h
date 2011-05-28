@@ -55,7 +55,7 @@ class modeMapBuilder: public modeScreen
 	void fromFile(string filename);
 	void addObject(int type, int team, int controlType, int x, int y);
 	vector<int> shaderButtons;
-	friend class menuLevelEditor;
+	friend class menu::levelEditor;
 public:
 	virtual int update();
 	virtual void draw3D();

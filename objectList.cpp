@@ -28,19 +28,9 @@ objId objectList::newObject(LevelFile::Object obj)
 		mPlanes[p->id] = p;
 		return p->id;
 	}
-	else if(obj.type & AA_GUN)
+	else if(obj.type & AA_GUN)// can't be player controlled
 	{
-		aaGun* p = NULL;
-		for(int i=0;i<NumPlayers;i++)
-		{
-			if(players[i].objectNum()==0)
-			{
-				p = new aaGun(obj.startloc,obj.startRot,obj.type,&players[i]);
-				break;
-			}
-			else if(i == NumPlayers-1)
-				p = new aaGun(obj.startloc,obj.startRot,obj.type);
-		}
+		aaGun* p = new aaGun(obj.startloc,obj.startRot,obj.type);
 		p->team = obj.team;
 		mObjects[p->id] = p;
 		mAAguns[p->id] = p;
@@ -48,11 +38,11 @@ objId objectList::newObject(LevelFile::Object obj)
 	}
 	return 0;
 }
-objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Vec3f vel, int disp, int owner)
+objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Vec3f vel, int disp, int owner, int target)
 {
 	if(!(type & MISSILE)) return NULL;
 
-	missile* m = new missile(type,team,pos,vel,disp,owner);
+	missile* m = new missile(type,team,pos,vel,disp,owner,target);
 	mObjects[m->id] = m;
 	mMissiles[m->id] = m;
 	return m->id;

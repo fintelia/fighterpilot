@@ -36,6 +36,13 @@ void nPlane::update(double time, double ms)
 	if(respawning)
 	{
 		altitude=world.altitude(position);
+		Vec3f lastPos=position;
+		Quat4f lastRotation=rotation;
+		Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
+
+		speed += 9.8 * (ms/1000) * -sin(climb);//gravity
+
+
 	 	if(altitude<3.0||hitGround)
 		{
 			position.y=position.y-altitude+3;
@@ -43,15 +50,25 @@ void nPlane::update(double time, double ms)
 		}
 		else
 		{
-			//rotation = rotation * (1.0-ms/10000.0) + Quat4f(1,0,0,PI/2.0) * ms/10000.0;
-			//velocity.y-=ms/10;
-			position+=rotation * Vec3f(0,0,1) * (ms/1000);
-			position.y-=ms/10;
+
+			rotation = Quat4f(0,0,0,1);
+			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+			position += rotation * Vec3f(0,0,1) * (ms/1000);
+			fwd = rotation * Vec3f(0,0,1);
+
+			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
+
+			int sgn=turn/abs(turn);
+			turn-=0.1*(ms/1000)*sgn;
+			if(turn/abs(turn)!=sgn)
+				turn=0;
+
+			climb -= 0.3 * (ms/1000);
+			if(climb < -PI/2)
+				climb = -PI/2;
 		}
-		//for(int i=0;i<5;i++)
-		//{
-		//	newSmoke.insert(pos,15,10.0+5.0*(rand()%1000-500)/500,10.0-float(rand()%100)/20.0);
-		//}
 	}
 	else
 	{	
@@ -93,7 +110,13 @@ void nPlane::update(double time, double ms)
 			Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
 
 			altitude=world.altitude(position);
-			if(altitude<3.0){die();position.y-=altitude-3;hitGround=true;}
+			if(altitude<3.0)
+			{
+				hitGround=true;
+				position.y-=altitude-3;
+				particleManager.addEmitter(new particle::blackSmoke(id));
+				die();
+			}
 			
 			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,25.0,69.0));
 			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
@@ -141,7 +164,7 @@ void nPlane::update(double time, double ms)
 					machineGun.roundsLeft--;
 					Vec3f o=rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=((fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms)*1000-o).normalize() + Vec3f(float(rand()%1000-500)/200000,float(rand()%1000-500)/200000,float(rand()%1000-500)/200000);
+					Vec3f t=((fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms)*1000-o).normalize() + random<Vec3f>()*0.0025;
 					
 					shotsFired++;
 					world.bullets.push_back(bullet(o + l,t,id,time-extraShootTime-machineGun.coolDown));
@@ -323,7 +346,11 @@ void nPlane::level(float ms)
 }
 void nPlane::die()
 {
-	if(!dead)	explode=new explosion(position);
+	//if(!dead)	explode=new explosion(position);
+	if(!dead)
+	{
+		//particleManager.addEmitter(new particle::blackSmoke(id));
+	}
 	dead =true;
 	if(controled)
 	{
@@ -360,10 +387,24 @@ void nPlane::ShootMissile()
 		  up	= (rotation * Vec3f(0,1,0)).normalize(),
 		  right	= (rotation * Vec3f(1,0,0)).normalize();
 
+	int pId=0;
+	Angle minAng=0.0;
+	const map<objId,nPlane*>& planes = world.planes();
+	for(auto i = planes.begin(); i != planes.end();i++)
+	{
+		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+		if(!i->second->dead && team != i->second->team && (ang < minAng || pId == 0 ))
+		{
+			minAng = ang;
+			pId = i->second->id;
+		}
+	}
+	if(pId == 0) 
+		return;
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	world.objectList.newMissile(MISSILE,team,position+right*o.x+up*o.y+fwd*o.z,fwd*speed,d,id);
+	world.objectList.newMissile(MISSILE,team,position+right*o.x+up*o.y+fwd*o.z,fwd*speed,d,id,pId);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }

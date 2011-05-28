@@ -77,7 +77,7 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
 					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
 					level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
-				y += float(rand()%2000-1000)*rVal;
+				y += random(1000.0*rVal);
 
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
 			}
@@ -92,8 +92,8 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 				c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
-				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal;
+				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
 				level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
 
 
@@ -102,8 +102,8 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 				c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
 				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
-				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	float(rand()%2000-1000)*rVal;
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)*rVal;
+				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
+				else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
 				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
 
 				if(x == numSquares-1)//right
@@ -112,7 +112,7 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 					c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal;
+					y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
 				}
@@ -122,7 +122,7 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 					c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
 					//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
 					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	float(rand()%2000-1000)*rVal;
+					y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
 					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
 					level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
 				}
@@ -165,9 +165,9 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::faultLine()
@@ -185,9 +185,9 @@ void modeMapBuilder::faultLine()
 	}
 	for(int i=0;i<100;i++)
 	{
-		a = float(rand()%1000)/500.0-1.0;
-		b = float(rand()%1000)/500.0-1.0;
-		c = rand()%level->ground()->resolutionX()-level->ground()->resolutionX()/2;
+		a = random(-1.0f,1.0f);
+		b = random(-1.0f,1.0f);
+		c = random(-0.5f,0.5f) * level->ground()->resolutionX();
 		for(x=0;x<level->ground()->resolutionX();x++)
 		{
 			for(y=0;y<level->ground()->resolutionZ();y++)
@@ -216,9 +216,9 @@ void modeMapBuilder::faultLine()
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::fromFile(string filename)
@@ -243,9 +243,9 @@ void modeMapBuilder::fromFile(string filename)
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
 	resetView();
 }
 void modeMapBuilder::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
@@ -323,16 +323,16 @@ void modeMapBuilder::draw3D()
 	glEnable(GL_DEPTH_TEST);
 
 
-	if(((menuLevelEditor*)menuManager.getMenu())->getShader() != -1)
-		((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menuLevelEditor*)menuManager.getMenu())->getShader()]);
-	bool w = ((menuLevelEditor*)menuManager.getMenu())->getShader() != 1;
-	float sl = ((menuLevelEditor*)menuManager.getMenu())->sliders["sea level"]->getValue();
+	if(((menu::levelEditor*)menuManager.getMenu())->getShader() != -1)
+		((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menu::levelEditor*)menuManager.getMenu())->getShader()]);
+	bool w = ((menu::levelEditor*)menuManager.getMenu())->getShader() != 1;
+	float sl = ((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->getValue();
 	level->renderPreview(w,sl);
 
-	if(((menuLevelEditor*)menuManager.getMenu())->getTab() == menuLevelEditor::OBJECTS)
+	if(((menu::levelEditor*)menuManager.getMenu())->getTab() == menu::levelEditor::OBJECTS)
 	{
 		level->renderObjectsPreview();
-		if(((menuLevelEditor*)menuManager.getMenu())->placingObject() != 0)
+		if(((menu::levelEditor*)menuManager.getMenu())->placingObject() != 0)
 		{
 			////////////////////////////////draw object//////////////////////////////////
 			POINT cursorPos;
@@ -354,7 +354,7 @@ void modeMapBuilder::draw3D()
 			glPushMatrix();
 			glTranslatef(val.x,val.y,val.z);
 			glScalef(10,10,10);
-			dataManager.draw((planeType)((menuLevelEditor*)menuManager.getMenu())->placingObject());
+			dataManager.draw((planeType)((menu::levelEditor*)menuManager.getMenu())->placingObject());
 			glPopMatrix();
 			////////////////////////////////draw grid//////////////////////////////////
 			glDepthMask(false);
@@ -390,7 +390,7 @@ void modeMapBuilder::draw3D()
 void modeMapBuilder::draw2D(){}
 bool modeMapBuilder::init()
 {
-	menuManager.setMenu("menuLevelEditor");
+	menuManager.setMenu(new menu::levelEditor);
 	//if(Cmenu != NULL) delete Cmenu;
 	//Cmenu=new closedMenu;
 

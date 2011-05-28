@@ -1,5 +1,5 @@
  
-class aaGun: public controlledObject
+class aaGun: public selfControlledObject
 {
 private:
 	double lastUpdateTime;
@@ -14,7 +14,6 @@ public:
 	void spawn();
 	void drawExplosion(bool flash);
 	void initArmaments();
-	aaGun(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
 	aaGun(Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
 	struct wayPoint
@@ -33,9 +32,10 @@ public:
 		float coolDown, coolDownLeft;
 	};
 ///////////orientation/////////////
-	Angle angle;
-	Angle elevation;
-	//Vec3f targeter;
+	//Angle angle;
+	//Angle elevation;
+	Vec3f targeter;
+	int target;
 /////////////weapons///////////////
 	armament machineGun;
 ////////////life///////////////////

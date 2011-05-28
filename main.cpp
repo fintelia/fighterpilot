@@ -23,7 +23,7 @@ TextManager* textManager;																														//	//
 ObjectStats settings;																															//	//
 float radarAng=0;																																//	//
 																																				//	//
-MenuManager& menuManager=MenuManager::getInstance();																							//	//
+menu::manager& menuManager=menu::manager::getInstance();																							//	//
 ModeManager& modeManager=ModeManager::getInstance();																							//	//
 DataManager& dataManager=DataManager::getInstance();																							//	//
 WorldManager& world=WorldManager::getInstance();																								//	//
@@ -155,7 +155,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					int			nCmdShow)			// Window Show State
 {
 	MSG		msg;									// Windows Message Structure
-	
+
 	if(!is_directory("media"))
 	{
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
@@ -190,17 +190,15 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 //////
 	srand ((unsigned int)time(NULL));
 	textManager = new TextManager();
-	menuManager.init();
-	menuManager.setMenu("menuLoading");
+	menuManager.setMenu(new menu::loading);
 
-	fireParticleEffect = graphics->newParticleEffect("explosion fireball",500.0*r.right/1280,"partical shader");
+	fireParticleEffect = graphics->newParticleEffect("explosion fireball",1000.0*r.right/1280,"partical shader");
 	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280,"partical shader");
 	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280,"partical shader");
 
 //////
 	float nextUpdate=0;
 	float lastUpdate=0;
-	try{
 	while(!done)									// Loop That Runs While done=FALSE
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
@@ -239,8 +237,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			}
 		}
 	}
-	}
-	catch(...){graphics->minimizeWindow(); }
+	world.destroy();
+	menuManager.shutdown();
+	modeManager.shutdown();
+	dataManager.shutdown();
 	graphics->destroyWindow();
 	return 0;
 }

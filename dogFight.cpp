@@ -19,7 +19,14 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 
 	if(!firstPerson)
 	{
-		graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height),"health bar");
+		dataManager.bind("health bar");
+		glBegin(GL_QUADS);
+		glTexCoord2f(0,0);	glVertex2f(x,y);
+		glTexCoord2f(0,1);	glVertex2f(x,y+height);
+		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
+		glTexCoord2f(1,0);	glVertex2f(x+width,y);
+		glEnd();
+		//graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height),"health bar");
 		graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), Vec2f(x + width/150*125 - ((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health)), height/25*8.5), "noTexture");
 	}
 	else
@@ -143,27 +150,32 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
 {
-	dataManager.bind("target ring");
-	for(auto i = world.planes().begin(); i != world.planes().end();i++)
+	if(!p->dead)
 	{
-		if(p->id!=i->second->id &&     frustum.sphereInFrustum(i->second->position,8) != FrustumG::OUTSIDE)
+ 		dataManager.bind("target ring");
+		for(auto i = world.planes().begin(); i != world.planes().end();i++)
 		{
-			Vec2f s = frustum.project(i->second->position);
-			if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
+			if(p->id!=i->second->id && !i->second->dead &&    frustum.sphereInFrustum(i->second->position,8) != FrustumG::OUTSIDE)
 			{
-				if(i->second->id<=1)		glColor3f(0,1,0);
-				else if(i->second->dead)	glColor3f(0.5,0.5,0.5);
-				else						glColor3f(0.5,0,0);
-				glBegin(GL_QUADS);
-					glTexCoord2f(0.0,1.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
-					glTexCoord2f(1.0,1.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
-					glTexCoord2f(1.0,0.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
-					glTexCoord2f(0.0,0.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
-				glEnd();
+				Vec2f s = frustum.project(i->second->position);
+				double distSquared = i->second->position.distanceSquared(p->position);
+				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
+				{
+					if(i->second->team==p->team)		glColor3f(0,1,0);
+					else if(distSquared > 2000*2000)	glColor3f(0.6,0.5,0.5);
+					else								glColor3f(0.5,0,0);
+
+					glBegin(GL_QUADS);
+						glTexCoord2f(0.0,1.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
+						glTexCoord2f(1.0,1.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
+						glTexCoord2f(1.0,0.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
+						glTexCoord2f(0.0,0.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
+					glEnd();
+				}
 			}
 		}
+		glColor3f(1,1,1);
 	}
-	glColor3f(1,1,1);
 }
 void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 {
@@ -204,7 +216,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 	{
 		cPlane=(*i).second;
 		Vec3f a=(*i).second->position;
-		if((cPlane->id!=players[acplayer].objectNum() || /*!players[acplayer].firstPerson() ||*/  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
+		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
 		{
 			//glColor3f(0,0,0);
 			//Vec3f fwd = (*i).second->rotation * Vec3f(0,0,100);
@@ -293,6 +305,7 @@ void modeDogFight::drawBullets()
 }
 void modeDogFight::drawScene(int acplayer) 
 {
+
 	static map<int,double> lastDraw;
 	double time=world.time();
 
@@ -428,7 +441,7 @@ void modeDogFight::drawScene(int acplayer)
 	////	glColor3f(0,1,0);
 	//}
 	//glEnd();
-	drawPlanes(acplayer,false);
+	drawPlanes(acplayer,false,true);
 #ifdef AI_TARGET_LINES 
 	glBegin(GL_LINES);
 	int t;
@@ -466,6 +479,7 @@ void modeDogFight::drawScene(int acplayer)
 	
 	drawExaust();
 	graphics->render3D();
+	particleManager.render();
 
 	//drawOrthoView(acplayer,e);
 
@@ -510,7 +524,6 @@ void modeDogFight::drawScene(int acplayer)
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
-	
 	
 	lastDraw[acplayer] = time;glError();
 

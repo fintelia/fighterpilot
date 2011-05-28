@@ -80,12 +80,12 @@ void Smoke::update(float ms)
 		clean();
 	}
 }
-void Smoke::insert(Vec3f pos,float random,float spread,float startT, float life)
+void Smoke::insert(Vec3f pos,float rnd,float spread,float startT, float life)
 {
 	if(size>=compacity) resize(size);
 
-	positions[size] = pos + Vec3f(rand()%200/100,rand()%200/100,rand()%200/100).normalize()*random;
-	velocity[size] = Vec3f(rand()%200/100,rand()%200/100+0.8,rand()%200/100).normalize()*spread;
+	positions[size] = pos + random<Vec3f>()*rnd;
+	velocity[size] = random<Vec3f>()*spread;
 
 	startTime[size] = startT;
 	endTime[size] = startT + life;

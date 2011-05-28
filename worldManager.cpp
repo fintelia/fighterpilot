@@ -28,6 +28,7 @@ void WorldManager::create(Level* lvl)
 		//	world.objectList.newPlane(defaultPlane,i->team,true);
 		//}
 	}
+	particleManager.init();
 }
 //void WorldManager::create()
 //{
@@ -57,6 +58,7 @@ void WorldManager::destroy()
 	bullets.clear();
 	smoke.clear();
 	exaust.clear();
+	particleManager.shutdown();
 }
 
 float WorldManager::elevation(Vec2f v) const
@@ -128,6 +130,8 @@ void WorldManager::update()
 	//Vec3f p;			MUST CHECK FOR BULLET/MISSILE HITS
 	//int l;
 
+	objectList.update(time(),ms);
+
 	for(auto i = objectList.planes().begin(); i != objectList.planes().end();i++)
 	{
 		if(!i->second->dead)
@@ -138,7 +142,7 @@ void WorldManager::update()
 				{
 					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)/1000-i->second->position))
 					{
-						(*i).second->loseHealth(0.25);
+						(*i).second->loseHealth(25);
 						if((*i).second->dead)
 						{
 							if(bullets[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();
@@ -149,27 +153,26 @@ void WorldManager::update()
 					}
 				}
 			}
-			//for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
-			//{
-			//	if(l->second->owner != i->second->id && i->second->position.distance(l->second->position) < 32.0 && l->second->owner != (*i).first)
-			//	{
-			//		(*i).second->loseHealth(55.0);
-			//		if((*i).second->dead) 
-			//		{
-			//			if(l->second->owner==players[0].objectNum() && players[0].active()) players[0].addKill();
-			//			if(l->second->owner==players[1].objectNum() && players[1].active()) players[1].addKill();
-			//		}
-			//		l->second->awaitingDelete = true;
-			//	}
-			//}
+			for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
+			{
+				if(l->second->owner != i->second->id && i->second->position.distance(l->second->position) < 32.0 && l->second->owner != (*i).first)
+				{
+					(*i).second->loseHealth(105.0);
+					if((*i).second->dead) 
+					{
+						if(l->second->owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+						if(l->second->owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+					}
+					l->second->awaitingDelete = true;
+				}
+			}
 		}
 	}
-
-	objectList.update(time(),ms);
 	//for(int i=0;i<(signed int)bullets.size();i++)
 	//{
 	//	bullets.erase(bullets.begin()+i);
 	//}
 	smoke.update(ms);
 	exaust.update(ms);
+	particleManager.update();
 }

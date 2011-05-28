@@ -57,13 +57,17 @@ int modeCampaign::update()
 #ifdef _DEBUG
 	if(input->getKey(0x31))
 	{
-		menuManager.setMenu("menuInGame");
+		menuManager.setMenu(new menu::inGame);
 		input->up(0x31);
+	}
+	if(input->getKey(0x4c))
+	{
+		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.getLength()/10.0);
 	}
 #else if
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setMenu("menuInGame");
+		menuManager.setMenu(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
 #endif
@@ -111,7 +115,7 @@ void modeCampaign::draw2D()
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);
 	}
-	else
+	else if(!p->dead)
 	{
 		radar(700, 500, 96, 96, false);
 

@@ -1,16 +1,19 @@
 
-class menuElement
+class modeMapBuilder;
+namespace menu{
+
+class element
 {
 public:
 	enum elementType{NONE=-1,BUTTON=0,STATIC,SLIDER,LIST,TOGGLE,LABEL,CHECKBOX};
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
-	menuElement(elementType t): type(t), x(0), y(0), active(true), view(true), changed(false) {}
-	menuElement(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), text(Text), color(c), active(true), view(true), changed(false) {}
-	menuElement(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), width(Width), height(Height), text(Text), color(c), active(true), view(true), changed(false) {}
+	element(elementType t): type(t), x(0), y(0), active(true), view(true), changed(false) {}
+	element(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), text(Text), color(c), active(true), view(true), changed(false) {}
+	element(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), width(Width), height(Height), text(Text), color(c), active(true), view(true), changed(false) {}
 
-	virtual ~menuElement(){}
+	virtual ~element(){}
 
 	virtual void render()=0;
 
@@ -58,20 +61,20 @@ protected:
 	bool changed;
 };
 
-class menuLabel: public menuElement
+class label: public element
 {
 public:
-	menuLabel(int X, int Y, string t,Color c=Color(0,0,0)): menuElement(LABEL, X, Y,t,c){}
-	virtual ~menuLabel(){}
+	label(int X, int Y, string t,Color c=Color(0,0,0)): element(LABEL, X, Y,t,c){}
+	virtual ~label(){}
 
 	void render();
 };
-class menuButton: public menuElement
+class button: public element
 {
 public:
 
-	menuButton(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0)): menuElement(BUTTON,X,Y,Width,Height,t,c),textColor(textC){setElementText(text);}
-	virtual ~menuButton(){}
+	button(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0)): element(BUTTON,X,Y,Width,Height,t,c),textColor(textC){setElementText(text);}
+	virtual ~button(){}
 
 	void render();
 
@@ -90,11 +93,11 @@ protected:
 
 	bool clicking;
 };
-class menuCheckBox:public menuElement
+class checkBox:public element
 {
 public:
-	menuCheckBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): menuElement(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(false),clicking(false){}
-	virtual ~menuCheckBox(){}
+	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(false),clicking(false){}
+	virtual ~checkBox(){}
 
 	void render();
 
@@ -109,14 +112,14 @@ protected:
 	bool checked;
 	bool clicking;
 };
-class menuToggle: public menuElement
+class toggle: public element
 {
 public:
-	menuToggle(vector<menuButton*> b, Color clickedC, Color unclickedC, menuLabel* l = NULL, int startValue=0);
-	virtual ~menuToggle(){}
+	toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l = NULL, int startValue=0);
+	virtual ~toggle(){}
 
-	int addButton(menuButton* button);
-	void setLabel(menuLabel* l){label=l;}
+	int addButton(button* b);
+	void setLabel(label* l){Label=l;}
 	void render();
 
 	void mouseDownL(int X, int Y);
@@ -128,16 +131,16 @@ public:
 protected:
 	void updateColors();
 
-	vector<menuButton*> buttons;
-	menuLabel* label;
+	vector<button*> buttons;
+	label* Label;
 	int value;
 	Color clicked, unclicked;
 };
-class menuSlider:public menuElement
+class slider:public element
 {
 public:
-	menuSlider(int X, int Y, int Width, int Height, float uValue, float lValue = 0, Color c = Color(0,1,0)): menuElement(SLIDER,X,Y,Width,Height,"",c),minValue(lValue),maxValue(uValue),value(lValue),clicking(false),mouseOffset(0.0f){}
-	virtual ~menuSlider(){}
+	slider(int X, int Y, int Width, int Height, float uValue, float lValue = 0, Color c = Color(0,1,0)): element(SLIDER,X,Y,Width,Height,"",c),minValue(lValue),maxValue(uValue),value(lValue),clicking(false),mouseOffset(0.0f){}
+	virtual ~slider(){}
 
 	void render();
 
@@ -159,11 +162,11 @@ protected:
 	bool clicking;
 	float mouseOffset;
 };
-class menuPopup
+class popup
 {
 public:
-	menuPopup(): done(false),callback(NULL){}
-	virtual ~menuPopup(){}
+	popup(): done(false),callback(NULL){}
+	virtual ~popup(){}
 
 	virtual int update()=0;
 	virtual void render()=0;
@@ -175,22 +178,22 @@ public:
 	virtual void scroll(float rotations){}
 
 	bool isDone(){return done;}
-	functor<void,menuPopup*>* callback;
+	functor<void,popup*>* callback;
 protected:
 	bool done;
-	map<string,menuButton*> buttons;
-	map<string,menuLabel*> labels;
-	map<string,menuToggle*> toggles;
-	map<string,menuSlider*> sliders;
+	map<string,button*> buttons;
+	map<string,label*> labels;
+	map<string,toggle*> toggles;
+	map<string,slider*> sliders;
 
-	friend class MenuManager;
+	friend class manager;
 };
 
-class menuOpenFile: public menuPopup
+class openFile: public popup
 {
 public:
-	menuOpenFile(){}
-	~menuOpenFile(){}
+	openFile(){}
+	~openFile(){}
 
 	bool init();
 	bool init(string ExtFilter);
@@ -213,28 +216,28 @@ protected:
 	vector<string> files;
 	vector<string> folders;
 
-	vector<menuButton*> folderButtons;
-	vector<menuButton*> fileButtons;
+	vector<button*> folderButtons;
+	vector<button*> fileButtons;
 
 	//menuButton* desktop;
 	//menuButton* myDocuments;
 	//menuButton* myComputer;
 	//menuButton* myNetwork;
 };
-class menuSaveFile: public menuOpenFile, functor<void,menuPopup*>
+class saveFile: public openFile, functor<void,popup*>
 {
 public:
-	void operator() (menuPopup* p);
-	menuSaveFile():replaceDialog(false){}
+	void operator() (popup* p);
+	saveFile():replaceDialog(false){}
 protected:
 	bool replaceDialog;
 	void fileSelected();
 };
-class menuMessageBox: public menuPopup
+class messageBox: public popup
 {
 public:
-	menuMessageBox():value(-1),clicking(-1){}
-	~menuMessageBox(){}
+	messageBox():value(-1),clicking(-1){}
+	~messageBox(){}
 
 	bool init(string t);
 	bool init(string t, vector<string> buttons);
@@ -244,7 +247,7 @@ public:
 	void mouseL(bool down, int x, int y);
 	int getValue(){return value;}
 protected:
-	vector<menuLabel*> options;
+	vector<label*> options;
 	//menuLabel* label;
 	int value;
 
@@ -253,11 +256,11 @@ protected:
 	int clicking;
 
 };
-class menuNewObject: public menuPopup
+class newObject: public popup
 {
 public:
-	menuNewObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
-	~menuNewObject(){}
+	newObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
+	~newObject(){}
 	int update(){return 0;}
 	void render(){}
 	int getObjectType(){return type;}
@@ -266,11 +269,11 @@ protected:
 	int type;
 	int team;
 };
-class menuScreen: functor<void,menuPopup*>
+class screen: functor<void,popup*>
 {
 public:
-	menuScreen(){}
-	virtual ~menuScreen(){}
+	screen(){}
+	virtual ~screen(){}
 	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
@@ -284,27 +287,27 @@ public:
 
 	virtual void scroll(float rotations){}
 	///////////////////////////////////////////
-	virtual void operator() (menuPopup* p){}
+	virtual void operator() (popup* p){}
 	//bool popupActive(){return popup != NULL;}
 protected:
 	static bool loadBackground();
 	static int backgroundImage;
 
-	map<string,menuButton*> buttons;
-	map<string,menuLabel*> labels;
-	map<string,menuToggle*> toggles;
-	map<string,menuSlider*> sliders;
-	friend class MenuManager;
+	map<string,button*> buttons;
+	map<string,label*> labels;
+	map<string,toggle*> toggles;
+	map<string,slider*> sliders;
+	friend class manager;
 };
 
-class menuLevelEditor: public menuScreen
+
+class levelEditor: public screen
 {
 public:
-	friend class mapBuilder;
 	friend class modeMapBuilder;
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,SETTINGS};
-	menuLevelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
-	~menuLevelEditor(){}
+	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
+	~levelEditor(){}
 	bool init();
 	int update();
 	void render();
@@ -315,7 +318,7 @@ public:
 	Tab getTab();
 	int getShader();//gets
 	int placingObject(){return newObjectType;}
-	void operator() (menuPopup* p);
+	void operator() (popup* p);
 protected:
 	//Tab currentTab;
 
@@ -351,12 +354,12 @@ protected:
 
 	int newObjectType;
 };
-class menuChooseMode: public menuScreen 
+class chooseMode: public screen 
 {
 public:
 	enum choice{SINGLE_PLAYER=0,MULTIPLAYER=1,MAP_EDITOR=2};
-	menuChooseMode():activeChoice(MULTIPLAYER){}
-	~menuChooseMode(){}
+	chooseMode():activeChoice(MULTIPLAYER){}
+	~chooseMode(){}
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
 	int update(){return 30;}
 	void render();
@@ -364,12 +367,12 @@ public:
 protected:
 	choice activeChoice;
 };
-class menuInGame: public menuScreen
+class inGame: public screen
 {
 public:
 	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
-	menuInGame(): activeChoice(RESUME){}
-	~menuInGame(){}
+	inGame(): activeChoice(RESUME){}
+	~inGame(){}
 	bool init();
 	int update(){return 30;}
 	void render();
@@ -377,65 +380,51 @@ public:
 protected:
 	choice activeChoice;
 };
-class menuLoading:public menuScreen
+class loading:public screen
 {
 public:
-	menuLoading():progress(0.0f){}
-	~menuLoading(){}
+	loading():progress(0.0f){}
+	~loading(){}
 	bool init();
 	int update();
 	void render();
 protected:
 	float progress;
 };
-class MenuManager
+class manager
 {
 public:
-	static MenuManager& getInstance()
+	static manager& getInstance()
 	{
-		static MenuManager* pInstance = new MenuManager();
+		static manager* pInstance = new manager();
 		return *pInstance;
 	}
 
-	bool setMenu(string menuName);
-	bool setPopup(menuPopup* p){if(p != NULL)popups.push_back(p);return p!=NULL;}
+	void setMenu(screen* m);
+	bool setPopup(popup* p){if(p != NULL)popups.push_back(p);return p!=NULL;}
 
-	bool init();
 	void shutdown();
 	int update();
 	void render();
 
-	//void mouseUpdate(bool left,bool right, int x, int y);
-	//void keyUpdate(bool down, int vkey);
-	//void scrollUpdate(float rotations);
-
 	void inputCallback(Input::callBack* callback);
 
-	menuScreen* getMenu(){return menu;}
-	menuPopup* getPopup(){return popups.empty() ? NULL : popups.back();}
+	screen* getMenu(){return menu;}
+	popup* getPopup(){return popups.empty() ? NULL : popups.back();}
 
 	void drawCursor(){mDrawCursor = true;}
 private:
-	typedef menuScreen *(*menuCreateFunc)();
-	//static MenuManager* pInstance;
-	vector<menuPopup*> popups;
-	menuScreen* menu;
+	vector<popup*> popups;
+	screen* menu;
 
-	//vector<menuScreen*> menuTrail
-	//#define REGISTERMENU(a) registerMenu(#a, &CreateObject<a>);
-
-	MenuManager(): menu(NULL){}
-	~MenuManager();
-	void registerMenu(string menuName,menuCreateFunc menuFunc);
-	menuScreen* createMenu(string menuName);
-	void destroyMenu(menuScreen* menu);
-
-	map<string,menuCreateFunc> menuList;
+	manager(): menu(NULL){}
+	~manager() {setMenu(NULL);}
 
 	bool mDrawCursor;
 };
+}
 
-extern MenuManager& menuManager;
+extern menu::manager& menuManager;
 
 void messageBox(string text);
 void closingMessage(string text,string title="error");
