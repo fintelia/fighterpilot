@@ -396,13 +396,10 @@ void modeDogFight::drawScene(int acplayer)
 	glDisable(GL_LIGHTING);
 	glError();
 
-	//glCallList(treeDisp);
-
-		
-	const map<objId,nPlane*>& planes = world.planes();
-	for(auto i=planes.begin();i!=planes.end();i++)
-		i->second->drawExplosion(p->id==i->second->id);
-	//vertexArrayParticles();
+	
+	//const map<objId,nPlane*>& planes = world.planes();
+	//for(auto i=planes.begin();i!=planes.end();i++)
+	//	i->second->drawExplosion(p->id==i->second->id);
 
 
 	

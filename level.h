@@ -124,10 +124,11 @@ protected:
 	shaderData					water;
 
 	Level(): mGround(NULL) {}
-	~Level(){if(mGround)delete mGround;}
+	
 public:
 	Level(LevelFile file);
 	Level(string BMP, Vec3f size, float seaLevel);
+	~Level(){if(mGround)delete mGround;}
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}

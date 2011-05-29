@@ -23,7 +23,6 @@ public:
 	void exitAutoPilot();
 	void returnToBattle();
 	void spawn();
-	void drawExplosion(bool flash);
 	void initArmaments();
 	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
 	nPlane(Vec3f sPos, Quat4f sRot, objectType Type);
@@ -61,7 +60,8 @@ public:
 	float health;
 	float maxHealth;
 	bool hitGround;
-	explosion* explode;
+	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_MISSILE,DEATH_BULLETS}death;
+	//explosion* explode;
 	bool respawning;
 	float respawnTime;
 ////////////auto-pilot/////////////
