@@ -82,7 +82,7 @@ protected:
 
 public:
 	emitter(Type t, string tex, unsigned int initalCompacity=0);
-	~emitter();
+	virtual ~emitter();
 	void addParticle(particle& p);
 	//virtual void setDefaults(...)=0;
 	virtual void update()=0;

@@ -211,6 +211,10 @@ public:
 		t=GetTime()-t;
 		t=GetTime();
 	}
+	void shutdown()
+	{
+		glDeleteTextures(1,(const GLuint*)&textureId);
+	}
 	void renderText(string text, int x, int y)
 	{
 		glDisable(GL_MULTISAMPLE);

@@ -238,6 +238,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		}
 	}
 	world.destroy();
+	textManager->shutdown();
 	menuManager.shutdown();
 	modeManager.shutdown();
 	dataManager.shutdown();

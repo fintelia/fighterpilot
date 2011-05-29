@@ -62,14 +62,7 @@ void manager::render()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		dataManager.bind("cursor");
-		glColor4f(1,1,1,1);
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);	glVertex2f((float)cursorPos.x,(float)cursorPos.y);
-			glTexCoord2f(0,1);	glVertex2f((float)cursorPos.x,(float)cursorPos.y+25);
-			glTexCoord2f(1,1);	glVertex2f((float)cursorPos.x+21,(float)cursorPos.y+25);
-			glTexCoord2f(1,0);	glVertex2f((float)cursorPos.x+21,(float)cursorPos.y);
-		glEnd();
+		graphics->drawOverlay(cursorPos.x,cursorPos.y,21,25,"cursor");
 	}
 }
 int manager::update()
@@ -104,6 +97,9 @@ void manager::setMenu(screen* m)
 		delete menu;
 
 	menu = m;
+
+	if(m != NULL)
+		m->init();
 }
 void manager::inputCallback(Input::callBack* callback)
 {
@@ -381,24 +377,10 @@ int openFile::update()
 }
 void openFile::render()
 {
-	dataManager.bind("file viewer");
-	glColor4f(1,1,1,1);
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,1);	glVertex2f(sw/2-420,sh/2+262);
-		glTexCoord2f(1,1);	glVertex2f(sw/2+421,sh/2+262);
-		glTexCoord2f(1,0);	glVertex2f(sw/2+421,sh/2-261);
-		glTexCoord2f(0,0);	glVertex2f(sw/2-420,sh/2-261);
-	glEnd();
+	graphics->drawOverlay(sw/2-420,sh/2-261,841,523,"file viewer");
+	graphics->drawOverlay(sw/2-180,sh/2+189,370,424,"entry bar");
 
-	dataManager.bind("entry bar");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,1);	glVertex2f(sw/2-180,sh/2+235);
-		glTexCoord2f(1,1);	glVertex2f(sw/2+190,sh/2+235);
-		glTexCoord2f(1,0);	glVertex2f(sw/2+190,sh/2+189);
-		glTexCoord2f(0,0);	glVertex2f(sw/2-180,sh/2+189);
-	glEnd();
-
-	glColor4f(0,0,0,1);
+	glColor3f(0,0,0);
 	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
 	glPushMatrix();
 	glTranslatef((sw/2-190),(sh/2-246),0);
@@ -406,6 +388,7 @@ void openFile::render()
 	for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	glPopMatrix();
 	menuManager.drawCursor();
+	glColor3f(1,1,1);
 }
 void openFile::keyDown(int vkey)
 {
@@ -514,19 +497,15 @@ bool messageBox::init(string t, vector<string> names)
 }
 void messageBox::render()
 {
-	glColor4f(1,1,1,1);
 	if(dataManager.getId("dialog box") != 0)
-		dataManager.bind("dialog box");
+		graphics->drawOverlay(x,y,width,height,"dialog box");
 	else
-		glColor4f(0.3,0.3,0.3,1);
-
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(x,y);
-		glTexCoord2f(0,1);	glVertex2f(x,y+height);
-		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-		glTexCoord2f(1,0);	glVertex2f(x+width,y);
-	glEnd();
-	dataManager.bindTex(0);
+	{
+		dataManager.bind("noTexture");
+		glColor3f(0.3,0.3,0.3);
+		graphics->drawOverlay(x,y,width,height);
+		glColor3f(1,1,1);
+	}
 
 	int startX = (15.0*width/715)+x;
 	int startY = (193.0*height/295)+y;
@@ -538,15 +517,7 @@ void messageBox::render()
 	for(vector<label*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
 		if(dataManager.getId("glow") != 0 && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
-		{
-			dataManager.bind("glow");
-			glBegin(GL_QUADS);
-				glTexCoord2f(0,0);	glVertex2f(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5-35);
-				glTexCoord2f(0,1);	glVertex2f(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5+35);
-				glTexCoord2f(1,1);	glVertex2f(startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,startY+slotHeight*0.5+35);
-				glTexCoord2f(1,0);	glVertex2f(startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,startY+slotHeight*0.5-35);
-			glEnd();
-		}
+			graphics->drawOverlay(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5-35,textManager->getTextWidth((*i)->getText())*1.5,70,"glow");
 		(*i)->render();
 	}
 	menuManager.drawCursor();
@@ -729,6 +700,7 @@ int levelEditor::update()
 	{
 		modeManager.setMode(NULL);
 		menuManager.setMenu(new menu::chooseMode);
+		return 0;
 	}
 	else if(getTab() == TERRAIN)
 	{
@@ -922,28 +894,11 @@ bool inGame::init()
 }
 void inGame::render()
 {
-	dataManager.bind("menu in game");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(sw/2-77,sh/2-122);
-		glTexCoord2f(1,0);	glVertex2f(sw/2+76,sh/2-122);
-		glTexCoord2f(1,1);	glVertex2f(sw/2+76,sh/2+123);
-		glTexCoord2f(0,1);	glVertex2f(sw/2-77,sh/2+123);
-	glEnd();
+	graphics->drawOverlay(sw/2-77,sh/2-122,153,245,"menu in game");
 	
-	float y;
-	if(activeChoice==RESUME)	y = sh/2-123 + 17;
-	if(activeChoice==OPTIONS)	y = sh/2-122 + 92;
-	if(activeChoice==QUIT)		y = sh/2-122 + 169;
-
-	dataManager.bind("menu in game select");
-	glBegin(GL_QUADS);
-		glTexCoord2f(1,1);	glVertex2f(sw/2-70,y+50);
-		glTexCoord2f(0,1);	glVertex2f(sw/2+58,y+50);
-		glTexCoord2f(0,0);	glVertex2f(sw/2+58,y);
-		glTexCoord2f(1,0);	glVertex2f(sw/2-70,y);
-	glEnd();
-
-	dataManager.bindTex(0);
+	if(activeChoice==RESUME)	graphics->drawOverlay(sw/2-70,sh/2-123 + 17,128,50,"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(sw/2-70,sh/2-122 + 92,128,50,"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(sw/2-70,sh/2-122 + 169,128,50,"menu in game select");
 }
 void inGame::keyDown(int vkey)
 {
@@ -1009,6 +964,7 @@ void loading::render()
 	{
 		glColor3f(0,1,0);
 		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02));
+		glColor3f(1,1,1);
 	}
 }
 void button::setElementText(string t)
@@ -1048,66 +1004,61 @@ void button::setElementXYWH(int X, int Y, int Width, int Height)
 void button::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
-	dataManager.bind("button");
-	glBegin(GL_QUADS);
-	float tx,ty,twidth,theight;
-	float rx,ry,rwidth,rheight;
+	Vec2f tPos,tSize;
+	Vec2f rPos,rSize;
 	for(int ix=0;ix<3;ix++)
 	{
 		for(int iy=0;iy<3;iy++)
 		{
 			if(ix==0)
 			{
-				tx=0.0;
-				twidth=10.0/140;
-				rx=x;
-				rwidth=min(10,width/2);
+				tPos.x=0.0;
+				tSize.x=10.0/140;
+				rPos.x=x;
+				rSize.x=min(10,width/2);
 			}
 			else if(ix==1)
 			{
-				tx=10.0/140;
-				twidth=1.0-20.0/140;
-				rx=x+10;
-				rwidth=max(width-20,0);
+				tPos.x=10.0/140;
+				tSize.x=1.0-20.0/140;
+				rPos.x=x+10;
+				rSize.x=max(width-20,0);
 			}
 			else if(ix==2)
 			{
-				tx=1.0-10.0/140;
-				twidth=10.0/140;
-				rx=x+width-min(10,width/2);
-				rwidth=min(10,width/2);
+				tPos.x=1.0-10.0/140;
+				tSize.x=10.0/140;
+				rPos.x=x+width-min(10,width/2);
+				rSize.x=min(10,width/2);
 			}
 			if(iy==0)
 			{
-				ty=0.0;
-				theight=10.0/45;
-				ry=y;
-				rheight=min(10,height/2);
+				tPos.y=0.0;
+				tSize.y=10.0/45;
+				rPos.y=y;
+				rSize.y=min(10,height/2);
 			}
 			else if(iy==1)
 			{
-				ty=10.0/45;
-				theight=1.0-20.0/45;
-				ry=y+10;
-				rheight=max(height-20,0);
+				tPos.y=10.0/45;
+				tSize.y=1.0-20.0/45;
+				rPos.y=y+10;
+				rSize.y=max(height-20,0);
 			}
 			else if(iy==2)
 			{
-				ty=1.0-10.0/45;
-				theight=10.0/45;
-				ry=y+height-min(10,height/2);
-				rheight=min(10,height/2);
+				tPos.y=1.0-10.0/45;
+				tSize.y=10.0/45;
+				rPos.y=y+height-min(10,height/2);
+				rSize.y=min(10,height/2);
 			}
-			glTexCoord2f(tx,		ty);			glVertex2f(rx,ry);
-			glTexCoord2f(tx+twidth,	ty);			glVertex2f(rx+rwidth,ry);
-			glTexCoord2f(tx+twidth,	ty+theight);	glVertex2f(rx+rwidth,ry+rheight);
-			glTexCoord2f(tx,		ty+theight);	glVertex2f(rx,ry+rheight);	
+			graphics->drawPartialOverlay(rPos,rSize,tPos,tSize,"button");
 		}
 	}
-	glEnd();
-	dataManager.bindTex(0);
+	dataManager.unbindTextures();
 	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
 	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
+	glColor3f(1,1,1);
 }
 void button::mouseDownL(int X, int Y)
 {
@@ -1122,28 +1073,13 @@ void button::mouseUpL(int X, int Y)
 }
 void checkBox::render()
 {
-	glColor4f(1,1,1,1);
-	dataManager.bind("check box");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,	0);	glVertex2f(x,y);		
-		glTexCoord2f(1,	0);	glVertex2f(x+26,y);		
-		glTexCoord2f(1,	1);	glVertex2f(x+26,y+26);	
-		glTexCoord2f(0,	1);	glVertex2f(x,y+26);	
-	glEnd();
+	graphics->drawOverlay(x,y,26,26,"check box");
 	if(checked)
-	{
-		dataManager.bind("check");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,	0);	glVertex2f(x,y);		
-			glTexCoord2f(1,	0);	glVertex2f(x+26,y);		
-			glTexCoord2f(1,	1);	glVertex2f(x+26,y+26);	
-			glTexCoord2f(0,	1);	glVertex2f(x,y+26);	
-		glEnd();
-	}
-	dataManager.bindTex(0);
+		graphics->drawOverlay(x,y,26,26,"check");
 
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x+30,y);
+	glColor3f(1,1,1);
 }
 void checkBox::mouseDownL(int X, int Y)
 {
@@ -1164,6 +1100,7 @@ void label::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x,y);
+	glColor3f(1,1,1);
 }
 toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), value(startValue), Label(l)
 {
@@ -1242,22 +1179,8 @@ void slider::render()
 		GetCursorPos(&cursorPos);
 		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
 	}
-	glColor4f(1,1,1,1);
-	dataManager.bind("slider bar");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,	0);	glVertex2f(x,		0.5*height+y-11);		
-		glTexCoord2f(1,	0);	glVertex2f(x+width,	0.5*height+y-11);		
-		glTexCoord2f(1,	1);	glVertex2f(x+width,	0.5*height+y+11);	
-		glTexCoord2f(0,	1);	glVertex2f(x,		0.5*height+y+11);	
-	glEnd();
-	dataManager.bind("slider");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,	0);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x - 22	, y);
-		glTexCoord2f(1,	0);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x + 22	, y);
-		glTexCoord2f(1,	1);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x + 22	, y + height);	
-		glTexCoord2f(0,	1);	glVertex2f((value-minValue)*width/(maxValue - minValue) + x - 22	, y + height);
-	glEnd();
-	dataManager.bindTex(0);
+	graphics->drawOverlay(x,0.5*height+y-11,width,22,"slider bar");
+	graphics->drawOverlay((value-minValue)*width/(maxValue - minValue) + x - 22,y,44,height,"slider");
 }
 void slider::mouseDownL(int X, int Y)
 {

@@ -295,12 +295,12 @@ Vector2<T> Vector2<T>::operator/(T scale) const
 template <class T>
 Vector2<T> Vector2<T>::operator+(const Vector2 &other) const
 {
-	return Vector2(x + scale, y + scale);
+	return Vector2(x + other.x, y + other.y);
 }
 template <class T>
 Vector2<T> Vector2<T>::operator-(const Vector2 &other) const
 {
-	return Vector2(x - scale, y - scale);
+	return Vector2(x - other.x, y - other.y);
 }
 template <class T>
 Vector2<T> Vector2<T>::operator-() const

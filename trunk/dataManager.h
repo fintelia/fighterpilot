@@ -51,13 +51,18 @@ private:
 		enum assetType{SHADER, TEXTURE, MODEL}type;
 		int id;
 	};
-	map<string,asset> assets;
 
-	map<int,string> boundTextures;
-	string			boundShader;
+	map<string,asset>	assets;
 
+	int					activeTextureUnit;
 
-	DataManager(){}
+	map<int,string>		boundTextures;
+	map<int,int>		boundTextureIds;
+
+	string				boundShader;
+	int					boundShaderId;
+
+	DataManager():activeTextureUnit(0),boundShaderId(0){}
 	~DataManager();
 
 	friend class CollisionChecker;

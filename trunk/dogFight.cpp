@@ -19,61 +19,29 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 
 	if(!firstPerson)
 	{
-		dataManager.bind("health bar");
-		glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(x,y);
-		glTexCoord2f(0,1);	glVertex2f(x,y+height);
-		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-		glTexCoord2f(1,0);	glVertex2f(x+width,y);
-		glEnd();
-		//graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height),"health bar");
+		graphics->drawOverlay(x,y,width,height,"health bar");
 		graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), Vec2f(x + width/150*125 - ((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health)), height/25*8.5), "noTexture");
 	}
 	else
 	{
 		dataManager.bind("health");
-		glUniform1f(glGetUniformLocation(dataManager.getId("health"), "health"), health);
-		glUniform1f(glGetUniformLocation(dataManager.getId("health"), "angle"), 1.24f);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0,1);	glVertex2f(x,y);
-		glTexCoord2f(0,0);	glVertex2f(x,y+height);
-		glTexCoord2f(1,0);	glVertex2f(x+width,y+height);
-		glTexCoord2f(1,1);	glVertex2f(x+width,y);
-		glEnd();
-		dataManager.bindShader(0);
-		//hShader->setValue1f("health",health);
-		//hShader->bind();
-		//graphics->drawOverlay(Vec2f(x,y),Vec2f(width,height));
-		//hShader->unbind();
+		static int uniform_health = glGetUniformLocation(dataManager.getId("health"), "health");
+		static int uniform_angle = glGetUniformLocation(dataManager.getId("health"), "angle");
+		glUniform1f(uniform_health, health);
+		glUniform1f(uniform_angle, 1.24f);
+		graphics->drawOverlay(x,y,width,height,"noTexture");
+		dataManager.unbindShader();
 	}
 }
 void modeDogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 {
 	x1 *=	0.00125*sw;
 	y1 *=	0.00167*sh;
-	x2*=	0.00125*sw;
-	y2*=	0.00167*sh;
+	x2 *=	0.00125*sw;
+	y2 *=	0.00167*sh;
 
-	glPushMatrix();
-	glTranslatef((x1+x2)/2,(y1+y2)/2,0);
-	glRotatef(degrees,0,0,1);
-	glTranslatef(-(x1+x2)/2,-(y1+y2)/2,0);
-	dataManager.bind("tilt back");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(x1,y1);
-		glTexCoord2f(0,1);	glVertex2f(x1,y2);
-		glTexCoord2f(1,1);	glVertex2f(x2,y2);
-		glTexCoord2f(1,0);	glVertex2f(x2,y1);
-	glEnd();
-	glPopMatrix();
-
-	dataManager.bind("tilt front");
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(x1,y1);
-		glTexCoord2f(0,1);	glVertex2f(x1,y2);
-		glTexCoord2f(1,1);	glVertex2f(x2,y2);
-		glTexCoord2f(1,0);	glVertex2f(x2,y1);
-	glEnd();
+	graphics->drawRotatedOverlay(Vec2f(x1,y2),Vec2f(x2-x1,y2-y1),degrees * PI/180,"tilt back");
+	graphics->drawOverlay(x1,y2,x2-x1,y2-y1,"tilt front");
 }
 void modeDogFight::radar(float x, float y, float width, float height,bool firstPerson)
 {
@@ -85,28 +53,33 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 	//plane p = *(plane*)planes[players[acplayer].planeNum()];
 	int xc=x+width/2,yc=y+height/2;
 
-	int shader;
+
+
 	if(firstPerson)
 	{
-		shader=dataManager.getId("radar");
+		static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
+		
+		dataManager.bind("radar");
+		glUniform1f(radarAng, radarAng);
+
+		graphics->drawOverlay(x,y,width,height,"noTexture");
+		dataManager.unbindShader();
 	}
 	else
 	{
-		shader=dataManager.getId("radar2");
-		dataManager.bind("radarTex");
+		static int radarTexture = glGetUniformLocation(dataManager.getId("radar2"), "radarTexture");
+		static int radarAng = glGetUniformLocation(dataManager.getId("radar2"), "radarAng");
+
+		dataManager.bind("radar2");
+		//dataManager.bind("radarTex");
+
+		glUniform1f(radarAng, radarAng);
+		glUniform1i(radarTexture, 0);
+		graphics->drawOverlay(x,y,width,height,"radarTex");
+		dataManager.unbindShader();
 	}
 
-	glUseProgram(shader);
-	glUniform1i(glGetUniformLocation(shader, "radarTexture"), 0);
-	glUniform1f(glGetUniformLocation(shader, "radarAng"), radarAng);
-
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(x,y);
-		glTexCoord2f(0,1);	glVertex2f(x,y+height);
-		glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-		glTexCoord2f(1,0);	glVertex2f(x+width,y);
-	glEnd();
-	glUseProgram(0);
+	
 
 	////dataManager.bind("radar plane");
 	////Vec3f trans;
@@ -138,21 +111,13 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 
 	if(!firstPerson)
 	{
-		glColor4f(1,1,1,1);
-		dataManager.bind("radar frame");
-		glBegin(GL_QUADS);
-			glTexCoord2f(0,0);	glVertex2f(x,y);
-			glTexCoord2f(0,1);	glVertex2f(x,y+height);
-			glTexCoord2f(1,1);	glVertex2f(x+width,y+height);
-			glTexCoord2f(1,0);	glVertex2f(x+width,y);
-		glEnd();
+		graphics->drawOverlay(x,y,width,height,"radar frame");
 	}
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
 {
 	if(!p->dead)
 	{
- 		dataManager.bind("target ring");
 		for(auto i = world.planes().begin(); i != world.planes().end();i++)
 		{
 			if(p->id!=i->second->id && !i->second->dead &&    frustum.sphereInFrustum(i->second->position,8) != FrustumG::OUTSIDE)
@@ -165,12 +130,7 @@ void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, flo
 					else if(distSquared > 2000*2000)	glColor3f(0.6,0.5,0.5);
 					else								glColor3f(0.5,0,0);
 
-					glBegin(GL_QUADS);
-						glTexCoord2f(0.0,1.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
-						glTexCoord2f(1.0,1.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth);
-						glTexCoord2f(1.0,0.0);	glVertex2f(vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
-						glTexCoord2f(0.0,0.0);	glVertex2f(vX + (s.x - 0.006) * vWidth, vY + s.y * vHeight - 0.006 * vWidth);
-					glEnd();
+					graphics->drawOverlay(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,0.012 * vWidth, 0.012 * vWidth,"target ring");
 				}
 			}
 		}
@@ -209,7 +169,6 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 	const map<objId,nPlane*>& planes = world.planes();
 	nPlane* cPlane;
 
-	glColor3f(1,1,1);
 	//Vec3f axis;
 	Angle roll;
 	for(auto i = planes.begin(); i != planes.end();i++)
@@ -218,13 +177,11 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 		Vec3f a=(*i).second->position;
 		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
 		{
-			//glColor3f(0,0,0);
 			//Vec3f fwd = (*i).second->rotation * Vec3f(0,0,100);
 			//glBegin(GL_LINES);
 			//glVertex3f(a.x,a.y,a.z);
 			//glVertex3f(a.x+fwd.x,a.y+fwd.y,a.z+fwd.z);
 			//glEnd();
-			//glColor3f(1,1,1);
 			glPushMatrix(); 
 				glTranslatef(a.x,a.y,a.z);
 
@@ -302,6 +259,7 @@ void modeDogFight::drawBullets()
 		}
 	glEnd();
 	glLineWidth(1);
+	glColor3f(1,1,1);
 }
 void modeDogFight::drawScene(int acplayer) 
 {
@@ -367,7 +325,6 @@ void modeDogFight::drawScene(int acplayer)
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
-	glColor3f(1,1,1);
 	//sky dome
 	glDepthRange(0.99,1.0);
 	glPushMatrix();
@@ -382,25 +339,11 @@ void modeDogFight::drawScene(int acplayer)
 	glPopMatrix();
 	glDepthRange(0,1);
 
-	//if(settings.MAP_TYPE==WATER && world.level == NULL)
-	//{
-	//	//if(lowQuality)
-	//		//drawWater3(e);
-	//		drawWater(e);
-	//	//else
-	//	//	drawWater4(e);
-	//		
-	//}
-	//glEnable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(1.0,1.0);
 	if(world.level != NULL)
 		world.level->render(e);
-	//satellite();
 
-	//glPolygonOffset(0.0,0.0);
-	//glDisable(GL_POLYGON_OFFSET_FILL);
-	glError();	//missiles
-	glColor3f(1,0,0);
+	//glError();
+
 	Vec3f axis;
 	const map<objId,missile*>& missiles = world.missiles();
 	for(auto i=missiles.begin();i != missiles.end();i++)
@@ -417,30 +360,15 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
-	{
-		glPushMatrix();	
-		glTranslatef(i->second->position.x,i->second->position.y+50.0,i->second->position.z);
-		glScalef(5,5,5);
-
-
-		//dataManager.draw("AA gun");       WE DO NOT HAVE A MODEL YET!!!!
-		glPopMatrix();
-	}
-
-	//glBindTexture(GL_TEXTURE_2D,0);
-	//glBegin(GL_LINES);
 	//for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
 	//{
-	//	glColor3f(1,0,0);
-	//	glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
-	//	glVertex3f(i->second->position.x+cos(i->second->angle)*1000,i->second->position.y+sin(i->second->elevation)*1000,i->second->position.z+sin(i->second->angle)*1000);
-	//	//glColor3f(0,1,0);
-	//	//glVertex3f(i->second->position.x,i->second->position.y+300,i->second->position.z);
-	//	//glVertex3f(i->second->position.x+1000,i->second->position.y+300,i->second->position.z);
-	////	glColor3f(0,1,0);
+	//	glPushMatrix();	
+	//	glTranslatef(i->second->position.x,i->second->position.y+50.0,i->second->position.z);
+	//	glScalef(5,5,5);
+	//	dataManager.draw("AA gun");       WE DO NOT HAVE A MODEL YET!!!!
+	//	glPopMatrix();
 	//}
-	//glEnd();
+
 	drawPlanes(acplayer,false,true);
 #ifdef AI_TARGET_LINES 
 	glBegin(GL_LINES);
@@ -460,6 +388,7 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 	glEnd();
+	glColor3f(1,1,1);
 #endif
 
 
@@ -481,30 +410,8 @@ void modeDogFight::drawScene(int acplayer)
 	graphics->render3D();
 	particleManager.render();
 
-	//drawOrthoView(acplayer,e);
-
 	drawBullets();
 
-	//////////////2D/////////////
-	//glDisable(GL_DEPTH_TEST);
-	//glColor4f(1,1,1,1);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	//drawHUD(acplayer,e,c,u);
-	//glBindTexture(GL_TEXTURE_2D,0);
-	//#ifdef _DEBUG
-	//	if(fps<29.0)glColor4f(1,0,0,1);
-	//	else glColor4f(0,0,0,1);
-
- 	//	if(acplayer==0) textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
-	//		//textManager->renderText(string((char*)gluErrorString(glGetError())),sw/2-25,25);
-	//	if(acplayer==0) Profiler.draw();
-	//#endif
-	//glEnable(GL_DEPTH_TEST);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);glError();
-	//viewPerspective();
-	///////////2D end//////////////	
 	glDepthMask(true);
 	glDisable(GL_DEPTH_TEST);
 	glBindTexture(GL_TEXTURE_2D,0);
@@ -525,8 +432,8 @@ void modeDogFight::drawScene(int acplayer)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	
-	lastDraw[acplayer] = time;glError();
-
-
-
+	lastDraw[acplayer] = time;
+	
+	glError();
+	
 }

@@ -111,7 +111,7 @@ public:
 
 		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}
 		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),shader(0),dispList(0){init();}
-		~heightmapGL(){glDeleteLists(dispList,1);}
+		~heightmapGL();
 		friend class Level;
 		friend class modeDogFight;
 	};
@@ -124,6 +124,7 @@ protected:
 	shaderData					water;
 
 	Level(): mGround(NULL) {}
+	~Level(){if(mGround)delete mGround;}
 public:
 	Level(LevelFile file);
 	Level(string BMP, Vec3f size, float seaLevel);

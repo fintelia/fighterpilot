@@ -76,7 +76,7 @@ void explosion::render(bool flash)
 			glTexCoord2f(1,1);	glVertex3f(loc.x+(right*sl).x+(up*sl).x,loc.y+(right*sl).y+(up*sl).y,loc.z+(right*sl).z+(up*sl).z);
 		glEnd();
 	}
-
+	glColor3f(1,1,1);
 
 	//if(time<270 && flash)
 	//{
@@ -154,6 +154,7 @@ void explosion::render2()
 		glVertex3f(loc.x,loc.y,loc.z);
 	}
 	glEnd();
+	glColor3f(1,1,1);
 }
 void explosion::render3()
 {

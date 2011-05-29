@@ -358,7 +358,7 @@ class chooseMode: public screen
 {
 public:
 	enum choice{SINGLE_PLAYER=0,MULTIPLAYER=1,MAP_EDITOR=2};
-	chooseMode():activeChoice(MULTIPLAYER){}
+	chooseMode():activeChoice(SINGLE_PLAYER){}
 	~chooseMode(){}
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
 	int update(){return 30;}
