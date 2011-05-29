@@ -131,7 +131,6 @@ void explosion::render(Vec3f up, Vec3f right)
 	//glMultMatrixf((const GLfloat*)&mat2);
 
 
-	glColor3f(1,1,1);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
@@ -218,6 +217,8 @@ emitter::~emitter()
 	if(vertices != NULL)	delete[] vertices;
 	particles = NULL;
 	vertices = NULL;
+
+	glDeleteBuffers(1,&VBO);
 }
 void emitter::addParticle(particle& p)
 {

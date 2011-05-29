@@ -18,7 +18,12 @@ int DataManager::loadTexture(string filename)
 int DataManager::loadModel(string filename)
 {
 	string ext=filesystem::extension(filename);
-	if(ext.compare(".obj") == 0)	return loadOBJ(filename);
+	if(ext.compare(".obj") == 0)
+	{
+		int id = loadOBJ(filename);
+		registerModel(filename,id);
+		return id;
+	}
 	return 0;
 }
 int DataManager::loadShader(string vert, string frag)
@@ -379,6 +384,7 @@ int DataManager::loadOBJ(string filename)
 					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
 					//if(ext.compare("tga")==0)
 						mMtl.tex=dataManager.loadTexture(file+s[1]);
+						registerTexture(mtlFile + "/" + s[1],mMtl.tex);
 					//else if(ext.compare("mmp")==0)
 					//	mMtl.tex=loadMMP( (char*)(file+s[1]).c_str());
 				}
@@ -499,7 +505,7 @@ int DataManager::loadOBJ(string filename)
 		}
 	}
 	fclose(fp);
-	int d = glGenLists (1);
+	int d = glGenLists(1);
 	glNewList (d, GL_COMPILE);
 	for(int pass=0;pass<=1;pass++)//pass 0 is opaque and pass 1 is translucent
 	{
@@ -672,8 +678,8 @@ int DataManager::loadPNG(string filename)
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		return 0;
 	}	
-	for (i = 0;  i < height;  ++i)
-		row_pointers[i] = image_data + i*rowbytes;
+	for (i = 0;  i < height;  i++)
+		row_pointers[i] = image_data + (height - (i+1))*rowbytes;
 	
 	png_read_image(png_ptr, row_pointers);
 	png_read_end(png_ptr, NULL);
@@ -721,42 +727,92 @@ void DataManager::bind(string name, int textureUnit)
 		return;
 	else if(assets[name].type==asset::TEXTURE)
 	{
-		glActiveTexture(GL_TEXTURE0+textureUnit);
+		if(boundTextures[textureUnit] == name)
+			return;
+		else if(boundTextureIds[textureUnit] == assets[name].id)
+		{
+			boundTextures[textureUnit] = name;
+			return;
+		}
+
+		if(activeTextureUnit != textureUnit)
+		{
+			glActiveTexture(GL_TEXTURE0+textureUnit);
+			activeTextureUnit = textureUnit;
+		}
+
 		glBindTexture(GL_TEXTURE_2D,assets[name].id);
+		boundTextureIds[textureUnit] = assets[name].id;
 		boundTextures[textureUnit] = name;
 	}
 	else if(assets[name].type==asset::SHADER)
 	{
+		//if(boundShader == name)
+		//	return;
+		//else if(boundShaderId == assets[name].id)
+		//{
+		//	boundShader = name;
+		//	return;
+		//}
+
 		glUseProgram(assets[name].id);
+		boundShaderId = assets[name].id;
 		boundShader = name;
 	}
 }
 void DataManager::bindTex(int id, int textureUnit)
 {
-	glActiveTexture(GL_TEXTURE0+textureUnit);
+	if(boundTextureIds[textureUnit] == id)
+		return;
+
+	if(activeTextureUnit != textureUnit)
+	{
+		glActiveTexture(GL_TEXTURE0+textureUnit);
+		activeTextureUnit = textureUnit;
+	}
+
 	glBindTexture(GL_TEXTURE_2D,id);
-	boundTextures[textureUnit] = "";
+
+	boundTextureIds[textureUnit] = id;
+	if(id == 0)		boundTextures[textureUnit] = "noTexture";
+	else			boundTextures[textureUnit] = "";
 }
 void DataManager::bindShader(int id)
 {
+	if(boundShaderId == id)
+		return;
+
 	glUseProgram(id);
-	boundShader = "";
+
+	boundShaderId = id;
+	if(id == 0)		boundShader = "noShader";
+	else			boundShader = "";
 }
 void DataManager::unbind(string name)
 {
-	if(boundShader.compare(name) == 0)
+	if(assets[name].id == 0)
+		return;
+
+	if(boundShader == name)
 	{
 		glUseProgram(0);
-		boundShader = "";
+		boundShaderId = 0;
+		boundShader = "noShader";
 	}
 	else
 	{
-		for(map<int,string>::iterator i = boundTextures.begin();i!=boundTextures.end();i++)
+		for(auto i = boundTextures.begin();i!=boundTextures.end();i++)
 		{
-			if(i->second.compare(name) == 0)
+			if(i->second == name)
 			{
-				glActiveTexture(GL_TEXTURE0+i->first);
+				if(activeTextureUnit != i->first)
+				{
+					glActiveTexture(GL_TEXTURE0+i->first);
+					activeTextureUnit = i->first;
+				}
 				glBindTexture(GL_TEXTURE_2D,0);
+				boundTextureIds[i->first] = 0;
+				boundTextures[i->first] = "noTexture";
 				return;
 			}
 		}
@@ -764,12 +820,27 @@ void DataManager::unbind(string name)
 }
 void DataManager::unbindTextures()
 {
-	for(map<int,string>::iterator i = boundTextures.begin();i!=boundTextures.end();i++)
+	if(boundTextureIds[activeTextureUnit] != 0)
 	{
-		glActiveTexture(GL_TEXTURE0+i->first);
 		glBindTexture(GL_TEXTURE_2D,0);
+		boundTextureIds[activeTextureUnit] = 0;
+		boundTextures[activeTextureUnit] = "noTexture";
 	}
-	boundTextures.end();
+
+	for(unsigned int i = 0; i < boundTextureIds.size(); i++)
+	{
+		if(boundTextureIds[i] != 0)
+		{
+			if(activeTextureUnit != i)
+			{
+				glActiveTexture(GL_TEXTURE0+i);
+				activeTextureUnit = i;
+			}
+			glBindTexture(GL_TEXTURE_2D,0);
+			boundTextures[i] = "noTexture";
+			boundTextureIds[i] = 0;
+		}
+	}
 }
 void DataManager::unbindShader()
 {
@@ -780,6 +851,11 @@ void DataManager::draw(string name)
 {
 	if(assets.find(name)==assets.end() || assets[name].type != asset::MODEL)
 		return;
+	if(activeTextureUnit != 0)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		activeTextureUnit = 0;
+	}
 	glCallList(assets[name].id);
 }
 void DataManager::draw(planeType p)

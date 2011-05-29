@@ -69,6 +69,7 @@ public:
 			textManager->renderText(lexical_cast<string>(i->second),200,y);
 		}
 		output.clear();
+		glColor3f(1,1,1);
 	}
 };
 extern profiler Profiler;

@@ -381,11 +381,13 @@ void modeMapBuilder::draw3D()
 				glVertex3f(level->ground()->resolutionX()*size,maxHeight+10,i);
 			}
 			glEnd();
+			glColor3f(1,1,1);
 			glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////
 		}	
 	}
 	glDisable(GL_DEPTH_TEST);
+	
 }
 void modeMapBuilder::draw2D(){}
 bool modeMapBuilder::init()

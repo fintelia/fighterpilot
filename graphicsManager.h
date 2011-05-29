@@ -79,6 +79,8 @@ public:
 	virtual	bool drawParticle(gID id, Vec3f pos, float life)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size, string tex)=0;
+	virtual bool drawOverlay(float x,float y,float width,float height)=0;
+	virtual bool drawOverlay(float x,float y,float width,float height,string tex)=0;
 	virtual bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex)=0;
 	virtual bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize, string tex)=0;
 
@@ -112,6 +114,11 @@ public:
 		return pInstance;
 	}
 protected:
+	struct texturedVertex2D
+	{
+		Vec2f position;
+		Vec2f texCoord;
+	};
 	struct model: public object
 	{
 		string disp;
@@ -141,6 +148,8 @@ protected:
 		void render();
 	};
 
+	texturedVertex2D overlay[4];
+
 	GLuint renderTextures[2];
 	GLuint depthRenderBuffers[2];
 	GLuint FBOs[2];
@@ -160,6 +169,8 @@ public:
 	//bool drawParticle(gID id, Vec3f pos, Color c)=0;
 	bool drawOverlay(Vec2f Origin, Vec2f Size);
 	bool drawOverlay(Vec2f Origin, Vec2f Size,string tex);
+	bool drawOverlay(float x,float y,float width,float height);
+	bool drawOverlay(float x,float y,float width,float height,string tex);
 	bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex);
 	bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize, string tex);
 

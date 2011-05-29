@@ -112,7 +112,6 @@ void OpenGLgraphics::particleEffect::render()
 {
 	if(num==0)return;
 
-	glColor4f(1,1,1,1);
 	dataManager.bind(texture);
 
 	if(shader == "partical shader")
@@ -159,53 +158,155 @@ bool OpenGLgraphics::drawParticle(gID id, Vec3f pos, float life)
 }
 bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size)
 {
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(origin.x,origin.y);
-		glTexCoord2f(1,0);	glVertex2f(origin.x+size.x,origin.y);
-		glTexCoord2f(1,1);	glVertex2f(origin.x+size.x,origin.y+size.y);
-		glTexCoord2f(0,1);	glVertex2f(origin.x,origin.y+size.y);
-	glEnd();
+	overlay[0].position = origin + Vec2f(0.0,		0.0);
+	overlay[1].position = origin + Vec2f(size.x,	0.0);
+	overlay[2].position = origin + Vec2f(size.x,	size.y);
+	overlay[3].position = origin + Vec2f(0.0,		size.y);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glDrawArrays(GL_QUADS, 0, 4);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	return true;
 }
 bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
 {
+	overlay[0].position = origin + Vec2f(0.0,		0.0);
+	overlay[1].position = origin + Vec2f(size.x,	0.0);
+	overlay[2].position = origin + Vec2f(size.x,	size.y);
+	overlay[3].position = origin + Vec2f(0.0,		size.y);
+
+	overlay[0].texCoord = Vec2f(0.0,1.0);
+	overlay[1].texCoord = Vec2f(1.0,1.0);
+	overlay[2].texCoord = Vec2f(1.0,0.0);
+	overlay[3].texCoord = Vec2f(0.0,0.0);
+
 	dataManager.bind(tex);
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(origin.x,origin.y);
-		glTexCoord2f(1,0);	glVertex2f(origin.x+size.x,origin.y);
-		glTexCoord2f(1,1);	glVertex2f(origin.x+size.x,origin.y+size.y);
-		glTexCoord2f(0,1);	glVertex2f(origin.x,origin.y+size.y);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	dataManager.unbind(tex);
+	return true;
+}
+bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height)
+{
+	overlay[0].position = Vec2f(x,y);
+	overlay[1].position = Vec2f(x+width,y);
+	overlay[2].position = Vec2f(x+width,y+height);
+	overlay[3].position = Vec2f(x,y+height);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glDrawArrays(GL_QUADS, 0, 4);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	return true;
+}
+bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string tex)
+{
+	overlay[0].position = Vec2f(x,y);
+	overlay[1].position = Vec2f(x+width,y);
+	overlay[2].position = Vec2f(x+width,y+height);
+	overlay[3].position = Vec2f(x,y+height);
+
+	overlay[0].texCoord = Vec2f(0.0,1.0);
+	overlay[1].texCoord = Vec2f(1.0,1.0);
+	overlay[2].texCoord = Vec2f(1.0,0.0);
+	overlay[3].texCoord = Vec2f(0.0,0.0);
+
+	dataManager.bind(tex);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
 	dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation, string tex)
 {
-	glPushMatrix();
-	glTranslatef(origin.x+size.x/2,origin.y+size.y/2,0);
-	glRotatef(rotation.degrees(),0,0,-1);
-	glTranslatef(-origin.x-size.x/2,-origin.y-size.y/2,0);
+	float w2 = size.x/2;
+	float h2 = size.y/2;
+	float cosRot = cos(rotation);
+	float sinRot = sin(rotation);
+	overlay[0].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*0.25) , origin.y+h2 + h2*sin(-rotation+PI*0.25));
+	overlay[1].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*0.75) , origin.y+h2 + h2*sin(-rotation+PI*0.75));
+	overlay[2].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.25) , origin.y+h2 + h2*sin(-rotation+PI*1.25));
+	overlay[3].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.75) , origin.y+h2 + h2*sin(-rotation+PI*1.75));
+
+	overlay[0].texCoord = Vec2f(0.0,1.0);
+	overlay[1].texCoord = Vec2f(1.0,1.0);
+	overlay[2].texCoord = Vec2f(1.0,0.0);
+	overlay[3].texCoord = Vec2f(0.0,0.0);
+
 	dataManager.bind(tex);
-	glBegin(GL_QUADS);
-		glTexCoord2f(0,0);	glVertex2f(origin.x,origin.y);				//glVertex2f(-size.x/2,-size.y/2);
-		glTexCoord2f(1,0);	glVertex2f(origin.x+size.x,origin.y);		//glVertex2f(size.x/2,-size.y/2);
-		glTexCoord2f(1,1);	glVertex2f(origin.x+size.x,origin.y+size.y);//glVertex2f(size.x/2,size.y/2);
-		glTexCoord2f(0,1);	glVertex2f(origin.x,origin.y+size.y);		//glVertex2f(-size.x/2,size.y/2);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
 	dataManager.unbind(tex);
-	glPopMatrix();
+
 	return true;
 }
 bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize, string tex)
 {
+	overlay[0].position = origin + Vec2f(0.0,		0.0);
+	overlay[1].position = origin + Vec2f(size.x,	0.0);
+	overlay[2].position = origin + Vec2f(size.x,	size.y);
+	overlay[3].position = origin + Vec2f(0.0,		size.y);
+
+	overlay[0].texCoord = tOrigin + Vec2f(0.0,		tSize.y);
+	overlay[1].texCoord = tOrigin + Vec2f(tSize.x,	tSize.y);
+	overlay[2].texCoord = tOrigin + Vec2f(tSize.x,	0.0);
+	overlay[3].texCoord = tOrigin + Vec2f(0.0,		0.0);
+
 	dataManager.bind(tex);
-	glBegin(GL_QUADS);
-		glTexCoord2f(tOrigin.x,tOrigin.y);					glVertex2f(origin.x,origin.y);
-		glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y);			glVertex2f(origin.x+size.x,origin.y);
-		glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y+tSize.y);	glVertex2f(origin.x+size.x,origin.y+size.y);
-		glTexCoord2f(tOrigin.x,tOrigin.y+tSize.y);			glVertex2f(origin.x,origin.y+size.y);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
 	dataManager.unbind(tex);
+
+	//dataManager.bind(tex);
+	//glBegin(GL_QUADS);
+	//	glTexCoord2f(tOrigin.x,tOrigin.y);					glVertex2f(origin.x,origin.y);
+	//	glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y);			glVertex2f(origin.x+size.x,origin.y);
+	//	glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y+tSize.y);	glVertex2f(origin.x+size.x,origin.y+size.y);
+	//	glTexCoord2f(tOrigin.x,tOrigin.y+tSize.y);			glVertex2f(origin.x,origin.y+size.y);
+	//glEnd();
+	//dataManager.unbind(tex);
 	return true;
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
@@ -230,8 +331,6 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 	glOrtho( 0, sw , sh , 0, -1, 1 );
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
-	glColor3f(1,1,1);
 	
 	//double time = world.time()/10000;
 	//double r = sqrt((float)sw*sw + sh*sh)/2;
@@ -404,6 +503,8 @@ void OpenGLgraphics::render()
 	glLoadIdentity();
 	glViewport(0, 0, sw, sh);
 
+	dataManager.bind("noShader");
+	glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
 	modeManager.render3D();
 
@@ -417,15 +518,15 @@ void OpenGLgraphics::render()
 	glLoadIdentity();						// Reset The Matrix
 
 	glDisable(GL_DEPTH_TEST);
-	glColor3f(1,1,1);
 	modeManager.render2D();
 	menuManager.render();
 
 
 	#ifdef _DEBUG
-		if(fps<29.0)glColor4f(1,0,0,1);
-		else glColor4f(0,0,0,1);
+		if(fps<29.0)glColor3f(1,0,0);
+		else glColor3f(0,0,0);
  		//textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
+		glColor3f(1,1,1);
 		Profiler.draw();
 	#endif
 
@@ -486,6 +587,10 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 }
 void OpenGLgraphics::destroyWindow()
 {
+	glDeleteTextures(2, renderTextures);
+	glDeleteFramebuffersEXT(2, FBOs);
+	glDeleteRenderbuffersEXT(2, depthRenderBuffers);
+	
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
 	ShowCursor(true);								// Show Mouse Pointer
 

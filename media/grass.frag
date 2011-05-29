@@ -55,5 +55,5 @@ void main()
 
 	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
-	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
+	gl_FragColor = vec4(color.rgb*(NdotL*0.7+0.3),color.a);//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }
