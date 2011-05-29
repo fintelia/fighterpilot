@@ -1,11 +1,11 @@
 
 #include "main.h"
 
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }
@@ -42,11 +42,34 @@ void nPlane::update(double time, double ms)
 
 		speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
-
-	 	if(altitude<3.0||hitGround)
+		if(death == DEATH_HIT_GROUND)
 		{
-			position.y=position.y-altitude+3;
-			hitGround=true;
+
+		}
+		else if(death == DEATH_HIT_WATER)
+		{
+			rotation = Quat4f(0,0,0,1);
+			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+			position += rotation * Vec3f(0,0,1) * (ms/1000);
+			fwd = rotation * Vec3f(0,0,1);
+
+			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
+		}
+		else if(altitude<3.0)
+		{
+			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			//if(death == HIT_GROUND)
+			{
+				hitGround=true;
+				position.y-=altitude-3;
+				particleManager.addEmitter(new particle::blackSmoke(id));
+			}
+			//else if(death == HIT_WATER)
+			{
+
+			}
 		}
 		else
 		{
@@ -112,9 +135,17 @@ void nPlane::update(double time, double ms)
 			altitude=world.altitude(position);
 			if(altitude<3.0)
 			{
-				hitGround=true;
-				position.y-=altitude-3;
-				particleManager.addEmitter(new particle::blackSmoke(id));
+				death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+				//if(death == HIT_GROUND)
+				{
+					hitGround=true;
+					position.y -= altitude-3;
+					particleManager.addEmitter(new particle::blackSmoke(id));
+				}
+				//else if(death == HIT_WATER)
+				{
+
+				}
 				die();
 			}
 			
@@ -417,14 +448,6 @@ void nPlane::loseHealth(float healthLoss)
 		die();
 	}
 }
-void nPlane::drawExplosion(bool flash)
-{
-	if(explode!=NULL)
-	{
-		explode->pos=position;
-		explode->render(flash);
-	}
-}
 void nPlane::initArmaments()
 {
 	rockets.max				= rockets.left				= settings.planeStats[defaultPlane].hardpoints.size();
@@ -443,11 +466,6 @@ void nPlane::initArmaments()
 void nPlane::spawn()
 {
 	initArmaments();
-	if(explode!=NULL) 
-	{
-		delete explode;
-		explode=NULL;
-	}
 	position = startPos;
 	rotation = startRot;
 
@@ -476,6 +494,7 @@ void nPlane::spawn()
 	controled=false;
 	maneuver=0;
 	hitGround=false;
+	death = DEATH_NONE;
 	health=maxHealth;
 	//updateAll(controlState());
 

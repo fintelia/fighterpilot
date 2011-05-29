@@ -177,10 +177,10 @@ bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
 	overlay[2].position = origin + Vec2f(size.x,	size.y);
 	overlay[3].position = origin + Vec2f(0.0,		size.y);
 
-	overlay[0].texCoord = Vec2f(0.0,1.0);
-	overlay[1].texCoord = Vec2f(1.0,1.0);
-	overlay[2].texCoord = Vec2f(1.0,0.0);
-	overlay[3].texCoord = Vec2f(0.0,0.0);
+	overlay[0].texCoord = Vec2f(0.0,0.0);
+	overlay[1].texCoord = Vec2f(1.0,0.0);
+	overlay[2].texCoord = Vec2f(1.0,1.0);
+	overlay[3].texCoord = Vec2f(0.0,1.0);
 
 	dataManager.bind(tex);
 
@@ -218,10 +218,10 @@ bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string
 	overlay[2].position = Vec2f(x+width,y+height);
 	overlay[3].position = Vec2f(x,y+height);
 
-	overlay[0].texCoord = Vec2f(0.0,1.0);
-	overlay[1].texCoord = Vec2f(1.0,1.0);
-	overlay[2].texCoord = Vec2f(1.0,0.0);
-	overlay[3].texCoord = Vec2f(0.0,0.0);
+	overlay[0].texCoord = Vec2f(0.0,0.0);
+	overlay[1].texCoord = Vec2f(1.0,0.0);
+	overlay[2].texCoord = Vec2f(1.0,1.0);
+	overlay[3].texCoord = Vec2f(0.0,1.0);
 
 	dataManager.bind(tex);
 
@@ -250,10 +250,10 @@ bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation
 	overlay[2].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.25) , origin.y+h2 + h2*sin(-rotation+PI*1.25));
 	overlay[3].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.75) , origin.y+h2 + h2*sin(-rotation+PI*1.75));
 
-	overlay[0].texCoord = Vec2f(0.0,1.0);
-	overlay[1].texCoord = Vec2f(1.0,1.0);
-	overlay[2].texCoord = Vec2f(1.0,0.0);
-	overlay[3].texCoord = Vec2f(0.0,0.0);
+	overlay[0].texCoord = Vec2f(0.0,0.0);
+	overlay[1].texCoord = Vec2f(1.0,0.0);
+	overlay[2].texCoord = Vec2f(1.0,1.0);
+	overlay[3].texCoord = Vec2f(0.0,1.0);
 
 	dataManager.bind(tex);
 
@@ -279,10 +279,10 @@ bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin,
 	overlay[2].position = origin + Vec2f(size.x,	size.y);
 	overlay[3].position = origin + Vec2f(0.0,		size.y);
 
-	overlay[0].texCoord = tOrigin + Vec2f(0.0,		tSize.y);
-	overlay[1].texCoord = tOrigin + Vec2f(tSize.x,	tSize.y);
-	overlay[2].texCoord = tOrigin + Vec2f(tSize.x,	0.0);
-	overlay[3].texCoord = tOrigin + Vec2f(0.0,		0.0);
+	overlay[0].texCoord = tOrigin + Vec2f(0.0,		0.0);
+	overlay[1].texCoord = tOrigin + Vec2f(tSize.x,	0.0);
+	overlay[2].texCoord = tOrigin + Vec2f(tSize.x,	tSize.y);
+	overlay[3].texCoord = tOrigin + Vec2f(0.0,		tSize.y);
 
 	dataManager.bind(tex);
 

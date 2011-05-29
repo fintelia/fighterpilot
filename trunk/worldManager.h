@@ -14,6 +14,8 @@ public:
 	float elevation(float x, float z) const;
 	float altitude(Vec3f v) const;
 	float altitude(float x, float y, float z) const;
+	bool isLand(Vec2f v) const;
+	bool isLand(float x, float z) const;
 
 	Level::heightmapGL* const WorldManager::ground() const;
 

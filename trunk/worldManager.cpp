@@ -95,7 +95,14 @@ float WorldManager::altitude(float x, float y, float z) const
 	}
 	return 0;
 }
-
+bool WorldManager::isLand(Vec2f v) const
+{
+	return level->ground()->height(v.x,v.y) > 0;
+}
+bool WorldManager::isLand(float x, float z) const
+{
+	return level->ground()->height(x,z) > 0;
+}
 Level::heightmapGL* const WorldManager::ground() const
 {
 	if(level!=NULL)

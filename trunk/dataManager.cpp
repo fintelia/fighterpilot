@@ -163,7 +163,7 @@ int DataManager::loadTGA(string filename)
 		//assert (0);
 		return 0;
 	}
-	NPOT = GLEE_ARB_texture_non_power_of_two && (texture.width & (texture.width-1)) && (texture.height & (texture.height-1));
+	NPOT = GLEE_ARB_texture_non_power_of_two && ((texture.width & (texture.width-1)) || (texture.height & (texture.height-1)));
 	if(texture.bpp == 24)													// If the BPP of the image is 24...
 		texture.type	= GL_RGB;											// Set Image type to GL_RGB
 	else																	// Else if its 32 BPP
@@ -679,7 +679,7 @@ int DataManager::loadPNG(string filename)
 		return 0;
 	}	
 	for (i = 0;  i < height;  i++)
-		row_pointers[i] = image_data + (height - (i+1))*rowbytes;
+		row_pointers[i] = image_data + i*rowbytes;
 	
 	png_read_image(png_ptr, row_pointers);
 	png_read_end(png_ptr, NULL);
@@ -693,7 +693,7 @@ int DataManager::loadPNG(string filename)
 	else if(colorChannels == 3) format = GL_RGB;
 	else if(colorChannels == 4) format = GL_RGBA;
 	
-	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) && (height & (height-1)));
+	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
 	
 	GLuint texV;
 	glGenTextures(1,&texV);
