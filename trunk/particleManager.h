@@ -23,8 +23,8 @@ struct vertex
 
 class emitter
 {
-	friend class ParticleManager;
 public:
+	friend class ParticleManager;
 	struct fuzzyAttribute
 	{
 		float value;
@@ -50,10 +50,15 @@ public:
 		float alpha() {return a + ta * random<float>(-1.0,1.0);}
 	};
 
-	const enum Type{NONE=0,EXPLOSION,SMOKE}type;
+	const enum Type{NONE=0,EXPLOSION,SMOKE,SPLASH}type;
+
+	const int parentObject;
+	const Vec3f parentOffset;
+
+protected:
 	Vec3f position;
-	int parentObject;
-	Vec3f parentOffset;
+	Vec3f lastPosition;
+
 	string texture;
 
 	fuzzyAttribute velocity;
@@ -61,16 +66,18 @@ public:
 	fuzzyAttribute life;
 	fuzzyColor color;
 
-	float friction;
 	//int sfactor;
     //int dfactor;
 	//shape shapes;
-protected:
+
+	float friction;
+
 	particle* particles;
 	vertex* vertices;
 	unsigned int compacity;
+	unsigned int liveParticles;
 	unsigned int total;
-
+	
 	double startTime;
 	double extraTime;
 	double particlesPerSecond;
@@ -81,32 +88,49 @@ protected:
 	GLuint VBO;
 
 public:
-	emitter(Type t, string tex, unsigned int initalCompacity=0);
+	emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity);
+	emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity);
 	virtual ~emitter();
 	void addParticle(particle& p);
 	//virtual void setDefaults(...)=0;
-	virtual void update()=0;
-	virtual void render(Vec3f up, Vec3f right)=0;
+
+
+
+	virtual bool createParticle(particle& p, Vec3f currentPosition)=0;
+	virtual void updateParticle(particle& p)=0;
+
+	void update();
+	void render(Vec3f up, Vec3f right);
+
 };
 
 class explosion: public emitter
 {
 public:
-	void init();
 	explosion(Vec3f pos);
 	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
-	void update();
-	void render(Vec3f up, Vec3f right);
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
 };
 class blackSmoke: public emitter
 {
 public:
-	void init();
 	blackSmoke(Vec3f pos);
 	blackSmoke(int parent, Vec3f offset = Vec3f(0,0,0));
-	void update();
-	void render(Vec3f up, Vec3f right);
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
 };
+//class splash: public emitter
+//{
+//public:
+//	splash(Vec3f pos);
+//	splash(int parent, Vec3f offset = Vec3f(0,0,0));
+//	void init();
+//	void update();
+//	void render(Vec3f up, Vec3f right);
+//}
 class manager
 {
 private:
