@@ -131,7 +131,7 @@ const map<objId,missile*>& WorldManager::missiles()const
 
 void WorldManager::update()
 {
-	double ms = time.getLength();
+	double ms = time.length();
 	//Vec3f sp;
 	//Vec3f v;
 	//Vec3f p;			MUST CHECK FOR BULLET/MISSILE HITS
@@ -145,9 +145,9 @@ void WorldManager::update()
 		{
 			for(int l=0;l<(signed int)bullets.size();l++)
 			{
-				if(bullets[l].owner != i->second->id && bullets[l].startTime < time.getLastTime() && bullets[l].startTime + bullets[l].life > time())
+				if(bullets[l].owner != i->second->id && bullets[l].startTime < time.lastTime() && bullets[l].startTime + bullets[l].life > time())
 				{
-					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.getLastTime()-bullets[l].startTime)/1000-i->second->position))
+					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.lastTime()-bullets[l].startTime)/1000-i->second->position))
 					{
 						(*i).second->loseHealth(25);
 						if((*i).second->dead)

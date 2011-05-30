@@ -140,6 +140,7 @@
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
     <ClCompile Include="particle.cpp" />
+    <ClCompile Include="particleExplosion.cpp" />
     <ClCompile Include="particleManager.cpp" />
     <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="worldManager.cpp" />

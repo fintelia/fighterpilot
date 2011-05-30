@@ -42,7 +42,7 @@ int modeCampaign::update()
 {
 	if(levelup)
 	{
-		countdown-=world.time.getLength();
+		countdown-=world.time.length();
 		if(countdown<0)
 		{
 			//need to add code to mode onto the next level
@@ -62,7 +62,7 @@ int modeCampaign::update()
 	}
 	if(input->getKey(0x4c))
 	{
-		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.getLength()/10.0);
+		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
 	}
 #else if
 	if(input->getKey(VK_ESCAPE))
@@ -93,7 +93,7 @@ int modeCampaign::update()
 	//	countdown=1000;
 	//}
 
-	radarAng+=45.0*world.time.getLength()/1000;
+	radarAng+=45.0*world.time.length()/1000;
 	if(radarAng>=360)
 		radarAng-=360;
 

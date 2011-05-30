@@ -119,15 +119,15 @@ public:
 		return paused;
 	}
 
-	double getLength() const
+	double length() const
 	{
 		return cGame-lGame;
 	}
-	double getLastTime() const
+	double lastTime() const
 	{
 		return lGame;
 	}
-	double getTime() const
+	double time() const
 	{
 		return cGame;
 	}

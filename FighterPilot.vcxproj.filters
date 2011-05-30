@@ -210,6 +210,12 @@
     <ClCompile Include="blackSmoke.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
+    <ClCompile Include="splash.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
+    <ClCompile Include="particleExplosion.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">

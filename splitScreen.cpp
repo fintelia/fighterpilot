@@ -89,7 +89,7 @@ int modeSplitScreen::update()
 	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 
 	world.update();
-	radarAng+=45.0*world.time.getLength()/1000;
+	radarAng+=45.0*world.time.length()/1000;
 	if(radarAng>=360)
 		radarAng-=360;
 
