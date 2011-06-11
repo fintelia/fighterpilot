@@ -400,72 +400,69 @@ bool OpenGLgraphics::init()
 
 
 	//FRAME BUFFER OBJECTS
-	glGenTextures(2, renderTextures);
-	glGenFramebuffersEXT(2, FBOs);
-	glGenRenderbuffersEXT(2, depthRenderBuffers);
+	//glGenTextures(2, renderTextures);
+	//glGenFramebuffersEXT(2, FBOs);
+	//glGenRenderbuffersEXT(2, depthRenderBuffers);
 
-	for(int i=0;i<2;i++)
-	{
-		glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
+	//for(int i=0;i<2;i++)
+	//{
+	//	glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
+	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+	//
+	//	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
 
-		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-		glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
+	//	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+	//	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
 
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 
-		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-		switch(status)
-		{
-		case GL_FRAMEBUFFER_COMPLETE_EXT:
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			break;
+	//	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	//	switch(status)
+	//	{
+	//	case GL_FRAMEBUFFER_COMPLETE_EXT:
+	//		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	//		break;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: Attachment is NOT complete." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: Attachment is NOT complete." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: No image is attached to FBO." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: No image is attached to FBO." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: Attached images have different dimensions." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: Attached images have different dimensions." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: Draw buffer." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: Draw buffer." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
-			std::cout << "[ERROR] Framebuffer incomplete: Read buffer." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
+	//		std::cout << "[ERROR] Framebuffer incomplete: Read buffer." << std::endl;
+	//		return false;
 
-		case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-			std::cout << "[ERROR] Unsupported by FBO implementation." << std::endl;
-			return false;
+	//	case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+	//		std::cout << "[ERROR] Unsupported by FBO implementation." << std::endl;
+	//		return false;
 
-		default:
-			std::cout << "[ERROR] Unknow error." << std::endl;
-			return false;
-		}
-		if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-			return false;
-	}
-	//-------------------------
-	//and now you can render to GL_TEXTURE_2D
-	//with: glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+	//	default:
+	//		std::cout << "[ERROR] Unknow error." << std::endl;
+	//		return false;
+	//	}
+	//	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	//		return false;
+	//}
 
 	return true;
 }
@@ -588,8 +585,8 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 void OpenGLgraphics::destroyWindow()
 {
 	glDeleteTextures(2, renderTextures);
-	glDeleteFramebuffersEXT(2, FBOs);
-	glDeleteRenderbuffersEXT(2, depthRenderBuffers);
+	//glDeleteFramebuffersEXT(2, FBOs);
+	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
 	
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
 	ShowCursor(true);								// Show Mouse Pointer

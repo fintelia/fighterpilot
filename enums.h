@@ -118,16 +118,6 @@ public:
 	virtual void operator() (B b)=0;
 };
 
-extern void minimizeWindow();
-#ifdef _DEBUG
-	#define debugBreak(){			\
-		minimizeWindow();			\
-		__debugbreak();				\
-	}
-#else if
-	#define debugBreak() {}
-#endif
-
 extern char* errorString;
 #define glError(){										\
 	errorString=(char*)gluErrorString(glGetError());	\

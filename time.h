@@ -93,6 +93,11 @@ public:
 
 	void ChangeSpeed(double speed, double changeRate)//change rate in ms^2(gametime) / ms(realtime)
 	{
+		if(speed <= 0.0)
+		{
+			debugBreak();
+			return;
+		}
 		sReal = cReal;
 		sGame = cGame;
 		sSpeed = timeSpeed;

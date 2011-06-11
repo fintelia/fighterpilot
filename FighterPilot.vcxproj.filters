@@ -216,6 +216,15 @@
     <ClCompile Include="particleExplosion.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
+    <ClCompile Include="debugBreak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="contrail.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
+    <ClCompile Include="smokeTrail.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
@@ -338,6 +347,7 @@
     <ClInclude Include="particleManager.h">
       <Filter>Source Files\particleManager</Filter>
     </ClInclude>
+    <ClInclude Include="debugBreak.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">

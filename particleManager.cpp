@@ -264,14 +264,22 @@ void emitter::addParticle(particle& p)
 }
 void emitter::update()
 {
-	static Vec3f lastPos = position;
 	double ms = world.time.length();
 	double time = world.time();
 	
 	if(parentObject != 0)
 	{
-		position = world.objectList[parentObject]->position + world.objectList[parentObject]->rotation * parentOffset;
+		if(world.objectList[parentObject] == NULL || world.objectList[parentObject]->awaitingDelete)
+		{
+			parentObject = 0;
+			particlesPerSecond = 0;
+		}
+		else
+		{
+			position = world.objectList[parentObject]->position + world.objectList[parentObject]->rotation * parentOffset;
+		}
 	}
+
 
 	particle p;
 	extraTime += ms;
@@ -280,7 +288,8 @@ void emitter::update()
 		extraTime -= 1000.0 / particlesPerSecond;
 
 		particle p;
-		if(createParticle(p,position*(1.0-(ms-extraTime)/ms) + lastPosition*(ms-extraTime)/ms))
+		float t = (ms-extraTime)/ms;
+		if(createParticle(p,position*(1.0-t) + lastPosition*t))
 		{
 			addParticle(p);
 		}
@@ -302,7 +311,7 @@ void emitter::update()
 			updateParticle(particles[i]);
 		}
 	}
-	lastPos = position;
+	lastPosition = position;
 }
 void emitter::render(Vec3f up, Vec3f right)
 {

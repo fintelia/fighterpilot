@@ -579,7 +579,7 @@ void Level::render(Vec3f eye)
 
 	mGround->render();
 
-	glDepthMask(false);
+//	glDepthMask(false);
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 	float cAng,sAng;

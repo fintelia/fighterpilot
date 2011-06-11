@@ -26,6 +26,7 @@ objId objectList::newObject(LevelFile::Object obj)
 		p->team = obj.team;
 		mObjects[p->id] = p;
 		mPlanes[p->id] = p;
+		p->init();
 		return p->id;
 	}
 	else if(obj.type & AA_GUN)// can't be player controlled
@@ -34,6 +35,7 @@ objId objectList::newObject(LevelFile::Object obj)
 		p->team = obj.team;
 		mObjects[p->id] = p;
 		mAAguns[p->id] = p;
+		p->init();
 		return p->id;
 	}
 	return 0;
@@ -45,6 +47,8 @@ objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Vec3f vel
 	missile* m = new missile(type,team,pos,vel,disp,owner,target);
 	mObjects[m->id] = m;
 	mMissiles[m->id] = m;
+
+	m->init();
 	return m->id;
 }
 void objectList::deleteObject(objId id)
