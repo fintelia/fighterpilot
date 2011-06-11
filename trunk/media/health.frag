@@ -9,7 +9,6 @@ void main()
 	vec4 color = vec4(0.11,0.35,0.52,0.4);
 
 	vec2 loc=texCoord;
-	loc.y=1.0-loc.y;
 	float radius = sqrt((loc.x-0.5)*(loc.x-0.5) + (loc.y-0.5)*(loc.y-0.5));
 	float ang = atan(loc.y-0.5,loc.x-0.5);
 	loc.x=radius*cos(ang+angle)+0.5;

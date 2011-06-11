@@ -39,19 +39,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_44;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_46_1;$(IncludePath)</IncludePath>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_44;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_46_1;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -117,7 +117,9 @@
     <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="campaign.cpp" />
     <ClCompile Include="collide.cpp" />
+    <ClCompile Include="contrail.cpp" />
     <ClCompile Include="dataManager.cpp" />
+    <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="explosion.cpp" />
     <ClCompile Include="FrustumG.cpp" />
@@ -149,6 +151,7 @@
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="time.cpp" />
@@ -163,6 +166,7 @@
     <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
     <ClInclude Include="dataManager.h" />
+    <ClInclude Include="debugBreak.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="explosion.h" />

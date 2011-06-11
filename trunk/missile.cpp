@@ -17,6 +17,14 @@
 //		}
 //	}
 //}
+missile::missile(missileType Type, teamNum Team,Vec3f sPos,Vec3f Vel, int dispList, int Owner, int Target):selfControlledObject(sPos, Quat4f(), Type), life(15.0), target(Target), difAng(0), lastAng(0), velocity(Vel), accel(Vel.normalize()*MISSILE_SPEED/3.0), displayList(dispList),path(sPos,Quat4f()),owner(Owner)
+{
+	
+}
+void missile::init()
+{
+	particleManager.addEmitter(new particle::contrail(id));
+}
 void missile::update(double time, double ms)
 {
 	/////////////////follow target////////////////////
@@ -51,13 +59,14 @@ void missile::update(double time, double ms)
 
 	//path.currentPoint(position,rotation);
 	////////////////////sparks//////////////////////////
-	static float distLeft=0.0;
-	distLeft += ms/1000;
-	while(distLeft > 0.006)
-	{
-		world.exaust.insert(position-velocity*distLeft,0,0.75,world.time()-distLeft*1000,random(3000.0,4000.0));
-		distLeft-=0.006;
-	}
+	//static float distLeft=0.0;
+	//distLeft += ms/1000;
+	//while(distLeft > 0.006)
+	//{
+	//	world.exaust.insert(position-velocity*distLeft,0,0.75,world.time()-distLeft*1000,random(3000.0,4000.0));
+	//	distLeft-=0.006;
+	//}
+
 	//for(int i=0;i<1;i++)
 	//{
 	//	spark tmp(pos.x,pos.y,pos.z,2,0.5,0.5,0.5,5);
@@ -78,5 +87,6 @@ void missile::update(double time, double ms)
 	//newExaust.insert(pos-velocity*0.015,0,0,10.0);
 
 	life-=ms/1000;
-	if(life < 0.0) awaitingDelete = true;
+	if(life < 0.0 || world.altitude(position) < 0.0)
+		awaitingDelete = true;
 }

@@ -1,14 +1,12 @@
 
-extern void minimizeWindow();
-#include <xutility>
-#if _ITERATOR_DEBUG_LEVEL == 2			//_ITERATOR_DEBUG_LEVEL == 2 when compiling in DEBUG mode
-	#undef _DEBUG_ERROR2				//we are redefining _DEBUG_ERROR2 so that the window is minimized and then the error message is displayed 
-	#define _DEBUG_ERROR2(mesg, file, line){		\
-		minimizeWindow();							\
-		_Debug_message(L ## mesg, file, line);		\
-	}
- #endif /* _ITERATOR_DEBUG_LEVEL == 2 */
+#pragma warning( disable : 4305)
+#pragma warning( disable : 4244)
+#pragma warning( disable : 4018)
+#pragma warning( disable : 4250)
+#pragma warning( disable : 4996)
+#pragma warning( disable : 4204)
 
+#include "debugBreak.h"
 
 #include <cstdio>
 #include <ctime>
@@ -36,11 +34,7 @@ using namespace std;
 using namespace boost;
 using namespace boost::filesystem;
 
-#pragma warning( disable : 4305)
-#pragma warning( disable : 4244)
-#pragma warning( disable : 4018)
-#pragma warning( disable : 4250)
-#pragma warning( disable : 4996)
+
 
 #pragma comment (linker, "/SUBSYSTEM:WINDOWS")
 #pragma comment (linker, "/ENTRY:WinMainCRTStartup")

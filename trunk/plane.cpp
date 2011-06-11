@@ -15,86 +15,8 @@ void nPlane::update(double time, double ms)
 	control->update();
 	controlState controller=control->getControlState();
 
-	//static bool followingPath = false;
-	//if(time < planePath.endTime())
-	//{
-	//	objectPath::point p=planePath(time);
-	//	rotation = p.rotation;
-	//	pos = p.position;
-	//	followingPath = true;
-	//	return;
-	//}
-	//if(followingPath)
-	//{
-	//	objectPath::point p=planePath(time);
-	//	rotation = p.rotation;
-	//	pos = p.position;
-	//	ms -= (time - planePath.endTime());
-	//	followingPath = false;
-	//}
-
-	if(respawning)
+	if(!dead)
 	{
-		altitude=world.altitude(position);
-		Vec3f lastPos=position;
-		Quat4f lastRotation=rotation;
-		Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
-
-		speed += 9.8 * (ms/1000) * -sin(climb);//gravity
-
-		if(death == DEATH_HIT_GROUND)
-		{
-
-		}
-		else if(death == DEATH_HIT_WATER)
-		{
-			rotation = Quat4f(0,0,0,1);
-			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
-			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
-			position += rotation * Vec3f(0,0,1) * (ms/1000);
-			fwd = rotation * Vec3f(0,0,1);
-
-			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
-		}
-		else if(altitude<3.0)
-		{
-			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-			//if(death == HIT_GROUND)
-			{
-				hitGround=true;
-				position.y-=altitude-3;
-				particleManager.addEmitter(new particle::blackSmoke(id));
-			}
-			//else if(death == HIT_WATER)
-			{
-
-			}
-		}
-		else
-		{
-
-			rotation = Quat4f(0,0,0,1);
-			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
-			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
-			position += rotation * Vec3f(0,0,1) * (ms/1000);
-			fwd = rotation * Vec3f(0,0,1);
-
-			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
-
-			int sgn=turn/abs(turn);
-			turn-=0.1*(ms/1000)*sgn;
-			if(turn/abs(turn)!=sgn)
-				turn=0;
-
-			climb -= 0.3 * (ms/1000);
-			if(climb < -PI/2)
-				climb = -PI/2;
-		}
-	}
-	else
-	{	
 		/////update rockets/////////////////////
 		if(rockets.left<rockets.max)
 			rockets.rechargeLeft-=ms;
@@ -128,27 +50,6 @@ void nPlane::update(double time, double ms)
 		}
 		else
 		{
-			Vec3f lastPos=position;
-			Quat4f lastRotation=rotation;
-			Vec3f lastFwd = rotation * Vec3f(0,0,1), fwd;
-
-			altitude=world.altitude(position);
-			if(altitude<3.0)
-			{
-				death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-				//if(death == HIT_GROUND)
-				{
-					hitGround=true;
-					position.y -= altitude-3;
-					particleManager.addEmitter(new particle::blackSmoke(id));
-				}
-				//else if(death == HIT_WATER)
-				{
-
-				}
-				die();
-			}
-			
 			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,25.0,69.0));
 			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
 			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
@@ -160,28 +61,12 @@ void nPlane::update(double time, double ms)
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
-			fwd = rotation * Vec3f(0,0,1);
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)
 			{
 				position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
 			}
 			////////////////////end move////////////////////////////////////
-			//bool setAutoPilot=false;
-			//if(position.x > settings.MAX_X * size && !controled){position.x = settings.MAX_X * size-6;setAutoPilot=true;}
-			//if(position.x < settings.MIN_X * size && !controled){position.x = settings.MIN_X * size+6;setAutoPilot=true;}
-			//if(position.z > settings.MAX_Y * size && !controled){position.z = settings.MAX_Y * size-6;setAutoPilot=true;}
-			//if(position.z < settings.MIN_Y * size && !controled){position.z = settings.MIN_Y * size+6;setAutoPilot=true;}
-			//if(setAutoPilot)
-			//{
-			//	returnToBattle();
-			//}
-
-			//if(pos.y>300 && velocity.y>0)
-			//	velocity.y=clamp(velocity.y-ms/2500,0,velocity.y);
-
-			//if(pos.y>250)	pos.y=250;
-			//roll=turn*PI/180;
 			level(ms);
 
 			if(controller.shoot1 <= 0.75)
@@ -194,8 +79,8 @@ void nPlane::update(double time, double ms)
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
 					Vec3f o=rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
-					Vec3f l=position*(1.0-extraShootTime/ms) + lastPos*extraShootTime/ms;
-					Vec3f t=((fwd.normalize()*(1.0-extraShootTime/ms) + lastFwd.normalize()*extraShootTime/ms)*1000-o).normalize() + random<Vec3f>()*0.0025;
+					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
+					Vec3f t=((rotation*Vec3f(0,0,1.0-extraShootTime/ms) + lastRotation*Vec3f(0,0,extraShootTime/ms))*1000-o).normalize() + random<Vec3f>()*0.0025;
 					
 					shotsFired++;
 					world.bullets.push_back(bullet(o + l,t,id,time-extraShootTime-machineGun.coolDown));
@@ -204,31 +89,114 @@ void nPlane::update(double time, double ms)
 			if(controller.shoot2>0.75)	ShootMissile();
 			
 			planePath.currentPoint(position,rotation);
-			//static double lastWaypoint = 0.0;
-			//lastWaypoint += ms;
+			
+			Vec3f vel2D = rotation * Vec3f(0,0,1);
+			vel2D.y=0;
+			vel2D = vel2D.normalize();
 
-			//if(lastWaypoint >= 100.0)
-			//{
-			//	lastWaypoint -= 1000.0;
-			//	objectPath::point p;
-			//	p.position = position;
-			//	p.rotation = rotation;
-			//	p.time = world.time();
-			//	planePath << p;
-			//}
+			camera = position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+			center = position + vel2D * 45.0;
 		}
-		//if(angle > 360)						angle -= 360;
-		//if(angle < 0)						angle += 360;
-		//Vec3f v(sin(float(angle * PI / 180)),climb,cos(float(angle * PI / 180)));
-		//Vec3f o(sin(float((angle+90) * PI / 180)),cos((turn+270)/180*3.1415926535),cos(float((angle+90) * PI / 180)));
-		//v=v.normalize();
-		//o=o.normalize();                         MUST BE REPLACED!
-		//normal = v.cross(o);
-		//forward=Vec3f(sin(angle*DegToRad)*acceleration,cos(turn*DegToRad)*climb,cos(angle *DegToRad)*acceleration).normalize();
-		
-		//normal=Vec3f(0,1,0);
 		findTargetVector();
+
+		altitude=world.altitude(position);
+		if(altitude < 0.0)
+		{
+			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			if(death == DEATH_HIT_GROUND)
+			{
+				position.y -= altitude;
+				particleManager.addEmitter(new particle::blackSmoke(id));
+			}
+			else if(death == DEATH_HIT_WATER)
+			{
+				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+				particleManager.addEmitter(new particle::splash(splashPos));
+
+
+				Vec3f vel2D = rotation * Vec3f(0,0,1);
+				vel2D.y=0;
+				vel2D = vel2D.normalize();
+
+				camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+				center = splashPos + vel2D * 45.0;
+			}
+			die();
+		}
+
 	}
+
+	if(dead)
+	{
+		altitude = world.altitude(position);
+		speed += 9.8 * (ms/1000) * -sin(climb); //gravity
+
+		if(death == DEATH_HIT_GROUND)
+		{
+
+		}
+		else if(death == DEATH_HIT_WATER)
+		{
+			//rotation = Quat4f(0,0,0,1);
+			//rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			//rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+			//position += rotation * Vec3f(0,0,1) * (ms/1000);
+
+			position.y -= 10.0 * (ms/1000);
+		}
+		else
+		{
+			rotation = Quat4f(0,0,0,1);
+			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+
+			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
+
+			int sgn=turn/abs(turn);
+			turn-=0.1*(ms/1000)*sgn;
+			if(turn/abs(turn)!=sgn)
+				turn=0;
+
+			climb -= 0.3 * (ms/1000);
+			if(climb < -PI/2)
+				climb = -PI/2;
+			
+			Vec3f vel2D = rotation * Vec3f(0,0,1);
+			vel2D.y=0;
+			vel2D = vel2D.normalize();
+
+			camera = position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+			center = position + vel2D * 45.0;
+		}
+
+		if(death == DEATH_TRAILING_SMOKE && altitude < 0.0)
+		{
+			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			if(death == DEATH_HIT_GROUND)
+			{
+				position.y -= altitude;
+				particleManager.addEmitter(new particle::blackSmoke(id));
+			}
+			else if(death == DEATH_HIT_WATER)
+			{
+				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+				particleManager.addEmitter(new particle::splash(splashPos));
+
+
+				Vec3f vel2D = rotation * Vec3f(0,0,1);
+				vel2D.y=0;
+				vel2D = vel2D.normalize();
+
+				camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+				center = splashPos + vel2D * 45.0;
+			}
+		}
+	}
+
+	lastPosition = position;
+	lastRotation = rotation;
 }
 void nPlane::autoPilotUpdate(float value)
 {
@@ -392,6 +360,12 @@ void nPlane::die()
 	if(!respawning)
 		respawnTime=world.time()+5000;
 	respawning=true;
+
+	if(death == DEATH_NONE)
+	{
+		death = DEATH_TRAILING_SMOKE;
+		particleManager.addEmitter(new particle::smokeTrail(id));
+	}
 }
 void nPlane::findTargetVector()
 {
@@ -430,8 +404,8 @@ void nPlane::ShootMissile()
 			pId = i->second->id;
 		}
 	}
-	if(pId == 0) 
-		return;
+	//if(pId == 0) 
+	//	return;
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
@@ -493,7 +467,6 @@ void nPlane::spawn()
 	dead = false;
 	controled=false;
 	maneuver=0;
-	hitGround=false;
 	death = DEATH_NONE;
 	health=maxHealth;
 	//updateAll(controlState());

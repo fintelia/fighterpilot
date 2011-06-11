@@ -287,11 +287,11 @@ void modeDogFight::drawScene(int acplayer)
 	Vec3f u;
 	if(!players[acplayer].firstPerson() || p->controled)
 	{
- 		Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;vel2D = vel2D.normalize();
-		e = p->position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-		if(p->controled) e = p->camera;
-		c = p->position + vel2D * 45.0;
-		if(p->controled) c=p->center;
+ 		//Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;vel2D = vel2D.normalize();
+		//e = p->position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+		e = p->camera;
+		//c = p->position + vel2D * 45.0;
+		c=p->center;
 		u = Vec3f(0,1,0);
 
 		//glMatrixMode(GL_PROJECTION);

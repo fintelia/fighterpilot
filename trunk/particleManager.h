@@ -52,10 +52,12 @@ public:
 
 	const enum Type{NONE=0,EXPLOSION,SMOKE,SPLASH}type;
 
-	const int parentObject;
-	const Vec3f parentOffset;
+
 
 protected:
+	int parentObject;
+	Vec3f parentOffset;
+
 	Vec3f position;
 	Vec3f lastPosition;
 
@@ -122,15 +124,33 @@ public:
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
 };
-//class splash: public emitter
-//{
-//public:
-//	splash(Vec3f pos);
-//	splash(int parent, Vec3f offset = Vec3f(0,0,0));
-//	void init();
-//	void update();
-//	void render(Vec3f up, Vec3f right);
-//}
+class splash: public emitter
+{
+private:
+	unsigned int totalCreated;
+public:
+	splash(Vec3f pos);
+	splash(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
+class contrail: public emitter
+{
+public:
+	contrail(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
+class smokeTrail: public emitter
+{
+public:
+	smokeTrail(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
 class manager
 {
 private:

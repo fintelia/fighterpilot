@@ -292,13 +292,13 @@ void openFile::refreshView()
 	filesystem::directory_iterator end_itr; // default construction yields past-the-end
 	for ( filesystem::directory_iterator itr( directory );	itr != end_itr;	 ++itr )
 	{
-		if ( is_directory(itr->status()) && itr->filename().compare(".svn") != 0)
+		if ( is_directory(itr->status()) && itr->path().generic_string().compare(".svn") != 0)
 		{
-			folders.push_back(itr->filename());
+			folders.push_back(itr->path().generic_string());
 		}
 		else if ( filesystem::extension(itr->path()).compare(extFilter) == 0 ) // see below
 		{
-			files.push_back(itr->filename());
+			files.push_back(itr->path().generic_string());
 		}
 	}
 	int row=0, column=0;

@@ -8,7 +8,7 @@
 using namespace std;
 using namespace boost;
 
-
+#include "debugBreak.h"
 #include "enums.h"
 #include "script.h"
 
