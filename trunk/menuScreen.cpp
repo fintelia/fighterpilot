@@ -294,11 +294,11 @@ void openFile::refreshView()
 	{
 		if ( is_directory(itr->status()) && itr->path().generic_string().compare(".svn") != 0)
 		{
-			folders.push_back(itr->path().generic_string());
+			folders.push_back(itr->path().leaf().generic_string());
 		}
 		else if ( filesystem::extension(itr->path()).compare(extFilter) == 0 ) // see below
 		{
-			files.push_back(itr->path().generic_string());
+			files.push_back(itr->path().leaf().generic_string());
 		}
 	}
 	int row=0, column=0;
@@ -378,7 +378,7 @@ int openFile::update()
 void openFile::render()
 {
 	graphics->drawOverlay(sw/2-420,sh/2-261,841,523,"file viewer");
-	graphics->drawOverlay(sw/2-180,sh/2+189,370,424,"entry bar");
+	graphics->drawOverlay(sw/2-180,sh/2+189,370,46,"entry bar");
 
 	glColor3f(0,0,0);
 	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
@@ -449,6 +449,12 @@ void saveFile::operator() (popup* p)
 }
 void saveFile::fileSelected()
 {
+	if(file == "")
+	{
+		done = true;
+		return;
+	}
+
 	if(file.find(".") == file.npos)
 		file += extFilter;
 	if(exists(directory/file))//if file exists
@@ -658,7 +664,13 @@ void levelEditor::operator() (popup* p)
 		string f=((openFile*)p)->getFile();
 		delete ((modeMapBuilder*)modeManager.getMode())->level;
 		LevelFile l(f);
-		((modeMapBuilder*)modeManager.getMode())->level = new editLevel(l);
+		mode->level = new editLevel(l);
+		mode->maxHeight=mode->level->ground()->getMaxHeight();
+		mode->minHeight=mode->level->ground()->getMinHeight();
+		sliders["sea level"]->setMaxValue(mode->level->ground()->getMaxHeight());
+		sliders["sea level"]->setMinValue(mode->level->ground()->getMinHeight());
+		sliders["sea level"]->setValue(0);
+		mode->resetView();
 	}
 	else if(awaitingLevelSave)
 	{
@@ -875,7 +887,7 @@ void chooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu(NULL);
 
-		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
+		modeManager.setMode(new modeSplitScreen("media/level2.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
@@ -1062,12 +1074,12 @@ void button::render()
 }
 void button::mouseDownL(int X, int Y)
 {
-	if(x < X && y < Y && x+width > X && y+height > Y)
+	if(view && active && x < X && y < Y && x+width > X && y+height > Y)
 		clicking = true;
 }
 void button::mouseUpL(int X, int Y)
 {
-	if(clicking && x < X && y < Y && x+width > X && y+height > Y)
+	if(view && active && clicking && x < X && y < Y && x+width > X && y+height > Y)
 		changed = true;
 	clicking = false;
 }
@@ -1083,12 +1095,12 @@ void checkBox::render()
 }
 void checkBox::mouseDownL(int X, int Y)
 {
-	if((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y))
+	if(view && active && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)))
 		clicking = true;
 }
 void checkBox::mouseUpL(int X, int Y)
 {
-	if(clicking && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)) )
+	if(view && active && clicking && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)) )
 	{
 		changed = true;
 		checked = !checked;
@@ -1142,25 +1154,31 @@ void toggle::render()
 }
 void toggle::mouseDownL(int X, int Y)
 {
-	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+	if(view && active)
 	{
-		(*i)->mouseDownL(X,Y);
+		for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++)
+		{
+			(*i)->mouseDownL(X,Y);
+		}
 	}
 }
 void toggle::mouseUpL(int X, int Y)
 {
-	int n=0;
-	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+	if(view && active)
 	{
-		(*i)->resetChanged();
-		(*i)->mouseUpL(X,Y);
-		if((*i)->getChanged() && value != n)
+		int n=0;
+		for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
 		{
-			value=n;
-			changed=true;
+			(*i)->resetChanged();
+			(*i)->mouseUpL(X,Y);
+			if((*i)->getChanged() && value != n)
+			{
+				value=n;
+				changed=true;
+			}
 		}
+		updateColors();
 	}
-	updateColors();
 }
 void toggle::updateColors()
 {
@@ -1184,12 +1202,12 @@ void slider::render()
 }
 void slider::mouseDownL(int X, int Y)
 {
-	if(abs(value*width/(maxValue - minValue) + x  - X) < 22 && Y > y && Y < y + height)	
+	if(view && active && abs(value*width/(maxValue - minValue) + x  - X) < 22 && Y > y && Y < y + height)	
 	{
 		clicking = true;
 		mouseOffset = value - ((maxValue - minValue) * (X - x) / width + minValue);
 	}
-	else if(X > x && X < x + width && Y > y && Y < y + height)
+	else if(view && active && X > x && X < x + width && Y > y && Y < y + height)
 	{
 		clicking = true;
 		mouseOffset = 0.0f;
@@ -1197,7 +1215,7 @@ void slider::mouseDownL(int X, int Y)
 }
 void slider::mouseUpL(int X, int Y)
 {
-	if(clicking)
+	if(view && active && clicking)
 	{
 		value = clamp((maxValue - minValue) * (X - x) / width + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;

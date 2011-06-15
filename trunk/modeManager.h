@@ -39,6 +39,8 @@ extern ModeManager& modeManager;
 
 class modeMapBuilder: public modeScreen
 {
+	menu::levelEditor* menus;
+
 	Quat4f rot;
 	Vec3f center;
 	editLevel* level;

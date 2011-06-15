@@ -5,7 +5,6 @@ const float width = 0.05;
 
 void main()
 {
-	//vec4 color = vec4(0.14,0.37,0.78,0.4);
 	vec4 color = vec4(0.11,0.35,0.52,0.4);
 
 	vec2 loc=texCoord;
@@ -31,10 +30,7 @@ void main()
 	loc.y = (loc.y-(0.5-width/2.0))/width;
 
 
-	//color.rgb *= loc.y*0.3+0.7;
-	//color.rgb += max(loc.y-0.4,0.0)*0.3;
 	color.rgb = color.rgb * (1.0-loc.y) + vec3(0.19,0.58,0.78) * loc.y;
-
 
 	gl_FragColor = color;
 }

@@ -30,6 +30,8 @@ public:
 		Vec3f center;
 		float radius;
 	public:
+		Vec3f getCenter(){return center;}
+		float getRadius(){return radius;}
 		triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces);
 		triangleList(): triangles(0), numTriangles(0), center(0,0,0), radius(-999999999.9f) {}
 		~triangleList(){if(triangles) delete[] triangles;}

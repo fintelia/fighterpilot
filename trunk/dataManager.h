@@ -31,6 +31,7 @@ public:
 
 	void shutdown();
 
+	CollisionChecker::triangleList* getModel(objectType type);
 private:
 	int loadTGA(string filename);
 	int loadMMP(string filename);

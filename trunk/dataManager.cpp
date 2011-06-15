@@ -1011,6 +1011,11 @@ int DataManager::getId(objectType t)
 	if(t==B2)	return getId("B2");
 	return 0;
 }
+CollisionChecker::triangleList* DataManager::getModel(objectType type)
+{
+	auto i = models.find(getId(type));
+	return i != models.end() ? i->second : NULL;
+}
 char* DataManager::textFileRead(char *fn) {
 	FILE *fp;
 	char *content = NULL;

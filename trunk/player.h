@@ -74,12 +74,12 @@ public:
 				else
 			#endif
 				{
-					c[CON_CLIMB]=nControl(VK_NUMPAD5);
-					c[CON_DIVE]=nControl(VK_NUMPAD2);
+					c[CON_CLIMB]=nControl(VK_DOWN);
+					c[CON_DIVE]=nControl(VK_UP);
 					c[CON_LEFT]=nControl(VK_LEFT);
 					c[CON_RIGHT]=nControl(VK_RIGHT);
-					c[CON_ACCEL]=nControl(VK_UP);
-					c[CON_BRAKE]=nControl(VK_DOWN);
+					c[CON_ACCEL]=nControl(VK_NUMPAD5);
+					c[CON_BRAKE]=nControl(VK_NUMPAD2);
 					c[CON_SHOOT]=nControl(VK_NUMPAD0);
 					c[CON_MISSILE]=nControl(VK_NUMPAD9);
 				}

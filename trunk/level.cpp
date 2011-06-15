@@ -474,7 +474,8 @@ void Level::exportBMP(string filename)
 void Level::renderPreview(bool drawWater, float seaLevelOffset)
 {
 	glPushMatrix();
-	
+	mGround->renderPreview(seaLevelOffset);
+
 	if(drawWater)
 	{
 		int s=dataManager.getId("ocean");
@@ -508,7 +509,6 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 		dataManager.bindShader(0);
 	}
 
-	mGround->renderPreview(seaLevelOffset);
 
 
 	glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
@@ -566,7 +566,7 @@ void Level::renderObjectsPreview()
 		{
 			glPushMatrix();
 			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
-			//glScalef(10,10,10);
+			glScalef(10,10,10);
 			dataManager.draw((planeType)i->type);
 			glPopMatrix();
 		}

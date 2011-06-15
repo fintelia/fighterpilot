@@ -54,6 +54,7 @@ void update()
 	input->update();
 	menuManager.update();
 	modeManager.update();
+
 }
 void ShowHideTaskBar(bool bHide)
 {
@@ -199,8 +200,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 //////
 	float nextUpdate=0;
 	float lastUpdate=0;
+
+	double lastLoop = GetTime();
+	double loopTime;
+	double m = GetTime();
 	while(!done)									// Loop That Runs While done=FALSE
 	{
+		m = GetTime()-m;
+		double t = GetTime();
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
 		{
 			if (msg.message==WM_QUIT)				// Have We Received A Quit Message?
@@ -213,15 +220,19 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				DispatchMessage(&msg);				// Dispatch The Message
 			}
 		}
-		else
+		t = GetTime()-t;
+		t = GetTime();
+	//	else
 		{
+
 			float waitTime=nextUpdate-GetTime();
 			if(waitTime>0)	Sleep(waitTime);
 			update();
 
-			double time = GetTime();		
+			double time = GetTime();
 			nextUpdate=1000.0/MAX_FPS + time;
 			lastUpdate = time;
+
 
 #ifdef _DEBUG
 			if(input->getKey(VK_ESCAPE))
@@ -235,7 +246,11 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				graphics->render();
 				graphics->swapBuffers();
 			}
+
+			t = GetTime()-t;
+			t = GetTime();
 		}
+		m = GetTime();
 	}
 	world.destroy();
 	textManager->shutdown();

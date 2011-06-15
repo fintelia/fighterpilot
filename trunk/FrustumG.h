@@ -37,7 +37,7 @@ public:
 	void setCamInternals(float angle, float ratio, float nearD, float farD);
 	void setCamDef(Vec3f &p, Vec3f &l, Vec3f &u);
 	int pointInFrustum(Vec3f &p);
-	int sphereInFrustum(Vec3f &p, float raio);
+	int sphereInFrustum(Vec3f p, float radius);
 	int boxInFrustum(AABox &b);
 
 	Vec2f project(Vec3f p);
