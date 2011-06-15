@@ -45,10 +45,9 @@ public:
 	};
 //////////////flight specs/////////
 	float speed;
-	double turn;
-	double climb;
+	Angle roll;
+	Angle climb;
 	Angle direction;
-
 	float altitude;
 /////////////weapons///////////////
 	Vec3f targeter;
@@ -72,6 +71,11 @@ public:
 ///////////camera view/////////////
 	Vec3f camera;
 	Vec3f center;
+	struct cameraAng{
+		float time;
+		float angle;
+	};
+	vector<cameraAng> cameraAngles;
 };
 
 //class plane: public planeBase

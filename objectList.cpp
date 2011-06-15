@@ -74,11 +74,13 @@ void objectList::clear()
 void objectList::update(double time, double ms)
 {
 	vector<int> toDelete;
+	int m=0;
 	for(auto i = mObjects.begin(); i != mObjects.end();i++)
 	{
 		i->second->update(time,ms);
 		if(i->second->awaitingDelete)
 			toDelete.push_back((*i).first);
+		m++;
 	}
 	for(vector<int>::iterator i=toDelete.begin();i!=toDelete.end();i++)
 	{

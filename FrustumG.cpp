@@ -81,16 +81,16 @@ int FrustumG::pointInFrustum(Vec3f &p) {
 }
 
 
-int FrustumG::sphereInFrustum(Vec3f &p, float raio) {
+int FrustumG::sphereInFrustum(Vec3f p, float radius) {
 
 	int result = INSIDE;
 	float distance;
 
 	for(int i=0; i < 6; i++) {
 		distance = pl[i].distance(p);
-		if (distance < -raio)
+		if (distance < -radius)
 			return OUTSIDE;
-		else if (distance < raio)
+		else if (distance < radius)
 			result =  INTERSECT;
 	}
 	return(result);

@@ -275,10 +275,10 @@ int modeMapBuilder::update()
 	GetCursorPos(&p);
 	if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 	{
-		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000;
-		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000;
-		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000;
-		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000;
+		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
 	}
 	menuManager.update();
 	return 7;
@@ -286,6 +286,10 @@ int modeMapBuilder::update()
 void modeMapBuilder::draw3D() 
 {	
 	gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+	static FrustumG frustum;
+	frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+	
+
 	Vec3f e,c,u;
 	c = center;
 	if(input->getMouseState(MIDDLE_BUTTON).down)
@@ -316,6 +320,8 @@ void modeMapBuilder::draw3D()
 		u = rot * Vec3f(0,0,-1);
 	}
 	gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
+	frustum.setCamDef(e,c,u);
+
 	GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 		
@@ -323,16 +329,16 @@ void modeMapBuilder::draw3D()
 	glEnable(GL_DEPTH_TEST);
 
 
-	if(((menu::levelEditor*)menuManager.getMenu())->getShader() != -1)
+	if(menus->getShader() != -1)
 		((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menu::levelEditor*)menuManager.getMenu())->getShader()]);
-	bool w = ((menu::levelEditor*)menuManager.getMenu())->getShader() != 1;
-	float sl = ((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->getValue();
-	level->renderPreview(w,sl);
+	bool w = menus->getShader() != 1;
+	float sl = menus->sliders["sea level"]->getValue();
+ 	level->renderPreview(w,sl);
 
-	if(((menu::levelEditor*)menuManager.getMenu())->getTab() == menu::levelEditor::OBJECTS)
+	if(menus->getTab() == menu::levelEditor::OBJECTS)
 	{
 		level->renderObjectsPreview();
-		if(((menu::levelEditor*)menuManager.getMenu())->placingObject() != 0)
+		if(menus->placingObject() != 0)
 		{
 			////////////////////////////////draw object//////////////////////////////////
 			POINT cursorPos;
@@ -384,17 +390,55 @@ void modeMapBuilder::draw3D()
 			glColor3f(1,1,1);
 			glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////
-		}	
-	}
-	glDisable(GL_DEPTH_TEST);
+		}		
+		glDisable(GL_DEPTH_TEST);
 	
+		glBindTexture(GL_TEXTURE_2D,0);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, 1, (float)sh/sw , 0, -1, 1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		glColor3f(0,1,0);
+
+		for(auto i = level->objects().begin(); i!= level->objects().end(); i++)
+		{
+			Vec2f s = frustum.project(i->startloc);
+			float r;
+
+			auto p = dataManager.getModel(i->type);
+			if(p==NULL)
+			{
+				r = 0.006;
+			}
+			else
+			{
+				Vec2f t = frustum.project(i->startloc + p->getCenter() + u*p->getRadius()*10);
+				r = max(0.004,s.distance(t));
+			}
+			if(frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE && s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
+			{
+				graphics->drawOverlay(s.x - r, s.y*sh/sw - r, r*2, r*2,"target ring");
+			}	
+		}
+	
+		glMatrixMode( GL_PROJECTION );			// Select Projection
+		glPopMatrix();							// Pop The Matrix
+		glMatrixMode( GL_MODELVIEW );			// Select Modelview
+		glEnable(GL_DEPTH_TEST);
+	}
 }
-void modeMapBuilder::draw2D(){}
+void modeMapBuilder::draw2D()
+{
+
+}
 bool modeMapBuilder::init()
 {
-	menuManager.setMenu(new menu::levelEditor);
-	//if(Cmenu != NULL) delete Cmenu;
-	//Cmenu=new closedMenu;
+	menus = new menu::levelEditor;
+	menus->mode = this;
+	menuManager.setMenu(menus);
 
 	if(level != NULL) delete level;
 	level = new editLevel;

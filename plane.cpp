@@ -50,16 +50,58 @@ void nPlane::update(double time, double ms)
 		}
 		else
 		{
-			speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,25.0,69.0));
-			climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
-			turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
-			direction -= turn*ms/3000.0;//needs to be adjusted to be continious
+			const float maxSpeed = 537.1;
+			const float minSpeed = 100.0;
+
+		
+
+			float acceleration = 100.0f*controller.accelerate*(ms/1000) - 100.0f*controller.brake*(ms/1000);
+			if(speed > maxSpeed && acceleration < 0.0)
+				speed += acceleration;
+			else if(speed < maxSpeed)
+				speed = clamp(speed + acceleration,minSpeed,maxSpeed);
+			
+			if(roll.inRange(PI/2,PI))	roll = PI/2;
+			if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
+
+			float deltaRoll = 3.0*controller.right*(ms/1000) - 5.0*controller.left*(ms/1000);
+			float rollAng = roll.getAngle();
+			if(rollAng > PI) rollAng -= PI*2;
+
+
+			if(deltaRoll > 0 && rollAng + deltaRoll > PI/3)
+			{
+				deltaRoll -= PI/3 - rollAng;
+				roll = PI/3;
+				direction -= deltaRoll * 0.2;
+			}
+			else if(deltaRoll < 0 && rollAng + deltaRoll < -PI/3)
+			{
+				deltaRoll += -PI/3 - rollAng;
+				roll = -PI/3;
+				direction -= deltaRoll * 0.2;
+			}
+			else
+				roll += deltaRoll;
+
+			direction -= rollAng * 0.2 * (ms/1000);
+
+			climb = climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000));
+
+			//direction -= (0.3*controller.climb*(ms/1000) - 0.3*controller.dive*(ms/1000))*sin(roll);
+			//turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
+			//climb = clamp(climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000))*cos(turn),-PI/3,PI/4);
+			//direction -= turn*ms/3000.0;//needs to be adjusted to be continious
 			speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
+
+
 			rotation = Quat4f(0,0,0,1);
-			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
+
+
 
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)
@@ -87,16 +129,69 @@ void nPlane::update(double time, double ms)
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
-			
-			planePath.currentPoint(position,rotation);
-			
-			Vec3f vel2D = rotation * Vec3f(0,0,1);
-			vel2D.y=0;
-			vel2D = vel2D.normalize();
 
-			camera = position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-			center = position + vel2D * 45.0;
+
+
+			planePath.currentPoint(position,rotation);
+
+
+			
+
+
+
+			if(!cameraAngles.empty() && cameraAngles.front().time < world.time() - 1000)
+			{
+				auto i = cameraAngles.begin();
+				while(i+1 != cameraAngles.end() && (i+1)->time  < world.time() - 1000)
+					i++;
+
+				if(i != cameraAngles.begin())
+					cameraAngles.erase(cameraAngles.begin(),i);
+			}
+
+			cameraAng a;
+			Vec3f vel2D = rotation * Vec3f(0,0,1);
+			a.angle = atan2(vel2D.z,vel2D.x);
+			
+ 			a.time = world.time();
+			if(!world.time.isPaused())
+			{
+				if(!cameraAngles.empty())
+				{
+					while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle+PI*2)))	a.angle += PI*2;
+					while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle-PI*2)))	a.angle -= PI*2;
+				}
+				cameraAngles.push_back(a);
+			}
+			float angle=0.0;
+			if(cameraAngles.size() > 1)
+			{
+				for(auto i = cameraAngles.begin(); i+1 != cameraAngles.end(); i++)
+				{
+					//if(i->time > world.time() - 500)
+						angle += (i->angle + (i+1)->angle) * ((i+1)->time - i->time) / 2;
+					//else
+					//{
+					//	float s = ((i+1)->time - (world.time() - 500)) / ((i+1)->time - i->time);
+					//	angle += ((i+1)->angle * s + i->angle * (1.0-s) + i->angle) * ((i+1)->time - i->time) / 2;
+					//}
+				}
+				angle = angle / (world.time() - cameraAngles.front().time);
+			}
+			else
+				angle = a.angle;
+
+			Profiler.setOutput("angle",angle);
+		//	if(climb > PI/2 && climb < PI*3/2)
+		//		vel2D = -vel2D;
+
+			camera = position - Vec3f(cos(angle), -0.60, sin(angle))*45.0;
+			center = position + Vec3f(cos(angle), 0.0, sin(angle)) * 45.0;
+
+
+
 		}
+
 		findTargetVector();
 
 		altitude=world.altitude(position);
@@ -148,20 +243,20 @@ void nPlane::update(double time, double ms)
 		else
 		{
 			rotation = Quat4f(0,0,0,1);
-			rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
+			rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
 			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
 
-			int sgn=turn/abs(turn);
-			turn-=0.1*(ms/1000)*sgn;
-			if(turn/abs(turn)!=sgn)
-				turn=0;
+			//int sgn=roll/abs(roll);
+			//turn-=0.1*(ms/1000)*sgn;
+			//if(turn/abs(turn)!=sgn)
+			//	turn=0;
 
-			climb -= 0.3 * (ms/1000);
-			if(climb < -PI/2)
-				climb = -PI/2;
+			//climb -= 0.3 * (ms/1000);
+			//if(climb < -PI/2)
+			//	climb = -PI/2;
 			
 			Vec3f vel2D = rotation * Vec3f(0,0,1);
 			vel2D.y=0;
@@ -213,7 +308,7 @@ void nPlane::autoPilotUpdate(float value)
 		position =		wayPoints.back().position;
 		direction =		atan2A(fwd.x,fwd.z);
 		climb =			asin(fwd.y/fwd.magnitude());
-		turn =			0;//to hard and rather useless to find
+		roll =			0;//to hard and rather useless to find
 
 		wayPoints.clear();
 		return;
@@ -252,7 +347,7 @@ void nPlane::exitAutoPilot()
 	float t;
 	if(wayPoints.size()==0)//no waypoints
 	{
-		turn=0;
+		roll=0;
 		controled=false;
 		return;
 	}
@@ -265,7 +360,7 @@ void nPlane::exitAutoPilot()
 		position =		wayPoints.back().position;
 		direction =		atan2A(fwd.x,fwd.z);
 		climb =			asin(fwd.y/fwd.magnitude());
-		turn =			0;//to hard and rather useless to find
+		roll =			0;//to hard and rather useless to find
 
 		wayPoints.clear();
 		return;
@@ -291,7 +386,7 @@ void nPlane::exitAutoPilot()
 	Vec3f fwd = rotation * Vec3f(0,0,1);
 	direction =	atan2A(fwd.x,fwd.z);
 	climb =		asin(fwd.y/fwd.magnitude());
-	turn =		0;
+	roll =		0;
 
 	controled=false;
 	wayPoints.clear();
@@ -333,15 +428,15 @@ void nPlane::returnToBattle()
 
 void nPlane::level(float ms)
 {
-	int sgn=turn/abs(turn);
-	turn-=0.1*(ms/1000)*sgn;
-	if(turn/abs(turn)!=sgn)
-		turn=0;
+	//int sgn=turn/abs(turn);
+	//turn-=0.1*(ms/1000)*sgn;			//this line causes a huge (60 fps -> 1 fps) performance hit?
+	//if(turn/abs(turn)!=sgn)
+	//	turn=0;
 
-	sgn=climb/abs(climb);
-	climb-=0.1*(ms/1000)*sgn;
-	if(climb/abs(climb)!=sgn)
-		climb=0;
+	//sgn=climb/abs(climb);
+	//climb-=0.1*(ms/1000)*sgn;			//this line causes a huge (60 fps -> 1 fps) performance hit?
+	//if(climb/abs(climb)!=sgn)
+	//	climb=0;
 }
 void nPlane::die()
 {
@@ -443,6 +538,12 @@ void nPlane::spawn()
 	position = startPos;
 	rotation = startRot;
 
+	double altitude = world.altitude(position);
+	if(altitude < 35)
+
+		position.y -= altitude - 35;
+
+
 	Vec3f f = (rotation * Vec3f(0,0,1)).normalize();
 	Vec3f u = (rotation * Vec3f(0,1,0)).normalize();
 	if(f.magnitudeSquared() < 0.001)
@@ -461,8 +562,8 @@ void nPlane::spawn()
 		direction = atan2(f.x,f.z);
 		climb = atan2(f.y,sqrt(f.x*f.x+f.z*f.z));
 	}
-	turn = 0;
-	speed=400.0;
+	roll = 0;
+	speed=300.0;
 
 	dead = false;
 	controled=false;

@@ -127,22 +127,21 @@ Angle lerp(Angle a1,Angle a2,double l);
 template <class U,class V>
 Angle clamp(Angle angle, U v1, V v2)
 {
+	if(angle.inRange(v1,v2))
+		return angle;
+
 	Angle low=v1;
 	Angle high=v2;
 
-	if(angle.inRange())
-		return angle;
+	Angle center;
+	if(high.getAngle() > low.getAngle())	center = (high.getAngle() + low.getAngle())/2;
+	else									center = (high.getAngle()-PI*2 + low.getAngle())/2;
 
-	if(low.ang<high.ang)
-	{
-		if(angle.ang<low.ang) return low;
-		if(angle.ang>high.ang) return high;
-		return angle;
-	}
-	else
-	{
-		if(angle.ang<high && angle.ang>low) return angle;
-		if(angle.ang<(high.ang+low.ang)/2) return high;//a bit arbitrary....
-		return low;
-	}
+	Angle opp = center + PI;
+	
+	if(angle.inRange(high,opp))
+		return high;
+
+	return low;
+
 }

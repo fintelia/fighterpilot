@@ -201,7 +201,7 @@ public:
 	void render();
 	
 	void refreshView();
-	bool validFile() {return file.compare("") != 0;}
+	bool validFile() {return file != "";}
 	string getFile() {return (directory/file).string();}
 
 	void keyDown(int vkey);
@@ -320,6 +320,7 @@ public:
 	int placingObject(){return newObjectType;}
 	void operator() (popup* p);
 protected:
+	modeMapBuilder* mode;
 	//Tab currentTab;
 
 	void addShader(string filename);

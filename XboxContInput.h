@@ -76,6 +76,7 @@ public:
 
 	void update()
 	{
+
 		DWORD dwResult;
 		int contN=256;
 		for( DWORD i = 0; i < MAX_CONTROLLERS; i++ )

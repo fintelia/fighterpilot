@@ -518,11 +518,10 @@ void OpenGLgraphics::render()
 	modeManager.render2D();
 	menuManager.render();
 
-
 	#ifdef _DEBUG
 		if(fps<29.0)glColor3f(1,0,0);
 		else glColor3f(0,0,0);
- 		//textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
+ 		textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
 		glColor3f(1,1,1);
 		Profiler.draw();
 	#endif
@@ -545,7 +544,6 @@ void OpenGLgraphics::render()
 ////////////////////////////////////START RESET///////////////////////////////////////
 	reset();
 	glError();
-
 }
 void OpenGLgraphics::viewport(int x,int y,int width,int height)
 {

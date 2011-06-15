@@ -103,7 +103,7 @@ void modeSplitScreen::draw2D()
 		if(players[acplayer].firstPerson() && !p->controled)
 		{
 			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2),"cockpit");
-			targeter(400,150+300*acplayer,50,p->turn);
+			targeter(400,150+300*acplayer,50,p->roll);
 			radar(176, 200+300*acplayer, 64, 64, true);
 			healthBar(340, 40+300*acplayer, -200, 200, p->health/p->maxHealth,true);
 		}
