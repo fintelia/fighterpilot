@@ -643,7 +643,9 @@ void Level::render(Vec3f eye)
 	dataManager.setUniform1f("time",	world.time());
 	dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
 	dataManager.setUniform2f("center",	center.x,center.z);
+	dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 
+	glEnable(GL_BLEND);
 	glBegin(GL_TRIANGLE_FAN);
 		glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
 		glVertex3f(center.x,center.y,center.z);

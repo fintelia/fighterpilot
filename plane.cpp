@@ -170,40 +170,29 @@ void nPlane::update(double time, double ms)
 
 			cameraAng a;
 			Vec3f vel2D = rotation * Vec3f(0,0,1);
-			//if(climb > PI/2 && climb < PI*3/2)
-			//	vel2D = -vel2D;
+
 			a.angle = atan2(vel2D.z,vel2D.x);
 			
  			a.time = world.time();
-			if(!world.time.isPaused())
+			if(!cameraAngles.empty())
 			{
-				if(!cameraAngles.empty())
-				{
-					while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle+PI*2)))	a.angle += PI*2;
-					while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle-PI*2)))	a.angle -= PI*2;
-				}
-				cameraAngles.push_back(a);
+				while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle+PI*2)))	a.angle += PI*2;
+				while(abs(cameraAngles.back().angle - a.angle) > abs(cameraAngles.back().angle - (a.angle-PI*2)))	a.angle -= PI*2;
 			}
+			if(cameraAngles.empty() || cameraAngles.back().time < a.time)
+				cameraAngles.push_back(a);
+
 			float angle=0.0;
 			if(cameraAngles.size() > 1)
 			{
 				for(auto i = cameraAngles.begin(); i+1 != cameraAngles.end(); i++)
 				{
-					//if(i->time > world.time() - 500)
-						angle += (i->angle + (i+1)->angle) * ((i+1)->time - i->time) / 2;
-					//else
-					//{
-					//	float s = ((i+1)->time - (world.time() - 500)) / ((i+1)->time - i->time);
-					//	angle += ((i+1)->angle * s + i->angle * (1.0-s) + i->angle) * ((i+1)->time - i->time) / 2;
-					//}
+					angle += (i->angle + (i+1)->angle) * ((i+1)->time - i->time) / 2;
 				}
 				angle = angle / (world.time() - cameraAngles.front().time);
 			}
 			else
 				angle = a.angle;
-
-		//	if(climb > PI/2 && climb < PI*3/2)
-		//		vel2D = -vel2D;
 
 			camera = position - Vec3f(cos(angle), -0.60, sin(angle))*45.0;
 			center = position + Vec3f(cos(angle), 0.0, sin(angle)) * 45.0;
