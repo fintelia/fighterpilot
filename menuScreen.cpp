@@ -582,16 +582,18 @@ bool levelEditor::init()
 	buttons["faultLine"]	= new button(sw-105,40,100,30,"fault line",lightGreen,white);
 	buttons["fromFile"]		= new button(sw-105,75,100,30,"from file",lightGreen,white);
 	buttons["exportBMP"]	= new button(sw-105,110,100,30,"export",lightGreen,white);
-	sliders["sea level"]	= new slider(sw-105,145,100,30,5000.0,0.0);
+	sliders["sea level"]	= new slider(sw-105,145,100,30,1.0,0.0);
+	sliders["height scale"] = new slider(sw-105,165,100,30,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
 
 	buttons["load"]			= new button(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
 	buttons["save"]			= new button(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
 	buttons["exit"]			= new button(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
-
-	addShader("media/grass.frag");
-	addShader("media/snow.frag");
+	addShader("island");
+	addShader("grass");
+	addShader("snow");
+	addShader("ocean");
 
 	//objects
 	buttons["addPlane"]		= new button(5,5,200,30,"new plane",lightGreen,white);
@@ -667,9 +669,7 @@ void levelEditor::operator() (popup* p)
 		mode->level = new editLevel(l);
 		mode->maxHeight=mode->level->ground()->getMaxHeight();
 		mode->minHeight=mode->level->ground()->getMinHeight();
-		sliders["sea level"]->setMaxValue(mode->level->ground()->getMaxHeight());
-		sliders["sea level"]->setMinValue(mode->level->ground()->getMinHeight());
-		sliders["sea level"]->setValue(0);
+		sliders["sea level"]->setValue(-mode->minHeight/(mode->maxHeight - mode->minHeight));
 		mode->resetView();
 	}
 	else if(awaitingLevelSave)
@@ -677,7 +677,7 @@ void levelEditor::operator() (popup* p)
 		awaitingLevelSave=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
-		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile(sliders["sea level"]->getValue());
+		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile(sliders["sea level"]->getValue() * (mode->maxHeight - mode->minHeight) + mode->minHeight);
 		l.save(f);
 	}
 	else if(awaitingNewObject)
@@ -784,6 +784,7 @@ int levelEditor::update()
 			buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
 			toggles["shaders"]->setVisibility(newTab==TERRAIN);
 			sliders["sea level"]->setVisibility(newTab==TERRAIN);
+			sliders["height scale"]->setVisibility(newTab==TERRAIN);
 		}
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
@@ -830,8 +831,8 @@ void levelEditor::mouseC(bool down, int x, int y)
 }
 void levelEditor::addShader(string filename)
 {
-	int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
-	((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
+	//int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
+	//((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
 
 	toggles["shaders"]->addButton(new button(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
 	//buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
@@ -962,8 +963,10 @@ int loading::update()
 	int assetsLeft = dataManager.registerAssets();
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 	progress = 1.0-(float)assetsLeft/totalAssets;
-	if(assetsLeft==0)	menuManager.setMenu(new menu::chooseMode);
-
+	if(assetsLeft==0)
+	{
+		menuManager.setMenu(new menu::chooseMode);
+	}
 	return 30;
 }
 void loading::render()

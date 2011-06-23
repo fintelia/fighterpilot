@@ -122,12 +122,12 @@ Vec3f Level::heightmapBase::normal(float x, float z) const
 	z *= mResolution.y/mSize.y;
 	return interpolatedNormal(x,z);
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL)
+Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL), shaderType(SHADER_NONE)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memset(heights,0,mResolution.x*mResolution.y*sizeof(float));
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL)
+Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL), shaderType(SHADER_NONE)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memcpy(heights,hts,mResolution.x*mResolution.y*sizeof(float));
@@ -216,27 +216,48 @@ void Level::heightmapGL::render() const
 		setTex();
 		valid=true;
 	}
-	if(shader != NULL)
+
+	if(shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_NONE)
 	{
-		dataManager.bindShader(shader);
+		if(shaderType == SHADER_ISLAND)	dataManager.bind("island new terrain");
+		else							dataManager.bind("grass new terrain");
+
 		dataManager.bind("sand",0);
 		dataManager.bind("grass",1);
 		dataManager.bind("rock",2);
-		dataManager.bind("snow",3);
-		dataManager.bind("LCnoise",4);
-		dataManager.bindTex(groundTex,5);
+		dataManager.bind("LCnoise",3);
+		dataManager.bindTex(groundTex,4);
+		glError();
+		dataManager.setUniform1f("maxHeight",	maxHeight);
+		dataManager.setUniform1f("minHeight",	0);
+		dataManager.setUniform1f("XZscale",		1);
+		dataManager.setUniform1f("time",		world.time());
 
-		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
-		glUniform1f(glGetUniformLocation(shader, "minHeight"),	0);
-		glUniform1f(glGetUniformLocation(shader, "XZscale"),	1);
-		glUniform1f(glGetUniformLocation(shader, "time"),		world.time());
-		glUniform1i(glGetUniformLocation(shader, "sand"),		0);
-		glUniform1i(glGetUniformLocation(shader, "grass"),		1);
-		glUniform1i(glGetUniformLocation(shader, "rock"),		2);
-		glUniform1i(glGetUniformLocation(shader, "snow"),		3);
-		glUniform1i(glGetUniformLocation(shader, "LCnoise"),	4);
-		glUniform1i(glGetUniformLocation(shader, "groundTex"),	5);
+		dataManager.setUniform1i("sand",		0);
+		dataManager.setUniform1i("grass",		1);
+		dataManager.setUniform1i("rock",		2);
+		dataManager.setUniform1i("LCnoise",		3);
+		dataManager.setUniform1i("groundTex",	4);
+	}
+	else if(shaderType == SHADER_SNOW)
+	{
+		dataManager.bind("snow terrain");
 
+		dataManager.bind("snow",0);
+		dataManager.bind("LCnoise",1);
+		dataManager.bindTex(groundTex,2);
+
+		dataManager.setUniform1f("maxHeight",	maxHeight);
+		dataManager.setUniform1f("minHeight",	0);
+		dataManager.setUniform1f("XZscale",		1);
+		dataManager.setUniform1f("time",		world.time());
+		dataManager.setUniform1i("snow",		0);
+		dataManager.setUniform1i("LCnoise",		1);
+		dataManager.setUniform1i("groundTex",	2);
+	}
+
+ 	if(shaderType == SHADER_NONE || shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_SNOW)
+	{
 		glPushMatrix();
 			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
 			glScalef(mSize.x,1,mSize.y);
@@ -295,31 +316,51 @@ void Level::heightmapGL::renderPreview(float seaLevelOffset) const
 		setTex();
 		valid=true;
 	}
-	if(shader != NULL)
+
+	if(shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_NONE)
 	{
-		dataManager.bindShader(shader);
+		if(shaderType == SHADER_ISLAND)	dataManager.bind("island new terrain");
+		else							dataManager.bind("grass new terrain");
+
 		dataManager.bind("sand",0);
 		dataManager.bind("grass",1);
 		dataManager.bind("rock",2);
-		dataManager.bind("snow",3);
-		dataManager.bind("LCnoise",4);
-		dataManager.bindTex(groundTex,5);
+		dataManager.bind("LCnoise",3);
+		dataManager.bindTex(groundTex,4);
 
-		glUniform1f(glGetUniformLocation(shader, "maxHeight"),	maxHeight);
-		glUniform1f(glGetUniformLocation(shader, "minHeight"),	max(minHeight,seaLevelOffset));
-		glUniform1f(glGetUniformLocation(shader, "XZscale"),	1);
-		glUniform1f(glGetUniformLocation(shader, "time"),		world.time());
-		glUniform1i(glGetUniformLocation(shader, "sand"),		0);
-		glUniform1i(glGetUniformLocation(shader, "grass"),		1);
-		glUniform1i(glGetUniformLocation(shader, "rock"),		2);
-		glUniform1i(glGetUniformLocation(shader, "snow"),		3);
-		glUniform1i(glGetUniformLocation(shader, "LCnoise"),	4);
-		glUniform1i(glGetUniformLocation(shader, "groundTex"),	5);
+		dataManager.setUniform1f("maxHeight",	maxHeight);
+		dataManager.setUniform1f("minHeight",	0);
+		dataManager.setUniform1f("XZscale",		1);
+		dataManager.setUniform1f("time",		world.time());
+		dataManager.setUniform1i("sand",		0);
+		dataManager.setUniform1i("grass",		1);
+		dataManager.setUniform1i("rock",		2);
+		dataManager.setUniform1i("LCnoise",		3);
+		dataManager.setUniform1i("groundTex",	4);
+	}
+	else if(shaderType == SHADER_SNOW)
+	{
+		dataManager.bind("snow terrain");
 
+		dataManager.bind("snow",0);
+		dataManager.bind("LCnoise",1);
+		dataManager.bindTex(groundTex,2);
+
+		dataManager.setUniform1f("maxHeight",	maxHeight);
+		dataManager.setUniform1f("minHeight",	0);
+		dataManager.setUniform1f("XZscale",		1);
+		dataManager.setUniform1f("time",		world.time());
+		dataManager.setUniform1i("snow",		0);
+		dataManager.setUniform1i("LCnoise",		1);
+		dataManager.setUniform1i("groundTex",	2);
+	}
+
+	if(shaderType == SHADER_NONE || shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_SNOW)
+	{
 		glPushMatrix();
-		glTranslatef(mPosition.x,mPosition.y,mPosition.z);
-		glScalef(mSize.x,1,mSize.y);
-		glCallList(dispList);
+			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
+			glScalef(mSize.x,1,mSize.y);
+			glCallList(dispList);
 		glPopMatrix();
 
 		dataManager.unbindTextures();
@@ -358,7 +399,7 @@ Level::Level(LevelFile file)
 {
 	mGround = new heightmapGL(file.info->mapResolution,file.heights);
 	mGround->setSize(file.info->mapSize);
-	mGround->init();
+	mGround->shaderType = file.info->shaderType;
 	for(int i=0; i < file.info->numObjects; i++)
 		mObjects.push_back(file.objects[i]);
 }
@@ -387,6 +428,7 @@ LevelFile Level::getLevelFile()
 	f.header.magicNumber = 0x454c49465f4c564c;
 	f.header.version = 1;
 	f.info = new LevelFile::Info;
+	f.info->shaderType = mGround->shaderType;
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
 	f.info->numObjects = mObjects.size();
@@ -402,6 +444,7 @@ LevelFile Level::getLevelFile(float seaLevelOffset)
 	f.header.magicNumber = 0x454c49465f4c564c;
 	f.header.version = 1;
 	f.info = new LevelFile::Info;
+	f.info->shaderType = mGround->shaderType;
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
 	f.info->numObjects = mObjects.size();
@@ -476,23 +519,25 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 	glPushMatrix();
 	mGround->renderPreview(seaLevelOffset);
 
-	if(drawWater)
+	if(seaLevelOffset != 0.0 && (mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN))
 	{
 		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
 
 		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+		if(mGround->shaderType == SHADER_ISLAND)	dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+		else										dataManager.bindTex(0,1);
 		dataManager.bind("rock",2);
 		dataManager.bind("sand",3);
 
-		glUniform1i(glGetUniformLocation(s, "bumpMap"), 0);
-		glUniform1i(glGetUniformLocation(s, "groundTex"), 1);
-		glUniform1i(glGetUniformLocation(s, "rock"), 2);
-		glUniform1i(glGetUniformLocation(s, "sand"), 3);
-		glUniform1f(glGetUniformLocation(s, "time"), world.time());
-		glUniform1f(glGetUniformLocation(s, "seaLevel"), (seaLevelOffset-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
-		glUniform1f(glGetUniformLocation(s, "XZscale"), mGround->mSize.x);
+		dataManager.setUniform1i("bumpMap", 0);
+		dataManager.setUniform1i("groundTex", 1);
+		dataManager.setUniform1i("rock", 2);
+		dataManager.setUniform1i("sand", 3);
+		dataManager.setUniform1f("time", world.time());
+		dataManager.setUniform1f("seaLevel", (seaLevelOffset-mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+		dataManager.setUniform1f("XZscale", mGround->mSize.x);
+
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
 		glBegin(GL_QUADS);
@@ -510,43 +555,46 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 	}
 
 
+	if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
+	{
+		glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
+		float h = mGround->minHeight-20.0;
+		//float h = max(mGround->minHeight-20.0,seaLevelOffset);//needs to be adjusted for sea level
+		dataManager.bind("layers");
+		float t=0.0;
 
-	glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
-	float h = max(mGround->minHeight-20.0,seaLevelOffset);//needs to be adjusted for sea level
-	dataManager.bind("layers");
-	glDisable(GL_LIGHTING);
-	float t=0.0;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i = 0; i < mGround->resolutionX()-1; i++)
+		{
+			glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
+			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
+			t+=0.2;
+		}
+		for(int i = 0; i < mGround->resolutionZ()-1; i++)
+		{
+			glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
+			glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i),h),i);
+			t+=0.2;
+		}
+		t+=0.2;
+		for(int i = mGround->resolutionX()-1; i > 0; i--)
+		{
+			t-=0.2;
+			glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
+			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1),h),mGround->resolutionZ()-1);
+		}
+		for(int i = mGround->resolutionZ()-1; i >= 0; i--)
+		{
+			t-=0.2;
+			glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
+			glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
+		}
+		glEnd();
+		dataManager.bindTex(0);
+	//}
 
-	glBegin(GL_TRIANGLE_STRIP);
-	for(int i = 0; i < mGround->resolutionX()-1; i++)
-	{
-		glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
-		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
-		t+=0.2;
-	}
-	for(int i = 0; i < mGround->resolutionZ()-1; i++)
-	{
-		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
-		glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i),h),i);
-		t+=0.2;
-	}
-	t+=0.2;
-	for(int i = mGround->resolutionX()-1; i > 0; i--)
-	{
-		t-=0.2;
-		glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
-		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1),h),mGround->resolutionZ()-1);
-	}
-	for(int i = mGround->resolutionZ()-1; i >= 0; i--)
-	{
-		t-=0.2;
-		glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
-		glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
-	}
-	glEnd();
-	dataManager.bindTex(0);
-	if(!drawWater)
-	{
+	//if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
+	//{
 		glColor3f(0.73,0.6,0.47);
 		glBegin(GL_QUADS);
 			glVertex3f(0,h,0);
@@ -584,26 +632,17 @@ void Level::render(Vec3f eye)
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 	float cAng,sAng;
 
-	static int shaderId = dataManager.getId("horizon2");
-	static int uniforms[] = {glGetUniformLocation(shaderId, "bumpMap"),
-							 glGetUniformLocation(shaderId, "ground"),
-							 glGetUniformLocation(shaderId, "tex"),
-							 glGetUniformLocation(shaderId, "time"),
-							 glGetUniformLocation(shaderId, "seaLevel"),
-							 glGetUniformLocation(shaderId, "center")};
-
 	dataManager.bind("horizon2");
 	dataManager.bind("hardNoise",0);
 	dataManager.bindTex(((Level::heightmapGL*)mGround)->groundTex,1);
 	dataManager.bind("sand",2);
 
-	glUniform1i(uniforms[0], 0);
-	glUniform1i(uniforms[1], 1);
-	glUniform1i(uniforms[2], 2);
-	glUniform1f(uniforms[3], world.time());
-	glUniform1f(uniforms[4], mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
-	glUniform2f(uniforms[5], center.x,center.z); 
-
+	dataManager.setUniform1i("bumpMap",	0);
+	dataManager.setUniform1i("ground",	1);
+	dataManager.setUniform1i("tex",		2);
+	dataManager.setUniform1f("time",	world.time());
+	dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
+	dataManager.setUniform2f("center",	center.x,center.z);
 
 	glBegin(GL_TRIANGLE_FAN);
 		glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());

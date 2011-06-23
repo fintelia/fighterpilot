@@ -7,7 +7,7 @@ void WorldManager::create(Level* lvl)
 	level = lvl;
 	time.reset();
 
-	((Level::heightmapGL*)level->ground())->setShader(dataManager.getId("grass new terrain"));
+	//((Level::heightmapGL*)level->ground())->setShader(dataManager.getId("grass new terrain"));
 
 	int playerNum=0;
 	for(auto i = level->objects().begin(); i != level->objects().end(); i++)

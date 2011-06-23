@@ -12,7 +12,7 @@
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=NULL; } }
 
 #define MAX_CONTROLLERS 4  // XInput handles up to 4 controllers 
-#define INPUT_DEADZONE  ( 0.24f * FLOAT(0x7FFF) )  // Default to 24% of the +/- 32767 range.   This is a reasonable default value but can be altered if needed.
+//#define INPUT_DEADZONE  ( 0.24f * FLOAT(0x7FFF) )  // Default to 24% of the +/- 32767 range.   This is a reasonable default value but can be altered if needed.
 #define USING_XINPUT
 
 struct CONTROLER_STATE
@@ -58,8 +58,10 @@ protected:
 		return (g1.wButtons & button) == (g2.wButtons & button);
 	}
 public:
+	float deadZone;
+
 	CONTROLER_STATE g_Controllers[MAX_CONTROLLERS];
-	xinput_input(): standard_input()
+	xinput_input(): standard_input(), deadZone(0.25)
 	{
 		int i;
 		for(int l=0;l<4;l++)
@@ -193,6 +195,10 @@ public:
 			if(key == GAMEPAD_Y)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_Y ? 1 : 0;
 		}
 		ReleaseMutex( inputMutex );
-		return i;
+
+		if(i >= 0.0)
+			return max(0.0,i/(1.0-deadZone) - deadZone);
+		else
+			return min(0.0,i/(1.0-deadZone) + deadZone);
 	}
 };

@@ -6,13 +6,17 @@ public:
 	int target;
 	Angle difAng;
 	Angle lastAng;
-	Vec3f velocity;
-	Vec3f accel;
+
+	float speed;
+	float acceleration;
+
+	//Vec3f velocity;
+	//Vec3f accel;
 	int displayList;
 	int owner;
-	objectPath path;
+//	objectPath path;
 
-	missile(missileType Type, teamNum Team,Vec3f sPos,Vec3f Vel, int dispList, int Owner, int Target);
+	missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int dispList, int Owner, int Target);
 	void init();
 	//void findTarget();
 	void update(double time, double ms);

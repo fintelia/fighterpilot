@@ -104,12 +104,12 @@ void modeSplitScreen::draw2D()
 		{
 			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2),"cockpit");
 			targeter(400,150+300*acplayer,50,p->roll);
-			radar(176, 200+300*acplayer, 64, 64, true);
+			radar(176, 200+300*acplayer, 64, 64, true, p);
 			healthBar(340, 40+300*acplayer, -200, 200, p->health/p->maxHealth,true);
 		}
 		else if(!p->dead)
 		{
-			radar(730, 230+300*acplayer, 64, 64, false);	
+			radar(730, 230+300*acplayer, 64, 64, false, p);	
 			healthBar(614, 25+300*acplayer, 150, 25, p->health/p->maxHealth,false);
 		}
 	}

@@ -4,6 +4,42 @@
 modeDogFight::modeDogFight(Level* lvl)
 {
 	world.create(lvl);
+
+	//RADAR FRAME BUFFER OBJECTS
+	glGenTextures(1, &radarTexture);
+	glGenFramebuffersEXT(1, &radarFBO);
+
+	glBindTexture(GL_TEXTURE_2D, radarTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
+	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, radarTexture, 0);
+
+	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	switch(status)
+	{
+		case GL_FRAMEBUFFER_COMPLETE_EXT:							break;
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attachment is NOT complete.",L"",0);
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:		MessageBox(NULL,L"[ERROR] Framebuffer incomplete: No image is attached to FBO.",L"",0);
+		case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attached images have different dimensions.",L"",0);
+		case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:					MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Color attached images have different internal formats.",L"",0);
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Draw buffer.",L"",0);
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Read buffer.",L"",0);
+		case GL_FRAMEBUFFER_UNSUPPORTED_EXT:						MessageBox(NULL,L"[ERROR] Unsupported by FBO implementation.",L"",0);
+			return;
+
+		default:
+			MessageBox(NULL,L"[ERROR] Unknow FBO error.",L"",0);
+			return;
+	}
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+		return;
+
 }
 modeDogFight::~modeDogFight()
 {
@@ -25,10 +61,12 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 	else
 	{
 		dataManager.bind("health");
-		static int uniform_health = glGetUniformLocation(dataManager.getId("health"), "health");
-		static int uniform_angle = glGetUniformLocation(dataManager.getId("health"), "angle");
-		glUniform1f(uniform_health, health);
-		glUniform1f(uniform_angle, 1.24f);
+		//static int uniform_health = glGetUniformLocation(dataManager.getId("health"), "health");
+		//static int uniform_angle = glGetUniformLocation(dataManager.getId("health"), "angle");
+		//glUniform1f(uniform_health, health);
+		//glUniform1f(uniform_angle, 1.24f);
+		dataManager.setUniform1f("health",health);
+		dataManager.setUniform1f("angle",1.24f);
 		graphics->drawOverlay(x,y,width,height,"noTexture");
 		dataManager.unbindShader();
 	}
@@ -43,7 +81,7 @@ void modeDogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 	graphics->drawRotatedOverlay(Vec2f(x1,y2),Vec2f(x2-x1,y2-y1),degrees * PI/180,"tilt back");
 	graphics->drawOverlay(x1,y2,x2-x1,y2-y1,"tilt front");
 }
-void modeDogFight::radar(float x, float y, float width, float height,bool firstPerson)
+void modeDogFight::radar(float x, float y, float width, float height,bool firstPerson, nPlane* p)
 {
 	x *=	0.00125*sw;
 	y *=	0.00167*sh;
@@ -53,29 +91,90 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 	//plane p = *(plane*)planes[players[acplayer].planeNum()];
 	int xc=x+width/2,yc=y+height/2;
 
+	//////////////////FBO/////////////////////////////////////
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0,0,128,128);
 
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho( 0, 1 , 1 , 0, -1, 1 );
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
 
+	Vec3f n;
+	glTranslatef(0.5,0.5,0);
+	glRotatef(p->direction.degrees(),0,0,-1);
+	glTranslatef(-0.5,-0.5,0);
+
+	for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+	{
+		if(p->id != i->second->id && !i->second->dead)
+		{
+			n = (i->second->position - p->position) / 32000.0;
+
+			//glPushMatrix();
+			//glTranslatef(n.x,n.y,0);
+			//glRotatef(i->second->direction.degrees(),0,0,1);
+			//glTranslatef(-n.x,-n.y,0);
+
+			glBegin(GL_TRIANGLES);
+			glVertex2f(0.5 - n.x,			0.5 + n.z + 0.02);
+			glVertex2f(0.5 - n.x - 0.02,	0.5 + n.z - 0.02);
+			glVertex2f(0.5 - n.x + 0.02,	0.5 + n.z - 0.02);
+			glEnd();
+
+			//glPopMatrix();
+		}
+	}
+	
+
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	//glLoadIdentity();
+	//glOrtho( 0, sw , sh , 0, -1, 1 );
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	//glLoadIdentity();
+	glViewport(0,0,sw,sh);
+	/////////////////////////////////////////////////////////
 	if(firstPerson)
 	{
-		static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
+	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
 		
 		dataManager.bind("radar");
-		glUniform1f(radarAng, radarAng);
+		dataManager.bindTex(radarTexture);
 
-		graphics->drawOverlay(x,y,width,height,"noTexture");
+		dataManager.setUniform1f("radarAng", radarAng);
+		dataManager.setUniform1i("radarTexture", 0);
+	//	glUniform1f(radarAng, radarAng);
+
+		graphics->drawOverlay(x,y,width,height);
 		dataManager.unbindShader();
 	}
 	else
 	{
-		static int radarTexture = glGetUniformLocation(dataManager.getId("radar2"), "radarTexture");
-		static int radarAng = glGetUniformLocation(dataManager.getId("radar2"), "radarAng");
-
+	//	static int radarTexture = glGetUniformLocation(dataManager.getId("radar2"), "radarTexture");
+	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar2"), "radarAng");
 		dataManager.bind("radar2");
-		//dataManager.bind("radarTex");
+		dataManager.bind("radarTex",0);
+		dataManager.bindTex(radarTexture,1);
 
-		glUniform1f(radarAng, radarAng);
-		glUniform1i(radarTexture, 0);
-		graphics->drawOverlay(x,y,width,height,"radarTex");
+		dataManager.setUniform1f("radarAng", radarAng);
+		dataManager.setUniform1i("backgroundTexture", 0);
+		dataManager.setUniform1i("radarTexture", 1);
+
+		//glUniform1f(radarAng, radarAng);
+		//glUniform1i(radarTexture, 0);
+
+		graphics->drawOverlay(x,y,width,height);
+
+		dataManager.unbindTextures();
 		dataManager.unbindShader();
 	}
 
@@ -342,7 +441,6 @@ void modeDogFight::drawScene(int acplayer)
 	if(world.level != NULL)
 		world.level->render(e);
 
-	//glError();
 
 	Vec3f axis;
 	const map<objId,missile*>& missiles = world.missiles();
@@ -352,9 +450,12 @@ void modeDogFight::drawScene(int acplayer)
 		{
 			glPushMatrix();
 				glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
-				axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
-				Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
-				glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
+
+				Angle ang = acosA(i->second->rotation.w);
+				glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
+			//	axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
+			//	Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
+			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
 				glCallList(i->second->displayList);
 			glPopMatrix();
 		}

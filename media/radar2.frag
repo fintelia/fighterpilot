@@ -1,6 +1,7 @@
 
 uniform float radarAng;
 varying vec2 texCoord;
+uniform sampler2D backgroundTexture;
 uniform sampler2D radarTexture;
 void main()
 {
@@ -21,6 +22,8 @@ void main()
 		tmp-=360.0;
 	if(tmp>180.0)
 		intensity=0.0;
-	color=vec4(  vec3(0.05,0.79,0.04)*intensity + texture2D(radarTexture,texCoord).rgb*(1.0-intensity),    texture2D(radarTexture,texCoord).a);
+
+	intensity = min(1.0, intensity + texture2D(radarTexture,texCoord).a);
+	color=vec4(  vec3(0.05,0.79,0.04)*intensity + texture2D(backgroundTexture,texCoord).rgb*(1.0-intensity),    texture2D(backgroundTexture,texCoord).a);
 	gl_FragColor = color;
 }

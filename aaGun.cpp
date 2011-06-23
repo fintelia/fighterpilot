@@ -84,7 +84,7 @@ void aaGun::update(double time, double ms)
 	{
 		missileCoolDown = 3000;
 		int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[0].missileNum].dispList;
-		world.objectList.newMissile(MISSILE,team,position,targeter,d,id,target);
+	//	world.objectList.newMissile(MISSILE,team,position,rotation,0,targeter,d,id,target);
 	}
 }
 void aaGun::findTargetVector()

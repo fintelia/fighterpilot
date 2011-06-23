@@ -3,13 +3,13 @@
 
 namespace particle
 {
-	explosion::explosion(Vec3f pos): emitter(EXPLOSION, pos, "smoke", 1.0, 3.0, 64)
+	explosion::explosion(Vec3f pos): emitter(EXPLOSION, pos, "explosion fireball", 1.0, 3.0, 64)
 	{
 		velocity =	fuzzyAttribute(3.0, 1.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
 		life =		fuzzyAttribute(6000.0, 100.0);
 	}
-	explosion::explosion(int parent, Vec3f offset): emitter(EXPLOSION, parent, offset, "smoke", 1.0, 3.0, 64)
+	explosion::explosion(int parent, Vec3f offset): emitter(EXPLOSION, parent, offset, "explosion fireball", 1.0, 3.0, 64)
 	{
 		velocity =	fuzzyAttribute(3.0, 1.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
@@ -26,7 +26,7 @@ namespace particle
 
 		p.size = 0.0;
 
-		p.r = 0;
+		p.r = 1;
 		p.g = 0;
 		p.b = 0;
 		p.a = 0;
@@ -46,7 +46,7 @@ namespace particle
 			t = (t-0.05)/0.99;
 			p.a = 1.0 - t;
 			p.size = (1.0-t) * 10.0 + t * 30.0;
-			p.pos.y += world.time.length()/100;
+		//	p.pos.y += world.time.length()/100;
 		}
 	}
 }

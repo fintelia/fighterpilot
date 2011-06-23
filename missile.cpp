@@ -1,3 +1,4 @@
+
 #include "main.h"
 //
 //void missile::findTarget()
@@ -17,7 +18,7 @@
 //		}
 //	}
 //}
-missile::missile(missileType Type, teamNum Team,Vec3f sPos,Vec3f Vel, int dispList, int Owner, int Target):selfControlledObject(sPos, Quat4f(), Type), life(15.0), target(Target), difAng(0), lastAng(0), velocity(Vel), accel(Vel.normalize()*MISSILE_SPEED/3.0), displayList(dispList),path(sPos,Quat4f()),owner(Owner)
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int dispList, int Owner, int Target):selfControlledObject(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), displayList(dispList), owner(Owner)
 {
 	
 }
@@ -31,31 +32,46 @@ void missile::update(double time, double ms)
 	nPlane* enemy = (nPlane*)world.objectList[target];
 	if(enemy != NULL)
 	{
-		Vec3f e=enemy->position;
+		Vec3f destVec = (enemy->position - position).normalize();
+		Vec3f fwd = rotation * Vec3f(0,0,1);
+		Angle ang = acosA(destVec.dot(fwd));
 
+		//if( ang > PI/4)
+		//{
+		//	target = 0;
+		//}
+		//else 
+		if(ang < PI * 0.5 * ms/1000)
+		{
+			rotation = Quat4f(fwd.cross(destVec), ang);
+		}
+		else
+		{
+			Quat4f destRot(fwd.cross(destVec), ang);
+			rotation = slerp(rotation,destRot,(float)(PI * 0.5 * ms/1000/ang));
+		}
 		//difAng=acosA((e-position).normalize().dot(velocity.normalize()));
 		//if(difAng.inRange(5.24,1.05))
-		{
+		//{
 			//accel=(accel.normalize()*0.0+(e-position).normalize()*1.0)*accel.magnitude();
-			velocity=(velocity.normalize()*0.96+(e-position).normalize()*0.04)*velocity.magnitude();
+			//velocity=(velocity.normalize()*0.96+(e-position).normalize()*0.04)*velocity.magnitude();
 			//velocity=(pos-e).normalize()*velocity.magnitude();
-		}
+		//}
 		//if(abs(lastAng-(angle-difAng)/5)>7.5)
 		//{
 		//	difAng=7.5*(lastAng-(angle-difAng)/5)/abs(lastAng-(angle-difAng)/5);//if turn ang > 7.5 set it to 7.5
 		//}
 		//if(abs(angle-difAng)<60)
-		//{
+		//{ 
 		//	lastAng=(angle-difAng)/5;
 		//	angle-=(angle-difAng)/2;
 		//	climbAngle-=(climbAngle-asin( (e[1]-y)/e.distance(Vec3f(x,y,z))))/5;	
 		//}
 	}
 	//////////////////Movement//////////////
-	velocity+=accel*(ms/1000);
-	if(velocity.magnitude()>MISSILE_SPEED) velocity=velocity.normalize()*MISSILE_SPEED;
-	
-	position+=velocity*(ms/1000);
+	speed+=acceleration*(ms/1000);
+	if(speed > MISSILE_SPEED) speed = MISSILE_SPEED;
+	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	//path.currentPoint(position,rotation);
 	////////////////////sparks//////////////////////////

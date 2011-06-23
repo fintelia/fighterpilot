@@ -10,7 +10,7 @@ private:
 public:
 	
 	objId newObject(LevelFile::Object obj);
-	objId newMissile(missileType type, teamNum team,Vec3f pos, Vec3f vel, int disp, int owner,int target);
+	objId newMissile(missileType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int disp, int owner,int target);
 	void deleteObject(objId id);
 	void clear();
 	void update(double time, double ms);

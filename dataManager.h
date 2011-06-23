@@ -26,6 +26,16 @@ public:
 	int getId(string name);
 	int getId(objectType t);
 
+	//vector forms could be added if needed
+	void setUniform1f(string name, float v0);
+	void setUniform2f(string name, float v0, float v1);
+	void setUniform3f(string name, float v0, float v1, float v2);
+	void setUniform4f(string name, float v0, float v1, float v2, float v3);
+	void setUniform1i(string name, int v0);
+	void setUniform2i(string name, int v0, int v1);
+	void setUniform3i(string name, int v0, int v1, int v2);
+	void setUniform4i(string name, int v0, int v1, int v2, int v3);
+
 	int registerAssets();
 	void registerAsset(string name, string filename);
 
@@ -52,8 +62,12 @@ private:
 		enum assetType{SHADER, TEXTURE, MODEL}type;
 		int id;
 	};
+	struct shaderAsset: public asset
+	{
+		map<string,int> uniforms;
+	};
 
-	map<string,asset>	assets;
+	map<string,asset*>	assets;
 
 	int					activeTextureUnit;
 

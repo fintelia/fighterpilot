@@ -24,6 +24,8 @@ public:
 	void returnToBattle();
 	void spawn();
 	void initArmaments();
+	void init();
+
 	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
 	nPlane(Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
@@ -58,7 +60,7 @@ public:
 	//int respawn;
 	float health;
 	float maxHealth;
-	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_TRAILING_SMOKE,DEATH_MISSILE,DEATH_BULLETS}death;
+	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_EXPLOSION,DEATH_TRAILING_SMOKE,DEATH_MISSILE,DEATH_BULLETS}death;
 	//explosion* explode;
 	bool respawning;
 	float respawnTime;

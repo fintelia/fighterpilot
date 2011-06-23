@@ -3,13 +3,17 @@
 
 nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
-	spawn();
+
 }
 nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
-	spawn();
+
 }
 
+void nPlane::init()
+{
+	spawn();
+}
 void nPlane::update(double time, double ms)
 {
 	control->update();
@@ -61,41 +65,56 @@ void nPlane::update(double time, double ms)
 			else if(speed < maxSpeed)
 				speed = clamp(speed + acceleration,minSpeed,maxSpeed);
 			
-			if(roll.inRange(PI/2,PI))	roll = PI/2;
-			if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
+		//	if(roll.inRange(PI/2,PI))	roll = PI/2;
+		//	if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
 
-			float deltaRoll = 3.0*controller.right*(ms/1000) - 5.0*controller.left*(ms/1000);
+			float deltaRoll = 5.0*controller.right*(ms/1000) - 5.0*controller.left*(ms/1000);
 			float rollAng = roll.getAngle();
 			if(rollAng > PI) rollAng -= PI*2;
 
 
-			if(deltaRoll > 0 && rollAng + deltaRoll > PI/3)
+			if(deltaRoll > 0 && Angle(PI/2).inRange(rollAng - 0.001, rollAng + deltaRoll))
 			{
-				deltaRoll -= PI/3 - rollAng;
-				roll = PI/3;
+				deltaRoll -= PI/2 - rollAng;
+				roll = PI/2;
 				direction -= deltaRoll * 0.2;
 			}
-			else if(deltaRoll < 0 && rollAng + deltaRoll < -PI/3)
+			else if(deltaRoll < 0 && Angle(-PI/2).inRange(rollAng + deltaRoll, rollAng + 0.001))
 			{
-				deltaRoll += -PI/3 - rollAng;
-				roll = -PI/3;
+				deltaRoll += -PI/2 - rollAng;
+				roll = -PI/2;
 				direction -= deltaRoll * 0.2;
 			}
 			else
+			{
 				roll += deltaRoll;
+				if(roll.inRange(-PI/2,PI/2))
+					direction -= (controller.right - controller.left) * 0.3 *(ms/1000);
+			}
+			
+			if(roll.inRange(0, PI/2 + 0.001))
+				roll = max(0.0,roll.getAngle() - (ms/1000));
+			else if(roll.inRange(-PI/2 - 0.001,0))
+				roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
 
-			direction -= rollAng * 0.2 * (ms/1000);
+			climb = climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
 
-			climb = climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000));
-
+			if(roll.inRange(-PI/2 - 0.001, PI/2 + 0.001))
+				roll = roll - abs(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * sin(roll);
+			else
+				roll = roll + abs(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * sin(roll);
 			//direction -= (0.3*controller.climb*(ms/1000) - 0.3*controller.dive*(ms/1000))*sin(roll);
 			//turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
 			//climb = clamp(climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000))*cos(turn),-PI/3,PI/4);
 			//direction -= turn*ms/3000.0;//needs to be adjusted to be continious
 			speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
-
-
+			if(climb > PI/2 && climb < PI*3/2)
+			{
+				direction += PI;
+				roll += PI;
+				climb = PI - climb;
+			}
 			rotation = Quat4f(0,0,0,1);
 			rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
@@ -151,6 +170,8 @@ void nPlane::update(double time, double ms)
 
 			cameraAng a;
 			Vec3f vel2D = rotation * Vec3f(0,0,1);
+			//if(climb > PI/2 && climb < PI*3/2)
+			//	vel2D = -vel2D;
 			a.angle = atan2(vel2D.z,vel2D.x);
 			
  			a.time = world.time();
@@ -181,15 +202,11 @@ void nPlane::update(double time, double ms)
 			else
 				angle = a.angle;
 
-			Profiler.setOutput("angle",angle);
 		//	if(climb > PI/2 && climb < PI*3/2)
 		//		vel2D = -vel2D;
 
 			camera = position - Vec3f(cos(angle), -0.60, sin(angle))*45.0;
 			center = position + Vec3f(cos(angle), 0.0, sin(angle)) * 45.0;
-
-
-
 		}
 
 		findTargetVector();
@@ -239,6 +256,10 @@ void nPlane::update(double time, double ms)
 			//position += rotation * Vec3f(0,0,1) * (ms/1000);
 
 			position.y -= 10.0 * (ms/1000);
+		}
+		else if(death == DEATH_EXPLOSION)
+		{
+
 		}
 		else
 		{
@@ -458,8 +479,8 @@ void nPlane::die()
 
 	if(death == DEATH_NONE)
 	{
-		death = DEATH_TRAILING_SMOKE;
-		particleManager.addEmitter(new particle::smokeTrail(id));
+		death = DEATH_EXPLOSION;
+		particleManager.addEmitter(new particle::explosion(id));
 	}
 }
 void nPlane::findTargetVector()
@@ -488,12 +509,12 @@ void nPlane::ShootMissile()
 		  right	= (rotation * Vec3f(1,0,0)).normalize();
 
 	int pId=0;
-	Angle minAng=0.0;
+	Angle minAng=PI/6;
 	const map<objId,nPlane*>& planes = world.planes();
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
-		if(!i->second->dead && team != i->second->team && (ang < minAng || pId == 0 ))
+		if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
 		{
 			minAng = ang;
 			pId = i->second->id;
@@ -504,7 +525,7 @@ void nPlane::ShootMissile()
 
 	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	world.objectList.newMissile(MISSILE,team,position+right*o.x+up*o.y+fwd*o.z,fwd*speed,d,id,pId);
+	world.objectList.newMissile(MISSILE,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,d,id,pId);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -576,4 +597,7 @@ void nPlane::spawn()
 
 	respawning=false;
 	shotsFired = 0;
+
+//	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(7,0,-5)));
+//	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(-7,0,-5)));
 }
