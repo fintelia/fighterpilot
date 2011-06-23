@@ -155,6 +155,8 @@ protected:
 	GLuint FBOs[2];
 	GLuint RBOs[2];
 	
+
+
 	RenderTarget renderTarget;
 
 	OpenGLgraphics():renderTarget(SCREEN){}

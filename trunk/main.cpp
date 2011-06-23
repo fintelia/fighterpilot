@@ -14,7 +14,9 @@ int sw=1280;																																	//	//
 																																				//	//
 profiler Profiler;																																//	//
 TextManager* textManager;																														//	//
+
 																																				//	//
+//#undef USING_XINPUT
 #if defined USING_XINPUT																														//	//
 	Input *input=new xinput_input;																												//	//
 #else																																			//	//
@@ -132,7 +134,8 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		case WM_ERASEBKGND:									// Check To See If Windows Is Trying To Erase The Background
 			return 0;										// either return 0 or 1, does not seem to be much of a difference...
 		case WM_SIZE:										// Resize The OpenGL Window
-			graphics->resize(LOWORD(lParam),HIWORD(lParam));
+			if(wParam != SIZE_MINIMIZED)
+				graphics->resize(LOWORD(lParam),HIWORD(lParam));
 			return 0;										// Jump Back
 	//	case WM_APPCOMMAND:
 	//	case WM_SYSKEYDOWN:
@@ -193,21 +196,19 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	textManager = new TextManager();
 	menuManager.setMenu(new menu::loading);
 
-	fireParticleEffect = graphics->newParticleEffect("explosion fireball",1000.0*r.right/1280,"partical shader");
-	smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280,"partical shader");
-	exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280,"partical shader");
+	//fireParticleEffect = graphics->newParticleEffect("explosion fireball",1000.0*r.right/1280,"partical shader");
+	//MessageBox(NULL,L"explosion fireball created",L"",0);
+	//smokeParticleEffect = graphics->newParticleEffect("explosion smoke",750.0*r.right/1280,"partical shader");
+	//MessageBox(NULL,L"explosion smoke created",L"",0);
+	//exaustParticleEffect = graphics->newParticleEffect("missile smoke",100.0*r.right/1280,"partical shader");
+	//MessageBox(NULL,L"missile smoke created",L"",0);
 
 //////
 	float nextUpdate=0;
 	float lastUpdate=0;
 
-	double lastLoop = GetTime();
-	double loopTime;
-	double m = GetTime();
 	while(!done)									// Loop That Runs While done=FALSE
 	{
-		m = GetTime()-m;
-		double t = GetTime();
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
 		{
 			if (msg.message==WM_QUIT)				// Have We Received A Quit Message?
@@ -220,19 +221,22 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				DispatchMessage(&msg);				// Dispatch The Message
 			}
 		}
-		t = GetTime()-t;
-		t = GetTime();
-	//	else
+		else
 		{
+			float time = GetTime();
+			float waitTime=nextUpdate-time;
 
-			float waitTime=nextUpdate-GetTime();
-			if(waitTime>0)	Sleep(waitTime);
-			update();
 
-			double time = GetTime();
-			nextUpdate=1000.0/MAX_FPS + time;
+			if(waitTime>4.0)
+				Sleep(waitTime-4.0);
+			while(time < nextUpdate)
+			{
+				time = GetTime();
+			}
+			nextUpdate=1000.0/MAX_FPS + time - 1.0;
 			lastUpdate = time;
 
+			update();
 
 #ifdef _DEBUG
 			if(input->getKey(VK_ESCAPE))
@@ -246,11 +250,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				graphics->render();
 				graphics->swapBuffers();
 			}
-
-			t = GetTime()-t;
-			t = GetTime();
 		}
-		m = GetTime();
 	}
 	world.destroy();
 	textManager->shutdown();

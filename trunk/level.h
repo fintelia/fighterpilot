@@ -1,4 +1,11 @@
 
+typedef int ShaderType;
+const ShaderType SHADER_NONE		= 0;
+const ShaderType SHADER_ISLAND		= 1;
+const ShaderType SHADER_GRASS		= 2;
+const ShaderType SHADER_SNOW		= 3;
+const ShaderType SHADER_OCEAN		= 4;
+
 struct LevelFile
 {
 	struct Header{
@@ -7,12 +14,13 @@ struct LevelFile
 	}header;
 
 	struct Info{//V1
-		float			unused;	
+		ShaderType		shaderType;	
 		Vec2f			mapSize;
 		Vec2u			mapResolution;
 		unsigned int	numObjects;
 		Info(): mapSize(1,1), mapResolution(0,0), numObjects(0){}
 	}*info;
+
 	struct Object{
 		int				type;			//the type of object
 		int				team;			//what team it is part of
@@ -87,6 +95,7 @@ public:
 		float*					heights;
 		mutable float			minHeight,
 								maxHeight;
+		ShaderType				shaderType;
 		friend class Level;
 	};
 	class heightmapGL: public heightmapBase
@@ -94,7 +103,7 @@ public:
 	private:
 		mutable bool valid;
 		mutable int dispList;
-		int shader;
+		//int shader;
 		int	groundTex;
 		mutable unsigned char *groundValues;
 
@@ -102,15 +111,15 @@ public:
 		void setTex() const;
 		void createList() const;
 	public:
-		void setShader(int s){shader=s;}
+		void setShader(ShaderType t){shaderType=t;}
 		void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height; valid=false;}
 		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height; valid=false;}		
 		void increaseHeights(float amount);
 		void renderPreview(float seaLevelOffset=0.0) const;
 		void render() const;
 
-		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),shader(0),dispList(0){init();}
-		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),shader(0),dispList(0){init();}
+		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),dispList(0){init();}
+		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),dispList(0){init();}
 		~heightmapGL();
 		friend class Level;
 		friend class modeDogFight;

@@ -54,7 +54,7 @@
       <WarningLevel>Level2</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>
       </BufferSecurityCheck>
@@ -146,6 +146,7 @@
     <ClCompile Include="particleManager.cpp" />
     <ClCompile Include="path.cpp" />
     <ClCompile Include="plane.cpp" />
+    <ClCompile Include="planeContrail.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="script.cpp" />
@@ -203,6 +204,7 @@
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
     <None Include="media\grass.frag" />
+    <None Include="media\grass2.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
     <None Include="media\horizon.frag" />
@@ -210,7 +212,6 @@
     <None Include="media\horizon2.frag" />
     <None Include="media\horizon2.vert" />
     <None Include="media\icon.ico" />
-    <None Include="media\island.frag" />
     <None Include="media\island.vert" />
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
@@ -223,6 +224,10 @@
     <None Include="media\snow.frag" />
     <None Include="media\terrain.frag" />
     <None Include="media\terrain.vert" />
+    <None Include="media\toon.frag" />
+    <None Include="media\toon.vert" />
+    <None Include="media\water.frag" />
+    <None Include="media\water.vert" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc" />

@@ -91,6 +91,12 @@
     <Filter Include="Source Files\particleManager">
       <UniqueIdentifier>{3c904835-fb15-4159-8d41-8b98ccf73a1d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\water">
+      <UniqueIdentifier>{2c6329f1-12c1-4185-ab55-951126b3da50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\grass">
+      <UniqueIdentifier>{b35d71a4-4ca8-4039-a032-fc3d7f7d8d3a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -223,6 +229,9 @@
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
     <ClCompile Include="smokeTrail.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
+    <ClCompile Include="planeContrail.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
   </ItemGroup>
@@ -365,9 +374,6 @@
     <None Include="media\icon.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="media\island.frag">
-      <Filter>shaders\island</Filter>
-    </None>
     <None Include="media\island.vert">
       <Filter>shaders\island</Filter>
     </None>
@@ -375,9 +381,6 @@
       <Filter>shaders\terrain</Filter>
     </None>
     <None Include="media\terrain.vert">
-      <Filter>shaders\terrain</Filter>
-    </None>
-    <None Include="media\grass.frag">
       <Filter>shaders\terrain</Filter>
     </None>
     <None Include="media\ocean.vert">
@@ -414,6 +417,24 @@
       <Filter>shaders\smoke</Filter>
     </None>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\grass.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\grass2.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\water.frag">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\water.vert">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\toon.frag">
+      <Filter>shaders\grass</Filter>
+    </None>
+    <None Include="media\toon.vert">
+      <Filter>shaders\grass</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

@@ -143,6 +143,14 @@ public:
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
 };
+class planeContrail: public emitter
+{
+public:
+	planeContrail(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
 class smokeTrail: public emitter
 {
 public:

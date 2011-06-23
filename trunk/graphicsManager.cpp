@@ -117,9 +117,12 @@ void OpenGLgraphics::particleEffect::render()
 	if(shader == "partical shader")
 	{
 		dataManager.bind(shader);
-		glUniform1i(glGetUniformLocation(dataManager.getId(shader), "tex"), 0);
-		glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size1"), size * 1.00);
-		glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size2"), size * 0.05);//not currently used
+		dataManager.setUniform1i("tex",0);
+		dataManager.setUniform1i("size1",size * 1.00);
+		dataManager.setUniform1i("size2",size * 0.05);//not currently used
+		//glUniform1i(glGetUniformLocation(dataManager.getId(shader), "tex"), 0);
+		//glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size1"), size * 1.00);
+		//glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size2"), size * 0.05);
 
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -163,26 +166,11 @@ bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size)
 	overlay[2].position = origin + Vec2f(size.x,	size.y);
 	overlay[3].position = origin + Vec2f(0.0,		size.y);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glDrawArrays(GL_QUADS, 0, 4);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	return true;
-}
-bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
-{
-	overlay[0].position = origin + Vec2f(0.0,		0.0);
-	overlay[1].position = origin + Vec2f(size.x,	0.0);
-	overlay[2].position = origin + Vec2f(size.x,	size.y);
-	overlay[3].position = origin + Vec2f(0.0,		size.y);
-
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
 	overlay[2].texCoord = Vec2f(1.0,1.0);
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
-	dataManager.bind(tex);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -195,6 +183,12 @@ bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+	return true;
+}
+bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
+{
+	dataManager.bind(tex);
+	drawOverlay(origin, size);
 	dataManager.unbind(tex);
 	return true;
 }
@@ -205,25 +199,11 @@ bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height)
 	overlay[2].position = Vec2f(x+width,y+height);
 	overlay[3].position = Vec2f(x,y+height);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glDrawArrays(GL_QUADS, 0, 4);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	return true;
-}
-bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string tex)
-{
-	overlay[0].position = Vec2f(x,y);
-	overlay[1].position = Vec2f(x+width,y);
-	overlay[2].position = Vec2f(x+width,y+height);
-	overlay[3].position = Vec2f(x,y+height);
-
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
 	overlay[2].texCoord = Vec2f(1.0,1.0);
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
-	dataManager.bind(tex);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -236,6 +216,12 @@ bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+	return true;
+}
+bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string tex)
+{
+	dataManager.bind(tex);
+	drawOverlay(x, y, width, height);
 	dataManager.unbind(tex);
 	return true;
 }
@@ -468,10 +454,13 @@ bool OpenGLgraphics::init()
 }
 void OpenGLgraphics::resize(int w, int h)
 {
-	sh = h;
-	sw = w;
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	if(sw > 0 && sh > 0)
+	{
+		sh = h;
+		sw = w;
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+	}
 }
 void OpenGLgraphics::render()
 {
@@ -808,7 +797,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 		return false;								// Return false
 	}
 
-	if(!arbMultisampleSupported && checkMultisample && !lowQuality && wglChoosePixelFormatARB)
+	if(!arbMultisampleSupported && checkMultisample && wglChoosePixelFormatARB)
 	{
 		int pixelFormat;
 		UINT numFormats;
@@ -843,6 +832,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
 	graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
 	//setGamma(0.0);
+
 	if (!graphics->init())							// Initialize Our Newly Created GL Window
 	{
 		destroyWindow();					// Reset The Display

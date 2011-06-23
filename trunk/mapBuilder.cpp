@@ -165,9 +165,7 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
 	resetView();
 }
 void modeMapBuilder::faultLine()
@@ -216,9 +214,7 @@ void modeMapBuilder::faultLine()
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
 	resetView();
 }
 void modeMapBuilder::fromFile(string filename)
@@ -243,9 +239,7 @@ void modeMapBuilder::fromFile(string filename)
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMaxValue(maxHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setMinValue(minHeight);
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(minHeight+(maxHeight-minHeight)/3);
+	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
 	resetView();
 }
 void modeMapBuilder::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
@@ -330,10 +324,14 @@ void modeMapBuilder::draw3D()
 
 
 	if(menus->getShader() != -1)
-		((Level::heightmapGL*)level->ground())->setShader(shaderButtons[((menu::levelEditor*)menuManager.getMenu())->getShader()]);
+		((Level::heightmapGL*)level->ground())->setShader(menus->toggles["shaders"]->getValue() + 1);
 	bool w = menus->getShader() != 1;
 	float sl = menus->sliders["sea level"]->getValue();
- 	level->renderPreview(w,sl);
+
+	glPushMatrix();
+	glScalef(1,pow(10.0f,menus->sliders["height scale"]->getValue()),1);
+ 	level->renderPreview(w,sl * (maxHeight - minHeight) + minHeight);
+	glPopMatrix();
 
 	if(menus->getTab() == menu::levelEditor::OBJECTS)
 	{

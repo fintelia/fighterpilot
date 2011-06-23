@@ -40,11 +40,11 @@ objId objectList::newObject(LevelFile::Object obj)
 	}
 	return 0;
 }
-objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Vec3f vel, int disp, int owner, int target)
+objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int disp, int owner,int target)
 {
 	if(!(type & MISSILE)) return NULL;
 
-	missile* m = new missile(type,team,pos,vel,disp,owner,target);
+	missile* m = new missile(type,team,pos,rot,speed,disp,owner,target);
 	mObjects[m->id] = m;
 	mMissiles[m->id] = m;
 

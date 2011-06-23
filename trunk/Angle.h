@@ -34,26 +34,43 @@ public:
 		return ang*180.0/PI;
 	}
 	
-	bool inRange(Angle low,Angle high)
+	bool inRange(Angle low,Angle high, bool inclusive = true)
 	{
-		if(low.ang<high.ang)
+		if(inclusive)
 		{
-			return (ang>low.ang && ang<high.ang);
+			if(low.ang == high.ang)	return ang == low.ang;
+			if(low.ang<high.ang)	return (ang>=low.ang && ang<=high.ang);
+									return !(ang>=high.ang && ang<=low.ang);
 		}
 		else
 		{
-			return !(ang>low.ang && ang<high.ang);
+			if(low.ang<high.ang)	return (ang>low.ang && ang<high.ang);
+									return !(ang>high.ang && ang<low.ang);
 		}
+
 	}
-	bool inRange(double low,double high)
+	bool inRange(double low,double high, bool inclusive = true)
 	{
-		if(low<high)
+		while(low>2.0*PI)
+			low-=2.0*PI;
+		while(low<0.0)		
+			low+=2.0*PI;
+
+		while(high>2.0*PI)
+			high-=2.0*PI;
+		while(high<0.0)		
+			high+=2.0*PI;
+
+		if(inclusive)
 		{
-			return (ang>low && ang<high);
+			if(low == high)	return ang == low;
+			if(low<high)	return (ang>=low && ang<=high);
+							return !(ang>=high && ang<=low);
 		}
 		else
 		{
-			return !(ang>high && ang<low);
+			if(low<high)	return (ang>low && ang<high);
+							return !(ang>high && ang<low);
 		}
 	}
 	void clampedAdd(double amount, double low,double high)

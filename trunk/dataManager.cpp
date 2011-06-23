@@ -28,9 +28,10 @@ int DataManager::loadModel(string filename)
 }
 int DataManager::loadShader(string vert, string frag)
 {
+	bool errorFlag = false;
 	GLuint v=0,f=0,p;
-	v = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-	f = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	v = glCreateShader(GL_VERTEX_SHADER);
+	f = glCreateShader(GL_FRAGMENT_SHADER);
 
 	char * ff = textFileRead((char*)frag.c_str());
 	char * vv = textFileRead((char*)vert.c_str());
@@ -43,49 +44,82 @@ int DataManager::loadShader(string vert, string frag)
 	free(ff);
 	free(vv);
 
-	char* cv=(char*)malloc(512); memset(cv,0,512);
-	char* cf=(char*)malloc(512); memset(cf,0,512);
-	int lv,lf;
-	glGetShaderInfoLog(v,512,&lv,cv);
-	glGetShaderInfoLog(f,512,&lf,cf);
+	string vertErrors;
+	string fragErrors;
+	string linkErrors;
+
+	int i;//used whenever a pointer to int is required
+	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE)
+	{
+		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+		char* cv=(char*)malloc(i); memset(cv,0,i);
+		glGetShaderInfoLog(v,i,&i,cv);
+		messageBox(vert + ": " + cv);
+		errorFlag = true;
+	}
+	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE)
+	{
+		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+		char* cf=(char*)malloc(i); memset(cf,0,i);
+		glGetShaderInfoLog(f,i,&i,cf);
+		messageBox(frag + ": " + cf);
+		errorFlag = true;
+	}
+
 
 	p = glCreateProgram();
 	glAttachShader(p,f);
 	glAttachShader(p,v);
 
 	glLinkProgram(p);
+
+	glGetProgramiv(p,GL_LINK_STATUS,&i);
+	if(i == GL_FALSE)
+	{
+		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+		char* cl=(char*)malloc(i); memset(cl,0,i);
+		glGetProgramInfoLog(p,i,&i,cl);
+		messageBox(frag + "(link): " + cl);
+		errorFlag = true;
+	}
+
 	glUseProgram(0); 
 
-	if(lv != 0)		messageBox(string(vert)+": "+string(cv));
-	if(lf != 0) 	messageBox(string(frag)+": "+string(cf));
 	//if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
 	//if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-	return p;
+
+	return errorFlag ? 0 : p;
 }
 int DataManager::loadTerrainShader(string frag)
 {
+	bool errorFlag = false;
 	static GLuint v=0;
 	
 
 	if(v==0)
 	{
-		v = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+		v = glCreateShader(GL_VERTEX_SHADER);
 		char * vv = textFileRead("media/terrain.vert");
 		if(vv == NULL) return 0;
 		glShaderSource(v, 1, (const char **)&vv, NULL);
 		glCompileShader(v);
 		free(vv);
-		int lv;
-		char* cv=(char*)malloc(512); memset(cv,0,512);
-		glGetShaderInfoLog(v,512,&lv,cv);
-		if(lv != 0){
-			//MessageBoxA(NULL,(string("media/terrain.vert")+"f: "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-			messageBox(string("media/terrain.vert")+"f: "+string(cv));
-			return 0;
+
+		int i;//used whenever a pointer to int is required
+		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+		if(i == GL_FALSE)
+		{
+			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+			char* cv=(char*)malloc(i); memset(cv,0,i);
+			glGetShaderInfoLog(v,i,&i,cv);
+			messageBox(string("terrain.vert: ") + cv);
+			errorFlag = true;
 		}
 	}
 
-	GLuint	f = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB),
+	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
 			p = 0;
 	char	*ff = textFileRead((char*)frag.c_str()),
 			*cf=(char*)malloc(512);
@@ -99,19 +133,36 @@ int DataManager::loadTerrainShader(string frag)
 		memset(cf,0,512);
 		glGetShaderInfoLog(f,512,&lf,cf);
 
+		int i;
+		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+		if(i == GL_FALSE)
+		{
+			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+			char* cf=(char*)malloc(i); memset(cf,0,i);
+			glGetShaderInfoLog(f,i,&i,cf);
+			messageBox(frag + ": " + cf);
+			errorFlag = true;
+		}
+
 		p = glCreateProgram();
 		glAttachShader(p,f);
 		glAttachShader(p,v);
 		glLinkProgram(p);
+
+		glGetProgramiv(p,GL_LINK_STATUS,&i);
+		if(i == GL_FALSE)
+		{
+			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+			char* cl=(char*)malloc(i); memset(cl,0,i);
+			glGetProgramInfoLog(p,i,&i,cl);
+			messageBox(frag + "(link): " + cl);
+			errorFlag = true;
+		}
+
 	}
 	glUseProgram(0);
 
-	if(lf != 0){
-		//MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-		messageBox(string(frag)+": "+string(cf));
-		return 0;
-	}
-	return p;
+	return errorFlag ? 0 : p;
 }
 
 int DataManager::loadTGA(string filename)
@@ -725,11 +776,11 @@ void DataManager::bind(string name, int textureUnit)
 {
 	if(assets.find(name)==assets.end())
 		return;
-	else if(assets[name].type==asset::TEXTURE)
+	else if(assets[name]->type==asset::TEXTURE)
 	{
 		if(boundTextures[textureUnit] == name)
 			return;
-		else if(boundTextureIds[textureUnit] == assets[name].id)
+		else if(boundTextureIds[textureUnit] == assets[name]->id)
 		{
 			boundTextures[textureUnit] = name;
 			return;
@@ -741,11 +792,11 @@ void DataManager::bind(string name, int textureUnit)
 			activeTextureUnit = textureUnit;
 		}
 
-		glBindTexture(GL_TEXTURE_2D,assets[name].id);
-		boundTextureIds[textureUnit] = assets[name].id;
+		glBindTexture(GL_TEXTURE_2D,assets[name]->id);
+		boundTextureIds[textureUnit] = assets[name]->id;
 		boundTextures[textureUnit] = name;
 	}
-	else if(assets[name].type==asset::SHADER)
+	else if(assets[name]->type==asset::SHADER)
 	{
 		//if(boundShader == name)
 		//	return;
@@ -755,8 +806,8 @@ void DataManager::bind(string name, int textureUnit)
 		//	return;
 		//}
 
-		glUseProgram(assets[name].id);
-		boundShaderId = assets[name].id;
+		glUseProgram(assets[name]->id);
+		boundShaderId = assets[name]->id;
 		boundShader = name;
 	}
 }
@@ -790,7 +841,7 @@ void DataManager::bindShader(int id)
 }
 void DataManager::unbind(string name)
 {
-	if(assets[name].id == 0)
+	if(assets[name]->id == 0)
 		return;
 
 	if(boundShader == name)
@@ -849,14 +900,14 @@ void DataManager::unbindShader()
 }
 void DataManager::draw(string name)
 {
-	if(assets.find(name)==assets.end() || assets[name].type != asset::MODEL)
+	if(assets.find(name)==assets.end() || assets[name]->type != asset::MODEL)
 		return;
 	if(activeTextureUnit != 0)
 	{
 		glActiveTexture(GL_TEXTURE0);
 		activeTextureUnit = 0;
 	}
-	glCallList(assets[name].id);
+	glCallList(assets[name]->id);
 }
 void DataManager::draw(planeType p)
 {
@@ -869,9 +920,13 @@ void DataManager::draw(planeType p)
 }
 int DataManager::registerAssets()
 {
+	static ofstream cout("loading.txt");
+
 	static int callNum=0;
 	callNum++;
 	int n=1;
+
+	cout << "loading asset #" + lexical_cast<string>(callNum) + "... ";
 
 	if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
 	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
@@ -931,7 +986,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
 	if(callNum==n++)	registerShader("radar",				"media/radar.vert","media/radar.frag");
 	if(callNum==n++)	registerShader("radar2",			"media/radar2.vert","media/radar2.frag");
-	if(callNum==n++)	registerShader("water",				"media/water.vert","media/water.frag");
+	//if(callNum==n++)	registerShader("water",				"media/water.vert","media/water.frag");
 	if(callNum==n++)	registerShader("sea floor",			"media/sea floor.vert","media/sea floor.frag");
 	if(callNum==n++)	registerShader("horizon",			"media/horizon.vert","media/horizon.frag");//was water2
 	if(callNum==n++)	registerShader("horizon2",			"media/horizon2.vert","media/horizon2.frag");//was water2
@@ -940,8 +995,10 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
 	if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
 	if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
-	if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
-	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass.frag");
+	//if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
+	if(callNum==n++)	registerAsset("island new terrain",	"media/grass.frag");
+	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
+	if(callNum==n++)	registerAsset("snow terrain",		"media/snow.frag");
 
 	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
 	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
@@ -954,6 +1011,7 @@ int DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	if(callNum==n++)	settings.load("media/modelData.txt");
+	cout << "loading complete" << endl;
 
 	return (n-1)-callNum;//number left
 }
@@ -969,37 +1027,39 @@ void DataManager::registerAsset(string name, string filename)
 }
 void DataManager::registerTexture(string name, int id)
 {
-	asset a;
-	a.id = id;
-	a.type = asset::TEXTURE;
-	assets.insert(pair<string,asset>(name,a));
+	asset* a = new asset;
+	a->id = id;
+	a->type = asset::TEXTURE;
+
+	assets[name] = a;
 }
 void DataManager::registerShader(string name, int id)
 {
-	asset a;
-	a.id = id;
-	a.type = asset::SHADER;
-	assets.insert(pair<string,asset>(name,a));
+	asset* a = new shaderAsset;
+	a->id = id;
+	a->type = asset::SHADER;
+
+	assets[name] = a;
 }
 void DataManager::registerShader(string name, string vert, string frag)
 {
-	asset a;
-	a.id = loadShader(vert,frag);
-	a.type = asset::SHADER;
-	assets.insert(pair<string,asset>(name,a));
+	asset* a = new shaderAsset;
+	a->id = loadShader(vert,frag);
+	a->type = asset::SHADER;
+	assets[name] = a;
 }
 void DataManager::registerModel(string name, int id)
 {
-	asset a;
-	a.id = id;
-	a.type = asset::MODEL;
-	assets.insert(pair<string,asset>(name,a));
+	asset* a = new asset;
+	a->id = id;
+	a->type = asset::MODEL;
+	assets[name] = a;
 }
 int DataManager::getId(string name)
 {
 	if(assets.find(name)==assets.end())
 		return 0;
-	return assets[name].id;
+	return assets[name]->id;
 }
 int DataManager::getId(objectType t)
 {
@@ -1044,15 +1104,96 @@ char* DataManager::textFileRead(char *fn) {
 	return content;
 }
 
+void DataManager::setUniform1f(string name, float v0)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform1f(((shaderAsset*)assets[boundShader])->uniforms[name],v0);
+	}
+}
+void DataManager::setUniform2f(string name, float v0, float v1)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform2f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1);
+	}
+}
+void DataManager::setUniform3f(string name, float v0, float v1, float v2)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform3f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2);
+	}
+}
+void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform4f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+	}
+}
+void DataManager::setUniform1i(string name, int v0)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform1i(((shaderAsset*)assets[boundShader])->uniforms[name],v0);
+	}
+}
+void DataManager::setUniform2i(string name, int v0, int v1)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform2i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1);
+	}
+}
+void DataManager::setUniform3i(string name, int v0, int v1, int v2)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform3i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2);
+	}
+}
+void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniform4i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+	}
+}
+
 void DataManager::shutdown()
 {
 	boundShader = "";
 	boundTextures.clear();
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
-		if(i->second.type == asset::SHADER)			glDeleteProgram(i->second.id);
-		else if(i->second.type == asset::MODEL)		glDeleteLists(i->second.id,1);
-		else if(i->second.type == asset::TEXTURE)	glDeleteTextures(1,(const GLuint*)&i->second.id);
+		if(i->second->type == asset::SHADER)			glDeleteProgram(i->second->id);
+		else if(i->second->type == asset::MODEL)		glDeleteLists(i->second->id,1);
+		else if(i->second->type == asset::TEXTURE)	glDeleteTextures(1,(const GLuint*)&i->second->id);
 	}
 	assets.clear();
 	for(auto i = models.begin(); i!=models.end();i++)

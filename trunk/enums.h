@@ -119,12 +119,18 @@ public:
 };
 
 extern char* errorString;
+
+#ifdef _DEBUG
 #define glError(){										\
 	errorString=(char*)gluErrorString(glGetError());	\
 	if(string(errorString).compare("no error") != 0){	\
 		debugBreak()									\
 	}													\
 }
+#else
+#define glError()		{}
+#endif
+
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
