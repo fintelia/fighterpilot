@@ -920,13 +920,13 @@ void DataManager::draw(planeType p)
 }
 int DataManager::registerAssets()
 {
-	static ofstream cout("loading.txt");
+	//static ofstream cout("loading.txt");
 
 	static int callNum=0;
 	callNum++;
 	int n=1;
 
-	cout << "loading asset #" + lexical_cast<string>(callNum) + "... ";
+	//cout << "loading asset #" + lexical_cast<string>(callNum) + "... ";
 
 	if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
 	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
@@ -1011,7 +1011,7 @@ int DataManager::registerAssets()
 	//				.					.
 	//				.					.
 	if(callNum==n++)	settings.load("media/modelData.txt");
-	cout << "loading complete" << endl;
+	//cout << "loading complete" << endl;
 
 	return (n-1)-callNum;//number left
 }

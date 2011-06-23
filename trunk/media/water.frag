@@ -28,6 +28,8 @@ void main()
 	//color.rgb=(texture2D(tex,texCoord*7.0).rgb+;
 	//color.rgb=vec3(depth,depth,depth);
 	//if(dist>9000.0) color.a*=1.0-(dist-9000.0)/5000.0;
-	color.a*=acos(dot(normalize(eyePos-pos),vec3(0.0,1.0,0.0)));
+	
+	//color.a*=acos(dot(normalize(eyePos-pos),vec3(0.0,1.0,0.0)));
+	color.a = (1.0 - (1.0 - color.a) * dot(normalize(eyePos-pos),vec3(0.0,1.0,0.0)) );
 	gl_FragColor = color;
 }
