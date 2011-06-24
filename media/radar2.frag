@@ -23,6 +23,7 @@ void main()
 	if(tmp>180.0)
 		intensity=0.0;
 
+	//intensity = 0.0;
 	intensity = min(1.0, intensity + texture2D(radarTexture,texCoord).a);
 	color=vec4(  vec3(0.05,0.79,0.04)*intensity + texture2D(backgroundTexture,texCoord).rgb*(1.0-intensity),    texture2D(backgroundTexture,texCoord).a);
 	gl_FragColor = color;
