@@ -105,10 +105,19 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 	glPushMatrix();
 	glLoadIdentity();
 
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_POLYGON_SMOOTH);
+
 	Vec3f n;
 	glTranslatef(0.5,0.5,0);
 	glRotatef(p->direction.degrees(),0,0,-1);
 	glTranslatef(-0.5,-0.5,0);
+	
+	static float filter[] = {	0.09,	0.11,	0.09,
+								0.11,	0.19,	0.11,
+								0.09,	0.11,	0.09};
 
 	for(auto i = world.planes().begin(); i != world.planes().end(); i++)
 	{
@@ -116,21 +125,31 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		{
 			n = (i->second->position - p->position) / 32000.0;
 
-			//glPushMatrix();
-			//glTranslatef(n.x,n.y,0);
-			//glRotatef(i->second->direction.degrees(),0,0,1);
-			//glTranslatef(-n.x,-n.y,0);
+			glPushMatrix();
+			glTranslatef(n.x,n.y,0);
+			glRotatef(i->second->direction.degrees(),0,0,1);
+			glTranslatef(-n.x,-n.y,0);
 
 			glBegin(GL_TRIANGLES);
-			glVertex2f(0.5 - n.x,			0.5 + n.z + 0.02);
-			glVertex2f(0.5 - n.x - 0.02,	0.5 + n.z - 0.02);
-			glVertex2f(0.5 - n.x + 0.02,	0.5 + n.z - 0.02);
+			for(int x = -1; x <= 1; x++)
+			{
+				for(int y = -1; y <= 1; y++)
+				{
+					glColor4f(1,1,1,filter[(x+1)+(y+1)*3]);
+					glVertex2f(0.5 + (float)x/256 - n.x,		0.5 + (float)y/256 + n.z + 0.02);
+					glVertex2f(0.5 + (float)x/256 - n.x - 0.02,	0.5 + (float)y/256 + n.z - 0.02);
+					glVertex2f(0.5 + (float)x/256 - n.x + 0.02,	0.5 + (float)y/256 + n.z - 0.02);
+				}
+			}
 			glEnd();
 
-			//glPopMatrix();
+			glPopMatrix();
 		}
 	}
-	
+	glColor3f(1,1,1);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
