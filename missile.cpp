@@ -18,7 +18,7 @@
 //		}
 //	}
 //}
-missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int dispList, int Owner, int Target):selfControlledObject(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), displayList(dispList), owner(Owner)
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):selfControlledObject(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), owner(Owner)
 {
 	
 }
@@ -48,7 +48,7 @@ void missile::update(double time, double ms)
 		else
 		{
 			Quat4f destRot(fwd.cross(destVec), ang);
-			rotation = slerp(rotation,destRot,(float)(PI * 0.5 * ms/1000/ang));
+			rotation = slerp(rotation,destRot,(float)((PI * 0.5 * ms/1000)/ang));
 		}
 		//difAng=acosA((e-position).normalize().dot(velocity.normalize()));
 		//if(difAng.inRange(5.24,1.05))

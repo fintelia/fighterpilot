@@ -85,9 +85,6 @@
     <Filter Include="Source Files\enums">
       <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\explosion">
-      <UniqueIdentifier>{a150796c-d644-436a-9afb-24e0352bcc5f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\particleManager">
       <UniqueIdentifier>{3c904835-fb15-4159-8d41-8b98ccf73a1d}</UniqueIdentifier>
     </Filter>
@@ -96,6 +93,15 @@
     </Filter>
     <Filter Include="shaders\grass">
       <UniqueIdentifier>{b35d71a4-4ca8-4039-a032-fc3d7f7d8d3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\model">
+      <UniqueIdentifier>{44548fa7-2143-4966-b24f-508c90d85fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math\matrix">
+      <UniqueIdentifier>{43b6d13e-2f94-45d6-a10f-091eabb61693}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\ortho">
+      <UniqueIdentifier>{321d4ec7-3cab-492b-a0b8-cea94b587fbb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -162,9 +168,6 @@
     <ClCompile Include="dataManager.cpp">
       <Filter>Source Files\dataManager</Filter>
     </ClCompile>
-    <ClCompile Include="shader.cpp">
-      <Filter>Source Files\dataManager</Filter>
-    </ClCompile>
     <ClCompile Include="cameraManager.cpp">
       <Filter>Source Files\camera</Filter>
     </ClCompile>
@@ -207,9 +210,6 @@
     <ClCompile Include="enums.cpp">
       <Filter>Source Files\enums</Filter>
     </ClCompile>
-    <ClCompile Include="explosion.cpp">
-      <Filter>Source Files\explosion</Filter>
-    </ClCompile>
     <ClCompile Include="particleManager.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
@@ -232,6 +232,9 @@
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
     <ClCompile Include="planeContrail.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionSmoke.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
   </ItemGroup>
@@ -317,9 +320,6 @@
     <ClInclude Include="dataManager.h">
       <Filter>Source Files\dataManager</Filter>
     </ClInclude>
-    <ClInclude Include="shader.h">
-      <Filter>Source Files\dataManager</Filter>
-    </ClInclude>
     <ClInclude Include="cameraManager.h">
       <Filter>Source Files\camera</Filter>
     </ClInclude>
@@ -350,13 +350,13 @@
     <ClInclude Include="enums.h">
       <Filter>Source Files\enums</Filter>
     </ClInclude>
-    <ClInclude Include="explosion.h">
-      <Filter>Source Files\explosion</Filter>
-    </ClInclude>
     <ClInclude Include="particleManager.h">
       <Filter>Source Files\particleManager</Filter>
     </ClInclude>
     <ClInclude Include="debugBreak.h" />
+    <ClInclude Include="matrix.h">
+      <Filter>Source Files\math\matrix</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -434,6 +434,18 @@
     </None>
     <None Include="media\toon.vert">
       <Filter>shaders\grass</Filter>
+    </None>
+    <None Include="media\model.frag">
+      <Filter>shaders\model</Filter>
+    </None>
+    <None Include="media\model.vert">
+      <Filter>shaders\model</Filter>
+    </None>
+    <None Include="media\ortho.frag">
+      <Filter>shaders\ortho</Filter>
+    </None>
+    <None Include="media\ortho.vert">
+      <Filter>shaders\ortho</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

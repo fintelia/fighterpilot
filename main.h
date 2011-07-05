@@ -28,7 +28,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
-//#include <boost\python.hpp>
 //--Namespaces
 using namespace std;
 using namespace boost;
@@ -56,7 +55,6 @@ using namespace boost::filesystem;
 
 extern bool	active;		// Window Active Flag
 extern const double PI;
-extern const float size;
 extern bool lowQuality;
 extern bool done;//setting this to true will terminate the program
 
@@ -73,7 +71,6 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "text.h"
 #include "gameMath.h"
 #include "random.h"
-#include "shader.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
 #include "particleManager.h"
@@ -82,7 +79,6 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "level.h"
 #include "script.h"
 #include "profiler.h"
-#include "explosion.h"
 #include "imageloader.h"//should be replaced!!!
 #include "partical.h"
 #include "player.h"
@@ -95,16 +91,9 @@ LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 #include "objectList.h"
 #include "worldManager.h"
 
-
 extern humanControl players[NumPlayers];
 
 extern int sh, sw;
-
-extern GraphicsManager::gID fireParticleEffect;
-extern GraphicsManager::gID smokeParticleEffect;
-extern GraphicsManager::gID exaustParticleEffect;
-
-extern float radarAng;//should be replaced by gameTime()
 
 extern int frame,Time,timebase;
 extern float fps;

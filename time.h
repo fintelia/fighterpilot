@@ -98,13 +98,22 @@ public:
 			debugBreak();
 			return;
 		}
-		sReal = cReal;
-		sGame = cGame;
-		sSpeed = timeSpeed;
 
-		eSpeed = speed;
-		eReal = sReal + ticksPerSecond*(__int64)abs((eSpeed - sSpeed)/changeRate);
-		changingSpeed = true;
+		if(changeRate == 0.0)
+		{
+			timeSpeed = speed;
+		}
+		else
+		{
+			sReal = cReal;
+			sGame = cGame;
+			sSpeed = timeSpeed;
+
+			eSpeed = speed;
+			double d = (eSpeed - sSpeed)*ticksPerSecond;
+			eReal = sReal + (__int64)abs(d/changeRate);
+			changingSpeed = true;
+		}
 	}
 	void pause()
 	{

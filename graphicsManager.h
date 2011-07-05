@@ -32,7 +32,6 @@ protected:
 			int height;
 		}viewport;
 
-		
 		struct Projection{
 			enum Type{PERSPECTIVE,ORTHOGRAPHIC}type;
 			//both
@@ -55,13 +54,16 @@ protected:
 			Vec3f center;
 			Vec3f up;
 		}camera;
+
+		matrix4x4<float> projectionMat;
+		matrix4x4<float> modelViewMat;
 	}view;
 
 
 	HDC			hDC;
 	HGLRC		hRC;
 	HWND		hWnd;
-	HINSTANCE	hInstance;			
+	HINSTANCE	hInstance;
 	float		currentGamma;
 	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL){}
 
@@ -70,13 +72,10 @@ public:
 	virtual void reset();
 
 	virtual gID newModel(string disp)=0;
-	virtual gID newParticleEffect(string texture, int size, string shader = "")=0;
 
 	bool drawObject(gID obj);
 	virtual bool drawModel(gID obj, Vec3f pos, Quat4f rot)=0;
 	virtual bool drawModel(gID obj)=0;
-	//virtual bool drawParticle(gID id, Vec3f pos, Color c)=0;
-	virtual	bool drawParticle(gID id, Vec3f pos, float life)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size)=0;
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size, string tex)=0;
 	virtual bool drawOverlay(float x,float y,float width,float height)=0;
@@ -90,16 +89,23 @@ public:
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
 	virtual bool createWindow(char* title, RECT WindowRect, bool checkMultisample)=0;
+	virtual bool recreateWindow(Vec2i resolution, int multisample)=0;
+	virtual bool changeResolution(Vec2f resolution)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
 	virtual void bindRenderTarget(RenderTarget t)=0;
 	virtual void renderFBO(RenderTarget src)=0;
 	
+	virtual void drawSphere(Vec3f position, float radius)=0;
+
 	virtual void viewport(int x,int y,int width,int height)=0;
 	virtual void perspective(float fovy, float aspect, float near, float far)=0;
 	virtual void ortho(float left, float right, float bottom, float top, float near, float far)=0;
-	virtual void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, -1.0f, 1.0f);}
+	virtual void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
 	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up)=0;
+
+	virtual Vec2f project(Vec3f p);
+	const View& getView(){return view;}
 
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
@@ -125,26 +131,6 @@ protected:
 		Vec3f pos;
 		Quat4f rot;
 		model(string d): object(MODEL,false), disp(d){}
-		void render(){}
-	};
-	struct particleEffect: public object
-	{
-		string			texture,
-						shader;
-		int				size;
-		unsigned int	num,
-						compacity;
-		GLuint			VBO;
-		struct particle{
-			Vec3f vert;
-			float r,g,b,a;
-			float life;
-		} *particles;
-
-		particleEffect(string tex, string Shader, int s);
-		~particleEffect();
-		void reset();
-		bool setParticle(Vec3f p, float life);
 		void render();
 	};
 
@@ -163,12 +149,9 @@ protected:
 public:
 
 	gID newModel(string disp);
-	gID newParticleEffect(string texture, int size, string shader = "");
 
 	bool drawModel(gID obj, Vec3f pos, Quat4f rot);
 	bool drawModel(gID obj);
-	bool drawParticle(gID id, Vec3f pos, float life);
-	//bool drawParticle(gID id, Vec3f pos, Color c)=0;
 	bool drawOverlay(Vec2f Origin, Vec2f Size);
 	bool drawOverlay(Vec2f Origin, Vec2f Size,string tex);
 	bool drawOverlay(float x,float y,float width,float height);
@@ -182,10 +165,14 @@ public:
 	void destroyWindow();
 	void setGamma(float gamma);
 	bool createWindow(char* title, RECT WindowRect, bool checkMultisample);
+	bool recreateWindow(Vec2i resolution, int multisample);
+	bool changeResolution(Vec2f resolution);
 	void swapBuffers();
 	void takeScreenshot();
 	void bindRenderTarget(RenderTarget t);
 	void renderFBO(RenderTarget src);
+
+	void drawSphere(Vec3f position, float radius);
 
 	void viewport(int x,int y,int width,int height);
 	void perspective(float fovy, float aspect, float near, float far);

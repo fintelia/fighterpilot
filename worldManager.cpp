@@ -168,6 +168,7 @@ void WorldManager::update()
 				tr2 = dataManager.getModel(l->second->type);
 				if(l->second->owner != i->second->id &&  l->second->owner != (*i).first && 
 					(i->second->position + i->second->rotation*(tr1!=NULL?tr1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(tr2!=NULL?tr2->getCenter():Vec3f(0,0,0))) < (tr1!=NULL?tr1->getRadius():0)+(tr2!=NULL?tr2->getRadius():0) )
+					//collisionCheck(i->second,l->second))
 				{
 					(*i).second->loseHealth(105.0);
 					if((*i).second->dead) 

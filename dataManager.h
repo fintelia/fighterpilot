@@ -20,7 +20,7 @@ public:
 	void unbindTextures();
 	void unbindShader();
 
-	void draw(planeType p);
+	void draw(objectType p);
 	void draw(string name);
 
 	int getId(string name);
@@ -38,6 +38,10 @@ public:
 
 	int registerAssets();
 	void registerAsset(string name, string filename);
+	void registerShader(string name, string vert, string frag);
+
+	int getCurrentShaderId(){return boundShaderId;}
+	bool texturesBound(){return !boundTextureIds.empty();}
 
 	void shutdown();
 
@@ -51,7 +55,7 @@ private:
 
 	void registerTexture(string name, int id);
 	void registerShader(string name, int id);
-	void registerShader(string name, string vert, string frag);
+	
 	void registerModel(string name, int id);
 
 	char *textFileRead(char *fn);//for shaders

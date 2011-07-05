@@ -10,7 +10,8 @@ const Color darkBlue(0.11f,0.35f,0.52f);
 const Color lightBlue(0.19f,0.58f,0.78f);
 const Color darkGreen(0.49f,0.57f,0.06f);
 const Color lightGreen(0.68f,0.76f,0.12f);
-
+const Color darkGray(0.3f,0.3f,0.3f);
+const Color lightGray(0.6f,0.6f,0.6f);
 unsigned __int8 uPowerOfTwo(unsigned __int8 i)
 {
     i--;

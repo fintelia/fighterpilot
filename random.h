@@ -83,8 +83,8 @@ public:
 	Vec3f operator()<Vec3f> ()
 	{
 		float t = gRand<float>() * 2.0f*PI;
-		float z = gRand<float>();
-		return Vec3f(cos(t),sin(t),sqrt(1.0f-z*z));
+		float z = gRand<float>() * 2.0f - 1.0f;
+		return Vec3f(z*cos(t),z*sin(t),(z < 0.0f) ? -sqrt(1.0f-z*z) : sqrt(1.0f-z*z));
 	}
 	template <>
 	Vec3d operator()<Vec3d> ()

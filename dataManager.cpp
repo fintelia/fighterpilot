@@ -328,7 +328,7 @@ int DataManager::loadOBJ(string filename)
 		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
 		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
 	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
-	struct mtl{int tex;color diffuse;float transparency;string name;mtl(): tex(0), diffuse(1,1,1), transparency(1.0){}};
+	struct mtl{int tex;color diffuse;float transparency;string name;mtl(): tex(dataManager.getId("white")), diffuse(1,1,1), transparency(1.0){}};
 ////////////////////variables///////////////////////////
 	unsigned int	numVertices=0,
 					numTexcoords=0,
@@ -896,6 +896,7 @@ void DataManager::unbindTextures()
 void DataManager::unbindShader()
 {
 	glUseProgram(0);
+	boundShaderId = 0;
 	boundShader = "";
 }
 void DataManager::draw(string name)
@@ -907,16 +908,25 @@ void DataManager::draw(string name)
 		glActiveTexture(GL_TEXTURE0);
 		activeTextureUnit = 0;
 	}
+	bind("noTexture");
+	bind("model");
+	setUniform1i("tex",0);
 	glCallList(assets[name]->id);
+	unbind("model");
 }
-void DataManager::draw(planeType p)
+void DataManager::draw(objectType p)
 {
-	if(p==F12)	draw("f12");
-	if(p==F16)	draw("f16");
-	if(p==F18)	draw("f18");
-	if(p==F22)	draw("f22");
-	if(p==UAV)	draw("UAV");
-	if(p==B2)	draw("B2");
+	if(p==F12)		draw("f12");
+	if(p==F16)		draw("f16");
+	if(p==F18)		draw("f18");
+	if(p==F22)		draw("f22");
+	if(p==UAV)		draw("UAV");
+	if(p==B2)		draw("B2");
+
+	if(p==MISSILE1)	draw("missile1");
+	if(p==MISSILE2)	draw("missile2");
+	if(p==MISSILE3)	draw("missile3");
+	if(p==MISSILE4)	draw("missile4");
 }
 int DataManager::registerAssets()
 {
@@ -933,6 +943,7 @@ int DataManager::registerAssets()
 
 	if(callNum==n++)	registerTexture("noTexture",		0);
 	if(callNum==n++)	registerShader("noShader",			0);	
+	if(callNum==n++)	registerAsset("white",				"media/white.png");	
 	if(callNum==n++)	registerAsset("grass",				"media/grass.png");
 	if(callNum==n++)	registerAsset("rock",				"media/rock.png");
 	if(callNum==n++)	registerAsset("sand",				"media/sand.png");
@@ -960,7 +971,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
 	if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
 	if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
-	//if(callNum==n++)	registerAsset("smoke2",				"media/smoke2.png");
+	if(callNum==n++)	registerAsset("fire",				"media/fire.png");
 
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
@@ -995,6 +1006,8 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
 	if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
 	if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
+	if(callNum==n++)	registerShader("model",				"media/model.vert","media/model.frag");
+	if(callNum==n++)	registerShader("ortho",				"media/ortho.vert","media/ortho.frag");
 	//if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
 	if(callNum==n++)	registerAsset("island new terrain",	"media/grass.frag");
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
@@ -1006,6 +1019,12 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
 	if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
 	if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
+
+	if(callNum==n++)	registerAsset("missile1",			"media/m1(center).obj");
+	if(callNum==n++)	registerAsset("missile2",			"media/m2(center).obj");
+	if(callNum==n++)	registerAsset("missile3",			"media/m3(center).obj");
+	if(callNum==n++)	registerAsset("missile4",			"media/m4(center).obj");
+
 	//if(callNum==n++)	registerAsset("AA gun",				"media/AAGun_Mobile_01.obj"); <---- WE HAVE NO MODEL YET!!!
 	//				.					.
 	//				.					.
@@ -1017,7 +1036,9 @@ int DataManager::registerAssets()
 }
 void DataManager::registerAsset(string name, string filename)
 {//shaders must be registered by hand right now
-	if(assets.find(name) != assets.end()) messageBox(string("name clash: ") + name);
+	if(assets.find(name) != assets.end()) 
+		messageBox(string("name clash: ") + name);
+
 	string ext=filesystem::extension(filename);
 	if(ext.compare(".tga") == 0)		registerTexture(name,loadTGA(filename));
 	else if(ext.compare(".mmp") == 0)	registerTexture(name,loadMMP(filename));
@@ -1069,6 +1090,11 @@ int DataManager::getId(objectType t)
 	if(t==F22)	return getId("f22");
 	if(t==UAV)	return getId("UAV");
 	if(t==B2)	return getId("B2");
+
+	if(t==MISSILE1) return getId("missile1");
+	if(t==MISSILE2) return getId("missile2");
+	if(t==MISSILE3) return getId("missile3");
+	if(t==MISSILE4) return getId("missile4");
 	return 0;
 }
 CollisionChecker::triangleList* DataManager::getModel(objectType type)

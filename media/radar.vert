@@ -5,5 +5,5 @@ void main()
 
 	texCoord = gl_MultiTexCoord0.xy;
 
-	gl_Position = ftransform();//gl_ModelViewProjectionMatrix * gl_Vertex;
+	gl_Position = gl_Vertex;
 }

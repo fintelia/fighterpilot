@@ -5,7 +5,7 @@ namespace menu{
 class element
 {
 public:
-	enum elementType{NONE=-1,BUTTON=0,STATIC,SLIDER,LIST,TOGGLE,LABEL,CHECKBOX};
+	enum elementType{NONE=-1,BUTTON=0,STATIC,SLIDER,LIST,TOGGLE,LABEL,CHECKBOX,TEXTBOX,LISTBOX};
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
@@ -105,13 +105,56 @@ public:
 	void mouseUpL(int X, int Y);
 protected:
 
-
 	void click();
 	void unclick();
 
 	bool checked;
 	bool clicking;
 };
+class textBox: public element
+{
+public:
+	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),focus(false),clicking(false),cursorPos(0){}
+
+	void mouseDownL(int X, int Y);
+	void mouseUpL(int X, int Y);
+	void keyDown(int vkey);
+
+	void render();
+
+protected:
+	void addChar(char c);
+
+	bool focus;
+	bool clicking;
+
+	int cursorPos;
+};
+
+class listBox: public element
+{
+public:
+	listBox(int X, int Y, int Width, string str, Color textColor): element(LISTBOX,X,Y,Width,30,str,textColor),focus(false),clicking(false),choosing(false),optionNum(-1){}
+
+	void addOption(string option);
+	
+	void mouseDownL(int X, int Y);
+	void mouseUpL(int X, int Y);
+
+	void render();
+
+	int getOptionNumber(){return optionNum;}
+protected:
+
+	vector<string> options;
+
+	bool focus;
+	bool clicking;
+	bool choosing;
+
+	int optionNum;
+};
+
 class toggle: public element
 {
 public:
@@ -185,6 +228,9 @@ protected:
 	map<string,label*> labels;
 	map<string,toggle*> toggles;
 	map<string,slider*> sliders;
+	map<string,checkBox*> checkBoxes;
+	map<string,textBox*> textBoxes;
+	map<string,listBox*> listBoxes;
 
 	friend class manager;
 };
@@ -233,11 +279,11 @@ protected:
 	bool replaceDialog;
 	void fileSelected();
 };
-class messageBox: public popup
+class messageBox_c: public popup
 {
 public:
-	messageBox():value(-1),clicking(-1){}
-	~messageBox(){}
+	messageBox_c():value(-1),clicking(-1){}
+	~messageBox_c(){}
 
 	bool init(string t);
 	bool init(string t, vector<string> buttons);
@@ -269,6 +315,20 @@ protected:
 	int type;
 	int team;
 };
+class objectProperties: public popup
+{
+protected:
+	LevelFile::Object* object;
+
+public:
+	objectProperties():object(NULL){}
+	~objectProperties(){}
+
+	bool init(LevelFile::Object* obj);
+
+	int update();
+	void render();
+};
 class screen: functor<void,popup*>
 {
 public:
@@ -297,6 +357,10 @@ protected:
 	map<string,label*> labels;
 	map<string,toggle*> toggles;
 	map<string,slider*> sliders;
+	map<string,checkBox*> checkBoxes;
+	map<string,textBox*> textBoxes;
+	map<string,listBox*> listBoxes;
+
 	friend class manager;
 };
 
@@ -408,6 +472,7 @@ public:
 	int update();
 	void render();
 
+	void issueInputCallback(Input::callBack* callback, element* e);
 	void inputCallback(Input::callBack* callback);
 
 	screen* getMenu(){return menu;}

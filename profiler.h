@@ -15,11 +15,11 @@ public:
 	}
 	void endElement(string n)
 	{
-		//glFinish();
+		glFinish();
 		if(start.find(n)==start.end())
 			start[n]=0;
 		elements[n].push_back(GetTime()-start[n]);
-		if(elements[n].size()>30)
+		if(elements[n].size()>3)
 			elements[n].erase(elements[n].begin());
 	}
 	void setOutput(string n, int i)

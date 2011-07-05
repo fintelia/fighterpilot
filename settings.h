@@ -36,22 +36,23 @@ public:
 	{
 		struct hardpoint
 		{
-			int missileNum;
+			missileType mType;
 			Vec3f offset;
-			hardpoint(): missileNum(-1), offset(0,0,0) {}
-			hardpoint(int mNum,Vec3f Offset): missileNum(mNum), offset(Offset) {}
+			hardpoint(): mType(MISSILE), offset(0,0,0) {}
+			hardpoint(missileType t,Vec3f Offset): mType(t), offset(Offset) {}
 		};
 		vector<hardpoint> hardpoints;//offsets
 		vector<Vec3f> machineGuns;
 		planeStat(){}
 	};
 	map<planeType,planeStat> planeStats;
-	struct missileStat
-	{
-		int dispList;
-		missileStat(): dispList(0) {}
-	};
-	vector<missileStat> missileStats;
+	//struct missileStat
+	//{
+	//	//int dispList;
+	//	missileType type;
+	//	missileStat(): type(MISSILE) {}
+	//};
+	//vector<missileStat> missileStats;
 
 	//void loadMap(char *filename);
 	void loadModelData(char* filename);

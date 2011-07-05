@@ -4,9 +4,9 @@
 
 //nst int TYPE				= 0xXXxx;
 const int PLANE				= 0x0100;
-const int F12				= 0x0100;
-const int F16				= 0x0100;
-const int F18				= 0x0100;
+const int F12				= 0x0101;
+const int F16				= 0x0102;
+const int F18				= 0x0103;
 const int F22				= 0x0104;
 const int UAV				= 0x0105;
 const int B2				= 0x0106;
@@ -14,7 +14,10 @@ const int B2				= 0x0106;
 const int AA_GUN			= 0x0200;
 
 const int MISSILE			= 0x0400;
-
+const int MISSILE1			= 0x0401;
+const int MISSILE2			= 0x0402;
+const int MISSILE3			= 0x0404;
+const int MISSILE4			= 0x0408;
 
 const int NEUTRAL			= 0x00;
 const int TEAM0				= 0x01;
@@ -54,7 +57,7 @@ extern planeType defaultPlane;
 extern const int BULLET_SPEED;
 extern const int MISSILE_SPEED;
 
-const double MAX_FPS		= 60.0;
+const double MAX_FPS		= 260.0;
 
 extern planeType planeTypeFromString(string s);
 
@@ -96,6 +99,8 @@ extern const Color darkBlue;
 extern const Color lightBlue;
 extern const Color darkGreen;
 extern const Color lightGreen;
+extern const Color darkGray;
+extern const Color lightGray;
 
 template<class A, class B>
 class functor

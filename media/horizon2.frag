@@ -27,7 +27,7 @@ void main()
 	else
 		color = vec4(0.00630957, 0.0289912, 0.0289912,1.0);
 
-	color = mix(color,mix(vec4(0.0707403, 0.217638, 0.893289,1.0),vec4(0.172611, 0.531049, 0.893289,0.0),rad),min(rad+0.2,1.0));
+	color = mix(color,mix(vec4(0.0707403, 0.217638, 0.893289,1.0),vec4(0.172611, 0.531049, 0.893289,1.0),rad),min(rad+0.2,1.0));
 	
 	if(gl_TexCoord[0].s<1.0 && gl_TexCoord[0].s>0.0 && gl_TexCoord[0].t<1.0 && gl_TexCoord[0].t>0.0)
 	{

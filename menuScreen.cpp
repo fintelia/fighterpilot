@@ -32,6 +32,21 @@ void manager::render()
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
 		}
+		for(auto e = menu->checkBoxes.begin(); e != menu->checkBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = menu->textBoxes.begin(); e != menu->textBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = menu->listBoxes.begin(); e != menu->listBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
 	}
 	for(auto i = popups.begin(); i!=popups.end();i++)
 	{
@@ -57,12 +72,38 @@ void manager::render()
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
 		}
+		for(auto e = (*i)->checkBoxes.begin(); e != (*i)->checkBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = (*i)->textBoxes.begin(); e != (*i)->textBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
+		for(auto e = (*i)->listBoxes.begin(); e != (*i)->listBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility())
+				e->second->render();
+		}
 	}
 	if(mDrawCursor)
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		graphics->drawOverlay(cursorPos.x,cursorPos.y,21,25,"cursor");
+		if(dataManager.getId("cursor") != 0)
+			graphics->drawOverlay(cursorPos.x,cursorPos.y,cursorPos.x+21,cursorPos.y+25,"cursor");
+		else
+		{
+			glColor3f(0,0,0);
+			glBegin(GL_TRIANGLES);
+				glVertex2f(cursorPos.x,cursorPos.y);
+				glVertex2f(cursorPos.x,cursorPos.y+25);
+				glVertex2f(cursorPos.x+12,cursorPos.y+22);
+			glEnd();
+			glColor3f(1,1,1);
+		}
 	}
 }
 int manager::update()
@@ -101,166 +142,88 @@ void manager::setMenu(screen* m)
 	if(m != NULL)
 		m->init();
 }
+void manager::issueInputCallback(Input::callBack* callback, element* e)
+{
+	if(e == NULL)
+		return;
+
+	if(callback->type == KEY_STROKE)
+	{
+		Input::keyStroke* call = (Input::keyStroke*)callback;
+		if(call->up)	e->keyUp(call->vkey);
+		else			e->keyDown(call->vkey);
+	}
+	else if(callback->type == MOUSE_CLICK)
+	{
+		Input::mouseClick* call = (Input::mouseClick*)callback;
+		if(call->button == LEFT_BUTTON && call->down)		e->mouseDownL(call->x,call->y);
+		else if(call->button == LEFT_BUTTON && !call->down)	e->mouseUpL(call->x,call->y);
+		else if(call->button == RIGHT_BUTTON && call->down)	e->mouseDownR(call->x,call->y);
+		else if(call->button == RIGHT_BUTTON && !call->down)e->mouseUpR(call->x,call->y);
+	}
+}
 void manager::inputCallback(Input::callBack* callback)
 {
-	if(callback->type == KEY_STROKE){
+	if(callback->type == KEY_STROKE)
+	{
 		Input::keyStroke* call = (Input::keyStroke*)callback;
 		if(!popups.empty())
 		{
 			int pSize = popups.size();
-			if(!call->up)
-				popups.back()->keyDown(call->vkey);
-			else
-				popups.back()->keyUp(call->vkey);
-			if(pSize==popups.size())
-			{
-				for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)
-				{
-					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
-				}
-			}
-			if(pSize==popups.size())
-			{
-				for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)
-				{
-					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
-				}
-			}
+			if(!call->up)	popups.back()->keyDown(call->vkey);
+			else			popups.back()->keyUp(call->vkey);
+
+			if(pSize==popups.size())	for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)	issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)	issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->textBoxes.begin(); pSize==popups.size() && e != popups.back()->textBoxes.end(); e++)	issueInputCallback(callback,e->second);
 		}
 		else if(menu!=NULL)
 		{
 			if(!call->up)	menu->keyDown(call->vkey);
 			else			menu->keyUp(call->vkey);
 
-			if(menu!=NULL)//if menu is still not NULL (could have changed due to this keystroke)
-			{
-				for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)
-				{
-					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
-				}
-			}
-			if(menu!=NULL)
-			{
-				for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)
-				{
-					if(e->second != NULL && call->up)		e->second->keyUp(call->vkey);
-					else if(e->second != NULL && !call->up)	e->second->keyDown(call->vkey);
-				}
-			}
+			if(menu)	for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)		issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)		issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->textBoxes.begin(); menu!=NULL && e != menu->textBoxes.end(); e++)	issueInputCallback(callback,e->second);
 		}
 	}
-	else if(callback->type == MOUSE_CLICK){
+	else if(callback->type == MOUSE_CLICK)
+	{
 		Input::mouseClick* call = (Input::mouseClick*)callback;
 		
 		if(!popups.empty())
 		{
 			int pSize = popups.size();
-			if(call->button == LEFT_BUTTON)
-				popups.back()->mouseL(call->down,call->x,call->y);
-			else if(call->button == RIGHT_BUTTON)
-				popups.back()->mouseR(call->down,call->x,call->y);
+			if(call->button == LEFT_BUTTON)			popups.back()->mouseL(call->down,call->x,call->y);
+			else if(call->button == RIGHT_BUTTON)	popups.back()->mouseR(call->down,call->x,call->y);
 			
-			if(pSize==popups.size())
-			{
-				for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
-						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
-			if(pSize==popups.size())
-			{
-				for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
-						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
-			if(pSize==popups.size())
-			{
-				for(auto e = popups.back()->sliders.begin(); pSize==popups.size() && e != popups.back()->sliders.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)		e->second->mouseDownL(call->x,call->y);
-						else if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						else if(call->button == RIGHT_BUTTON && !call->down)e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
+			if(pSize==popups.size())	for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)		issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)		issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->sliders.begin(); pSize==popups.size() && e != popups.back()->sliders.end(); e++)		issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->checkBoxes.begin(); pSize==popups.size() && e != popups.back()->checkBoxes.end(); e++)	issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->textBoxes.begin(); pSize==popups.size() && e != popups.back()->textBoxes.end(); e++)	issueInputCallback(callback,e->second);
+			if(pSize==popups.size())	for(auto e = popups.back()->listBoxes.begin(); pSize==popups.size() && e != popups.back()->listBoxes.end(); e++)	issueInputCallback(callback,e->second);
 		}
 		else if(menu!=NULL)
 		{
-			if(call->button == LEFT_BUTTON)
-				menu->mouseL(call->down,call->x,call->y);
-			else if(call->button == MIDDLE_BUTTON)
-				menu->mouseC(call->down,call->x,call->y);
-			else if(call->button == RIGHT_BUTTON)
-				menu->mouseR(call->down,call->x,call->y);
+			if(call->button == LEFT_BUTTON)				menu->mouseL(call->down,call->x,call->y);
+			else if(call->button == MIDDLE_BUTTON)		menu->mouseC(call->down,call->x,call->y);
+			else if(call->button == RIGHT_BUTTON)		menu->mouseR(call->down,call->x,call->y);
 
-			if(menu!=NULL)
-			{
-				for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
-			if(menu!=NULL)
-			{
-				for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
-			if(menu!=NULL)
-			{
-				for(auto e = menu->sliders.begin(); menu!=NULL && e != menu->sliders.end(); e++)
-				{
-					if(e->second != NULL)
-					{
-						if(call->button == LEFT_BUTTON && call->down)	e->second->mouseDownL(call->x,call->y);
-						if(call->button == LEFT_BUTTON && !call->down)	e->second->mouseUpL(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && call->down)	e->second->mouseDownR(call->x,call->y);
-						if(call->button == RIGHT_BUTTON && !call->down)	e->second->mouseUpR(call->x,call->y);
-					}
-				}
-			}
+			if(menu)	for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->sliders.begin(); menu!=NULL && e != menu->sliders.end(); e++)issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->checkBoxes.begin(); menu!=NULL && e != menu->checkBoxes.end(); e++)issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->textBoxes.begin(); menu!=NULL && e != menu->textBoxes.end(); e++)issueInputCallback(callback,e->second);
+			if(menu)	for(auto e = menu->listBoxes.begin(); menu!=NULL && e != menu->listBoxes.end(); e++)issueInputCallback(callback,e->second);
 		}
 
 	}
-	else if(callback->type == MOUSE_SCROLL){
+	else if(callback->type == MOUSE_SCROLL)
+	{
 		Input::mouseScroll* call = (Input::mouseScroll*)callback;
-		if(!popups.empty())
-			popups.back()->scroll(call->rotations);
-		else if(menu!=NULL)
-			menu->scroll(call->rotations);
-
+		if(!popups.empty())		popups.back()->scroll(call->rotations);
+		else if(menu!=NULL)		menu->scroll(call->rotations);
 	}
 }
 bool openFile::init()
@@ -377,8 +340,8 @@ int openFile::update()
 }
 void openFile::render()
 {
-	graphics->drawOverlay(sw/2-420,sh/2-261,841,523,"file viewer");
-	graphics->drawOverlay(sw/2-180,sh/2+189,370,46,"entry bar");
+	graphics->drawOverlay(sw/2-420,sh/2-261,sw/2+421,sh/2+262,"file viewer");
+	graphics->drawOverlay(sw/2-180,sh/2+189,sw/2+190,sh/2+235,"entry bar");
 
 	glColor3f(0,0,0);
 	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
@@ -437,7 +400,7 @@ void saveFile::operator() (popup* p)
 {
 	if(replaceDialog)
 	{
-		if(((messageBox*)p)->getValue() == 0)
+		if(((messageBox_c*)p)->getValue() == 0)
 		{
 			done = true;
 		}
@@ -459,7 +422,7 @@ void saveFile::fileSelected()
 		file += extFilter;
 	if(exists(directory/file))//if file exists
 	{
-		messageBox* m = new messageBox;
+		messageBox_c* m = new messageBox_c;
 		vector<string> s;
 		s.push_back("yes");
 		s.push_back("no");
@@ -474,11 +437,11 @@ void saveFile::fileSelected()
 	}
 }
 
-bool messageBox::init(string t)
+bool messageBox_c::init(string t)
 {
 	return init(t, vector<string>(1,"OK"));
 }
-bool messageBox::init(string t, vector<string> names)
+bool messageBox_c::init(string t, vector<string> names)
 {
 	if(names.empty()) return init(t);//watch out for infinite loop!!
 
@@ -501,15 +464,15 @@ bool messageBox::init(string t, vector<string> names)
 	clicking=-1;
 	return true;
 }
-void messageBox::render()
+void messageBox_c::render()
 {
 	if(dataManager.getId("dialog box") != 0)
-		graphics->drawOverlay(x,y,width,height,"dialog box");
+		graphics->drawOverlay(x,y,x+width,y+height,"dialog box");
 	else
 	{
 		dataManager.bind("noTexture");
 		glColor3f(0.3,0.3,0.3);
-		graphics->drawOverlay(x,y,width,height);
+		graphics->drawOverlay(x,y,x+width,y+height);
 		glColor3f(1,1,1);
 	}
 
@@ -523,12 +486,15 @@ void messageBox::render()
 	for(vector<label*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
 		if(dataManager.getId("glow") != 0 && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
-			graphics->drawOverlay(startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,startY+slotHeight*0.5-35,textManager->getTextWidth((*i)->getText())*1.5,70,"glow");
+		{
+			graphics->drawOverlay(	startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,		startY+slotHeight*0.5-35,						
+									startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,		startY+slotHeight*0.5+35,   "glow");
+		}
 		(*i)->render();
 	}
 	menuManager.drawCursor();
 }
-void messageBox::mouseL(bool down, int X, int Y)
+void messageBox_c::mouseL(bool down, int X, int Y)
 {
 	if(done) return;
 
@@ -561,8 +527,88 @@ void messageBox::mouseL(bool down, int X, int Y)
 		clicking = -1;
 	}
 }
+bool objectProperties::init(LevelFile::Object* obj)
+{
+	if(obj == NULL)
+		return false;
+
+	object = obj;
 
 
+	buttons["Ok"]		= new button(sw/2+275, sh/2+185, 100, 40, "Ok",lightGray);
+	buttons["Cancel"]	= new button(sw/2+150, sh/2+185, 100, 40, "Cancel",lightGray);
+
+	labels["x location"]	= new label(sw/2-210,sh/2-15,"X location:");
+	labels["z location"]	= new label(sw/2-210,sh/2+25,"Y location:");
+	labels["y location"]	= new label(sw/2-210,sh/2+65,"Z location:");
+
+	textBoxes["x location"]	= new textBox(sw/2-100,sh/2-15,100,lexical_cast<string>(floor(object->startloc.x+0.5)),black);
+	textBoxes["y location"]	= new textBox(sw/2-100,sh/2+25,100,lexical_cast<string>(floor(object->startloc.y+0.5)),black);
+	textBoxes["z location"]	= new textBox(sw/2-100,sh/2+65,100,lexical_cast<string>(floor(object->startloc.z+0.5)),black);
+
+	listBox* l = new listBox(sw/2+100,sh/2-15,100,"team " + lexical_cast<string>(object->team+1),black);
+	l->addOption("team 1");
+	l->addOption("team 2");
+	l->addOption("team 3");
+	l->addOption("team 4");
+	listBoxes["team"] = l;
+
+	string ptype;
+	if(object->type == F16)	ptype = "F16";
+	if(object->type == F18)	ptype = "F18";
+	if(object->type == F22)	ptype = "F22";
+	if(object->type == UAV)	ptype = "UAV";
+	if(object->type == B2)	ptype = "B2";
+
+	l = new listBox(sw/2+250,sh/2-15,100,ptype,black);
+	l->addOption("F16");
+	l->addOption("F18");
+	l->addOption("F22");
+	l->addOption("UAV");
+	l->addOption("B2");
+	listBoxes["type"] = l;
+
+	return true;
+}
+int objectProperties::update()
+{
+	if(buttons["Ok"]->checkChanged())
+	{
+		try{
+			Vec3f v(lexical_cast<float>(textBoxes["x location"]->getText()), 
+					lexical_cast<float>(textBoxes["y location"]->getText()),
+					lexical_cast<float>(textBoxes["z location"]->getText()));
+
+			object->startloc = v;
+			object->team = listBoxes["team"]->getOptionNumber();
+
+			int ptype = listBoxes["type"]->getOptionNumber();
+			if(ptype == 0)	object->type = F16;
+			if(ptype == 1)	object->type = F18;
+			if(ptype == 2)	object->type = F22;
+			if(ptype == 3)	object->type = UAV;
+			if(ptype == 4)	object->type = B2;
+		}
+		catch(...)
+		{
+			messageBox("object position invalid");
+			return 0;
+		}
+
+		done = true;		
+	}
+	else if(buttons["Cancel"]->checkChanged())
+	{
+		done = true;
+	}
+	return 0;
+}
+void objectProperties::render()
+{
+	glColor4f(1,1,1,0.2);
+	graphics->drawOverlay(sw/2-400,sh/2-250,sw/2+400,sh/2+250,"white");
+	glColor3f(1,1,1);
+}
 int screen::backgroundImage=0;
 
 bool screen::loadBackground()
@@ -809,7 +855,7 @@ void levelEditor::render()
 }
 void levelEditor::mouseL(bool down, int x, int y)
 {
-	if(getTab() == OBJECTS)
+	if(getTab() == OBJECTS && down)
 	{
 		if(newObjectType != 0)
 		{
@@ -817,6 +863,10 @@ void levelEditor::mouseL(bool down, int x, int y)
 			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, x, y);
 			newObjectType = 0;
 			teamNum++;
+		}
+		else
+		{
+			mode->selectObject(x,y);
 		}
 	}
 }
@@ -851,15 +901,32 @@ levelEditor::Tab levelEditor::getTab()
 }
 void chooseMode::render()
 {
-	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
-	float sx = (float)sw/800;
-	float sy = (float)sh/600;
-	graphics->drawOverlay(Vec2f((-327+420)*sx,304*sy),Vec2f(629*sx,115*sy),"menu pictures");
+/*
+ 	graphics->drawOverlay(-1.0,-1.0,1.0,1.0,"menu background");
+	graphics->drawOverlay(-0.75,-0.4,0.75,0.0,"menu pictures");
 	for(int i=1;i<=5;i++)
 	{
 		if(i!=activeChoice+2)
 		{
-			graphics->drawOverlay(Vec2f((-327+i*210)*sx,300*sy),Vec2f(209*sx,150*sy),"menu slot");
+			graphics->drawOverlay(-1.25+0.5*i,-0.4,0.25+0.5*i,0.0,"menu slot");
+			//graphics->drawOverlay(Vec2f((-327+i*210)*sx,300*sy),Vec2f(209*sx,150*sy),"menu slot");
+		}
+	}
+	for(int i=1;i<=3;i++)
+	{
+	//	graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
+	}
+ */
+
+	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
+	float sx = (float)sw/800;
+	float sy = (float)sh/600;
+	graphics->drawOverlay(Vec2f((-327+420)*sx,304*sy),Vec2f(722*sx,419*sy),"menu pictures");
+	for(int i=1;i<=5;i++)
+	{
+		if(i!=activeChoice+2)
+		{
+			graphics->drawOverlay(Vec2f((-327+i*210)*sx,300*sy),Vec2f((-118+i*210)*sx,450*sy),"menu slot");
 		}
 	}
 	for(int i=1;i<=3;i++)
@@ -888,7 +955,7 @@ void chooseMode::keyDown(int vkey)
 		input->up(VK_RETURN);
 		menuManager.setMenu(NULL);
 
-		modeManager.setMode(new modeSplitScreen("media/level2.lvl"));
+		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
@@ -907,11 +974,11 @@ bool inGame::init()
 }
 void inGame::render()
 {
-	graphics->drawOverlay(sw/2-77,sh/2-122,153,245,"menu in game");
+	graphics->drawOverlay(sw/2-77,sh/2-122,sw/2+76,sh/2+123,"menu in game");
 	
-	if(activeChoice==RESUME)	graphics->drawOverlay(sw/2-70,sh/2-123 + 17,128,50,"menu in game select");
-	if(activeChoice==OPTIONS)	graphics->drawOverlay(sw/2-70,sh/2-122 + 92,128,50,"menu in game select");
-	if(activeChoice==QUIT)		graphics->drawOverlay(sw/2-70,sh/2-122 + 169,128,50,"menu in game select");
+	if(activeChoice==RESUME)	graphics->drawOverlay(sw/2-70,sh/2-122+16,sw/2+58,sh/2-122+66,"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(sw/2-70,sh/2-122+92,sw/2+58,sh/2-122+142,"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(sw/2-70,sh/2-122+169,sw/2+58,sh/2-122+219,"menu in game select");
 }
 void inGame::keyDown(int vkey)
 {
@@ -956,12 +1023,16 @@ int loading::update()
 		dataManager.registerAsset("menu background", "media/menu/menu background.png");
 		dataManager.registerAsset("progress back", "media/progress back.png");
 		dataManager.registerAsset("progress front", "media/progress front.png");
+		dataManager.registerShader("ortho", "media/ortho.vert", "media/ortho.frag");
 		toLoad=false;
 	}
 
 	static int totalAssets = -1;
 	int assetsLeft = dataManager.registerAssets();
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
+
+	//graphics->minimizeWindow();
+	//MessageBox(NULL,(wstring(L"loaded asset #") + lexical_cast<wstring>(totalAssets - assetsLeft)).c_str(),L"",0);
 	progress = 1.0-(float)assetsLeft/totalAssets;
 	if(assetsLeft==0)
 	{
@@ -971,16 +1042,23 @@ int loading::update()
 }
 void loading::render()
 {
-	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
-	graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9,sh*0.02),"progress back");
+	//static int n = 0;	n++;
+	//if(n <= 1) return;
+	dataManager.bind("ortho");
+	graphics->drawOverlay(-1.0,1.0,1.0,-1.0,"menu background");
+	graphics->drawOverlay(-0.9,-0.92,0.9,-0.96,"progress back");
+
 	if(dataManager.getId("progress front") != 0)
-		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02),"progress front");
+	{
+		graphics->drawOverlay(-0.9,-0.92,1.8*progress-0.9,-0.96,"progress front");
+	}
 	else
 	{
 		glColor3f(0,1,0);
-		graphics->drawOverlay(Vec2f(sw*0.05,sh*0.96),Vec2f(sw*0.9*progress,sh*0.02));
+		graphics->drawOverlay(-0.9,-0.92,1.8*progress-0.9,-0.96);
 		glColor3f(1,1,1);
 	}
+	dataManager.unbindShader();
 }
 void button::setElementText(string t)
 {
@@ -1088,9 +1166,9 @@ void button::mouseUpL(int X, int Y)
 }
 void checkBox::render()
 {
-	graphics->drawOverlay(x,y,26,26,"check box");
+	graphics->drawOverlay(x,y,x+26,y+26,"check box");
 	if(checked)
-		graphics->drawOverlay(x,y,26,26,"check");
+		graphics->drawOverlay(x,y,x+26,y+26,"check");
 
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x+30,y);
@@ -1110,7 +1188,230 @@ void checkBox::mouseUpL(int X, int Y)
 	}
 	clicking = false;
 }
+void textBox::mouseDownL(int X, int Y)
+{
+	clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+	if(!clicking) focus = false;
+}
+void textBox::mouseUpL(int X, int Y)
+{
+	if(clicking)
+	{
+		focus = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+		cursorPos = text.length();
+		clicking = false;
+	}
+}
+void textBox::render()
+{
+	if(focus)	glColor3f(0,0,0);
+	else	glColor3f(0.3,0.3,0.3);
+	graphics->drawOverlay(x-1,y-1,x+width+1,y+height+1,"white");
 
+	if(focus)	glColor3f(0.6,0.6,0.6);
+	else	glColor3f(0.8,0.8,0.8);
+	graphics->drawOverlay(x,y,x+width,y+height,"white");
+
+	glColor3f(color.r,color.g,color.b);
+	if(focus)
+	{
+		
+		float w = textManager->getTextWidth(text.substr(0,cursorPos));
+		float h = textManager->getTextHeight(text);
+
+		textManager->renderText(text,x+2,y);
+		if(int(floor(world.time()/500)) % 2 == 1)
+		{
+			glBegin(GL_LINES);
+			glVertex2f(x+w,y+2);
+			glVertex2f(x+w,y+h);
+			glEnd();
+		}
+	}
+	else
+	{
+		textManager->renderText(text,x+2,y);
+	}
+
+	glColor3f(1,1,1);
+}
+void textBox::addChar(char c)
+{
+	text.insert(text.begin()+cursorPos,c);
+	cursorPos++;
+}
+void textBox::keyDown(int vkey)
+{
+	if(focus)
+	{
+		if(0x60 <= vkey && 0x69 >= vkey)// numpad
+		{
+			addChar(vkey - 0x30);
+		}
+		else if(vkey == 0x20)// space
+		{
+			addChar(' ');
+		}
+		else if(vkey == 0x6e)
+		{
+			addChar('.');
+		}
+		else if(vkey == 0x08 && cursorPos > 0)// backspace
+		{
+			cursorPos--;
+			text.erase(text.begin()+cursorPos);
+		}
+		else if(vkey == 0x2e && cursorPos < text.length())// delete
+		{
+			text.erase(text.begin()+cursorPos);
+		}
+		else if(vkey == 0x25 && cursorPos > 0)
+		{
+			cursorPos--;
+		}
+		else if(vkey == 0x27 && cursorPos < text.length())
+		{
+			cursorPos++;
+		}
+
+
+		else if(input->getKey(VK_SHIFT))
+		{
+			if(0x41 <= vkey && 0x5a >= vkey)	addChar(vkey);
+			if(vkey == 0xba)					addChar(':');
+			if(vkey == 0xbc)					addChar('<');
+			if(vkey == 0xbe)					addChar('>');
+			if(vkey == 0xbf)					addChar('?');
+			if(vkey == 0xdb)					addChar('{');
+			if(vkey == 0xdc)					addChar('|');
+			if(vkey == 0xdd)					addChar('}');
+			if(vkey == 0xde)					addChar('"');
+		}
+		else
+		{
+			if(0x41 <= vkey && 0x5a >= vkey)	addChar(vkey+0x20);
+			if(0x30 <= vkey && 0x39 >= vkey)	addChar(vkey);
+			if(vkey == 0xba)					addChar(';');
+			if(vkey == 0xbc)					addChar(',');
+			if(vkey == 0xbe)					addChar('.');
+			if(vkey == 0xbf)					addChar('/');
+			if(vkey == 0xdb)					addChar('[');
+			if(vkey == 0xdc)					addChar('\\');
+			if(vkey == 0xdd)					addChar(']');
+			if(vkey == 0xde)					addChar('\'');
+		}
+	}
+}
+void listBox::addOption(string option)
+{
+	if(option == text)
+		optionNum = options.size();
+
+	options.push_back(option);
+}
+void listBox::mouseDownL(int X, int Y)
+{
+	if(focus)
+	{
+		choosing = (x <= X && x+width >= X && y <= Y && y+height+30*options.size() >= Y);
+		if(!choosing) focus = false;
+	}
+	else
+	{
+		clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+	}
+}
+void listBox::mouseUpL(int X, int Y)
+{
+	if(clicking)
+	{
+		focus = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+		clicking = false;
+	}
+	else if(choosing)
+	{
+		if(x <= X && x+width >= X && y+30 <= Y && y+height+30*options.size() >= Y)
+		{
+			int n = (Y-(y+height)) / 30;
+			text = options[n];
+			optionNum = n;
+		}
+		else
+		{
+			focus = false;
+		}
+		choosing = false;
+	}
+}
+void listBox::render()
+{
+	glColor3f(0.3,0.3,0.3);
+	graphics->drawOverlay(x-1,y-1,x+width+1,y+height+1,"white");
+
+	if(focus)
+	{
+		glColor3f(0,0,0);
+		graphics->drawOverlay(x-1,y+height+2,x+width+1,y+height+2+30*options.size(),"white");
+	}
+
+	if(focus)	glColor3f(0.6,0.6,0.6);
+	else	glColor3f(0.8,0.8,0.8);
+	graphics->drawOverlay(x,y,x+width,y+height,"white");
+
+	if(focus)
+	graphics->drawOverlay(x,y+height+3,x+width,y+height+1+30*options.size(),"white");
+
+
+	if(focus)	glColor3f(0.3,0.3,0.3);
+	else	glColor3f(0.5,0.5,0.5);
+	graphics->drawOverlay(x+width-height,y,x+width,y+height,"white");
+
+	glColor3f(0,0,0);
+	glBegin(GL_TRIANGLES);
+		glVertex2f(x+width-height * 0.666,	y + height * 0.333);
+		glVertex2f(x+width-height * 0.333,	y + height * 0.333);
+		glVertex2f(x+width-height * 0.5,	y + height * 0.666);
+	glEnd();
+
+	glColor3f(color.r,color.g,color.b);
+	//if(focus)
+	//{
+	//	
+	//	float w = textManager->getTextWidth(text.substr(0,cursorPos));
+	//	float h = textManager->getTextHeight(text);
+
+	//	textManager->renderText(text,x,y);
+	//	if(int(floor(world.time()/500)) % 2 == 1)
+	//	{
+	//		glBegin(GL_LINES);
+	//		glVertex2f(x+w,y+2);
+	//		glVertex2f(x+w,y+h);
+	//		glEnd();
+	//	}
+	//}
+	//else
+	//{
+	//	textManager->renderText(text,x,y);
+	//}
+	textManager->renderText(text,x+2,y);
+	if(focus)
+	{
+		float h = y + height + 1;
+		for(auto i = options.begin(); i!= options.end(); i++)
+		{
+			textManager->renderText(*i,x+2,h);
+			h += 30;
+		}
+	}
+
+	if(focus && optionNum != -1)
+	{
+		glColor4f(0.3,0.3,0.3,0.3);
+		graphics->drawOverlay(x,y+height+3+30*optionNum,x+width,y+height+1+30*(optionNum+1),"white");
+	}
+
+	glColor3f(1,1,1);
+}
 void label::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
@@ -1200,8 +1501,10 @@ void slider::render()
 		GetCursorPos(&cursorPos);
 		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
 	}
-	graphics->drawOverlay(x,0.5*height+y-11,width,22,"slider bar");
-	graphics->drawOverlay((value-minValue)*width/(maxValue - minValue) + x - 22,y,44,height,"slider");
+	graphics->drawOverlay(x,0.5*height+y-11,x+width,0.5*height+y+11,"slider bar");
+
+	float xv = (value-minValue)*width/(maxValue-minValue)+x;
+	graphics->drawOverlay(xv-22,y,xv+22,y+height,"slider");
 }
 void slider::mouseDownL(int X, int Y)
 {
@@ -1263,7 +1566,7 @@ void slider::setMaxValue(float m)
 }
 void messageBox(string text)
 {
-	menu::messageBox* m = new menu::messageBox;
+	menu::messageBox_c* m = new menu::messageBox_c;
 	m->init(text);
 	menuManager.setPopup(m);
 }
@@ -1281,7 +1584,7 @@ void closingMessage(string text,string title)
 		{
 			void operator() (menu::popup*){exit(0);}
 		};
-		menu::messageBox* m = new menu::messageBox;
+		menu::messageBox_c* m = new menu::messageBox_c;
 		m->init(text);
 		m->callback = (functor<void,menu::popup*>*)(new exitor);
 		menuManager.setPopup(m);
