@@ -93,24 +93,29 @@ int modeCampaign::update()
 	//	countdown=1000;
 	//}
 
-	radarAng+=45.0*world.time.length()/1000;
-	if(radarAng>=360)
-		radarAng-=360;
-
+#ifdef _DEBUG
+	static bool slow = false;
+	if(input->getKey(0x54))
+	{
+		input->up(0x54);
+		slow = !slow;
+		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
+	}
+#endif
 	return 30;
 }
 void modeCampaign::draw2D()
 {
 	nPlane* p=(nPlane*)world.objectList[players[0].objectNum()];
 	
-	if(players[0].firstPerson() && !p->controled)
+	if(players[0].firstPerson() && !p->controled && !p->dead)
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
 		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");
 		targeter(400,300,50,p->roll);
-		radar(176-16, 350-10, 80, 80, true, p);
+		radar(-0.6, -0.1333, 0.2, -0.2666, true, p);
 		
-		healthBar(140, 390, 200, -200, p->health/p->maxHealth,true);
+		healthBar(-0.65, -0.3, 0.5, 0.666, p->health/p->maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);
@@ -134,6 +139,9 @@ void modeCampaign::draw2D()
 }
 void modeCampaign::draw3D()
 {
+	//static int n = 0;	n++;
+	//if(n <= 1) return;
+
 	gluPerspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawScene(0);

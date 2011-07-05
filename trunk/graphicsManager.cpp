@@ -23,12 +23,6 @@ GraphicsManager::gID OpenGLgraphics::newModel(string disp)
 	objects.insert(pair<gID,object*>(nID, new model(disp)));
 	return nID;
 }
-GraphicsManager::gID OpenGLgraphics::newParticleEffect(string texture, int size, string shader)
-{
-	gID nID = idGen();
-	objects.insert(pair<gID,object*>(nID, new particleEffect(texture,shader,size)));
-	return nID;
-}
 void GraphicsManager::reset()
 {
 	for(map<gID,object*>::iterator i=objects.begin();i!=objects.end();i++)
@@ -61,6 +55,22 @@ bool OpenGLgraphics::drawModel(gID obj, Vec3f pos, Quat4f rot)
 	}
 	return false;
 }
+Vec2f GraphicsManager::project(Vec3f p)
+{
+	p -= view.camera.eye;
+
+	Vec3f f = (view.camera.center - view.camera.eye).normalize();
+	Vec3f UP = (view.camera.up).normalize();
+
+	Vec3f s = (f.cross(UP)).normalize();
+	Vec3f u = (s.cross(f)).normalize();
+	
+	float F = 1.0/tan((view.projection.fovy*PI/180.0) / 2.0);
+
+	Vec3f v = Vec3f(s.dot(p)*F/view.projection.aspect,   -u.dot(p)*F,   f.dot(p)*(view.projection.zNear+view.projection.zFar)-2.0*view.projection.zNear*view.projection.zFar) / (f.dot(p));
+
+	return Vec2f( (v.x + 1.0) / 2.0, (v.y + 1.0) / 2.0 );
+}
 bool OpenGLgraphics::drawModel(gID obj)
 {
 	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
@@ -70,101 +80,24 @@ bool OpenGLgraphics::drawModel(gID obj)
 	}
 	return false;
 }
-OpenGLgraphics::particleEffect::particleEffect(string tex, string Shader, int s): object(PARTICLE_EFFECT,true), texture(tex), shader(Shader), size(s), num(0), compacity(32), particles(NULL)
+void OpenGLgraphics::model::render()
 {
-	particles = new (nothrow) particle[compacity];
-	if(particles == NULL)
-		compacity = 0;
-	glGenBuffers(1,&VBO);
+	//todo write code
 }
-void OpenGLgraphics::particleEffect::reset()
+bool OpenGLgraphics::drawOverlay(Vec2f p1, Vec2f p2)
 {
-	drawFlag=false;
-	num = 0;
-}
-bool OpenGLgraphics::particleEffect::setParticle(Vec3f p, float life)
-{
+	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
+	//if(orthoShader)
+	//{
+	//	dataManager.bind("ortho");
+	//	if(!dataManager.texturesBound())
+	//		dataManager.bind("white");
+	//}
 
-	if(compacity <= num)
-	{
-		particle* tmpParticles = new (nothrow) particle[compacity*2];
-		if(tmpParticles == NULL) 
-			return false;
-
-		memcmp(tmpParticles,particles,compacity*sizeof(particle));
-		delete[] particles;
-		particles = tmpParticles;
-
-		compacity *= 2;
-	}
-	particles[num].vert = p;
-	//particles[num].r = c.r;
-	//particles[num].g = c.g;
-	//particles[num].b = c.b;
-	//particles[num].a = c.a;
-	particles[num].life = life;
-
-	drawFlag=true;
-	num++;
-	return true;
-}
-void OpenGLgraphics::particleEffect::render()
-{
-	if(num==0)return;
-
-	dataManager.bind(texture);
-
-	if(shader == "partical shader")
-	{
-		dataManager.bind(shader);
-		dataManager.setUniform1i("tex",0);
-		dataManager.setUniform1i("size1",size * 1.00);
-		dataManager.setUniform1i("size2",size * 0.05);//not currently used
-		//glUniform1i(glGetUniformLocation(dataManager.getId(shader), "tex"), 0);
-		//glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size1"), size * 1.00);
-		//glUniform1f(glGetUniformLocation(dataManager.getId(shader), "size2"), size * 0.05);
-
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(particle)*num, particles, GL_DYNAMIC_DRAW);
-
-		glEnableClientState(GL_VERTEX_ARRAY);
-		GLuint aLife = glGetAttribLocation(dataManager.getId("partical shader"),"life");
-		glEnableVertexAttribArray(aLife);
-
-		glVertexPointer(3, GL_FLOAT, sizeof(particle), 0);
-		glVertexAttribPointer(aLife,1,GL_FLOAT,false, sizeof(particle), (void*)(7*sizeof(float)));
-		//glColorPointer(4, GL_FLOAT, sizeof(particle), (void*)sizeof(Vec3f));
-
-		glDrawArrays(GL_POINTS, 0, num);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		glDisableVertexAttribArray(aLife);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	dataManager.bindShader(0);
-	dataManager.bindTex(0);
-}
-OpenGLgraphics::particleEffect::~particleEffect()
-{
-	glDeleteBuffers(1,&VBO);
-	delete[] particles;
-}
-bool OpenGLgraphics::drawParticle(gID id, Vec3f pos, float life)
-{
-	if(objects.find(id) !=objects.end() && objects[id]->type==object::PARTICLE_EFFECT)
-	{
-		return ((particleEffect*)objects[id])->setParticle(pos, life);
-	}
-	return false;
-}
-bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size)
-{
-	overlay[0].position = origin + Vec2f(0.0,		0.0);
-	overlay[1].position = origin + Vec2f(size.x,	0.0);
-	overlay[2].position = origin + Vec2f(size.x,	size.y);
-	overlay[3].position = origin + Vec2f(0.0,		size.y);
+	overlay[0].position = Vec2f(p1.x,p1.y);
+	overlay[1].position = Vec2f(p2.x,p1.y);
+	overlay[2].position = Vec2f(p2.x,p2.y);
+	overlay[3].position = Vec2f(p1.x,p2.y);
 
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
@@ -183,21 +116,31 @@ bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+	//if(orthoShader)
+	//	dataManager.unbindShader();
 	return true;
 }
-bool OpenGLgraphics::drawOverlay(Vec2f origin, Vec2f size, string tex)
+bool OpenGLgraphics::drawOverlay(Vec2f p1, Vec2f p2, string tex)
 {
 	dataManager.bind(tex);
-	drawOverlay(origin, size);
+	drawOverlay(p1, p2);
 	dataManager.unbind(tex);
 	return true;
 }
-bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height)
+bool OpenGLgraphics::drawOverlay(float x,float y,float x2,float y2)
 {
+	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
+	//if(orthoShader)
+	//{
+	//	dataManager.bind("ortho");
+	//	if(!dataManager.texturesBound())
+	//		dataManager.bind("white");
+	//}
+
 	overlay[0].position = Vec2f(x,y);
-	overlay[1].position = Vec2f(x+width,y);
-	overlay[2].position = Vec2f(x+width,y+height);
-	overlay[3].position = Vec2f(x,y+height);
+	overlay[1].position = Vec2f(x2,y);
+	overlay[2].position = Vec2f(x2,y2);
+	overlay[3].position = Vec2f(x,y2);
 
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
@@ -216,17 +159,24 @@ bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
+	//if(orthoShader)
+	//	dataManager.unbindShader();
+
 	return true;
 }
-bool OpenGLgraphics::drawOverlay(float x,float y,float width,float height,string tex)
+bool OpenGLgraphics::drawOverlay(float x,float y,float x2,float y2,string tex)
 {
 	dataManager.bind(tex);
-	drawOverlay(x, y, width, height);
+	drawOverlay(x, y, x2, y2);
 	dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation, string tex)
 {
+	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
+	//if(orthoShader)
+	//	dataManager.bind("ortho");
+
 	float w2 = size.x/2;
 	float h2 = size.y/2;
 	float cosRot = cos(rotation);
@@ -256,10 +206,17 @@ bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation
 
 	dataManager.unbind(tex);
 
+	//if(orthoShader)
+	//	dataManager.unbindShader();
+
 	return true;
 }
 bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize, string tex)
 {
+	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
+	//if(orthoShader)
+	//	dataManager.bind("ortho");
+
 	overlay[0].position = origin + Vec2f(0.0,		0.0);
 	overlay[1].position = origin + Vec2f(size.x,	0.0);
 	overlay[2].position = origin + Vec2f(size.x,	size.y);
@@ -293,6 +250,10 @@ bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin,
 	//	glTexCoord2f(tOrigin.x,tOrigin.y+tSize.y);			glVertex2f(origin.x,origin.y+size.y);
 	//glEnd();
 	//dataManager.unbind(tex);
+
+	//if(orthoShader)
+	//	dataManager.unbindShader();
+
 	return true;
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
@@ -383,7 +344,6 @@ bool OpenGLgraphics::init()
 	glPointParameterf(GL_POINT_SIZE_MIN_ARB, 1);
 	glPointParameterf(GL_POINT_SIZE_MAX_ARB, 8192);
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
-
 
 	//FRAME BUFFER OBJECTS
 	//glGenTextures(2, renderTextures);
@@ -478,7 +438,6 @@ void OpenGLgraphics::render()
 	for(int i=0;i<20;i++)
 		spf+=(frameTimes[i]*0.001)/20;
 	fps=1.0/spf;
-
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
 	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
 
@@ -489,8 +448,10 @@ void OpenGLgraphics::render()
 	glLoadIdentity();
 	glViewport(0, 0, sw, sh);
 
-	dataManager.bind("noShader");
-	glUseProgram(0);
+	//dataManager.unbindShader();
+
+
+	//glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
 	modeManager.render3D();
 
@@ -531,7 +492,8 @@ void OpenGLgraphics::render()
 	//if(GLEE_ARB_framebuffer_sRGB)	glDisable(GL_FRAMEBUFFER_SRGB);
 
 ////////////////////////////////////START RESET///////////////////////////////////////
-	reset();
+	//reset();
+
 	glError();
 }
 void OpenGLgraphics::viewport(int x,int y,int width,int height)
@@ -549,6 +511,13 @@ void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zF
 	view.projection.aspect = aspect;
 	view.projection.zNear = zNear;
 	view.projection.zFar = zFar;
+
+	float f = 1.0 / tan(fovy / 2.0);
+	view.projectionMat.set(	f/aspect,	0.0,						0.0,						0.0,
+							0.0,		f,							0.0,						0.0,
+							0.0,		(zFar+zNear)/(zNear-zFar),	2*zFar*zNear/(zNear-zFar),	0.0,
+							0.0,		0.0,						-1.0,						0.0);
+
 	gluPerspective(fovy, aspect, zNear, zFar);
 }
 void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
@@ -560,6 +529,12 @@ void OpenGLgraphics::ortho(float left, float right, float bottom, float top, flo
 	view.projection.top = top;
 	view.projection.zNear = zNear;
 	view.projection.zFar = zFar;
+
+	view.projectionMat.set(	2.0/(right-left),	0.0,				0.0,				(left+right)/(left-right),
+							0.0,				2.0/(top-bottom),	0.0,				(bottom+top)/(bottom-top),
+							0.0,				0.0,				2.0/(zNear-zFar),	(zNear+zFar)/(zNear-zFar),
+							0.0,				0.0,				0.0,				1.0);
+
 	glOrtho(left, right, bottom, top, zNear, zFar);
 }
 void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
@@ -567,6 +542,16 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 	view.camera.eye = eye;
 	view.camera.center = center;
 	view.camera.up = up;
+
+	Vec3f f = (center-eye).normalize();
+	Vec3f s = f.cross(up.normalize());
+	Vec3f u = s.cross(f);
+
+	view.modelViewMat.set(	s.x,	s.y,	s.z,	s.dot(-eye),
+							u.x,	u.y,	u.z,	u.dot(-eye),
+							-f.x,	-f.y,	-f.z,	(-f).dot(-eye),
+							0.0,	0.0,	0.0,	1.0);
+
 	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
 }
 void OpenGLgraphics::destroyWindow()
@@ -722,36 +707,36 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 
 
 
-	static	PIXELFORMATDESCRIPTOR pfd2=				// pfd Tells Windows How We Want Things To Be
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),				// Size Of This Pixel Format Descriptor
-		1,											// Version Number
-		PFD_DRAW_TO_WINDOW |						// Format Must Support Window
-		PFD_SUPPORT_OPENGL |						// Format Must Support OpenGL
-		PFD_SUPPORT_COMPOSITION |					// needed for vista
-		PFD_DOUBLEBUFFER,							// Must Support Double Buffering
-		PFD_TYPE_RGBA,								// Request An RGBA Format
-		32,											// Select Our Color Depth
-		0, 0, 0, 0, 0, 0,							// Color Bits Ignored
-		0,											// Alpha Buffer
-		0,											// Shift Bit Ignored
-		0,											// No Accumulation Buffer
-		0,0,0,0,									// Accumulation Bits Ignored
-		24,											// 24Bit Z-Buffer (Depth Buffer)
-		0,											// No Stencil Buffer
-		0,											// No Auxiliary Buffer
-		PFD_MAIN_PLANE,								// Main Drawing Layer
-		0,											// Reserved
-		0, 0, 0										// Layer Masks Ignored
-	};
+	//static	PIXELFORMATDESCRIPTOR pfd2=				// pfd Tells Windows How We Want Things To Be
+	//{
+	//	sizeof(PIXELFORMATDESCRIPTOR),				// Size Of This Pixel Format Descriptor
+	//	1,											// Version Number
+	//	PFD_DRAW_TO_WINDOW |						// Format Must Support Window
+	//	PFD_SUPPORT_OPENGL |						// Format Must Support OpenGL
+	//	PFD_SUPPORT_COMPOSITION |					// needed for vista
+	//	PFD_DOUBLEBUFFER,							// Must Support Double Buffering
+	//	PFD_TYPE_RGBA,								// Request An RGBA Format
+	//	32,											// Select Our Color Depth
+	//	0, 0, 0, 0, 0, 0,							// Color Bits Ignored
+	//	0,											// Alpha Buffer
+	//	0,											// Shift Bit Ignored
+	//	0,											// No Accumulation Buffer
+	//	0,0,0,0,									// Accumulation Bits Ignored
+	//	24,											// 24Bit Z-Buffer (Depth Buffer)
+	//	0,											// No Stencil Buffer
+	//	0,											// No Auxiliary Buffer
+	//	PFD_MAIN_PLANE,								// Main Drawing Layer
+	//	0,											// Reserved
+	//	0, 0, 0										// Layer Masks Ignored
+	//};
 	
 	PIXELFORMATDESCRIPTOR pfd;
 	pfd.nSize = sizeof( pfd );
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_SUPPORT_COMPOSITION;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 24;
-	pfd.cDepthBits = 16;
+	pfd.cDepthBits = 24;
 	pfd.cAlphaBits = 8;
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
@@ -802,19 +787,21 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 		int pixelFormat;
 		UINT numFormats;
 		float fAttributes[] = {0,0};
-		int iAttributes[] = { WGL_DRAW_TO_WINDOW_ARB,GL_TRUE,
-			WGL_SUPPORT_OPENGL_ARB,GL_TRUE,
-			WGL_ACCELERATION_ARB,WGL_FULL_ACCELERATION_ARB,
-			WGL_COLOR_BITS_ARB,24,
-			WGL_ALPHA_BITS_ARB,8,
-			WGL_DEPTH_BITS_ARB,16,
-			WGL_STENCIL_BITS_ARB,0,
-			WGL_DOUBLE_BUFFER_ARB,GL_TRUE,
-			WGL_SAMPLE_BUFFERS_ARB,GL_TRUE,
-			WGL_SAMPLES_ARB, 16 ,						// Check For 16x Multisampling
+		int iAttributes[] = {
+			WGL_SAMPLES_ARB,			16,					// Check For 16x Multisampling
+			WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
+			WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
+			WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
+			//WGL_PIXEL_TYPE_ARB,		WGL_TYPE_RGBA_ARB,
+			WGL_COLOR_BITS_ARB,			24,
+			WGL_ALPHA_BITS_ARB,			8,
+			WGL_DEPTH_BITS_ARB,			24,
+//			WGL_STENCIL_BITS_ARB,		0,
+			WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
+			WGL_SAMPLE_BUFFERS_ARB,		GL_TRUE,
 			0,0};
 
-		while(iAttributes[19] > 1)
+		while(iAttributes[1] > 1)
 		{
 			if (wglChoosePixelFormatARB(hDC,iAttributes,fAttributes,1,&pixelFormat,&numFormats) && numFormats >= 1)
 			{
@@ -823,7 +810,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 				destroyWindow();
 				return graphics->createWindow(title, WindowRect, false);
 			}
-			iAttributes[19] >>= 1;
+			iAttributes[1] >>= 1;
 		}
 	}
 
@@ -844,6 +831,28 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 	RegisterHotKey(hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
 
 	return true;									// Success
+}
+bool OpenGLgraphics::recreateWindow(Vec2i resolution, int multisample)
+{
+	return false;
+}
+bool OpenGLgraphics::changeResolution(Vec2f resolution)
+{
+	DEVMODE dmScreenSettings;										// Device Mode
+	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
+	dmScreenSettings.dmSize			= sizeof(dmScreenSettings);		// Size Of The Devmode Structure
+	dmScreenSettings.dmPelsWidth	= resolution.x;					// Selected Screen Width
+	dmScreenSettings.dmPelsHeight	= resolution.y;					// Selected Screen Height
+	dmScreenSettings.dmBitsPerPel	= 32;							// Selected Bits Per Pixel
+	dmScreenSettings.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
+
+	if(ChangeDisplaySettings(&dmScreenSettings,CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+	{
+		SetWindowPos(hWnd,0,0,0,resolution.x,resolution.y,0);
+		resize(resolution.x,resolution.y);
+		return true;
+	}
+	return false;
 }
 void OpenGLgraphics::swapBuffers()
 {
@@ -950,4 +959,14 @@ void OpenGLgraphics::takeScreenshot()
 		delete[] colors;
 	}
 	
+}
+
+void OpenGLgraphics::drawSphere(Vec3f position, float radius)
+{
+	static GLUquadric* quadric = gluNewQuadric();
+
+	glPushMatrix();
+	glTranslatef(position.x,position.y,position.z);
+	gluSphere(quadric,radius,5,5);
+	glPopMatrix();
 }

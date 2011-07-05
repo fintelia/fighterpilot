@@ -198,7 +198,7 @@ namespace particle{
 //
 //}
 
-emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity):type(t),position(pos),lastPosition(position),parentObject(0),parentOffset(0,0,0),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position)
+emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(pos),lastPosition(position),parentObject(0),parentOffset(0,0,0),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -210,7 +210,7 @@ emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesP
 	}
 	glGenBuffers(1,&VBO);
 }
-emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity):type(t),position(world.objectList[parent]->position + world.objectList[parent]->rotation * offset),lastPosition(position),parentObject(parent),parentOffset(offset),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position)
+emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(world.objectList[parent]->position + world.objectList[parent]->rotation * offset),lastPosition(position),parentObject(parent),parentOffset(offset),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -357,7 +357,20 @@ void emitter::render(Vec3f up, Vec3f right)
 	glColorPointer(4, GL_FLOAT, sizeof(vertex), (void*)(sizeof(float)*4));
 	glTexCoordPointer(2,GL_FLOAT,sizeof(vertex), (void*)(sizeof(float)*8));
 
-	glDrawArrays(GL_QUADS, 0, vNum*4);
+	if(additiveBlending)
+	{
+		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+		glDrawArrays(GL_QUADS, 0, vNum*4);
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+		glDrawArrays(GL_QUADS, 0, vNum*4);
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	}
+	else
+	{
+		glDrawArrays(GL_QUADS, 0, vNum*4);
+	}
+
+
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);

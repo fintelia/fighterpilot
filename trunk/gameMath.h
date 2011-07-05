@@ -5,12 +5,11 @@
 //#include "vec3f.h"
 #include "vector.h"
 #include "quaternion.h"
+#include "matrix.h"
 #include "geoPlane.h"//-------------------------//
 #include "AABox.h"/////---for frustum culling---//
 #include "FrustumG.h"//-------------------------//
 #include "collide.h"
-
-
 
 class SVertex
 {
@@ -82,3 +81,14 @@ T lerp(T a, U b, V t)
 {
 	return a+(b-a)*t;
 }
+
+template<class T>
+class circle
+{
+public:
+	Vector2<T> center;
+	T radius;
+
+	circle(): center(0,0), radius(0) {}
+	circle(Vector2<T> c, T r): center(c), radius(r) {}
+};

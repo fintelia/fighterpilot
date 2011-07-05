@@ -6,7 +6,7 @@ void ObjectStats::load(string filename)
 	ifstream fin(filename, ios::in);
 
 	planeType	cP	= F18;//default to f18
-	int			cMissileType=-1;
+	missileType	cMissileType=MISSILE1;
 
 	//int			cH	= -1,//hardpoint #
 	bool		mirror = false;
@@ -54,15 +54,18 @@ void ObjectStats::load(string filename)
 					else defaultPlane=(planeType)lexical_cast<int>(value); // Try to avoid
 					mirror=false;
 				}
-				else if(var == "MISSILE")
-				{
-					missileStats.push_back(missileStat());
-					missileStats.back().dispList=dataManager.loadModel(value);//objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());
-					cMissileType++;
-				}
+				//else if(var == "MISSILE")
+				//{
+				//	missileStats.push_back(missileStat());
+				//	missileStats.back().dispList=dataManager.loadModel(value);//objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());
+				//	cMissileType++;
+				//}
 				else if(var == "CURRENT_MISSILE")
 				{
- 					cMissileType = lexical_cast<int>(value);
+					if(value == "MISSILE1")			cMissileType=MISSILE1;
+					else if(value == "MISSILE2")	cMissileType=MISSILE2;
+					else if(value == "MISSILE3")	cMissileType=MISSILE3;
+					else if(value == "MISSILE4")	cMissileType=MISSILE4;
 				}
 				else if(var.compare("M_OFFSET") == 0 && cMissileType != -1)
 				{
@@ -192,21 +195,21 @@ void ObjectStats::loadModelData(char* filename)
 				//	hMirror=false;
 				//	cH=-1;
 				//}
-				else if(var.compare("MISSILE") == 0)
-				{
-					cM++;
-					missileStats.push_back(missileStat());
-					missileStats[cM].dispList=dataManager.loadModel(value);//objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());
-					int i=4;
-				}
-				else if(var.compare("M_MISSILE") == 0)
-				{
-					cH++;
-					if(hMirror) cH++;
-					planeStats[cP].hardpoints.push_back(planeStat::hardpoint());
-					planeStats[cP].hardpoints[cH].missileNum=lexical_cast<int>(value);
-					hMirror=false;
-				}
+				//else if(var.compare("MISSILE") == 0)
+				//{
+				//	cM++;
+				//	missileStats.push_back(missileStat());
+				//	missileStats[cM].dispList=dataManager.loadModel(value);//objModel::objDisplayList((char*)lexical_cast<string>(value).c_str());
+				//	int i=4;
+				//}
+				//else if(var.compare("M_MISSILE") == 0)
+				//{
+				//	cH++;
+				//	if(hMirror) cH++;
+				//	planeStats[cP].hardpoints.push_back(planeStat::hardpoint());
+				//	planeStats[cP].hardpoints[cH].missileNum=lexical_cast<int>(value);
+				//	hMirror=false;
+				//}
 				else if(var.compare("M_OFFSET") == 0 && cH != -1)
 				{
 					int d = 0;

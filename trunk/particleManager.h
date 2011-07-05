@@ -88,18 +88,19 @@ protected:
 	Vec3f maxXYZ;
 
 	GLuint VBO;
+	bool additiveBlending;
 
 public:
-	emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity);
-	emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity);
+	emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
+	emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
 	virtual ~emitter();
 	void addParticle(particle& p);
 	//virtual void setDefaults(...)=0;
 
 
 
-	virtual bool createParticle(particle& p, Vec3f currentPosition)=0;
-	virtual void updateParticle(particle& p)=0;
+	virtual bool createParticle(particle& p, Vec3f currentPosition){return false;}
+	virtual void updateParticle(particle& p){}
 
 	void update();
 	void render(Vec3f up, Vec3f right);
@@ -108,11 +109,22 @@ public:
 
 class explosion: public emitter
 {
+private:
+	CollisionChecker::triangleList* trl;
 public:
 	explosion(Vec3f pos);
 	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
 
-	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
+class explosionSmoke: public emitter
+{
+private:
+	CollisionChecker::triangleList* trl;
+public:
+	explosionSmoke(Vec3f pos);
+	explosionSmoke(int parent, Vec3f offset = Vec3f(0,0,0));
+
 	void updateParticle(particle& p);
 };
 class blackSmoke: public emitter

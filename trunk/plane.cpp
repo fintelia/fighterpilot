@@ -149,8 +149,6 @@ void nPlane::update(double time, double ms)
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
 
-
-
 			planePath.currentPoint(position,rotation);
 
 
@@ -207,7 +205,11 @@ void nPlane::update(double time, double ms)
 			if(death == DEATH_HIT_GROUND)
 			{
 				position.y -= altitude;
-				particleManager.addEmitter(new particle::blackSmoke(id));
+
+				//particleManager.addEmitter(new particle::blackSmoke(id));
+
+				death = DEATH_EXPLOSION;
+				particleManager.addEmitter(new particle::explosion(id));
 			}
 			else if(death == DEATH_HIT_WATER)
 			{
@@ -413,7 +415,7 @@ void nPlane::returnToBattle()
 	Vec3f right	= rotation * Vec3f(1,0,0);
 	fwd.y=0; fwd=fwd.normalize();
 
-	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-size*64,position.z-size*64));
+	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.ground()->sizeX()/2,position.z-world.ground()->sizeZ()/2));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
 	camera=Vec3f(position.x - fwd.x*20, position.y + sin(45.0)*20,	 position.z - fwd.z*20);
@@ -470,6 +472,7 @@ void nPlane::die()
 	{
 		death = DEATH_EXPLOSION;
 		particleManager.addEmitter(new particle::explosion(id));
+		//particleManager.addEmitter(new particle::explosionSmoke(id));
 	}
 }
 void nPlane::findTargetVector()
@@ -512,9 +515,10 @@ void nPlane::ShootMissile()
 	//if(pId == 0) 
 	//	return;
 
-	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].missileNum].dispList;
+	missileType t = settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].mType;
+
 	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
-	world.objectList.newMissile(MISSILE,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,d,id,pId);
+	world.objectList.newMissile(t,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,id,pId);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }

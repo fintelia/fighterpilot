@@ -48,15 +48,22 @@ modeDogFight::~modeDogFight()
 
 void modeDogFight::healthBar(float x, float y, float width, float height, float health, bool firstPerson)
 {
-	x *=	0.00125*sw;
-	y *=	0.00167*sh;
-	width*= 0.00125*sw;
-	height*=0.00167*sh;
+
 
 	if(!firstPerson)
 	{
-		graphics->drawOverlay(x,y,width,height,"health bar");
-		graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), Vec2f(x + width/150*125 - ((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health)), height/25*8.5), "noTexture");
+		x *=	0.00125*sw;
+		y *=	0.00167*sh;
+		width*= 0.00125*sw;
+		height*=0.00167*sh;
+		graphics->drawOverlay(x,y,x+width,y+height,"health bar");
+
+
+
+		//graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), 
+		//					Vec2f(x + width/150*125 - ((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health)), height/25*8.5), "noTexture");
+		graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*8.0), 
+							Vec2f(x + width/150*125, y + height/25*16.0), "noTexture");
 	}
 	else
 	{
@@ -67,7 +74,7 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 		//glUniform1f(uniform_angle, 1.24f);
 		dataManager.setUniform1f("health",health);
 		dataManager.setUniform1f("angle",1.24f);
-		graphics->drawOverlay(x,y,width,height,"noTexture");
+		graphics->drawOverlay(x,y,x+width,y+height,"noTexture");
 		dataManager.unbindShader();
 	}
 }
@@ -79,89 +86,88 @@ void modeDogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 	y2 *=	0.00167*sh;
 
 	graphics->drawRotatedOverlay(Vec2f(x1,y2),Vec2f(x2-x1,y2-y1),degrees * PI/180,"tilt back");
-	graphics->drawOverlay(x1,y2,x2-x1,y2-y1,"tilt front");
+	graphics->drawOverlay(x1,y2,x2,y2,"tilt front");
 }
 void modeDogFight::radar(float x, float y, float width, float height,bool firstPerson, nPlane* p)
 {
-	x *=	0.00125*sw;
-	y *=	0.00167*sh;
-	width*= 0.00125*sw;
-	height*=0.00167*sh;
-
 	//plane p = *(plane*)planes[players[acplayer].planeNum()];
 	int xc=x+width/2,yc=y+height/2;
 
 	//////////////////FBO/////////////////////////////////////
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
-	glClearColor(0,0,0,0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glViewport(0,0,128,128);
+	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
+	//glClearColor(0,0,0,0);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//glViewport(0,0,128,128);
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho( 0, 1 , 1 , 0, -1, 1 );
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
-	glEnable(GL_POLYGON_SMOOTH);
-
-	Vec3f n;
-	glTranslatef(0.5,0.5,0);
-	glRotatef(p->direction.degrees(),0,0,-1);
-	glTranslatef(-0.5,-0.5,0);
-	
-	static float filter[] = {	0.09,	0.11,	0.09,
-								0.11,	0.19,	0.11,
-								0.09,	0.11,	0.09};
-
-	for(auto i = world.planes().begin(); i != world.planes().end(); i++)
-	{
-		if(p->id != i->second->id && !i->second->dead)
-		{
-			n = (i->second->position - p->position) / 32000.0;
-
-			glPushMatrix();
-			glTranslatef(n.x,n.y,0);
-			glRotatef(i->second->direction.degrees(),0,0,1);
-			glTranslatef(-n.x,-n.y,0);
-
-			glBegin(GL_TRIANGLES);
-			for(int x = -1; x <= 1; x++)
-			{
-				for(int y = -1; y <= 1; y++)
-				{
-					glColor4f(1,1,1,filter[(x+1)+(y+1)*3]);
-					glVertex2f(0.5 + (float)x/256 - n.x,		0.5 + (float)y/256 + n.z + 0.02);
-					glVertex2f(0.5 + (float)x/256 - n.x - 0.02,	0.5 + (float)y/256 + n.z - 0.02);
-					glVertex2f(0.5 + (float)x/256 - n.x + 0.02,	0.5 + (float)y/256 + n.z - 0.02);
-				}
-			}
-			glEnd();
-
-			glPopMatrix();
-		}
-	}
-	glColor3f(1,1,1);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+	//glMatrixMode(GL_PROJECTION);
+	//glPushMatrix();
 	//glLoadIdentity();
-	//glOrtho( 0, sw , sh , 0, -1, 1 );
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	//glOrtho( 0, 1 , 1 , 0, -1, 1 );
+	//glMatrixMode(GL_MODELVIEW);
+	//glPushMatrix();
 	//glLoadIdentity();
-	glViewport(0,0,sw,sh);
+
+
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_ONE, GL_ONE);
+	//glEnable(GL_POLYGON_SMOOTH);
+
+	//Vec3f n;
+	//glTranslatef(0.5,0.5,0);
+	//glRotatef(p->direction.degrees(),0,0,-1);
+	//glTranslatef(-0.5,-0.5,0);
+	//
+	//static float filter[] = {	0.09,	0.11,	0.09,
+	//							0.11,	0.19,	0.11,
+	//							0.09,	0.11,	0.09};
+
+	//for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+	//{
+	//	if(p->id != i->second->id && !i->second->dead)
+	//	{
+	//		n = (i->second->position - p->position) / 32000.0;
+
+	//		glPushMatrix();
+	//		glTranslatef(n.x,n.y,0);
+	//		glRotatef(i->second->direction.degrees(),0,0,1);
+	//		glTranslatef(-n.x,-n.y,0);
+
+	//		glBegin(GL_TRIANGLES);
+	//		for(int x = -1; x <= 1; x++)
+	//		{
+	//			for(int y = -1; y <= 1; y++)
+	//			{
+	//				glColor4f(1,1,1,filter[(x+1)+(y+1)*3]);
+	//				glVertex2f(0.5 + (float)x/256 - n.x,		0.5 + (float)y/256 + n.z + 0.02);
+	//				glVertex2f(0.5 + (float)x/256 - n.x - 0.02,	0.5 + (float)y/256 + n.z - 0.02);
+	//				glVertex2f(0.5 + (float)x/256 - n.x + 0.02,	0.5 + (float)y/256 + n.z - 0.02);
+	//			}
+	//		}
+	//		glEnd();
+
+	//		glPopMatrix();
+	//	}
+	//}
+	//glColor3f(1,1,1);
+
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	//glMatrixMode(GL_PROJECTION);
+	//glPopMatrix();
+	////glLoadIdentity();
+	////glOrtho( 0, sw , sh , 0, -1, 1 );
+	//glMatrixMode(GL_MODELVIEW);
+	//glPopMatrix();
+	////glLoadIdentity();
+	//glViewport(0,0,sw,sh);
 	/////////////////////////////////////////////////////////
+
+	float radarAng = 45.0*world.time()/1000;
+	radarAng = (radarAng/360.0 - floor(radarAng/360.0)) * 360;
+
 	if(firstPerson)
 	{
 	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
@@ -170,14 +176,25 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.bindTex(radarTexture);
 
 		dataManager.setUniform1f("radarAng", radarAng);
-		dataManager.setUniform1i("radarTexture", 0);
+		//dataManager.setUniform1i("radarTexture", 0);
 	//	glUniform1f(radarAng, radarAng);
 
-		graphics->drawOverlay(x,y,width,height);
-		dataManager.unbindShader();
+		graphics->drawOverlay(x,y,x+width,y+height);
+		dataManager.unbind("radar");
+		dataManager.unbindTextures();
+
+		glPushMatrix();
+		glTranslatef(((1.0+x)+abs(width)/2)/2*sw,((-y+1.0)+abs(height)/2)/2*sh,0);
+		//glScalef(abs(width)*sw,abs(height)*sh,1.0);
+		//glScalef(-1,1,1.0);
+		glRotatef(p->direction.degrees()+18.0,0,0,1);
 	}
 	else
 	{
+		x *=	0.00125*sw;
+		y *=	0.00167*sh;
+		width*= 0.00125*sw;
+		height*=0.00167*sh;
 	//	static int radarTexture = glGetUniformLocation(dataManager.getId("radar2"), "radarTexture");
 	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar2"), "radarAng");
 		dataManager.bind("radar2");
@@ -186,50 +203,61 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 
 		dataManager.setUniform1f("radarAng", radarAng);
 		dataManager.setUniform1i("backgroundTexture", 0);
-		dataManager.setUniform1i("radarTexture", 1);
+		//dataManager.setUniform1i("radarTexture", 1);
 
 		//glUniform1f(radarAng, radarAng);
 		//glUniform1i(radarTexture, 0);
 
-		graphics->drawOverlay(x,y,width,height);
+		graphics->drawOverlay(x,y,x+width,y+height);
 
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
+
+		glPushMatrix();
+
+		glTranslatef(x+width/2,y+height/2,0);
+		//glScalef(width,height,1.0);
+		glRotatef(p->direction.degrees(),0,0,1);
 	}
 
-	
+	if(firstPerson)	glColor3f(0.19,0.58,0.87);
+	else			glColor3f(0.05,0.79,0.04);
 
-	////dataManager.bind("radar plane");
-	////Vec3f trans;
-	////for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	////{
-	////	int d=p.pos.distance((*i).second->pos);
-	////	if(d<3733 && acplayer!=(*i).first && !(*i).second->dead)
-	////	{															///NEEDS TO BE REDONE!!!
-	////		glPushMatrix();
-	////		glTranslatef(xc,yc,0);
-	////		glRotatef(acosA(Vec3f(p.velocity.x,0,p.velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
-	////		glTranslatef(((*i).second->pos.x-p.pos.x)*(x2-xc)/(16384),((*i).second->pos.z-p.pos.z)*(x2-xc)/(16384),0);
-	////		glRotatef(acosA(Vec3f((*i).second->velocity.x,0,(*i).second->velocity.z).dot(Vec3f(0,0,1))).degrees()-180,0,0,1);
-	////		for(float px=-0.5;px<0.9;px+=0.5)
-	////		{
-	////			for(float py=-0.5;py<0.9;py+=0.5)
-	////			{
-	////				glBegin(GL_QUADS);
-	////					glTexCoord2f(0,1);	glVertex2f(4+px,4+py);
-	////					glTexCoord2f(0,0);	glVertex2f(4+px,-4+py);
-	////					glTexCoord2f(1,0);	glVertex2f(-4+px,-4+py);
-	////					glTexCoord2f(1,1);	glVertex2f(-4+px,4+py);
-	////				glEnd();
-	////			}
-	////		}
-	////		glPopMatrix();
-	////	}
-	////}
+	//glBegin(GL_TRIANGLES);
+	//	glVertex2f(0,	-20);
+	//	glVertex2f(-20,	20);
+	//	glVertex2f(20,	20);
+	//glEnd();
+
+	Vec3f n;
+	for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+	{
+		n = (i->second->position - p->position) / 160.0;
+		if(p->id != i->second->id && !i->second->dead && n.magnitude() < width/2)
+		{
+
+			glPushMatrix();
+		//	glTranslatef(n.x,n.y,0);
+			glRotatef(i->second->direction.degrees(),0,0,1);
+			glTranslatef(-n.x,-n.z,0);
+
+			glBegin(GL_TRIANGLES);
+				glVertex2f(0.0,  -4.0);
+				glVertex2f(-3.0, 4.0);
+				glVertex2f(3.0,	 4.0);
+			glEnd();
+
+			glPopMatrix();
+		}
+		
+	}
+	glPopMatrix();
+	glColor3f(1,1,1);
+
 
 	if(!firstPerson)
 	{
-		graphics->drawOverlay(x,y,width,height,"radar frame");
+		graphics->drawOverlay(x,y,x+width,y+height,"radar frame");
 	}
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
@@ -248,7 +276,7 @@ void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, flo
 					else if(distSquared > 2000*2000)	glColor3f(0.6,0.5,0.5);
 					else								glColor3f(0.5,0,0);
 
-					graphics->drawOverlay(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,0.012 * vWidth, 0.012 * vWidth,"target ring");
+					graphics->drawOverlay(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth,"target ring");
 				}
 			}
 		}
@@ -263,24 +291,9 @@ void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 	y *=	0.00167*sh;
 
 	graphics->drawRotatedOverlay(Vec2f(x-width,y-height),Vec2f(width*2,height*2),tilt,"tilt");
-	graphics->drawOverlay(Vec2f(x-width,y-height),Vec2f(width*2,height*2),"targeter");
+	graphics->drawOverlay(x-width,y-height,x+width,y+height,"targeter");
 }
-void modeDogFight::drawExaust()
-{
-	int numSprites=0;
-	float time = world.time();
-	if(world.exaust.getSize()!=0)
-	{
-		for(int i=0;i<world.exaust.getSize();i++)
-		{
-			if(world.exaust.startTime[i] < time && time < world.exaust.endTime[i])
-			{
-				graphics->drawParticle(exaustParticleEffect,world.exaust.positions[i]+world.exaust.velocity[i]*(world.exaust.endTime[i]-world.exaust.startTime[i])/1000,0.5*(world.exaust.endTime[i]-time)/(world.exaust.endTime[i]-world.exaust.startTime[i]));
-				numSprites++;
-			}
-		}
-	}
-}
+//modes
 void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 {
 	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
@@ -293,7 +306,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 	{
 		cPlane=(*i).second;
 		Vec3f a=(*i).second->position;
-		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead))
+		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
 		{
 			//Vec3f fwd = (*i).second->rotation * Vec3f(0,0,100);
 			//glBegin(GL_LINES);
@@ -310,7 +323,9 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 				//else if(!(*i).second->dead)		glCallList(model[2]);
 				
 				//m.draw();
+				//glScalef(20,20,20);
 				dataManager.draw(cPlane->type);
+				//dataManager.draw("sphere");
 
 				int ml=1;
 				glEnable(GL_LIGHTING);
@@ -320,7 +335,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 					{
 						glPushMatrix();
 						glTranslatef(m->offset.x,m->offset.y,m->offset.z);
-						glCallList(settings.missileStats[m->missileNum].dispList);
+						dataManager.draw(m->mType);
 						glPopMatrix();
 					}
 				}
@@ -403,7 +418,7 @@ void modeDogFight::drawScene(int acplayer)
 	Vec3f e;
 	Vec3f c;
 	Vec3f u;
-	if(!players[acplayer].firstPerson() || p->controled)
+	if(!players[acplayer].firstPerson() || p->controled || p->dead)
 	{
  		//Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;vel2D = vel2D.normalize();
 		//e = p->position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
@@ -475,7 +490,7 @@ void modeDogFight::drawScene(int acplayer)
 			//	axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
 			//	Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
 			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
-				glCallList(i->second->displayList);
+				dataManager.draw(i->second->type);
 			glPopMatrix();
 		}
 	}
@@ -510,20 +525,11 @@ void modeDogFight::drawScene(int acplayer)
 	glEnd();
 	glColor3f(1,1,1);
 #endif
-
-
+	 
 	glDepthMask(false);
 	glDisable(GL_LIGHTING);
 	glError();
 
-	
-	//const map<objId,nPlane*>& planes = world.planes();
-	//for(auto i=planes.begin();i!=planes.end();i++)
-	//	i->second->drawExplosion(p->id==i->second->id);
-
-
-	
-	drawExaust();
 	graphics->render3D();
 	particleManager.render();
 

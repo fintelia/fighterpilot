@@ -22,20 +22,18 @@ private:
 public:
 	friend class objectList;
 
-	const Vec3f startPos;
-	const Quat4f startRot;
-	const objectType type;
-	const objId id;
+	const Vec3f			startPos;
+	const Quat4f		startRot;
+	const objectType	type;
+	const objId			id;
 
-
-	Vec3f position,
-		lastPosition;
-	Quat4f rotation,
-		lastRotation;
-
-	bool dead;
-	int team;
-	bool awaitingDelete;
+	Vec3f				position,
+						lastPosition;
+	Quat4f				rotation,
+						lastRotation;
+	bool				dead;
+	int					team;
+	bool				awaitingDelete;
 
 	object(Vec3f sPos, Quat4f sRot, objectType Type): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(NEUTRAL), awaitingDelete(false){}
 	virtual void update(double time, double ms)=0;

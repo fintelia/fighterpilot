@@ -78,13 +78,18 @@ public:
 
 	void update()
 	{
-
+			double t = GetTime();
 		DWORD dwResult;
 		int contN=256;
 		for( DWORD i = 0; i < MAX_CONTROLLERS; i++ )
 		{
 			// Simply get the state of the controller from XInput.
+
+
+
 			dwResult = XInputGetState( i, &g_Controllers[i].state );
+
+
 
 			if( dwResult == ERROR_SUCCESS )
 				g_Controllers[i].bConnected = true;
@@ -157,6 +162,8 @@ public:
 				//}
 			}
 		}
+		t = GetTime() - t;
+		t = GetTime();
 	}
 	~xinput_input()
 	{

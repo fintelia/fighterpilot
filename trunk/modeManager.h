@@ -41,6 +41,8 @@ class modeMapBuilder: public modeScreen
 {
 	menu::levelEditor* menus;
 
+	map<int,circle<float>> objectCircles;
+
 	Quat4f rot;
 	Vec3f center;
 	editLevel* level;
@@ -56,7 +58,12 @@ class modeMapBuilder: public modeScreen
 	void faultLine();
 	void fromFile(string filename);
 	void addObject(int type, int team, int controlType, int x, int y);
+	void selectObject(int x, int y);
+
+	void updateObjectCircles();
+
 	vector<int> shaderButtons;
+
 	friend class menu::levelEditor;
 public:
 	virtual int update();
@@ -84,7 +91,6 @@ public:
 	void targeter(float x, float y, float apothem, Angle tilt);
 	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
 
-	void drawExaust();
 	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawBullets();
 	void drawScene(int acplayer);

@@ -77,6 +77,7 @@ int modeSplitScreen::update()
 	}
 #endif
 
+#ifdef _DEBUG
 	static bool slow = false;
 	if(input->getKey(0x54))
 	{
@@ -84,14 +85,11 @@ int modeSplitScreen::update()
 		slow = !slow;
 		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
 	}
-
+#endif
 	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 
 	world.update();
-	radarAng+=45.0*world.time.length()/1000;
-	if(radarAng>=360)
-		radarAng-=360;
 
 	return 7;
 }
@@ -102,10 +100,10 @@ void modeSplitScreen::draw2D()
 		nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 		if(players[acplayer].firstPerson() && !p->controled)
 		{
-			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2),"cockpit");
+			graphics->drawOverlay(Vec2f(0,sh/2*acplayer),Vec2f(sw,sh/2*(acplayer+1)),"cockpit");
 			targeter(400,150+300*acplayer,50,p->roll);
-			radar(176, 200+300*acplayer, 64, 64, true, p);
-			healthBar(340, 40+300*acplayer, -200, 200, p->health/p->maxHealth,true);
+			radar(-0.56, 0.13-acplayer, 0.16, 0.2133, true, p);
+			healthBar(-0.65, 0.2-acplayer, 0.5, 0.666, p->health/p->maxHealth,true);
 		}
 		else if(!p->dead)
 		{

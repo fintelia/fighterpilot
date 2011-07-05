@@ -121,7 +121,7 @@
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="enums.cpp" />
-    <ClCompile Include="explosion.cpp" />
+    <ClCompile Include="explosionSmoke.cpp" />
     <ClCompile Include="FrustumG.cpp" />
     <ClCompile Include="GameMath.cpp" />
     <ClCompile Include="geoPlane.cpp" />
@@ -151,7 +151,6 @@
     <ClCompile Include="random.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
-    <ClCompile Include="shader.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
@@ -168,9 +167,9 @@
     <ClInclude Include="collide.h" />
     <ClInclude Include="dataManager.h" />
     <ClInclude Include="debugBreak.h" />
+    <ClInclude Include="matrix.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="enums.h" />
-    <ClInclude Include="explosion.h" />
     <ClInclude Include="FrustumG.h" />
     <ClInclude Include="gameMath.h" />
     <ClInclude Include="geoPlane.h" />
@@ -194,7 +193,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
-    <ClInclude Include="shader.h" />
     <ClInclude Include="text.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
@@ -213,8 +211,12 @@
     <None Include="media\horizon2.vert" />
     <None Include="media\icon.ico" />
     <None Include="media\island.vert" />
+    <None Include="media\model.frag" />
+    <None Include="media\model.vert" />
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
+    <None Include="media\ortho.frag" />
+    <None Include="media\ortho.vert" />
     <None Include="media\radar.frag" />
     <None Include="media\radar.vert" />
     <None Include="media\radar2.frag" />

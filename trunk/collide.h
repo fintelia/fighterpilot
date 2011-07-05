@@ -1,4 +1,6 @@
 
+class object;
+
 class CollisionChecker
 {
 public:
@@ -32,6 +34,7 @@ public:
 	public:
 		Vec3f getCenter(){return center;}
 		float getRadius(){return radius;}
+		Vec3f getRandomVertex();
 		triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces);
 		triangleList(): triangles(0), numTriangles(0), center(0,0,0), radius(-999999999.9f) {}
 		~triangleList(){if(triangles) delete[] triangles;}
@@ -57,6 +60,6 @@ public:
 	bool operator() (objectType t1, Vec3f center, float radius) const;
 	bool operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const;
 
-
+	bool operator() (object* o1, object* o2) const;
 };
 extern CollisionChecker& collisionCheck;

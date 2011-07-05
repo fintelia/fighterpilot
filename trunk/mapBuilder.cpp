@@ -25,6 +25,59 @@ void modeMapBuilder::resetView()
 	rot = Quat4f(Vec3f(1,0,0),1.0);
 	center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
 }
+void modeMapBuilder::selectObject(int x, int y)
+{
+	if(objectCircles.empty())
+		return;
+
+	Vec2f mouse((float)x/sw,(float)y/sw);
+
+
+	float minDist;
+	map<int,circle<float>>::iterator min = objectCircles.end();
+	for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
+	{
+		float d = i->second.center.distanceSquared(mouse);
+		if(d < i->second.radius*i->second.radius && (min == objectCircles.end() || d < minDist))
+		{
+			minDist = d;
+			min = i;
+		}
+	}
+
+	if(min != objectCircles.end())
+	{
+		//object found
+		auto* m = new menu::objectProperties();
+		m->init(((editLevel*)level)->getObject(min->first));
+		menuManager.setPopup(m);
+	}
+}
+void modeMapBuilder::updateObjectCircles()
+{
+	objectCircles.clear();
+	int n=0;
+	for(auto i = level->objects().begin(); i!= level->objects().end(); i++, n++)
+	{
+		Vec2f s = graphics->project(i->startloc);
+		float r;
+
+		auto p = dataManager.getModel(i->type);
+		if(p==NULL)
+		{
+			r = 0.006;
+		}
+		else
+		{
+			Vec2f t = graphics->project(i->startloc + p->getCenter() + graphics->getView().camera.up*p->getRadius()*10);
+			r = max(0.004,s.distance(t));
+		}
+		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
+		{
+			objectCircles[n] = circle<float>(Vec2f(s.x,s.y*sh/sw),r);
+		}
+	}
+}
 void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^x+1)!!!
 {
 	int sLen=max(level->ground()->resolutionX(),level->ground()->resolutionZ());
@@ -269,19 +322,20 @@ int modeMapBuilder::update()
 	GetCursorPos(&p);
 	if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 	{
-		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
-		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->resolutionX() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
-		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
-		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->resolutionZ() * size * pow(1.1f,-scroll) * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scroll);
+		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scroll);
 	}
 	menuManager.update();
+
 	return 7;
 }
 void modeMapBuilder::draw3D() 
 {	
-	gluPerspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-	static FrustumG frustum;
-	frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+	graphics->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+	//static FrustumG frustum;
+	//frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
 	
 
 	Vec3f e,c,u;
@@ -313,8 +367,7 @@ void modeMapBuilder::draw3D()
 		e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scroll);
 		u = rot * Vec3f(0,0,-1);
 	}
-	gluLookAt(e.x,e.y,e.z,	c.x,c.y,c.z,	u.x,u.y,u.z);
-	frustum.setCamDef(e,c,u);
+	graphics->lookAt(e,c,u);
 
 	GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
@@ -366,23 +419,23 @@ void modeMapBuilder::draw3D()
 			glColor4f(0.1,0.3,1.0,0.3);
 				
 			glBegin(GL_QUADS);
-			glVertex3f(0,									maxHeight+objPlacementAlt,	0);
-			glVertex3f(0,									maxHeight+objPlacementAlt,	level->ground()->resolutionZ()*size);
-			glVertex3f(level->ground()->resolutionX()*size,	maxHeight+objPlacementAlt,	level->ground()->resolutionZ()*size);
-			glVertex3f(level->ground()->resolutionX()*size,	maxHeight+objPlacementAlt,	0);
+			glVertex3f(0,							maxHeight+objPlacementAlt,	0);
+			glVertex3f(0,							maxHeight+objPlacementAlt,	level->ground()->sizeZ());
+			glVertex3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ());
+			glVertex3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0);
 			glEnd();
 
 			glColor4f(0.3,0.5,1.0,0.2);
 			glBegin(GL_LINES);
-			for(int i=0;i<level->ground()->resolutionZ()*size; i+=size*4)
+			for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
 			{
-				glVertex3f(i,maxHeight+10,0);
-				glVertex3f(i,maxHeight+10,level->ground()->resolutionZ()*size);
+				glVertex3f(f,maxHeight+10,0);
+				glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
 			}
-			for(int i=0;i<level->ground()->resolutionX()*size; i+=size*4)
+			for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
 			{
-				glVertex3f(0,maxHeight+10,i);
-				glVertex3f(level->ground()->resolutionX()*size,maxHeight+10,i);
+				glVertex3f(0,maxHeight+10,f);
+				glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
 			}
 			glEnd();
 			glColor3f(1,1,1);
@@ -401,26 +454,33 @@ void modeMapBuilder::draw3D()
 
 		glColor3f(0,1,0);
 
-		for(auto i = level->objects().begin(); i!= level->objects().end(); i++)
+		updateObjectCircles();
+		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
-			Vec2f s = frustum.project(i->startloc);
-			float r;
-
-			auto p = dataManager.getModel(i->type);
-			if(p==NULL)
-			{
-				r = 0.006;
-			}
-			else
-			{
-				Vec2f t = frustum.project(i->startloc + p->getCenter() + u*p->getRadius()*10);
-				r = max(0.004,s.distance(t));
-			}
-			if(frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE && s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
-			{
-				graphics->drawOverlay(s.x - r, s.y*sh/sw - r, r*2, r*2,"target ring");
-			}	
+			graphics->drawOverlay(i->second.center.x - i->second.radius, i->second.center.y - i->second.radius,
+				i->second.center.x + i->second.radius, i->second.center.y + i->second.radius,"target ring");
 		}
+
+		//for(auto i = level->objects().begin(); i!= level->objects().end(); i++)
+		//{
+		//	Vec2f s = frustum.project(i->startloc);
+		//	float r;
+
+		//	auto p = dataManager.getModel(i->type);
+		//	if(p==NULL)
+		//	{
+		//		r = 0.006;
+		//	}
+		//	else
+		//	{
+		//		Vec2f t = frustum.project(i->startloc + p->getCenter() + u*p->getRadius()*10);
+		//		r = max(0.004,s.distance(t));
+		//	}
+		//	if(frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE && s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
+		//	{
+		//		graphics->drawOverlay(s.x - r, s.y*sh/sw - r, s.x + r, s.y*sh/sw + r,"target ring");
+		//	}	
+		//}
 	
 		glMatrixMode( GL_PROJECTION );			// Select Projection
 		glPopMatrix();							// Pop The Matrix

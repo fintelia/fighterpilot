@@ -158,7 +158,7 @@ public:
 
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
 	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
-
+	LevelFile::Object* getObject(int id){return &mObjects[id];}
 
 	void setWater(string shaderName);
 

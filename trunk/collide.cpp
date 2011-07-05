@@ -121,7 +121,13 @@ bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& t
 
 	return false; // Default value/no collision
 }
-
+Vec3f CollisionChecker::triangleList::getRandomVertex()
+{
+	int r = random<int>(numTriangles*3);
+	if(r % 3 == 0)		return triangles[r / 3].a;
+	else if(r % 3 == 1)	return triangles[r / 3].b;
+	else				return triangles[r / 3].c;
+}
 CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces):triangles(NULL), numTriangles(0), center(0.0f,0.0f,0.0f), radius(-99999999.9f)
 {
 	if(nVertices == 0 || nFaces == 0)
@@ -280,4 +286,39 @@ bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) co
 bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const
 {
 	return operator()(*dataManager.models[dataManager.getId(t1)], lineStart, lineEnd);
+}
+
+bool CollisionChecker::operator() (object* o1, object* o2) const
+{
+	triangleList* tr1 = dataManager.models[dataManager.getId(o1->type)];
+	triangleList* tr2 = dataManager.models[dataManager.getId(o2->type)];
+
+	Quat4f rot1 = o1->rotation;
+	Quat4f rot2 = o2->rotation;
+
+	Vec3f pos1 = o1->position;
+	Vec3f pos2 = o2->position;
+
+	Vec3f center1 = o1->position + rot1 * tr1->center;
+	Vec3f center2 = o2->position + rot2 * tr2->center;
+
+	if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
+	{
+		int i1,i2;
+		for(i1=0; i1 < tr1->numTriangles; i1++)
+		{
+			if((pos1 + rot1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
+			{
+				for(i2 = 0; i2 < tr2->numTriangles; i2++)
+				{
+					if((pos1 + rot1*tr1->triangles[i1].center).distanceSquared(pos2 + rot2*tr2->triangles[i2].center) < (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
+					{
+						if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2]))
+							return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
 }

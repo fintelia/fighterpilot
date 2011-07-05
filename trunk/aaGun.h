@@ -12,7 +12,6 @@ public:
 	void die();
 	void loseHealth(float healthLoss);
 	void spawn();
-	void drawExplosion(bool flash);
 	void initArmaments();
 	aaGun(Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
@@ -43,7 +42,6 @@ public:
 	//int respawn;
 	float health;
 	float maxHealth;
-	explosion* explode;
 ////////////auto-pilot/////////////
 	objectPath planePath;
 ///////////camera view/////////////

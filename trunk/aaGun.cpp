@@ -70,7 +70,7 @@ void aaGun::update(double time, double ms)
 		extraShootTime+=ms;
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-		//	world.bullets.push_back(bullet(position,targeter,id,time-extraShootTime-machineGun.coolDown));
+			world.bullets.push_back(bullet(position,targeter,id,time-extraShootTime-machineGun.coolDown));
 
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
@@ -78,14 +78,14 @@ void aaGun::update(double time, double ms)
 		}
 	}
 
-	static float missileCoolDown = 3000;
-	missileCoolDown -= ms;
-	if(missileCoolDown <= 0.0 && target != 0)
-	{
-		missileCoolDown = 3000;
-		int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[0].missileNum].dispList;
+	//static float missileCoolDown = 3000;
+	//missileCoolDown -= ms;
+	//if(missileCoolDown <= 0.0 && target != 0)
+	//{
+	//	missileCoolDown = 3000;
+	//	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[0].missileNum].dispList;
 	//	world.objectList.newMissile(MISSILE,team,position,rotation,0,targeter,d,id,target);
-	}
+	//}
 }
 void aaGun::findTargetVector()
 {
@@ -113,7 +113,6 @@ void aaGun::findTargetVector()
 }
 void aaGun::die()
 {
-	if(!dead)	explode=new explosion(position);
 	dead = true;
 }
 void aaGun::loseHealth(float healthLoss)
@@ -128,11 +127,6 @@ void aaGun::loseHealth(float healthLoss)
 void aaGun::spawn()
 {
 	initArmaments();
-	if(explode!=NULL)
-	{
-		delete explode;
-		explode=NULL;
-	}
 	position = startPos;
 	rotation = startRot;
 
@@ -142,14 +136,6 @@ void aaGun::spawn()
 	target = 0;
 	shotsFired = 0;
 }
-void aaGun::drawExplosion(bool flash)
-{
-	if(explode!=NULL)
-	{
-		explode->pos=position;
-		explode->render(flash);
-	}
-}
 void aaGun::initArmaments()
 {
 	machineGun.max			= machineGun.left			= 1000; 
@@ -158,7 +144,7 @@ void aaGun::initArmaments()
 	machineGun.coolDown		= machineGun.coolDownLeft	= 15.0;
 	machineGun.firing									= false;
 }
-aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), maxHealth(100), explode(NULL), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
 	spawn();
 }

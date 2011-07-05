@@ -7,25 +7,22 @@ bool active=true;					// Window Active Flag																						//	//
 bool InitMultisample(HINSTANCE hInstance,HWND hWnd,PIXELFORMATDESCRIPTOR pfd);																	//	//
 																																				//	//
 extern const double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;										//	//
-extern const float size=128;																													//	//
 char* errorString;																																//	//
 int sh=1024;																																	//	//
 int sw=1280;																																	//	//
 																																				//	//
 profiler Profiler;																																//	//
 TextManager* textManager;																														//	//
-
 																																				//	//
-//#undef USING_XINPUT
+//#undef USING_XINPUT																															//  //
 #if defined USING_XINPUT																														//	//
 	Input *input=new xinput_input;																												//	//
 #else																																			//	//
 	Input *input=new standard_input;																											//	//
 #endif																																			//	//
 ObjectStats settings;																															//	//
-float radarAng=0;																																//	//
 																																				//	//
-menu::manager& menuManager=menu::manager::getInstance();																							//	//
+menu::manager& menuManager=menu::manager::getInstance();																						//	//
 ModeManager& modeManager=ModeManager::getInstance();																							//	//
 DataManager& dataManager=DataManager::getInstance();																							//	//
 WorldManager& world=WorldManager::getInstance();																								//	//
@@ -39,9 +36,6 @@ bool done=false;//exits program																													//	//
 bool lowQuality;																																//	//
 humanControl players[NumPlayers];																												//	//
 																																				//	//
-GraphicsManager::gID fireParticleEffect;																										//	//
-GraphicsManager::gID smokeParticleEffect;																										//	//
-GraphicsManager::gID exaustParticleEffect;																										//	//
 																																				//	//
 int frame=0,Time,timebase=0;																													//	//
 float fps;																																		//	//
@@ -51,12 +45,12 @@ planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void update()
 {
+	double t = GetTime();
 	world.time.nextFrame();
 	
-	input->update();
-	menuManager.update();
-	modeManager.update();
-
+	input->update();		//takes 2-11 ms
+	menuManager.update();	//takes almost no time
+	modeManager.update();	//takes almost no time
 }
 void ShowHideTaskBar(bool bHide)
 {
