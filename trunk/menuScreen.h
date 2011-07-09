@@ -96,13 +96,15 @@ protected:
 class checkBox:public element
 {
 public:
-	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(false),clicking(false){}
+	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(startChecked),clicking(false){}
 	virtual ~checkBox(){}
 
 	void render();
 
 	void mouseDownL(int X, int Y);
 	void mouseUpL(int X, int Y);
+
+	bool getChecked(){return checked;}
 protected:
 
 	void click();
@@ -123,14 +125,32 @@ public:
 	void render();
 
 protected:
-	void addChar(char c);
-
+	virtual void addChar(char c);
+	virtual void gainFocus(){focus=true;}
+	virtual void loseFocus(){focus=false;}
 	bool focus;
 	bool clicking;
 
 	int cursorPos;
 };
+class numericTextBox: public textBox
+{
+public:
+	numericTextBox(int X, int Y, int Width, float val, Color textColor): textBox(X, Y, Width, lexical_cast<string>(val), textColor), useMinMaxStep(false),mAllowDecimal(false){}
+	void allowDecimal(bool b){mAllowDecimal = b;}
+	void setMinMaxStep(float Min,float Max,float Step){useMinMaxStep=true;minVal=Min;maxVal=Max;stepVal=Step;}
+protected:
+	void addChar(char c);
+	void loseFocus();
+	void gainFocus();
 
+	float lastVal;
+	float minVal;
+	float maxVal;
+	float stepVal;
+	bool useMinMaxStep;
+	bool mAllowDecimal;
+};
 class listBox: public element
 {
 public:
@@ -253,7 +273,7 @@ public:
 	void keyDown(int vkey);
 	void mouseL(bool down, int x, int y);
 protected:
-	virtual void fileSelected(){done=true;}
+	virtual void fileSelected();
 	string file;
 
 	filesystem::path directory;
@@ -429,8 +449,23 @@ public:
 	int update(){return 30;}
 	void render();
 	void keyDown(int vkey);
+	void operator() (popup* p);
 protected:
 	choice activeChoice;
+	bool choosingFile;
+};
+class chooseMap: public screen
+{
+public:
+	chooseMap():currentChoice(0){}
+	~chooseMap(){}
+	bool init();
+	int update(){return 30;}
+	void render();
+	void keyDown(int vkey);
+protected:
+	vector<string> mapChoices;
+	int currentChoice;
 };
 class inGame: public screen
 {

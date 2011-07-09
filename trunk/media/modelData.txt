@@ -7,10 +7,10 @@ MISSILE=media/m4(center).obj
 
 PLANE=F16
 MODEL=media/f16.obj
-
+	G_OFFSET=0.0,-0.6,0.0
 PLANE=F18
 MODEL=media/f18hornet.obj
-
+	G_OFFSET=0.0,0.0,0.0
 
 PLANE=F22
 MODEL=media/f22.obj
@@ -28,13 +28,14 @@ MODEL=media/f22.obj
 	CURRENT_MISSILE=MISSILE4
 	M_OFFSET=7.05,-0.65,-2.4
 
-	G_OFFSET=3.0,0.0,-1.0
+	G_OFFSET=5.0,0.0,-1.0
 
 PLANE=B2
 MODEL=media/b2.obj
-
+	G_OFFSET=0.0,0.0,0.0
 
 PLANE=UAV
 MODEL=media/uav.obj
-
+	G_OFFSET=0.0,0.0,0.0
+	
 DEFAULT=F22

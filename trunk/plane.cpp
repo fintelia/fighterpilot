@@ -141,7 +141,7 @@ void nPlane::update(double time, double ms)
 					machineGun.roundsLeft--;
 					Vec3f o=rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
-					Vec3f t=((rotation*Vec3f(0,0,1.0-extraShootTime/ms) + lastRotation*Vec3f(0,0,extraShootTime/ms))*1000-o).normalize() + random<Vec3f>()*0.0025;
+					Vec3f t=((rotation*Vec3f(0,0,1.0-extraShootTime/ms) + lastRotation*Vec3f(0,0,extraShootTime/ms))*1000-o).normalize() + random<Vec3f>()*0.025;
 					
 					shotsFired++;
 					world.bullets.push_back(bullet(o + l,t,id,time-extraShootTime-machineGun.coolDown));

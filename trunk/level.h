@@ -88,6 +88,9 @@ public:
 		virtual void render() const=0;
 		virtual void renderPreview(float seaLevelOffset=0.0) const=0;
 		virtual void init()=0;
+
+		float operator() (unsigned int x, unsigned int z) const{return height(x,z);}
+		void operator() (unsigned int x, unsigned int z, float height) {setHeight(x,height,z);}
 	protected:
 		Vec3f					mPosition;
 		Vec2f					mSize;
@@ -97,6 +100,7 @@ public:
 								maxHeight;
 		ShaderType				shaderType;
 		friend class Level;
+		friend class modeMapBuilder;
 	};
 	class heightmapGL: public heightmapBase
 	{
@@ -123,6 +127,7 @@ public:
 		~heightmapGL();
 		friend class Level;
 		friend class modeDogFight;
+		friend class modeMapBuilder;
 	};
 
 protected:

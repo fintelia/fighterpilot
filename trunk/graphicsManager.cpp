@@ -958,7 +958,6 @@ void OpenGLgraphics::takeScreenshot()
 		delete[] rows;
 		delete[] colors;
 	}
-	
 }
 
 void OpenGLgraphics::drawSphere(Vec3f position, float radius)

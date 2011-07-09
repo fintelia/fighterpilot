@@ -54,9 +54,14 @@ class modeMapBuilder: public modeScreen
 	void zoom(float rotations);
 	void trackBallUpdate(int newX, int newY);
 	void resetView();
-	void diamondSquare(float h, float m);
+
+	float randomDisplacement(float h1, float h2, float d);
+	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
+	void diamondSquareFill(int x1, int x2, int y1, int y2);
+	void diamondSquare(float h, float m, int subdivide);
 	void faultLine();
 	void fromFile(string filename);
+	void smooth(int a);
 	void addObject(int type, int team, int controlType, int x, int y);
 	void selectObject(int x, int y);
 
