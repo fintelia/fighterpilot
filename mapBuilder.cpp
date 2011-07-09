@@ -78,7 +78,47 @@ void modeMapBuilder::updateObjectCircles()
 		}
 	}
 }
-void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^x+1)!!!
+float modeMapBuilder::randomDisplacement(float h1, float h2, float d)
+{
+	d *= 15;
+	float r = random(-d/2,d/2);
+	return (h1 + h2 + r) / 2.0;
+ }
+float modeMapBuilder::randomDisplacement(float h1, float h2,float h3, float h4, float d)
+{
+	d *= 15;
+	float r = random(-d/2,d/2);
+	return (h1 + h2 + h3 + h4 + r) / 4.0;
+}
+void modeMapBuilder::diamondSquareFill(int x1, int y1, int x2, int y2)
+{
+	if(x1 == x2 && y1 == y2) 
+		return;
+
+	auto& g = *level->ground();
+
+	int midx = (x1 + x2) / 2;
+	int midy = (y1 + y2) / 2;
+
+	if(x2-x1 > 1 && y1==0)	g(midx, y1, randomDisplacement(g(x1,y1), g(x2,y1), x2-x1) );
+	if(y2-y1 > 1 && x1==0)	g(x1, midy, randomDisplacement(g(x1,y1), g(x1,y2), y2-y1) );
+
+	if(x2-x1 > 1)	g(midx, y2, randomDisplacement(g(x1,y2), g(x2,y2), x2-x1) );
+	if(y2-y1 > 1)	g(x2, midy, randomDisplacement(g(x2,y1), g(x2,y2), y2-y1) );
+
+	if(x2-x1 > 1 && y2-y1 > 1)	
+		g(midx, midy, randomDisplacement(g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), min(x2-x1,y2-y1)) );
+
+
+	if(x2-x1 > 1 || y2-y1 > 1)
+	{
+		diamondSquareFill(x1,	y1,		midx,	midy);
+		diamondSquareFill(midx, y1,		x2,		midy);
+		diamondSquareFill(x1,	midy,	midx,	y2);
+		diamondSquareFill(midx,	midy,	x2,		y2);
+	}
+}
+void modeMapBuilder::diamondSquare(float h, float m, int subdivide)//mapsize must be (2^x+1, 2^x+1)!!!
 {
 	int sLen=max(level->ground()->resolutionX(),level->ground()->resolutionZ());
 	if( !(!((sLen-1) & (sLen-2) ) && sLen > 1) || level->ground()->resolutionX() != level->ground()->resolutionZ())//if v is not one more than a power of 2
@@ -93,7 +133,6 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 		level->newGround(sLen,sLen);
 	}
 
-	
 	//set corners
 
 	int x, z, numSquares, squareSize;
@@ -111,107 +150,118 @@ void modeMapBuilder::diamondSquare(float h, float m)//mapsize must be (2^x+1, 2^
 			level->ground()->setHeight(x,0,y);
 		}
 	}
-
 	//level->ground()->setHeight(0,0,0);
 	//level->ground()->setHeight(0,0,sLen-1);
-	//level->ground()->setHeight(sLen-1,0,level->ground()->resolutionZ()-1);
+	//level->ground()->setHeight(sLen-1,0,sLen-1);
 	//level->ground()->setHeight(sLen-1,0,0);
 
-	for(int itt=3; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=m)
+	int n = (sLen-1)/subdivide;
+	for(int x=0;x<subdivide;x++)
 	{
-		numSquares = 0x1 << itt;
-		squareSize = (sLen-1)/numSquares;
-		//diamond
-		for(x = 0; x < numSquares; x++)
+		for(int y=0;y<subdivide;y++)
 		{
-			for(z = 0; z < numSquares; z++)
-			{
-				y = (level->ground()->rasterHeight(x*squareSize,z*squareSize)+
-					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
-					level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
-					level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
-				y += random(1000.0*rVal);
-
-				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
-			}
+			diamondSquareFill(n*x, n*y, n*(x+1), n*(y+1));
 		}
-		//square
-		for(x = 0; x < numSquares; x++)
-		{
-			for(z = 0; z < numSquares; z++)
-			{
-				//left
-				c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
-				c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
-				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-				c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
-				if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
-				level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
-
-
-				//top
-				c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
-				c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
-				c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
-				if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
-				else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
-				level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
-
-				if(x == numSquares-1)//right
-				{
-					c[0]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize);
-					c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
-					//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
-					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
-					level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
-				}
-				if(z == numSquares-1)//bottom
-				{
-					c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
-					c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
-					//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
-					y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
-					//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
-					level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
-				}
-			}
-		}
-		//rVal*=h;
 	}
-	//for(x = 0; x < level->ground()->getSize(); x++)
-	//	level->ground()->setHeight(x,getHeight(x,0),level->ground()->getSize()-2);
-	//for(z = 0; z < level->ground()->getSize(); z++)
-	//	level->ground()->setHeight(level->ground()->getSize()-2,getHeight(x,z),z);
-	//maxHeight=-9999;
-	//minHeight=9999;
-	//float h;
-	//for(x=0;x<level->ground()->resolutionX();x++)
+	smooth(1);
+
+	//for(int itt=3; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=m)
 	//{
-	//	for(y=0;y<level->ground()->resolutionZ();y++)
+	//	numSquares = 0x1 << itt;
+	//	squareSize = (sLen-1)/numSquares;
+	//	//diamond
+	//	for(x = 0; x < numSquares; x++)
 	//	{
-	//		h = level->ground()->rasterHeight(x,y);
-	//		if(h>maxHeight) maxHeight=h;
-	//		if(h<minHeight) minHeight=h;
+	//		for(z = 0; z < numSquares; z++)
+	//		{
+	//			y = (level->ground()->rasterHeight(x*squareSize,z*squareSize)+
+	//				level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize)+
+	//				level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize)+
+	//				level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize))/4;
+	//			y += random(1000.0*rVal);
+
+	//			level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize+squareSize/2);
+	//		}
 	//	}
+	//	//square
+	//	for(x = 0; x < numSquares; x++)
+	//	{
+	//		for(z = 0; z < numSquares; z++)
+	//		{
+	//			//left
+	//			c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
+	//			c[1]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
+	//			c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//			c[3]=level->ground()->rasterHeight(x*squareSize-squareSize/2,z*squareSize+squareSize/2);
+	//			if(x==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
+	//			else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
+	//			level->ground()->setHeight(x*squareSize,y,z*squareSize+squareSize/2);
+
+
+	//			//top
+	//			c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize);
+	//			c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize);
+	//			c[2]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//			c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize-squareSize/2);
+	//			if(z==0)			y=(c[0]+c[1]+c[2])/3	  +	random(1000.0*rVal);
+	//			else				y=(c[0]+c[1]+c[2]+c[3])/4 + random(1000.0*rVal);
+	//			level->ground()->setHeight(x*squareSize+squareSize/2,y,z*squareSize);
+
+	//			if(x == numSquares-1)//right
+	//			{
+	//				c[0]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize);
+	//				c[1]=level->ground()->rasterHeight((x+1)*squareSize,z*squareSize+squareSize);
+	//				//c[2]=getHeight((x+1)*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//				y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
+	//				//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
+	//				level->ground()->setHeight((x+1)*squareSize,y,z*squareSize+squareSize/2);
+	//			}
+	//			if(z == numSquares-1)//bottom
+	//			{
+	//				c[0]=level->ground()->rasterHeight(x*squareSize,z*squareSize+squareSize);
+	//				c[1]=level->ground()->rasterHeight(x*squareSize+squareSize,z*squareSize+squareSize);
+	//				//c[2]=getHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//				c[3]=level->ground()->rasterHeight(x*squareSize+squareSize/2,z*squareSize+squareSize/2);
+	//				y=(c[0]+c[1]+c[3])/3	  +	random(1000.0*rVal);
+	//				//else				y=(c[0]+c[1]+c[2]+c[3])/4 + float(rand()%2000-1000)/500.0f*rVal;
+	//				level->ground()->setHeight(x*squareSize+squareSize/2,y,(z+1)*squareSize);
+	//			}
+	//		}
+	//	}
+	//	//rVal*=h;
 	//}
+	////for(x = 0; x < level->ground()->getSize(); x++)
+	////	level->ground()->setHeight(x,getHeight(x,0),level->ground()->getSize()-2);
+	////for(z = 0; z < level->ground()->getSize(); z++)
+	////	level->ground()->setHeight(level->ground()->getSize()-2,getHeight(x,z),z);
+	////maxHeight=-9999;
+	////minHeight=9999;
+	////float h;
+	////for(x=0;x<level->ground()->resolutionX();x++)
+	////{
+	////	for(y=0;y<level->ground()->resolutionZ();y++)
+	////	{
+	////		h = level->ground()->rasterHeight(x,y);
+	////		if(h>maxHeight) maxHeight=h;
+	////		if(h<minHeight) minHeight=h;
+	////	}
+	////}
+	
+	
 	level->ground()->setMinMaxHeights();
 	minHeight=level->ground()->getMinHeight();
 
-	for(x=0;x<sLen;x++)
-	{
-		for(y=0;y<sLen;y++)
-		{
-			level->ground()->setHeight(x,(level->ground()->height(x,y)-minHeight)*clamp(2.0-2.0*sqrt((x-sLen/2)*(x-sLen/2)+(y-sLen/2)*(y-sLen/2))/(sLen/2),1.0,0.0),y);
-		}
-	}
-	
+	//for(x=0;x<sLen;x++)					//island
+	//{
+	//	for(y=0;y<sLen;y++)
+	//	{
+	//		level->ground()->setHeight(x,(level->ground()->height(x,y)-minHeight)*clamp(2.0-2.0*sqrt((x-sLen/2)*(x-sLen/2)+(y-sLen/2)*(y-sLen/2))/(sLen/2),1.0,0.0),y);
+	//	}
+	//}
+	//
 
-	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*400,level->ground()->resolutionZ()*400));
 
 
 
@@ -294,6 +344,37 @@ void modeMapBuilder::fromFile(string filename)
 	minHeight=level->ground()->getMinHeight();
 	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
 	resetView();
+}
+void modeMapBuilder::smooth(int a)
+{
+	auto& g = *level->ground();
+	int w = g.resolutionX();
+	int h = g.resolutionZ();
+	float* smoothed = new float[w*h];
+	memcpy(smoothed, g.heights, w * h * sizeof(float));
+
+	float s;
+	int n;
+	for(int x=0; x < w; x++)
+	{
+		for(int y=0; y < h; y++)
+		{
+			s=0;
+			n=0;
+			for(int i = max(x-a,0); i < min(x+a,w-1); i++)
+			{
+				for(int j = max(y-a,0); j < min(y+a,h-1); j++)
+				{
+					s += g(i,j);
+					n++;
+				}
+			}
+			smoothed[x+y*w] = s/n;
+		}
+	}
+
+	memcpy(g.heights, smoothed, w * h * sizeof(float));
+	delete[] smoothed;
 }
 void modeMapBuilder::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
 {
@@ -503,7 +584,7 @@ bool modeMapBuilder::init()
 
 	scroll=0.0;
 	level->newGround(513,513);
-	diamondSquare(0.17,0.5);
+	diamondSquare(0.17,0.5,16);
 
 	resetView();
 	return true;

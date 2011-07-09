@@ -353,6 +353,18 @@ void openFile::render()
 	menuManager.drawCursor();
 	glColor3f(1,1,1);
 }
+void openFile::fileSelected()
+{
+	string e = extension(file);
+	if(e != extFilter)
+	{
+		file += extFilter;
+	}
+	if(!exists(directory/file))
+		file = "";
+
+	done = true;
+}
 void openFile::keyDown(int vkey)
 {
 	if(vkey == VK_RETURN)
@@ -542,9 +554,12 @@ bool objectProperties::init(LevelFile::Object* obj)
 	labels["z location"]	= new label(sw/2-210,sh/2+25,"Y location:");
 	labels["y location"]	= new label(sw/2-210,sh/2+65,"Z location:");
 
-	textBoxes["x location"]	= new textBox(sw/2-100,sh/2-15,100,lexical_cast<string>(floor(object->startloc.x+0.5)),black);
-	textBoxes["y location"]	= new textBox(sw/2-100,sh/2+25,100,lexical_cast<string>(floor(object->startloc.y+0.5)),black);
-	textBoxes["z location"]	= new textBox(sw/2-100,sh/2+65,100,lexical_cast<string>(floor(object->startloc.z+0.5)),black);
+	textBoxes["x location"]	= new numericTextBox(sw/2-100,sh/2-15,100,floor(object->startloc.x+0.5),black);
+	textBoxes["y location"]	= new numericTextBox(sw/2-100,sh/2+25,100,floor(object->startloc.y+0.5),black);
+	textBoxes["z location"]	= new numericTextBox(sw/2-100,sh/2+65,100,floor(object->startloc.z+0.5),black);
+
+	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",object->controlType & CONTROL_HUMAN,black);
+	checkBoxes["respawn"]	= new checkBox(sw/2+100,sh/2+80,"respawn when destroyed\n(comming soon)",false,black);
 
 	listBox* l = new listBox(sw/2+100,sh/2-15,100,"team " + lexical_cast<string>(object->team+1),black);
 	l->addOption("team 1");
@@ -588,6 +603,8 @@ int objectProperties::update()
 			if(ptype == 2)	object->type = F22;
 			if(ptype == 3)	object->type = UAV;
 			if(ptype == 4)	object->type = B2;
+
+			object->controlType = checkBoxes["control"]->getChecked() ? CONTROL_HUMAN : CONTROL_COMPUTER;
 		}
 		catch(...)
 		{
@@ -768,7 +785,7 @@ int levelEditor::update()
 		}
 		else if(buttons["dSquare"]->checkChanged())
 		{
-			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.17,0.5);
+			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.17,0.5,4);
 		}
 		else if(buttons["fromFile"]->checkChanged())
 		{
@@ -941,6 +958,18 @@ void chooseMode::keyDown(int vkey)
 	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
+#ifdef _DEBUG 
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && input->getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the alt key is pressed
+	{
+		openFile* p = new openFile;
+		p->callback = (functor<void,popup*>*)this;
+		p->init(".lvl");
+		menuManager.setPopup(p);
+		choosingFile = true;
+	}
+	else
+#endif
+	
 	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
 	{
 		input->up(VK_SPACE);
@@ -965,6 +994,67 @@ void chooseMode::keyDown(int vkey)
 
 		modeManager.setMode(new modeMapBuilder);
 	}
+}
+void chooseMode::operator() (popup* p)
+{
+	if(choosingFile && ((openFile*)p)->validFile())
+	{
+		if(activeChoice==SINGLE_PLAYER)
+		{
+			input->up(VK_SPACE);
+			input->up(VK_RETURN);
+			menuManager.setMenu(NULL);
+
+			modeManager.setMode(new modeCampaign(((openFile*)p)->getFile()));
+			return;
+		}
+		else if(activeChoice==MULTIPLAYER)
+		{
+			input->up(VK_SPACE);
+			input->up(VK_RETURN);
+			menuManager.setMenu(NULL);
+
+			modeManager.setMode(new modeSplitScreen(((openFile*)p)->getFile()));
+			return;
+		}
+		choosingFile = false;
+	}
+}
+bool chooseMap::init()
+{
+	directory_iterator end_itr; // default construction yields past-the-end
+	for(directory_iterator itr("./media/"); itr != end_itr; ++itr)
+	{
+		if (extension(itr->path()) == ".lvl")
+		{
+			mapChoices.push_back(itr->path().leaf().generic_string());
+		}
+	}
+	currentChoice = 0;
+	return true;
+}
+void chooseMap::render()
+{
+	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
+}
+void chooseMap::keyDown(int vkey)
+{
+	if(mapChoices.empty())
+		return;
+
+	if(vkey==VK_ESCAPE)
+	{
+		input->up(VK_ESCAPE);
+		menuManager.setMenu(new chooseMode);
+	}
+	if(vkey==VK_UP)		currentChoice--;
+	if(vkey==VK_DOWN)	currentChoice++;
+
+	if(currentChoice<0)	
+		currentChoice=max(mapChoices.size()-1,0);
+	if(currentChoice>=mapChoices.size())	
+		currentChoice=0;
+
 }
 bool inGame::init()
 {
@@ -1191,13 +1281,18 @@ void checkBox::mouseUpL(int X, int Y)
 void textBox::mouseDownL(int X, int Y)
 {
 	clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
-	if(!clicking) focus = false;
+	if(!clicking && focus)
+	{
+		loseFocus();
+	}
 }
 void textBox::mouseUpL(int X, int Y)
 {
 	if(clicking)
 	{
-		focus = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+		bool f = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+		if(f && !focus) gainFocus();
+		if(!f && focus) loseFocus();
 		cursorPos = text.length();
 		clicking = false;
 	}
@@ -1300,6 +1395,41 @@ void textBox::keyDown(int vkey)
 			if(vkey == 0xdd)					addChar(']');
 			if(vkey == 0xde)					addChar('\'');
 		}
+	}
+}
+void numericTextBox::addChar(char c)
+{
+	if(c >= '0' && c <= '9' || c=='.')
+	{
+		text.insert(text.begin()+cursorPos,c);
+		cursorPos++;
+	}
+}
+void numericTextBox::loseFocus()
+{
+	try{
+		float f = lexical_cast<float>(text);
+		if(useMinMaxStep)
+		{
+			f = max(f,minVal);
+			f = min(f,maxVal);
+			f = floor(f / stepVal + 0.5) * stepVal;
+		}
+		if(!mAllowDecimal)
+		{
+			f = floor(f + 0.5f);
+		}
+		text = lexical_cast<string>(f);
+	}catch(...){
+		text = lexical_cast<string>(lastVal);
+	}
+}
+void numericTextBox::gainFocus()
+{
+	try{
+		lastVal = lexical_cast<float>(text);
+	}catch(...){
+		lastVal = 0.0f;
 	}
 }
 void listBox::addOption(string option)
