@@ -25,6 +25,7 @@ missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float S
 void missile::init()
 {
 	particleManager.addEmitter(new particle::contrail(id));
+	particleManager.addEmitter(new particle::contrailSmall(id));
 }
 void missile::update(double time, double ms)
 {

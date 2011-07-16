@@ -237,6 +237,9 @@
     <ClCompile Include="explosionSmoke.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
+    <ClCompile Include="contrailSmall.cpp">
+      <Filter>Source Files\particleManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">

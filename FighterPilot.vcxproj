@@ -118,6 +118,7 @@
     <ClCompile Include="campaign.cpp" />
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="contrail.cpp" />
+    <ClCompile Include="contrailSmall.cpp" />
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="enums.cpp" />

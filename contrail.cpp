@@ -3,11 +3,11 @@
 
 namespace particle
 {
-	contrail::contrail(int parent, Vec3f offset): emitter(SMOKE, parent, offset, "smoke", 1.0, 100.0, 48)
+	contrail::contrail(int parent, Vec3f offset): emitter(CONTRAIL_LARGE, parent, offset, "smoke", 1.0, 75.0, 48)
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
 		//spread =	fuzzyAttribute(0.0);
-		life =		fuzzyAttribute(7000.0, 6000.0);
+		life =		fuzzyAttribute(7000.0, 3000.0);
 	}
 	bool contrail::createParticle(particle& p, Vec3f currentPosition)
 	{
@@ -19,31 +19,31 @@ namespace particle
 
 		p.size = 5.0;
 
-		p.r = 0.5;
-		p.g = 0.5;
-		p.b = 0.5;
+		p.r = 0.6;
+		p.g = 0.6;
+		p.b = 0.6;
 		p.a = 0.0;
 		return true;
 	}
 	void contrail::updateParticle(particle& p)
 	{
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.01)
+		if(t<0.05)
 		{
-			p.a = t * 100.0;
-			p.size = 4.0 * (t * 100.0);
+			p.a = t * 20.0;
+			p.size = 5.0;//7.0 * (t * 20.0);
 		}
 		else if(t < 0.75)
 		{
-			t = (t-0.01)/0.74;
+			t = (t-0.05)/0.70;
 			p.a = 1.0 - 0.75*t;
-			p.size = (1.0-t) * 4.0 + t * 13.0;
+			p.size = (1.0-t) * 5.0 + t * 10.0;
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
 			p.a = 0.25 - 0.25*t;
-			p.size = (1.0-t) * 13.0 + t * 50.0;
+			p.size = (1.0-t) * 10.0 + t * 20.0;
 		}
 	}
 }
