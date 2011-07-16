@@ -50,7 +50,7 @@ public:
 		float alpha() {return a + ta * random<float>(-1.0,1.0);}
 	};
 
-	const enum Type{NONE=0,EXPLOSION,SMOKE,SPLASH}type;
+	const enum Type{NONE=0,EXPLOSION,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
 
 
 
@@ -151,6 +151,14 @@ class contrail: public emitter
 {
 public:
 	contrail(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
+class contrailSmall: public emitter
+{
+public:
+	contrailSmall(int parent, Vec3f offset = Vec3f(0,0,0));
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
