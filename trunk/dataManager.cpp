@@ -328,7 +328,13 @@ int DataManager::loadOBJ(string filename)
 		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
 		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
 	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
-	struct mtl{int tex;color diffuse;float transparency;string name;mtl(): tex(dataManager.getId("white")), diffuse(1,1,1), transparency(1.0){}};
+	struct mtl
+	{	int tex;
+		color diffuse;
+		float transparency;
+		string name;
+		mtl():diffuse(1,1,1){}
+	};
 ////////////////////variables///////////////////////////
 	unsigned int	numVertices=0,
 					numTexcoords=0,
@@ -378,6 +384,11 @@ int DataManager::loadOBJ(string filename)
 		{
 			string mstring="";
 			mtl mMtl;
+			mMtl.tex = dataManager.getId("white");
+			mMtl.diffuse = color(1,1,1);
+			mMtl.transparency = 1.0;
+			mMtl.name = "";
+
 			map<string,mtl> m;
 
 			ifstream fin;
@@ -425,8 +436,12 @@ int DataManager::loadOBJ(string filename)
 					{
 						mMtl.name=mstring;
 						m.insert(pair<string,mtl>(mstring,mMtl));
+
 					}
-					mMtl=mtl();
+					mMtl.tex = dataManager.getId("white");
+					mMtl.diffuse = color(1,1,1);
+					mMtl.transparency = 1.0;
+					mMtl.name = "";
 					mstring=s[1];
 				}
 				else if(s[0].compare(0,6,"map_Kd")==0)
@@ -442,7 +457,12 @@ int DataManager::loadOBJ(string filename)
 				else if(s[0].compare(0,2,"Kd")==0)
 				{
 					assert(mstring.compare(""));
-					mMtl.diffuse=color(atof(s[1].c_str()),atof(s[2].c_str()),atof(s[3].c_str()));
+					try{
+					float r = lexical_cast<float>(s[1]);
+					float g = lexical_cast<float>(s[2]);
+					float b = lexical_cast<float>(s[3]);
+					mMtl.diffuse=color(r,g,b);
+					}catch(...){}
 				}
 				else if(s[0].compare(0,2,"d")==0 || s[0].compare(0,2,"Tr")==0)
 				{
@@ -914,6 +934,19 @@ void DataManager::draw(string name)
 	glCallList(assets[name]->id);
 	unbind("model");
 }
+void DataManager::drawCustomShader(string name)
+{
+	if(assets.find(name)==assets.end() || assets[name]->type != asset::MODEL)
+		return;
+	if(activeTextureUnit != 0)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		activeTextureUnit = 0;
+	}
+	bind("noTexture");
+	glCallList(assets[name]->id);
+
+}
 void DataManager::draw(objectType p)
 {
 	if(p==F12)		draw("f12");
@@ -972,6 +1005,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
 	if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
 	if(callNum==n++)	registerAsset("fire",				"media/fire.png");
+	if(callNum==n++)	registerAsset("hex grid",			"media/hexGrid.png");
 
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
@@ -1008,12 +1042,14 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
 	if(callNum==n++)	registerShader("model",				"media/model.vert","media/model.frag");
 	if(callNum==n++)	registerShader("ortho",				"media/ortho.vert","media/ortho.frag");
+	if(callNum==n++)	registerShader("hex grid shader",	"media/hex grid.vert","media/hex grid.frag");
 	//if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
 	if(callNum==n++)	registerAsset("island new terrain",	"media/grass.frag");
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
 	if(callNum==n++)	registerAsset("snow terrain",		"media/snow.frag");
 
 	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
+	if(callNum==n++)	registerAsset("cylinder",			"media/cylinder.obj");
 	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
 	if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");
 	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");

@@ -22,6 +22,7 @@ public:
 
 	void draw(objectType p);
 	void draw(string name);
+	void drawCustomShader(string name);
 
 	int getId(string name);
 	int getId(objectType t);

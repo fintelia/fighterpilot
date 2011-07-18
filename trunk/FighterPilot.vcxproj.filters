@@ -103,6 +103,9 @@
     <Filter Include="shaders\ortho">
       <UniqueIdentifier>{321d4ec7-3cab-492b-a0b8-cea94b587fbb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\hex grid">
+      <UniqueIdentifier>{2f2f3799-4fac-4cb0-8d80-f2511f1a5b8b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -449,6 +452,12 @@
     </None>
     <None Include="media\ortho.vert">
       <Filter>shaders\ortho</Filter>
+    </None>
+    <None Include="media\hex grid.frag">
+      <Filter>shaders\hex grid</Filter>
+    </None>
+    <None Include="media\hex grid.vert">
+      <Filter>shaders\hex grid</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
