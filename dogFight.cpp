@@ -394,6 +394,27 @@ void modeDogFight::drawBullets()
 	glLineWidth(1);
 	glColor3f(1,1,1);
 }
+void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height)
+{
+	//Vec3f cn(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2);
+	//float h=10000.0;
+	//float radius = world.ground()->sizeX()*2.0;
+
+	dataManager.bind("hex grid shader");
+	dataManager.setUniform1i("tex",0);
+	dataManager.setUniform1f("minHeight",center.y);
+	dataManager.setUniform1f("maxHeight",center.y+height);
+	dataManager.setUniform1f("radius",radius);
+	dataManager.setUniform3f("color",1,1,1);
+
+
+	glTranslatef(center.x,center.y,center.z);
+	glScalef(radius,height,radius);
+
+	dataManager.drawCustomShader("cylinder");
+
+	dataManager.unbindShader();
+}
 void modeDogFight::drawScene(int acplayer) 
 {
 
@@ -528,6 +549,11 @@ void modeDogFight::drawScene(int acplayer)
 	 
 	glDepthMask(false);
 	glDisable(GL_LIGHTING);
+	
+
+	drawHexCylinder(Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2),world.ground()->sizeX()/2,20000);
+
+
 	glError();
 
 	graphics->render3D();

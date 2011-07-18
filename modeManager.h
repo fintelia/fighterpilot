@@ -96,6 +96,7 @@ public:
 	void targeter(float x, float y, float apothem, Angle tilt);
 	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
 
+	void drawHexCylinder(Vec3f center, float radius, float height);
 	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawBullets();
 	void drawScene(int acplayer);

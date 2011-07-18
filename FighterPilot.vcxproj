@@ -206,6 +206,8 @@
     <None Include="media\grass2.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
+    <None Include="media\hex grid.frag" />
+    <None Include="media\hex grid.vert" />
     <None Include="media\horizon.frag" />
     <None Include="media\horizon.vert" />
     <None Include="media\horizon2.frag" />
