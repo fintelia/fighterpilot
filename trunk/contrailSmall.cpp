@@ -28,16 +28,16 @@ namespace particle
 	void contrailSmall::updateParticle(particle& p)
 	{
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.05)
+		if(t<0.1)
 		{
-			p.a = t * 20.0;
-			p.size = 1.0 * (t * 20.0);
+			p.a = t * 10.0;
+			p.size = 2.0 * (t * 10.0);
 		}
 		else
 		{
-			t = (t-0.05)/0.95;
+			t = (t-0.1)/0.9;
 			p.a = 1.0 - t;
-			p.size = 1.0 - 0.5*t;
+			p.size = 2.0 - 0.5*t;
 		}
 	}
 }

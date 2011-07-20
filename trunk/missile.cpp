@@ -34,23 +34,40 @@ void missile::update(double time, double ms)
 	if(enemy != NULL)
 	{
 		Vec3f destVec = (enemy->position - position).normalize();
-		Vec3f fwd = rotation * Vec3f(0,0,1);
-		Angle ang = acosA(destVec.dot(fwd));
+	//	Vec3f fwd = rotation * Vec3f(0,0,1);
+	//	Angle ang = acosA(destVec.dot(fwd));
+
+		Vec3f upVec;
+		if(destVec.y > 0.8 || destVec.y < -0.8)
+			upVec = Vec3f(1,0,0);
+		else
+			upVec = Vec3f(0,1,0);
+
+		Vec3f axis = upVec.cross(destVec);
+		Angle angle = acosA(destVec.dot(Vec3f(0,0,1)));
+		rotation = Quat4f(axis, angle);
+		//if((rotation * Vec3f(0,0,1)).distanceSquared(destVec) > 0.1)
+		//{
+		//	rotation.x *= -1.0;
+		//	rotation.y *= -1.0;
+		//	rotation.z *= -1.0;
+		//}
 
 		//if( ang > PI/4)
 		//{
 		//	target = 0;
 		//}
 		//else 
-		if(ang < PI * 0.5 * ms/1000)
-		{
-			rotation = Quat4f(fwd.cross(destVec), ang);
-		}
-		else
-		{
-			Quat4f destRot(fwd.cross(destVec), ang);
-			rotation = slerp(rotation,destRot,(float)((PI * 0.5 * ms/1000)/ang));
-		}
+		//if(ang < PI * 1.5 * ms/1000)
+		//{
+		//	rotation = Quat4f(fwd.cross(destVec), ang);
+		//}
+		//else
+		//{
+		//	Quat4f destRot(fwd.cross(destVec), ang);
+		//	rotation = slerp(rotation,destRot,(float)((PI * 1.5 * ms/1000)/ang));
+		//}
+
 		//difAng=acosA((e-position).normalize().dot(velocity.normalize()));
 		//if(difAng.inRange(5.24,1.05))
 		//{

@@ -328,7 +328,6 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 				//dataManager.draw("sphere");
 
 				int ml=1;
-				glEnable(GL_LIGHTING);
 				for(auto m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
 				{
 					if(i->second->rockets.left>=ml)
@@ -368,11 +367,27 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 void modeDogFight::drawBullets()
 {
 	double time = world.time();
-	double lTime = time - 5.0;//world.time.getLastTime();
+	double lTime = time - 7.0;//world.time.getLastTime();
+
+	Vec3f up, right;
+
+	float modelview[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	right.x = modelview[0];
+	right.y = modelview[4];
+	right.z = modelview[8];
+	up.x = modelview[1];
+	up.y = modelview[5];
+	up.z = modelview[9];
+
+
+	dataManager.bind("bullet");
+
 	//float length;
 	Vec3f start, end, end2;
-	glLineWidth(3);
-	glBegin(GL_LINES);
+	Vec3f v[4];
+
+	glBegin(GL_QUADS);
 		for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
 		{
 			if(time > i->startTime)
@@ -382,36 +397,42 @@ void modeDogFight::drawBullets()
 				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
 				end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
 
-				glColor4f(1.0,0.9,0.6,1.0);		glVertex3f(start.x,start.y,start.z);//was (0.6,0.6,0.6,0.7)...
-				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(end.x,end.y,end.z);
-				glColor4f(0.6,0.6,0.6,1.0);		glVertex3f(start.x,start.y,start.z);
-				glColor4f(0.6,0.6,0.6,0.0);		glVertex3f(end2.x,end2.y,end2.z);
-
-
+				v[0] = start + right*0.3;
+				v[1] = start - right*0.3;
+				v[2] = end2 + right*0.3;
+				v[3] = end2 - right*0.3;
+				glTexCoord2f(1,1);	glVertex3fv(&v[0].x);
+				glTexCoord2f(1,0);	glVertex3fv(&v[1].x);
+				glTexCoord2f(0,1);	glVertex3fv(&v[2].x);
+				glTexCoord2f(0,0);	glVertex3fv(&v[3].x);
 			}
 		}
 	glEnd();
-	glLineWidth(1);
-	glColor3f(1,1,1);
+	//glColor3f(1,1,1);
+
+	dataManager.unbind("bullet");
 }
-void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height)
+void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
 {
 	//Vec3f cn(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2);
 	//float h=10000.0;
 	//float radius = world.ground()->sizeX()*2.0;
 
-	dataManager.bind("hex grid shader");
+ 	dataManager.bind("hex grid shader");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1f("minHeight",center.y);
 	dataManager.setUniform1f("maxHeight",center.y+height);
 	dataManager.setUniform1f("radius",radius);
-	dataManager.setUniform3f("color",1,1,1);
+	dataManager.setUniform3f("color",c.r,c.g,c.b);
 
+	glPushMatrix();
 
 	glTranslatef(center.x,center.y,center.z);
 	glScalef(radius,height,radius);
 
 	dataManager.drawCustomShader("cylinder");
+
+	glPopMatrix();
 
 	dataManager.unbindShader();
 }
@@ -483,12 +504,10 @@ void modeDogFight::drawScene(int acplayer)
 	glDepthRange(0.99,1.0);
 	glPushMatrix();
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
 	glTranslatef(e[0],e[1],e[2]);
 	glScalef(3000,800,3000);
 	glTranslatef(0,-0.7,0);
 	dataManager.draw("sky dome");
-	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 	glDepthRange(0,1);
@@ -513,6 +532,29 @@ void modeDogFight::drawScene(int acplayer)
 			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
 				dataManager.draw(i->second->type);
 			glPopMatrix();
+
+			nPlane* enemy = (nPlane*)world.objectList[i->second->target];
+			if(enemy != NULL)
+			{
+				Vec3f destVec = (enemy->position - i->second->position).normalize();
+				Vec3f fwd = i->second->rotation * Vec3f(0,0,1);
+				Angle ang = acosA(destVec.dot(fwd));
+
+				Vec3f v = i->second->position + i->second->rotation * Vec3f(0,0,1000);
+
+				Vec3f w = i->second->position + destVec * 1000;
+
+				glBegin(GL_LINES);
+					glColor3f(0,1,0);
+					glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
+					glVertex3f(v.x,v.y,v.z);
+
+					glColor3f(1,0,0);
+					glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
+					glVertex3f(w.x,w.y,w.z);
+				glEnd();
+				glColor3f(1,1,1);
+			}
 		}
 	}
 
@@ -546,20 +588,21 @@ void modeDogFight::drawScene(int acplayer)
 	glEnd();
 	glColor3f(1,1,1);
 #endif
-	 
+	 glError();
+
+	drawBullets();
+
 	glDepthMask(false);
-	glDisable(GL_LIGHTING);
-	
 
-	drawHexCylinder(Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2),world.ground()->sizeX()/2,20000);
+	drawHexCylinder(Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2),world.ground()->sizeX(),20000, white);
 
-
-	glError();
+	glDepthMask(false);//needed since drawHexCylinder sets depthMask to true
 
 	graphics->render3D();
 	particleManager.render();
 
-	drawBullets();
+	
+
 
 	glDepthMask(true);
 	glDisable(GL_DEPTH_TEST);
@@ -572,17 +615,15 @@ void modeDogFight::drawScene(int acplayer)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	planeIdBoxes(p, 0.0, 0.0, 1.0, 1.0/frustum.ratio);
+	//planeIdBoxes(p, 0.0, 0.0, 1.0, 1.0/frustum.ratio);
 		
 	glMatrixMode( GL_PROJECTION );			// Select Projection
 	glPopMatrix();							// Pop The Matrix
 	glMatrixMode( GL_MODELVIEW );			// Select Modelview
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
 	
 	lastDraw[acplayer] = time;
 	
 	glError();
-	
 }

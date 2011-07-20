@@ -389,8 +389,8 @@ class levelEditor: public screen
 {
 public:
 	friend class modeMapBuilder;
-	enum Tab{NO_TAB, TERRAIN,OBJECTS,SETTINGS};
-	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0){}
+	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS};
+	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1){}
 	~levelEditor(){}
 	bool init();
 	int update();
@@ -404,6 +404,8 @@ public:
 	int placingObject(){return newObjectType;}
 	void operator() (popup* p);
 protected:
+	Tab lastTab;
+
 	modeMapBuilder* mode;
 	//Tab currentTab;
 

@@ -1006,6 +1006,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
 	if(callNum==n++)	registerAsset("fire",				"media/fire.png");
 	if(callNum==n++)	registerAsset("hex grid",			"media/hexGrid.png");
+	if(callNum==n++)	registerAsset("bullet",				"media/bullet.png");
 
 	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
 	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");

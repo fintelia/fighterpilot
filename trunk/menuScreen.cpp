@@ -829,12 +829,11 @@ int levelEditor::update()
 			menuManager.setPopup(p);
 		}
 	}
-	else if(getTab() == SETTINGS)
+	else if(getTab() == REGIONS)
 	{
 
 	}
 
-	static Tab lastTab = (Tab)-1;
 	Tab newTab = getTab();
 	if(lastTab != newTab)
 	{
@@ -854,13 +853,13 @@ int levelEditor::update()
 			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
 			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
 		}
-		if(lastTab == SETTINGS || newTab==SETTINGS || lastTab == (Tab)-1)
+		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{
-			toggles["onHit"]->setVisibility(newTab==SETTINGS);
-			toggles["onAIHit"]->setVisibility(newTab==SETTINGS);
-			toggles["gameType"]->setVisibility(newTab==SETTINGS);
-			toggles["mapType"]->setVisibility(newTab==SETTINGS);
-			toggles["seaFloorType"]->setVisibility(newTab==SETTINGS);
+			toggles["onHit"]->setVisibility(newTab==REGIONS);
+			toggles["onAIHit"]->setVisibility(newTab==REGIONS);
+			toggles["gameType"]->setVisibility(newTab==REGIONS);
+			toggles["mapType"]->setVisibility(newTab==REGIONS);
+			toggles["seaFloorType"]->setVisibility(newTab==REGIONS);
 		}
 	}
 	lastTab = newTab;
@@ -913,7 +912,7 @@ levelEditor::Tab levelEditor::getTab()
 	int t =  toggles["tabs"]->getValue();
 	if(t == 0) return TERRAIN;
 	if(t == 1) return OBJECTS;
-	if(t == 2) return SETTINGS;
+	if(t == 2) return REGIONS;
 	return NO_TAB;
 }
 void chooseMode::render()

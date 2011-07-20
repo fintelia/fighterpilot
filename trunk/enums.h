@@ -95,6 +95,9 @@ struct Color
 
 extern const Color white;
 extern const Color black;
+extern const Color red;
+extern const Color green;
+extern const Color blue;
 extern const Color darkBlue;
 extern const Color lightBlue;
 extern const Color darkGreen;
