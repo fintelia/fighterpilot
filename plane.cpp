@@ -51,6 +51,8 @@ void nPlane::update(double time, double ms)
 				autoPilotUpdate(ms);
 			else
 				controled=false;
+
+			altitude=world.altitude(position);
 		}
 		else
 		{
@@ -192,40 +194,51 @@ void nPlane::update(double time, double ms)
 			else
 				angle = a.angle;
 
-			camera = position - Vec3f(cos(angle), -0.60, sin(angle))*45.0;
+			camera = position - Vec3f(cos(angle), -0.60, sin(angle))* 45.0;
 			center = position + Vec3f(cos(angle), 0.0, sin(angle)) * 45.0;
+			
+			Vec2f positionXZ(position.x,position.z);
+			Vec2f mapCenter(world.ground()->sizeX()/2, world.ground()->sizeZ()/2);
+			float r = max(mapCenter.x,mapCenter.y)*2.0 + 60.0f;
+			if(positionXZ.distanceSquared(mapCenter) > r*r)
+			{
+				returnToBattle();
+			}
+
+			altitude=world.altitude(position);
+			if(altitude < 0.0)
+			{
+				death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+				if(death == DEATH_HIT_GROUND)
+				{
+					position.y -= altitude;
+
+					//particleManager.addEmitter(new particle::blackSmoke(id));
+
+					death = DEATH_EXPLOSION;
+					particleManager.addEmitter(new particle::explosion(id));
+				}
+				else if(death == DEATH_HIT_WATER)
+				{
+					Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+					particleManager.addEmitter(new particle::splash(splashPos));
+
+
+					Vec3f vel2D = rotation * Vec3f(0,0,1);
+					vel2D.y=0;
+					vel2D = vel2D.normalize();
+
+					camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+					center = splashPos + vel2D * 45.0;
+				}
+				die();
+			}
 		}
 
 		findTargetVector();
-
-		altitude=world.altitude(position);
-		if(altitude < 0.0)
-		{
-			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-			if(death == DEATH_HIT_GROUND)
-			{
-				position.y -= altitude;
-
-				//particleManager.addEmitter(new particle::blackSmoke(id));
-
-				death = DEATH_EXPLOSION;
-				particleManager.addEmitter(new particle::explosion(id));
-			}
-			else if(death == DEATH_HIT_WATER)
-			{
-				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-				particleManager.addEmitter(new particle::splash(splashPos));
+		
 
 
-				Vec3f vel2D = rotation * Vec3f(0,0,1);
-				vel2D.y=0;
-				vel2D = vel2D.normalize();
-
-				camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-				center = splashPos + vel2D * 45.0;
-			}
-			die();
-		}
 
 	}
 
@@ -322,6 +335,9 @@ void nPlane::autoPilotUpdate(float value)
 		climb =			asin(fwd.y/fwd.magnitude());
 		roll =			0;//to hard and rather useless to find
 
+		center.x =		position.x;
+		center.z =		position.z;
+
 		wayPoints.clear();
 		return;
 	}
@@ -403,9 +419,9 @@ void nPlane::exitAutoPilot()
 	controled=false;
 	wayPoints.clear();
 }
-void nPlane::returnToBattle()
+void nPlane::returnToBattle()//needs to be adjusted for initial speed
 {
-
+	cameraAngles.clear();
 	wayPoints.clear();
 	controled =true;
 	double time=world.time();
@@ -429,7 +445,7 @@ void nPlane::returnToBattle()
 	wayPoints.push_back(wayPoint(time+4460.0,		position+newFwd*2309+Vec3f(0,588,0),	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
 	wayPoints.push_back(wayPoint(time+5300.0,		position+newFwd*1743+Vec3f(0,176,0),	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
 	wayPoints.push_back(wayPoint(time+5660.0,		position+newFwd*1500,					newRot * Quat4f(Vec3f(-1,0,0),PI)		));
-	wayPoints.push_back(wayPoint(time+7000.0,		position-newFwd*5,						newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
+	wayPoints.push_back(wayPoint(time+7000.0,		position-newFwd*55,						newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 
 	////wayPoints.push_back(wayPoint(time+7000.0,	pos,
 	////							0,				acceleration,

@@ -17,6 +17,9 @@ void LevelFile::load(string filename)
 		objects = new Object[info->numObjects];
 		fin.read((char*)objects,info->numObjects*sizeof(Object));
 
+		regions = new Region[info->numRegions];
+		fin.read((char*)regions,info->numRegions*sizeof(Region));
+
 		heights = new float[info->mapResolution.x*info->mapResolution.y];
 		fin.read((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
 	}
@@ -267,7 +270,6 @@ void Level::heightmapGL::render() const
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
 	}
-	//glDisable(GL_LIGHTING);
 	//glPushMatrix();
 	//glColor4f(0.1,0.3,1.0,0.6);
 	//glTranslatef(position.x,position.y,position.z);
@@ -432,6 +434,7 @@ LevelFile Level::getLevelFile()
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
 	f.info->numObjects = mObjects.size();
+	f.info->numRegions = 0;
 	f.heights = mGround->heights;
 	f.objects = new LevelFile::Object[mObjects.size()];
 	memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
@@ -448,6 +451,7 @@ LevelFile Level::getLevelFile(float seaLevelOffset)
 	f.info->mapSize = mGround->size();
 	f.info->mapResolution = mGround->resolution();
 	f.info->numObjects = mObjects.size();
+	f.info->numRegions = 0;
 	f.heights = mGround->heights;
 	if(mObjects.size() > 0)
 	{

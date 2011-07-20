@@ -442,7 +442,7 @@ void OpenGLgraphics::render()
 	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
 
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
-	glClearColor(0.47f,0.57f,0.63f,1.0f);
+	glClearColor(0.0,0.0,0.0,0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

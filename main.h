@@ -42,7 +42,7 @@ using namespace boost::filesystem;
 #pragma comment (lib, "glu32.lib")
 
 #pragma comment (lib, "zlib.lib")
-#pragma comment (lib, "libpng.lib")
+#pragma comment (lib, "libpng15.lib")
 
 
 #include <windows.h>

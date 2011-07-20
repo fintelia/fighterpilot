@@ -51,6 +51,10 @@ class modeMapBuilder: public modeScreen
 	float scroll;
 	float objPlacementAlt;
 
+	bool ortho;
+	Vec3f orthoCenter;
+	float orthoScale;
+
 	void zoom(float rotations);
 	void trackBallUpdate(int newX, int newY);
 	void resetView();
@@ -96,7 +100,7 @@ public:
 	void targeter(float x, float y, float apothem, Angle tilt);
 	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
 
-	void drawHexCylinder(Vec3f center, float radius, float height);
+	void drawHexCylinder(Vec3f center, float radius, float height, Color c);
 	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawBullets();
 	void drawScene(int acplayer);

@@ -17,7 +17,7 @@ namespace particle
 		p.vel = random<Vec3f>() * velocity();
 		p.pos = currentPosition + random<Vec3f>()*spread() + p.vel * extraTime/1000.0;
 
-		p.size = 5.0;
+		p.size = 7.5;
 
 		p.r = 0.6;
 		p.g = 0.6;
@@ -28,22 +28,22 @@ namespace particle
 	void contrail::updateParticle(particle& p)
 	{
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.05)
+		if(t<0.10)
 		{
-			p.a = t * 20.0;
-			p.size = 5.0;//7.0 * (t * 20.0);
+			p.a = t * 10.0;
+			p.size = 7.5;//7.0 * (t * 20.0);
 		}
 		else if(t < 0.75)
 		{
-			t = (t-0.05)/0.70;
+			t = (t-0.10)/0.65;
 			p.a = 1.0 - 0.75*t;
-			p.size = (1.0-t) * 5.0 + t * 10.0;
+			p.size = (1.0-t) * 7.5 + t * 15.0;
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
 			p.a = 0.25 - 0.25*t;
-			p.size = (1.0-t) * 10.0 + t * 20.0;
+			p.size = (1.0-t) * 15.0 + t * 25.0;
 		}
 	}
 }

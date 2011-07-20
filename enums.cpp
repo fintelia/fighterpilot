@@ -6,6 +6,9 @@ const int MISSILE_SPEED		= 1180;// 1180 m/s = mach 4 (max speed)
 
 const Color white(1.0f,1.0f,1.0f);
 const Color black(0.0f,0.0f,0.0f);
+const Color red(1.0f,0.0f,0.0f);
+const Color green(0.0f,1.0f,0.0f);
+const Color blue(0.0f,0.0f,1.0f);
 const Color darkBlue(0.11f,0.35f,0.52f);
 const Color lightBlue(0.19f,0.58f,0.78f);
 const Color darkGreen(0.49f,0.57f,0.06f);
