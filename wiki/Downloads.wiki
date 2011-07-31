@@ -1,4 +1,4 @@
-The latest version of Fighter-Pilot can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot(3.6.11).zip here]. 
+There is a new version of Fighter-Pilot! It can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot(7.31.11).zip here]. 
 
 
 *System Requirements:*
