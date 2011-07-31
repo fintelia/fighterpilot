@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-const int BULLET_SPEED		= 2000;// 2000 m/s
+const int BULLET_SPEED		= 1000;// 2000 m/s
 const int MISSILE_SPEED		= 1180;// 1180 m/s = mach 4 (max speed)
 
 const Color white(1.0f,1.0f,1.0f);
@@ -21,7 +21,7 @@ unsigned __int8 uPowerOfTwo(unsigned __int8 i)
     i |= i >> 1;
     i |= i >> 2;
     i |= i >> 4;
-    return i++;
+    return ++i;
 }
 unsigned __int16 uPowerOfTwo(unsigned __int16 i)
 {
@@ -30,7 +30,7 @@ unsigned __int16 uPowerOfTwo(unsigned __int16 i)
     i |= i >> 2;
     i |= i >> 4;
     i |= i >> 8;
-    return i++;
+    return ++i;
 }
 unsigned __int32 uPowerOfTwo(unsigned __int32 i)
 {
@@ -40,7 +40,7 @@ unsigned __int32 uPowerOfTwo(unsigned __int32 i)
     i |= i >> 4;
     i |= i >> 8;
     i |= i >> 16;
-    return i++;
+    return ++i;
 }
 unsigned __int64 uPowerOfTwo(unsigned __int64 i)
 {
@@ -51,7 +51,7 @@ unsigned __int64 uPowerOfTwo(unsigned __int64 i)
     i |= i >> 8;
     i |= i >> 16;
 	i |= i >> 32;
-    return i++;
+    return ++i;
 }
 __int8 uPowerOfTwo(__int8 i)
 {
@@ -59,7 +59,7 @@ __int8 uPowerOfTwo(__int8 i)
     i |= i >> 1;
     i |= i >> 2;
     i |= i >> 4;
-    return i++;
+    return ++i;
 }
 __int16 uPowerOfTwo(__int16 i)
 {
@@ -68,7 +68,7 @@ __int16 uPowerOfTwo(__int16 i)
     i |= i >> 2;
     i |= i >> 4;
     i |= i >> 8;
-    return i++;
+    return ++i;
 }
 __int32 uPowerOfTwo(__int32 i)
 {
@@ -78,7 +78,7 @@ __int32 uPowerOfTwo(__int32 i)
     i |= i >> 4;
     i |= i >> 8;
     i |= i >> 16;
-    return i++;
+    return ++i;
 }
 __int64 uPowerOfTwo(__int64 i)
 {
@@ -89,5 +89,5 @@ __int64 uPowerOfTwo(__int64 i)
     i |= i >> 8;
     i |= i >> 16;
 	i |= i >> 32;
-    return i++;
+    return ++i;
 }

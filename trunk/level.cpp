@@ -169,11 +169,13 @@ void Level::heightmapGL::setTex() const
 	//////////////////////////////////
 	int x,z;
 	Vec3f n;
-	Vec2f bSize((float)(mResolution.x)/uPowerOfTwo(mResolution.x),(float)(mResolution.y)/uPowerOfTwo(mResolution.y));
+	int xPOT = uPowerOfTwo(mResolution.x);
+	int zPOT = uPowerOfTwo(mResolution.y);
+	Vec2f bSize(((float)mResolution.x-1)/xPOT, ((float)mResolution.y-1)/zPOT);
 
-	for(x=0; x < uPowerOfTwo(mResolution.x); x += 1)
+	for(x=0; x < xPOT; x += 1)
 	{
-		for(z=0; z< uPowerOfTwo(mResolution.y); z += 1)
+		for(z=0; z< zPOT; z += 1)
 		{
 			n = interpolatedNormal(bSize.x*x,bSize.y*z);
 			//if(x > 0.99)					n += getNormal(bSize.x*x-1,	bSize.y*z) * 0.5;
@@ -195,15 +197,17 @@ void Level::heightmapGL::setTex() const
 }
 void Level::heightmapGL::createList() const
 {
+	int skipX = mResolution.x / 128;
+	int skipZ = mResolution.y / 128;
 	dispList = glGenLists(1);
 	glNewList(dispList,GL_COMPILE);
-	for(unsigned int z=0;z<mResolution.y-1;z++)
+	for(unsigned int z=0;z<mResolution.y-skipZ; z += skipZ)
 	{
 		glBegin(GL_TRIANGLE_STRIP);
-		for(unsigned int x=0;x<mResolution.x;x++)
+		for(unsigned int x=0;x<mResolution.x; x += skipX)
 		{
 			glVertex3f((float)x/(mResolution.x-1),heights[x+z*mResolution.x],	(float)(z)/(mResolution.y-1));
-			glVertex3f((float)x/(mResolution.x-1),heights[x+(z+1)*mResolution.x],(float)(z+1)/(mResolution.y-1));
+			glVertex3f((float)x/(mResolution.x-1),heights[x+(z+skipZ)*mResolution.x],(float)(z+skipZ)/(mResolution.y-1));
 		}
 		glEnd();
 	}

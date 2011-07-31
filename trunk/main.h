@@ -16,6 +16,7 @@
 #include <map>
 #include <stack>
 #include <queue>
+#include <set>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -28,6 +29,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 //--Namespaces
 using namespace std;
 using namespace boost;
@@ -61,6 +63,7 @@ extern bool done;//setting this to true will terminate the program
 const int NumPlayers = 2;
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
+namespace menu{class levelEditor;}
 
 #include "enums.h"
 #include "time.h"
@@ -97,6 +100,7 @@ extern int sh, sw;
 
 extern int frame,Time,timebase;
 extern float fps;
+
 
 #include "menuScreen.h"
 #include "modeManager.h"

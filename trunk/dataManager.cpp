@@ -1049,7 +1049,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
 	if(callNum==n++)	registerAsset("snow terrain",		"media/snow.frag");
 
-	if(callNum==n++)	registerAsset("sky dome",			"media/dome4.obj");
+	if(callNum==n++)	registerAsset("sky dome",			"media/dome.obj");//was 'dome4.obj'
 	if(callNum==n++)	registerAsset("cylinder",			"media/cylinder.obj");
 	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
 	if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");

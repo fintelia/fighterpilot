@@ -106,6 +106,13 @@ void manager::render()
 		}
 	}
 }
+void manager::render3D()
+{
+	if(menu != NULL)
+	{
+		menu->render3D();
+	}
+}
 int manager::update()
 {
 	if(!popups.empty())
@@ -237,7 +244,20 @@ bool openFile::init(string ExtFilter)
 	buttons["myComputer"]	= new button(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
 	buttons["myNetwork"]	= new button(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
 
-	extFilter=ExtFilter;
+	extFilters.clear();
+	extFilters.insert(ExtFilter);
+	directory=".";
+	refreshView();
+	return true;
+}
+bool openFile::init(set<string> ExtFilters)
+{
+	buttons["desktop"]		= new button(sw/2-405,sh/2-246,175,40,"Desktop",lightGreen,white);
+	buttons["myDocuments"]	= new button(sw/2-405,sh/2-196,175,40,"My Documents",lightGreen,white);
+	buttons["myComputer"]	= new button(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
+	buttons["myNetwork"]	= new button(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
+
+	extFilters=ExtFilters;
 	directory=".";
 	refreshView();
 	return true;
@@ -259,7 +279,7 @@ void openFile::refreshView()
 		{
 			folders.push_back(itr->path().leaf().generic_string());
 		}
-		else if ( filesystem::extension(itr->path()).compare(extFilter) == 0 ) // see below
+		if(extFilters.find(extension(itr->path())) != extFilters.end())
 		{
 			files.push_back(itr->path().leaf().generic_string());
 		}
@@ -356,9 +376,9 @@ void openFile::render()
 void openFile::fileSelected()
 {
 	string e = extension(file);
-	if(e != extFilter)
+	if(extFilters.find(e) == extFilters.end())
 	{
-		file += extFilter;
+		file += *extFilters.begin();
 	}
 	if(!exists(directory/file))
 		file = "";
@@ -431,7 +451,7 @@ void saveFile::fileSelected()
 	}
 
 	if(file.find(".") == file.npos)
-		file += extFilter;
+		file += *extFilters.begin();
 	if(exists(directory/file))//if file exists
 	{
 		messageBox_c* m = new messageBox_c;
@@ -634,287 +654,6 @@ bool screen::loadBackground()
 	return backgroundImage != 0;
 }
 
-bool levelEditor::init()
-{
-	vector<button*> v;//for toggles
-
-	//terrain
-
-	//buttons["newShader"]	= new button(5,5,200,30,"new shader",lightGreen,white);
-	buttons["dSquare"]		= new button(sw-105,5,100,30,"d-square",lightGreen,white);
-	buttons["faultLine"]	= new button(sw-105,40,100,30,"fault line",lightGreen,white);
-	buttons["fromFile"]		= new button(sw-105,75,100,30,"from file",lightGreen,white);
-	buttons["exportBMP"]	= new button(sw-105,110,100,30,"export",lightGreen,white);
-	sliders["sea level"]	= new slider(sw-105,145,100,30,1.0,0.0);
-	sliders["height scale"] = new slider(sw-105,165,100,30,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
-
-	buttons["load"]			= new button(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
-	buttons["save"]			= new button(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
-	buttons["exit"]			= new button(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
-
-	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
-	addShader("island");
-	addShader("grass");
-	addShader("snow");
-	addShader("ocean");
-
-	//objects
-	buttons["addPlane"]		= new button(5,5,200,30,"new plane",lightGreen,white);
-	buttons["addAAgun"]		= new button(5,40,200,30,"new AA gun",lightGreen,white);
-	//settings
-
-	v.clear();
-	v.push_back(new button(120,5,100,30,"respawn",black,white));
-	v.push_back(new button(225,5,100,30,"restart",black,white));
-	v.push_back(new button(330,5,100,30,"die",black,white));
-	toggles["onHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,5,"player hit:"));
-
-	v.clear();
-	v.push_back(new button(120,45,100,30,"respawn",black,white));
-	v.push_back(new button(225,45,100,30,"restart",black,white));
-	v.push_back(new button(330,45,100,30,"die",black,white));
-	toggles["onAIHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,45,"AI hit:"));
-
-	v.clear();
-	v.push_back(new button(120,85,100,30,"ffa",black,white));
-	v.push_back(new button(225,85,100,30,"teams",black,white));
-	v.push_back(new button(330,85,100,30,"player vs",black,white));
-	toggles["gameType"]	= new toggle(v,darkBlue,lightBlue,new label(5,85,"game type:"));
-
-	v.clear();
-	v.push_back(new button(120,125,100,30,"water",black,white));
-	v.push_back(new button(225,125,100,30,"land",black,white));
-	toggles["mapType"]	= new toggle(v,darkBlue,lightBlue,new label(5,125,"map type:"));
-
-	v.clear();
-	v.push_back(new button(120,165,100,30,"rock",black,white));
-	v.push_back(new button(225,165,100,30,"sand",black,white));
-	toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
-
-	v.clear();
-	v.push_back(new button(5,sh-40,100,35,"Terrain",black,white));
-	v.push_back(new button(110,sh-40,100,35,"Objects",black,white));
-	v.push_back(new button(215,sh-40,100,35,"Settings",black,white));
-	toggles["tabs"]	= new toggle(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
-
-	return true;
-}
-void levelEditor::operator() (popup* p)
-{
-	if(awaitingMapFile)
-	{
-		awaitingMapFile=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((openFile*)p)->getFile();
-		((modeMapBuilder*)modeManager.getMode())->fromFile(f);
-	}
-	//else if(awaitingShaderFile)
-	//{
-	//	awaitingShaderFile=false;
-	//	if(!((saveFile*)p)->validFile()) return;
-	//	string f=((openFile*)p)->getFile();
-	//	addShader(f);
-	//}
-	else if(awaitingMapSave)
-	{
-		awaitingMapSave=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((saveFile*)p)->getFile();
-		((modeMapBuilder*)modeManager.getMode())->level->exportBMP(f);
-	}
-	else if(awaitingLevelFile)
-	{
-		awaitingLevelFile=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((openFile*)p)->getFile();
-		delete ((modeMapBuilder*)modeManager.getMode())->level;
-		LevelFile l(f);
-		mode->level = new editLevel(l);
-		mode->maxHeight=mode->level->ground()->getMaxHeight();
-		mode->minHeight=mode->level->ground()->getMinHeight();
-		sliders["sea level"]->setValue(-mode->minHeight/(mode->maxHeight - mode->minHeight));
-		mode->resetView();
-	}
-	else if(awaitingLevelSave)
-	{
-		awaitingLevelSave=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((saveFile*)p)->getFile();
-		LevelFile l = ((modeMapBuilder*)modeManager.getMode())->level->getLevelFile(sliders["sea level"]->getValue() * (mode->maxHeight - mode->minHeight) + mode->minHeight);
-		l.save(f);
-	}
-	else if(awaitingNewObject)
-	{
-		awaitingNewObject = false;
-		newObjectType=((newObject*)p)->getObjectType();
-	}
-	//else if(...)
-	//   .
-	//   .
-	//   .
-}
-int levelEditor::update()
-{
-	if(buttons["load"]->checkChanged())
-	{
-		awaitingLevelFile = true;
-		popup* p = new openFile;
-		p->callback = (functor<void,popup*>*)this;
-		((openFile*)p)->init(".lvl");
-		menuManager.setPopup(p);
-	}
-	else if(buttons["save"]->checkChanged())
-	{
-		awaitingLevelSave = true;
-		popup* p = new saveFile;
-		p->callback = (functor<void,popup*>*)this;
-		((saveFile*)p)->init(".lvl");
-		menuManager.setPopup(p);
-	}
-	else if(buttons["exit"]->checkChanged())
-	{
-		modeManager.setMode(NULL);
-		menuManager.setMenu(new menu::chooseMode);
-		return 0;
-	}
-	else if(getTab() == TERRAIN)
-	{
-		if(buttons["faultLine"]->checkChanged())
-		{
-			((modeMapBuilder*)modeManager.getMode())->faultLine();
-		}
-		else if(buttons["dSquare"]->checkChanged())
-		{
-			((modeMapBuilder*)modeManager.getMode())->diamondSquare(0.17,0.5,4);
-		}
-		else if(buttons["fromFile"]->checkChanged())
-		{
-			awaitingMapFile = true;
-			popup* p = new openFile;
-			p->callback = (functor<void,popup*>*)this;
-			((openFile*)p)->init(".bmp");
-			menuManager.setPopup(p);
-		}
-		else if(buttons["exportBMP"]->checkChanged())
-		{
-			awaitingMapSave = true;
-			popup* p = new saveFile;
-			p->callback = (functor<void,popup*>*)this;
-			((saveFile*)p)->init(".bmp");
-			menuManager.setPopup(p);
-		}
-		//else if(buttons["newShader"]->checkChanged())
-		//{
-		//	awaitingShaderFile=true;
-		//	popup* p = new openFile;
-		//	p->callback = (functor<void,popup*>*)this;
-		//	((openFile*)p)->init(".frag");
-		//	manager.setPopup(p);
-		//}
-	}
-	else if(getTab() == OBJECTS)
-	{
-		if(buttons["addPlane"]->checkChanged())
-		{
-			awaitingNewObject=true;
-			popup* p = new newObject;
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
-		}
-		else if(buttons["addAAgun"]->checkChanged())
-		{
-			awaitingNewObject=true;
-			popup* p = new newObject(AA_GUN);
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
-		}
-	}
-	else if(getTab() == REGIONS)
-	{
-
-	}
-
-	Tab newTab = getTab();
-	if(lastTab != newTab)
-	{
-		if(lastTab == TERRAIN || newTab==TERRAIN || lastTab == (Tab)-1)
-		{
-			//buttons["newShader"]->setVisibility(newTab==TERRAIN);
-			buttons["dSquare"]->setVisibility(newTab==TERRAIN);
-			buttons["faultLine"]->setVisibility(newTab==TERRAIN);
-			buttons["fromFile"]->setVisibility(newTab==TERRAIN);
-			buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
-			toggles["shaders"]->setVisibility(newTab==TERRAIN);
-			sliders["sea level"]->setVisibility(newTab==TERRAIN);
-			sliders["height scale"]->setVisibility(newTab==TERRAIN);
-		}
-		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
-		{
-			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
-			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
-		}
-		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
-		{
-			toggles["onHit"]->setVisibility(newTab==REGIONS);
-			toggles["onAIHit"]->setVisibility(newTab==REGIONS);
-			toggles["gameType"]->setVisibility(newTab==REGIONS);
-			toggles["mapType"]->setVisibility(newTab==REGIONS);
-			toggles["seaFloorType"]->setVisibility(newTab==REGIONS);
-		}
-	}
-	lastTab = newTab;
-	return 0;
-}
-void levelEditor::render()
-{
-	menuManager.drawCursor();
-}
-void levelEditor::mouseL(bool down, int x, int y)
-{
-	if(getTab() == OBJECTS && down)
-	{
-		if(newObjectType != 0)
-		{
-			static int teamNum=0;
-			((modeMapBuilder*)modeManager.getMode())->addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, x, y);
-			newObjectType = 0;
-			teamNum++;
-		}
-		else
-		{
-			mode->selectObject(x,y);
-		}
-	}
-}
-void levelEditor::scroll(float rotations)
-{
-	((modeMapBuilder*)modeManager.getMode())->zoom(rotations);
-}
-void levelEditor::mouseC(bool down, int x, int y)
-{
-	if(!down)
-		((modeMapBuilder*)modeManager.getMode())->trackBallUpdate(x,y);
-}
-void levelEditor::addShader(string filename)
-{
-	//int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
-	//((modeMapBuilder*)modeManager.getMode())->shaderButtons.push_back(s);
-
-	toggles["shaders"]->addButton(new button(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
-	//buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
-}
-int levelEditor::getShader()
-{
-	return toggles["shaders"]->getValue();
-}
-levelEditor::Tab levelEditor::getTab()
-{
-	int t =  toggles["tabs"]->getValue();
-	if(t == 0) return TERRAIN;
-	if(t == 1) return OBJECTS;
-	if(t == 2) return REGIONS;
-	return NO_TAB;
-}
 void chooseMode::render()
 {
 /*
@@ -957,8 +696,8 @@ void chooseMode::keyDown(int vkey)
 	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
-#ifdef _DEBUG 
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && input->getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the alt key is pressed
+//#ifdef _DEBUG 
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && input->getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
 	{
 		openFile* p = new openFile;
 		p->callback = (functor<void,popup*>*)this;
@@ -967,7 +706,7 @@ void chooseMode::keyDown(int vkey)
 		choosingFile = true;
 	}
 	else
-#endif
+//#endif
 	
 	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
 	{
@@ -989,9 +728,9 @@ void chooseMode::keyDown(int vkey)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu(NULL);
+		menuManager.setMenu(new menu::levelEditor);
 
-		modeManager.setMode(new modeMapBuilder);
+		//modeManager.setMode(new modeMapBuilder);
 	}
 }
 void chooseMode::operator() (popup* p)
@@ -1407,6 +1146,7 @@ void numericTextBox::addChar(char c)
 void numericTextBox::loseFocus()
 {
 	try{
+		focus = false;
 		float f = lexical_cast<float>(text);
 		if(useMinMaxStep)
 		{
@@ -1426,6 +1166,7 @@ void numericTextBox::loseFocus()
 void numericTextBox::gainFocus()
 {
 	try{
+		focus = true;
 		lastVal = lexical_cast<float>(text);
 	}catch(...){
 		lastVal = 0.0f;

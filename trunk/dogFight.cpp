@@ -367,7 +367,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 void modeDogFight::drawBullets()
 {
 	double time = world.time();
-	double lTime = time - 7.0;//world.time.getLastTime();
+	double lTime = time - 20.0;//world.time.getLastTime();
 
 	Vec3f up, right;
 
@@ -386,7 +386,6 @@ void modeDogFight::drawBullets()
 	//float length;
 	Vec3f start, end, end2;
 	Vec3f v[4];
-
 	glBegin(GL_QUADS);
 		for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
 		{
@@ -397,18 +396,23 @@ void modeDogFight::drawBullets()
 				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
 				end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
 
-				v[0] = start + right*0.3;
-				v[1] = start - right*0.3;
-				v[2] = end2 + right*0.3;
-				v[3] = end2 - right*0.3;
+				Vec3f dir = i->velocity.normalize();
+				float a1 = dir.dot(up);
+				float a2 = dir.dot(right);
+				float len = 0.3/sqrt(a1*a1+a2*a2);
+
+				v[0] = start + (right*a1 - up*a2)*len;
+				v[1] = start - (right*a1 - up*a2)*len;
+				v[2] = end2 - (right*a1 - up*a2)*len;
+				v[3] = end2 + (right*a1 - up*a2)*len;
+
 				glTexCoord2f(1,1);	glVertex3fv(&v[0].x);
 				glTexCoord2f(1,0);	glVertex3fv(&v[1].x);
-				glTexCoord2f(0,1);	glVertex3fv(&v[2].x);
-				glTexCoord2f(0,0);	glVertex3fv(&v[3].x);
+				glTexCoord2f(0,0);	glVertex3fv(&v[2].x);
+				glTexCoord2f(0,1);	glVertex3fv(&v[3].x);
 			}
 		}
 	glEnd();
-	//glColor3f(1,1,1);
 
 	dataManager.unbind("bullet");
 }
@@ -501,16 +505,17 @@ void modeDogFight::drawScene(int acplayer)
 		cam=e;
 	}
 	//sky dome
-	glDepthRange(0.99,1.0);
 	glPushMatrix();
 	glDisable(GL_DEPTH_TEST);
-	glTranslatef(e[0],e[1],e[2]);
+
+	glTranslatef(e.x,e.y,e.z);
 	glScalef(3000,800,3000);
 	glTranslatef(0,-0.7,0);
 	dataManager.draw("sky dome");
+
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
-	glDepthRange(0,1);
+
 
 	if(world.level != NULL)
 		world.level->render(e);
@@ -590,9 +595,11 @@ void modeDogFight::drawScene(int acplayer)
 #endif
 	 glError();
 
+	glDepthMask(false);
+
 	drawBullets();
 
-	glDepthMask(false);
+
 
 	drawHexCylinder(Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2),world.ground()->sizeX(),20000, white);
 

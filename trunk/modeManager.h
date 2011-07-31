@@ -37,51 +37,6 @@ private:
 
 extern ModeManager& modeManager;
 
-class modeMapBuilder: public modeScreen
-{
-	menu::levelEditor* menus;
-
-	map<int,circle<float>> objectCircles;
-
-	Quat4f rot;
-	Vec3f center;
-	editLevel* level;
-	float maxHeight;
-	float minHeight;
-	float scroll;
-	float objPlacementAlt;
-
-	bool ortho;
-	Vec3f orthoCenter;
-	float orthoScale;
-
-	void zoom(float rotations);
-	void trackBallUpdate(int newX, int newY);
-	void resetView();
-
-	float randomDisplacement(float h1, float h2, float d);
-	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
-	void diamondSquareFill(int x1, int x2, int y1, int y2);
-	void diamondSquare(float h, float m, int subdivide);
-	void faultLine();
-	void fromFile(string filename);
-	void smooth(int a);
-	void addObject(int type, int team, int controlType, int x, int y);
-	void selectObject(int x, int y);
-
-	void updateObjectCircles();
-
-	vector<int> shaderButtons;
-
-	friend class menu::levelEditor;
-public:
-	virtual int update();
-	virtual void draw3D();
-	void draw2D();
-	modeMapBuilder(): center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scroll(0.0), objPlacementAlt(10.0) {}
-	bool init();
-};
-
 class modeDogFight: public modeScreen
 {
 protected:

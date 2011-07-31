@@ -1,15 +1,18 @@
 
 
 varying vec3 position, lightDir, halfVector;
+varying float h;
 
 uniform float XZscale;
+
 uniform float minHeight;
 uniform float maxHeight;
 
 void main()
 {
 	position.xz = gl_Vertex.xz/XZscale;
-	position.y = (gl_Vertex.y-minHeight)/(maxHeight-minHeight);
+	position.y = gl_Vertex.y;
+	h = (gl_Vertex.y-minHeight)/(maxHeight-minHeight);
 	lightDir = normalize(vec3(gl_LightSource[0].position));
 	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
 
