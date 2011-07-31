@@ -106,6 +106,9 @@
     <Filter Include="shaders\hex grid">
       <UniqueIdentifier>{2f2f3799-4fac-4cb0-8d80-f2511f1a5b8b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\menu">
+      <UniqueIdentifier>{37781df0-5224-40cc-8c6e-a9f52cae4841}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -121,9 +124,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="menuScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="missile.cpp">
@@ -186,9 +186,6 @@
     <ClCompile Include="dogFight.cpp">
       <Filter>Source Files\modeManager</Filter>
     </ClCompile>
-    <ClCompile Include="mapBuilder.cpp">
-      <Filter>Source Files\modeManager</Filter>
-    </ClCompile>
     <ClCompile Include="bullet.cpp">
       <Filter>Source Files\bullet</Filter>
     </ClCompile>
@@ -243,6 +240,12 @@
     <ClCompile Include="contrailSmall.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
+    <ClCompile Include="menuScreen.cpp">
+      <Filter>Source Files\menu</Filter>
+    </ClCompile>
+    <ClCompile Include="levelEditor.cpp">
+      <Filter>Source Files\menu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
@@ -261,9 +264,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="menuScreen.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="missile.h">
@@ -362,6 +362,9 @@
     <ClInclude Include="debugBreak.h" />
     <ClInclude Include="matrix.h">
       <Filter>Source Files\math\matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="menuScreen.h">
+      <Filter>Source Files\menu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

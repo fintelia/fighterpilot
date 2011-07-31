@@ -46,5 +46,7 @@ void main()
 	normal = normalize(normal);
 	float NdotL = dot(normal,lightDir);
 
-	gl_FragColor = color * (0.95 + clamp(NdotL*0.75,0.0,0.05));
+	color *= (0.95 + clamp(NdotL*0.75,0.0,0.05));
+
+	gl_FragColor = color ;
 }

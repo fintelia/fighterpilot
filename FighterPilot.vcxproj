@@ -72,7 +72,6 @@
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
       <LargeAddressAware>true</LargeAddressAware>
-      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <CustomBuildStep>
       <Command>COPY "$(OutDir)FighterPilot.exe" "$(ProjectDir)"</Command>
@@ -134,8 +133,8 @@
     <ClCompile Include="imageloader.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
+    <ClCompile Include="levelEditor.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="mapBuilder.cpp" />
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="dogFight.cpp" />

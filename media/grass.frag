@@ -1,5 +1,6 @@
 
 varying vec3 position, lightDir, halfVector;
+varying float h;
 
 uniform float time;
 
@@ -35,9 +36,9 @@ void main()
 	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
 	vec3 TexValues;
-	if(position.y<0.2)		TexValues = vec3(0.0,1.0,0.0);
-	else if(position.y<0.4)	TexValues = vec3(0.0,1.0-(position.y-0.2)/0.2,(position.y-0.2)/0.2);
-	else					TexValues = vec3(0.0,0.0,1.0);
+	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
+	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
+	else				TexValues = vec3(0.0,0.0,1.0);
 
 	//if(r<TexValues[0]) r=0.0;
 	//else r-=TexValues[0];
@@ -55,5 +56,18 @@ void main()
 
 	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
-	gl_FragColor = vec4(color.rgb*(NdotL*0.7+0.3),color.a);//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
+
+	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
+
+	///////////////////////
+	//if(position.y > 0.0)
+	//{
+		//float z = gl_FragCoord.z / gl_FragCoord.w;
+		//float d=0.00001;
+		//float fogFactor = clamp(exp2( -d * d * z * z * 1.442695 ), 0.0, 1.0);
+		//color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	//}
+	//////////////////
+
+	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }

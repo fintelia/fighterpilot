@@ -138,6 +138,7 @@ public:
 		ShaderType				shaderType;
 		friend class Level;
 		friend class modeMapBuilder;
+		friend class menu::levelEditor;
 	};
 	class heightmapGL: public heightmapBase
 	{
@@ -165,6 +166,7 @@ public:
 		friend class Level;
 		friend class modeDogFight;
 		friend class modeMapBuilder;
+		friend class menu::levelEditor;
 	};
 
 protected:

@@ -442,7 +442,7 @@ void OpenGLgraphics::render()
 	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
 
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
-	glClearColor(0.0,0.0,0.0,0.0);
+	glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -454,6 +454,7 @@ void OpenGLgraphics::render()
 	//glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
 	modeManager.render3D();
+	menuManager.render3D();
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);

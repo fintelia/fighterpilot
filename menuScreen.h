@@ -1,5 +1,4 @@
 
-class modeMapBuilder;
 namespace menu{
 
 class element
@@ -263,6 +262,7 @@ public:
 
 	bool init();
 	bool init(string ExtFilter);
+	bool init(set<string> ExtFilters);
 	int update();
 	void render();
 	
@@ -278,7 +278,7 @@ protected:
 
 	filesystem::path directory;
 
-	string extFilter;
+	set<string> extFilters;
 	vector<string> files;
 	vector<string> folders;
 
@@ -357,6 +357,7 @@ public:
 	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
+	virtual void render3D(){}
 	///////////////////////////////////////////
 	virtual void mouseL(bool down, int x, int y){}
 	virtual void mouseR(bool down, int x, int y){}
@@ -388,13 +389,13 @@ protected:
 class levelEditor: public screen
 {
 public:
-	friend class modeMapBuilder;
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS};
-	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1){}
+	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1), center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
 	int update();
 	void render();
+	void render3D();
 
 	void mouseL(bool down, int x, int y);
 	void scroll(float rotations);
@@ -404,35 +405,28 @@ public:
 	int placingObject(){return newObjectType;}
 	void operator() (popup* p);
 protected:
+	
+	void zoom(float rotations);
+	void trackBallUpdate(int newX, int newY);
+	void resetView();
+
+	float randomDisplacement(float h1, float h2, float d);
+	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
+	void diamondSquareFill(int x1, int x2, int y1, int y2);
+	void diamondSquare(float h, float m, int subdivide);
+	void faultLine();
+	void fromFile(string filename);
+	void smooth(int a);
+	void addObject(int type, int team, int controlType, int x, int y);
+	void selectObject(int x, int y);
+
+	void updateObjectCircles();
+
+
 	Tab lastTab;
 
-	modeMapBuilder* mode;
-	//Tab currentTab;
-
 	void addShader(string filename);
-	//menuToggle* bShaders;
-	//menuButton* bNewShader;
 
-	//menuButton* bDiamondSquare;
-	//menuButton* bFaultLine;
-	//menuButton* bFromFile;
-	//menuButton* bExportBMP;
-
-	//menuButton* bLoad;
-	//menuButton* bSave;
-	//menuButton* bExit;
-
-	//menuButton* bAddPlane;
-
-	//menuToggle* bOnHit;
-	//menuToggle* bOnAIHit;
-	//menuToggle* bGameType;
-	//menuToggle* bMapType;
-	//menuToggle* bSeaFloorType;
-
-	//menuToggle* bTabs;
-
-	//bool awaitingShaderFile;
 	bool awaitingMapFile;
 	bool awaitingMapSave;
 	bool awaitingLevelFile;
@@ -440,6 +434,23 @@ protected:
 	bool awaitingNewObject;
 
 	int newObjectType;
+
+	
+	map<int,circle<float>> objectCircles;
+
+	Quat4f rot;
+	Vec3f center;
+	editLevel* level;
+	float maxHeight;
+	float minHeight;
+	float scrollVal;
+	float objPlacementAlt;
+
+	//bool ortho;
+	//Vec3f orthoCenter;
+	//float orthoScale;
+
+
 };
 class chooseMode: public screen 
 {
@@ -508,6 +519,7 @@ public:
 	void shutdown();
 	int update();
 	void render();
+	void render3D();
 
 	void issueInputCallback(Input::callBack* callback, element* e);
 	void inputCallback(Input::callBack* callback);
