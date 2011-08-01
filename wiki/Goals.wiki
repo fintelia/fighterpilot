@@ -1,0 +1,16 @@
+*Things To Do:*
+
+ # Streamline the menu::levelEditor code
+ # Fix GUI mouse events so only one element is effected by each event
+ # Separate update interval from frame rate
+ # Fix missile tracking
+ # Improved camera smoothing
+ # Display map bounds on radar
+
+
+
+*Possible Things To Do*
+
+ * Add lua scripting for AI's
+ * Add lua scripting for the GUI
+ * Load the GUI element properties from an xml document (with tinyXML?)
