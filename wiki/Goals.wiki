@@ -6,11 +6,17 @@
  # Fix missile tracking
  # Improved camera smoothing
  # Display map bounds on radar
-
-
+ # Toggle fog in grass shader
+ # Improve grass shader
+ # support for chained levels to create a campaign
 
 *Possible Things To Do*
 
  * Add lua scripting for AI's
  * Add lua scripting for the GUI
  * Load the GUI element properties from an xml document (with tinyXML?)
+
+*Future Plans*
+ * Add a campaign
+ * Add more planes
+ * Add ground units and ships
