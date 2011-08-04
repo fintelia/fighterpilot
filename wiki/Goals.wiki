@@ -15,6 +15,7 @@
  * Add lua scripting for AI's
  * Add lua scripting for the GUI
  * Load the GUI element properties from an xml document (with tinyXML?)
+ * Terrain LOD
 
 *Future Plans*
  * Add a campaign
