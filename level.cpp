@@ -197,8 +197,8 @@ void Level::heightmapGL::setTex() const
 }
 void Level::heightmapGL::createList() const
 {
-	int skipX = mResolution.x / 128;
-	int skipZ = mResolution.y / 128;
+	int skipX = max(mResolution.x / 128,1);
+	int skipZ = max(mResolution.y / 128,1);
 	dispList = glGenLists(1);
 	glNewList(dispList,GL_COMPILE);
 	for(unsigned int z=0;z<mResolution.y-skipZ; z += skipZ)
@@ -637,7 +637,7 @@ void Level::render(Vec3f eye)
 
 //	glDepthMask(false);
 
-	if(mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_ISLAND)
+	if(mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS)
 	{
 		Vec3d center(eye.x,0,eye.z);
 		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));

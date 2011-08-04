@@ -60,10 +60,10 @@ TexValues = vec3(0.0,h,1.0-h);
 	float NdotL = dot(normal,lightDir);
 	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
 	///////////////////////
-//	float z = gl_FragCoord.z / gl_FragCoord.w;
-//	float d=0.00005;
-//	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
-//	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	float z = gl_FragCoord.z / gl_FragCoord.w;
+	float d=0.00005;
+	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
+	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
 	//////////////////
 
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));

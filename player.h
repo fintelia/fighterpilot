@@ -102,14 +102,14 @@ public:
 				else
 			#endif
 				{
-					c[CON_CLIMB]=nControl(0x55);
-					c[CON_DIVE]=nControl(0x4A);
-					c[CON_LEFT]=nControl(0x41);
-					c[CON_RIGHT]=nControl(0x44);
-					c[CON_ACCEL]=nControl(0x57);
-					c[CON_BRAKE]=nControl(0x53);
-					c[CON_SHOOT]=nControl(0x20);
-					c[CON_MISSILE]=nControl(0x42);
+					c[CON_CLIMB]=nControl(0x57);	//U
+					c[CON_DIVE]=nControl(0x53);		//J
+					c[CON_LEFT]=nControl(0x41);		//A
+					c[CON_RIGHT]=nControl(0x44);	//D
+					c[CON_ACCEL]=nControl(0x55);	//W
+					c[CON_BRAKE]=nControl(0x4A);	//S
+					c[CON_SHOOT]=nControl(0x20);	//SPACE
+					c[CON_MISSILE]=nControl(0x42);	//B
 				}
 		}
 	}

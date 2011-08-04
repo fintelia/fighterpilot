@@ -136,7 +136,7 @@ public:
 
 
 };
-Angle atan2A(double X,double Y);
+Angle atan2A(double opp,double adj);
 Angle asinA(double X);
 Angle acosA(double X);
 Angle lerp(Angle a1,Angle a2,double l);

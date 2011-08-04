@@ -31,9 +31,10 @@ void missile::update(double time, double ms)
 {
 	/////////////////follow target////////////////////
 	nPlane* enemy = (nPlane*)world.objectList[target];
-	if(enemy != NULL)
+	Vec3f destVec=rotation*Vec3f(0,0,1);
+	if(enemy != NULL && !enemy->dead)
 	{
-		Vec3f destVec = (enemy->position - position).normalize();
+		destVec = (enemy->position - position).normalize();
 	//	Vec3f fwd = rotation * Vec3f(0,0,1);
 	//	Angle ang = acosA(destVec.dot(fwd));
 
@@ -86,11 +87,16 @@ void missile::update(double time, double ms)
 		//	climbAngle-=(climbAngle-asin( (e[1]-y)/e.distance(Vec3f(x,y,z))))/5;	
 		//}
 	}
+	else if(enemy != NULL && enemy->dead)
+	{
+		particleManager.addEmitter(new particle::explosion(position));
+		life = 0.0;
+	}
 	//////////////////Movement//////////////
 	speed+=acceleration*(ms/1000);
 	if(speed > MISSILE_SPEED) speed = MISSILE_SPEED;
-	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
-
+	position += /*(rotation*Vec3f(0,0,1))*/destVec.normalize() * speed *(ms/1000);
+	
 	//path.currentPoint(position,rotation);
 	////////////////////sparks//////////////////////////
 	//static float distLeft=0.0;

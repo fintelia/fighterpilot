@@ -2,6 +2,9 @@
 uniform float radarAng;
 varying vec2 texCoord;
 //uniform sampler2D radarTexture;
+//
+//uniform vec2 mapCenter;
+//uniform float mapRadius;
 
 
 void main()
@@ -55,6 +58,9 @@ void main()
 	if(abs(radius-0.66)<0.010)	intensity=max(intensity, 1.0-(abs(radius-0.66)-0.005)/0.01);
 
 	//intensity = min(1.0, intensity + texture2D(radarTexture,texCoord).a);
+
+	//if((mapCenter.x-texCoord.x)*(mapCenter.x-texCoord.x) + (mapCenter.y-texCoord.y)*(mapCenter.y-texCoord.y) > mapRadius*mapRadius)
+		//intensity = 1.0;
 
 	//color=vec4(  vec3(0.05,0.79,0.04)*intensity + texture2D(radarTexture,texCoord).rgb*(1.0-intensity),    texture2D(radarTexture,texCoord).a);
 	gl_FragColor = vec4(mix(backColor.rgb,vec3(0.19,0.58,0.87),intensity),backColor.a);//green": (0.05,0.79,0.04); blue: 

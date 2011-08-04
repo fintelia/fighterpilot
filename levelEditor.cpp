@@ -71,8 +71,9 @@ bool levelEditor::init()
 	level = new editLevel;
 
 	scrollVal=0.0;
-	level->newGround(513,513);
-	diamondSquare(0.17,0.5,16);
+	level->newGround(5,5);
+	diamondSquare(0.17,0.5,1);
+	smooth(1);
 
 	resetView();
 	return true;
@@ -163,7 +164,7 @@ int levelEditor::update()
 		}
 		else if(buttons["dSquare"]->checkChanged())
 		{
-			diamondSquare(0.17,0.5,4);
+			diamondSquare(0.17,0.5,16);
 		}
 		else if(buttons["fromFile"]->checkChanged())
 		{
@@ -284,12 +285,25 @@ void levelEditor::mouseL(bool down, int x, int y)
 }
 void levelEditor::scroll(float rotations)
 {
-	zoom(rotations);
+	scrollVal = clamp(scrollVal + rotations,-8,25);
 }
 void levelEditor::mouseC(bool down, int x, int y)
 {
 	if(!down)
-		trackBallUpdate(x,y);
+	{
+		int oldX = input->getMouseState(MIDDLE_BUTTON).x;
+		int oldY = input->getMouseState(MIDDLE_BUTTON).y;
+		if(x==oldX && y==oldY) return;
+
+		Vec2f oldP(2.0*oldX/sw-sw/2.0,2.0*oldY/sh-sh/2.0);
+		Vec2f newP(2.0*x/sw-sw/2.0,2.0*y/sh-sh/2.0);
+
+		Vec3f xAxis = rot * Vec3f(-1,0,0);
+
+		Vec3f axis = xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x);
+		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
+		rot = Quat4f(axis,ang) * rot;
+	}
 }
 void levelEditor::addShader(string filename)
 {
@@ -310,25 +324,6 @@ levelEditor::Tab levelEditor::getTab()
 	if(t == 1) return OBJECTS;
 	if(t == 2) return REGIONS;
 	return NO_TAB;
-}
-void levelEditor::zoom(float rotations)
-{
-	scrollVal = clamp(scrollVal + rotations,-8,25);
-}
-void levelEditor::trackBallUpdate(int newX, int newY)
-{
-	int oldX = input->getMouseState(MIDDLE_BUTTON).x;
-	int oldY = input->getMouseState(MIDDLE_BUTTON).y;
-	if(newX==oldX && newY==oldY) return;
-
-	Vec2f oldP(2.0*oldX/sw-sw/2.0,2.0*oldY/sh-sh/2.0);
-	Vec2f newP(2.0*newX/sw-sw/2.0,2.0*newY/sh-sh/2.0);
-
-	Vec3f xAxis = rot * Vec3f(-1,0,0);
-
-	Vec3f axis = xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x);
-	Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
-	rot = Quat4f(axis,ang) * rot;
 }
 void levelEditor::resetView()
 {
@@ -762,9 +757,9 @@ void levelEditor::smooth(int a)
 		{
 			s=0;
 			n=0;
-			for(int i = max(x-a,0); i < min(x+a,w-1); i++)
+			for(int i = max(x-a,0); i <= min(x+a,w-1); i++)
 			{
-				for(int j = max(y-a,0); j < min(y+a,h-1); j++)
+				for(int j = max(y-a,0); j <= min(y+a,h-1); j++)
 				{
 					s += g(i,j);
 					n++;
