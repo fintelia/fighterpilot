@@ -36,24 +36,28 @@ void aaGun::update(double time, double ms)
 
 	/////////////////////CONTROL//////////////////////
 	bool shoot;
-	target = 0;
-	if(target == 0)
+
+	target=0;
+	float lDistSquared = 0.0;
+	float nDistSquared;
+	for(auto n = world.planes().begin(); n!=world.planes().end(); n++)
 	{
-		float lDistSquared = 0.0;
-		float nDistSquared;
-		for(auto n = world.planes().begin(); n!=world.planes().end(); n++)
+		nDistSquared = n->second->position.distanceSquared(position);
+		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target == 0 || nDistSquared < lDistSquared))
 		{
-			nDistSquared = n->second->position.distanceSquared(position);
-			if(!n->second->dead && n->second->team != team && nDistSquared < 10000 * 10000 && (target == 0 || nDistSquared < lDistSquared))
-			{
-				target = n->second->id;
-				lDistSquared = nDistSquared;
-			}
+			target = n->second->id;
+			lDistSquared = nDistSquared;
 		}
 	}
+
 	if(target != 0)
 	{
 		targeter = (world.objectList[target]->position - position).normalize();
+		Vec3f t = targeter.normalize();
+		Angle a = acosA(t.y);
+		rotation = Quat4f(Vec3f(1,0,0),a);
+		a = atan2A(t.x,t.z);
+		rotation = Quat4f(Vec3f(0,1,0),a) * rotation;
 		shoot = true;
 	}
 	else
@@ -70,8 +74,9 @@ void aaGun::update(double time, double ms)
 		extraShootTime+=ms;
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-			world.bullets.push_back(bullet(position,targeter,id,time-extraShootTime-machineGun.coolDown));
 
+			world.bullets.push_back(bullet(position,targeter+random<Vec3f>()*0.010,id,time-extraShootTime-machineGun.coolDown));
+	
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
 			shotsFired++;
@@ -82,9 +87,9 @@ void aaGun::update(double time, double ms)
 	//missileCoolDown -= ms;
 	//if(missileCoolDown <= 0.0 && target != 0)
 	//{
+	//	Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
 	//	missileCoolDown = 3000;
-	//	int d=settings.missileStats[settings.planeStats[defaultPlane].hardpoints[0].missileNum].dispList;
-	//	world.objectList.newMissile(MISSILE,team,position,rotation,0,targeter,d,id,target);
+	//	world.objectList.newMissile(MISSILE1,team,p,Quat4f(Vec3f(1,0,0),Angle(PI/2)),1000,id,target);
 	//}
 }
 void aaGun::findTargetVector()
@@ -133,6 +138,9 @@ void aaGun::spawn()
 	dead = false;
 	health=maxHealth;
 
+
+	position = Vec3f(position.x,world.elevation(position.x,position.z)+5.0,position.z);
+
 	target = 0;
 	shotsFired = 0;
 }
@@ -140,8 +148,8 @@ void aaGun::initArmaments()
 {
 	machineGun.max			= machineGun.left			= 1000; 
 	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
-	machineGun.rechargeTime	= machineGun.rechargeLeft	= 15.0;
-	machineGun.coolDown		= machineGun.coolDownLeft	= 15.0;
+	machineGun.rechargeTime	= machineGun.rechargeLeft	= 150.0;
+	machineGun.coolDown		= machineGun.coolDownLeft	= 20.0;
 	machineGun.firing									= false;
 }
 aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)

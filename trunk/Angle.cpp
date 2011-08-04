@@ -3,9 +3,9 @@
 #include "angle.h"
 
 //const double PI = 3.14159265358979323846264338327950288419;
-Angle atan2A(double X,double Y)
+Angle atan2A(double opp,double adj)
 {
-	return Angle(atan2(X,Y));
+	return Angle(atan2(opp,adj));
 }
 Angle asinA(double X)
 {

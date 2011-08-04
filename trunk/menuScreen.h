@@ -406,8 +406,6 @@ public:
 	void operator() (popup* p);
 protected:
 	
-	void zoom(float rotations);
-	void trackBallUpdate(int newX, int newY);
 	void resetView();
 
 	float randomDisplacement(float h1, float h2, float d);

@@ -1056,6 +1056,7 @@ int DataManager::registerAssets()
 	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
 	if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
 	if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
+	if(callNum==n++)	registerAsset("AA gun",				"media/AAgun.obj");
 
 	if(callNum==n++)	registerAsset("missile1",			"media/m1(center).obj");
 	if(callNum==n++)	registerAsset("missile2",			"media/m2(center).obj");

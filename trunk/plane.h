@@ -11,6 +11,8 @@ private:
 	double lastUpdateTime;
 	double extraShootTime;//time since it last shot;
 	unsigned long shotsFired;
+
+	void smoothCamera();
 public:
 //////////////functions////////////
 	void update(double time, double ms);
@@ -51,6 +53,7 @@ public:
 	Angle climb;
 	Angle direction;
 	float altitude;
+	bool lockRollRange;
 /////////////weapons///////////////
 	Vec3f targeter;
 	armament machineGun;
@@ -73,11 +76,16 @@ public:
 ///////////camera view/////////////
 	Vec3f camera;
 	Vec3f center;
-	struct cameraAng{
+	Vec3f up;
+	struct cameraState{
 		float time;
 		float angle;
+		Vec3f position;
+		Vec3f velocity;
+		//Quat4f rot;
 	};
-	vector<cameraAng> cameraAngles;
+
+	vector<cameraState> cameraStates;
 };
 
 //class plane: public planeBase

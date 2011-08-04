@@ -175,7 +175,13 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.bind("radar");
 		dataManager.bindTex(radarTexture);
 
+
 		dataManager.setUniform1f("radarAng", radarAng);
+
+		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0,(world.ground()->sizeZ()/2-p->position.z)/160.0);
+		//dataManager.setUniform2f("mapCenter", mCenter.x + 0.5, mCenter.y + 0.5);
+		//dataManager.setUniform1f("mapRadius", world.ground()->sizeX()/160.0);
+
 		//dataManager.setUniform1i("radarTexture", 0);
 	//	glUniform1f(radarAng, radarAng);
 
@@ -203,6 +209,15 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 
 		dataManager.setUniform1f("radarAng", radarAng);
 		dataManager.setUniform1i("backgroundTexture", 0);
+		
+		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0/width,(world.ground()->sizeZ()/2-p->position.z)/160.0/height);
+		//float mCenterRad = mCenter.magnitude();
+		//Angle mCenterAng = atan2A(mCenter.x,mCenter.y) + (p->direction + PI/2);
+		//mCenter = Vec2f(cos(mCenterAng),sin(mCenterAng))*mCenterRad;
+
+
+		//dataManager.setUniform2f("mapCenter", mCenter.x + 0.5, mCenter.y + 0.5);
+		//dataManager.setUniform1f("mapRadius", world.ground()->sizeX()/160.0/width);
 		//dataManager.setUniform1i("radarTexture", 1);
 
 		//glUniform1f(radarAng, radarAng);
@@ -471,7 +486,8 @@ void modeDogFight::drawScene(int acplayer)
 		e = p->camera;
 		//c = p->position + vel2D * 45.0;
 		c=p->center;
-		u = Vec3f(0,1,0);
+		//u = Vec3f(0,1,0);
+		u=p->up;
 
 		//glMatrixMode(GL_PROJECTION);
 		//glLoadIdentity();
@@ -499,7 +515,7 @@ void modeDogFight::drawScene(int acplayer)
 		c=p->rotation * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
 		u=p->rotation * Vec3f(0,1,0);
 		//upAndRight(p->rotation * Vec3f(0,0,1),p->roll,u,Vec3f());
-			
+		
 		gluLookAt(e.x,e.y,e.z, c.x,c.y,c.z, u.x,u.y,u.z);
 		frustum.setCamDef(e,c,u);
 		cam=e;
@@ -508,11 +524,11 @@ void modeDogFight::drawScene(int acplayer)
 	glPushMatrix();
 	glDisable(GL_DEPTH_TEST);
 
-	glTranslatef(e.x,e.y,e.z);
-	glScalef(3000,800,3000);
-	glTranslatef(0,-0.7,0);
+	glTranslatef(e.x,0,e.z);
+	glScalef(30000,10000,30000);
 	dataManager.draw("sky dome");
-
+	glScalef(1,-1,1);
+	dataManager.draw("sky dome");
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 
@@ -563,14 +579,16 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	//for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
-	//{
-	//	glPushMatrix();	
-	//	glTranslatef(i->second->position.x,i->second->position.y+50.0,i->second->position.z);
-	//	glScalef(5,5,5);
-	//	dataManager.draw("AA gun");       WE DO NOT HAVE A MODEL YET!!!!
-	//	glPopMatrix();
-	//}
+	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
+	{
+		glPushMatrix();	
+		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
+		Angle ang = acosA(i->second->rotation.w);
+		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
+		glScalef(10,10,10);
+		dataManager.draw("AA gun");
+		glPopMatrix();
+	}
 
 	drawPlanes(acplayer,false,true);
 #ifdef AI_TARGET_LINES 

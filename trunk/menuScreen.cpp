@@ -449,7 +449,7 @@ void saveFile::fileSelected()
 		done = true;
 		return;
 	}
-
+	file = "AA guns";
 	if(file.find(".") == file.npos)
 		file += *extFilters.begin();
 	if(exists(directory/file))//if file exists
