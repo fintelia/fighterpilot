@@ -10,6 +10,12 @@
  # Improve grass shader
  # support for chained levels to create a campaign
 
+* New Models To Make *
+ # AA gun
+ # SAM battery
+ # Ships
+ # Tanks 
+
 *Possible Things To Do*
 
  * Add lua scripting for AI's
