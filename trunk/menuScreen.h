@@ -39,12 +39,12 @@ public:
 	void resetChanged()			{changed = false;}
 
 	//events
-	virtual void mouseDownR(int X, int Y){}
-	virtual void mouseDownL(int X, int Y){}
-	virtual void mouseUpR(int X, int Y){}
-	virtual void mouseUpL(int X, int Y){}
-	virtual void keyDown(int vkey){}
-	virtual void keyUp(int vkey){}
+	virtual bool mouseDownR(int X, int Y){return false;}
+	virtual bool mouseDownL(int X, int Y){return false;}
+	virtual bool mouseUpR(int X, int Y){return false;}
+	virtual bool mouseUpL(int X, int Y){return false;}
+	virtual bool keyDown(int vkey){return false;}
+	virtual bool keyUp(int vkey){return false;}
 
 	const elementType type;
 protected:
@@ -77,8 +77,8 @@ public:
 
 	void render();
 
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
 
 	void setElementText(string t);
 	void setElementTextColor(Color c);
@@ -100,8 +100,8 @@ public:
 
 	void render();
 
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
 
 	bool getChecked(){return checked;}
 protected:
@@ -117,9 +117,9 @@ class textBox: public element
 public:
 	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),focus(false),clicking(false),cursorPos(0){}
 
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
-	void keyDown(int vkey);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
+	bool keyDown(int vkey);
 
 	void render();
 
@@ -157,8 +157,8 @@ public:
 
 	void addOption(string option);
 	
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
 
 	void render();
 
@@ -184,8 +184,8 @@ public:
 	void setLabel(label* l){Label=l;}
 	void render();
 
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
 
 	int getValue(){return value;}
 	void setValue(int v){value = clamp(v,0,buttons.size()-1);updateColors();}
@@ -206,8 +206,8 @@ public:
 
 	void render();
 
-	void mouseDownL(int X, int Y);
-	void mouseUpL(int X, int Y);
+	bool mouseDownL(int X, int Y);
+	bool mouseUpL(int X, int Y);
 
 	void setMinValue(float m);
 	void setMaxValue(float m);
@@ -233,11 +233,11 @@ public:
 	virtual int update()=0;
 	virtual void render()=0;
 
-	virtual void mouseL(bool down, int x, int y){}
-	virtual void mouseR(bool down, int x, int y){}
-	virtual void keyDown(int vkey){}
-	virtual void keyUp(int vkey){}
-	virtual void scroll(float rotations){}
+	virtual bool mouseL(bool down, int x, int y){return false;}
+	virtual bool mouseR(bool down, int x, int y){return false;}
+	virtual bool keyDown(int vkey){return false;}
+	virtual bool keyUp(int vkey){return false;}
+	virtual bool scroll(float rotations){return false;}
 
 	bool isDone(){return done;}
 	functor<void,popup*>* callback;
@@ -270,8 +270,8 @@ public:
 	bool validFile() {return file != "";}
 	string getFile() {return (directory/file).string();}
 
-	void keyDown(int vkey);
-	void mouseL(bool down, int x, int y);
+	bool keyDown(int vkey);
+	bool mouseL(bool down, int x, int y);
 protected:
 	virtual void fileSelected();
 	string file;
@@ -310,7 +310,7 @@ public:
 	int update(){return 0;}
 	void render();
 
-	void mouseL(bool down, int x, int y);
+	bool mouseL(bool down, int x, int y);
 	int getValue(){return value;}
 protected:
 	vector<label*> options;
@@ -359,14 +359,14 @@ public:
 	virtual void render()=0;
 	virtual void render3D(){}
 	///////////////////////////////////////////
-	virtual void mouseL(bool down, int x, int y){}
-	virtual void mouseR(bool down, int x, int y){}
-	virtual void mouseC(bool down, int x, int y){}
+	virtual bool mouseL(bool down, int x, int y){return false;}
+	virtual bool mouseR(bool down, int x, int y){return false;}
+	virtual bool mouseC(bool down, int x, int y){return false;}
 
-	virtual void keyDown(int vkey){}
-	virtual void keyUp(int vkey){}
+	virtual bool keyDown(int vkey){return false;}
+	virtual bool keyUp(int vkey){return false;}
 
-	virtual void scroll(float rotations){}
+	virtual bool scroll(float rotations){return false;}
 	///////////////////////////////////////////
 	virtual void operator() (popup* p){}
 	//bool popupActive(){return popup != NULL;}
@@ -397,9 +397,9 @@ public:
 	void render();
 	void render3D();
 
-	void mouseL(bool down, int x, int y);
-	void scroll(float rotations);
-	void mouseC(bool down, int x, int y);
+	bool mouseL(bool down, int x, int y);
+	bool scroll(float rotations);
+	bool mouseC(bool down, int x, int y);
 	Tab getTab();
 	int getShader();//gets
 	int placingObject(){return newObjectType;}
@@ -416,7 +416,7 @@ protected:
 	void fromFile(string filename);
 	void smooth(int a);
 	void addObject(int type, int team, int controlType, int x, int y);
-	void selectObject(int x, int y);
+	bool selectObject(int x, int y);
 
 	void updateObjectCircles();
 
@@ -459,7 +459,7 @@ public:
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
 	int update(){return 30;}
 	void render();
-	void keyDown(int vkey);
+	bool keyDown(int vkey);
 	void operator() (popup* p);
 protected:
 	choice activeChoice;
@@ -473,7 +473,7 @@ public:
 	bool init();
 	int update(){return 30;}
 	void render();
-	void keyDown(int vkey);
+	bool keyDown(int vkey);
 protected:
 	vector<string> mapChoices;
 	int currentChoice;
@@ -487,7 +487,7 @@ public:
 	bool init();
 	int update(){return 30;}
 	void render();
-	void keyDown(int vkey);
+	bool keyDown(int vkey);
 protected:
 	choice activeChoice;
 };
@@ -519,7 +519,7 @@ public:
 	void render();
 	void render3D();
 
-	void issueInputCallback(Input::callBack* callback, element* e);
+	bool issueInputCallback(Input::callBack* callback, element* e);
 	void inputCallback(Input::callBack* callback);
 
 	screen* getMenu(){return menu;}

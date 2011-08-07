@@ -14,6 +14,7 @@ MODEL=media/f18hornet.obj
 
 PLANE=F22
 MODEL=media/f22.obj
+	G_OFFSET=-3.0,0.0,-1.0
 	MIRROR=TRUE
 
 	CURRENT_MISSILE=MISSILE1
@@ -28,7 +29,7 @@ MODEL=media/f22.obj
 	CURRENT_MISSILE=MISSILE4
 	M_OFFSET=7.05,-0.65,-2.4
 
-	G_OFFSET=5.0,0.0,-1.0
+
 
 PLANE=B2
 MODEL=media/b2.obj

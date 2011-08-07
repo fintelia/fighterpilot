@@ -54,10 +54,13 @@ void aaGun::update(double time, double ms)
 	{
 		targeter = (world.objectList[target]->position - position).normalize();
 		Vec3f t = targeter.normalize();
-		Angle a = acosA(t.y);
-		rotation = Quat4f(Vec3f(1,0,0),a);
-		a = atan2A(t.x,t.z);
-		rotation = Quat4f(Vec3f(0,1,0),a) * rotation;
+
+
+		Vec3f axis = t.cross(Vec3f(0,0,1));
+		Angle ang = acosA(axis.dot(t));
+
+		if(ang > PI/4) ang = PI/4;
+		rotation = Quat4f(axis,ang);
 		shoot = true;
 	}
 	else
@@ -83,13 +86,13 @@ void aaGun::update(double time, double ms)
 		}
 	}
 
-	//static float missileCoolDown = 3000;
+	//static float missileCoolDown = 7000;
 	//missileCoolDown -= ms;
 	//if(missileCoolDown <= 0.0 && target != 0)
 	//{
 	//	Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
-	//	missileCoolDown = 3000;
-	//	world.objectList.newMissile(MISSILE1,team,p,Quat4f(Vec3f(1,0,0),Angle(PI/2)),1000,id,target);
+	//	missileCoolDown = 7000;
+	//	world.objectList.newMissile(MISSILE1,team,p,rotation*Quat4f(Vec3f(-1,0,0),PI/2),0,id,target);
 	//}
 }
 void aaGun::findTargetVector()

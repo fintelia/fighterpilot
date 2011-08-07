@@ -105,6 +105,7 @@ public:
 	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up)=0;
 
 	virtual Vec2f project(Vec3f p);
+	virtual Vec3f unProject(Vec3f p);
 	const View& getView(){return view;}
 
 	void flashTaskBar(int times, int length=0);
@@ -137,6 +138,7 @@ protected:
 	texturedVertex2D overlay[4];
 
 	GLuint renderTextures[2];
+	GLuint colorRenderBuffers[2];
 	GLuint depthRenderBuffers[2];
 	GLuint FBOs[2];
 	GLuint RBOs[2];

@@ -71,6 +71,42 @@ Vec2f GraphicsManager::project(Vec3f p)
 
 	return Vec2f( (v.x + 1.0) / 2.0, (v.y + 1.0) / 2.0 );
 }
+Vec3f GraphicsManager::unProject(Vec3f p)// from x=0 to 1 && y=0 to 1 && z from 0 to 1
+{
+	float alpha = view.projection.fovy * 0.5 * (p.y-0.5)*2 * PI/180;
+	float beta = view.projection.fovy * 0.5 * (p.x-0.5)*2  * PI/180;
+
+	Vec3f up = view.camera.up;
+	Vec3f center = (view.camera.center - view.camera.eye).normalize();
+	Vec3f right = up.cross(center);
+
+	float d = (view.projection.zNear + (view.projection.zFar-view.projection.zNear)*p.z);
+
+	Profiler.setOutput("p.x",(p.x*2-1.0));
+	Profiler.setOutput("p.y",(p.y*2-1.0));
+
+	Vec3f r = view.camera.eye + (center + up * tan(alpha) + right * tan(beta) * view.projection.aspect) * d;
+
+	Vec2f pj = project(r);
+
+	Profiler.setOutput("pj.x",((1.0-pj.x)*2-1.0));
+	Profiler.setOutput("pj.y",((1.0-pj.y)*2-1.0));
+
+	Profiler.setOutput("pj/p.x",((1.0-pj.x)*2-1.0)/(p.x*2-1.0));
+	Profiler.setOutput("pj/p.y",((1.0-pj.y)*2-1.0)/(p.y*2-1.0));
+
+	return r;
+
+
+	//p = p-eye;
+	//Angle alpha = acosA( (p.normalize()).dot(view.camera.center.normalize()) );
+	//Angle beta = acosA( (p.normalize()).dot(view.camera.up.normalize()) );
+
+
+
+	//matrix4x4<float> PM = view.modelViewMat * view.projectionMat;
+	//view.projection.
+}
 bool OpenGLgraphics::drawModel(gID obj)
 {
 	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
@@ -295,8 +331,8 @@ bool OpenGLgraphics::init()
 {
 	if(!GLEE_VERSION_2_0)
 	{
-		string s("Your version of opengl must be above 2.0");
-		s+="\n   Opengl version: ";
+		string s("Your version of OpenGL must be above 2.0");
+		s+="\n   OpenGL version: ";
 		s+=(char*)glGetString(GL_VERSION);
 		s+="\n   Renderer: ";
 		s+=(char*)glGetString(GL_RENDERER);
@@ -308,7 +344,7 @@ bool OpenGLgraphics::init()
 	else if(!GLEE_EXT_framebuffer_object)
 	{
 		string s("Your graphics card must support GL_EXT_framebuffer_object");
-		s+="\n   Opengl version: ";
+		s+="\n   OpenGL version: ";
 		s+=(char*)glGetString(GL_VERSION);
 		s+="\n   Renderer: ";
 		s+=(char*)glGetString(GL_RENDERER);
@@ -332,7 +368,7 @@ bool OpenGLgraphics::init()
 
 	glShadeModel(GL_SMOOTH);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	if(GLEE_ARB_framebuffer_sRGB)	glEnable(GL_FRAMEBUFFER_SRGB);
+	//if(GLEE_ARB_framebuffer_sRGB)	glEnable(GL_FRAMEBUFFER_SRGB);
 	glActiveTextureARB(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTextureARB(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
@@ -346,69 +382,79 @@ bool OpenGLgraphics::init()
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
 	//FRAME BUFFER OBJECTS
-	//glGenTextures(2, renderTextures);
-	//glGenFramebuffersEXT(2, FBOs);
-	//glGenRenderbuffersEXT(2, depthRenderBuffers);
+	glGenTextures(2, renderTextures);
+	glGenFramebuffersEXT(2, FBOs);
+	glGenRenderbuffersEXT(2, colorRenderBuffers);
+	glGenRenderbuffersEXT(2, depthRenderBuffers);
 
-	//for(int i=0;i<2;i++)
-	//{
-	//	glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	//
-	//	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
-	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
+	int samples;
+	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
+	samples = 8;
+	for(int i=0;i<2;i++)
+	{
+		if(GLEE_EXT_framebuffer_multisample && i == 0 )
+		{
+			//glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
+			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
-	//	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-	//	glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, colorRenderBuffers[i]);
+			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
 
-	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
 
-	//	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	//	switch(status)
-	//	{
-	//	case GL_FRAMEBUFFER_COMPLETE_EXT:
-	//		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	//		break;
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, colorRenderBuffers[i]);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: Attachment is NOT complete." << std::endl;
-	//		return false;
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: No image is attached to FBO." << std::endl;
-	//		return false;
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: Attached images have different dimensions." << std::endl;
-	//		return false;
+			////glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+			////glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
+			////glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
-	//		return false;
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+	
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: Draw buffer." << std::endl;
-	//		return false;
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+			glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
 
-	//	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
-	//		std::cout << "[ERROR] Framebuffer incomplete: Read buffer." << std::endl;
-	//		return false;
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 
-	//	case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-	//		std::cout << "[ERROR] Unsupported by FBO implementation." << std::endl;
-	//		return false;
+			
+		}
+		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+		string errorMsg;
+		if(status == GL_FRAMEBUFFER_COMPLETE_EXT)							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT)			errorMsg = "Framebuffer incomplete: Attachment is NOT complete.";
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT)	errorMsg = "Framebuffer incomplete: No image is attached to FBO.";
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)			errorMsg = "Framebuffer incomplete: Attached images have different dimensions.";
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)			errorMsg = "Framebuffer incomplete: Color attached images have different internal formats.";
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT)		errorMsg = "Framebuffer incomplete: Draw buffer.";
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT)		errorMsg = "Framebuffer incomplete: Read buffer.";
+		else if(status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)					errorMsg = "Unsupported by FBO implementation.";
+		else 																errorMsg = "Unknow frame buffer error.";
 
-	//	default:
-	//		std::cout << "[ERROR] Unknow error." << std::endl;
-	//		return false;
-	//	}
-	//	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-	//		return false;
-	//}
+		if(errorMsg != "")
+		{
+			MessageBoxA(NULL, errorMsg.c_str(),"ERROR",MB_OK);
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -439,7 +485,7 @@ void OpenGLgraphics::render()
 		spf+=(frameTimes[i]*0.001)/20;
 	fps=1.0/spf;
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
 
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
@@ -483,15 +529,22 @@ void OpenGLgraphics::render()
 	glMatrixMode( GL_MODELVIEW );			// Select Modelview
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
-	//if(GLEE_ARB_framebuffer_sRGB)	glEnable(GL_FRAMEBUFFER_SRGB);
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
+	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
+	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
+	glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST );
+	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
+	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
 
-	//bindRenderTarget(SCREEN);
-	//glClearColor(0.0,0.0,0.0,1.0f);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//renderFBO(FBO_0);
 
-	//if(GLEE_ARB_framebuffer_sRGB)	glDisable(GL_FRAMEBUFFER_SRGB);
-
+	bindRenderTarget(SCREEN);
+	glClearColor(0.0,0.0,0.0,1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	dataManager.bind("gamma shader");
+	dataManager.setUniform1f("gamma",2.2);
+	dataManager.setUniform1i("tex",0);
+	renderFBO(FBO_1);
+	dataManager.unbindShader();
 ////////////////////////////////////START RESET///////////////////////////////////////
 	//reset();
 
@@ -513,12 +566,13 @@ void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zF
 	view.projection.zNear = zNear;
 	view.projection.zFar = zFar;
 
-	float f = 1.0 / tan(fovy / 2.0);
-	view.projectionMat.set(	f/aspect,	0.0,						0.0,						0.0,
-							0.0,		f,							0.0,						0.0,
-							0.0,		(zFar+zNear)/(zNear-zFar),	2*zFar*zNear/(zNear-zFar),	0.0,
-							0.0,		0.0,						-1.0,						0.0);
+	float f = 1.0 / tan(fovy*PI/180 / 2.0);
+	view.projectionMat.set(	f/aspect,	0.0,		0.0,						0.0,
+							0.0,		f,			0.0,						0.0,
+							0.0,		0.0,		(zFar+zNear)/(zNear-zFar),	2*zFar*zNear/(zNear-zFar),
+							0.0,		0.0,		-1.0,						0.0);
 
+	glLoadIdentity();
 	gluPerspective(fovy, aspect, zNear, zFar);
 }
 void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
@@ -540,10 +594,6 @@ void OpenGLgraphics::ortho(float left, float right, float bottom, float top, flo
 }
 void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 {
-	view.camera.eye = eye;
-	view.camera.center = center;
-	view.camera.up = up;
-
 	Vec3f f = (center-eye).normalize();
 	Vec3f s = f.cross(up.normalize());
 	Vec3f u = s.cross(f);
@@ -554,6 +604,10 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 							0.0,	0.0,	0.0,	1.0);
 
 	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
+
+	view.camera.eye = eye;
+	view.camera.center = center;
+	view.camera.up = u;
 }
 void OpenGLgraphics::destroyWindow()
 {

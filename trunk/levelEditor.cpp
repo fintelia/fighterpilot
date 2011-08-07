@@ -266,7 +266,7 @@ void levelEditor::render()
 {
 	menuManager.drawCursor();
 }
-void levelEditor::mouseL(bool down, int x, int y)
+bool levelEditor::mouseL(bool down, int x, int y)
 {
 	if(getTab() == OBJECTS && down)
 	{
@@ -276,24 +276,27 @@ void levelEditor::mouseL(bool down, int x, int y)
 			addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, x, y);
 			newObjectType = 0;
 			teamNum++;
+			return true;
 		}
 		else
 		{
-			selectObject(x,y);
+			return selectObject(x,y);
 		}
 	}
+	return false;
 }
-void levelEditor::scroll(float rotations)
+bool levelEditor::scroll(float rotations)
 {
 	scrollVal = clamp(scrollVal + rotations,-8,25);
+	return true;
 }
-void levelEditor::mouseC(bool down, int x, int y)
+bool levelEditor::mouseC(bool down, int x, int y)
 {
 	if(!down)
 	{
 		int oldX = input->getMouseState(MIDDLE_BUTTON).x;
 		int oldY = input->getMouseState(MIDDLE_BUTTON).y;
-		if(x==oldX && y==oldY) return;
+		if(x==oldX && y==oldY) return true;
 
 		Vec2f oldP(2.0*oldX/sw-sw/2.0,2.0*oldY/sh-sh/2.0);
 		Vec2f newP(2.0*x/sw-sw/2.0,2.0*y/sh-sh/2.0);
@@ -303,7 +306,9 @@ void levelEditor::mouseC(bool down, int x, int y)
 		Vec3f axis = xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x);
 		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
 		rot = Quat4f(axis,ang) * rot;
+		return true;
 	}
+	return false;
 }
 void levelEditor::addShader(string filename)
 {
@@ -330,10 +335,10 @@ void levelEditor::resetView()
 	rot = Quat4f(Vec3f(1,0,0),1.0);
 	center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
 }
-void levelEditor::selectObject(int x, int y)
+bool levelEditor::selectObject(int x, int y)
 {
 	if(objectCircles.empty())
-		return;
+		return false;
 
 	Vec2f mouse((float)x/sw,(float)y/sw);
 
@@ -356,7 +361,9 @@ void levelEditor::selectObject(int x, int y)
 		auto* m = new menu::objectProperties();
 		m->init(((editLevel*)level)->getObject(min->first));
 		menuManager.setPopup(m);
+		return true;
 	}
+	return false;
 }
 void levelEditor::updateObjectCircles()
 {
@@ -807,7 +814,7 @@ void levelEditor::render3D()
 
 		Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
 		Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
-			
+		
 			
 		Vec3f xAxis = rot * Vec3f(-1,0,0);
 
@@ -834,6 +841,27 @@ void levelEditor::render3D()
 		
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		Vec3f v = graphics->unProject(Vec3f(1.0-(float)cursorPos.x/sw,1.0-(float)cursorPos.y/sh,0.0));
+		graphics->drawSphere(v,0.1);
+
+
+		Vec3f f = (c-e).normalize();
+		Vec3f r = u.cross(f);
+
+		float d = 300.0;
+
+		glBegin(GL_LINE_LOOP);
+		for(float i=0; i < PI*2; i+=0.1)
+		{
+			Vec3f v = e + f*d + u*sin(i)*d*tan(40.0*PI/180) + r*cos(i)*d*tan(40.0*PI/180)*1.25;
+			glVertex3f(v.x,v.y,v.z);
+		}
+
+		glEnd();
+
 
 
 	if(getShader() != -1)
@@ -900,7 +928,8 @@ void levelEditor::render3D()
 			glColor3f(1,1,1);
 			glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////
-		}		
+		}
+
 		glDisable(GL_DEPTH_TEST);
 	
 		glBindTexture(GL_TEXTURE_2D,0);

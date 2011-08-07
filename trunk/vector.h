@@ -199,8 +199,16 @@ T Vector3<T>::signedMagnitude() const
 template <class T>
 Vector3<T> Vector3<T>::normalize() const
 {
-	T m = sqrt(x * x + y * y + z * z);
-	return Vector3(x / m, y / m, z / m);
+	T m2 = x * x + y * y + z * z;
+	if(m2 > 0.0)
+	{
+		T m = sqrt(m2);
+		return Vector3(x / m, y / m, z / m);
+	}
+	else
+	{
+		return *this;
+	}
 }
 template <class T>
 Vector3<T> Vector3<T>::normalizeSigned() const

@@ -442,7 +442,7 @@ void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Col
 	dataManager.setUniform1f("minHeight",center.y);
 	dataManager.setUniform1f("maxHeight",center.y+height);
 	dataManager.setUniform1f("radius",radius);
-	dataManager.setUniform3f("color",c.r,c.g,c.b);
+	dataManager.setUniform4f("color",c.r,c.g,c.b,c.a);
 
 	glPushMatrix();
 
@@ -505,7 +505,7 @@ void modeDogFight::drawScene(int acplayer)
 
 
 
-		gluLookAt(e.x,e.y,e.z, c.x,c.y,c.z, u.x,u.y,u.z);
+		graphics->lookAt(e, c, u);
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
@@ -516,7 +516,7 @@ void modeDogFight::drawScene(int acplayer)
 		u=p->rotation * Vec3f(0,1,0);
 		//upAndRight(p->rotation * Vec3f(0,0,1),p->roll,u,Vec3f());
 		
-		gluLookAt(e.x,e.y,e.z, c.x,c.y,c.z, u.x,u.y,u.z);
+		graphics->lookAt(e, c, u);
 		frustum.setCamDef(e,c,u);
 		cam=e;
 	}
@@ -553,39 +553,16 @@ void modeDogFight::drawScene(int acplayer)
 			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
 				dataManager.draw(i->second->type);
 			glPopMatrix();
-
-			nPlane* enemy = (nPlane*)world.objectList[i->second->target];
-			if(enemy != NULL)
-			{
-				Vec3f destVec = (enemy->position - i->second->position).normalize();
-				Vec3f fwd = i->second->rotation * Vec3f(0,0,1);
-				Angle ang = acosA(destVec.dot(fwd));
-
-				Vec3f v = i->second->position + i->second->rotation * Vec3f(0,0,1000);
-
-				Vec3f w = i->second->position + destVec * 1000;
-
-				glBegin(GL_LINES);
-					glColor3f(0,1,0);
-					glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
-					glVertex3f(v.x,v.y,v.z);
-
-					glColor3f(1,0,0);
-					glVertex3f(i->second->position.x,i->second->position.y,i->second->position.z);
-					glVertex3f(w.x,w.y,w.z);
-				glEnd();
-				glColor3f(1,1,1);
-			}
 		}
 	}
 
+	dataManager.bind("model");
 	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
 	{
 		glPushMatrix();	
 		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
 		Angle ang = acosA(i->second->rotation.w);
 		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
-		glScalef(10,10,10);
 		dataManager.draw("AA gun");
 		glPopMatrix();
 	}
@@ -617,9 +594,10 @@ void modeDogFight::drawScene(int acplayer)
 
 	drawBullets();
 
-
-
-	drawHexCylinder(Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2),world.ground()->sizeX(),20000, white);
+	Vec3f cCenter = Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2);
+	double cRadius = world.ground()->sizeX();
+	//double d = abs(sqrt((e.x-cCenter.x)*(e.x-cCenter.x) + (e.z-cCenter.z)*(e.z-cCenter.z)) - cRadius);
+	drawHexCylinder(cCenter,cRadius,20000, white);
 
 	glDepthMask(false);//needed since drawHexCylinder sets depthMask to true
 

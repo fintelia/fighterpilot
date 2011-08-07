@@ -313,9 +313,9 @@ void emitter::update()
 	}
 	lastPosition = position;
 }
-void emitter::render(Vec3f up, Vec3f right)
+void emitter::prepareRender(Vec3f up, Vec3f right)
 {
-	int pNum,vNum,n;
+	int pNum,n;
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
 		if(particles[pNum].endTime > world.time())
@@ -343,12 +343,18 @@ void emitter::render(Vec3f up, Vec3f right)
 		}
 	}
 
-	dataManager.bind(texture);
+	
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*vNum*4, vertices, GL_DYNAMIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+}
+void emitter::render()
+{
+	dataManager.bind(texture);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -357,27 +363,27 @@ void emitter::render(Vec3f up, Vec3f right)
 	glColorPointer(4, GL_FLOAT, sizeof(vertex), (void*)(sizeof(float)*4));
 	glTexCoordPointer(2,GL_FLOAT,sizeof(vertex), (void*)(sizeof(float)*8));
 
-	if(additiveBlending)
-	{
-		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawArrays(GL_QUADS, 0, vNum*4);
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-		glDrawArrays(GL_QUADS, 0, vNum*4);
-		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	}
-	else
-	{
-		glDrawArrays(GL_QUADS, 0, vNum*4);
-	}
-
+	glDrawArrays(GL_QUADS, 0, vNum*4);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 	dataManager.bindTex(0);
 }
+//void emitter::render(Vec3f up, Vec3f right)
+//{
+//		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+//
+//		glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+//		glDrawArrays(GL_QUADS, 0, vNum*4);
+//		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+//	}
+//	else
+//	{
+//		glDrawArrays(GL_QUADS, 0, vNum*4);
+//	}
+//}
 
 
 void manager::init()
@@ -410,8 +416,17 @@ void manager::render()
 
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
-		(*i)->render(up,right);
+		(*i)->prepareRender(up,right);
 	}
+	glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+	for(auto i = emitters.begin(); i!=emitters.end(); i++)
+		if((*i)->additiveBlending)	(*i)->render();
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	for(auto i = emitters.begin(); i!=emitters.end(); i++)
+		if((*i)->additiveBlending)	(*i)->render();
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	for(auto i = emitters.begin(); i!=emitters.end(); i++)
+		if(!(*i)->additiveBlending)	(*i)->render();
 }
 void manager::shutdown()
 {

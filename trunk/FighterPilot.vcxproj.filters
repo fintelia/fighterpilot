@@ -109,6 +109,9 @@
     <Filter Include="Source Files\menu">
       <UniqueIdentifier>{37781df0-5224-40cc-8c6e-a9f52cae4841}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\gamma correction">
+      <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -245,6 +248,9 @@
     </ClCompile>
     <ClCompile Include="levelEditor.cpp">
       <Filter>Source Files\menu</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionFlash.cpp">
+      <Filter>Source Files\particleManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -461,6 +467,12 @@
     </None>
     <None Include="media\hex grid.vert">
       <Filter>shaders\hex grid</Filter>
+    </None>
+    <None Include="media\gamma.frag">
+      <Filter>shaders\gamma correction</Filter>
+    </None>
+    <None Include="media\gamma.vert">
+      <Filter>shaders\gamma correction</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
