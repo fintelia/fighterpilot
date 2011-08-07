@@ -50,7 +50,7 @@ public:
 		float alpha() {return a + ta * random<float>(-1.0,1.0);}
 	};
 
-	const enum Type{NONE=0,EXPLOSION,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
+	const enum Type{NONE=0,EXPLOSION,EXPLOSION_FLASH,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
 
 
 
@@ -80,6 +80,8 @@ protected:
 	unsigned int liveParticles;
 	unsigned int total;
 	
+	unsigned int vNum;
+
 	double startTime;
 	double extraTime;
 	double particlesPerSecond;
@@ -91,6 +93,8 @@ protected:
 	bool additiveBlending;
 
 public:
+	friend class manager;
+
 	emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
 	emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
 	virtual ~emitter();
@@ -103,8 +107,8 @@ public:
 	virtual void updateParticle(particle& p){}
 
 	void update();
-	void render(Vec3f up, Vec3f right);
-
+	void prepareRender(Vec3f up, Vec3f right);
+	void render();
 };
 
 class explosion: public emitter
@@ -114,6 +118,16 @@ private:
 public:
 	explosion(Vec3f pos);
 	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
+
+	void updateParticle(particle& p);
+};
+class explosionFlash: public emitter
+{
+private:
+	CollisionChecker::triangleList* trl;
+public:
+	explosionFlash(Vec3f pos);
+	explosionFlash(int parent, Vec3f offset = Vec3f(0,0,0));
 
 	void updateParticle(particle& p);
 };

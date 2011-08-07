@@ -35,18 +35,29 @@ void missile::update(double time, double ms)
 	if(enemy != NULL && !enemy->dead)
 	{
 		destVec = (enemy->position - position).normalize();
+		Vec3f axis = Vec3f(0,0,1).cross(destVec);
+		Angle angle = acosA(destVec.dot(Vec3f(0,0,1)));
+		Quat4f targetRot(axis,angle);
 	//	Vec3f fwd = rotation * Vec3f(0,0,1);
 	//	Angle ang = acosA(destVec.dot(fwd));
 
-		Vec3f upVec;
-		if(destVec.y > 0.8 || destVec.y < -0.8)
-			upVec = Vec3f(1,0,0);
-		else
-			upVec = Vec3f(0,1,0);
+		//if(destVec.y > 0.999)
+		//	rotation = Quat4f(Vec3f(1,0,0),PI/2);
+		//else if(destVec.y < -0.999)
+		//	rotation = Quat4f(Vec3f(1,0,0),-PI/2);
+		//else
+		//{
+		//	Angle a = acosA(destVec.y);
+		//	rotation = Quat4f(Vec3f(1,0,0),a);
+		//	a = atan2A(destVec.x,destVec.z);
+		//	rotation = Quat4f(Vec3f(0,-1,0),a) * rotation;
+		//}
 
-		Vec3f axis = upVec.cross(destVec);
-		Angle angle = acosA(destVec.dot(Vec3f(0,0,1)));
-		rotation = Quat4f(axis, angle);
+
+
+
+
+
 		//if((rotation * Vec3f(0,0,1)).distanceSquared(destVec) > 0.1)
 		//{
 		//	rotation.x *= -1.0;
@@ -54,20 +65,19 @@ void missile::update(double time, double ms)
 		//	rotation.z *= -1.0;
 		//}
 
-		//if( ang > PI/4)
-		//{
-		//	target = 0;
-		//}
-		//else 
-		//if(ang < PI * 1.5 * ms/1000)
-		//{
-		//	rotation = Quat4f(fwd.cross(destVec), ang);
-		//}
-		//else
-		//{
-		//	Quat4f destRot(fwd.cross(destVec), ang);
-		//	rotation = slerp(rotation,destRot,(float)((PI * 1.5 * ms/1000)/ang));
-		//}
+		if( angle > PI*3/4)
+		{
+			target = 0;
+		}
+		else 
+		if(angle < PI * 2.5 * ms/1000)
+		{
+			rotation = targetRot;
+		}
+		else
+		{
+			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
+		}
 
 		//difAng=acosA((e-position).normalize().dot(velocity.normalize()));
 		//if(difAng.inRange(5.24,1.05))
@@ -95,8 +105,10 @@ void missile::update(double time, double ms)
 	//////////////////Movement//////////////
 	speed+=acceleration*(ms/1000);
 	if(speed > MISSILE_SPEED) speed = MISSILE_SPEED;
-	position += /*(rotation*Vec3f(0,0,1))*/destVec.normalize() * speed *(ms/1000);
-	
+	//position += destVec.normalize() * speed *(ms/1000);
+	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
+
+
 	//path.currentPoint(position,rotation);
 	////////////////////sparks//////////////////////////
 	//static float distLeft=0.0;

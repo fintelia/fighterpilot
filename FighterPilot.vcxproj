@@ -121,6 +121,7 @@
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="enums.cpp" />
+    <ClCompile Include="explosionFlash.cpp" />
     <ClCompile Include="explosionSmoke.cpp" />
     <ClCompile Include="FrustumG.cpp" />
     <ClCompile Include="GameMath.cpp" />
@@ -201,6 +202,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\gamma.frag" />
+    <None Include="media\gamma.vert" />
     <None Include="media\grass.frag" />
     <None Include="media\grass2.frag" />
     <None Include="media\health.frag" />

@@ -178,7 +178,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	}
 
 	// Create Our OpenGL Window
-	if (!graphics->createWindow("Fighter Pilot",r,true))
+	if (!graphics->createWindow("Fighter Pilot",r,false))
 	{
 		return 0;									// Quit If Window Was Not Created
 	}
@@ -227,7 +227,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			{
 				time = GetTime();
 			}
-			nextUpdate=1000.0/MAX_FPS + time - 1.0;
+			nextUpdate=1000.0/(MAX_FPS+1.0) + time;
 			lastUpdate = time;
 
 			update();
