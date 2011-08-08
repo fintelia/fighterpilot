@@ -107,6 +107,14 @@ Vec3f GraphicsManager::unProject(Vec3f p)// from x=0 to 1 && y=0 to 1 && z from 
 	//matrix4x4<float> PM = view.modelViewMat * view.projectionMat;
 	//view.projection.
 }
+OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
+{
+	renderTextures[0]		= renderTextures[1]		= 0;
+	colorRenderBuffers[0]	= colorRenderBuffers[1] = 0;
+	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
+	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
+	FBOs[0]					= FBOs[1]				= 0;
+}
 bool OpenGLgraphics::drawModel(gID obj)
 {
 	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
@@ -382,9 +390,8 @@ bool OpenGLgraphics::init()
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
 	//FRAME BUFFER OBJECTS
-	glGenTextures(2, renderTextures);
+	
 	glGenFramebuffersEXT(2, FBOs);
-	glGenRenderbuffersEXT(2, colorRenderBuffers);
 	glGenRenderbuffersEXT(2, depthRenderBuffers);
 
 	int samples;
@@ -394,6 +401,7 @@ bool OpenGLgraphics::init()
 	{
 		if(GLEE_EXT_framebuffer_multisample && i == 0 )
 		{
+			glGenRenderbuffersEXT(1, colorRenderBuffers+i);
 			//glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -420,6 +428,7 @@ bool OpenGLgraphics::init()
 		}
 		else
 		{
+			glGenTextures(1, renderTextures+i);
 			glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -611,8 +620,16 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 }
 void OpenGLgraphics::destroyWindow()
 {
-	glDeleteTextures(2, renderTextures);
-	//glDeleteFramebuffersEXT(2, FBOs);
+	if(renderTextures[0] != 0)		glDeleteTextures(2, renderTextures);
+	if(renderTextures[1] != 0)		glDeleteTextures(1, renderTextures+1);
+	if(colorRenderBuffers[0] != 0)	glDeleteTextures(2, colorRenderBuffers);
+	if(colorRenderBuffers[1] != 0)	glDeleteTextures(1, colorRenderBuffers+1);
+	if(depthRenderBuffers[0] != 0)	glDeleteTextures(2, depthRenderBuffers);
+	if(depthRenderBuffers[1] != 0)	glDeleteTextures(1, depthRenderBuffers+1);
+	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
+	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
+
+
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
 	
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop

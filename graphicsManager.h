@@ -137,17 +137,15 @@ protected:
 
 	texturedVertex2D overlay[4];
 
-	GLuint renderTextures[2];
-	GLuint colorRenderBuffers[2];
+	GLuint renderTextures[2];//only second is used with multisampling
+	GLuint colorRenderBuffers[2];//only first is used with multisampling
 	GLuint depthRenderBuffers[2];
 	GLuint FBOs[2];
-	GLuint RBOs[2];
 	
-
 
 	RenderTarget renderTarget;
 
-	OpenGLgraphics():renderTarget(SCREEN){}
+	OpenGLgraphics();
 public:
 
 	gID newModel(string disp);
