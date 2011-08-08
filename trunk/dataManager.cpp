@@ -413,6 +413,12 @@ int DataManager::loadOBJ(string filename)
 
 				fin.getline(l,256);
 				line.assign(l);
+				if(line.empty()) 
+					continue;
+
+				if(line[0] == '\t')
+					erase_head(line,1);
+
 				h=line.find(" ");
 				for(int n=0;n<4;n++)
 				{
@@ -432,7 +438,7 @@ int DataManager::loadOBJ(string filename)
 				//}
 				if(s[0].compare("newmtl")==0)
 				{
-					if(mstring.compare("")!=0)
+					if(!mstring.compare("")!=0)
 					{
 						mMtl.name=mstring;
 						m.insert(pair<string,mtl>(mstring,mMtl));
@@ -446,7 +452,7 @@ int DataManager::loadOBJ(string filename)
 				}
 				else if(s[0].compare(0,6,"map_Kd")==0)
 				{
-					assert(mstring.compare(""));
+					if(!mstring.compare("")) continue;
 					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
 					//if(ext.compare("tga")==0)
 						mMtl.tex=dataManager.loadTexture(file+s[1]);
@@ -456,7 +462,7 @@ int DataManager::loadOBJ(string filename)
 				}
 				else if(s[0].compare(0,2,"Kd")==0)
 				{
-					assert(mstring.compare(""));
+					if(!mstring.compare("")) continue;
 					try{
 					float r = lexical_cast<float>(s[1]);
 					float g = lexical_cast<float>(s[2]);
@@ -464,10 +470,15 @@ int DataManager::loadOBJ(string filename)
 					mMtl.diffuse=color(r,g,b);
 					}catch(...){}
 				}
-				else if(s[0].compare(0,2,"d")==0 || s[0].compare(0,2,"Tr")==0)
+				else if(s[0].compare(0,2,"d")==0)
 				{
-					assert(mstring.compare(""));
+					if(!mstring.compare("")) continue;
 					mMtl.transparency=atof(s[1].c_str());
+				}
+				else if(s[0].compare(0,2,"Tr")==0)
+				{
+					if(!mstring.compare("")) continue;
+					mMtl.transparency=1.0-atof(s[1].c_str());
 				}
 			}
 			mMtl.name=mstring;

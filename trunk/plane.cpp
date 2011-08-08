@@ -538,7 +538,7 @@ void nPlane::die()
 	{
 		death = DEATH_EXPLOSION;
 		particleManager.addEmitter(new particle::explosion(id));
-		particleManager.addEmitter(new particle::explosionFlash(id));
+		//particleManager.addEmitter(new particle::explosionFlash(id));
 	}
 }
 void nPlane::findTargetVector()
