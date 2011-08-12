@@ -139,7 +139,6 @@ extern char* errorString;
 #define glError()		{}
 #endif
 
-
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);

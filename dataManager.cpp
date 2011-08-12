@@ -1,7 +1,6 @@
 
 #include "main.h"
 
-
 DataManager::~DataManager()
 {
 	shutdown();
@@ -872,9 +871,6 @@ void DataManager::bindShader(int id)
 }
 void DataManager::unbind(string name)
 {
-	if(assets[name]->id == 0)
-		return;
-
 	if(boundShader == name)
 	{
 		glUseProgram(0);
@@ -944,6 +940,7 @@ void DataManager::draw(string name)
 	setUniform1i("tex",0);
 	glCallList(assets[name]->id);
 	unbind("model");
+	glColor3f(1,1,1);
 }
 void DataManager::drawCustomShader(string name)
 {
@@ -956,7 +953,7 @@ void DataManager::drawCustomShader(string name)
 	}
 	bind("noTexture");
 	glCallList(assets[name]->id);
-
+	glColor3f(1,1,1);
 }
 void DataManager::draw(objectType p)
 {
@@ -972,117 +969,299 @@ void DataManager::draw(objectType p)
 	if(p==MISSILE3)	draw("missile3");
 	if(p==MISSILE4)	draw("missile4");
 }
-int DataManager::registerAssets()
+bool DataManager::loadAssetList()
 {
-	//static ofstream cout("loading.txt");
 
-	static int callNum=0;
-	callNum++;
-	int n=1;
 
-	//cout << "loading asset #" + lexical_cast<string>(callNum) + "... ";
+	TiXmlDocument doc("media/assetList.xml");
+	if(!doc.LoadFile())
+	{
+		return false;
+	}
 
-	if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
-	if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
+	const char* c;
+	TiXmlNode* node					= NULL;
+	TiXmlNode* assetsNode			= NULL;
 
-	if(callNum==n++)	registerTexture("noTexture",		0);
-	if(callNum==n++)	registerShader("noShader",			0);	
-	if(callNum==n++)	registerAsset("white",				"media/white.png");	
-	if(callNum==n++)	registerAsset("grass",				"media/grass.png");
-	if(callNum==n++)	registerAsset("rock",				"media/rock.png");
-	if(callNum==n++)	registerAsset("sand",				"media/sand.png");
-	if(callNum==n++)	registerAsset("snow",				"media/snow.png");
-	if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.png");
-	if(callNum==n++)	registerAsset("radarTex",			"media/radar2.png");
-	if(callNum==n++)	registerAsset("particle",			"media/particle4.png");	
-	if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
-	if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.png");
-	//if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
-	if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball4.png");
-	//if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");
-	if(callNum==n++)	registerAsset("explosion smoke",	"media/explosion/smoke5.png");
-	if(callNum==n++)	registerAsset("cockpit",			"media/cockpit.png");
-	if(callNum==n++)	registerAsset("health bar",			"media/health bar.png");
-	if(callNum==n++)	registerAsset("tilt",				"media/tilt.png");
-	if(callNum==n++)	registerAsset("targeter",			"media/targeter.png");
-	if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.png");
-	if(callNum==n++)	registerAsset("key",				"media/key.png");
-	if(callNum==n++)	registerAsset("next level",			"media/nextLevel.png");
-	if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.png");
-	if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.png");
-	if(callNum==n++)	registerAsset("button",				"media/button.png");
-	if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
-	if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
-	if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
-	if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
-	if(callNum==n++)	registerAsset("fire",				"media/fire.png");
-	if(callNum==n++)	registerAsset("hex grid",			"media/hexGrid.png");
-	if(callNum==n++)	registerAsset("bullet",				"media/bullet.png");
+	assetsNode = doc.FirstChild("assets");
+	if(assetsNode == NULL) return false;
 
-	if(callNum==n++)	registerAsset("glow",				"media/glow.png");
-	if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
-	if(callNum==n++)	registerAsset("layers",				"media/layers.png");
-	if(callNum==n++)	registerAsset("check",				"media/check.png");
-	if(callNum==n++)	registerAsset("check box",			"media/check box.png");
-	if(callNum==n++)	registerAsset("slider",				"media/slider.png");
-	if(callNum==n++)	registerAsset("slider bar",			"media/slider bar.png");
+////////////////////////////////////////textures//////////////////////////////////////////
+	node = assetsNode->FirstChild("textures");
+	if(node != NULL)
+	{
+		TiXmlElement* texturesElement	= NULL;
+		TiXmlElement* textureElement	= NULL;
 
-	//if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
-	//if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
-	//if(callNum==n++)	registerAsset("tree front",			"media/tree/front.png");
+		texturesElement = node->ToElement();
+		if(texturesElement != NULL)
+		{
+			node = texturesElement->FirstChildElement();
+			if(node != NULL) textureElement = node->ToElement();
 
-	//if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
-	if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");
-	if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.png");
-	if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.png");
-	if(callNum==n++)	registerAsset("menu pictures",		"media/menu/choice pics.png");
+			textureFile tmpTextureFile;
+			while(textureElement != NULL)
+			{
+				c = textureElement->Attribute("name");	tmpTextureFile.name = c!=NULL ? c : "";
+				c = textureElement->Attribute("file");	tmpTextureFile.filename = c!=NULL ? c : "";
 
-	if(callNum==n++)	registerAsset("menu in game",		"media/menu/in game.png");
-	if(callNum==n++)	registerAsset("menu in game select","media/menu/in game select.png");
+				if(tmpTextureFile.name != "" && tmpTextureFile.filename != "")
+				{
+					const char* preload = textureElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+						textureFiles.push(tmpTextureFile);
+					else
+						textureFilesPreload.push(tmpTextureFile);
+				}
+				else debugBreak();
 
-	if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
-	if(callNum==n++)	registerShader("radar",				"media/radar.vert","media/radar.frag");
-	if(callNum==n++)	registerShader("radar2",			"media/radar2.vert","media/radar2.frag");
-	//if(callNum==n++)	registerShader("water",				"media/water.vert","media/water.frag");
-	if(callNum==n++)	registerShader("sea floor",			"media/sea floor.vert","media/sea floor.frag");
-	if(callNum==n++)	registerShader("horizon",			"media/horizon.vert","media/horizon.frag");//was water2
-	if(callNum==n++)	registerShader("horizon2",			"media/horizon2.vert","media/horizon2.frag");//was water2
-	if(callNum==n++)	registerShader("island terrain",	"media/island.vert","media/island.frag");
-	if(callNum==n++)	registerShader("rock terrain",		"media/rock.vert","media/rock.frag");
-	if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
-	if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
-	if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
-	if(callNum==n++)	registerShader("model",				"media/model.vert","media/model.frag");
-	if(callNum==n++)	registerShader("ortho",				"media/ortho.vert","media/ortho.frag");
-	if(callNum==n++)	registerShader("hex grid shader",	"media/hex grid.vert","media/hex grid.frag");
-	//if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
-	if(callNum==n++)	registerAsset("island new terrain",	"media/grass.frag");
-	if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
-	if(callNum==n++)	registerAsset("snow terrain",		"media/snow.frag");
+				textureElement = textureElement->NextSiblingElement();
+			}
+		}
+	}
+////////////////////////////////////////shaders///////////////////////////////////////////
+	node = assetsNode->FirstChild("shaders");
+	if(node != NULL)
+	{
+		TiXmlElement* shadersElement	= NULL;
+		TiXmlElement* shaderElement		= NULL;
 
-	if(callNum==n++)	registerAsset("sky dome",			"media/dome.obj");//was 'dome4.obj'
-	if(callNum==n++)	registerAsset("cylinder",			"media/cylinder.obj");
-	if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
-	if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");
-	if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
-	if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
-	if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
-	if(callNum==n++)	registerAsset("AA gun",				"media/AAgun.obj");
+		shadersElement = node->ToElement();
+		if(shadersElement != NULL)
+		{
+			node = shadersElement->FirstChildElement();
+			if(node != NULL) shaderElement = node->ToElement();
 
-	if(callNum==n++)	registerAsset("missile1",			"media/m1(center).obj");
-	if(callNum==n++)	registerAsset("missile2",			"media/m2(center).obj");
-	if(callNum==n++)	registerAsset("missile3",			"media/m3(center).obj");
-	if(callNum==n++)	registerAsset("missile4",			"media/m4(center).obj");
+			shaderFile tmpShaderFile;
+			while(shaderElement != NULL)
+			{
+				c = shaderElement->Attribute("name");		tmpShaderFile.name = c!=NULL ? c : "";
+				c = shaderElement->Attribute("vertex");		tmpShaderFile.vertexShaderFile = c!=NULL ? c : "";
+				c = shaderElement->Attribute("fragment");	tmpShaderFile.fragmentShaderFile = c!=NULL ? c : "";
 
-	//if(callNum==n++)	registerAsset("AA gun",				"media/AAGun_Mobile_01.obj"); <---- WE HAVE NO MODEL YET!!!
-	//				.					.
-	//				.					.
-	//				.					.
-	if(callNum==n++)	settings.load("media/modelData.txt");
-	//cout << "loading complete" << endl;
+				const char* use_sAspect = shaderElement->Attribute("sAspect");
+				tmpShaderFile.use_sAspect = (use_sAspect != NULL && string(use_sAspect) == "true");
 
-	return (n-1)-callNum;//number left
+				if(tmpShaderFile.name != "" && tmpShaderFile.vertexShaderFile != "" && tmpShaderFile.fragmentShaderFile != "")
+				{
+					const char* preload = shaderElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+						shaderFiles.push(tmpShaderFile);
+					else
+						shaderFilesPreload.push(tmpShaderFile);
+				}
+				else debugBreak();
+				shaderElement = shaderElement->NextSiblingElement();
+			}
+		}
+	}
+////////////////////////////////////////models///////////////////////////////////////////
+	node = assetsNode->FirstChild("models");
+	if(node != NULL)
+	{
+		TiXmlElement* modelsElement		= NULL;
+		TiXmlElement* modelElement		= NULL;
+
+		modelsElement = node->ToElement();
+		if(modelsElement != NULL)
+		{
+			node = modelsElement->FirstChildElement();
+			if(node != NULL) modelElement = node->ToElement();
+
+			modelFile tmpModelFile;
+			while(modelElement != NULL)
+			{
+				c = modelElement->Attribute("name");	tmpModelFile.name = c!=NULL ? c : "";
+				c = modelElement->Attribute("file");	tmpModelFile.filename = c!=NULL ? c : "";
+				
+				if(tmpModelFile.name !="" && tmpModelFile.filename != "")
+					modelFiles.push(tmpModelFile);
+				else
+					debugBreak();
+
+				modelElement = modelElement->NextSiblingElement();
+			}
+		}
+	}
+
+	return true;
 }
+void DataManager::preloadAssets()
+{
+	while(!textureFilesPreload.empty())
+	{
+		textureFile i = textureFilesPreload.front();
+		textureFilesPreload.pop();
+
+		registerAsset(i.name, i.filename);
+	}
+
+	while(!shaderFilesPreload.empty())
+	{
+		shaderFile i = shaderFilesPreload.front();
+		shaderFilesPreload.pop();
+
+		registerShader(i.name, i.vertexShaderFile, i.fragmentShaderFile);
+	}
+}
+int DataManager::loadAsset()
+{
+	if(!textureFiles.empty())
+	{
+		textureFile i = textureFiles.front();
+		textureFiles.pop();
+
+		registerAsset(i.name, i.filename);
+
+		return textureFiles.size() + shaderFiles.size() + modelFiles.size();
+	}
+	else if(!shaderFiles.empty())
+	{
+		shaderFile i = shaderFiles.front();
+		shaderFiles.pop();
+
+		registerShader(i.name, i.vertexShaderFile, i.fragmentShaderFile);
+
+		if(i.use_sAspect)
+		{
+			auto s = assets.find(i.name);
+			if(s != assets.end())
+				((shaderAsset*)(s->second))->use_sAspect = true;
+
+			bind(i.name);
+			setUniform1f("sAspect",sAspect);
+			unbind(i.name);
+		}
+
+		return shaderFiles.size() + modelFiles.size();
+	}
+	else if(!modelFiles.empty())
+	{
+		modelFile i = modelFiles.front();
+		modelFiles.pop();
+
+		registerAsset(i.name, i.filename);
+
+		return modelFiles.size();
+	}
+	return 0;
+}
+//int DataManager::registerAssets()
+//{
+	////static ofstream cout("loading.txt");
+
+	//static int callNum=0;
+	//callNum++;
+	//int n=1;
+
+	////cout << "loading asset #" + lexical_cast<string>(callNum) + "... ";
+
+	//if(callNum==n++)	textManager->init("media/ascii");//needed for error messages
+	//if(callNum==n++)	registerAsset("dialog box",			"media/dialog box.png");
+
+	//if(callNum==n++)	registerTexture("noTexture",		0);
+	//if(callNum==n++)	registerShader("noShader",			0);	
+	//if(callNum==n++)	registerAsset("white",				"media/white.png");	
+	//if(callNum==n++)	registerAsset("grass",				"media/grass.png");
+	//if(callNum==n++)	registerAsset("rock",				"media/rock.png");
+	//if(callNum==n++)	registerAsset("sand",				"media/sand.png");
+	//if(callNum==n++)	registerAsset("snow",				"media/snow.png");
+	//if(callNum==n++)	registerAsset("LCnoise",			"media/LCnoise.png");
+	//if(callNum==n++)	registerAsset("radarTex",			"media/radar2.png");
+	//if(callNum==n++)	registerAsset("particle",			"media/particle4.png");	
+	//if(callNum==n++)	registerAsset("radar plane",		"media/plane radar2.png");
+	//if(callNum==n++)	registerAsset("hardNoise",			"media/hardNoiseDOT3.png");
+	////if(callNum==n++)	registerAsset("explosion core",		"media/explosion/core.png");
+	//if(callNum==n++)	registerAsset("explosion fireball",	"media/explosion/fireball4.png");
+	////if(callNum==n++)	registerAsset("explosion flash",	"media/explosion/flash.png");
+	//if(callNum==n++)	registerAsset("explosion smoke",	"media/explosion/smoke5.png");
+	//if(callNum==n++)	registerAsset("cockpit",			"media/cockpit.png");
+	//if(callNum==n++)	registerAsset("health bar",			"media/health bar.png");
+	//if(callNum==n++)	registerAsset("tilt",				"media/tilt.png");
+	//if(callNum==n++)	registerAsset("targeter",			"media/targeter.png");
+	//if(callNum==n++)	registerAsset("missile smoke",		"media/particle8.png");
+	//if(callNum==n++)	registerAsset("key",				"media/key.png");
+	//if(callNum==n++)	registerAsset("next level",			"media/nextLevel.png");
+	//if(callNum==n++)	registerAsset("radar frame",		"media/radar_frame.png");
+	//if(callNum==n++)	registerAsset("cockpit square",		"media/cockpit square.png");
+	//if(callNum==n++)	registerAsset("button",				"media/button.png");
+	//if(callNum==n++)	registerAsset("file viewer",		"media/file viewer.png");
+	//if(callNum==n++)	registerAsset("entry bar",			"media/entry bar.png");
+	//if(callNum==n++)	registerAsset("target ring",		"media/target ring.png");
+	//if(callNum==n++)	registerAsset("smoke",				"media/particles/smoke.png");
+	//if(callNum==n++)	registerAsset("fire",				"media/fire.png");
+	//if(callNum==n++)	registerAsset("hex grid",			"media/hexGrid.png");
+	//if(callNum==n++)	registerAsset("bullet",				"media/bullet.png");
+
+	//if(callNum==n++)	registerAsset("glow",				"media/glow.png");
+	//if(callNum==n++)	registerAsset("cursor",				"media/cursor.png");
+	//if(callNum==n++)	registerAsset("layers",				"media/layers.png");
+	//if(callNum==n++)	registerAsset("check",				"media/check.png");
+	//if(callNum==n++)	registerAsset("check box",			"media/check box.png");
+	//if(callNum==n++)	registerAsset("slider",				"media/slider.png");
+	//if(callNum==n++)	registerAsset("slider bar",			"media/slider bar.png");
+
+	////if(callNum==n++)	registerAsset("tree top",			"media/tree/top.png");
+	////if(callNum==n++)	registerAsset("tree right",			"media/tree/right.png");
+	////if(callNum==n++)	registerAsset("tree front",			"media/tree/front.png");
+
+	////if(callNum==n++)	registerAsset("menu background",	"media/menu/menu background2.tga"); registered earlier in loading
+	//if(callNum==n++)	registerAsset("menu start",			"media/menu/start.png");
+	//if(callNum==n++)	registerAsset("menu slot",			"media/menu/slot.png");
+	//if(callNum==n++)	registerAsset("menu mode choices",	"media/menu/mode choices.png");
+	//if(callNum==n++)	registerAsset("menu pictures",		"media/menu/choice pics.png");
+
+	//if(callNum==n++)	registerAsset("menu in game",		"media/menu/in game.png");
+	//if(callNum==n++)	registerAsset("menu in game select","media/menu/in game select.png");
+
+	//if(callNum==n++)	registerShader("grass terrain",		"media/toon.vert","media/toon.frag");
+	//if(callNum==n++)	registerShader("radar",				"media/radar.vert","media/radar.frag");
+	//if(callNum==n++)	registerShader("radar2",			"media/radar2.vert","media/radar2.frag");
+	//if(callNum==n++)	registerShader("radar plane shader","media/radarPlane.vert","media/radarPlane.frag");
+	////if(callNum==n++)	registerShader("water",				"media/water.vert","media/water.frag");
+	//if(callNum==n++)	registerShader("sea floor",			"media/sea floor.vert","media/sea floor.frag");
+	//if(callNum==n++)	registerShader("horizon",			"media/horizon.vert","media/horizon.frag");//was water2
+	//if(callNum==n++)	registerShader("horizon2",			"media/horizon2.vert","media/horizon2.frag");//was water2
+	//if(callNum==n++)	registerShader("island terrain",	"media/island.vert","media/island.frag");
+	//if(callNum==n++)	registerShader("rock terrain",		"media/rock.vert","media/rock.frag");
+	//if(callNum==n++)	registerShader("health",			"media/health.vert","media/health.frag");
+	//if(callNum==n++)	registerShader("ocean",				"media/ocean.vert","media/ocean.frag");
+	//if(callNum==n++)	registerShader("partical shader",	"media/smoke.vert","media/smoke.frag");
+	//if(callNum==n++)	registerShader("model",				"media/model.vert","media/model.frag");
+	//if(callNum==n++)	registerShader("ortho",				"media/ortho.vert","media/ortho.frag");
+	//if(callNum==n++)	registerShader("hex grid shader",	"media/hex grid.vert","media/hex grid.frag");
+	//if(callNum==n++)	registerShader("sky shader",		"media/sky.vert","media/sky.frag");
+	////if(callNum==n++)	registerAsset("island new terrain",	"media/terrain.frag");
+	//if(callNum==n++)	registerAsset("island new terrain",	"media/grass.frag");
+	//if(callNum==n++)	registerAsset("grass new terrain",	"media/grass2.frag");
+	//if(callNum==n++)	registerAsset("snow terrain",		"media/snow.frag");
+
+	//if(callNum==n++)	registerAsset("sky dome",			"media/dome.obj");//was 'dome4.obj'
+	//if(callNum==n++)	registerAsset("cylinder",			"media/cylinder.obj");
+	//if(callNum==n++)	registerAsset("f16",				"media/f16.obj");
+	//if(callNum==n++)	registerAsset("f18",				"media/f18hornet.obj");
+	//if(callNum==n++)	registerAsset("f22",				"media/f22.obj");
+	//if(callNum==n++)	registerAsset("UAV",				"media/UAV.obj");
+	//if(callNum==n++)	registerAsset("B2",					"media/B2.obj");
+	//if(callNum==n++)	registerAsset("AA gun",				"media/AAgun.obj");
+
+	//if(callNum==n++)	registerAsset("missile1",			"media/m1(center).obj");
+	//if(callNum==n++)	registerAsset("missile2",			"media/m2(center).obj");
+	//if(callNum==n++)	registerAsset("missile3",			"media/m3(center).obj");
+	//if(callNum==n++)	registerAsset("missile4",			"media/m4(center).obj");
+
+	////if(callNum==n++)	registerAsset("AA gun",				"media/AAGun_Mobile_01.obj"); <---- WE HAVE NO MODEL YET!!!
+	////				.					.
+	////				.					.
+	////				.					.
+	//if(callNum==n++)	settings.load("media/modelData.txt");
+	////cout << "loading complete" << endl;
+
+	//return (n-1)-callNum;//number left
+
+
+//	return 0;
+//}
 void DataManager::registerAsset(string name, string filename)
 {//shaders must be registered by hand right now
 	if(assets.find(name) != assets.end()) 
@@ -1105,17 +1284,20 @@ void DataManager::registerTexture(string name, int id)
 }
 void DataManager::registerShader(string name, int id)
 {
-	asset* a = new shaderAsset;
+	shaderAsset* a = new shaderAsset;
 	a->id = id;
 	a->type = asset::SHADER;
+	a->use_sAspect = false;
 
 	assets[name] = a;
 }
 void DataManager::registerShader(string name, string vert, string frag)
 {
-	asset* a = new shaderAsset;
+	shaderAsset* a = new shaderAsset;
 	a->id = loadShader(vert,frag);
 	a->type = asset::SHADER;
+	a->use_sAspect = false;
+
 	assets[name] = a;
 }
 void DataManager::registerModel(string name, int id)

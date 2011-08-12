@@ -10,7 +10,8 @@ extern const double PI = 3.14159265358979323846264338327950288419716939937510582
 char* errorString;																																//	//
 int sh=1024;																																	//	//
 int sw=1280;																																	//	//
-																																				//	//
+float sAspect=((float)sw)/sh;																													//	//
+																																				//  //
 profiler Profiler;																																//	//
 TextManager* textManager;																														//	//
 																																				//	//
@@ -157,6 +158,16 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	if(!is_directory("media"))
 	{
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+		return 0;
+	}
+	else if(!exists("media/assetList.xml"))
+	{
+		MessageBox(NULL,L"Media/assetList.xml not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+		return 0;
+	}
+	else if(!dataManager.loadAssetList())
+	{
+		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 		return 0;
 	}
 

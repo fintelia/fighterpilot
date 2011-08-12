@@ -45,7 +45,7 @@ using namespace boost::filesystem;
 
 #pragma comment (lib, "zlib.lib")
 #pragma comment (lib, "libpng15.lib")
-
+#pragma comment (lib, "tinyxml.lib")
 
 #include <windows.h>
 #include <Shlobj.h>
@@ -54,6 +54,8 @@ using namespace boost::filesystem;
 #include <GL/glu.h>
 //#include "zlib/zlib.h"
 #include "png/png.h"
+#include "xml/tinyxml.h"
+
 
 extern bool	active;		// Window Active Flag
 extern const double PI;
@@ -64,6 +66,8 @@ const int NumPlayers = 2;
 
 LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 namespace menu{class levelEditor;}
+
+#define OPENGL2
 
 #include "enums.h"
 #include "time.h"
@@ -97,7 +101,7 @@ namespace menu{class levelEditor;}
 extern humanControl players[NumPlayers];
 
 extern int sh, sw;
-
+extern float sAspect;
 extern int frame,Time,timebase;
 extern float fps;
 

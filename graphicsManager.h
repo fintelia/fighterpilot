@@ -95,14 +95,18 @@ public:
 	virtual void takeScreenshot()=0;
 	virtual void bindRenderTarget(RenderTarget t)=0;
 	virtual void renderFBO(RenderTarget src)=0;
-	
-	virtual void drawSphere(Vec3f position, float radius)=0;
 
-	virtual void viewport(int x,int y,int width,int height)=0;
-	virtual void perspective(float fovy, float aspect, float near, float far)=0;
-	virtual void ortho(float left, float right, float bottom, float top, float near, float far)=0;
+
+	virtual void drawLine(Vec3f start, Vec3f end)=0;
+	virtual void drawSphere(Vec3f position, float radius)=0;
+	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
+	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
+
+	virtual void viewport(int x,int y,int width,int height);
+	virtual void perspective(float fovy, float aspect, float near, float far);
+	virtual void ortho(float left, float right, float bottom, float top, float near, float far);
 	virtual void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
-	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up)=0;
+	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up);
 
 	virtual Vec2f project(Vec3f p);
 	virtual Vec3f unProject(Vec3f p);
@@ -112,6 +116,7 @@ public:
 	void minimizeWindow();
 };
 
+#ifdef OPENGL2
 class OpenGLgraphics: public GraphicsManager
 {
 public:
@@ -126,6 +131,10 @@ protected:
 		Vec2f position;
 		Vec2f texCoord;
 	};
+	struct vertex3D
+	{
+		Vec3f position;
+	};
 	struct model: public object
 	{
 		string disp;
@@ -136,6 +145,7 @@ protected:
 	};
 
 	texturedVertex2D overlay[4];
+	vertex3D shapes3D[4];
 
 	GLuint renderTextures[2];//only second is used with multisampling
 	GLuint colorRenderBuffers[2];//only first is used with multisampling
@@ -172,11 +182,16 @@ public:
 	void bindRenderTarget(RenderTarget t);
 	void renderFBO(RenderTarget src);
 
+	void drawLine(Vec3f start, Vec3f end);
 	void drawSphere(Vec3f position, float radius);
+	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
+	void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4);
 
 	void viewport(int x,int y,int width,int height);
 	void perspective(float fovy, float aspect, float near, float far);
 	void ortho(float left, float right, float bottom, float top, float near, float far);
 	void lookAt(Vec3f eye, Vec3f center, Vec3f up);
 };
+#endif
+
 extern GraphicsManager* graphics;

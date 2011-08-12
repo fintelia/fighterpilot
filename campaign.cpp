@@ -113,7 +113,7 @@ void modeCampaign::draw2D()
 	//	planeIdBoxes(p,0,0,sw,sh);
 		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");
 		targeter(400,300,50,p->roll);
-		radar(-0.6, -0.1333, 0.2, -0.2666, true, p);
+		radar(0.2 * sAspect, 0.433, 0.125, -0.125, true, p);
 		
 		healthBar(-0.65, -0.3, 0.5, 0.666, p->health/p->maxHealth,true);
 
@@ -122,7 +122,7 @@ void modeCampaign::draw2D()
 	}
 	else if(!p->dead)
 	{
-		radar(700, 500, 80, 80, false, p);
+		radar(sAspect-0.167, 0.167, 0.1333, -0.1333, false, p);
 
 		glDisable(GL_MULTISAMPLE);
 		healthBar(614, 25, 150, 25, p->health/p->maxHealth,false);
