@@ -869,16 +869,21 @@ int loading::update()
 	static bool toLoad = true;
 	if(toLoad)
 	{
-		dataManager.registerAsset("menu background", "media/menu/menu background.png");
-		dataManager.registerAsset("progress back", "media/progress back.png");
-		dataManager.registerAsset("progress front", "media/progress front.png");
-		dataManager.registerShader("ortho", "media/ortho.vert", "media/ortho.frag");
-		dataManager.registerShader("gamma shader", "media/gamma.vert", "media/gamma.frag");
+		dataManager.preloadAssets();
+
+		textManager->init("media/ascii");
+		settings.load("media/modelData.txt");
+
+		//dataManager.registerAsset("menu background", "media/menu/menu background.png");
+		//dataManager.registerAsset("progress back", "media/progress back.png");
+		//dataManager.registerAsset("progress front", "media/progress front.png");
+		//dataManager.registerShader("ortho", "media/ortho.vert", "media/ortho.frag");
+		//dataManager.registerShader("gamma shader", "media/gamma.vert", "media/gamma.frag");
 		toLoad=false;
 	}
 
 	static int totalAssets = -1;
-	int assetsLeft = dataManager.registerAssets();
+	int assetsLeft = dataManager.loadAsset();
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 
 	//graphics->minimizeWindow();

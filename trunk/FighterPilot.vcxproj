@@ -142,6 +142,7 @@
     <ClCompile Include="modeManager.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
+    <ClCompile Include="OpenGLgraphics.cpp" />
     <ClCompile Include="particle.cpp" />
     <ClCompile Include="particleExplosion.cpp" />
     <ClCompile Include="particleManager.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="missile.h" />
     <ClInclude Include="modeManager.h" />
     <ClInclude Include="objectList.h" />
+    <ClInclude Include="OpenGLgraphics.h" />
     <ClInclude Include="partical.h" />
     <ClInclude Include="particleManager.h" />
     <ClInclude Include="path.h" />
@@ -202,6 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\assetList.xml" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass.frag" />
@@ -226,6 +229,10 @@
     <None Include="media\radar.vert" />
     <None Include="media\radar2.frag" />
     <None Include="media\radar2.vert" />
+    <None Include="media\radarPlane.frag" />
+    <None Include="media\radarPlane.vert" />
+    <None Include="media\sky.frag" />
+    <None Include="media\sky.vert" />
     <None Include="media\smoke.frag" />
     <None Include="media\smoke.vert" />
     <None Include="media\snow.frag" />

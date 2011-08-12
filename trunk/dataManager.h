@@ -37,7 +37,11 @@ public:
 	void setUniform3i(string name, int v0, int v1, int v2);
 	void setUniform4i(string name, int v0, int v1, int v2, int v3);
 
-	int registerAssets();
+	bool loadAssetList();
+	void preloadAssets();
+	int loadAsset();
+
+	//int registerAssets();
 	void registerAsset(string name, string filename);
 	void registerShader(string name, string vert, string frag);
 
@@ -69,6 +73,7 @@ private:
 	};
 	struct shaderAsset: public asset
 	{
+		bool use_sAspect;
 		map<string,int> uniforms;
 	};
 
@@ -84,6 +89,28 @@ private:
 
 	DataManager():activeTextureUnit(0),boundShaderId(0){}
 	~DataManager();
+
+	struct textureFile{
+		string name;
+		string filename;
+	};
+	queue<textureFile> textureFiles;
+	queue<textureFile> textureFilesPreload;
+
+	struct shaderFile{
+		string name;
+		string vertexShaderFile;
+		string fragmentShaderFile;
+		bool use_sAspect;
+	};
+	queue<shaderFile> shaderFiles;
+	queue<shaderFile> shaderFilesPreload;
+
+	struct modelFile{
+		string name;
+		string filename;
+	};
+	queue<modelFile> modelFiles;
 
 	friend class CollisionChecker;
 };

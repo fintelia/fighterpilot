@@ -112,6 +112,12 @@
     <Filter Include="shaders\gamma correction">
       <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\sky">
+      <UniqueIdentifier>{b6730312-4e6c-4673-9ad2-fa955511cf4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\radar\3rd person">
+      <UniqueIdentifier>{1a2a2b2d-8ea5-4599-b8cd-5cb45d008788}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -252,6 +258,9 @@
     <ClCompile Include="explosionFlash.cpp">
       <Filter>Source Files\particleManager</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGLgraphics.cpp">
+      <Filter>Source Files\graphicsManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
@@ -372,6 +381,9 @@
     <ClInclude Include="menuScreen.h">
       <Filter>Source Files\menu</Filter>
     </ClInclude>
+    <ClInclude Include="OpenGLgraphics.h">
+      <Filter>Source Files\graphicsManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -400,12 +412,6 @@
     </None>
     <None Include="media\ocean.vert">
       <Filter>shaders\terrain</Filter>
-    </None>
-    <None Include="media\radar.frag">
-      <Filter>shaders\radar</Filter>
-    </None>
-    <None Include="media\radar.vert">
-      <Filter>shaders\radar</Filter>
     </None>
     <None Include="media\radar2.frag">
       <Filter>shaders\radar</Filter>
@@ -474,6 +480,25 @@
     <None Include="media\gamma.vert">
       <Filter>shaders\gamma correction</Filter>
     </None>
+    <None Include="media\sky.vert">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\sky.frag">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\radar.frag">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radar.vert">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radarPlane.vert">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radarPlane.frag">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\assetList.xml" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

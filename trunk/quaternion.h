@@ -42,7 +42,7 @@ public:
 	}
 	Quaternion(Vector3<T> v)
 	{
-		v = v.normalize()
+		v = v.normalize();
 		Vec3f axis = Vector3<T>(0,0,1).cross(v);
 		Angle theta = acosA(v.z); //same as Angle theta = acosA(Vector3<T>(0,0,1).dot(v));
 		T sTheta2 = sin(theta/2);
@@ -124,24 +124,24 @@ public:
 typedef Quaternion<float> Quat4f;
 typedef Quaternion<double> Quat4d;
 
-template <class T>
-Quaternion<T> slerp(const Quaternion<T>& q1, const Quaternion<T>& q2, T t)
+template <class T, class U>
+Quaternion<T> slerp(const Quaternion<T>& q1, const Quaternion<T>& q2, U t)
 {
-	if (t <= (T)0.0)
+	if (t <= (U)0.0)
 		return q1;
-	if (t >= (T)1.0)
+	if (t >= (U)1.0)
 		return q2;
 		
 	Quaternion<T> q3 = q2;
-	T c = q1.dot(q3);
+	U c = q1.dot(q3);
 
-	if (c < (T)0.0)
+	if (c < (U)0.0)
 	{
 		q3 = -q3;
 		c = -c;
 	}
 	
-	if (c > (T)0.999)
+	if (c > (U)0.999)
 		return lerp(q1, q3, t);
 		
 	Angle a = acosA(c); // ACos() clamps input to [-1, 1]

@@ -175,7 +175,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.bind("radar");
 		dataManager.bindTex(radarTexture);
 
-
+		dataManager.setUniform1f("sAspect", sAspect);
 		dataManager.setUniform1f("radarAng", radarAng);
 
 		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0,(world.ground()->sizeZ()/2-p->position.z)/160.0);
@@ -189,89 +189,86 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.unbind("radar");
 		dataManager.unbindTextures();
 
-		glPushMatrix();
-		glTranslatef(((1.0+x)+abs(width)/2)/2*sw,((-y+1.0)+abs(height)/2)/2*sh,0);
-		//glScalef(abs(width)*sw,abs(height)*sh,1.0);
-		//glScalef(-1,1,1.0);
-		glRotatef(p->direction.degrees()+18.0,0,0,1);
+
+
+		Vec3f nC((x+width/2),(y+height/2),0);
+		float radius = width/2;
+
+		dataManager.bind("radar plane shader");
+		dataManager.setUniform2f("center",nC.x,nC.y);
+		dataManager.setUniform1f("radius",radius);
+		dataManager.setUniform1f("sAspect",sAspect);
+		glColor3f(0.19,0.58,0.87);
+
+		Vec3f n;
+		Vec3f cent, u, v;
+		for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+		{
+			n = (i->second->position - p->position) / (16000.0);
+			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
+			{
+				float mag = n.magnitude();
+				Angle ang = atan2A(-n.x,n.z) + p->direction + 18.0 * PI/180;
+				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
+				ang = p->direction + i->second->direction + 18.0 * PI/180;
+				u = Vec3f(sin(ang),cos(ang),0);
+				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
+
+				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
+			}
+		
+		}
+
+		glColor3f(1,1,1);
+		dataManager.unbindShader();
 	}
 	else
 	{
-		x *=	0.00125*sw;
-		y *=	0.00167*sh;
-		width*= 0.00125*sw;
-		height*=0.00167*sh;
-	//	static int radarTexture = glGetUniformLocation(dataManager.getId("radar2"), "radarTexture");
-	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar2"), "radarAng");
 		dataManager.bind("radar2");
 		dataManager.bind("radarTex",0);
 		dataManager.bindTex(radarTexture,1);
 
+		dataManager.setUniform1f("sAspect", sAspect);
 		dataManager.setUniform1f("radarAng", radarAng);
 		dataManager.setUniform1i("backgroundTexture", 0);
-		
-		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0/width,(world.ground()->sizeZ()/2-p->position.z)/160.0/height);
-		//float mCenterRad = mCenter.magnitude();
-		//Angle mCenterAng = atan2A(mCenter.x,mCenter.y) + (p->direction + PI/2);
-		//mCenter = Vec2f(cos(mCenterAng),sin(mCenterAng))*mCenterRad;
-
-
-		//dataManager.setUniform2f("mapCenter", mCenter.x + 0.5, mCenter.y + 0.5);
-		//dataManager.setUniform1f("mapRadius", world.ground()->sizeX()/160.0/width);
-		//dataManager.setUniform1i("radarTexture", 1);
-
-		//glUniform1f(radarAng, radarAng);
-		//glUniform1i(radarTexture, 0);
 
 		graphics->drawOverlay(x,y,x+width,y+height);
 
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
 
-		glPushMatrix();
-
-		glTranslatef(x+width/2,y+height/2,0);
-		//glScalef(width,height,1.0);
-		glRotatef(p->direction.degrees(),0,0,1);
-	}
-
-	if(firstPerson)	glColor3f(0.19,0.58,0.87);
-	else			glColor3f(0.05,0.79,0.04);
-
-	//glBegin(GL_TRIANGLES);
-	//	glVertex2f(0,	-20);
-	//	glVertex2f(-20,	20);
-	//	glVertex2f(20,	20);
-	//glEnd();
-
-	Vec3f n;
-	for(auto i = world.planes().begin(); i != world.planes().end(); i++)
-	{
-		n = (i->second->position - p->position) / 160.0;
-		if(p->id != i->second->id && !i->second->dead && n.magnitude() < width/2)
-		{
-
-			glPushMatrix();
-		//	glTranslatef(n.x,n.y,0);
-			glRotatef(i->second->direction.degrees(),0,0,1);
-			glTranslatef(-n.x,-n.z,0);
-
-			glBegin(GL_TRIANGLES);
-				glVertex2f(0.0,  -4.0);
-				glVertex2f(-3.0, 4.0);
-				glVertex2f(3.0,	 4.0);
-			glEnd();
-
-			glPopMatrix();
-		}
 		
-	}
-	glPopMatrix();
-	glColor3f(1,1,1);
+		Vec3f nC((x+width/2),(y+height/2),0);
+		float radius = width/2;
 
+		dataManager.bind("radar plane shader");
+		dataManager.setUniform2f("center",nC.x,nC.y);
+		dataManager.setUniform1f("radius",radius);
+		dataManager.setUniform1f("sAspect",sAspect);
+		glColor3f(0.05,0.79,0.04);
 
-	if(!firstPerson)
-	{
+		Vec3f n;
+		Vec3f cent, u, v;
+		for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+		{
+			n = (i->second->position - p->position) / (16000.0);
+			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
+			{
+				float mag = n.magnitude();
+				Angle ang = atan2A(-n.x,n.z) + p->direction;
+				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
+				ang = p->direction + i->second->direction;
+				u = Vec3f(sin(ang),cos(ang),0);
+				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
+
+				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
+			}
+		
+		}
+
+		glColor3f(1,1,1);
+		dataManager.unbindShader();
+
 		graphics->drawOverlay(x,y,x+width,y+height,"radar frame");
 	}
 }
@@ -395,7 +392,7 @@ void modeDogFight::drawBullets()
 	up.y = modelview[5];
 	up.z = modelview[9];
 
-
+	
 	dataManager.bind("bullet");
 
 	//float length;
@@ -428,7 +425,7 @@ void modeDogFight::drawBullets()
 			}
 		}
 	glEnd();
-
+	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	dataManager.unbind("bullet");
 }
 void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
@@ -526,9 +523,11 @@ void modeDogFight::drawScene(int acplayer)
 
 	glTranslatef(e.x,0,e.z);
 	glScalef(30000,10000,30000);
+	//dataManager.bind("sky shader");
 	dataManager.draw("sky dome");
 	glScalef(1,-1,1);
 	dataManager.draw("sky dome");
+	dataManager.unbindShader();
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 

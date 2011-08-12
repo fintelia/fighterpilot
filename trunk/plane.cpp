@@ -165,12 +165,19 @@ void nPlane::update(double time, double ms)
 				{
 					extraShootTime-=machineGun.coolDown;
 					machineGun.roundsLeft--;
-					Vec3f o=rotation*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
+
+					Quat4f rot(slerp(rotation,lastRotation,(float)extraShootTime/ms));
+
+					Vec3f o=rot*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
-					Vec3f t=((rotation*Vec3f(0,0,1.0-extraShootTime/ms) + lastRotation*Vec3f(0,0,extraShootTime/ms))*1000-o).normalize() + random<Vec3f>()*0.025;
-					
+
+
+					Angle randAng = random<float>() * PI * 2.0;
+					float randF = (random<float>(-1.0,1.0) + random<float>(-1.0,1.0))/2.0 * PI/64;
+					rot = Quat4f(Vec3f(cos(randAng),sin(randAng),0.0),randF) * rot;
+
 					shotsFired++;
-					world.bullets.push_back(bullet(o + l,t,id,time-extraShootTime-machineGun.coolDown));
+					world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
 			if(controller.shoot2>0.75)	ShootMissile();
