@@ -371,9 +371,6 @@ public:
 	virtual void operator() (popup* p){}
 	//bool popupActive(){return popup != NULL;}
 protected:
-	static bool loadBackground();
-	static int backgroundImage;
-
 	map<string,button*> buttons;
 	map<string,label*> labels;
 	map<string,toggle*> toggles;

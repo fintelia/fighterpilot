@@ -156,6 +156,7 @@
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
+    <ClCompile Include="text.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="worldManager.cpp" />
   </ItemGroup>

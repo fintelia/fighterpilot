@@ -6,164 +6,155 @@ DataManager::~DataManager()
 	shutdown();
 }
 
-int DataManager::loadTexture(string filename)
+//int DataManager::loadTexture(string filename)
+//{
+//	string ext=filesystem::extension(filename);
+//	if(ext.compare(".tga") == 0)	return loadTGA(filename);
+//	if(ext.compare(".png") == 0)	return loadPNG(filename);
+//	return 0;
+//}
+//int DataManager::loadShader(string vert, string frag)
+//{
+//	bool errorFlag = false;
+//	GLuint v=0,f=0,p;
+//	v = glCreateShader(GL_VERTEX_SHADER);
+//	f = glCreateShader(GL_FRAGMENT_SHADER);
+//
+//	char * ff = textFileRead((char*)frag.c_str());
+//	char * vv = textFileRead((char*)vert.c_str());
+//	if(ff == NULL || vv == NULL) return 0;
+//
+//	glShaderSource(v, 1, (const char **)&vv, NULL);
+//	glShaderSource(f, 1, (const char **)&ff, NULL);
+//	glCompileShader(v);
+//	glCompileShader(f);
+//	free(ff);
+//	free(vv);
+//
+//	string vertErrors;
+//	string fragErrors;
+//	string linkErrors;
+//
+//	int i;//used whenever a pointer to int is required
+//	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+//	if(i == GL_FALSE)
+//	{
+//		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+//		char* cv=(char*)malloc(i); memset(cv,0,i);
+//		glGetShaderInfoLog(v,i,&i,cv);
+//		messageBox(vert + ": " + cv);
+//		errorFlag = true;
+//	}
+//	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+//	if(i == GL_FALSE)
+//	{
+//		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+//		char* cf=(char*)malloc(i); memset(cf,0,i);
+//		glGetShaderInfoLog(f,i,&i,cf);
+//		messageBox(frag + ": " + cf);
+//		errorFlag = true;
+//	}
+//
+//
+//	p = glCreateProgram();
+//	glAttachShader(p,f);
+//	glAttachShader(p,v);
+//
+//	glLinkProgram(p);
+//
+//	glGetProgramiv(p,GL_LINK_STATUS,&i);
+//	if(i == GL_FALSE)
+//	{
+//		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+//		char* cl=(char*)malloc(i); memset(cl,0,i);
+//		glGetProgramInfoLog(p,i,&i,cl);
+//		messageBox(frag + "(link): " + cl);
+//		errorFlag = true;
+//	}
+//
+//	glUseProgram(0); 
+//
+//	//if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+//	//if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
+//
+//	return errorFlag ? 0 : p;
+//}
+//int DataManager::loadTerrainShader(string frag)
+//{
+//	bool errorFlag = false;
+//	static GLuint v=0;
+//	
+//
+//	if(v==0)
+//	{
+//		v = glCreateShader(GL_VERTEX_SHADER);
+//		char * vv = textFileRead("media/terrain.vert");
+//		if(vv == NULL) return 0;
+//		glShaderSource(v, 1, (const char **)&vv, NULL);
+//		glCompileShader(v);
+//		free(vv);
+//
+//		int i;//used whenever a pointer to int is required
+//		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+//		if(i == GL_FALSE)
+//		{
+//			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+//			char* cv=(char*)malloc(i); memset(cv,0,i);
+//			glGetShaderInfoLog(v,i,&i,cv);
+//			messageBox(string("terrain.vert: ") + cv);
+//			errorFlag = true;
+//		}
+//	}
+//
+//	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
+//			p = 0;
+//	char	*ff = textFileRead((char*)frag.c_str()),
+//			*cf=(char*)malloc(512);
+//	int		lf=0;
+//
+//	if(ff != NULL) 
+//	{
+//		glShaderSource(f, 1, (const char **)&ff, NULL);
+//		glCompileShader(f);
+//		free(ff);
+//		memset(cf,0,512);
+//		glGetShaderInfoLog(f,512,&lf,cf);
+//
+//		int i;
+//		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+//		if(i == GL_FALSE)
+//		{
+//			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+//			char* cf=(char*)malloc(i); memset(cf,0,i);
+//			glGetShaderInfoLog(f,i,&i,cf);
+//			messageBox(frag + ": " + cf);
+//			errorFlag = true;
+//		}
+//
+//		p = glCreateProgram();
+//		glAttachShader(p,f);
+//		glAttachShader(p,v);
+//		glLinkProgram(p);
+//
+//		glGetProgramiv(p,GL_LINK_STATUS,&i);
+//		if(i == GL_FALSE)
+//		{
+//			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+//			char* cl=(char*)malloc(i); memset(cl,0,i);
+//			glGetProgramInfoLog(p,i,&i,cl);
+//			messageBox(frag + "(link): " + cl);
+//			errorFlag = true;
+//		}
+//
+//	}
+//	glUseProgram(0);
+//
+//	return errorFlag ? 0 : p;
+//}
+void registerFont(string name, string filename) //loads a .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
-	string ext=filesystem::extension(filename);
-	if(ext.compare(".tga") == 0)	return loadTGA(filename);
-	if(ext.compare(".mmp") == 0)	return loadMMP(filename);
-	if(ext.compare(".png") == 0)	return loadPNG(filename);
-	return 0;
+	//todo add code
 }
-int DataManager::loadModel(string filename)
-{
-	string ext=filesystem::extension(filename);
-	if(ext.compare(".obj") == 0)
-	{
-		int id = loadOBJ(filename);
-		registerModel(filename,id);
-		return id;
-	}
-	return 0;
-}
-int DataManager::loadShader(string vert, string frag)
-{
-	bool errorFlag = false;
-	GLuint v=0,f=0,p;
-	v = glCreateShader(GL_VERTEX_SHADER);
-	f = glCreateShader(GL_FRAGMENT_SHADER);
-
-	char * ff = textFileRead((char*)frag.c_str());
-	char * vv = textFileRead((char*)vert.c_str());
-	if(ff == NULL || vv == NULL) return 0;
-
-	glShaderSource(v, 1, (const char **)&vv, NULL);
-	glShaderSource(f, 1, (const char **)&ff, NULL);
-	glCompileShader(v);
-	glCompileShader(f);
-	free(ff);
-	free(vv);
-
-	string vertErrors;
-	string fragErrors;
-	string linkErrors;
-
-	int i;//used whenever a pointer to int is required
-	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE)
-	{
-		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-		char* cv=(char*)malloc(i); memset(cv,0,i);
-		glGetShaderInfoLog(v,i,&i,cv);
-		messageBox(vert + ": " + cv);
-		errorFlag = true;
-	}
-	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE)
-	{
-		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-		char* cf=(char*)malloc(i); memset(cf,0,i);
-		glGetShaderInfoLog(f,i,&i,cf);
-		messageBox(frag + ": " + cf);
-		errorFlag = true;
-	}
-
-
-	p = glCreateProgram();
-	glAttachShader(p,f);
-	glAttachShader(p,v);
-
-	glLinkProgram(p);
-
-	glGetProgramiv(p,GL_LINK_STATUS,&i);
-	if(i == GL_FALSE)
-	{
-		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-		char* cl=(char*)malloc(i); memset(cl,0,i);
-		glGetProgramInfoLog(p,i,&i,cl);
-		messageBox(frag + "(link): " + cl);
-		errorFlag = true;
-	}
-
-	glUseProgram(0); 
-
-	//if(lv != 0) MessageBoxA(NULL,(string(vert)+": "+string(cv)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-	//if(lf != 0) MessageBoxA(NULL,(string(frag)+": "+string(cf)).c_str(), "Shader Error",MB_ICONEXCLAMATION);
-
-	return errorFlag ? 0 : p;
-}
-int DataManager::loadTerrainShader(string frag)
-{
-	bool errorFlag = false;
-	static GLuint v=0;
-	
-
-	if(v==0)
-	{
-		v = glCreateShader(GL_VERTEX_SHADER);
-		char * vv = textFileRead("media/terrain.vert");
-		if(vv == NULL) return 0;
-		glShaderSource(v, 1, (const char **)&vv, NULL);
-		glCompileShader(v);
-		free(vv);
-
-		int i;//used whenever a pointer to int is required
-		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
-		if(i == GL_FALSE)
-		{
-			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-			char* cv=(char*)malloc(i); memset(cv,0,i);
-			glGetShaderInfoLog(v,i,&i,cv);
-			messageBox(string("terrain.vert: ") + cv);
-			errorFlag = true;
-		}
-	}
-
-	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
-			p = 0;
-	char	*ff = textFileRead((char*)frag.c_str()),
-			*cf=(char*)malloc(512);
-	int		lf=0;
-
-	if(ff != NULL) 
-	{
-		glShaderSource(f, 1, (const char **)&ff, NULL);
-		glCompileShader(f);
-		free(ff);
-		memset(cf,0,512);
-		glGetShaderInfoLog(f,512,&lf,cf);
-
-		int i;
-		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
-		if(i == GL_FALSE)
-		{
-			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-			char* cf=(char*)malloc(i); memset(cf,0,i);
-			glGetShaderInfoLog(f,i,&i,cf);
-			messageBox(frag + ": " + cf);
-			errorFlag = true;
-		}
-
-		p = glCreateProgram();
-		glAttachShader(p,f);
-		glAttachShader(p,v);
-		glLinkProgram(p);
-
-		glGetProgramiv(p,GL_LINK_STATUS,&i);
-		if(i == GL_FALSE)
-		{
-			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-			char* cl=(char*)malloc(i); memset(cl,0,i);
-			glGetProgramInfoLog(p,i,&i,cl);
-			messageBox(frag + "(link): " + cl);
-			errorFlag = true;
-		}
-
-	}
-	glUseProgram(0);
-
-	return errorFlag ? 0 : p;
-}
-
 int DataManager::loadTGA(string filename)
 {
 /////////////structs///////////////
@@ -268,399 +259,399 @@ int DataManager::loadTGA(string filename)
     free(texture.imageData);
     return texV;
 }
-int DataManager::loadMMP(string filename)
-{
-	struct MMPheader
-	{
-		int size_x;
-		int size_y;
-		int channels;
-	};
-	MMPheader h;
-	ifstream fin;
-	fin.open(filename,ios::binary);
-	if(!fin.is_open()) return 0;
-	fin.read((char*)&h,sizeof(h));
-	if(h.channels != 3 && h.channels != 4) return 0;
-
-	unsigned char* imageData=(unsigned char*)malloc(h.size_x*h.size_y*h.channels);
-	if(imageData==NULL) return 0;
-	
-	GLuint texV;
-	glGenTextures(1,&texV);
-    glBindTexture(GL_TEXTURE_2D, texV);
-
-	
-	int x=h.size_x, y=h.size_y, mLevel=0;
-	while (true) 
-	{
-		fin.read((char*)imageData,x*y*h.channels);
-
-		//set mipmap
-		if(h.channels==3)
-			glTexImage2D(GL_TEXTURE_2D, mLevel++, 3, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-		else if(h.channels==4)
-			glTexImage2D(GL_TEXTURE_2D, mLevel++, 4, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-		if(x==1 && y==1) break;
-		x=max(x>>1,1);//divide by 2
-		y=max(y>>1,1);
-
-	}
-	fin.close();
-	free(imageData);
-
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	return texV;
-}
-int DataManager::loadOBJ(string filename)
-{
-///////////////////////types////////////////////////////
-	struct color{float r,g,b;color(float red, float green, float blue): r(red), g(green), b(blue){}};
-	struct texCoord{float u,v;texCoord(float U, float V): u(U), v(V) {}texCoord(): u(0), v(0) {}};
-	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;
-		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
-		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
-		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
-		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
-	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
-	struct mtl
-	{	int tex;
-		color diffuse;
-		float transparency;
-		string name;
-		mtl():diffuse(1,1,1){}
-	};
-////////////////////variables///////////////////////////
-	unsigned int	numVertices=0,
-					numTexcoords=0,
-					numNormals=0,
-					numFaces=0,
-					numMtls=0;
-
-	Vec3f*			vertices;
-	Vec3f*			normals;
-	texCoord*		texCoords;
-	face*			faces;
-	mtl*			mtls;
-
-	unsigned int	totalVerts,totalFaces;
-
-	FILE *fp;
-	if(fopen_s(&fp,filename.c_str(), "r"))
-		return 0;
-
-	char buffer[200];
-	char *token, *nextToken=NULL;
-	///////
-	map<string,mtl>	mtl_map;
-	string file(filename);
-	int i=file.find_last_of("/");
-	if(i==string::npos)
-		file.assign("");
-	else
-		file=file.substr(0,i+1);
-	string mtlFile;
-	//////
-	while(fgets(buffer, 200, fp) != NULL) 
-	{
-		token = strtok_s(buffer, " ", &nextToken);
-		if(strcmp(token, "v") == 0) 	numVertices++;
-		if(strcmp(token, "vt") == 0) 	numTexcoords++;
-		if(strcmp(token, "f") == 0) 	numFaces++;
-		if(strcmp(token, "vn") == 0)	numNormals++;
-		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok_s(NULL, " ", &nextToken);
-	}
-	rewind(fp);
-	//fclose(fp);
-	if(mtlFile.size()!=0)
-	{
-		mtlFile=mtlFile.substr(0,mtlFile.size()-1);
-///////////////////////LOAD MTL/////////////////////////////////
-		{
-			string mstring="";
-			mtl mMtl;
-			mMtl.tex = dataManager.getId("white");
-			mMtl.diffuse = color(1,1,1);
-			mMtl.transparency = 1.0;
-			mMtl.name = "";
-
-			map<string,mtl> m;
-
-			ifstream fin;
-			fin.open(mtlFile);
-			string file;
-			int i=mtlFile.find_last_of("/");
-			if(i==string::npos)
-				file.assign("");
-			else
-				file=mtlFile.substr(0,i+1);
-			if(!fin.is_open())
-			{
-				messageBox("mtl file could not be loaded");
-				exit(0);
-			}
-			while (!fin.eof())
-			{
-				string line;
-				char l[256];
-				string s[4];
-				int i=0, h=0;
-
-				fin.getline(l,256);
-				line.assign(l);
-				if(line.empty()) 
-					continue;
-
-				if(line[0] == '\t')
-					erase_head(line,1);
-
-				h=line.find(" ");
-				for(int n=0;n<4;n++)
-				{
-					s[n].assign(line.substr(i,h-i));
-					i=h+1;
-					if(i>(signed int)line.size())
-						i=line.size();
-					h=line.find(" ",h+2);
-					if(h==string::npos)
-						h=line.size();
-				}
-
-				//if(h!=string::npos)
-				//{
-				//	s[0].assign(line.substr(line.find_first_not_of("	 "),h));
-				//	s[1].assign(line.substr(h+1,line.size()-h-1));
-				//}
-				if(s[0].compare("newmtl")==0)
-				{
-					if(!mstring.compare("")!=0)
-					{
-						mMtl.name=mstring;
-						m.insert(pair<string,mtl>(mstring,mMtl));
-
-					}
-					mMtl.tex = dataManager.getId("white");
-					mMtl.diffuse = color(1,1,1);
-					mMtl.transparency = 1.0;
-					mMtl.name = "";
-					mstring=s[1];
-				}
-				else if(s[0].compare(0,6,"map_Kd")==0)
-				{
-					if(!mstring.compare("")) continue;
-					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
-					//if(ext.compare("tga")==0)
-						mMtl.tex=dataManager.loadTexture(file+s[1]);
-						registerTexture(mtlFile + "/" + s[1],mMtl.tex);
-					//else if(ext.compare("mmp")==0)
-					//	mMtl.tex=loadMMP( (char*)(file+s[1]).c_str());
-				}
-				else if(s[0].compare(0,2,"Kd")==0)
-				{
-					if(!mstring.compare("")) continue;
-					try{
-					float r = lexical_cast<float>(s[1]);
-					float g = lexical_cast<float>(s[2]);
-					float b = lexical_cast<float>(s[3]);
-					mMtl.diffuse=color(r,g,b);
-					}catch(...){}
-				}
-				else if(s[0].compare(0,2,"d")==0)
-				{
-					if(!mstring.compare("")) continue;
-					mMtl.transparency=atof(s[1].c_str());
-				}
-				else if(s[0].compare(0,2,"Tr")==0)
-				{
-					if(!mstring.compare("")) continue;
-					mMtl.transparency=1.0-atof(s[1].c_str());
-				}
-			}
-			mMtl.name=mstring;
-			m.insert(pair<string,mtl>(mstring,mMtl));
-			mtl_map = m;
-		}
-///////////////////////LOAD MTL END/////////////////////////
-	}
-
-	try
-	{
-		vertices	= new Vec3f[numVertices];
-		texCoords	= new texCoord[numTexcoords];
-		faces		= new face[numFaces];
-		normals		= new Vec3f[numNormals];
-		mtls		= new mtl[mtl_map.size()];
-	}
-	catch(...)
-	{
-		fclose(fp);
-		return false;
-	}
-	//fopen_s(&fp,filename, "r");
-	
-	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
-		mtls[numMtls++]=itt->second;
-
-	totalVerts = numVertices;
-	totalFaces = numFaces;
-
-	numVertices=0;
-	numTexcoords=0;
-	numNormals=0;
-	numFaces=0;
-
-	int cMtl=-1;
-	while(fgets(buffer, 200, fp) != NULL) 
-	{
-		token = strtok_s(buffer, " \t", &nextToken);
-		if(strcmp(token, "v") == 0)
-		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].x);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].y);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].z);
-		
-			vertices[numVertices].x = -vertices[numVertices].x;
-			numVertices++;
-		}
-		else if(strcmp(token, "vt") == 0) 
-		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].u);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].v);
-		
-			texCoords[numTexcoords].v = 1.0f - texCoords[numTexcoords].v;
-			numTexcoords++;
-		}
-		else if(strcmp(token, "vn") == 0) 
-		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].x);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].y);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].z);
-			numNormals++;
-		}
-		else if(strcmp(token, "f") == 0) 
-		{
-			int i, v = 0, t = 0, n = 0;
-		
-			for(i = 0; i<3; i++)
-			{
-				token = strtok_s(NULL, " \t",&nextToken);
-				sscanf_s(token, "%d/%d/%d", &v, &t, &n);
-		
-				faces[numFaces].n[i] = n - 1;
-				faces[numFaces].t[i] = t - 1;
-				faces[numFaces].v[i] = v - 1;
-			}
-		
-			Vec3f a, b;
-		
-			for(i = 0; i<3; i++) 
-			{
-				a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
-				b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
-			}
-			faces[numFaces].material=cMtl;
-			//normals[numNormals]=a.normalize().cross(b.normalize()).normalize();
-			//numNormals++;
-			numFaces++;
-		}
-		//else if(strcmp(token, "mtllib") == 0)  already loaded
-		else if(strcmp(token, "usemtl") == 0)
-		{
-			string name=strtok_s(NULL, " ",&nextToken);
-			if(name.size()!=0)
-			{
-				name=name.substr(0,name.size()-1);
-				for(int l=0; l<numMtls; l++)
-				{
-					if(mtls[l].name.compare(name)==0)
-					{
-						cMtl=l;
-						break;
-					}
-				}
-			}
-		}
-	}
-	fclose(fp);
-	int d = glGenLists(1);
-	glNewList (d, GL_COMPILE);
-	for(int pass=0;pass<=1;pass++)//pass 0 is opaque and pass 1 is translucent
-	{
-		if(pass==1)
-		{
-			glDepthMask(false);
-		}
-		for(int l=0; l<numMtls; l++)
-		{
-			glBindTexture(GL_TEXTURE_2D,mtls[l].tex);
-			if(mtls[l].transparency>=0.999 && pass==0)
-				glColor3f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b);
-			else if(mtls[l].transparency<0.999 && pass==1)
-				glColor4f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b,mtls[l].transparency);
-			if(mtls[l].transparency>=0.999 && pass==0 || mtls[l].transparency<0.999 && pass==1)
-			{
-				glBegin(GL_TRIANGLES);
-				for(int f=0;f<numFaces;f++)
-				{
-					if(faces[f].material==l)
-					{
-						if(mtls[faces[f].material].tex==0)
-						{
-							glNormal3fv(&normals[faces[f].n[0]].x);
-							glVertex3fv(&vertices[faces[f].v[0]].x);
-
-							glNormal3fv(&normals[faces[f].n[1]].x);
-							glVertex3fv(&vertices[faces[f].v[1]].x);
-
-							glNormal3fv(&normals[faces[f].n[2]].x);
-							glVertex3fv(&vertices[faces[f].v[2]].x);
-						}
-						else
-						{
-					//		glNormal3fv(&normals[faces[f].n[0]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[0]].u);
-							glVertex3fv(&vertices[	faces[f].v[0]].x);
-
-					//		glNormal3fv(&normals[	faces[f].n[1]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[1]].u);
-							glVertex3fv(&vertices[	faces[f].v[1]].x);
-							
-					//		glNormal3fv(&normals[	faces[f].n[2]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[2]].u);
-							glVertex3fv(&vertices[	faces[f].v[2]].x);
-						}
-					}
-				}
-				glEnd();
-			}
-		}
-	}
-	glDepthMask(true);
-	glEndList();
-
-	//tmpModel.vertices = vertices;
-	unsigned int* fs = new unsigned int[totalFaces*3];
-	for(int itt = 0;itt<totalFaces;itt++)
-	{
-		fs[itt*3+0] = faces[itt].v[0];
-		fs[itt*3+1] = faces[itt].v[1];
-		fs[itt*3+2] = faces[itt].v[2];
-	}
-	models[d]=new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces);
-
-	delete[] fs;
-	delete[] vertices;
-	delete[] texCoords;
-	delete[] faces;
-	delete[] normals;
-	delete[] mtls;
-	
-	return d;
-}
+//int DataManager::loadMMP(string filename)
+//{
+//	struct MMPheader
+//	{
+//		int size_x;
+//		int size_y;
+//		int channels;
+//	};
+//	MMPheader h;
+//	ifstream fin;
+//	fin.open(filename,ios::binary);
+//	if(!fin.is_open()) return 0;
+//	fin.read((char*)&h,sizeof(h));
+//	if(h.channels != 3 && h.channels != 4) return 0;
+//
+//	unsigned char* imageData=(unsigned char*)malloc(h.size_x*h.size_y*h.channels);
+//	if(imageData==NULL) return 0;
+//	
+//	GLuint texV;
+//	glGenTextures(1,&texV);
+//    glBindTexture(GL_TEXTURE_2D, texV);
+//
+//	
+//	int x=h.size_x, y=h.size_y, mLevel=0;
+//	while (true) 
+//	{
+//		fin.read((char*)imageData,x*y*h.channels);
+//
+//		//set mipmap
+//		if(h.channels==3)
+//			glTexImage2D(GL_TEXTURE_2D, mLevel++, 3, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
+//		else if(h.channels==4)
+//			glTexImage2D(GL_TEXTURE_2D, mLevel++, 4, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
+//		if(x==1 && y==1) break;
+//		x=max(x>>1,1);//divide by 2
+//		y=max(y>>1,1);
+//
+//	}
+//	fin.close();
+//	free(imageData);
+//
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//	return texV;
+//}
+//int DataManager::loadOBJ(string filename)
+//{
+/////////////////////////types////////////////////////////
+//	struct color{float r,g,b;color(float red, float green, float blue): r(red), g(green), b(blue){}};
+//	struct texCoord{float u,v;texCoord(float U, float V): u(U), v(V) {}texCoord(): u(0), v(0) {}};
+//	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;
+//		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
+//		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
+//		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
+//		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
+//	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
+//	struct mtl
+//	{	int tex;
+//		color diffuse;
+//		float transparency;
+//		string name;
+//		mtl():diffuse(1,1,1){}
+//	};
+//////////////////////variables///////////////////////////
+//	unsigned int	numVertices=0,
+//					numTexcoords=0,
+//					numNormals=0,
+//					numFaces=0,
+//					numMtls=0;
+//
+//	Vec3f*			vertices;
+//	Vec3f*			normals;
+//	texCoord*		texCoords;
+//	face*			faces;
+//	mtl*			mtls;
+//
+//	unsigned int	totalVerts,totalFaces;
+//
+//	FILE *fp;
+//	if(fopen_s(&fp,filename.c_str(), "r"))
+//		return 0;
+//
+//	char buffer[200];
+//	char *token, *nextToken=NULL;
+//	///////
+//	map<string,mtl>	mtl_map;
+//	string file(filename);
+//	int i=file.find_last_of("/");
+//	if(i==string::npos)
+//		file.assign("");
+//	else
+//		file=file.substr(0,i+1);
+//	string mtlFile;
+//	//////
+//	while(fgets(buffer, 200, fp) != NULL) 
+//	{
+//		token = strtok_s(buffer, " ", &nextToken);
+//		if(strcmp(token, "v") == 0) 	numVertices++;
+//		if(strcmp(token, "vt") == 0) 	numTexcoords++;
+//		if(strcmp(token, "f") == 0) 	numFaces++;
+//		if(strcmp(token, "vn") == 0)	numNormals++;
+//		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok_s(NULL, " ", &nextToken);
+//	}
+//	rewind(fp);
+//	//fclose(fp);
+//	if(mtlFile.size()!=0)
+//	{
+//		mtlFile=mtlFile.substr(0,mtlFile.size()-1);
+/////////////////////////LOAD MTL/////////////////////////////////
+//		{
+//			string mstring="";
+//			mtl mMtl;
+//			mMtl.tex = dataManager.getId("white");
+//			mMtl.diffuse = color(1,1,1);
+//			mMtl.transparency = 1.0;
+//			mMtl.name = "";
+//
+//			map<string,mtl> m;
+//
+//			ifstream fin;
+//			fin.open(mtlFile);
+//			string file;
+//			int i=mtlFile.find_last_of("/");
+//			if(i==string::npos)
+//				file.assign("");
+//			else
+//				file=mtlFile.substr(0,i+1);
+//			if(!fin.is_open())
+//			{
+//				messageBox("mtl file could not be loaded");
+//				exit(0);
+//			}
+//			while (!fin.eof())
+//			{
+//				string line;
+//				char l[256];
+//				string s[4];
+//				int i=0, h=0;
+//
+//				fin.getline(l,256);
+//				line.assign(l);
+//				if(line.empty()) 
+//					continue;
+//
+//				if(line[0] == '\t')
+//					erase_head(line,1);
+//
+//				h=line.find(" ");
+//				for(int n=0;n<4;n++)
+//				{
+//					s[n].assign(line.substr(i,h-i));
+//					i=h+1;
+//					if(i>(signed int)line.size())
+//						i=line.size();
+//					h=line.find(" ",h+2);
+//					if(h==string::npos)
+//						h=line.size();
+//				}
+//
+//				//if(h!=string::npos)
+//				//{
+//				//	s[0].assign(line.substr(line.find_first_not_of("	 "),h));
+//				//	s[1].assign(line.substr(h+1,line.size()-h-1));
+//				//}
+//				if(s[0].compare("newmtl")==0)
+//				{
+//					if(!mstring.compare("")!=0)
+//					{
+//						mMtl.name=mstring;
+//						m.insert(pair<string,mtl>(mstring,mMtl));
+//
+//					}
+//					mMtl.tex = dataManager.getId("white");
+//					mMtl.diffuse = color(1,1,1);
+//					mMtl.transparency = 1.0;
+//					mMtl.name = "";
+//					mstring=s[1];
+//				}
+//				else if(s[0].compare(0,6,"map_Kd")==0)
+//				{
+//					if(!mstring.compare("")) continue;
+//					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
+//					//if(ext.compare("tga")==0)
+//						mMtl.tex=dataManager.loadTexture(file+s[1]);
+//						registerTexture(mtlFile + "/" + s[1],mMtl.tex);
+//					//else if(ext.compare("mmp")==0)
+//					//	mMtl.tex=loadMMP( (char*)(file+s[1]).c_str());
+//				}
+//				else if(s[0].compare(0,2,"Kd")==0)
+//				{
+//					if(!mstring.compare("")) continue;
+//					try{
+//					float r = lexical_cast<float>(s[1]);
+//					float g = lexical_cast<float>(s[2]);
+//					float b = lexical_cast<float>(s[3]);
+//					mMtl.diffuse=color(r,g,b);
+//					}catch(...){}
+//				}
+//				else if(s[0].compare(0,2,"d")==0)
+//				{
+//					if(!mstring.compare("")) continue;
+//					mMtl.transparency=atof(s[1].c_str());
+//				}
+//				else if(s[0].compare(0,2,"Tr")==0)
+//				{
+//					if(!mstring.compare("")) continue;
+//					mMtl.transparency=1.0-atof(s[1].c_str());
+//				}
+//			}
+//			mMtl.name=mstring;
+//			m.insert(pair<string,mtl>(mstring,mMtl));
+//			mtl_map = m;
+//		}
+/////////////////////////LOAD MTL END/////////////////////////
+//	}
+//
+//	try
+//	{
+//		vertices	= new Vec3f[numVertices];
+//		texCoords	= new texCoord[numTexcoords];
+//		faces		= new face[numFaces];
+//		normals		= new Vec3f[numNormals];
+//		mtls		= new mtl[mtl_map.size()];
+//	}
+//	catch(...)
+//	{
+//		fclose(fp);
+//		return false;
+//	}
+//	//fopen_s(&fp,filename, "r");
+//	
+//	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
+//		mtls[numMtls++]=itt->second;
+//
+//	totalVerts = numVertices;
+//	totalFaces = numFaces;
+//
+//	numVertices=0;
+//	numTexcoords=0;
+//	numNormals=0;
+//	numFaces=0;
+//
+//	int cMtl=-1;
+//	while(fgets(buffer, 200, fp) != NULL) 
+//	{
+//		token = strtok_s(buffer, " \t", &nextToken);
+//		if(strcmp(token, "v") == 0)
+//		{
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].x);
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].y);
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].z);
+//		
+//			vertices[numVertices].x = -vertices[numVertices].x;
+//			numVertices++;
+//		}
+//		else if(strcmp(token, "vt") == 0) 
+//		{
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].u);
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].v);
+//		
+//			texCoords[numTexcoords].v = 1.0f - texCoords[numTexcoords].v;
+//			numTexcoords++;
+//		}
+//		else if(strcmp(token, "vn") == 0) 
+//		{
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].x);
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].y);
+//			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].z);
+//			numNormals++;
+//		}
+//		else if(strcmp(token, "f") == 0) 
+//		{
+//			int i, v = 0, t = 0, n = 0;
+//		
+//			for(i = 0; i<3; i++)
+//			{
+//				token = strtok_s(NULL, " \t",&nextToken);
+//				sscanf_s(token, "%d/%d/%d", &v, &t, &n);
+//		
+//				faces[numFaces].n[i] = n - 1;
+//				faces[numFaces].t[i] = t - 1;
+//				faces[numFaces].v[i] = v - 1;
+//			}
+//		
+//			Vec3f a, b;
+//		
+//			for(i = 0; i<3; i++) 
+//			{
+//				a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
+//				b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
+//			}
+//			faces[numFaces].material=cMtl;
+//			//normals[numNormals]=a.normalize().cross(b.normalize()).normalize();
+//			//numNormals++;
+//			numFaces++;
+//		}
+//		//else if(strcmp(token, "mtllib") == 0)  already loaded
+//		else if(strcmp(token, "usemtl") == 0)
+//		{
+//			string name=strtok_s(NULL, " ",&nextToken);
+//			if(name.size()!=0)
+//			{
+//				name=name.substr(0,name.size()-1);
+//				for(int l=0; l<numMtls; l++)
+//				{
+//					if(mtls[l].name.compare(name)==0)
+//					{
+//						cMtl=l;
+//						break;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	fclose(fp);
+//	int d = glGenLists(1);
+//	glNewList (d, GL_COMPILE);
+//	for(int pass=0;pass<=1;pass++)//pass 0 is opaque and pass 1 is translucent
+//	{
+//		if(pass==1)
+//		{
+//			glDepthMask(false);
+//		}
+//		for(int l=0; l<numMtls; l++)
+//		{
+//			glBindTexture(GL_TEXTURE_2D,mtls[l].tex);
+//			if(mtls[l].transparency>=0.999 && pass==0)
+//				glColor3f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b);
+//			else if(mtls[l].transparency<0.999 && pass==1)
+//				glColor4f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b,mtls[l].transparency);
+//			if(mtls[l].transparency>=0.999 && pass==0 || mtls[l].transparency<0.999 && pass==1)
+//			{
+//				glBegin(GL_TRIANGLES);
+//				for(int f=0;f<numFaces;f++)
+//				{
+//					if(faces[f].material==l)
+//					{
+//						if(mtls[faces[f].material].tex==0)
+//						{
+//							glNormal3fv(&normals[faces[f].n[0]].x);
+//							glVertex3fv(&vertices[faces[f].v[0]].x);
+//
+//							glNormal3fv(&normals[faces[f].n[1]].x);
+//							glVertex3fv(&vertices[faces[f].v[1]].x);
+//
+//							glNormal3fv(&normals[faces[f].n[2]].x);
+//							glVertex3fv(&vertices[faces[f].v[2]].x);
+//						}
+//						else
+//						{
+//					//		glNormal3fv(&normals[faces[f].n[0]].x);
+//							glTexCoord2fv(&texCoords[faces[f].t[0]].u);
+//							glVertex3fv(&vertices[	faces[f].v[0]].x);
+//
+//					//		glNormal3fv(&normals[	faces[f].n[1]].x);
+//							glTexCoord2fv(&texCoords[faces[f].t[1]].u);
+//							glVertex3fv(&vertices[	faces[f].v[1]].x);
+//							
+//					//		glNormal3fv(&normals[	faces[f].n[2]].x);
+//							glTexCoord2fv(&texCoords[faces[f].t[2]].u);
+//							glVertex3fv(&vertices[	faces[f].v[2]].x);
+//						}
+//					}
+//				}
+//				glEnd();
+//			}
+//		}
+//	}
+//	glDepthMask(true);
+//	glEndList();
+//
+//	//tmpModel.vertices = vertices;
+//	unsigned int* fs = new unsigned int[totalFaces*3];
+//	for(int itt = 0;itt<totalFaces;itt++)
+//	{
+//		fs[itt*3+0] = faces[itt].v[0];
+//		fs[itt*3+1] = faces[itt].v[1];
+//		fs[itt*3+2] = faces[itt].v[2];
+//	}
+//	models[d]=new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces);
+//
+//	delete[] fs;
+//	delete[] vertices;
+//	delete[] texCoords;
+//	delete[] faces;
+//	delete[] normals;
+//	delete[] mtls;
+//	
+//	return d;
+//}
 int DataManager::loadPNG(string filename)
 {
 	png_uint_32		i, 
@@ -800,7 +791,6 @@ int DataManager::loadPNG(string filename)
 	free(row_pointers);
 	return texV;
 }
-int DataManager::loadShader(string filename){return 0;}
 
 void DataManager::bind(string name, int textureUnit)
 {
@@ -1093,7 +1083,7 @@ void DataManager::preloadAssets()
 		textureFile i = textureFilesPreload.front();
 		textureFilesPreload.pop();
 
-		registerAsset(i.name, i.filename);
+		registerTexture(i.name, i.filename);
 	}
 
 	while(!shaderFilesPreload.empty())
@@ -1102,6 +1092,17 @@ void DataManager::preloadAssets()
 		shaderFilesPreload.pop();
 
 		registerShader(i.name, i.vertexShaderFile, i.fragmentShaderFile);
+		
+		if(i.use_sAspect)
+		{
+			auto s = assets.find(i.name);
+			if(s != assets.end())
+				((shaderAsset*)(s->second))->use_sAspect = true;
+
+			bind(i.name);
+			setUniform1f("sAspect",sAspect);
+			unbind(i.name);
+		}
 	}
 }
 int DataManager::loadAsset()
@@ -1111,7 +1112,7 @@ int DataManager::loadAsset()
 		textureFile i = textureFiles.front();
 		textureFiles.pop();
 
-		registerAsset(i.name, i.filename);
+		registerTexture(i.name, i.filename);
 
 		return textureFiles.size() + shaderFiles.size() + modelFiles.size();
 	}
@@ -1140,7 +1141,8 @@ int DataManager::loadAsset()
 		modelFile i = modelFiles.front();
 		modelFiles.pop();
 
-		registerAsset(i.name, i.filename);
+		registerOBJ(i.name, i.filename);
+	//	registerModel(i.name, loadOBJ(i.filename));
 
 		return modelFiles.size();
 	}
@@ -1262,50 +1264,531 @@ int DataManager::loadAsset()
 
 //	return 0;
 //}
-void DataManager::registerAsset(string name, string filename)
-{//shaders must be registered by hand right now
-	if(assets.find(name) != assets.end()) 
-		messageBox(string("name clash: ") + name);
-
-	string ext=filesystem::extension(filename);
-	if(ext.compare(".tga") == 0)		registerTexture(name,loadTGA(filename));
-	else if(ext.compare(".mmp") == 0)	registerTexture(name,loadMMP(filename));
-	else if(ext.compare(".png") == 0)	registerTexture(name,loadPNG(filename));
-	else if(ext.compare(".obj") == 0)	registerModel(name,loadOBJ(filename));
-	else if(ext.compare(".frag") == 0)	registerShader(name,loadTerrainShader(filename));
-}
-void DataManager::registerTexture(string name, int id)
+//void DataManager::registerAsset(string name, string filename)
+//{//shaders must be registered by hand right now
+//	if(assets.find(name) != assets.end()) 
+//		messageBox(string("name clash: ") + name);
+//
+//	string ext=filesystem::extension(filename);
+//	if(ext.compare(".tga") == 0)		registerTexture(name,loadTGA(filename));
+//	else if(ext.compare(".png") == 0)	registerTexture(name,loadPNG(filename));
+//	else if(ext.compare(".obj") == 0)	registerModel(name,loadOBJ(filename));
+//	else if(ext.compare(".frag") == 0)	registerShader(name,loadTerrainShader(filename));
+//}
+bool DataManager::registerTexture(string name, string filename)
 {
+	int id = 0;
+	string ext=filesystem::extension(filename);
+	if(ext.compare(".tga") == 0)		id = loadTGA(filename);
+	else if(ext.compare(".png") == 0)	id = loadPNG(filename);
+
+	if(id == 0)
+		return false;
+
 	asset* a = new asset;
 	a->id = id;
 	a->type = asset::TEXTURE;
 
 	assets[name] = a;
+	return true;
 }
-void DataManager::registerShader(string name, int id)
+bool DataManager::registerShader(string name, string vert, string frag, bool use_sAspect)
 {
-	shaderAsset* a = new shaderAsset;
-	a->id = id;
-	a->type = asset::SHADER;
-	a->use_sAspect = false;
+	bool errorFlag = false;
+	GLuint v=0,f=0,p;
+	v = glCreateShader(GL_VERTEX_SHADER);
+	f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	assets[name] = a;
-}
-void DataManager::registerShader(string name, string vert, string frag)
-{
-	shaderAsset* a = new shaderAsset;
-	a->id = loadShader(vert,frag);
-	a->type = asset::SHADER;
-	a->use_sAspect = false;
+	char * ff = textFileRead((char*)frag.c_str());
+	char * vv = textFileRead((char*)vert.c_str());
+	if(ff == NULL || vv == NULL) return false;
 
-	assets[name] = a;
+	glShaderSource(v, 1, (const char **)&vv, NULL);
+	glShaderSource(f, 1, (const char **)&ff, NULL);
+	glCompileShader(v);
+	glCompileShader(f);
+	free(ff);
+	free(vv);
+
+	string vertErrors;
+	string fragErrors;
+	string linkErrors;
+
+	int i;//used whenever a pointer to int is required
+	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE)
+	{
+		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+		char* cv=(char*)malloc(i); memset(cv,0,i);
+		glGetShaderInfoLog(v,i,&i,cv);
+		messageBox(vert + ": " + cv);
+		errorFlag = true;
+	}
+	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE && !errorFlag)
+	{
+		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+		char* cf=(char*)malloc(i); memset(cf,0,i);
+		glGetShaderInfoLog(f,i,&i,cf);
+		messageBox(frag + ": " + cf);
+		errorFlag = true;
+	}
+
+
+	p = glCreateProgram();
+	glAttachShader(p,f);
+	glAttachShader(p,v);
+
+	glLinkProgram(p);
+
+	glGetProgramiv(p,GL_LINK_STATUS,&i);
+	if(i == GL_FALSE && !errorFlag)
+	{
+		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+		char* cl=(char*)malloc(i); memset(cl,0,i);
+		glGetProgramInfoLog(p,i,&i,cl);
+		messageBox(frag + "(link): " + cl);
+		errorFlag = true;
+	}
+	glUseProgram(0); 
+
+	if(!errorFlag)
+	{
+		shaderAsset* a = new shaderAsset;
+		a->id = p;
+		a->type = asset::SHADER;
+		a->use_sAspect = use_sAspect;
+		assets[name] = a;
+	}
+	return !errorFlag;
 }
-void DataManager::registerModel(string name, int id)
+bool DataManager::registerTerrainShader(string name, string frag)
 {
+	bool errorFlag = false;
+	static GLuint v=0;
+	
+	if(v==0)
+	{
+		v = glCreateShader(GL_VERTEX_SHADER);
+		char * vv = textFileRead("media/terrain.vert");
+		if(vv == NULL) return false;
+		glShaderSource(v, 1, (const char **)&vv, NULL);
+		glCompileShader(v);
+		free(vv);
+
+		int i;//used whenever a pointer to int is required
+		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+		if(i == GL_FALSE)
+		{
+			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+			char* cv=(char*)malloc(i); memset(cv,0,i);
+			glGetShaderInfoLog(v,i,&i,cv);
+			messageBox(string("terrain.vert: ") + cv);
+			errorFlag = true;
+		}
+	}
+
+	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
+			p = 0;
+	char	*ff = textFileRead((char*)frag.c_str()),
+			*cf=(char*)malloc(512);
+	int		lf=0;
+
+	if(ff != NULL) 
+	{
+		glShaderSource(f, 1, (const char **)&ff, NULL);
+		glCompileShader(f);
+		free(ff);
+		memset(cf,0,512);
+		glGetShaderInfoLog(f,512,&lf,cf);
+
+		int i;
+		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+		if(i == GL_FALSE && !errorFlag)
+		{
+			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+			char* cf=(char*)malloc(i); memset(cf,0,i);
+			glGetShaderInfoLog(f,i,&i,cf);
+			messageBox(frag + ": " + cf);
+			errorFlag = true;
+		}
+
+		p = glCreateProgram();
+		glAttachShader(p,f);
+		glAttachShader(p,v);
+		glLinkProgram(p);
+
+		glGetProgramiv(p,GL_LINK_STATUS,&i);
+		if(i == GL_FALSE && !errorFlag)
+		{
+			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+			char* cl=(char*)malloc(i); memset(cl,0,i);
+			glGetProgramInfoLog(p,i,&i,cl);
+			messageBox(frag + "(link): " + cl);
+			errorFlag = true;
+		}
+
+	}
+	glUseProgram(0);
+
+	if(!errorFlag)
+	{
+		shaderAsset* a = new shaderAsset;
+		a->id = p;
+		a->type = asset::SHADER;
+		a->use_sAspect = false;
+		assets[name] = a;
+	}
+	return !errorFlag;
+}
+bool DataManager::registerOBJ(string name, string filename)
+{
+	///////////////////////types////////////////////////////
+//	struct color{float r,g,b;color(float red, float green, float blue): r(red), g(green), b(blue){}};
+	struct texCoord{float u,v;texCoord(float U, float V): u(U), v(V) {}texCoord(): u(0), v(0) {}};
+	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;
+		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
+		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
+		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
+		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
+	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
+	struct mtl
+	{
+		string tex;
+		string name;
+		Color diffuse;
+	};
+////////////////////variables///////////////////////////
+	unsigned int	numVertices=0,
+					numTexcoords=0,
+					numNormals=0,
+					numFaces=0,
+					numMtls=0;
+
+	Vec3f*			vertices;
+	Vec3f*			normals;
+	texCoord*		texCoords;
+	face*			faces;
+	mtl*			mtls;
+
+	unsigned int	totalVerts,totalFaces;
+
+	FILE *fp;
+	if(fopen_s(&fp,filename.c_str(), "r"))
+		return false;
+
+	char buffer[200];
+	char *token, *nextToken=NULL;
+	///////
+	map<string,mtl>	mtl_map;
+	string file(filename);
+	int i=file.find_last_of("/");
+	if(i==string::npos)
+		file.assign("");
+	else
+		file=file.substr(0,i+1);
+	string mtlFile;
+	//////
+	while(fgets(buffer, 200, fp) != NULL) 
+	{
+		token = strtok_s(buffer, " ", &nextToken);
+		if(strcmp(token, "v") == 0) 	numVertices++;
+		if(strcmp(token, "vt") == 0) 	numTexcoords++;
+		if(strcmp(token, "f") == 0) 	numFaces++;
+		if(strcmp(token, "vn") == 0)	numNormals++;
+		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok_s(NULL, " ", &nextToken);
+	}
+	rewind(fp);
+	//fclose(fp);
+	if(mtlFile.size()!=0)
+	{
+		mtlFile=mtlFile.substr(0,mtlFile.size()-1);
+///////////////////////LOAD MTL/////////////////////////////////
+		{
+			string mstring="";
+			mtl mMtl;
+			mMtl.tex = "";
+			mMtl.name = "";
+			mMtl.diffuse = white;
+
+			map<string,mtl> m;
+
+			ifstream fin;
+			fin.open(mtlFile);
+			string file;
+			int i=mtlFile.find_last_of("/");
+			if(i==string::npos)
+				file.assign("");
+			else
+				file=mtlFile.substr(0,i+1);
+			if(!fin.is_open())
+			{
+				messageBox("mtl file could not be loaded");
+				exit(0);
+			}
+			while (!fin.eof())
+			{
+				string line;
+				char l[256];
+				string s[4];
+				int i=0, h=0;
+
+				fin.getline(l,256);
+				line.assign(l);
+				if(line.empty()) 
+					continue;
+
+				if(line[0] == '\t')
+					erase_head(line,1);
+
+				h=line.find(" ");
+				for(int n=0;n<4;n++)
+				{
+					s[n].assign(line.substr(i,h-i));
+					i=h+1;
+					if(i>(signed int)line.size())
+						i=line.size();
+					h=line.find(" ",h+2);
+					if(h==string::npos)
+						h=line.size();
+				}
+
+				//if(h!=string::npos)
+				//{
+				//	s[0].assign(line.substr(line.find_first_not_of("	 "),h));
+				//	s[1].assign(line.substr(h+1,line.size()-h-1));
+				//}
+				if(s[0].compare("newmtl")==0)
+				{
+					if(!mstring.compare("")!=0)
+					{
+						mMtl.name=mstring;
+						m.insert(pair<string,mtl>(mstring,mMtl));
+
+					}
+					mMtl.tex = "";
+					mMtl.diffuse = white;
+					mMtl.name = "";
+					mstring=s[1];
+				}
+				else if(s[0].compare(0,6,"map_Kd")==0)
+				{
+					if(!mstring.compare("")) continue;
+					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
+					//if(ext.compare("tga")==0)
+					mMtl.tex=mtlFile + "/" + s[1];
+					if(!registerTexture(mMtl.tex, file+s[1]))
+						mMtl.tex = "";
+						//mMtl.tex=dataManager.loadPNG(file+s[1]);
+						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);
+					//else if(ext.compare("mmp")==0)
+					//	mMtl.tex=loadMMP( (char*)(file+s[1]).c_str());
+				}
+				else if(s[0].compare(0,2,"Kd")==0)
+				{
+					if(!mstring.compare("")) continue;
+					try{
+					float r = lexical_cast<float>(s[1]);
+					float g = lexical_cast<float>(s[2]);
+					float b = lexical_cast<float>(s[3]);
+					mMtl.diffuse=Color(r,g,b,mMtl.diffuse.a);
+					}catch(...){}
+				}
+				else if(s[0].compare(0,2,"d")==0)
+				{
+					if(!mstring.compare("")) continue;
+					mMtl.diffuse.a=atof(s[1].c_str());
+				}
+				else if(s[0].compare(0,2,"Tr")==0)
+				{
+					if(!mstring.compare("")) continue;
+					mMtl.diffuse.a=1.0-atof(s[1].c_str());
+				}
+			}
+			mMtl.name=mstring;
+			m.insert(pair<string,mtl>(mstring,mMtl));
+			mtl_map = m;
+		}
+///////////////////////LOAD MTL END/////////////////////////
+	}
+
+	try
+	{
+		vertices	= new Vec3f[numVertices];
+		texCoords	= new texCoord[numTexcoords];
+		faces		= new face[numFaces];
+		normals		= new Vec3f[numNormals];
+		mtls		= new mtl[mtl_map.size()];
+	}
+	catch(...)
+	{
+		fclose(fp);
+		return false;
+	}
+	//fopen_s(&fp,filename, "r");
+	
+	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
+		mtls[numMtls++]=itt->second;
+
+	totalVerts = numVertices;
+	totalFaces = numFaces;
+
+	numVertices=0;
+	numTexcoords=0;
+	numNormals=0;
+	numFaces=0;
+
+	int cMtl=-1;
+	while(fgets(buffer, 200, fp) != NULL) 
+	{
+		token = strtok_s(buffer, " \t", &nextToken);
+		if(strcmp(token, "v") == 0)
+		{
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].x);
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].y);
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].z);
+		
+			vertices[numVertices].x = -vertices[numVertices].x;
+			numVertices++;
+		}
+		else if(strcmp(token, "vt") == 0) 
+		{
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].u);
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].v);
+		
+			texCoords[numTexcoords].v = 1.0f - texCoords[numTexcoords].v;
+			numTexcoords++;
+		}
+		else if(strcmp(token, "vn") == 0) 
+		{
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].x);
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].y);
+			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].z);
+			numNormals++;
+		}
+		else if(strcmp(token, "f") == 0) 
+		{
+			int i, v = 0, t = 0, n = 0;
+		
+			for(i = 0; i<3; i++)
+			{
+				token = strtok_s(NULL, " \t",&nextToken);
+				sscanf_s(token, "%d/%d/%d", &v, &t, &n);
+		
+				faces[numFaces].n[i] = n - 1;
+				faces[numFaces].t[i] = t - 1;
+				faces[numFaces].v[i] = v - 1;
+			}
+		
+			Vec3f a, b;
+		
+			for(i = 0; i<3; i++) 
+			{
+				a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
+				b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
+			}
+			faces[numFaces].material=cMtl;
+			//normals[numNormals]=a.normalize().cross(b.normalize()).normalize();
+			//numNormals++;
+			numFaces++;
+		}
+		//else if(strcmp(token, "mtllib") == 0)  already loaded
+		else if(strcmp(token, "usemtl") == 0)
+		{
+			string name=strtok_s(NULL, " ",&nextToken);
+			if(name.size()!=0)
+			{
+				name=name.substr(0,name.size()-1);
+				for(int l=0; l<numMtls; l++)
+				{
+					if(mtls[l].name.compare(name)==0)
+					{
+						cMtl=l;
+						break;
+					}
+				}
+			}
+		}
+	}
+	fclose(fp);
+	int d = glGenLists(1);
+	glNewList (d, GL_COMPILE);
+	for(int pass=0;pass<=1;pass++)//pass 0 is opaque and pass 1 is translucent
+	{
+		if(pass==1)
+		{
+			glDepthMask(false);
+		}
+		for(int l=0; l<numMtls; l++)
+		{
+			glBindTexture(GL_TEXTURE_2D, mtls[l].tex != "" ? assets[mtls[l].tex]->id : 0);
+			if(mtls[l].diffuse.a>=0.999 && pass==0)
+				glColor3f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b);
+			else if(mtls[l].diffuse.a<0.999 && pass==1)
+				glColor4f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b,mtls[l].diffuse.a);
+			if(mtls[l].diffuse.a>=0.999 && pass==0 || mtls[l].diffuse.a<0.999 && pass==1)
+			{
+				glBegin(GL_TRIANGLES);
+				for(int f=0;f<numFaces;f++)
+				{
+					if(faces[f].material==l)
+					{
+						if(mtls[faces[f].material].tex=="")
+						{
+							glNormal3fv(&normals[faces[f].n[0]].x);
+							glVertex3fv(&vertices[faces[f].v[0]].x);
+
+							glNormal3fv(&normals[faces[f].n[1]].x);
+							glVertex3fv(&vertices[faces[f].v[1]].x);
+
+							glNormal3fv(&normals[faces[f].n[2]].x);
+							glVertex3fv(&vertices[faces[f].v[2]].x);
+						}
+						else
+						{
+					//		glNormal3fv(&normals[faces[f].n[0]].x);
+							glTexCoord2fv(&texCoords[faces[f].t[0]].u);
+							glVertex3fv(&vertices[	faces[f].v[0]].x);
+
+					//		glNormal3fv(&normals[	faces[f].n[1]].x);
+							glTexCoord2fv(&texCoords[faces[f].t[1]].u);
+							glVertex3fv(&vertices[	faces[f].v[1]].x);
+							
+					//		glNormal3fv(&normals[	faces[f].n[2]].x);
+							glTexCoord2fv(&texCoords[faces[f].t[2]].u);
+							glVertex3fv(&vertices[	faces[f].v[2]].x);
+						}
+					}
+				}
+				glEnd();
+			}
+		}
+	}
+	glDepthMask(true);
+	glEndList();
+
+	//tmpModel.vertices = vertices;
+	unsigned int* fs = new unsigned int[totalFaces*3];
+	for(int itt = 0;itt<totalFaces;itt++)
+	{
+		fs[itt*3+0] = faces[itt].v[0];
+		fs[itt*3+1] = faces[itt].v[1];
+		fs[itt*3+2] = faces[itt].v[2];
+	}
+	models[d]=new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces);
+
+	delete[] fs;
+	delete[] vertices;
+	delete[] texCoords;
+	delete[] faces;
+	delete[] normals;
+	delete[] mtls;
+	
 	asset* a = new asset;
-	a->id = id;
+	a->id = d;
 	a->type = asset::MODEL;
 	assets[name] = a;
+	return true;
 }
 int DataManager::getId(string name)
 {

@@ -238,7 +238,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			{
 				time = GetTime();
 			}
-			nextUpdate=1000.0/(MAX_FPS+1.0) + time;
+			nextUpdate=1000.0/(MAX_FPS+10.0) + time;
 			lastUpdate = time;
 
 			update();
