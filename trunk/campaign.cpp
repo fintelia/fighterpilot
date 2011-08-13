@@ -111,31 +111,30 @@ void modeCampaign::draw2D()
 	if(players[0].firstPerson() && !p->controled && !p->dead)
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
-		graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"cockpit square");
-		targeter(400,300,50,p->roll);
+	//	dataManager.bind("ortho");
+		graphics->drawOverlay(0,1.0,sAspect,0.0,"cockpit square");
+	//	dataManager.unbindShader();
+
+		targeter(0.5*sAspect, 0.5, 0.08, p->roll);
 		radar(0.2 * sAspect, 0.433, 0.125, -0.125, true, p);
 		
-		healthBar(-0.65, -0.3, 0.5, 0.666, p->health/p->maxHealth,true);
+		healthBar(0.175*sAspect, 1.0-0.35, 0.25*sAspect, -0.333, p->health/p->maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);
 	}
-	else if(!p->dead)
+	else if(!p->dead  && !p->controled)
 	{
 		radar(sAspect-0.167, 0.167, 0.1333, -0.1333, false, p);
-
-		glDisable(GL_MULTISAMPLE);
-		healthBar(614, 25, 150, 25, p->health/p->maxHealth,false);
-		glEnable(GL_MULTISAMPLE);
-
+		healthBar(0.768*sAspect, 0.958, 0.188*sAspect, -0.042, p->health/p->maxHealth,false);
 	}
 	
 
-	if(levelup)
-	{
-		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
-		graphics->drawOverlay(Vec2f(sw/2-v*sw/2,sh-v*sh),Vec2f(sw,sh)*v,"next level");
-	}
+	//if(levelup)
+	//{
+	//	float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+	//	graphics->drawOverlay(Vec2f(sw/2-v*sw/2,sh-v*sh),Vec2f(sw,sh)*v,"next level");
+	//}
 }
 void modeCampaign::draw3D()
 {

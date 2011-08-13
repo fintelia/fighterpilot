@@ -97,11 +97,7 @@ void manager::render()
 		else
 		{
 			glColor3f(0,0,0);
-			glBegin(GL_TRIANGLES);
-				glVertex2f(cursorPos.x,cursorPos.y);
-				glVertex2f(cursorPos.x,cursorPos.y+25);
-				glVertex2f(cursorPos.x+12,cursorPos.y+22);
-			glEnd();
+			graphics->drawTriangle(Vec3f(cursorPos.x,cursorPos.y,0),Vec3f(cursorPos.x,cursorPos.y+25,0),Vec3f(cursorPos.x+12,cursorPos.y+22,0));
 			glColor3f(1,1,1);
 		}
 	}
@@ -655,14 +651,6 @@ void objectProperties::render()
 	graphics->drawOverlay(sw/2-400,sh/2-250,sw/2+400,sh/2+250,"white");
 	glColor3f(1,1,1);
 }
-int screen::backgroundImage=0;
-
-bool screen::loadBackground()
-{
-	backgroundImage=dataManager.loadTexture("media/menu/menu background2.tga");
-	return backgroundImage != 0;
-}
-
 void chooseMode::render()
 {
 /*
@@ -681,22 +669,23 @@ void chooseMode::render()
 	//	graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
 	}
  */
-
-	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
+	dataManager.bind("ortho");
+	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
 	float sx = (float)sw/800;
 	float sy = (float)sh/600;
-	graphics->drawOverlay(Vec2f((-327+420)*sx,304*sy),Vec2f(722*sx,419*sy),"menu pictures");
+	graphics->drawOverlay(Vec2f((-0.409+0.525)*sAspect,0.493),Vec2f(0.903*sAspect,0.302),"menu pictures");
 	for(int i=1;i<=5;i++)
 	{
 		if(i!=activeChoice+2)
 		{
-			graphics->drawOverlay(Vec2f((-327+i*210)*sx,300*sy),Vec2f((-118+i*210)*sx,450*sy),"menu slot");
+			graphics->drawOverlay(Vec2f((-0.409+i*0.263)*sAspect,0.5),Vec2f((-0.148+i*0.263)*sAspect,0.25),"menu slot");
 		}
 	}
 	for(int i=1;i<=3;i++)
 	{
-		graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
+		graphics->drawPartialOverlay(Vec2f((i*0.263-0.144)*sAspect,0.503),Vec2f(0.256*sAspect,-0.0417),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
 	}
+	dataManager.unbindShader();
 }
 bool chooseMode::keyDown(int vkey)
 {
@@ -787,7 +776,9 @@ bool chooseMap::init()
 }
 void chooseMap::render()
 {
-	graphics->drawOverlay(Vec2f(0,0),Vec2f(sw,sh),"menu background");
+	dataManager.bind("ortho");
+	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
+	dataManager.unbindShader();
 }
 bool chooseMap::keyDown(int vkey)
 {
@@ -818,11 +809,14 @@ bool inGame::init()
 }
 void inGame::render()
 {
-	graphics->drawOverlay(sw/2-77,sh/2-122,sw/2+76,sh/2+123,"menu in game");
-	
-	if(activeChoice==RESUME)	graphics->drawOverlay(sw/2-70,sh/2-122+16,sw/2+58,sh/2-122+66,"menu in game select");
-	if(activeChoice==OPTIONS)	graphics->drawOverlay(sw/2-70,sh/2-122+92,sw/2+58,sh/2-122+142,"menu in game select");
-	if(activeChoice==QUIT)		graphics->drawOverlay(sw/2-70,sh/2-122+169,sw/2+58,sh/2-122+219,"menu in game select");
+	dataManager.bind("ortho");
+	graphics->drawOverlay(0.440*sAspect,0.620,0.559*sAspect,0.381,"menu in game");
+
+	if(activeChoice==RESUME)	graphics->drawOverlay(0.445*sAspect,0.600,0.545*sAspect,0.550,"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(0.445*sAspect,0.528,0.545*sAspect,0.478,"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(0.445*sAspect,0.454,0.545*sAspect,0.404,"menu in game select");
+
+	dataManager.unbindShader();
 }
 bool inGame::keyDown(int vkey)
 {
@@ -900,17 +894,17 @@ void loading::render()
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
 	dataManager.bind("ortho");
-	graphics->drawOverlay(-1.0,1.0,1.0,-1.0,"menu background");
-	graphics->drawOverlay(-0.9,-0.92,0.9,-0.96,"progress back");
+	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
+	graphics->drawOverlay(0.05*sAspect,0.04,0.95*sAspect,0.02,"progress back");
 
 	if(dataManager.getId("progress front") != 0)
 	{
-		graphics->drawOverlay(-0.9,-0.92,1.8*progress-0.9,-0.96,"progress front");
+		graphics->drawOverlay(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02,"progress front");
 	}
 	else
 	{
 		glColor3f(0,1,0);
-		graphics->drawOverlay(-0.9,-0.92,1.8*progress-0.9,-0.96);
+		graphics->drawOverlay(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02);
 		glColor3f(1,1,1);
 	}
 	dataManager.unbindShader();
@@ -1109,10 +1103,7 @@ void textBox::render()
 		textManager->renderText(text,x+2,y);
 		if(int(floor(world.time()/500)) % 2 == 1)
 		{
-			glBegin(GL_LINES);
-			glVertex2f(x+w,y+2);
-			glVertex2f(x+w,y+h);
-			glEnd();
+			graphics->drawLine(Vec3f(x+w,y+2,0),Vec3f(x+w,y+h,0));
 		}
 	}
 	else
@@ -1300,32 +1291,11 @@ void listBox::render()
 	graphics->drawOverlay(x+width-height,y,x+width,y+height,"white");
 
 	glColor3f(0,0,0);
-	glBegin(GL_TRIANGLES);
-		glVertex2f(x+width-height * 0.666,	y + height * 0.333);
-		glVertex2f(x+width-height * 0.333,	y + height * 0.333);
-		glVertex2f(x+width-height * 0.5,	y + height * 0.666);
-	glEnd();
-
+	graphics->drawTriangle(	Vec3f(x+width-height * 0.666,	y + height * 0.333, 0),
+							Vec3f(x+width-height * 0.333,	y + height * 0.333,	0),
+							Vec3f(x+width-height * 0.5,		y + height * 0.666,	0));
 	glColor3f(color.r,color.g,color.b);
-	//if(focus)
-	//{
-	//	
-	//	float w = textManager->getTextWidth(text.substr(0,cursorPos));
-	//	float h = textManager->getTextHeight(text);
 
-	//	textManager->renderText(text,x,y);
-	//	if(int(floor(world.time()/500)) % 2 == 1)
-	//	{
-	//		glBegin(GL_LINES);
-	//		glVertex2f(x+w,y+2);
-	//		glVertex2f(x+w,y+h);
-	//		glEnd();
-	//	}
-	//}
-	//else
-	//{
-	//	textManager->renderText(text,x,y);
-	//}
 	textManager->renderText(text,x+2,y);
 	if(focus)
 	{

@@ -65,8 +65,12 @@ protected:
 	HWND		hWnd;
 	HINSTANCE	hInstance;
 	float		currentGamma;
-	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL){}
 
+	bool stereo;
+	bool leftEye;
+	float interOcularDistance;
+
+	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0){}
 public:
 	virtual void render3D();
 	virtual void reset();
@@ -80,7 +84,9 @@ public:
 	virtual bool drawOverlay(Vec2f Origin, Vec2f Size, string tex)=0;
 	virtual bool drawOverlay(float x,float y,float width,float height)=0;
 	virtual bool drawOverlay(float x,float y,float width,float height,string tex)=0;
+	virtual bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation)=0;
 	virtual bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex)=0;
+	virtual bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize)=0;
 	virtual bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize, string tex)=0;
 
 	virtual bool init()=0;
@@ -107,6 +113,9 @@ public:
 	virtual void ortho(float left, float right, float bottom, float top, float near, float far);
 	virtual void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
 	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up);
+
+	void useAnagricStereo(bool b){stereo = b;}
+	void setInterOcularDistance(float d){interOcularDistance = d;}
 
 	virtual Vec2f project(Vec3f p);
 	virtual Vec3f unProject(Vec3f p);
@@ -166,7 +175,9 @@ public:
 	bool drawOverlay(Vec2f Origin, Vec2f Size,string tex);
 	bool drawOverlay(float x,float y,float width,float height);
 	bool drawOverlay(float x,float y,float width,float height,string tex);
+	bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation);
 	bool drawRotatedOverlay(Vec2f Origin, Vec2f Size, Angle rotation, string tex);
+	bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize);
 	bool drawPartialOverlay(Vec2f Origin, Vec2f Size, Vec2f tOrigin, Vec2f tSize, string tex);
 
 	bool init();

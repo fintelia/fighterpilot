@@ -901,30 +901,28 @@ void levelEditor::render3D()
 			glScalef(10,10,10);
 			dataManager.draw((planeType)((menu::levelEditor*)menuManager.getMenu())->placingObject());
 			glPopMatrix();
-			////////////////////////////////draw grid//////////////////////////////////
+			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			glDepthMask(false);
 			glColor4f(0.1,0.3,1.0,0.3);
 				
-			glBegin(GL_QUADS);
-			glVertex3f(0,							maxHeight+objPlacementAlt,	0);
-			glVertex3f(0,							maxHeight+objPlacementAlt,	level->ground()->sizeZ());
-			glVertex3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ());
-			glVertex3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0);
-			glEnd();
+			graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
+								Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
+								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
+								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0));
 
 			glColor4f(0.3,0.5,1.0,0.2);
-			glBegin(GL_LINES);
 			for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
 			{
-				glVertex3f(f,maxHeight+10,0);
-				glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
+				graphics->drawLine(Vec3f(f,maxHeight+10,0), Vec3f(f,maxHeight+10,level->ground()->sizeZ()));
+				//glVertex3f(f,maxHeight+10,0);
+				//glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
 			}
 			for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
 			{
-				glVertex3f(0,maxHeight+10,f);
-				glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
+				graphics->drawLine(Vec3f(0,maxHeight+10,f), Vec3f(level->ground()->sizeX(),maxHeight+10,f));
+				//glVertex3f(0,maxHeight+10,f);
+				//glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
 			}
-			glEnd();
 			glColor3f(1,1,1);
 			glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////

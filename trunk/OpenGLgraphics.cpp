@@ -8,6 +8,9 @@ OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
 	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
 	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
 	FBOs[0]					= FBOs[1]				= 0;
+
+	//useAnagricStereo(true);
+	//setInterOcularDistance(1.0);
 }
 GraphicsManager::gID OpenGLgraphics::newModel(string disp)
 {
@@ -126,7 +129,7 @@ bool OpenGLgraphics::drawOverlay(float x,float y,float x2,float y2,string tex)
 	dataManager.unbind(tex);
 	return true;
 }
-bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation, string tex)
+bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation)
 {
 	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
 	//if(orthoShader)
@@ -146,7 +149,7 @@ bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation
 	overlay[2].texCoord = Vec2f(1.0,1.0);
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
-	dataManager.bind(tex);
+	//dataManager.bind(tex);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -159,14 +162,21 @@ bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	dataManager.unbind(tex);
+	//dataManager.unbind(tex);
 
 	//if(orthoShader)
 	//	dataManager.unbindShader();
 
 	return true;
 }
-bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize, string tex)
+bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation, string tex)
+{
+	dataManager.bind(tex);
+	drawRotatedOverlay(origin, size, rotation);
+	dataManager.unbind(tex);
+	return true;
+}
+bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize)
 {
 	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
 	//if(orthoShader)
@@ -182,7 +192,7 @@ bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin,
 	overlay[2].texCoord = tOrigin + Vec2f(tSize.x,	tSize.y);
 	overlay[3].texCoord = tOrigin + Vec2f(0.0,		tSize.y);
 
-	dataManager.bind(tex);
+	//dataManager.bind(tex);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -195,20 +205,15 @@ bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin,
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	dataManager.unbind(tex);
-
-	//dataManager.bind(tex);
-	//glBegin(GL_QUADS);
-	//	glTexCoord2f(tOrigin.x,tOrigin.y);					glVertex2f(origin.x,origin.y);
-	//	glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y);			glVertex2f(origin.x+size.x,origin.y);
-	//	glTexCoord2f(tOrigin.x+tSize.x,tOrigin.y+tSize.y);	glVertex2f(origin.x+size.x,origin.y+size.y);
-	//	glTexCoord2f(tOrigin.x,tOrigin.y+tSize.y);			glVertex2f(origin.x,origin.y+size.y);
-	//glEnd();
 	//dataManager.unbind(tex);
 
-	//if(orthoShader)
-	//	dataManager.unbindShader();
-
+	return true;
+}
+bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize, string tex)
+{
+	dataManager.bind(tex);
+	drawPartialOverlay(origin, size, tOrigin, tSize);
+	dataManager.unbind(tex);
 	return true;
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
@@ -230,7 +235,7 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 	glViewport(0,0,sw,sh);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho( 0, sw , sh , 0, -1, 1 );
+//	glOrtho( 0, sw , sh , 0, -1, 1 );
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
@@ -238,12 +243,7 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 	//double r = sqrt((float)sw*sw + sh*sh)/2;
 
 	dataManager.bindTex(renderTextures[src]);
-	glBegin(GL_QUADS);
-		glTexCoord2f(1,1);	glVertex2f(sw,0);//glVertex2f(sw/2 + r * cos(time+PI*0.0), sh/2 + r * sin(time+PI*0.0));
-		glTexCoord2f(1,0);	glVertex2f(sw,sh);//glVertex2f(sw/2 + r * cos(time+PI*0.5), sh/2 + r * sin(time+PI*0.5));
-		glTexCoord2f(0,0);	glVertex2f(0,sh);//glVertex2f(sw/2 + r * cos(time+PI*1.0), sh/2 + r * sin(time+PI*1.0));
-		glTexCoord2f(0,1);	glVertex2f(0,0);//glVertex2f(sw/2 + r * cos(time+PI*1.5), sh/2 + r * sin(time+PI*1.5));
-	glEnd();
+	drawOverlay(-1,-1,1,1);
 	dataManager.bindTex(0);
 }
 bool OpenGLgraphics::init()
@@ -279,8 +279,6 @@ bool OpenGLgraphics::init()
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_BLEND);	
 	glEnable(GL_MULTISAMPLE);
-	glEnable(GL_POINT_SMOOTH);
-	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -420,11 +418,37 @@ void OpenGLgraphics::render()
 
 	//glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
-	modeManager.render3D();
-	menuManager.render3D();
+	if(stereo)
+	{
+		leftEye = true;
+		glColorMask(true,false,false,true);
+		modeManager.render3D();
+		menuManager.render3D();
+		
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		leftEye = false;
+		glColorMask(false,true,true,true);
+		modeManager.render3D();
+		menuManager.render3D();
+		
+		glColorMask(true,true,true,true);
+	}
+	else
+	{
+		modeManager.render3D();
+		menuManager.render3D();
+	}
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
+	glDisable(GL_DEPTH_TEST);
+
+
+	dataManager.bind("ortho");
+	modeManager.render2D();
+	dataManager.unbindShader();
+
 	glMatrixMode(GL_PROJECTION);			// Select Projection
 	glPushMatrix();							// Push The Matrix
 	glLoadIdentity();						// Reset The Matrix
@@ -432,8 +456,7 @@ void OpenGLgraphics::render()
 	glMatrixMode(GL_MODELVIEW);				// Select Modelview Matrix
 	glLoadIdentity();						// Reset The Matrix
 
-	glDisable(GL_DEPTH_TEST);
-	modeManager.render2D();
+
 	menuManager.render();
 
 	#ifdef _DEBUG
@@ -489,6 +512,21 @@ void OpenGLgraphics::ortho(float left, float right, float bottom, float top, flo
 }
 void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 {
+	if(stereo)
+	{
+		Vec3f f = (center - eye).normalize();
+		Vec3f r = (up.normalize()).cross(f);
+		if(leftEye)
+		{
+			eye += r * interOcularDistance * 0.5;
+			center += r * interOcularDistance * 0.5;
+		}
+		else
+		{
+			eye -= r * interOcularDistance * 0.5;
+			center -= r * interOcularDistance * 0.5;
+		}
+	}
 	GraphicsManager::lookAt(eye, center, up);
 	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
 }

@@ -53,24 +53,25 @@
   </textures>
 
   <shaders>
-    <shader name="ortho"                vertex="media/ortho.vert"       fragment="media/ortho.frag"   preload="true" />
+    <shader name="ortho"                vertex="media/ortho.vert"       fragment="media/ortho.frag"   preload="true" sAspect="true" />
     <shader name="gamma shader"         vertex="media/gamma.vert"       fragment="media/gamma.frag"   preload="true" />
     
+    <shader name="radar"                vertex="media/radar.vert"       fragment="media/radar.frag" sAspect="true" />
+    <shader name="radar2"               vertex="media/radar2.vert"      fragment="media/radar2.frag" sAspect="true" />
+	  <shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" sAspect="true" />
+    <shader name="health"               vertex="media/health.vert"      fragment="media/health.frag" sAspect="true" />
+    
     <shader name="grass terrain"        vertex="media/toon.vert"        fragment="media/toon.frag" />
-    <shader name="radar"                vertex="media/radar.vert"       fragment="media/radar.frag" />
-    <shader name="radar2"               vertex="media/radar2.vert"      fragment="media/radar2.frag" />
-	  <shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" />
     <shader name="water"                vertex="media/water.vert"       fragment="media/water.frag" />
     <shader name="sea floor"            vertex="media/sea floor.vert"   fragment="media/sea floor.frag" />
 	  <shader name="horizon"              vertex="media/horizon.vert"     fragment="media/horizon.frag" />
     <shader name="horizon2"             vertex="media/horizon2.vert"    fragment="media/horizon2.frag" />
     <shader name="island terrain"       vertex="media/island.vert"      fragment="media/island.frag" />
     <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />
-    <shader name="health"               vertex="media/health.vert"      fragment="media/health.frag" />
+
     <shader name="ocean"                vertex="media/ocean.vert"       fragment="media/ocean.frag" />
     <shader name="partical shader"      vertex="media/smoke.vert"       fragment="media/smoke.frag" />
     <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
-    <shader name="ortho"                vertex="media/ortho.vert"       fragment="media/ortho.frag" />
     <shader name="hex grid shader"      vertex="media/hex grid.vert"    fragment="media/hex grid.frag" />
     <shader name="sky shader"           vertex="media/sky.vert"         fragment="media/sky.frag" />
 

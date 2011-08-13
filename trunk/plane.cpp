@@ -627,7 +627,6 @@ void nPlane::spawn()
 
 	double altitude = world.altitude(position);
 	if(altitude < 35)
-
 		position.y -= altitude - 35;
 
 

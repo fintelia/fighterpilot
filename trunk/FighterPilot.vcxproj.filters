@@ -261,6 +261,9 @@
     <ClCompile Include="OpenGLgraphics.cpp">
       <Filter>Source Files\graphicsManager</Filter>
     </ClCompile>
+    <ClCompile Include="text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
