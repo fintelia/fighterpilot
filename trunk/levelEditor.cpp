@@ -266,49 +266,51 @@ void levelEditor::render()
 {
 	menuManager.drawCursor();
 }
-bool levelEditor::mouseL(bool down, int x, int y)
+bool levelEditor::mouse(mouseButton button, bool down)
 {
-	if(getTab() == OBJECTS && down)
+	Vec2f p = down ? input->getMouseState(button).downPos : input->getMouseState(button).upPos;
+
+	if(button == LEFT_BUTTON)
 	{
-		if(newObjectType != 0)
+		if(getTab() == OBJECTS && down)
 		{
-			static int teamNum=0;
-			addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, x, y);
-			newObjectType = 0;
-			teamNum++;
-			return true;
-		}
-		else
-		{
-			return selectObject(x,y);
+			if(newObjectType != 0)
+			{
+				static int teamNum=0;
+				addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, p.x * sh, p.y * sh);
+				newObjectType = 0;
+				teamNum++;
+				return true;
+			}
+			else
+			{
+				return selectObject(p.x * sh, p.y * sh);
+			}
 		}
 	}
+	else if(button == MIDDLE_BUTTON)
+	{
+		if(!down)
+		{
+			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
+			if(oldP == p) 
+				return true;
+
+			Vec3f xAxis = rot * Vec3f(1,0,0);
+
+			Vec3f axis = xAxis * (p.y-oldP.y) + Vec3f(0,-1,0) * (p.x-oldP.x);
+			Angle ang = oldP.distance(p);
+			rot = Quat4f(axis,ang) * rot;
+			return true;
+		}
+	}
+
 	return false;
 }
 bool levelEditor::scroll(float rotations)
 {
 	scrollVal = clamp(scrollVal + rotations,-8,25);
 	return true;
-}
-bool levelEditor::mouseC(bool down, int x, int y)
-{
-	if(!down)
-	{
-		int oldX = input->getMouseState(MIDDLE_BUTTON).x;
-		int oldY = input->getMouseState(MIDDLE_BUTTON).y;
-		if(x==oldX && y==oldY) return true;
-
-		Vec2f oldP(2.0*oldX/sw-sw/2.0,2.0*oldY/sh-sh/2.0);
-		Vec2f newP(2.0*x/sw-sw/2.0,2.0*y/sh-sh/2.0);
-
-		Vec3f xAxis = rot * Vec3f(-1,0,0);
-
-		Vec3f axis = xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x);
-		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
-		rot = Quat4f(axis,ang) * rot;
-		return true;
-	}
-	return false;
 }
 void levelEditor::addShader(string filename)
 {
@@ -812,14 +814,14 @@ void levelEditor::render3D()
 		POINT p;
 		GetCursorPos(&p);
 
-		Vec2f oldP(2.0*input->getMouseState(MIDDLE_BUTTON).x/sw-sw/2.0,2.0*input->getMouseState(MIDDLE_BUTTON).y/sh-sh/2.0);
-		Vec2f newP(2.0*p.x/sw-sw/2.0,2.0*p.y/sh-sh/2.0);
+		Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
+		Vec2f newP((float)p.x/sh,1.0 - (float)p.y/sh);
 		
 			
-		Vec3f xAxis = rot * Vec3f(-1,0,0);
+		Vec3f xAxis = rot * Vec3f(1,0,0);
 
 		Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-		Angle ang = sqrt( (newP.x-oldP.x)*(newP.x-oldP.x) + (newP.y-oldP.y)*(newP.y-oldP.y) )/2.0;
+		Angle ang = oldP.distance(newP);
 
 		Quat4f tmpRot;
 		if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;

@@ -359,9 +359,7 @@ public:
 	virtual void render()=0;
 	virtual void render3D(){}
 	///////////////////////////////////////////
-	virtual bool mouseL(bool down, int x, int y){return false;}
-	virtual bool mouseR(bool down, int x, int y){return false;}
-	virtual bool mouseC(bool down, int x, int y){return false;}
+	virtual bool mouse(mouseButton button, bool down){return false;}
 
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
@@ -393,10 +391,9 @@ public:
 	int update();
 	void render();
 	void render3D();
-
-	bool mouseL(bool down, int x, int y);
+	
+	bool mouse(mouseButton button, bool down);
 	bool scroll(float rotations);
-	bool mouseC(bool down, int x, int y);
 	Tab getTab();
 	int getShader();//gets
 	int placingObject(){return newObjectType;}

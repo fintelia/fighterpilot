@@ -52,10 +52,9 @@ public:
 	void draw(string name);
 	void drawCustomShader(string name);
 
-	int getId(string name);	//should be phased out
-	int getId(objectType t);
 
-	//vector forms could be added if needed
+	bool assetLoaded(string name);
+
 	void setUniform1f(string name, float v0);
 	void setUniform2f(string name, float v0, float v1);
 	void setUniform3f(string name, float v0, float v1, float v2);
@@ -76,24 +75,16 @@ public:
 	CollisionChecker::triangleList* getModel(objectType type);
 private:
 
-//	int loadTexture(string filename);//simply calls loadTGA/loadPNG based on file extension
-
-//	int loadShader(string vert, string frag);
-//	int loadTerrainShader(string frag);
-	int loadTGA(string filename);
-	int loadPNG(string filename);
-
-//	int loadOBJ(string filename);
-
-	//void registerAsset(string name, string filename);
-
+	bool registerTGA(string name, string filename);
+	bool registerPNG(string name, string filename);
+	bool registerOBJ(string name, string filename);
 	bool registerShader(string name, string vert, string frag, bool use_sAspect=false);
 	bool registerTerrainShader(string name, string frag);
-	bool registerOBJ(string name, string filename);
 	bool registerTexture(string name, string filename);
 	bool registerFont(string name, string filename);
 
-
+	int getId(string name);
+	int getId(objectType t);
 
 	char *textFileRead(char *fn);//for shaders
 

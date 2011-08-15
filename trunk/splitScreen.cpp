@@ -61,8 +61,8 @@
 // }
 int modeSplitScreen::update()
 {
-	if(input->getKey(F1))	{	players[0].toggleFirstPerson(); input->up(F1);}
-	if(input->getKey(F2))	{	players[1].toggleFirstPerson(); input->up(F2);}
+	if(input->getKey(VK_F1))	{	players[0].toggleFirstPerson(); input->up(VK_F1);}
+	if(input->getKey(VK_F2))	{	players[1].toggleFirstPerson(); input->up(VK_F2);}
 #ifdef _DEBUG
 	if(input->getKey(0x31))
 	{
@@ -83,7 +83,7 @@ int modeSplitScreen::update()
 	{
 		input->up(0x54);
 		slow = !slow;
-		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
+		world.time.changeSpeed(slow ? 0.1 : 1.0, 5.0);
 	}
 #endif
 	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());

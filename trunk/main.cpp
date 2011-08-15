@@ -46,12 +46,18 @@ planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void update()
 {
-	double t = GetTime();
+	while(world.time.needsUpdate())
+	{
+		world.time.nextUpdate();
+		modeManager.update();	//takes almost no time
+	}
+
 	world.time.nextFrame();
-	
+
 	input->update();		//takes 2-11 ms
+	
+
 	menuManager.update();	//takes almost no time
-	modeManager.update();	//takes almost no time
 }
 void ShowHideTaskBar(bool bHide)
 {
@@ -228,18 +234,18 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		}
 		else
 		{
-			float time = GetTime();
-			float waitTime=nextUpdate-time;
+			//float time = GetTime();
+			//float waitTime=nextUpdate-time;
 
 
-			if(waitTime>4.0)
-				Sleep(waitTime-4.0);
-			while(time < nextUpdate)
-			{
-				time = GetTime();
-			}
-			nextUpdate=1000.0/(MAX_FPS+10.0) + time;
-			lastUpdate = time;
+			//if(waitTime>4.0)
+			//	Sleep(waitTime-4.0);
+			//while(time < nextUpdate)
+			//{
+			//	time = GetTime();
+			//}
+			//nextUpdate=1000.0/(MAX_FPS+10.0) + time;
+			//lastUpdate = time;
 
 			update();
 
