@@ -1,32 +1,34 @@
 
-const int UP	= VK_UP;
-const int DOWN	= VK_DOWN;
-const int LEFT	= VK_LEFT;
-const int RIGHT	= VK_RIGHT;
-const int _5	= 53;
-const int _2	= 50;
-const int _9	= 57;
-const int _W	= 119;
-const int _A	= 100;
-const int _S	= 115;
-const int _D	= 97;
-const int _U	= 117;
-const int _J	= 106;
-const int SPACE = 32;
-const int _B	= 98;
-const int _0    = 48;
-const int F1    = VK_F1;
-const int F2    = VK_F2;
-const int ENTER = 13;
+//const int UP	= VK_UP;
+//const int DOWN	= VK_DOWN;
+//const int LEFT	= VK_LEFT;
+//const int RIGHT	= VK_RIGHT;
+//const int _5	= 53;
+//const int _2	= 50;
+//const int _9	= 57;
+//const int _W	= 119;
+//const int _A	= 100;
+//const int _S	= 115;
+//const int _D	= 97;
+//const int _U	= 117;
+//const int _J	= 106;
+//const int SPACE = 32;
+//const int _B	= 98;
+//const int _0    = 48;m
+//const int F1    = VK_F1;
+//const int F2    = VK_F2;
+//const int ENTER = 13;
 
 class Input: public functor<float,int>
 {
 protected:
 	struct mouseButtonState
 	{
-		long x,y;
+		Vec2f downPos;
+		Vec2f upPos;
+		Vec2f curPos;
 		bool down;
-		mouseButtonState(): x(0), y(0), down(false){}
+		mouseButtonState(): downPos(0,0), upPos(0,0), curPos(0,0), down(false){}
 	};
 
 public:
@@ -46,9 +48,9 @@ public:
 	struct mouseClick: public callBack{
 		bool down;
 		mouseButton button;
-		int x,y;
+		Vec2f pos;
 		mouseClick(): callBack(MOUSE_SCROLL){}
-		mouseClick(bool Down, mouseButton b, int X, int Y): callBack(MOUSE_CLICK), down(Down), button(b), x(X), y(Y){}
+		mouseClick(bool Down, mouseButton b, Vec2f p): callBack(MOUSE_CLICK), down(Down), button(b), pos(p){}
 	};
 	struct mouseScroll: public callBack{
 		double rotations;
@@ -77,8 +79,7 @@ class standard_input: public Input
 protected:
 	bool keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
-	HANDLE  inputMutex; 
-
+	HANDLE  inputMutex;
 
 public:
 	standard_input();

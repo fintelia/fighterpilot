@@ -74,9 +74,10 @@ public:
 
 	objectPath planePath;
 ///////////camera view/////////////
-	Vec3f camera;
-	Vec3f center;
-	Vec3f up;
+	objectCamera camera;
+	//Vec3f camera;
+	//Vec3f center;
+	//Vec3f up;
 	struct cameraState{
 		float time;
 		float angle;

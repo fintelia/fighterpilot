@@ -71,12 +71,13 @@ namespace menu{class levelEditor;}
 
 #include "enums.h"
 #include "time.h"
+
+#include "text.h"
+#include "gameMath.h"
 #include "input.h"
 #ifdef _DEBUG
 #include "XboxContInput.h"
 #endif
-#include "text.h"
-#include "gameMath.h"
 #include "random.h"
 #include "graphicsManager.h"
 #include "dataManager.h"

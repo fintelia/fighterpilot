@@ -529,7 +529,6 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 
 	if(seaLevelOffset != 0.0 && (mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS))
 	{
-		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
 
 		dataManager.bind("hardNoise",0);
@@ -678,7 +677,6 @@ void Level::render(Vec3f eye)
 	else if(mGround->shaderType == SHADER_GRASS)
 	{
 		glDepthMask(false);
-		int s=dataManager.getId("ocean");
 		dataManager.bind("ocean");
 
 		dataManager.bind("hardNoise",0);

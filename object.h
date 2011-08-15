@@ -101,3 +101,16 @@ class staticObject: public object
 public:
 	staticObject(Vec3f sPos, Quat4f sRot, objectType Type): object(sPos, sRot, Type){}
 };
+
+class objectCamera
+{
+public:
+	Vec3f position;
+	Vec3f lastPosition;
+
+	Vec3f center;
+	Vec3f lastCenter;
+
+	Vec3f up;
+	Vec3f lastUp;
+};

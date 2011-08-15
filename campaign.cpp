@@ -49,10 +49,10 @@ int modeCampaign::update()
 			return 30;
 		}
 	}
-	if(input->getKey(F1))
+	if(input->getKey(VK_F1))
 	{
 		players[0].toggleFirstPerson();
-		input->getKey(F1);input->up(F1);
+		input->up(VK_F1);
 	}
 #ifdef _DEBUG
 	if(input->getKey(0x31))
@@ -99,7 +99,7 @@ int modeCampaign::update()
 	{
 		input->up(0x54);
 		slow = !slow;
-		world.time.ChangeSpeed(slow ? 0.1 : 1.0, 5.0);
+		world.time.changeSpeed(slow ? 0.1 : 1.0, 5.0);
 	}
 #endif
 	return 30;

@@ -3,6 +3,8 @@
 
 const int BULLET_SPEED		= 1000;// 2000 m/s
 const int MISSILE_SPEED		= 1180;// 1180 m/s = mach 4 (max speed)
+const double MAX_FPS		= 60.0;
+const double UPDATE_LENGTH	= 20.0;
 
 const Color white(1.0f,1.0f,1.0f);
 const Color black(0.0f,0.0f,0.0f);

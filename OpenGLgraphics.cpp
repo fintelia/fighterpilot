@@ -10,7 +10,7 @@ OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
 	FBOs[0]					= FBOs[1]				= 0;
 
 	//useAnagricStereo(true);
-	//setInterOcularDistance(1.0);
+	//setInterOcularDistance(0.75);
 }
 GraphicsManager::gID OpenGLgraphics::newModel(string disp)
 {
@@ -844,62 +844,27 @@ void OpenGLgraphics::swapBuffers()
 }
 void OpenGLgraphics::takeScreenshot()
 {
+	SYSTEMTIME sTime;
+	GetLocalTime(&sTime);
+
+	string filename = "screen shots\\FighterPilot ";
+	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" + lexical_cast<string>(sTime.wDay) + " " + 
+				lexical_cast<string>(sTime.wHour+1) + "-" + lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" + lexical_cast<string>(sTime.wMilliseconds) + ".png";
+	
+	if(!filesystem::is_directory("screen shots"))
+		filesystem::create_directory("screen shots");
+
 	int size = (3*sw+sw%4)*sh + 3*sw*sh%4;
-
-
-	BITMAPFILEHEADER header;
-	header.bfType					= 0x4D42;
-	header.bfSize					= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO) + size;
-	header.bfReserved1				= 0;
-	header.bfReserved2				= 0;
-	header.bfOffBits				= sizeof(BITMAPINFO)+sizeof(BITMAPFILEHEADER);
-
-	BITMAPINFO info;
-	info.bmiHeader.biSize			= sizeof(BITMAPINFOHEADER);
-	info.bmiHeader.biWidth			= sw;
-	info.bmiHeader.biHeight			= sh;
-	info.bmiHeader.biPlanes			= 1;
-	info.bmiHeader.biBitCount		= 24;
-	info.bmiHeader.biCompression	= BI_RGB;
-	info.bmiHeader.biSizeImage		= 0;
-	info.bmiHeader.biXPelsPerMeter	= 100;
-	info.bmiHeader.biYPelsPerMeter	= 100;
-	info.bmiHeader.biClrUsed		= 0;
-	info.bmiHeader.biClrImportant	= 0;
-	memset(&info.bmiColors,0,sizeof(info.bmiColors));
-
-	unsigned char* colors = new unsigned char[size];
-	memset(colors,0,size);
-	glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors); 
-
-	for(int x=0;x<sw;x++)
-	{
-		for(int y=0;y<sh;y++)
-		{
-			swap(   colors[(y*(3*sw+sw%4) + 3*x) + 0]   ,    colors[(y*(3*sw+sw%4) + 3*x) + 2]   );
-			//colors[(y*(3*sw+sw%4) + 3*x) + 0] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 0];
-			//colors[(y*(3*sw+sw%4) + 3*x) + 1] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 1];
-			//colors[(y*(3*sw+sw%4) + 3*x) + 2] = 255 - colors[(y*(3*sw+sw%4) + 3*x) + 2];
-		}
-	}
-	ofstream fout("screen shot.bmp",ios::out|ios::binary|ios::trunc);
-	fout.write((char*)&header,sizeof(header));
-	fout.write((char*)&info,sizeof(info));
-	fout.write((char*)colors,size);
-	delete[] colors;
-	fout.close();
-
 
 	//see: http://zarb.org/~gc/html/libpng.html
 	FILE *fp;
-	fopen_s(&fp,"screen shot.png", "w");
-	if(fp)
+	if(!fopen_s(&fp,filename.c_str(), "wb") && fp)
 	{
-		colors = new unsigned char[size];
+		unsigned char* colors = new unsigned char[size];
 		memset(colors,0,size);
 		glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors); 
 		png_bytepp rows = new unsigned char*[sh];
-		for(int i=0;i<sh;i++) rows[i] = colors + (3*sw+sw%4)*i;
+		for(int i=0;i<sh;i++) rows[i] = colors +  (3*sw+sw%4) * (sh-i);
 
 		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
 		if (!png_ptr)
@@ -909,31 +874,18 @@ void OpenGLgraphics::takeScreenshot()
 			return;
 		}
 		png_infop info_ptr = png_create_info_struct(png_ptr);
-		if (!info_ptr)
+		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
 		{
 			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 			fclose(fp);
 			delete[] colors;
 			return;
 		}
-		if (setjmp(png_jmpbuf(png_ptr)))
-		{
-			png_destroy_write_struct(&png_ptr, &info_ptr);
-			fclose(fp);
-			delete[] colors;
-			return;
-		}
 		png_init_io(png_ptr, fp);
 		png_set_IHDR(png_ptr, info_ptr, sw, sh, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-		//png_set_write_status_fn(png_ptr, [&write_row_callback](png_ptr, png_uint_32 row, int pass){});
 		png_set_rows(png_ptr,info_ptr,rows);
 
-		//png_write_info(png_ptr, info_ptr);
-
 		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
-		//png_write_image(png_ptr,rows);
-		//png_write_info(png_ptr, info_ptr);
-		//png_write_end(png_ptr, NULL);
 
 		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
 		png_destroy_write_struct(&png_ptr, &info_ptr);

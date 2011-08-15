@@ -360,10 +360,9 @@ void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Col
 }
 void modeDogFight::drawScene(int acplayer) 
 {
-
 	static map<int,double> lastDraw;
 	double time=world.time();
-
+	double interp = 1.0;//world.time.interpolate();
 
 	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
 	glMatrixMode(GL_MODELVIEW);
@@ -378,50 +377,28 @@ void modeDogFight::drawScene(int acplayer)
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 	
 	float ly= 0.5;
-	Vec3f cam;
 	Vec3f e;
 	Vec3f c;
 	Vec3f u;
 	if(!players[acplayer].firstPerson() || p->controled || p->dead)
 	{
- 		//Vec3f vel2D = p->rotation * Vec3f(0,0,1); vel2D.y=0;vel2D = vel2D.normalize();
-		//e = p->position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-		e = p->camera;
-		//c = p->position + vel2D * 45.0;
-		c=p->center;
-		//u = Vec3f(0,1,0);
-		u=p->up;
-
-		//glMatrixMode(GL_PROJECTION);
-		//glLoadIdentity();
-		//glOrtho(-40000, 40000 , 15000 , -15000, -100, 20000 );
-		//glMatrixMode(GL_MODELVIEW);
-		//glLoadIdentity();
-		//u=Vec3f(1,0,0);
-		//e=Vec3f(64*size,15000,64*size);
-		//c=Vec3f(64*size,900,64*size);
-
-		//e = p->pos + Vec3f(250,400,250);
-		//c = p->pos;
-		//u= Vec3f(0,1,0);
-
-
-
+		e = lerp(p->camera.lastPosition,p->camera.position,interp);
+		c = lerp(p->camera.lastCenter,p->camera.center,interp);
+		u = lerp(p->camera.lastUp,p->camera.up,interp);
 
 		graphics->lookAt(e, c, u);
 		frustum.setCamDef(e,c,u);
-		cam=e;
 	}
 	else
 	{
-		e=p->position;
-		c=p->rotation * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
-		u=p->rotation * Vec3f(0,1,0);
-		//upAndRight(p->rotation * Vec3f(0,0,1),p->roll,u,Vec3f());
+		Quat4f rot = slerp(p->rotation,p->lastRotation,interp);
+
+		e = lerp(p->lastPosition,p->position,interp);
+		c = rot * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
+		u = rot * Vec3f(0,1,0);
 		
 		graphics->lookAt(e, c, u);
 		frustum.setCamDef(e,c,u);
-		cam=e;
 	}
 	//sky dome
 	glPushMatrix();

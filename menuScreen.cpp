@@ -92,7 +92,7 @@ void manager::render()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		if(dataManager.getId("cursor") != 0)
+		if(dataManager.assetLoaded("cursor"))
 			graphics->drawOverlay(cursorPos.x,cursorPos.y,cursorPos.x+21,cursorPos.y+25,"cursor");
 		else
 		{
@@ -159,10 +159,10 @@ bool manager::issueInputCallback(Input::callBack* callback, element* e)
 	else if(callback->type == MOUSE_CLICK)
 	{
 		Input::mouseClick* call = (Input::mouseClick*)callback;
-		if(call->button == LEFT_BUTTON && call->down)		return e->mouseDownL(call->x,call->y);
-		else if(call->button == LEFT_BUTTON && !call->down)	return e->mouseUpL(call->x,call->y);
-		else if(call->button == RIGHT_BUTTON && call->down)	return e->mouseDownR(call->x,call->y);
-		else if(call->button == RIGHT_BUTTON && !call->down)return e->mouseUpR(call->x,call->y);
+		if(call->button == LEFT_BUTTON && call->down)		return e->mouseDownL(call->pos.x,call->pos.y);
+		else if(call->button == LEFT_BUTTON && !call->down)	return e->mouseUpL(call->pos.x,call->pos.y);
+		else if(call->button == RIGHT_BUTTON && call->down)	return e->mouseDownR(call->pos.x,call->pos.y);
+		else if(call->button == RIGHT_BUTTON && !call->down)return e->mouseUpR(call->pos.x,call->pos.y);
 	}
 	return false;
 }
@@ -197,9 +197,12 @@ void manager::inputCallback(Input::callBack* callback)
 		
 		if(!popups.empty())
 		{
+			call->pos.x *= sh;
+			call->pos.y = (1.0 - call->pos.y) * sh;
+
 			int pSize = popups.size();
-			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->x,call->y)) return;
-			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->x,call->y)) return;
+			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
+			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;
 			
 			if(pSize==popups.size())	for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)		if(issueInputCallback(callback,e->second)) return;
 			if(pSize==popups.size())	for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)		if(issueInputCallback(callback,e->second)) return;
@@ -210,9 +213,11 @@ void manager::inputCallback(Input::callBack* callback)
 		}
 		else if(menu!=NULL)
 		{
-			if(call->button == LEFT_BUTTON && menu->mouseL(call->down,call->x,call->y)) return;
-			if(call->button == MIDDLE_BUTTON && menu->mouseC(call->down,call->x,call->y)) return;
-			if(call->button == RIGHT_BUTTON && menu->mouseR(call->down,call->x,call->y)) return;
+			if(menu->mouse(call->button,call->down))
+				return;
+
+			call->pos.x *= sh;
+			call->pos.y = (1.0 - call->pos.y) * sh;
 
 			if(menu)	for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)		if(issueInputCallback(callback,e->second)) return;
 			if(menu)	for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)		if(issueInputCallback(callback,e->second)) return;
@@ -502,7 +507,7 @@ bool messageBox_c::init(string t, vector<string> names)
 }
 void messageBox_c::render()
 {
-	if(dataManager.getId("dialog box") != 0)
+	if(dataManager.assetLoaded("dialog box"))
 		graphics->drawOverlay(x,y,x+width,y+height,"dialog box");
 	else
 	{
@@ -521,7 +526,7 @@ void messageBox_c::render()
 	GetCursorPos(&cursorPos);
 	for(vector<label*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
 	{
-		if(dataManager.getId("glow") != 0 && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
+		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
 			graphics->drawOverlay(	startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,		startY+slotHeight*0.5-35,						
 									startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,		startY+slotHeight*0.5+35,   "glow");
@@ -897,7 +902,7 @@ void loading::render()
 	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
 	graphics->drawOverlay(0.05*sAspect,0.04,0.95*sAspect,0.02,"progress back");
 
-	if(dataManager.getId("progress front") != 0)
+	if(dataManager.assetLoaded("progress front"))
 	{
 		graphics->drawOverlay(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02,"progress front");
 	}

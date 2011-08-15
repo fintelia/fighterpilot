@@ -19,6 +19,13 @@ void nPlane::update(double time, double ms)
 	control->update();
 	controlState controller=control->getControlState();
 
+	lastPosition = position;
+	lastRotation = rotation;
+
+	camera.lastPosition = camera.position;
+	camera.lastCenter = camera.center;
+	camera.lastUp = camera.up;
+
 	if(!dead)
 	{
 		/////update rockets/////////////////////
@@ -219,8 +226,9 @@ void nPlane::update(double time, double ms)
 					vel2D.y=0;
 					vel2D = vel2D.normalize();
 
-					camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-					center = splashPos + vel2D * 45.0;
+					camera.position = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+					camera.center = splashPos + vel2D * 45.0;
+					camera.up = Vec3f(0,1,0);
 				}
 				die();
 			}
@@ -278,8 +286,9 @@ void nPlane::update(double time, double ms)
 			vel2D.y=0;
 			vel2D = vel2D.normalize();
 
-			camera = position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-			center = position + vel2D * 45.0;
+			camera.position = position - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+			camera.center = position + vel2D * 45.0;
+			camera.up = Vec3f(0,1,0);
 		}
 
 		if(death == DEATH_TRAILING_SMOKE && altitude < 0.0)
@@ -300,14 +309,14 @@ void nPlane::update(double time, double ms)
 				vel2D.y=0;
 				vel2D = vel2D.normalize();
 
-				camera = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-				center = splashPos + vel2D * 45.0;
+				camera.position = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+				camera.center = splashPos + vel2D * 45.0;
+				camera.up = Vec3f(0,1,0);
 			}
 		}
 	}
 
-	lastPosition = position;
-	lastRotation = rotation;
+
 }
 void nPlane::smoothCamera()
 {
@@ -367,9 +376,9 @@ void nPlane::smoothCamera()
 	}
 	
 
-	camera = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 45.0;
-	center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 45.0;
-	up = Vec3f(0,1,0);
+	camera.position = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 45.0;
+	camera.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 45.0;
+	camera.up = Vec3f(0,1,0);
 
 	//center = position + dir * 15.0;
 	//camera = position + dir * 15.0 + v * 45;
@@ -392,8 +401,8 @@ void nPlane::autoPilotUpdate(float value)
 		climb =			asin(fwd.y/fwd.magnitude());
 		roll =			0;//to hard and rather useless to find
 
-		center.x =		position.x;
-		center.z =		position.z;
+		camera.center.x = position.x;
+		camera.center.z = position.z;
 
 		wayPoints.clear();
 		return;
@@ -416,8 +425,8 @@ void nPlane::autoPilotUpdate(float value)
 
 	position = w1.position*(1.0-t)+w2.position*t;
 	rotation = slerp(w1.rotation,w2.rotation,t);
-	center.x = position.x;
-	center.z = position.z;
+	camera.center.x = position.x;
+	camera.center.z = position.z;
 	//Vec3f fwd = rotation * Vec3f(0,0,1);
 	//direction =	atan2A(fwd.x,fwd.z);
 	//climb =		asin(fwd.y/fwd.magnitude());
@@ -491,9 +500,9 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.ground()->sizeX()/2,position.z-world.ground()->sizeZ()/2));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
-	camera=Vec3f(position.x - fwd.x*20, position.y + sin(45.0)*20,	 position.z - fwd.z*20);
-	center=Vec3f(position.x + fwd.x*35, position.y, position.z + fwd.z*35);
-	
+	camera.position = Vec3f(position.x - fwd.x*20, position.y + sin(45.0)*20,	 position.z - fwd.z*20);
+	camera.center = Vec3f(position.x + fwd.x*35, position.y, position.z + fwd.z*35);
+	camera.up = Vec3f(0,1,0);
 
 	wayPoints.push_back(wayPoint(time,				position,								rotation								));
 	wayPoints.push_back(wayPoint(time+3000.0,		position+newFwd*2500,					newRot									));

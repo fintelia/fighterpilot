@@ -57,7 +57,8 @@ extern planeType defaultPlane;
 extern const int BULLET_SPEED;
 extern const int MISSILE_SPEED;
 
-const double MAX_FPS		= 60.0;
+extern const double MAX_FPS;
+extern const double UPDATE_LENGTH;
 
 extern planeType planeTypeFromString(string s);
 
