@@ -47,6 +47,11 @@ public:
 	T x,y,z;
 	Vector3();
 	Vector3(T x, T y, T z);
+	template<class U>
+	Vector3(Vector3<U> u):x(u.x), y(u.y), z(u.z)
+	{
+	
+	}
 
 	T &operator[](int index);
 	T operator[](int index) const;

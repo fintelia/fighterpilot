@@ -56,41 +56,17 @@ Vec2f GraphicsManager::project(Vec3f p)
 
 	return Vec2f( (v.x + 1.0) / 2.0, (v.y + 1.0) / 2.0 );
 }
-Vec3f GraphicsManager::unProject(Vec3f p)// from x=0 to 1 && y=0 to 1 && z from 0 to 1
+Vec3f GraphicsManager::unProject(Vec3f p)// from x=0 to sAspect && y=0 to 1 && z from 0 to 1
 {
-	float alpha = view.projection.fovy * 0.5 * (p.y-0.5)*2 * PI/180;
-	float beta = view.projection.fovy * 0.5 * (p.x-0.5)*2  * PI/180;
+	matrix4x4<double> A = view.projectionMat * view.modelViewMat;
+	matrix4x4<double> inv;
 
-	Vec3f up = view.camera.up;
-	Vec3f center = (view.camera.center - view.camera.eye).normalize();
-	Vec3f right = up.cross(center);
+	if(!A.inverse(inv))
+		return Vec3f();//inverse could not be calculated
 
-	float d = (view.projection.zNear + (view.projection.zFar-view.projection.zNear)*p.z);
+	Vec3d r = inv * Vec3d(p.x*2.0/sAspect - 1.0, p.y*2.0 - 1.0, p.z*2.0 - 1.0);
 
-	Profiler.setOutput("p.x",(p.x*2-1.0));
-	Profiler.setOutput("p.y",(p.y*2-1.0));
-
-	Vec3f r = view.camera.eye + (center + up * tan(alpha) + right * tan(beta) * view.projection.aspect) * d;
-
-	Vec2f pj = project(r);
-
-	Profiler.setOutput("pj.x",((1.0-pj.x)*2-1.0));
-	Profiler.setOutput("pj.y",((1.0-pj.y)*2-1.0));
-
-	Profiler.setOutput("pj/p.x",((1.0-pj.x)*2-1.0)/(p.x*2-1.0));
-	Profiler.setOutput("pj/p.y",((1.0-pj.y)*2-1.0)/(p.y*2-1.0));
-
-	return r;
-
-
-	//p = p-eye;
-	//Angle alpha = acosA( (p.normalize()).dot(view.camera.center.normalize()) );
-	//Angle beta = acosA( (p.normalize()).dot(view.camera.up.normalize()) );
-
-
-
-	//matrix4x4<float> PM = view.modelViewMat * view.projectionMat;
-	//view.projection.
+	return Vec3f(r.x,r.y,r.z);
 }
 void GraphicsManager::viewport(int x,int y,int width,int height)
 {

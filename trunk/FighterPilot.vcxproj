@@ -185,7 +185,6 @@
     <ClInclude Include="missile.h" />
     <ClInclude Include="modeManager.h" />
     <ClInclude Include="objectList.h" />
-    <ClInclude Include="OpenGLgraphics.h" />
     <ClInclude Include="partical.h" />
     <ClInclude Include="particleManager.h" />
     <ClInclude Include="path.h" />

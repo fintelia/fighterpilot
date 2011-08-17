@@ -384,9 +384,6 @@
     <ClInclude Include="menuScreen.h">
       <Filter>Source Files\menu</Filter>
     </ClInclude>
-    <ClInclude Include="OpenGLgraphics.h">
-      <Filter>Source Files\graphicsManager</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">

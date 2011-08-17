@@ -71,7 +71,7 @@ bool levelEditor::init()
 	level = new editLevel;
 
 	scrollVal=0.0;
-	level->newGround(5,5);
+	level->newGround(65,65);
 	diamondSquare(0.17,0.5,1);
 	smooth(1);
 
@@ -164,7 +164,7 @@ int levelEditor::update()
 		}
 		else if(buttons["dSquare"]->checkChanged())
 		{
-			diamondSquare(0.17,0.5,16);
+			diamondSquare(0.17,0.5,1);
 		}
 		else if(buttons["fromFile"]->checkChanged())
 		{
@@ -477,7 +477,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 			diamondSquareFill(n*x, n*y, n*(x+1), n*(y+1));
 		}
 	}
-	smooth(1);
+//	smooth(1);
 
 	//for(int itt=3; (0x1 << itt) < (level->ground()->resolutionX()-1);itt++, rVal*=m)
 	//{
@@ -575,7 +575,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//}
 	//
 
-	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*400,level->ground()->resolutionZ()*400));
+	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*40,level->ground()->resolutionZ()*40));
 
 
 
@@ -783,22 +783,14 @@ void levelEditor::smooth(int a)
 }
 void levelEditor::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
 {
-	double mViewMat[16];
-	double projMat[16];
-	int viewport[4]  = {0,0,sw,sh};
-	glGetDoublev(GL_MODELVIEW_MATRIX,mViewMat);
-	glGetDoublev(GL_PROJECTION_MATRIX,projMat);
-
-	Vec3d P0, P1, dir;
-
-	gluUnProject(x,sh-y,0.0,mViewMat,projMat,viewport,&P0.x,&P0.y,&P0.z);
-	gluUnProject(x,sh-y,1.0,mViewMat,projMat,viewport,&P1.x,&P1.y,&P1.z);
-	dir = P0-P1;
-
+	Vec2f cursorPos = input->getMousePos();
+	Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+	Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+	Vec3d dir = P0-P1;
+				
 	if(abs(dir.y) < 0.001) return;
 	Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 	((editLevel*)level)->addObject(type,team,controlType,Vec3f(val.x,val.y,val.z));
-
 }
 void levelEditor::render3D() 
 {	
@@ -844,28 +836,6 @@ void levelEditor::render3D()
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
-		Vec3f v = graphics->unProject(Vec3f(1.0-(float)cursorPos.x/sw,1.0-(float)cursorPos.y/sh,0.0));
-		graphics->drawSphere(v,0.1);
-
-
-		Vec3f f = (c-e).normalize();
-		Vec3f r = u.cross(f);
-
-		float d = 300.0;
-
-		glBegin(GL_LINE_LOOP);
-		for(float i=0; i < PI*2; i+=0.1)
-		{
-			Vec3f v = e + f*d + u*sin(i)*d*tan(40.0*PI/180) + r*cos(i)*d*tan(40.0*PI/180)*1.25;
-			glVertex3f(v.x,v.y,v.z);
-		}
-
-		glEnd();
-
-
-
 	if(getShader() != -1)
 		((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
 	bool w = getShader() != 1;
@@ -882,19 +852,11 @@ void levelEditor::render3D()
 		if(placingObject() != 0)
 		{
 			////////////////////////////////draw object//////////////////////////////////
-			POINT cursorPos;
-			GetCursorPos(&cursorPos);
-			double mViewMat[16];
-			double projMat[16];
-			int viewport[4]  = {0,0,sw,sh};
-			glGetDoublev(GL_MODELVIEW_MATRIX,mViewMat);
-			glGetDoublev(GL_PROJECTION_MATRIX,projMat);
 
-			Vec3d P0, P1, dir;
-
-			gluUnProject(cursorPos.x,sh-cursorPos.y,0.0,mViewMat,projMat,viewport,&P0.x,&P0.y,&P0.z);
-			gluUnProject(cursorPos.x,sh-cursorPos.y,1.0,mViewMat,projMat,viewport,&P1.x,&P1.y,&P1.z);
-			dir = P0-P1;
+			Vec2f cursorPos = input->getMousePos();
+			Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+			Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+			Vec3d dir = P0-P1;
 				
 			if(abs(dir.y) < 0.001) return;
 			Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
