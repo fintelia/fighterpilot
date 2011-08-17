@@ -22,13 +22,13 @@
 class Input: public functor<float,int>
 {
 protected:
+	Vec2f mousePos;
 	struct mouseButtonState
 	{
 		Vec2f downPos;
 		Vec2f upPos;
-		Vec2f curPos;
 		bool down;
-		mouseButtonState(): downPos(0,0), upPos(0,0), curPos(0,0), down(false){}
+		mouseButtonState(): downPos(0,0), upPos(0,0), down(false){}
 	};
 
 public:
@@ -72,6 +72,7 @@ public:
 	virtual bool getKey(int key)=0;
 	virtual const mouseButtonState& getMouseState(mouseButton m)=0;
 	virtual float operator() (int key)=0;
+	virtual Vec2f getMousePos(){return mousePos;}
  };
 
 class standard_input: public Input
@@ -89,7 +90,7 @@ public:
 	virtual bool getKey(int key);
 	virtual const mouseButtonState& getMouseState(mouseButton m);
 	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual void update(){}
+	virtual void update();
 	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
 };
 

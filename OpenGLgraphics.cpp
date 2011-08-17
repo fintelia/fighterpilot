@@ -502,12 +502,15 @@ void OpenGLgraphics::viewport(int x,int y,int width,int height)
 void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zFar)
 {
 	GraphicsManager::perspective(fovy, aspect, zNear, zFar);
+	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(fovy, aspect, zNear, zFar);
 }
 void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
 {
 	GraphicsManager::ortho(left, right, bottom, top, zNear, zFar);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 	glOrtho(left, right, bottom, top, zNear, zFar);
 }
 void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
@@ -528,6 +531,8 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 		}
 	}
 	GraphicsManager::lookAt(eye, center, up);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
 }
 void OpenGLgraphics::destroyWindow()
