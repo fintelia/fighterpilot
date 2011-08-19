@@ -42,20 +42,14 @@ void OpenGLgraphics::model::render()
 {
 	//todo write code
 }
-bool OpenGLgraphics::drawOverlay(Vec2f p1, Vec2f p2)
+bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 {
-	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
-	//if(orthoShader)
-	//{
-	//	dataManager.bind("ortho");
-	//	if(!dataManager.texturesBound())
-	//		dataManager.bind("white");
-	//}
+	if(tex != "") dataManager.bind(tex);
 
-	overlay[0].position = Vec2f(p1.x,p1.y);
-	overlay[1].position = Vec2f(p2.x,p1.y);
-	overlay[2].position = Vec2f(p2.x,p2.y);
-	overlay[3].position = Vec2f(p1.x,p2.y);
+	overlay[0].position = Vec2f(r.x,		r.y);
+	overlay[1].position = Vec2f(r.x+r.w,	r.y);
+	overlay[2].position = Vec2f(r.x+r.w,	r.y+r.h);
+	overlay[3].position = Vec2f(r.x,		r.y+r.h);
 
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
@@ -74,82 +68,55 @@ bool OpenGLgraphics::drawOverlay(Vec2f p1, Vec2f p2)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	//if(orthoShader)
-	//	dataManager.unbindShader();
+	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
-bool OpenGLgraphics::drawOverlay(Vec2f p1, Vec2f p2, string tex)
+bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 {
-	dataManager.bind(tex);
-	drawOverlay(p1, p2);
-	dataManager.unbind(tex);
-	return true;
-}
-bool OpenGLgraphics::drawOverlay(float x,float y,float x2,float y2)
-{
-	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
-	//if(orthoShader)
-	//{
-	//	dataManager.bind("ortho");
-	//	if(!dataManager.texturesBound())
-	//		dataManager.bind("white");
-	//}
+	if(tex != "") dataManager.bind(tex);
 
-	overlay[0].position = Vec2f(x,y);
-	overlay[1].position = Vec2f(x2,y);
-	overlay[2].position = Vec2f(x2,y2);
-	overlay[3].position = Vec2f(x,y2);
-
-	overlay[0].texCoord = Vec2f(0.0,0.0);
-	overlay[1].texCoord = Vec2f(1.0,0.0);
-	overlay[2].texCoord = Vec2f(1.0,1.0);
-	overlay[3].texCoord = Vec2f(0.0,1.0);
-
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
-
-	glDrawArrays(GL_QUADS, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//if(orthoShader)
-	//	dataManager.unbindShader();
-
-	return true;
-}
-bool OpenGLgraphics::drawOverlay(float x,float y,float x2,float y2,string tex)
-{
-	dataManager.bind(tex);
-	drawOverlay(x, y, x2, y2);
-	dataManager.unbind(tex);
-	return true;
-}
-bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation)
-{
-	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
-	//if(orthoShader)
-	//	dataManager.bind("ortho");
-
-	float w2 = size.x/2;
-	float h2 = size.y/2;
+	float w2 = r.w/2;
+	float h2 = r.h/2;
 	float cosRot = cos(rotation);
 	float sinRot = sin(rotation);
-	overlay[0].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*0.25) , origin.y+h2 + h2*sin(-rotation+PI*0.25));
-	overlay[1].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*0.75) , origin.y+h2 + h2*sin(-rotation+PI*0.75));
-	overlay[2].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.25) , origin.y+h2 + h2*sin(-rotation+PI*1.25));
-	overlay[3].position = Vec2f(origin.x+w2 + w2*cos(-rotation+PI*1.75) , origin.y+h2 + h2*sin(-rotation+PI*1.75));
+	overlay[0].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*0.25) , r.y+h2 + h2*sin(-rotation+PI*0.25));
+	overlay[1].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*0.75) , r.y+h2 + h2*sin(-rotation+PI*0.75));
+	overlay[2].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*1.25) , r.y+h2 + h2*sin(-rotation+PI*1.25));
+	overlay[3].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*1.75) , r.y+h2 + h2*sin(-rotation+PI*1.75));
 
 	overlay[0].texCoord = Vec2f(0.0,0.0);
 	overlay[1].texCoord = Vec2f(1.0,0.0);
 	overlay[2].texCoord = Vec2f(1.0,1.0);
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
-	//dataManager.bind(tex);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	if(tex != "") dataManager.unbind(tex);
+	return true;
+}
+bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
+{
+	if(tex != "") dataManager.bind(tex);
+
+	overlay[0].position = Vec2f(r.x,		r.y);
+	overlay[1].position = Vec2f(r.x+r.w,	r.y);
+	overlay[2].position = Vec2f(r.x+r.w,	r.y+r.h);
+	overlay[3].position = Vec2f(r.x,		r.y+r.h);
+
+	overlay[0].texCoord = Vec2f(t.x,		t.y);
+	overlay[1].texCoord = Vec2f(t.x+t.w,	t.y);
+	overlay[2].texCoord = Vec2f(t.x+t.w,	t.y+t.h);
+	overlay[3].texCoord = Vec2f(t.x,		t.y+t.h);
+
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -162,60 +129,10 @@ bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	//dataManager.unbind(tex);
-
-	//if(orthoShader)
-	//	dataManager.unbindShader();
-
+	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
-bool OpenGLgraphics::drawRotatedOverlay(Vec2f origin, Vec2f size, Angle rotation, string tex)
-{
-	dataManager.bind(tex);
-	drawRotatedOverlay(origin, size, rotation);
-	dataManager.unbind(tex);
-	return true;
-}
-bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize)
-{
-	//bool orthoShader = dataManager.getCurrentShaderId() == 0;
-	//if(orthoShader)
-	//	dataManager.bind("ortho");
 
-	overlay[0].position = origin + Vec2f(0.0,		0.0);
-	overlay[1].position = origin + Vec2f(size.x,	0.0);
-	overlay[2].position = origin + Vec2f(size.x,	size.y);
-	overlay[3].position = origin + Vec2f(0.0,		size.y);
-
-	overlay[0].texCoord = tOrigin + Vec2f(0.0,		0.0);
-	overlay[1].texCoord = tOrigin + Vec2f(tSize.x,	0.0);
-	overlay[2].texCoord = tOrigin + Vec2f(tSize.x,	tSize.y);
-	overlay[3].texCoord = tOrigin + Vec2f(0.0,		tSize.y);
-
-	//dataManager.bind(tex);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
-
-	glDrawArrays(GL_QUADS, 0, 4);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//dataManager.unbind(tex);
-
-	return true;
-}
-bool OpenGLgraphics::drawPartialOverlay(Vec2f origin, Vec2f size, Vec2f tOrigin, Vec2f tSize, string tex)
-{
-	dataManager.bind(tex);
-	drawPartialOverlay(origin, size, tOrigin, tSize);
-	dataManager.unbind(tex);
-	return true;
-}
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
 	if(t == SCREEN)
@@ -243,7 +160,7 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 	//double r = sqrt((float)sw*sw + sh*sh)/2;
 
 	dataManager.bindTex(renderTextures[src]);
-	drawOverlay(-1,-1,1,1);
+	drawOverlay(Rect::XYXY(-1,-1,1,1));
 	dataManager.bindTex(0);
 }
 bool OpenGLgraphics::init()

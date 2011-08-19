@@ -46,16 +46,16 @@ planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void update()
 {
-	while(world.time.needsUpdate())
+	//while(world.time.needsUpdate())
 	{
-		world.time.nextUpdate();
-		modeManager.update();	//takes almost no time
+	//	world.time.nextUpdate();
+		
 	}
 
 	world.time.nextFrame();
-
-	input->update();		//takes 2-11 ms
 	
+	input->update();		//takes 2-11 ms
+	modeManager.update();	//takes almost no time
 
 	menuManager.update();	//takes almost no time
 }

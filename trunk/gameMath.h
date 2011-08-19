@@ -20,6 +20,90 @@ public:
 //	float padding[28];
 };
 
+template <class T>
+class rectangle
+{
+public:
+	T x, y, w, h;
+
+	rectangle(T X, T Y, T W, T H): x(X), y(Y), w(W), h(H)
+	{
+		
+	}
+
+	static rectangle XYWH(T X, T Y, T W, T H)
+	{
+		return rectangle(X,Y,W,H);
+	}
+	static rectangle XYWH(Vector2<T> origin, Vector2<T> size)
+	{
+		return rectangle(origin.x,origin.y,size.x,size.y);
+	}
+	static rectangle XYXY(T X, T Y, T X2, T Y2)
+	{
+		return rectangle(X,Y,X2-X,Y2-Y);
+	}
+	static rectangle XYXY(Vector2<T> p1, Vector2<T> p2)
+	{
+		return rectangle(p1.x,p1.y,p2.x-p1.x,p2.y-p1.y);
+	}
+	static rectangle XXYY(T X, T X2, T Y, T Y2)
+	{
+		return rectangle(X,Y,X2-X,Y2-Y);
+	}
+	static rectangle XXYY(Vector2<T> xVals, Vector2<T> yVals)
+	{
+		return rectangle(xVals.x,yVals.x,xVals.y,yVals.y);
+	}
+	static rectangle CWH(T Cx, T Cy, T W, T H)
+	{
+		return rectangle(Cx-W/2,Cy-W/2,W,H);
+	}
+	static rectangle CWH(Vector2<T> center, Vector2<T> size)
+	{
+		return rectangle(center.x-size.x/2,center.y-size.y/2,size.x,size.y);
+	}
+
+
+	Vector2<T> bl()
+	{
+		return Vector2<T>(x + (w >= 0) ? 0 : w,y + (h >= 0) ? 0 : h);
+	}
+	Vector2<T> tr()
+	{
+		return Vector2<T>(x + (w <= 0) ? 0 : w,y + (h <= 0) ? 0 : h);
+	}
+	Vector2<T> tl()
+	{
+		return Vector2<T>(x + (w <= 0) ? 0 : w,y + (h >= 0) ? 0 : h);
+	}
+	Vector2<T> br()
+	{
+		return Vector2<T>(x + (w >= 0) ? 0 : w,y + (h <= 0) ? 0 : h);
+	}
+	Vector2<T> origin()
+	{
+		return Vector2<T>(x ,y);
+	}
+	Vector2<T> size()
+	{
+		return Vector2<T>(w, h);
+	}
+
+	T area()
+	{
+		return abs(w * h);
+	}
+
+};
+
+typedef rectangle<float>		Rect;
+
+typedef rectangle<float>		Rect4f;
+typedef rectangle<double>		Rect4d;
+typedef rectangle<int>			Rect4i;
+typedef rectangle<unsigned int>	Rect4u;
+typedef rectangle<long>			Rect4l;
 
 template <class T>
 void upAndRight(Vector3<T> fwd,Angle roll,Vector3<T>& up,Vector3<T>& right)

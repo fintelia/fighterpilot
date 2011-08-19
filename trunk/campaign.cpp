@@ -112,7 +112,7 @@ void modeCampaign::draw2D()
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
 	//	dataManager.bind("ortho");
-		graphics->drawOverlay(0,1.0,sAspect,0.0,"cockpit square");
+		graphics->drawOverlay(Rect::XYXY(0,1.0,sAspect,0.0),"cockpit square");
 	//	dataManager.unbindShader();
 
 		targeter(0.5*sAspect, 0.5, 0.08, p->roll);

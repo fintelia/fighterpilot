@@ -16,3 +16,4 @@ T clamp(T value, U v1, V v2)
 		else return value;
 	}
 }
+
