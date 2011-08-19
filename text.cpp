@@ -10,7 +10,7 @@ void TextManager::renderCharacter(char c, int x, int y)
 			cwidth=(double)chars[c].width/textureWidth-0.002,
 			cheight=(double)chars[c].height/textureWidth-0.002;
 
-	graphics->drawPartialOverlay(Vec2f(x,y),Vec2f(chars[c].width,chars[c].height),Vec2f(cx,cy),Vec2f(cwidth,cheight));
+	graphics->drawPartialOverlay(Rect::XYWH(x,y,chars[c].width,chars[c].height),Rect::XYWH(cx,cy,cwidth,cheight));
 }
 
 void TextManager::renderText(string text, int x, int y)

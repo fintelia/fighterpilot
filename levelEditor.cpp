@@ -870,9 +870,10 @@ void levelEditor::render3D()
 			glColor4f(0.1,0.3,1.0,0.3);
 				
 			graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
+								
 								Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
-								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
-								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0));
+								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
+								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
 
 			glColor4f(0.3,0.5,1.0,0.2);
 			for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
@@ -907,8 +908,7 @@ void levelEditor::render3D()
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
-			graphics->drawOverlay(i->second.center.x - i->second.radius, i->second.center.y - i->second.radius,
-				i->second.center.x + i->second.radius, i->second.center.y + i->second.radius,"target ring");
+			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2),"target ring");
 		}
 
 		//for(auto i = level->objects().begin(); i!= level->objects().end(); i++)

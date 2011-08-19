@@ -93,7 +93,7 @@ void manager::render()
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
 		if(dataManager.assetLoaded("cursor"))
-			graphics->drawOverlay(cursorPos.x,cursorPos.y,cursorPos.x+21,cursorPos.y+25,"cursor");
+			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,21,25),"cursor");
 		else
 		{
 			glColor3f(0,0,0);
@@ -362,8 +362,8 @@ int openFile::update()
 }
 void openFile::render()
 {
-	graphics->drawOverlay(sw/2-420,sh/2-261,sw/2+421,sh/2+262,"file viewer");
-	graphics->drawOverlay(sw/2-180,sh/2+189,sw/2+190,sh/2+235,"entry bar");
+	graphics->drawOverlay(Rect::CWH(sw/2,sh/2,841,523),"file viewer");
+	graphics->drawOverlay(Rect::XYXY(sw/2-180,sh/2+189,sw/2+190,sh/2+235),"entry bar");
 
 	glColor3f(0,0,0);
 	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
@@ -508,12 +508,12 @@ bool messageBox_c::init(string t, vector<string> names)
 void messageBox_c::render()
 {
 	if(dataManager.assetLoaded("dialog box"))
-		graphics->drawOverlay(x,y,x+width,y+height,"dialog box");
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"dialog box");
 	else
 	{
 		dataManager.bind("noTexture");
 		glColor3f(0.3,0.3,0.3);
-		graphics->drawOverlay(x,y,x+width,y+height);
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		glColor3f(1,1,1);
 	}
 
@@ -528,8 +528,9 @@ void messageBox_c::render()
 	{
 		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
-			graphics->drawOverlay(	startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,		startY+slotHeight*0.5-35,						
-									startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,		startY+slotHeight*0.5+35,   "glow");
+			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,		startY+slotHeight*0.5-35,						
+												startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,		startY+slotHeight*0.5+35),
+												"glow");
 		}
 		(*i)->render();
 	}
@@ -653,7 +654,7 @@ int objectProperties::update()
 void objectProperties::render()
 {
 	glColor4f(1,1,1,0.2);
-	graphics->drawOverlay(sw/2-400,sh/2-250,sw/2+400,sh/2+250,"white");
+	graphics->drawOverlay(Rect::CWH(sw/2,sh/2,800,500),"white");
 	glColor3f(1,1,1);
 }
 void chooseMode::render()
@@ -675,20 +676,20 @@ void chooseMode::render()
 	}
  */
 	dataManager.bind("ortho");
-	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
+	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
 	float sx = (float)sw/800;
 	float sy = (float)sh/600;
-	graphics->drawOverlay(Vec2f((-0.409+0.525)*sAspect,0.493),Vec2f(0.903*sAspect,0.302),"menu pictures");
+	graphics->drawOverlay(Rect::XYXY((-0.409+0.525)*sAspect,0.493,0.903*sAspect,0.302),"menu pictures");
 	for(int i=1;i<=5;i++)
 	{
 		if(i!=activeChoice+2)
 		{
-			graphics->drawOverlay(Vec2f((-0.409+i*0.263)*sAspect,0.5),Vec2f((-0.148+i*0.263)*sAspect,0.25),"menu slot");
+			graphics->drawOverlay(Rect::XYXY((-0.409+i*0.263)*sAspect,0.5,(-0.148+i*0.263)*sAspect,0.25),"menu slot");
 		}
 	}
 	for(int i=1;i<=3;i++)
 	{
-		graphics->drawPartialOverlay(Vec2f((i*0.263-0.144)*sAspect,0.503),Vec2f(0.256*sAspect,-0.0417),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
+		graphics->drawPartialOverlay(Rect::XYWH((i*0.263-0.144)*sAspect,0.503,0.256*sAspect,-0.0417),Rect::XYWH(0,0.33*(i-1),1,0.33),"menu mode choices");
 	}
 	dataManager.unbindShader();
 }
@@ -782,7 +783,7 @@ bool chooseMap::init()
 void chooseMap::render()
 {
 	dataManager.bind("ortho");
-	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
+	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
 	dataManager.unbindShader();
 }
 bool chooseMap::keyDown(int vkey)
@@ -815,11 +816,11 @@ bool inGame::init()
 void inGame::render()
 {
 	dataManager.bind("ortho");
-	graphics->drawOverlay(0.440*sAspect,0.620,0.559*sAspect,0.381,"menu in game");
+	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.620,0.559*sAspect,0.381),"menu in game");
 
-	if(activeChoice==RESUME)	graphics->drawOverlay(0.445*sAspect,0.600,0.545*sAspect,0.550,"menu in game select");
-	if(activeChoice==OPTIONS)	graphics->drawOverlay(0.445*sAspect,0.528,0.545*sAspect,0.478,"menu in game select");
-	if(activeChoice==QUIT)		graphics->drawOverlay(0.445*sAspect,0.454,0.545*sAspect,0.404,"menu in game select");
+	if(activeChoice==RESUME)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.600,0.545*sAspect,0.550),"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.528,0.545*sAspect,0.478),"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.454,0.545*sAspect,0.404),"menu in game select");
 
 	dataManager.unbindShader();
 }
@@ -899,17 +900,17 @@ void loading::render()
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
 	dataManager.bind("ortho");
-	graphics->drawOverlay(0.0,1.0,sAspect,0.0,"menu background");
-	graphics->drawOverlay(0.05*sAspect,0.04,0.95*sAspect,0.02,"progress back");
+	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
+	graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,0.95*sAspect,0.02),"progress back");
 
 	if(dataManager.assetLoaded("progress front"))
 	{
-		graphics->drawOverlay(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02,"progress front");
+		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02),"progress front");
 	}
 	else
 	{
 		glColor3f(0,1,0);
-		graphics->drawOverlay(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02);
+		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02));
 		glColor3f(1,1,1);
 	}
 	dataManager.unbindShader();
@@ -999,7 +1000,7 @@ void button::render()
 				rPos.y=y+height-min(10,height/2);
 				rSize.y=min(10,height/2);
 			}
-			graphics->drawPartialOverlay(rPos,rSize,tPos,tSize,"button");
+			graphics->drawPartialOverlay(Rect::XYWH(rPos,rSize),Rect::XYWH(tPos,tSize),"button");
 		}
 	}
 	dataManager.unbindTextures();
@@ -1029,9 +1030,9 @@ bool button::mouseUpL(int X, int Y)
 }
 void checkBox::render()
 {
-	graphics->drawOverlay(x,y,x+26,y+26,"check box");
+	graphics->drawOverlay(Rect::XYWH(x,y,26,26),"check box");
 	if(checked)
-		graphics->drawOverlay(x,y,x+26,y+26,"check");
+		graphics->drawOverlay(Rect::XYXY(x,y,26,26),"check");
 
 	glColor4f(color.r,color.g,color.b,color.a);
 	textManager->renderText(text,x+30,y);
@@ -1092,11 +1093,11 @@ void textBox::render()
 {
 	if(focus)	glColor3f(0,0,0);
 	else	glColor3f(0.3,0.3,0.3);
-	graphics->drawOverlay(x-1,y-1,x+width+1,y+height+1,"white");
+	graphics->drawOverlay(Rect::XYXY(x-1,y-1,x+width+1,y+height+1),"white");
 
 	if(focus)	glColor3f(0.6,0.6,0.6);
 	else	glColor3f(0.8,0.8,0.8);
-	graphics->drawOverlay(x,y,x+width,y+height,"white");
+	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"white");
 
 	glColor3f(color.r,color.g,color.b);
 	if(focus)
@@ -1275,25 +1276,25 @@ bool listBox::mouseUpL(int X, int Y)
 void listBox::render()
 {
 	glColor3f(0.3,0.3,0.3);
-	graphics->drawOverlay(x-1,y-1,x+width+1,y+height+1,"white");
+	graphics->drawOverlay(Rect::XYXY(x-1,y-1,x+width+1,y+height+1),"white");
 
 	if(focus)
 	{
 		glColor3f(0,0,0);
-		graphics->drawOverlay(x-1,y+height+2,x+width+1,y+height+2+30*options.size(),"white");
+		graphics->drawOverlay(Rect::XYXY(x-1,y+height+2,x+width+1,y+height+2+30*options.size()),"white");
 	}
 
 	if(focus)	glColor3f(0.6,0.6,0.6);
 	else	glColor3f(0.8,0.8,0.8);
-	graphics->drawOverlay(x,y,x+width,y+height,"white");
+	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"white");
 
 	if(focus)
-	graphics->drawOverlay(x,y+height+3,x+width,y+height+1+30*options.size(),"white");
+	graphics->drawOverlay(Rect::XYXY(x,y+height+3,x+width,y+height+1+30*options.size()),"white");
 
 
 	if(focus)	glColor3f(0.3,0.3,0.3);
 	else	glColor3f(0.5,0.5,0.5);
-	graphics->drawOverlay(x+width-height,y,x+width,y+height,"white");
+	graphics->drawOverlay(Rect::XYXY(x+width-height,y,x+width,y+height),"white");
 
 	glColor3f(0,0,0);
 	graphics->drawTriangle(	Vec3f(x+width-height * 0.666,	y + height * 0.333, 0),
@@ -1315,7 +1316,7 @@ void listBox::render()
 	if(focus && optionNum != -1)
 	{
 		glColor4f(0.3,0.3,0.3,0.3);
-		graphics->drawOverlay(x,y+height+3+30*optionNum,x+width,y+height+1+30*(optionNum+1),"white");
+		graphics->drawOverlay(Rect::XYXY(x,y+height+3+30*optionNum,x+width,y+height+1+30*(optionNum+1)),"white");
 	}
 
 	glColor3f(1,1,1);
@@ -1413,10 +1414,10 @@ void slider::render()
 		GetCursorPos(&cursorPos);
 		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
 	}
-	graphics->drawOverlay(x,0.5*height+y-11,x+width,0.5*height+y+11,"slider bar");
+	graphics->drawOverlay(Rect::XYXY(x,0.5*height+y-11,x+width,0.5*height+y+11),"slider bar");
 
 	float xv = (value-minValue)*width/(maxValue-minValue)+x;
-	graphics->drawOverlay(xv-22,y,xv+22,y+height,"slider");
+	graphics->drawOverlay(Rect::XYXY(xv-22,y,xv+22,y+height),"slider");
 }
 bool slider::mouseDownL(int X, int Y)
 {

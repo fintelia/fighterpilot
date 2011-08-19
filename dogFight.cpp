@@ -59,7 +59,7 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 
 		glColor3f(1,1,1);
 
-		graphics->drawOverlay(x,y,x+width,y+height,"health bar");
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
 
 
 
@@ -68,7 +68,7 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 		Vec2f v1 = Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*8.0);
 		Vec2f v2 = Vec2f(x + width/150*125, y + height/25*16.0);
 
-		graphics->drawOverlay(v1, v2,"white");
+		graphics->drawOverlay(Rect::XYXY(v1, v2),"white");
 
 	}
 	else
@@ -80,7 +80,7 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 		//glUniform1f(uniform_angle, 1.24f);
 		dataManager.setUniform1f("health",health);
 		dataManager.setUniform1f("angle",1.24f);
-		graphics->drawOverlay(x,y,x+width,y+height);
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		dataManager.bind("ortho");
 	}
 }
@@ -91,8 +91,8 @@ void modeDogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 	x2 *=	0.00125*sw;
 	y2 *=	0.00167*sh;
 
-	graphics->drawRotatedOverlay(Vec2f(x1,y2),Vec2f(x2-x1,y2-y1),degrees * PI/180,"tilt back");
-	graphics->drawOverlay(x1,y2,x2,y2,"tilt front");
+	graphics->drawRotatedOverlay(Rect::XYXY(x1,y2,x2,y2),degrees * PI/180,"tilt back");
+	graphics->drawOverlay(Rect::XYXY(x1,y2,x2,y2),"tilt front");
 }
 void modeDogFight::radar(float x, float y, float width, float height,bool firstPerson, nPlane* p)
 {
@@ -118,7 +118,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		//dataManager.setUniform1i("radarTexture", 0);
 	//	glUniform1f(radarAng, radarAng);
 
-		graphics->drawOverlay(x,y,x+width,y+height);
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		//dataManager.unbind("radar");
 		dataManager.unbindTextures();
 
@@ -163,7 +163,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.setUniform1f("radarAng", radarAng);
 		dataManager.setUniform1i("backgroundTexture", 0);
 
-		graphics->drawOverlay(x,y,x+width,y+height);
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
 		dataManager.unbindTextures();
 		//dataManager.unbindShader();
@@ -200,7 +200,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		glColor3f(1,1,1);
 		dataManager.bind("ortho");
 
-		graphics->drawOverlay(x,y,x+width,y+height,"radar frame");
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
@@ -219,7 +219,7 @@ void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, flo
 					else if(distSquared > 2000*2000)	glColor3f(0.6,0.5,0.5);
 					else								glColor3f(0.5,0,0);
 
-					graphics->drawOverlay(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth,"target ring");
+					graphics->drawOverlay(Rect::XYXY(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth),"target ring");
 				}
 			}
 		}
@@ -233,8 +233,8 @@ void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 	//x *=	0.00125*sw;
 	//y *=	0.00167*sh;
 	//dataManager.bind("ortho");
-	graphics->drawRotatedOverlay(Vec2f(x-apothem,y+apothem),Vec2f(apothem*2,-apothem*2),tilt,"tilt");
-	graphics->drawOverlay(x-apothem,y+apothem,x+apothem,y-apothem,"targeter");
+	graphics->drawRotatedOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),tilt,"tilt");
+	graphics->drawOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),"targeter");
 	//dataManager.unbindShader();
 }
 //modes
