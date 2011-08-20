@@ -212,6 +212,7 @@ void Level::heightmapGL::createList() const
 		glEnd();
 	}
 	glEndList();
+	
 }
 void Level::heightmapGL::render() const
 {
@@ -270,6 +271,7 @@ void Level::heightmapGL::render() const
 			glScalef(mSize.x,1,mSize.y);
 			glCallList(dispList);
 		glPopMatrix();
+
 
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
@@ -440,9 +442,11 @@ LevelFile Level::getLevelFile()
 	f.info->numObjects = mObjects.size();
 	f.info->numRegions = 0;
 	f.heights = mGround->heights;
-	f.objects = new LevelFile::Object[mObjects.size()];
-	memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
-
+	f.objects = NULL;
+	if(!mObjects.empty()){
+		f.objects = new LevelFile::Object[mObjects.size()];
+		memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
+	}
 	return f;
 }
 LevelFile Level::getLevelFile(float seaLevelOffset)

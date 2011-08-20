@@ -48,8 +48,6 @@ modeDogFight::~modeDogFight()
 
 void modeDogFight::healthBar(float x, float y, float width, float height, float health, bool firstPerson)
 {
-
-
 	if(!firstPerson)
 	{
 		//x *=	0.00125*sw;
@@ -60,7 +58,6 @@ void modeDogFight::healthBar(float x, float y, float width, float height, float 
 		glColor3f(1,1,1);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
-
 
 
 		//graphics->drawOverlay(Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*7.25), 

@@ -54,23 +54,19 @@ int modeCampaign::update()
 		players[0].toggleFirstPerson();
 		input->up(VK_F1);
 	}
-#ifdef _DEBUG
-	if(input->getKey(0x31))
-	{
-		menuManager.setMenu(new menu::inGame);
-		input->up(0x31);
-	}
-	if(input->getKey(0x4c))
-	{
-		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
-	}
-#else if
 	if(input->getKey(VK_ESCAPE))
 	{
 		menuManager.setMenu(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
+#ifdef _DEBUG
+	if(input->getKey(0x4c))
+	{
+		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
+	}
 #endif
+
+
 	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	world.update();
 
@@ -94,12 +90,17 @@ int modeCampaign::update()
 	//}
 
 #ifdef _DEBUG
-	static bool slow = false;
 	if(input->getKey(0x54))
 	{
 		input->up(0x54);
-		slow = !slow;
-		world.time.changeSpeed(slow ? 0.1 : 1.0, 5.0);
+		if(world.time.getSpeed() > 0.5)
+		{
+			world.time.changeSpeed(0.1, 5.0);
+		}
+		else
+		{
+			world.time.changeSpeed(1.0, 5.0);
+		}
 	}
 #endif
 	return 30;

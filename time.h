@@ -218,4 +218,15 @@ public:
 	{
 		return min((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH, 1.0);
 	}
+	double getSpeed()
+	{
+		if(changingSpeed)
+		{
+			return sSpeed + (eSpeed - sSpeed) * (cReal - sReal) / (eReal - sReal);
+		}
+		else
+		{
+			return timeSpeed;
+		}
+	}
 };
