@@ -1,7 +1,6 @@
 *Things To Do:*
 
  # Separate update interval from frame rate
- # Fix missile tracking
  # Improved camera smoothing
  # Display map bounds on radar
  # Toggle fog in grass shader
