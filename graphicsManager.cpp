@@ -1,30 +1,6 @@
 
 #include "main.h"
 
-bool GraphicsManager::drawObject(gID obj)
-{
-	if(objects.find(obj) !=objects.end())
-	{
-		objects[obj]->drawFlag = true;
-		return true;
-	}
-	return false;
-}
-void GraphicsManager::render3D()
-{
-	for(map<gID,object*>::iterator i=objects.begin();i!=objects.end();i++)
-		if(i->second->drawFlag && !i->second->transparent)	i->second->render();
-	for(map<gID,object*>::iterator i=objects.begin();i!=objects.end();i++)
-		if(i->second->drawFlag && i->second->transparent)	i->second->render();
-}
-
-void GraphicsManager::reset()
-{
-	for(map<gID,object*>::iterator i=objects.begin();i!=objects.end();i++)
-	{
-		i->second->reset(); 
-	}
-}
 void GraphicsManager::flashTaskBar(int times, int length)
 {
 	FLASHWINFO f;
@@ -39,7 +15,6 @@ void GraphicsManager::minimizeWindow()
 {
 	ShowWindow(hWnd, SW_MINIMIZE);
 }
-
 Vec2f GraphicsManager::project(Vec3f p)
 {
 	p -= view.camera.eye;

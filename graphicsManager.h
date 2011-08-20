@@ -10,18 +10,6 @@ private:
 
 protected:
 	gID idGen(){return ++currentId;}
-	struct object
-	{
-		const enum objectType{MODEL, PARTICLE_EFFECT}type;
-		const bool transparent;
-		bool drawFlag;
-
-		object(objectType t, bool trans): type(t), transparent(trans){}
-		virtual void reset(){drawFlag=false;}
-		virtual void render()=0;
-	};
-
-	map<gID,object*> objects;
 
 	struct View
 	{
@@ -72,15 +60,6 @@ protected:
 
 	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0){}
 public:
-	virtual void render3D();
-	virtual void reset();
-
-	virtual gID newModel(string disp)=0;
-
-	bool drawObject(gID obj);
-	virtual bool drawModel(gID obj, Vec3f pos, Quat4f rot)=0;
-	virtual bool drawModel(gID obj)=0;
-
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
 	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
@@ -140,21 +119,14 @@ protected:
 	{
 		Vec3f position;
 	};
-	struct model: public object
-	{
-		string disp;
-		Vec3f pos;
-		Quat4f rot;
-		model(string d): object(MODEL,false), disp(d){}
-		void render();
-	};
 
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
 
 	GLuint renderTextures[2];//only second is used with multisampling
-	GLuint colorRenderBuffers[2];//only first is used with multisampling
-	GLuint depthRenderBuffers[2];
+	GLuint depthTextures[2];//only second is used with multisampling
+	GLuint colorRenderBuffers;//only used with multisampling
+	GLuint depthRenderBuffers;//only used with multisampling
 	GLuint FBOs[2];
 	
 
@@ -162,11 +134,6 @@ protected:
 
 	OpenGLgraphics();
 public:
-
-	gID newModel(string disp);
-
-	bool drawModel(gID obj, Vec3f pos, Quat4f rot);
-	bool drawModel(gID obj);
 
 	bool drawOverlay(Rect4f r, string tex="");
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");

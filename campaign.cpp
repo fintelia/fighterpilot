@@ -142,7 +142,13 @@ void modeCampaign::draw3D()
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
 
-	gluPerspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawScene(0);
+}
+void modeCampaign::drawParticles()
+{
+	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	particleManager.render();
 }

@@ -414,6 +414,11 @@ void manager::render()
 	up.y = modelview[5];
 	up.z = modelview[9];
 
+	dataManager.bind("particle shader");
+	dataManager.setUniform1i("tex",0);
+	dataManager.setUniform1i("depth",1);
+
+
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
 		(*i)->prepareRender(up,right);
@@ -427,6 +432,8 @@ void manager::render()
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if(!(*i)->additiveBlending)	(*i)->render();
+
+	dataManager.unbindShader();
 }
 void manager::shutdown()
 {

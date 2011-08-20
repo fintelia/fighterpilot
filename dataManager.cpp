@@ -397,7 +397,7 @@ void DataManager::draw(string name)
 		glActiveTexture(GL_TEXTURE0);
 		activeTextureUnit = 0;
 	}
-	bind("noTexture");
+	bind("white");
 	bind("model");
 	setUniform1i("tex",0);
 	glCallList(assets[name]->id);
@@ -842,7 +842,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		{
 			string mstring="";
 			mtl mMtl;
-			mMtl.tex = "";
+			mMtl.tex = "white";
 			mMtl.name = "";
 			mMtl.diffuse = white;
 
@@ -913,7 +913,7 @@ bool DataManager::registerOBJ(string name, string filename)
 					//if(ext.compare("tga")==0)
 					mMtl.tex=mtlFile + "/" + s[1];
 					if(!registerTexture(mMtl.tex, file+s[1]))
-						mMtl.tex = "";
+						mMtl.tex = "white";
 						//mMtl.tex=dataManager.loadPNG(file+s[1]);
 						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);
 					//else if(ext.compare("mmp")==0)
@@ -933,6 +933,7 @@ bool DataManager::registerOBJ(string name, string filename)
 				{
 					if(!mstring.compare("")) continue;
 					mMtl.diffuse.a=atof(s[1].c_str());
+
 				}
 				else if(s[0].compare(0,2,"Tr")==0)
 				{
