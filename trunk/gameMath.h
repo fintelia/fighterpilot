@@ -25,7 +25,10 @@ class rectangle
 {
 public:
 	T x, y, w, h;
-
+	rectangle(): x(), y(), w(), h()
+	{
+		
+	}
 	rectangle(T X, T Y, T W, T H): x(X), y(Y), w(W), h(H)
 	{
 		
@@ -57,7 +60,7 @@ public:
 	}
 	static rectangle CWH(T Cx, T Cy, T W, T H)
 	{
-		return rectangle(Cx-W/2,Cy-W/2,W,H);
+		return rectangle(Cx-W/2,Cy-H/2,W,H);
 	}
 	static rectangle CWH(Vector2<T> center, Vector2<T> size)
 	{
@@ -65,34 +68,40 @@ public:
 	}
 
 
-	Vector2<T> bl()
+	Vector2<T> bl() const
 	{
-		return Vector2<T>(x + (w >= 0) ? 0 : w,y + (h >= 0) ? 0 : h);
+		return Vector2<T>(x + (w >= 0 ? 0 : w), y + (h >= 0 ? 0 : h));
 	}
-	Vector2<T> tr()
+	Vector2<T> tr() const
 	{
-		return Vector2<T>(x + (w <= 0) ? 0 : w,y + (h <= 0) ? 0 : h);
+		return Vector2<T>(x + (w <= 0 ? 0 : w), y + (h <= 0 ? 0 : h));
 	}
-	Vector2<T> tl()
+	Vector2<T> tl() const
 	{
-		return Vector2<T>(x + (w <= 0) ? 0 : w,y + (h >= 0) ? 0 : h);
+		return Vector2<T>(x + (w <= 0 ? 0 : w), y + (h >= 0 ? 0 : h));
 	}
-	Vector2<T> br()
+	Vector2<T> br() const
 	{
-		return Vector2<T>(x + (w >= 0) ? 0 : w,y + (h <= 0) ? 0 : h);
+		return Vector2<T>(x + (w >= 0 ? 0 : w), y + (h <= 0 ? 0 : h));
 	}
-	Vector2<T> origin()
+	Vector2<T> origin() const
 	{
 		return Vector2<T>(x ,y);
 	}
-	Vector2<T> size()
+	Vector2<T> size() const
 	{
 		return Vector2<T>(w, h);
 	}
 
-	T area()
+	T area() const
 	{
 		return abs(w * h);
+	}
+
+	template <class T>
+	bool inRect(Vector2<T> v) const
+	{
+		return ((w > 0 && v.x > x && v.x < x + w) || (w < 0 && v.x < x && v.x > x + w)) && ((h > 0 && v.y > y && v.y < y + h) || (h < 0 && v.y < y && v.x > y + h));
 	}
 
 };

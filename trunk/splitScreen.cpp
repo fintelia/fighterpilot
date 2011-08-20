@@ -63,27 +63,25 @@ int modeSplitScreen::update()
 {
 	if(input->getKey(VK_F1))	{	players[0].toggleFirstPerson(); input->up(VK_F1);}
 	if(input->getKey(VK_F2))	{	players[1].toggleFirstPerson(); input->up(VK_F2);}
-#ifdef _DEBUG
-	if(input->getKey(0x31))
-	{
-		menuManager.setMenu(new menu::inGame);
-		input->up(0x31);
-	}
-#else if
+
 	if(input->getKey(VK_ESCAPE))
 	{
 		menuManager.setMenu(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
-#endif
 
 #ifdef _DEBUG
-	static bool slow = false;
 	if(input->getKey(0x54))
 	{
 		input->up(0x54);
-		slow = !slow;
-		world.time.changeSpeed(slow ? 0.1 : 1.0, 5.0);
+		if(world.time.getSpeed() > 0.5)
+		{
+			world.time.changeSpeed(0.1, 5.0);
+		}
+		else
+		{
+			world.time.changeSpeed(1.0, 5.0);
+		}
 	}
 #endif
 	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());

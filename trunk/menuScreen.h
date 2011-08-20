@@ -8,16 +8,17 @@ public:
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
-	element(elementType t): type(t), x(0), y(0), active(true), view(true), changed(false) {}
-	element(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), text(Text), color(c), active(true), view(true), changed(false) {}
-	element(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), x(X), y(Y), width(Width), height(Height), text(Text), color(c), active(true), view(true), changed(false) {}
+	element(elementType t): type(t), active(true), view(true), focus(false), changed(false) {}
+	element(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,0,0), text(Text), color(c), active(true), view(true), focus(false), changed(false) {}
+	element(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,Width,Height), text(Text), color(c), active(true), view(true), focus(false), changed(false) {}
 
 	virtual ~element(){}
 
 	virtual void render()=0;
 
-	virtual void setElementXYWH(int X, int Y, int Width, int Height)	{x=X; y=Y; width=Width; height=Height;}
-	virtual void setElementXY(int X, int Y)	{x=X; y=Y;}
+	virtual void setElementPosition(Vec2f pos){shape.x = pos.x; shape.y = pos.y;}
+	virtual void setElementSize(Vec2f size){shape.w = size.x; shape.h = size.y;}
+	virtual void setElementShape(Rect newShape){setElementPosition(newShape.origin()); setElementSize(newShape.size());}
 	virtual void setElementText(string t) {text=t;}
 	virtual void setElementColor(Color c) {color=c;}
 
@@ -46,18 +47,26 @@ public:
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
 
+	virtual void gainFocus(){focus = true;}
+	virtual void looseFocus(){focus = false;}
+
+	virtual bool hasFocus(){return focus;}
+
+	virtual bool inElement(Vec2f v){return shape.inRect(v);}
+	const Rect& getShape(){return shape;}
+
 	const elementType type;
 protected:
-	int x;
-	int y;
-	int width;
-	int height;
+	Rect shape;
+
 	string text;
 	Color color;
 
 	bool active;
 	bool view;
 	bool changed;
+
+	bool focus;
 };
 
 class label: public element
@@ -82,7 +91,7 @@ public:
 
 	void setElementText(string t);
 	void setElementTextColor(Color c);
-	void setElementXYWH(int X, int Y, int Width, int Height);
+	void setElementSize(Vec2f size);
 protected:
 	Color textColor;
 	string clampedText;
@@ -115,7 +124,7 @@ protected:
 class textBox: public element
 {
 public:
-	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),focus(false),clicking(false),cursorPos(0){}
+	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),clicking(false),cursorPos(0){}
 
 	bool mouseDownL(int X, int Y);
 	bool mouseUpL(int X, int Y);
@@ -125,9 +134,6 @@ public:
 
 protected:
 	virtual void addChar(char c);
-	virtual void gainFocus(){focus=true;}
-	virtual void loseFocus(){focus=false;}
-	bool focus;
 	bool clicking;
 
 	int cursorPos;
@@ -153,12 +159,15 @@ protected:
 class listBox: public element
 {
 public:
-	listBox(int X, int Y, int Width, string str, Color textColor): element(LISTBOX,X,Y,Width,30,str,textColor),focus(false),clicking(false),choosing(false),optionNum(-1){}
+	listBox(int X, int Y, int Width, string str, Color textColor): element(LISTBOX,X,Y,Width,30,str,textColor),clicking(false),choosing(false),optionNum(-1){}
 
 	void addOption(string option);
 	
 	bool mouseDownL(int X, int Y);
 	bool mouseUpL(int X, int Y);
+
+	void gainFocus();
+	void looseFocus();
 
 	void render();
 
@@ -167,7 +176,6 @@ protected:
 
 	vector<string> options;
 
-	bool focus;
 	bool clicking;
 	bool choosing;
 
@@ -224,7 +232,28 @@ protected:
 	bool clicking;
 	float mouseOffset;
 };
-class popup
+class elementContainer
+{
+protected:
+	element* focus;
+	
+	map<string,button*> buttons;
+	map<string,label*> labels;
+	map<string,toggle*> toggles;
+	map<string,slider*> sliders;
+	map<string,checkBox*> checkBoxes;
+	map<string,textBox*> textBoxes;
+	map<string,listBox*> listBoxes;
+	
+	friend class manager;
+
+	void inputCallback(Input::callBack* callback);
+	bool issueInputCallback(Input::callBack* callback, element* e);
+
+	elementContainer():focus(NULL){}
+};
+
+class popup: public elementContainer
 {
 public:
 	popup(): done(false),callback(NULL){}
@@ -243,13 +272,6 @@ public:
 	functor<void,popup*>* callback;
 protected:
 	bool done;
-	map<string,button*> buttons;
-	map<string,label*> labels;
-	map<string,toggle*> toggles;
-	map<string,slider*> sliders;
-	map<string,checkBox*> checkBoxes;
-	map<string,textBox*> textBoxes;
-	map<string,listBox*> listBoxes;
 
 	friend class manager;
 };
@@ -349,7 +371,7 @@ public:
 	int update();
 	void render();
 };
-class screen: functor<void,popup*>
+class screen: public elementContainer, functor<void,popup*>
 {
 public:
 	screen(){}
@@ -369,13 +391,6 @@ public:
 	virtual void operator() (popup* p){}
 	//bool popupActive(){return popup != NULL;}
 protected:
-	map<string,button*> buttons;
-	map<string,label*> labels;
-	map<string,toggle*> toggles;
-	map<string,slider*> sliders;
-	map<string,checkBox*> checkBoxes;
-	map<string,textBox*> textBoxes;
-	map<string,listBox*> listBoxes;
 
 	friend class manager;
 };
@@ -395,29 +410,26 @@ public:
 	bool mouse(mouseButton button, bool down);
 	bool scroll(float rotations);
 	Tab getTab();
-	int getShader();//gets
-	int placingObject(){return newObjectType;}
+	int getShader();
 	void operator() (popup* p);
 protected:
 	
-	void resetView();
 
 	float randomDisplacement(float h1, float h2, float d);
 	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
 	void diamondSquareFill(int x1, int x2, int y1, int y2);
 	void diamondSquare(float h, float m, int subdivide);
 	void faultLine();
-	void fromFile(string filename);
 	void smooth(int a);
-	void addObject(int type, int team, int controlType, int x, int y);
-	bool selectObject(int x, int y);
 
+	void resetView();
+	void fromFile(string filename);
+
+	void addObject(int type, int team, int controlType, float x, float y);
 	void updateObjectCircles();
 
 
 	Tab lastTab;
-
-	void addShader(string filename);
 
 	bool awaitingMapFile;
 	bool awaitingMapSave;
@@ -513,7 +525,7 @@ public:
 	void render();
 	void render3D();
 
-	bool issueInputCallback(Input::callBack* callback, element* e);
+
 	void inputCallback(Input::callBack* callback);
 
 	screen* getMenu(){return menu;}

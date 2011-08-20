@@ -249,13 +249,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 			update();
 
-#ifdef _DEBUG
-			if(input->getKey(VK_ESCAPE))
-			{
-				done=true;
-			}
-			else 
-#endif
 			if(hasContext && active)
 			{
 				graphics->render();

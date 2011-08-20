@@ -126,7 +126,7 @@ public:
 		virtual void renderPreview(float seaLevelOffset=0.0) const=0;
 		virtual void init()=0;
 
-		float operator() (unsigned int x, unsigned int z) const{return height(x,z);}
+		float operator() (unsigned int x, unsigned int z) const{return rasterHeight(x,z);}
 		void operator() (unsigned int x, unsigned int z, float height) {setHeight(x,height,z);}
 	protected:
 		Vec3f					mPosition;

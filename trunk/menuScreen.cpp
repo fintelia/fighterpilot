@@ -145,27 +145,7 @@ void manager::setMenu(screen* m)
 	if(m != NULL)
 		m->init();
 }
-bool manager::issueInputCallback(Input::callBack* callback, element* e)
-{
-	if(e == NULL)
-		return false;
 
-	if(callback->type == KEY_STROKE)
-	{
-		Input::keyStroke* call = (Input::keyStroke*)callback;
-		if(call->up)	return e->keyUp(call->vkey);
-		else			return e->keyDown(call->vkey);
-	}
-	else if(callback->type == MOUSE_CLICK)
-	{
-		Input::mouseClick* call = (Input::mouseClick*)callback;
-		if(call->button == LEFT_BUTTON && call->down)		return e->mouseDownL(call->pos.x,call->pos.y);
-		else if(call->button == LEFT_BUTTON && !call->down)	return e->mouseUpL(call->pos.x,call->pos.y);
-		else if(call->button == RIGHT_BUTTON && call->down)	return e->mouseDownR(call->pos.x,call->pos.y);
-		else if(call->button == RIGHT_BUTTON && !call->down)return e->mouseUpR(call->pos.x,call->pos.y);
-	}
-	return false;
-}
 void manager::inputCallback(Input::callBack* callback)
 {
 	if(callback->type == KEY_STROKE)
@@ -177,18 +157,18 @@ void manager::inputCallback(Input::callBack* callback)
 			if(!call->up && popups.back()->keyDown(call->vkey)) return;
 			if(call->up && popups.back()->keyUp(call->vkey)) return;
 
-			if(pSize==popups.size())	for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)	if(issueInputCallback(callback,e->second))return;
-			if(pSize==popups.size())	for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)	if(issueInputCallback(callback,e->second))return;
-			if(pSize==popups.size())	for(auto e = popups.back()->textBoxes.begin(); pSize==popups.size() && e != popups.back()->textBoxes.end(); e++)	if(issueInputCallback(callback,e->second))return;
+			debugAssert(popups.size() == pSize);
+
+			popups.back()->inputCallback(call);
 		}
 		else if(menu!=NULL)
 		{
 			if(!call->up && menu->keyDown(call->vkey))return;
 			if(call->up && menu->keyUp(call->vkey))return;
 
-			if(menu)	for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->textBoxes.begin(); menu!=NULL && e != menu->textBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
+			debugAssert(menu != NULL);
+
+			menu->inputCallback(call);
 		}
 	}
 	else if(callback->type == MOUSE_CLICK)
@@ -204,12 +184,9 @@ void manager::inputCallback(Input::callBack* callback)
 			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
 			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;
 			
-			if(pSize==popups.size())	for(auto e = popups.back()->buttons.begin(); pSize==popups.size() && e != popups.back()->buttons.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(pSize==popups.size())	for(auto e = popups.back()->toggles.begin(); pSize==popups.size() && e != popups.back()->toggles.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(pSize==popups.size())	for(auto e = popups.back()->sliders.begin(); pSize==popups.size() && e != popups.back()->sliders.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(pSize==popups.size())	for(auto e = popups.back()->checkBoxes.begin(); pSize==popups.size() && e != popups.back()->checkBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
-			if(pSize==popups.size())	for(auto e = popups.back()->textBoxes.begin(); pSize==popups.size() && e != popups.back()->textBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
-			if(pSize==popups.size())	for(auto e = popups.back()->listBoxes.begin(); pSize==popups.size() && e != popups.back()->listBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
+			debugAssert(popups.size() == pSize);
+
+			popups.back()->inputCallback(call);
 		}
 		else if(menu!=NULL)
 		{
@@ -219,12 +196,9 @@ void manager::inputCallback(Input::callBack* callback)
 			call->pos.x *= sh;
 			call->pos.y = (1.0 - call->pos.y) * sh;
 
-			if(menu)	for(auto e = menu->buttons.begin(); menu!=NULL && e != menu->buttons.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->toggles.begin(); menu!=NULL && e != menu->toggles.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->sliders.begin(); menu!=NULL && e != menu->sliders.end(); e++)		if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->checkBoxes.begin(); menu!=NULL && e != menu->checkBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->textBoxes.begin(); menu!=NULL && e != menu->textBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
-			if(menu)	for(auto e = menu->listBoxes.begin(); menu!=NULL && e != menu->listBoxes.end(); e++)	if(issueInputCallback(callback,e->second)) return;
+			debugAssert(menu != NULL);
+
+			menu->inputCallback(call);
 		}
 
 	}
@@ -233,6 +207,79 @@ void manager::inputCallback(Input::callBack* callback)
 		Input::mouseScroll* call = (Input::mouseScroll*)callback;
 		if(!popups.empty() && popups.back()->scroll(call->rotations)) return;
 		if(menu!=NULL && menu->scroll(call->rotations)) return;
+	}
+}
+bool elementContainer::issueInputCallback(Input::callBack* callback, element* e)
+{
+	if(e == NULL)
+		return false;
+
+	if(callback->type == KEY_STROKE)
+	{
+		Input::keyStroke* call = (Input::keyStroke*)callback;
+		if(call->up)	return e->keyUp(call->vkey);
+		else			return e->keyDown(call->vkey);
+	}
+	else if(callback->type == MOUSE_CLICK)
+	{
+		Input::mouseClick* call = (Input::mouseClick*)callback;
+
+		if(call->button == LEFT_BUTTON && call->down)
+		{
+			if(!e->hasFocus())	e->gainFocus();
+			return e->mouseDownL(call->pos.x,call->pos.y);
+		}
+		else if(call->button == LEFT_BUTTON && !call->down)	return e->mouseUpL(call->pos.x,call->pos.y);
+		else if(call->button == RIGHT_BUTTON && call->down)	return e->mouseDownR(call->pos.x,call->pos.y);
+		else if(call->button == RIGHT_BUTTON && !call->down)return e->mouseUpR(call->pos.x,call->pos.y);
+	}
+	return false;
+}
+void elementContainer::inputCallback(Input::callBack* callback)
+{
+	if(callback->type == KEY_STROKE && focus != NULL)
+	{
+		Input::keyStroke* call = (Input::keyStroke*)callback;
+		issueInputCallback(callback,focus);
+	}
+	else if(callback->type == MOUSE_CLICK)
+	{
+		Input::mouseClick* call = (Input::mouseClick*)callback;
+	
+		
+	//	call->pos.x *= sh;
+	//	call->pos.y = (1.0 - call->pos.y) * sh;
+		
+		if(call->down)
+		{
+			if(focus != NULL)
+			{
+				if(focus->inElement(call->pos))
+				{
+					issueInputCallback(callback,focus);
+					return;
+				}
+				else
+				{
+					focus->looseFocus();
+					focus = NULL;
+				}
+			}
+
+			for(auto e = buttons.begin(); this!=NULL && e != buttons.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e = toggles.begin(); this!=NULL && e != toggles.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e = sliders.begin(); this!=NULL && e != sliders.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e = checkBoxes.begin(); this!=NULL && e != checkBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e = textBoxes.begin(); this!=NULL && e != textBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e = listBoxes.begin(); this!=NULL && e != listBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+		
+			debugAssert(focus == NULL);//break if focus is not NULL
+			focus = NULL;//if anything responded to the mouse press, this will execute
+		}
+		else
+		{
+			if(focus != NULL)	issueInputCallback(callback,focus);
+		}
 	}
 }
 bool openFile::init()
@@ -458,7 +505,6 @@ void saveFile::fileSelected()
 		done = true;
 		return;
 	}
-	file = "AA guns";
 	if(file.find(".") == file.npos)
 		file += *extFilters.begin();
 	if(exists(directory/file))//if file exists
@@ -919,17 +965,17 @@ void button::setElementText(string t)
 {
 	text=t;
 	clampedText=t;
-	if(textManager->getTextWidth(clampedText) < width-6)
+	if(textManager->getTextWidth(clampedText) < shape.w-6)
 	{
 		return;
 	}
-	else if(textManager->getTextWidth("...") > width-6)
+	else if(textManager->getTextWidth("...") > shape.w-6)
 	{
 		clampedText="";
 	}
 	else
 	{
-		while(textManager->getTextWidth(clampedText + "...") > width-6)
+		while(textManager->getTextWidth(clampedText + "...") > shape.w-6)
 			clampedText.erase(clampedText.size()-1);
 		int l=clampedText.find_last_not_of(" \t\f\v\n\r")+1;
 		clampedText=clampedText.substr(0,l);
@@ -941,12 +987,10 @@ void button::setElementTextColor(Color c)
 {
 	textColor = c;
 }
-void button::setElementXYWH(int X, int Y, int Width, int Height)
+void button::setElementSize(Vec2f size)
 {
-	x=X;
-	y=Y;
-	width=Width;
-	height=Height;
+	shape.w = size.x;
+	shape.h = size.y;
 	setElementText(text);//update clampedText
 }
 void button::render()
@@ -962,55 +1006,55 @@ void button::render()
 			{
 				tPos.x=0.0;
 				tSize.x=10.0/140;
-				rPos.x=x;
-				rSize.x=min(10,width/2);
+				rPos.x=shape.x;
+				rSize.x=min(10,shape.w/2);
 			}
 			else if(ix==1)
 			{
 				tPos.x=10.0/140;
 				tSize.x=1.0-20.0/140;
-				rPos.x=x+10;
-				rSize.x=max(width-20,0);
+				rPos.x=shape.x+10;
+				rSize.x=max(shape.w-20,0);
 			}
 			else if(ix==2)
 			{
 				tPos.x=1.0-10.0/140;
 				tSize.x=10.0/140;
-				rPos.x=x+width-min(10,width/2);
-				rSize.x=min(10,width/2);
+				rPos.x=shape.x+shape.w-min(10,shape.w/2);
+				rSize.x=min(10,shape.w/2);
 			}
 			if(iy==0)
 			{
 				tPos.y=0.0;
 				tSize.y=10.0/45;
-				rPos.y=y;
-				rSize.y=min(10,height/2);
+				rPos.y=shape.y;
+				rSize.y=min(10,shape.h/2);
 			}
 			else if(iy==1)
 			{
 				tPos.y=10.0/45;
 				tSize.y=1.0-20.0/45;
-				rPos.y=y+10;
-				rSize.y=max(height-20,0);
+				rPos.y=shape.y+10;
+				rSize.y=max(shape.h-20,0);
 			}
 			else if(iy==2)
 			{
 				tPos.y=1.0-10.0/45;
 				tSize.y=10.0/45;
-				rPos.y=y+height-min(10,height/2);
-				rSize.y=min(10,height/2);
+				rPos.y=shape.y+shape.h-min(10,shape.h/2);
+				rSize.y=min(10,shape.h/2);
 			}
 			graphics->drawPartialOverlay(Rect::XYWH(rPos,rSize),Rect::XYWH(tPos,tSize),"button");
 		}
 	}
 	dataManager.unbindTextures();
 	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
-	textManager->renderText(clampedText,x+(width-textManager->getTextWidth(clampedText))/2,y+(height-textManager->getTextHeight(clampedText))/2);
+	textManager->renderText(clampedText,shape.x+(shape.w-textManager->getTextWidth(clampedText))/2,shape.y+(shape.h-textManager->getTextHeight(clampedText))/2);
 	glColor3f(1,1,1);
 }
 bool button::mouseDownL(int X, int Y)
 {
-	if(view && active && x < X && y < Y && x+width > X && y+height > Y)
+	if(view && active && shape.inRect(Vec2f(X,Y)))
 	{
 		clicking = true;
 		return true;
@@ -1019,7 +1063,7 @@ bool button::mouseDownL(int X, int Y)
 }
 bool button::mouseUpL(int X, int Y)
 {
-	if(view && active && clicking && x < X && y < Y && x+width > X && y+height > Y)
+	if(view && active && clicking && shape.inRect(Vec2f(X,Y)))
 	{
 		changed = true;
 		clicking = false;
@@ -1030,17 +1074,17 @@ bool button::mouseUpL(int X, int Y)
 }
 void checkBox::render()
 {
-	graphics->drawOverlay(Rect::XYWH(x,y,26,26),"check box");
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check box");
 	if(checked)
-		graphics->drawOverlay(Rect::XYXY(x,y,26,26),"check");
+		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check");
 
 	glColor4f(color.r,color.g,color.b,color.a);
-	textManager->renderText(text,x+30,y);
+	textManager->renderText(text,shape.x+30,shape.y);
 	glColor3f(1,1,1);
 }
 bool checkBox::mouseDownL(int X, int Y)
 {
-	if(view && active && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)))
+	if(view && active && shape.inRect(Vec2f(X,Y)))
 	{
 		clicking = true;
 		return true;
@@ -1049,7 +1093,7 @@ bool checkBox::mouseDownL(int X, int Y)
 }
 bool checkBox::mouseUpL(int X, int Y)
 {
-	if(view && active && clicking && ((x < X && y < Y && x+30 > X && y+25 > Y) || (x+30 < X && y < Y && x+width > X && y+height > Y)) )
+	if(view && active && clicking && shape.inRect(Vec2f(X,Y)) )
 	{
 		changed = true;
 		checked = !checked;
@@ -1066,13 +1110,12 @@ bool textBox::mouseDownL(int X, int Y)
 {
 	if(!clicking)
 	{
-		clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
+		clicking = shape.inRect(Vec2f(X,Y));
 		return clicking;
 	}
 	else
 	{
-		clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
-		if(!clicking && focus)	loseFocus();
+		clicking = shape.inRect(Vec2f(X,Y));
 		return !clicking;
 	}
 }
@@ -1080,9 +1123,7 @@ bool textBox::mouseUpL(int X, int Y)
 {
 	if(clicking)
 	{
-		bool f = (x <= X && x+width >= X && y <= Y && y+height >= Y);
-		if(f && !focus) gainFocus();
-		if(!f && focus) loseFocus();
+		bool f = shape.inRect(Vec2f(X,Y));
 		cursorPos = text.length();
 		clicking = false;
 		return true;
@@ -1093,11 +1134,11 @@ void textBox::render()
 {
 	if(focus)	glColor3f(0,0,0);
 	else	glColor3f(0.3,0.3,0.3);
-	graphics->drawOverlay(Rect::XYXY(x-1,y-1,x+width+1,y+height+1),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,shape.h+2),"white");
 
 	if(focus)	glColor3f(0.6,0.6,0.6);
 	else	glColor3f(0.8,0.8,0.8);
-	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"white");
+	graphics->drawOverlay(shape,"white");
 
 	glColor3f(color.r,color.g,color.b);
 	if(focus)
@@ -1106,15 +1147,15 @@ void textBox::render()
 		float w = textManager->getTextWidth(text.substr(0,cursorPos));
 		float h = textManager->getTextHeight(text);
 
-		textManager->renderText(text,x+2,y);
+		textManager->renderText(text,shape.x+2,shape.y);
 		if(int(floor(world.time()/500)) % 2 == 1)
 		{
-			graphics->drawLine(Vec3f(x+w,y+2,0),Vec3f(x+w,y+h,0));
+			graphics->drawLine(Vec3f(shape.x+w,shape.y+2,0),Vec3f(shape.x+w,shape.y+h,0));
 		}
 	}
 	else
 	{
-		textManager->renderText(text,x+2,y);
+		textManager->renderText(text,shape.x+2,shape.y);
 	}
 
 	glColor3f(1,1,1);
@@ -1232,83 +1273,76 @@ void listBox::addOption(string option)
 
 	options.push_back(option);
 }
+void listBox::gainFocus()
+{
+	focus = true;
+	shape.h = 30*(1 + options.size());
+}
+void listBox::looseFocus()
+{
+	shape.h = 30;
+	focus = false;
+}
 bool listBox::mouseDownL(int X, int Y)
 {
-	if(focus)
-	{
-		choosing = (x <= X && x+width >= X && y <= Y && y+height+30*options.size() >= Y);
-		if(!choosing) focus = false;
-		return true;
-	}
-	else
-	{
-		clicking = (x <= X && x+width >= X && y <= Y && y+height >= Y);
-		return clicking;
-	}
+	choosing = shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30;
+	return true;
 }
 bool listBox::mouseUpL(int X, int Y)
 {
-	if(clicking)
-	{
-		focus = (x <= X && x+width >= X && y <= Y && y+height >= Y);
-		clicking = false;
-		return true;
-	}
-	else if(choosing)
+	if(choosing)
 	{
 		choosing = false;
-		if(x <= X && x+width >= X && y+30 <= Y && y+height+30*options.size() >= Y)
+		if(shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30)
 		{
-			int n = (Y-(y+height)) / 30;
+			int n = (Y-(shape.y+30)) / 30;
 			text = options[n];
 			optionNum = n;
 			return true;
 		}
 		else
 		{
-			focus = false;
 			return false;
 		}
-		
 	}
 	return false;
 }
 void listBox::render()
 {
 	glColor3f(0.3,0.3,0.3);
-	graphics->drawOverlay(Rect::XYXY(x-1,y-1,x+width+1,y+height+1),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,30+2),"white");
 
 	if(focus)
 	{
 		glColor3f(0,0,0);
-		graphics->drawOverlay(Rect::XYXY(x-1,y+height+2,x+width+1,y+height+2+30*options.size()),"white");
+		graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y+30+2,shape.w+2,shape.h-30+2),"white");
 	}
 
-	if(focus)	glColor3f(0.6,0.6,0.6);
-	else	glColor3f(0.8,0.8,0.8);
-	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"white");
+	if(focus)	glColor3f(0.8,0.8,0.8);
+	else	glColor3f(0.9,0.9,0.9);
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,shape.w,30),"white");
 
 	if(focus)
-	graphics->drawOverlay(Rect::XYXY(x,y+height+3,x+width,y+height+1+30*options.size()),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30+3,shape.w,30*options.size()),"white");
 
 
 	if(focus)	glColor3f(0.3,0.3,0.3);
 	else	glColor3f(0.5,0.5,0.5);
-	graphics->drawOverlay(Rect::XYXY(x+width-height,y,x+width,y+height),"white");
+	graphics->drawOverlay(Rect::XYXY(shape.x+shape.w-30,shape.y,shape.x+shape.w,shape.y+30),"white");
 
 	glColor3f(0,0,0);
-	graphics->drawTriangle(	Vec3f(x+width-height * 0.666,	y + height * 0.333, 0),
-							Vec3f(x+width-height * 0.333,	y + height * 0.333,	0),
-							Vec3f(x+width-height * 0.5,		y + height * 0.666,	0));
+	graphics->drawTriangle(	Vec3f(shape.x+shape.w-30.0 * 0.666,	shape.y + 30.0 * 0.333,	0),
+							Vec3f(shape.x+shape.w-30.0 * 0.333,	shape.y + 30.0 * 0.333,	0),
+							Vec3f(shape.x+shape.w-30.0 * 0.5,	shape.y + 30.0 * 0.666,	0));
 	glColor3f(color.r,color.g,color.b);
 
-	textManager->renderText(text,x+2,y);
+	textManager->renderText(text,shape.x+2,shape.y);
 	if(focus)
 	{
-		float h = y + height + 1;
+		float h = shape.y + 30 + 1;
 		for(auto i = options.begin(); i!= options.end(); i++)
 		{
-			textManager->renderText(*i,x+2,h);
+			textManager->renderText(*i,shape.x+2,h);
 			h += 30;
 		}
 	}
@@ -1316,7 +1350,7 @@ void listBox::render()
 	if(focus && optionNum != -1)
 	{
 		glColor4f(0.3,0.3,0.3,0.3);
-		graphics->drawOverlay(Rect::XYXY(x,y+height+3+30*optionNum,x+width,y+height+1+30*(optionNum+1)),"white");
+		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30*(optionNum+1)+3,shape.w,30+1),"white");
 	}
 
 	glColor3f(1,1,1);
@@ -1324,7 +1358,7 @@ void listBox::render()
 void label::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
-	textManager->renderText(text,x,y);
+	textManager->renderText(text,shape.x,shape.y);
 	glColor3f(1,1,1);
 }
 toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), value(startValue), Label(l)
@@ -1338,22 +1372,55 @@ toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, in
 	unclicked=unclickedC;
 	
 	int n=0;
-	for(vector<button*>::iterator i = buttons.begin(); i!=buttons.end();i++,n++)
+	for(auto i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
 		if(value==n)
 			(*i)->setElementColor(clicked);
 		else
 			(*i)->setElementColor(unclicked);
 	}
+
+	if(!buttons.empty())
+	{
+		Vec2f vMin = buttons.front()->getShape().bl();
+		Vec2f vMax = buttons.front()->getShape().tr();
+		Vec2f tMin, tMax;
+		for(auto i = buttons.begin() + 1; i!=buttons.end();i++)
+		{
+			tMin = (*i)->getShape().bl();
+			tMax = (*i)->getShape().tr();
+			vMin.x = min(vMin.x, tMin.x);
+			vMin.y = min(vMin.y, tMin.y);
+			vMax.x = max(vMax.x, tMax.x);
+			vMax.y = max(vMax.y, tMax.y);
+		}
+		shape = Rect::XYXY(vMin,vMax);
+	}
 }
-int toggle::addButton(button* button)
+int toggle::addButton(button* b)
 {
-	button->setElementColor(unclicked);
-	buttons.push_back(button);
+	if(b == NULL)
+		return -1;
+
+	b->setElementColor(unclicked);
+	buttons.push_back(b);
 	if(buttons.size()==1)
 	{
 		value=0;
 		buttons[0]->setElementColor(clicked);
+		shape = b->getShape();
+	}
+	else
+	{
+		Vec2f vMin = shape.bl();
+		Vec2f vMax = shape.tr();
+		Vec2f tMin = b->getShape().bl();
+		Vec2f tMax = b->getShape().tr();
+		vMin.x = min(vMin.x, tMin.x);
+		vMin.y = min(vMin.y, tMin.y);
+		vMax.x = max(vMax.x, tMax.x);
+		vMax.y = max(vMax.y, tMax.y);
+		shape = Rect::XYXY(vMin,vMax);
 	}
 	return buttons.size()-1;
 }
@@ -1412,22 +1479,22 @@ void slider::render()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
-	graphics->drawOverlay(Rect::XYXY(x,0.5*height+y-11,x+width,0.5*height+y+11),"slider bar");
+	graphics->drawOverlay(Rect::XYXY(shape.x,0.5*shape.h+shape.y-11,shape.x+shape.w,0.5*shape.h+shape.y+11),"slider bar");
 
-	float xv = (value-minValue)*width/(maxValue-minValue)+x;
-	graphics->drawOverlay(Rect::XYXY(xv-22,y,xv+22,y+height),"slider");
+	float xv = (value-minValue)*shape.w/(maxValue-minValue)+shape.x;
+	graphics->drawOverlay(Rect::XYXY(xv-22,shape.y,xv+22,shape.y+shape.h),"slider");
 }
 bool slider::mouseDownL(int X, int Y)
 {
-	if(view && active && abs(value*width/(maxValue - minValue) + x  - X) < 22 && Y > y && Y < y + height)	
+	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 22 && Y > shape.y && Y < shape.y + shape.h)	
 	{
 		clicking = true;
-		mouseOffset = value - ((maxValue - minValue) * (X - x) / width + minValue);
+		mouseOffset = value - ((maxValue - minValue) * (X - shape.x) / shape.w + minValue);
 		return true;
 	}
-	else if(view && active && X > x && X < x + width && Y > y && Y < y + height)
+	else if(view && active && shape.inRect(Vec2f(X,Y)))
 	{
 		clicking = true;
 		mouseOffset = 0.0f;
@@ -1439,7 +1506,7 @@ bool slider::mouseUpL(int X, int Y)
 {
 	if(view && active && clicking)
 	{
-		value = clamp((maxValue - minValue) * (X - x) / width + minValue + mouseOffset, minValue, maxValue);
+		value = clamp((maxValue - minValue) * (X - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 		return true;
 	}
@@ -1451,7 +1518,7 @@ float slider::getValue()
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
 	return value;
 }
@@ -1461,7 +1528,7 @@ void slider::setMinValue(float m)
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}
 	minValue = m;
@@ -1474,7 +1541,7 @@ void slider::setMaxValue(float m)
 	{
 		POINT cursorPos;
 		GetCursorPos(&cursorPos);
-		value = clamp((maxValue - minValue) * (cursorPos.x - x) / width + minValue + mouseOffset, minValue, maxValue);
+		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}
 	maxValue = m;

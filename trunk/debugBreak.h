@@ -27,3 +27,15 @@ extern void minimizeWindow();
 #else if
 	#define debugBreak() {}
 #endif
+
+#ifdef _DEBUG
+	#define debugAssert(a){			\
+		if(!(a))					\
+		{							\
+			minimizeWindow();		\
+			__debugbreak();			\
+		}							\
+	}
+#else if
+	#define debugBreak(a) {}
+#endif

@@ -35,9 +35,12 @@ void missile::update(double time, double ms)
 	if(enemy != NULL && !enemy->dead)
 	{
 		destVec = (enemy->position - position).normalize();
-		Vec3f axis = Vec3f(0,0,1).cross(destVec);
-		Angle angle = acosA(destVec.dot(Vec3f(0,0,1)));
-		Quat4f targetRot(axis,angle);
+		Vec3f fwd = rotation * Vec3f(0,0,1);
+
+		Vec3f axis = fwd.cross(destVec);
+		Angle angle = acosA(destVec.dot(fwd));
+
+		Quat4f targetRot(destVec);
 	//	Vec3f fwd = rotation * Vec3f(0,0,1);
 	//	Angle ang = acosA(destVec.dot(fwd));
 

@@ -22,16 +22,16 @@ bool levelEditor::init()
 	buttons["exit"]			= new button(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
-//	addShader("island");
-	addShader("grass");
-	addShader("snow");
-	addShader("ocean");
+
+	toggles["shaders"]->addButton(new button(5,5,200,30,"grass",black,white));
+	toggles["shaders"]->addButton(new button(5,40,200,30,"snow",black,white));
+	toggles["shaders"]->addButton(new button(5,75,200,30,"ocean",black,white));
 
 	//objects
 	buttons["addPlane"]		= new button(5,5,200,30,"new plane",lightGreen,white);
 	buttons["addAAgun"]		= new button(5,40,200,30,"new AA gun",lightGreen,white);
-	//settings
 
+	//settings
 	v.clear();
 	v.push_back(new button(120,5,100,30,"respawn",black,white));
 	v.push_back(new button(225,5,100,30,"restart",black,white));
@@ -71,8 +71,8 @@ bool levelEditor::init()
 	level = new editLevel;
 
 	scrollVal=0.0;
-	level->newGround(65,65);
-	diamondSquare(0.17,0.5,1);
+	level->newGround(129,129);
+	diamondSquare(0.17,0.5,2);
 	smooth(1);
 
 	resetView();
@@ -119,7 +119,7 @@ void levelEditor::operator() (popup* p)
 		awaitingLevelSave=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
-		LevelFile l = level->getLevelFile(/*sliders["sea level"]->getValue() * (mode->maxHeight - mode->minHeight) + mode->minHeight*/);
+		LevelFile l = level->getLevelFile(sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 		l.save(f);
 	}
 	else if(awaitingNewObject)
@@ -277,14 +277,34 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			if(newObjectType != 0)
 			{
 				static int teamNum=0;
-				addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, p.x * sh, p.y * sh);
+				addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, p.x, p.y);
 				newObjectType = 0;
 				teamNum++;
 				return true;
 			}
-			else
+			else if(!objectCircles.empty())
 			{
-				return selectObject(p.x * sh, p.y * sh);
+				float minDist;
+				map<int,circle<float>>::iterator min = objectCircles.end();
+				for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
+				{
+					float d = i->second.center.distanceSquared(p);
+					if(d < i->second.radius*i->second.radius && (min == objectCircles.end() || d < minDist))
+					{
+						minDist = d;
+						min = i;
+					}
+				}
+
+				if(min != objectCircles.end())
+				{
+					//object found
+					auto* m = new menu::objectProperties();
+					m->init(((editLevel*)level)->getObject(min->first));
+					menuManager.setPopup(m);
+					return true;
+				}
+				return false;
 			}
 		}
 	}
@@ -312,14 +332,6 @@ bool levelEditor::scroll(float rotations)
 	scrollVal = clamp(scrollVal + rotations,-8,25);
 	return true;
 }
-void levelEditor::addShader(string filename)
-{
-	//int s = dataManager.loadTerrainShader(filename);//((mapBuilder*)mode)->loadShader("media/terrain.vert",(char*)(string("media/")+filename).c_str());
-	//shaderButtons.push_back(s);
-
-	toggles["shaders"]->addButton(new button(5,toggles["shaders"]->getSize()*35+5,200,30,filename,black,white));
-	//buttons["newShader"]->setElementXY(5,toggles["shaders"]->getSize()*35+5);
-}
 int levelEditor::getShader()
 {
 	return toggles["shaders"]->getValue();
@@ -336,36 +348,6 @@ void levelEditor::resetView()
 {
 	rot = Quat4f(Vec3f(1,0,0),1.0);
 	center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
-}
-bool levelEditor::selectObject(int x, int y)
-{
-	if(objectCircles.empty())
-		return false;
-
-	Vec2f mouse((float)x/sw,(float)y/sw);
-
-
-	float minDist;
-	map<int,circle<float>>::iterator min = objectCircles.end();
-	for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
-	{
-		float d = i->second.center.distanceSquared(mouse);
-		if(d < i->second.radius*i->second.radius && (min == objectCircles.end() || d < minDist))
-		{
-			minDist = d;
-			min = i;
-		}
-	}
-
-	if(min != objectCircles.end())
-	{
-		//object found
-		auto* m = new menu::objectProperties();
-		m->init(((editLevel*)level)->getObject(min->first));
-		menuManager.setPopup(m);
-		return true;
-	}
-	return false;
 }
 void levelEditor::updateObjectCircles()
 {
@@ -386,21 +368,21 @@ void levelEditor::updateObjectCircles()
 			Vec2f t = graphics->project(i->startloc + p->getCenter() + graphics->getView().camera.up*p->getRadius()*10);
 			r = max(0.004,s.distance(t));
 		}
-		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
+		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
 		{
-			objectCircles[n] = circle<float>(Vec2f(s.x,s.y*sh/sw),r);
+			objectCircles[n] = circle<float>(Vec2f(s.x,s.y),r);
 		}
 	}
 }
 float levelEditor::randomDisplacement(float h1, float h2, float d)
 {
-	d *= 30;
+	d *= 65;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + r) / 2.0;
  }
 float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, float d)
 {
-	d *= 30;
+	d *= 65;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + h3 + h4 + r) / 4.0;
 }
@@ -410,6 +392,8 @@ void levelEditor::diamondSquareFill(int x1, int y1, int x2, int y2)
 		return;
 
 	auto& g = *level->ground();
+
+	float h[5] = {g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), min(x2-x1,y2-y1)};
 
 	int midx = (x1 + x2) / 2;
 	int midy = (y1 + y2) / 2;
@@ -424,7 +408,7 @@ void levelEditor::diamondSquareFill(int x1, int y1, int x2, int y2)
 		g(midx, midy, randomDisplacement(g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), min(x2-x1,y2-y1)) );
 
 
-	if(x2-x1 > 1 || y2-y1 > 1)
+	if(x2-x1 > 1 || y2-y1 > 1 )
 	{
 		diamondSquareFill(x1,	y1,		midx,	midy);
 		diamondSquareFill(midx, y1,		x2,		midy);
@@ -455,7 +439,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 
 	//h=pow(2.0f,-h);
 	float rVal=h, y;
-		
+	
 
 	for(x=0;x<sLen;x++)
 	{
@@ -575,7 +559,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//}
 	//
 
-	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*40,level->ground()->resolutionZ()*40));
+	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 
 
 
@@ -781,7 +765,7 @@ void levelEditor::smooth(int a)
 	memcpy(g.heights, smoothed, w * h * sizeof(float));
 	delete[] smoothed;
 }
-void levelEditor::addObject(int type, int team, int controlType, int x, int y)//in screen coordinates
+void levelEditor::addObject(int type, int team, int controlType, float x, float y)//in screen coordinates
 {
 	Vec2f cursorPos = input->getMousePos();
 	Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
@@ -849,7 +833,7 @@ void levelEditor::render3D()
 	if(getTab() == menu::levelEditor::OBJECTS)
 	{
 		level->renderObjectsPreview();
-		if(placingObject() != 0)
+		if(newObjectType != 0)
 		{
 			////////////////////////////////draw object//////////////////////////////////
 
@@ -863,7 +847,7 @@ void levelEditor::render3D()
 			glPushMatrix();
 			glTranslatef(val.x,val.y,val.z);
 			glScalef(10,10,10);
-			dataManager.draw((planeType)((menu::levelEditor*)menuManager.getMenu())->placingObject());
+			dataManager.draw(newObjectType);
 			glPopMatrix();
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			glDepthMask(false);
@@ -895,13 +879,17 @@ void levelEditor::render3D()
 
 		glDisable(GL_DEPTH_TEST);
 	
-		glBindTexture(GL_TEXTURE_2D,0);
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, 1, (float)sh/sw , 0, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		//glBindTexture(GL_TEXTURE_2D,0);
+		//glMatrixMode(GL_PROJECTION);
+		//glPushMatrix();
+		//glLoadIdentity();
+		//glOrtho(0, 1, (float)sh/sw , 0, -1, 1);
+		//glMatrixMode(GL_MODELVIEW);
+		//glLoadIdentity();
+
+	
+
+		dataManager.bind("ortho");
 
 		glColor3f(0,1,0);
 
@@ -910,6 +898,7 @@ void levelEditor::render3D()
 		{
 			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2),"target ring");
 		}
+		dataManager.unbindShader();
 
 		//for(auto i = level->objects().begin(); i!= level->objects().end(); i++)
 		//{
@@ -932,9 +921,9 @@ void levelEditor::render3D()
 		//	}	
 		//}
 	
-		glMatrixMode( GL_PROJECTION );			// Select Projection
-		glPopMatrix();							// Pop The Matrix
-		glMatrixMode( GL_MODELVIEW );			// Select Modelview
+	//	glMatrixMode( GL_PROJECTION );			// Select Projection
+	//	glPopMatrix();							// Pop The Matrix
+	//	glMatrixMode( GL_MODELVIEW );			// Select Modelview
 		glEnable(GL_DEPTH_TEST);
 	}
 }

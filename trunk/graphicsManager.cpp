@@ -54,7 +54,7 @@ Vec2f GraphicsManager::project(Vec3f p)
 
 	Vec3f v = Vec3f(s.dot(p)*F/view.projection.aspect,   -u.dot(p)*F,   f.dot(p)*(view.projection.zNear+view.projection.zFar)-2.0*view.projection.zNear*view.projection.zFar) / (f.dot(p));
 
-	return Vec2f( (v.x + 1.0) / 2.0, (v.y + 1.0) / 2.0 );
+	return Vec2f( (v.x + 1.0) / 2.0 * sAspect, 1.0 - (v.y + 1.0) / 2.0);
 }
 Vec3f GraphicsManager::unProject(Vec3f p)// from x=0 to sAspect && y=0 to 1 && z from 0 to 1
 {
