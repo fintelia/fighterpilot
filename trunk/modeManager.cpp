@@ -31,6 +31,11 @@ void ModeManager::render3D()
 	if(mode != NULL)
 		mode->draw3D();
 }
+void ModeManager::renderParticles()
+{
+	if(mode != NULL)
+		mode->drawParticles();
+}
 int ModeManager::update()
 {
 	if(mode != NULL)

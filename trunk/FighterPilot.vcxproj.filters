@@ -79,9 +79,6 @@
     <Filter Include="Source Files\object\object list">
       <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\smoke">
-      <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\enums">
       <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
     </Filter>
@@ -117,6 +114,9 @@
     </Filter>
     <Filter Include="shaders\radar\3rd person">
       <UniqueIdentifier>{1a2a2b2d-8ea5-4599-b8cd-5cb45d008788}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\particle">
+      <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -431,12 +431,6 @@
     <None Include="media\horizon2.vert">
       <Filter>shaders\horizon2</Filter>
     </None>
-    <None Include="media\smoke.frag">
-      <Filter>shaders\smoke</Filter>
-    </None>
-    <None Include="media\smoke.vert">
-      <Filter>shaders\smoke</Filter>
-    </None>
     <None Include="ClassDiagram1.cd" />
     <None Include="media\grass.frag">
       <Filter>shaders\terrain</Filter>
@@ -499,6 +493,12 @@
       <Filter>shaders\radar\3rd person</Filter>
     </None>
     <None Include="media\assetList.xml" />
+    <None Include="media\particle.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

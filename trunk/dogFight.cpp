@@ -461,7 +461,7 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 #endif
-	 glError();
+	glError();
 
 	glDepthMask(false);
 
@@ -472,32 +472,31 @@ void modeDogFight::drawScene(int acplayer)
 	//double d = abs(sqrt((e.x-cCenter.x)*(e.x-cCenter.x) + (e.z-cCenter.z)*(e.z-cCenter.z)) - cRadius);
 	drawHexCylinder(cCenter,cRadius,20000, white);
 
-	glDepthMask(false);//needed since drawHexCylinder sets depthMask to true
+	//glDepthMask(false);//needed since drawHexCylinder sets depthMask to true
 
-	graphics->render3D();
-	particleManager.render();
+	//particleManager.render();
 
 	
 
 
-	glDepthMask(true);
-	glDisable(GL_DEPTH_TEST);
-	glBindTexture(GL_TEXTURE_2D,0);
+	//glDepthMask(true);
+	//glDisable(GL_DEPTH_TEST);
+	//glBindTexture(GL_TEXTURE_2D,0);
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, 1, 1.0/frustum.ratio, 0, -1, 1);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_PROJECTION);
+	//glPushMatrix();
+	//glLoadIdentity();
+	//glOrtho(0, 1, 1.0/frustum.ratio, 0, -1, 1);
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 
-	//planeIdBoxes(p, 0.0, 0.0, 1.0, 1.0/frustum.ratio);
-		
-	glMatrixMode( GL_PROJECTION );			// Select Projection
-	glPopMatrix();							// Pop The Matrix
-	glMatrixMode( GL_MODELVIEW );			// Select Modelview
+	////planeIdBoxes(p, 0.0, 0.0, 1.0, 1.0/frustum.ratio);
+	//	
+	//glMatrixMode( GL_PROJECTION );			// Select Projection
+	//glPopMatrix();							// Pop The Matrix
+	//glMatrixMode( GL_MODELVIEW );			// Select Modelview
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	
 	lastDraw[acplayer] = time;
 	

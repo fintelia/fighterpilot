@@ -114,10 +114,20 @@ void modeSplitScreen::draw3D()
 {
 	glClearColor(0.5f,0.8f,0.9f,1.0f);
 	glViewport(0, sh/2, sw, sh/2);
-	gluPerspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 	frustum.setCamInternals(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 	drawScene(0);
 
 	glViewport(0, 0, sw, sh/2);
 	drawScene(1);
+}
+void modeSplitScreen::drawParticles()
+{
+	glViewport(0, sh/2, sw, sh/2);
+	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	frustum.setCamInternals(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	particleManager.render();
+
+	glViewport(0, 0, sw, sh/2);
+	particleManager.render();
 }

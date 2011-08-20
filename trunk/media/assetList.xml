@@ -74,7 +74,8 @@
     <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
     <shader name="hex grid shader"      vertex="media/hex grid.vert"    fragment="media/hex grid.frag" />
     <shader name="sky shader"           vertex="media/sky.vert"         fragment="media/sky.frag" />
-
+    <shader name="particle shader"      vertex="media/particle.vert"    fragment="media/particle.frag" />
+    
     <shader name="island new terrain"     vertex="media/terrain.vert"   fragment="media/grass.frag" />
     <shader name="grass new terrain"      vertex="media/terrain.vert"   fragment="media/grass2.frag" />
     <shader name="snow terrain"           vertex="media/terrain.vert"   fragment="media/snow.frag" />

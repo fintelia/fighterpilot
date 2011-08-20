@@ -3,44 +3,14 @@
 
 OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
 {
-	renderTextures[0]		= renderTextures[1]		= 0;
-	colorRenderBuffers[0]	= colorRenderBuffers[1] = 0;
-	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
-	depthRenderBuffers[0]	= depthRenderBuffers[1] = 0;
 	FBOs[0]					= FBOs[1]				= 0;
+	renderTextures[0]		= renderTextures[1]		= 0;
+	depthTextures[0]		= depthTextures[1]		= 0;
+	colorRenderBuffers	= 0;
+	depthRenderBuffers	= 0;
 
 	//useAnagricStereo(true);
 	//setInterOcularDistance(0.75);
-}
-GraphicsManager::gID OpenGLgraphics::newModel(string disp)
-{
-	gID nID = idGen();
-	objects.insert(pair<gID,object*>(nID, new model(disp)));
-	return nID;
-}
-bool OpenGLgraphics::drawModel(gID obj, Vec3f pos, Quat4f rot)
-{
-	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
-	{
-		objects[obj]->drawFlag = true;
-		((model*)objects[obj])->pos = pos;
-		((model*)objects[obj])->rot = rot;
-		return true;
-	}
-	return false;
-}
-bool OpenGLgraphics::drawModel(gID obj)
-{
-	if(objects.find(obj) !=objects.end() && objects[obj]->type==object::MODEL)
-	{
-		objects[obj]->drawFlag = true;
-		return true;
-	}
-	return false;
-}
-void OpenGLgraphics::model::render()
-{
-	//todo write code
 }
 bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 {
@@ -218,7 +188,6 @@ bool OpenGLgraphics::init()
 	//FRAME BUFFER OBJECTS
 	
 	glGenFramebuffersEXT(2, FBOs);
-	glGenRenderbuffersEXT(2, depthRenderBuffers);
 
 	int samples;
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
@@ -227,7 +196,8 @@ bool OpenGLgraphics::init()
 	{
 		if(GLEE_EXT_framebuffer_multisample && i == 0 )
 		{
-			glGenRenderbuffersEXT(1, colorRenderBuffers+i);
+			glGenRenderbuffersEXT(1, &colorRenderBuffers);
+			glGenRenderbuffersEXT(1, &depthRenderBuffers);
 			//glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -235,42 +205,58 @@ bool OpenGLgraphics::init()
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, colorRenderBuffers[i]);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, colorRenderBuffers);
 			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
 
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers);
+			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT , sw, sh);
 
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, colorRenderBuffers[i]);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, colorRenderBuffers);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers);
 
 
 
 			////glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
 			////glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
 			////glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-
 		}
 		else
 		{
 			glGenTextures(1, renderTextures+i);
 			glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 	
+			glGenTextures(1, depthTextures+i);
+			glBindTexture(GL_TEXTURE_2D, depthTextures[i]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+				//glTexParameteri (GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+
+		//glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+		//glTexParameteri (GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_ALPHA);
+		//glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		//glCopyTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, 0, sw, sh, 0);
+
+				glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+
 			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextures[i], 0);
 
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-			glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
+			//glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
+			//glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
 
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-
-			
+			//glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 		}
 		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 		string errorMsg;
@@ -356,6 +342,22 @@ void OpenGLgraphics::render()
 		modeManager.render3D();
 		menuManager.render3D();
 	}
+
+///////////////////////////////////START PARTICLES///////////////////////
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
+	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
+	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
+	glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST );
+	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
+	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, FBOs[0]);
+
+	glDisable(GL_DEPTH_TEST);
+	//glDepthMask(false);
+	dataManager.bindTex(depthTextures[1],1);
+	modeManager.renderParticles();
+	dataManager.unbindTextures();
+	//glDepthMask(true);
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
@@ -454,12 +456,15 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 }
 void OpenGLgraphics::destroyWindow()
 {
-	if(renderTextures[0] != 0)		glDeleteTextures(2, renderTextures);
+	if(renderTextures[0] != 0)		glDeleteTextures(1, renderTextures);
 	if(renderTextures[1] != 0)		glDeleteTextures(1, renderTextures+1);
-	if(colorRenderBuffers[0] != 0)	glDeleteTextures(2, colorRenderBuffers);
-	if(colorRenderBuffers[1] != 0)	glDeleteTextures(1, colorRenderBuffers+1);
-	if(depthRenderBuffers[0] != 0)	glDeleteTextures(2, depthRenderBuffers);
-	if(depthRenderBuffers[1] != 0)	glDeleteTextures(1, depthRenderBuffers+1);
+
+	if(depthTextures[0] != 0)		glDeleteTextures(1, depthTextures);
+	if(depthTextures[1] != 0)		glDeleteTextures(1, depthTextures+1);
+
+	if(colorRenderBuffers != 0)	glDeleteTextures(1, &colorRenderBuffers);
+	if(depthRenderBuffers != 0)	glDeleteTextures(1, &depthRenderBuffers);
+
 	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
 	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
 

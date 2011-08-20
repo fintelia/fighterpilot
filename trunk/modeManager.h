@@ -5,6 +5,7 @@ public:
 	virtual int update()=0;
 	virtual void draw2D()=0;
 	virtual void draw3D()=0;
+	virtual void drawParticles(){}
 	virtual bool init(){return true;}
 };
 
@@ -25,7 +26,7 @@ public:
 
 	void render2D();
 	void render3D();
-
+	void renderParticles();
 	modeScreen* getMode(){return mode;}
 private:
 	modeScreen* mode;
@@ -69,6 +70,7 @@ public:
 	int update();
 	void draw2D();
 	void draw3D();
+	void drawParticles();
 };
 
 class modeCampaign: public modeDogFight
@@ -82,4 +84,5 @@ public:
 	int update();
 	void draw2D();
 	void draw3D();
+	void drawParticles();
 };
