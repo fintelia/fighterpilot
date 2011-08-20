@@ -1,7 +1,5 @@
 *Things To Do:*
 
- # Streamline the menu::levelEditor code
- # Fix GUI mouse events so only one element is effected by each event
  # Separate update interval from frame rate
  # Fix missile tracking
  # Improved camera smoothing
