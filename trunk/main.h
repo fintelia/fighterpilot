@@ -93,6 +93,7 @@ namespace menu{class levelEditor;}
 #include "object.h"
 #include "bullet.h" 
 #include "missile.h"
+#include "bomb.h"
 #include "plane.h"
 #include "aaGun.h"
 #include "settings.h"

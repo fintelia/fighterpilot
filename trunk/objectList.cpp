@@ -51,6 +51,17 @@ objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Quat4f ro
 	m->init();
 	return m->id;
 }
+objId objectList::newBomb(bombType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int owner)
+{
+	if(!(type & BOMB)) return NULL;
+
+	bomb* m = new bomb(type,team,pos,rot,speed,owner);
+	mObjects[m->id] = m;
+	mBombs[m->id] = m;
+
+	m->init();
+	return m->id;
+}
 void objectList::deleteObject(objId id)
 {
 	if(mObjects.find(id)==mObjects.end()) return;

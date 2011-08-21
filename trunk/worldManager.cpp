@@ -128,7 +128,10 @@ const map<objId,missile*>& WorldManager::missiles()const
 {
 	return objectList.missiles();
 }
-
+const map<objId,bomb*>& WorldManager::bombs()const
+{
+	return objectList.bombs();
+}
 void WorldManager::update()
 {
 	double ms = time.length();

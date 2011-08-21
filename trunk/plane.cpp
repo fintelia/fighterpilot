@@ -187,7 +187,29 @@ void nPlane::update(double time, double ms)
 					world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
-			if(controller.shoot2>0.75)	ShootMissile();
+			if(controller.shoot2>0.75)	shootMissile();
+
+			if(controller.shoot3>0.75 && roll.inRange(-PI/6,PI/6) && climb.inRange(-PI/4,PI/12))
+				bombs.firing = true;
+
+			if(bombs.roundsLeft == 0)
+			{
+				bombs.firing = false;
+				bombs.rechargeLeft -= ms;
+				if(bombs.rechargeLeft < 0.0)
+				{
+					bombs.roundsLeft = bombs.roundsMax;
+					bombs.rechargeLeft = bombs.rechargeTime;
+				}
+			}
+			else if(bombs.firing)
+			{
+				bombs.coolDownLeft -= ms;
+				while(bombs.coolDownLeft <= 0.0 && bombs.roundsLeft > 0)
+				{
+					dropBomb();
+				}
+			}
 
 			planePath.currentPoint(position,rotation);
 
@@ -376,8 +398,8 @@ void nPlane::smoothCamera()
 	}
 	
 
-	camera.position = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 45.0;
-	camera.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 45.0;
+	camera.position = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 35.0;
+	camera.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 35.0;
 	camera.up = Vec3f(0,1,0);
 
 	//center = position + dir * 15.0;
@@ -573,7 +595,7 @@ void nPlane::findTargetVector()
 	targeter = rotation * Vec3f(0,0,1);
 }
 
-void nPlane::ShootMissile()
+void nPlane::shootMissile()
 {
 	if(rockets.coolDownLeft>0 || rockets.left<=0 || controled)
 		return;
@@ -597,12 +619,28 @@ void nPlane::ShootMissile()
 	//if(pId == 0) 
 	//	return;
 
-	missileType t = settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].mType;
+	missileType t = rockets.ammoRounds[rockets.max - rockets.left].type;
+	Vec3f o = rockets.ammoRounds[rockets.max - rockets.left].offset;
 
-	Vec3f o=settings.planeStats[defaultPlane].hardpoints[rockets.max-rockets.left].offset;
 	world.objectList.newMissile(t,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,id,pId);
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
+}
+void nPlane::dropBomb()
+{
+	if(bombs.coolDownLeft>0 || bombs.roundsLeft<=0 || controled)
+		return;
+
+	Vec3f fwd	= (rotation * Vec3f(0,0,1)).normalize(),
+		  up	= (rotation * Vec3f(0,1,0)).normalize(),
+		  right	= (rotation * Vec3f(1,0,0)).normalize();
+
+	bombType t = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].type;
+	Vec3f o = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].offset;
+
+	world.objectList.newBomb(t,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,id);
+	bombs.coolDownLeft += bombs.coolDown;
+	bombs.roundsLeft--;
 }
 void nPlane::loseHealth(float healthLoss)
 {
@@ -615,11 +653,32 @@ void nPlane::loseHealth(float healthLoss)
 }
 void nPlane::initArmaments()
 {
-	rockets.max				= rockets.left				= settings.planeStats[defaultPlane].hardpoints.size();
+	armament::ammo a;
+	for(int i = 0; i < settings.planeStats[type].hardpoints.size(); i++)
+	{
+		a.type = settings.planeStats[type].hardpoints[i].mType;
+		a.offset = settings.planeStats[type].hardpoints[i].offset;
+		if(settings.planeStats[type].hardpoints[i].mType & MISSILE)
+		{
+			rockets.ammoRounds.push_back(a);
+		}
+		else if(settings.planeStats[type].hardpoints[i].mType & BOMB)
+		{
+			bombs.ammoRounds.push_back(a);
+		}
+	}
+
+	rockets.max				= rockets.left				= rockets.ammoRounds.size();
 	rockets.roundsMax		= rockets.roundsLeft		= 1;
-	rockets.coolDown		= rockets.coolDownLeft		= 700.0f;
-	rockets.rechargeTime	= rockets.rechargeLeft		= 10000.0f;
-	//rockets.firing										= false;	 not used
+	rockets.coolDown		= rockets.coolDownLeft		= 1000.0f;
+	rockets.rechargeTime	= rockets.rechargeLeft		= 7000.0f;
+	//rockets.firing									= false;	 not used
+
+	bombs.max				= bombs.left				= 1;
+	bombs.roundsMax			= bombs.roundsLeft			= rockets.ammoRounds.size();
+	bombs.coolDown			= bombs.coolDownLeft		= 100.0;
+	bombs.rechargeTime		= bombs.rechargeLeft		= 8000.0f;
+	bombs.firing										= false;
 
 	machineGun.max			= machineGun.left			= 1000; 
 	machineGun.roundsMax	= machineGun.roundsLeft		= 200;

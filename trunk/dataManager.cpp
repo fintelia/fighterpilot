@@ -430,6 +430,9 @@ void DataManager::draw(objectType p)
 	if(p==MISSILE2)	draw("missile2");
 	if(p==MISSILE3)	draw("missile3");
 	if(p==MISSILE4)	draw("missile4");
+
+	if(p==BOMB1)	draw("missile1");
+	if(p==BOMB2)	draw("missile2");
 }
 bool DataManager::loadAssetList()
 {
@@ -842,7 +845,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		{
 			string mstring="";
 			mtl mMtl;
-			mMtl.tex = "white";
+			mMtl.tex = "";
 			mMtl.name = "";
 			mMtl.diffuse = white;
 
@@ -913,7 +916,7 @@ bool DataManager::registerOBJ(string name, string filename)
 					//if(ext.compare("tga")==0)
 					mMtl.tex=mtlFile + "/" + s[1];
 					if(!registerTexture(mMtl.tex, file+s[1]))
-						mMtl.tex = "white";
+						mMtl.tex = "";
 						//mMtl.tex=dataManager.loadPNG(file+s[1]);
 						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);
 					//else if(ext.compare("mmp")==0)
@@ -1057,7 +1060,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		}
 		for(int l=0; l<numMtls; l++)
 		{
-			glBindTexture(GL_TEXTURE_2D, mtls[l].tex != "" ? assets[mtls[l].tex]->id : 0);
+			glBindTexture(GL_TEXTURE_2D, mtls[l].tex != "" ? assets[mtls[l].tex]->id : assets["white"]->id);
 			if(mtls[l].diffuse.a>=0.999 && pass==0)
 				glColor3f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b);
 			else if(mtls[l].diffuse.a<0.999 && pass==1)

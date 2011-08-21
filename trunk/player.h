@@ -9,6 +9,7 @@ const int CON_ACCEL=4;
 const int CON_BRAKE=5;
 const int CON_SHOOT=6;
 const int CON_MISSILE=7;
+const int CON_BOMB=8;
 
 class nControl
 {
@@ -51,66 +52,51 @@ class playerControls
 private:
 
 public:
-	nControl c[8];
+	nControl c[9];
 
 	playerControls(){}
 	playerControls(int p)//default controls for player p
 	{
+		#ifdef USING_XINPUT
+			xinput_input* x=(xinput_input*)input;
+			if(x->g_Controllers[0].bConnected)
+			{
+				c[CON_CLIMB]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
+				c[CON_DIVE]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
+				c[CON_LEFT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
+				c[CON_RIGHT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::POSITIVE);
+				c[CON_ACCEL]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
+				c[CON_BRAKE]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
+				c[CON_SHOOT]=nControl		(RIGHT_TRIGGER + GAMEPAD1_OFFSET, nControl::POSITIVE);
+				c[CON_MISSILE]=nControl		(LEFT_TRIGGER +	GAMEPAD1_OFFSET, nControl::POSITIVE);
+				c[CON_BOMB]=nControl		(LEFT_SHOULDER + GAMEPAD1_OFFSET, nControl::POSITIVE);
+			}
+			else
+		#endif
 		if(p==1)
 		{
-			#ifdef USING_XINPUT
-				xinput_input* x=(xinput_input*)input;
-				if(x->g_Controllers[0].bConnected)
-				{
-					c[CON_CLIMB]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-					c[CON_DIVE]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-					c[CON_LEFT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-					c[CON_RIGHT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-					c[CON_ACCEL]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-					c[CON_BRAKE]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-					c[CON_SHOOT]=nControl		(RIGHT_TRIGGER + GAMEPAD1_OFFSET, nControl::POSITIVE);
-					c[CON_MISSILE]=nControl		(LEFT_TRIGGER +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-				}
-				else
-			#endif
-				{
-					c[CON_CLIMB]=nControl(VK_DOWN);
-					c[CON_DIVE]=nControl(VK_UP);
-					c[CON_LEFT]=nControl(VK_LEFT);
-					c[CON_RIGHT]=nControl(VK_RIGHT);
-					c[CON_ACCEL]=nControl(VK_NUMPAD5);
-					c[CON_BRAKE]=nControl(VK_NUMPAD2);
-					c[CON_SHOOT]=nControl(VK_NUMPAD0);
-					c[CON_MISSILE]=nControl(VK_NUMPAD9);
-				}
+			c[CON_CLIMB]=nControl(VK_DOWN);
+			c[CON_DIVE]=nControl(VK_UP);
+			c[CON_LEFT]=nControl(VK_LEFT);
+			c[CON_RIGHT]=nControl(VK_RIGHT);
+			c[CON_ACCEL]=nControl(VK_NUMPAD5);
+			c[CON_BRAKE]=nControl(VK_NUMPAD2);
+			c[CON_SHOOT]=nControl(VK_NUMPAD0);
+			c[CON_MISSILE]=nControl(VK_NUMPAD9);
+			c[CON_BOMB]=nControl(VK_NUMPAD8);
 		}
 		else if(p==2)
 		{
-			#ifdef USING_XINPUT
-				xinput_input* x=(xinput_input*)input;
-				if(x->g_Controllers[1].bConnected)
-				{
-					c[CON_CLIMB]=nControl		(THUMB_LY +	GAMEPAD2_OFFSET, nControl::NEGATIVE);
-					c[CON_DIVE]=nControl		(THUMB_LY +	GAMEPAD2_OFFSET, nControl::POSITIVE);
-					c[CON_LEFT]=nControl		(THUMB_LX +	GAMEPAD2_OFFSET, nControl::NEGATIVE);
-					c[CON_RIGHT]=nControl		(THUMB_LX +	GAMEPAD2_OFFSET, nControl::POSITIVE);
-					c[CON_ACCEL]=nControl		(THUMB_RY +	GAMEPAD2_OFFSET, nControl::POSITIVE);
-					c[CON_BRAKE]=nControl		(THUMB_RY +	GAMEPAD2_OFFSET, nControl::NEGATIVE);
-					c[CON_SHOOT]=nControl		(RIGHT_TRIGGER + GAMEPAD2_OFFSET, nControl::POSITIVE);
-					c[CON_MISSILE]=nControl		(LEFT_TRIGGER +	GAMEPAD2_OFFSET, nControl::POSITIVE);
-				}
-				else
-			#endif
-				{
-					c[CON_CLIMB]=nControl(0x57);	//U
-					c[CON_DIVE]=nControl(0x53);		//J
-					c[CON_LEFT]=nControl(0x41);		//A
-					c[CON_RIGHT]=nControl(0x44);	//D
-					c[CON_ACCEL]=nControl(0x55);	//W
-					c[CON_BRAKE]=nControl(0x4A);	//S
-					c[CON_SHOOT]=nControl(0x20);	//SPACE
-					c[CON_MISSILE]=nControl(0x42);	//B
-				}
+
+			c[CON_CLIMB]=nControl(0x57);	//U
+			c[CON_DIVE]=nControl(0x53);		//J
+			c[CON_LEFT]=nControl(0x41);		//A
+			c[CON_RIGHT]=nControl(0x44);	//D
+			c[CON_ACCEL]=nControl(0x55);	//W
+			c[CON_BRAKE]=nControl(0x4A);	//S
+			c[CON_SHOOT]=nControl(0x20);	//SPACE
+			c[CON_MISSILE]=nControl(0x42);	//B
+			c[CON_BOMB]=nControl(0x56);	//V
 		}
 	}
 	nControl getCotrol(int con)
@@ -186,6 +172,7 @@ public:
 		c.right=controls[CON_RIGHT];
 		c.shoot1=controls[CON_SHOOT];
 		c.shoot2=controls[CON_MISSILE];
+		c.shoot3=controls[CON_BOMB];
 		return c;
 	}
 };
@@ -206,6 +193,7 @@ public:
 		contState.right=0.0;
 		contState.shoot1=0.0;
 		contState.shoot2=0.0;
+		contState.shoot3=0.0;
 	}
 	controlState getControlState()
 	{

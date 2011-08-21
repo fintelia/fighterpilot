@@ -19,6 +19,10 @@ const int MISSILE2			= 0x0402;
 const int MISSILE3			= 0x0404;
 const int MISSILE4			= 0x0408;
 
+const int BOMB				= 0x0800;
+const int BOMB1				= 0x0801;
+const int BOMB2				= 0x0802;
+
 const int NEUTRAL			= 0x00;
 const int TEAM0				= 0x01;
 const int TEAM1				= 0x02;
@@ -46,6 +50,7 @@ const int CONTROL_COMPUTER	= 0x004;
 typedef int objectType;
 typedef int planeType;
 typedef int missileType;
+typedef int bombType;
 typedef int controlType;
 
 typedef int teamNum;
@@ -84,7 +89,8 @@ struct controlState
 	float	left;
 	float	shoot1;
 	float	shoot2;
-	controlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(0), shoot2(0) {}
+	float	shoot3;
+	controlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(0), shoot2(0), shoot3(0) {}
 };
 
 struct Color
