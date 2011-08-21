@@ -68,6 +68,7 @@ protected:
 	fuzzyAttribute life;
 	fuzzyColor color;
 
+	float radius;
 	//int sfactor;
     //int dfactor;
 	//shape shapes;
@@ -116,7 +117,7 @@ class explosion: public emitter
 private:
 	CollisionChecker::triangleList* trl;
 public:
-	explosion(Vec3f pos);
+	explosion(Vec3f pos, float radius);
 	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
 
 	void updateParticle(particle& p);

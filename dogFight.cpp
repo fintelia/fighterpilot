@@ -250,7 +250,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
 		{
 			//graphics->drawLine(a,a+(*i).second->rotation * Vec3f(0,0,100));
-			glPushMatrix(); 
+			glPushMatrix();
 				glTranslatef(a.x,a.y,a.z);
 
 				Angle ang = acosA(cPlane->rotation.w);
@@ -264,16 +264,20 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 				dataManager.draw(cPlane->type);
 				//dataManager.draw("sphere");
 
-				int ml=1;
-				for(auto m = settings.planeStats[cPlane->type].hardpoints.rbegin(); m!= settings.planeStats[cPlane->type].hardpoints.rend(); m++, ml++)
+				int ml=0;
+				for(int m = cPlane->rockets.max - cPlane->rockets.left; m < cPlane->rockets.max; m++)
 				{
-					if(i->second->rockets.left>=ml)
-					{
-						glPushMatrix();
-						glTranslatef(m->offset.x,m->offset.y,m->offset.z);
-						dataManager.draw(m->mType);
-						glPopMatrix();
-					}
+					glPushMatrix();
+					glTranslatef(cPlane->rockets.ammoRounds[m].offset.x,cPlane->rockets.ammoRounds[m].offset.y,cPlane->rockets.ammoRounds[m].offset.z);
+					dataManager.draw(cPlane->rockets.ammoRounds[m].type);
+					glPopMatrix();
+				}
+				for(int m = cPlane->bombs.roundsMax - cPlane->bombs.roundsLeft; m < cPlane->bombs.roundsMax; m++)
+				{
+					glPushMatrix();
+					glTranslatef(cPlane->bombs.ammoRounds[m].offset.x,cPlane->bombs.ammoRounds[m].offset.y,cPlane->bombs.ammoRounds[m].offset.z);
+					dataManager.draw(cPlane->bombs.ammoRounds[m].type);
+					glPopMatrix();
 				}
 			glPopMatrix();
 		}
@@ -415,7 +419,7 @@ void modeDogFight::drawScene(int acplayer)
 	if(world.level != NULL)
 		world.level->render(e);
 
-
+	dataManager.bind("model");
 	Vec3f axis;
 	const map<objId,missile*>& missiles = world.missiles();
 	for(auto i=missiles.begin();i != missiles.end();i++)
@@ -435,7 +439,24 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	dataManager.bind("model");
+	const map<objId,bomb*>& bombs = world.bombs();
+	for(auto i=bombs.begin();i != bombs.end();i++)
+	{
+		if(!i->second->awaitingDelete && !i->second->dead)
+		{
+			glPushMatrix();
+				glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
+
+				Angle ang = acosA(i->second->rotation.w);
+				glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
+			//	axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
+			//	Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
+			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
+				dataManager.draw(i->second->type);
+			glPopMatrix();
+		}
+	}
+
 	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
 	{
 		glPushMatrix();	

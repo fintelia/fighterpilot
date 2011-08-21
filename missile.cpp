@@ -102,7 +102,7 @@ void missile::update(double time, double ms)
 	}
 	else if(enemy != NULL && enemy->dead)
 	{
-		particleManager.addEmitter(new particle::explosion(position));
+		particleManager.addEmitter(new particle::explosion(position,5.0));
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
@@ -143,5 +143,8 @@ void missile::update(double time, double ms)
 
 	life-=ms/1000;
 	if(life < 0.0 || world.altitude(position) < 0.0)
+	{
 		awaitingDelete = true;
+		particleManager.addEmitter(new particle::explosion(position,5.0));
+	}
 }

@@ -5,7 +5,9 @@ namespace particle
 {
 	splash::splash(Vec3f pos): emitter(SMOKE, Vec3f(pos.x,0,pos.z), "smoke", 1.0, 100.0, 50), totalCreated(0)
 	{
-		velocity =	fuzzyAttribute(15.0, 5.0);
+		position.y = 0;
+
+		velocity =	fuzzyAttribute(10.0, 10.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
 		life =		fuzzyAttribute(6000.0, 100.0);
 

@@ -9,5 +9,5 @@ uniform sampler2D tex;
 void main()
 {
 	//color.rgb *= max(dot(normal, lightPosition), 0.0);
-	gl_FragColor = color * texture2D(tex,texCoord);
+	gl_FragColor = vec4(color.rgb * texture2D(tex,texCoord).rgb,1.0);
 }

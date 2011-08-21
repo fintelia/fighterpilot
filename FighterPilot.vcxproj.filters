@@ -135,9 +135,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="missile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="random.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -264,6 +261,12 @@
     <ClCompile Include="text.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="missile.cpp">
+      <Filter>Source Files\object</Filter>
+    </ClCompile>
+    <ClCompile Include="bomb.cpp">
+      <Filter>Source Files\object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
@@ -282,9 +285,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="missile.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="profiler.h">
@@ -383,6 +383,12 @@
     </ClInclude>
     <ClInclude Include="menuScreen.h">
       <Filter>Source Files\menu</Filter>
+    </ClInclude>
+    <ClInclude Include="missile.h">
+      <Filter>Source Files\object</Filter>
+    </ClInclude>
+    <ClInclude Include="bomb.h">
+      <Filter>Source Files\object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -499,6 +505,7 @@
     <None Include="media\particle.vert">
       <Filter>shaders\particle</Filter>
     </None>
+    <None Include="media\modelData.txt" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

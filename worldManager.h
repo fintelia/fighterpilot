@@ -23,6 +23,7 @@ public:
 	const map<objId,nPlane*>& planes()const;
 	const map<objId,aaGun*>& aaGuns()const;
 	const map<objId,missile*>& missiles()const;
+	const map<objId,bomb*>& bombs()const;
 
 	void update();
 

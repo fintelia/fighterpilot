@@ -112,6 +112,7 @@
     <ClCompile Include="aaGun.cpp" />
     <ClCompile Include="Angle.cpp" />
     <ClCompile Include="blackSmoke.cpp" />
+    <ClCompile Include="bomb.cpp" />
     <ClCompile Include="bullet.cpp" />
     <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="campaign.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="aaGun.h" />
     <ClInclude Include="Angle.h" />
     <ClInclude Include="basicMath.h" />
+    <ClInclude Include="bomb.h" />
     <ClInclude Include="bullet.h" />
     <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
@@ -204,7 +206,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
-    <None Include="media\assetList.xml" />
+    <None Include="media\assetList.xml">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass.frag" />
@@ -221,6 +225,7 @@
     <None Include="media\island.vert" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
+    <None Include="media\modelData.txt" />
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
     <None Include="media\ortho.frag" />

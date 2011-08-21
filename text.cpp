@@ -15,7 +15,6 @@ void TextManager::renderCharacter(char c, int x, int y)
 
 void TextManager::renderText(string text, int x, int y)
 {
-	glDisable(GL_MULTISAMPLE);
 	dataManager.bindTex(textureId);
 
 	int xpos=x;
@@ -36,5 +35,4 @@ void TextManager::renderText(string text, int x, int y)
 	}
 
 	dataManager.bindTex(0);
-	glEnable(GL_MULTISAMPLE);
 }

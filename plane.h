@@ -18,7 +18,8 @@ public:
 	void update(double time, double ms);
 	void findTargetVector();
 	void level(float value);
-	void ShootMissile();
+	void shootMissile();
+	void dropBomb();
 	void die();
 	void loseHealth(float healthLoss);
 	void autoPilotUpdate(float value);
@@ -46,6 +47,11 @@ public:
 		unsigned int roundsMax, roundsLeft;//number fired before recharge must take place
 		float rechargeTime, rechargeLeft;//all in milliseconds
 		float coolDown, coolDownLeft;
+		struct ammo{
+			Vec3f offset;
+			objectType type;
+		};
+		vector<ammo> ammoRounds;
 	};
 //////////////flight specs/////////
 	float speed;
@@ -58,6 +64,7 @@ public:
 	Vec3f targeter;
 	armament machineGun;
 	armament rockets;
+	armament bombs;
 ////////////life///////////////////
 	//bool dead; (from entity)
 	//int respawn;

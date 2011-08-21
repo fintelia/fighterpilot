@@ -6,11 +6,12 @@ private:
 	map<objId,nPlane*>		mPlanes;
 	map<objId,aaGun*>		mAAguns;
 	map<objId,missile*>		mMissiles;
-
+	map<objId,bomb*>		mBombs;
 public:
 	
 	objId newObject(LevelFile::Object obj);
 	objId newMissile(missileType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int owner,int target);
+	objId newBomb(bombType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int owner);
 	void deleteObject(objId id);
 	void clear();
 	void update(double time, double ms);
@@ -31,5 +32,9 @@ public:
 	const map<objId,missile*>& missiles()const
 	{
 		return mMissiles;
+	}
+	const map<objId,bomb*>& bombs()const
+	{
+		return mBombs;
 	}
 };
