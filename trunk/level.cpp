@@ -37,6 +37,255 @@ void LevelFile::save(string filename)
 	}
 	fout.close();
 }
+void LevelFile::savePNG(string filename)
+{
+	int tWidth = 32;
+	int tHeight = 32;
+	int size = (3*tWidth+tWidth%4)*sh + 3*tWidth*tHeight%4;
+
+	//see: http://zarb.org/~gc/html/libpng.html
+	FILE *fp;
+	if(!fopen_s(&fp,(filename).c_str(), "wb") && fp)
+	{
+		unsigned char* colors = new unsigned char[size];
+		memset(colors,255,size);
+		png_bytepp rows = new unsigned char*[tHeight];
+		for(int i=0;i<tHeight;i++) rows[i] = colors +  (3*tWidth+tWidth%4) * (tHeight-i);
+
+		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
+		if (!png_ptr)
+		{
+			fclose(fp);
+			delete[] colors;
+			return;
+		}
+		png_infop info_ptr = png_create_info_struct(png_ptr);
+		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
+		{
+			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+			fclose(fp);
+			delete[] colors;
+			return;
+		}
+		png_init_io(png_ptr, fp);
+		png_set_IHDR(png_ptr, info_ptr, tWidth, tHeight, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+		png_set_rows(png_ptr,info_ptr,rows);
+
+		//////////////////////////////////////////WRITE SPECIAL CHUNKS/////////////////////////////////////////////
+		png_unknown_chunk chunks[2];
+
+		pngUnknownChunk(chunks[0], "mhTs", heights, info->mapResolution.x*info->mapResolution.y*sizeof(float));
+		pngUnknownChunk(chunks[1], "obJs", objects, info->numObjects*sizeof(Object));
+
+		png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS, NULL, 0);
+		png_set_unknown_chunks(png_ptr,info_ptr,chunks,2);
+		png_set_unknown_chunk_location(png_ptr, info_ptr, 0, 0x02);
+		png_set_unknown_chunk_location(png_ptr, info_ptr, 1, 0x02);
+
+		png_text textFields[7];
+		string title = "untitled";
+		string nextLevel = "";
+		string shaderType;
+		string mapResolutionX = lexical_cast<string>(info->mapResolution.x);
+		string mapResolutionY = lexical_cast<string>(info->mapResolution.y);
+		string mapSizeX = lexical_cast<string>(info->mapSize.x);
+		string mapSizeY = lexical_cast<string>(info->mapSize.y);
+		if(info->shaderType == SHADER_ISLAND) shaderType = "island";
+		if(info->shaderType == SHADER_GRASS) shaderType = "grass";
+		if(info->shaderType == SHADER_SNOW) shaderType = "snow";
+		if(info->shaderType == SHADER_OCEAN) shaderType = "ocean";
+		
+
+		pngTextField(&textFields[0],"Title",title.c_str());
+		pngTextField(&textFields[1],"Next Level",nextLevel.c_str());
+		pngTextField(&textFields[2],"Shader Type",shaderType.c_str());
+		pngTextField(&textFields[3],"Map X Resolution",mapResolutionX.c_str());
+		pngTextField(&textFields[4],"Map Y Resolution",mapResolutionY.c_str());
+		pngTextField(&textFields[5],"Map X Size",mapSizeX.c_str());
+		pngTextField(&textFields[6],"Map Y Size",mapSizeY.c_str());
+
+		png_set_text(png_ptr,info_ptr,textFields,7);
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
+		png_destroy_write_struct(&png_ptr, &info_ptr);
+
+		fclose(fp);
+		delete[] rows;
+		delete[] colors;
+	}
+}
+bool LevelFile::loadPNG(string filename)
+{
+	png_uint_32		i, 
+					width,
+					height,
+					rowbytes;
+	int				bit_depth,
+					color_type,
+					colorChannels;
+	unsigned char*	image_data;
+	png_bytep*		row_pointers;
+	
+	/* Open the PNG file. */
+	FILE *infile;
+	fopen_s(&infile,filename.c_str(), "rb");
+	
+	if (!infile) {
+		return false;
+	}
+	
+	unsigned char sig[8];
+	/* Check for the 8-byte signature */
+	fread(sig, 1, 8, infile);
+	if (!png_check_sig((unsigned char *) sig, 8)) {
+		fclose(infile);
+		return false;
+	}
+	/* 
+	 * Set up the PNG structs 
+	 */
+	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr) {
+		fclose(infile);
+		return false; /* out of memory */
+	}
+	
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr) {
+		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+		fclose(infile);
+		return false; /* out of memory */
+	}
+	
+	png_infop end_ptr = png_create_info_struct(png_ptr);
+	if (!end_ptr) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+		fclose(infile);
+		return false; /* out of memory */
+	}
+	
+	/*
+	 * block to handle libpng errors, 
+	 * then check whether the PNG file had a bKGD chunk
+	 */
+	if (setjmp(png_jmpbuf(png_ptr))) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
+		fclose(infile);
+		return false;
+	}
+	
+	/*
+	 * takes our file stream pointer (infile) and 
+	 * stores it in the png_ptr struct for later use.
+	 */
+	png_init_io(png_ptr, infile);
+	
+	/*
+	 * lets libpng know that we already checked the 8 
+	 * signature bytes, so it should not expect to find 
+	 * them at the current file pointer location
+	 */
+	png_set_sig_bytes(png_ptr, 8);
+
+	png_set_keep_unknown_chunks(png_ptr,3,NULL,0);
+
+	png_read_info(png_ptr, info_ptr);
+	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+	
+	
+	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
+	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
+	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
+	if (bit_depth == 16)																png_set_strip_16(png_ptr);
+	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
+	
+	/* snipped out the color type code, see source pngLoad.c */
+	/* Update the png info struct.*/
+	png_read_update_info(png_ptr, info_ptr);
+	
+	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
+	
+	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		return false;
+	}
+	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		return false;
+	}	
+	for (i = 0;  i < height;  i++)
+		row_pointers[i] = image_data + i*rowbytes;
+	
+	png_read_image(png_ptr, row_pointers);
+	png_read_end(png_ptr, NULL);
+
+	//////////////////////////////////
+	if(info != NULL) delete info;
+	info = new Info();
+
+	string title, nextLevel, shaderType;
+	png_text* text_ptr;
+	int num_text;
+	png_get_text(png_ptr, info_ptr, &text_ptr, &num_text);
+	for(int i=0;i<num_text;i++)
+	{
+		try{
+			if(strcmp(text_ptr[i].key,"Title") == 0)			title = text_ptr[i].text;
+			if(strcmp(text_ptr[i].key,"Next Level") == 0)		nextLevel = text_ptr[i].text;
+			if(strcmp(text_ptr[i].key,"Shader Type") == 0)		shaderType = text_ptr[i].text;
+			if(strcmp(text_ptr[i].key,"Map X Resolution") == 0)	info->mapResolution.x = lexical_cast<int>(text_ptr[i].text);
+			if(strcmp(text_ptr[i].key,"Map Y Resolution") == 0)	info->mapResolution.y = lexical_cast<int>(text_ptr[i].text);
+			if(strcmp(text_ptr[i].key,"Map X Size") == 0)		info->mapSize.x = lexical_cast<float>(text_ptr[i].text);
+			if(strcmp(text_ptr[i].key,"Map Y Size") == 0)		info->mapSize.y = lexical_cast<float>(text_ptr[i].text);
+		}catch(...)
+		{
+			debugBreak();
+		}
+	}
+	if(shaderType == "island")		info->shaderType = SHADER_ISLAND;
+	else if(shaderType == "grass")	info->shaderType = SHADER_GRASS;
+	else if(shaderType == "snow")	info->shaderType = SHADER_SNOW;
+	else if(shaderType == "ocean")	info->shaderType = SHADER_OCEAN;
+
+	png_unknown_chunk* unknowns;
+	int num_unknowns = png_get_unknown_chunks(png_ptr, info_ptr, &unknowns);
+
+	for(int i=0; i<num_unknowns; i++)
+	{
+		if(strcmp((const char*)unknowns[i].name,"mhTs") == 0)
+		{
+			if(heights != NULL) delete heights;
+			heights = new float[unknowns[i].size / sizeof(float)];
+			memcpy(heights, unknowns[i].data, unknowns[i].size - unknowns[i].size%sizeof(float));
+		}
+		else if(strcmp((const char*)unknowns[i].name,"obJs") == 0)
+		{
+			if(objects != NULL) delete objects;
+			info->numObjects = unknowns[i].size / sizeof(Object);
+			objects = new Object[info->numObjects];
+			memcpy(objects, unknowns[i].data, info->numObjects*sizeof(Object));
+		}
+		else if(strcmp((const char*)unknowns[i].name,"reGn") == 0)
+		{
+			if(regions != NULL) delete regions;
+			info->numRegions = unknowns[i].size / sizeof(Region);
+			regions = new Region[info->numRegions];
+			memcpy(regions, unknowns[i].data, info->numRegions*sizeof(Region));
+		}
+	}
+
+	/////////////////////////////////
+
+	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+	fclose(infile);
+	
+	free(image_data);
+	free(row_pointers);
+	return true;
+}
 LevelFile::LevelFile(): info(NULL), objects(NULL), heights(NULL)
 {
 	header.magicNumber = 0x454c49465f4c564c;
@@ -47,6 +296,10 @@ LevelFile::LevelFile(string filename): info(NULL), objects(NULL), heights(NULL)
 	header.magicNumber = 0x454c49465f4c564c;
 	header.version = 0;
 	load(filename);
+	//if(!loadPNG(filename))
+	//{
+	//	//load failed
+	//}
 }
 //________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 float Level::heightmapBase::rasterHeight(unsigned int x,unsigned int z) const
@@ -311,7 +564,7 @@ void Level::heightmapGL::render() const
 	//glEnd();
 	//glPopMatrix();
 }
-void Level::heightmapGL::renderPreview(float seaLevelOffset) const
+void Level::heightmapGL::renderPreview(float scale, float seaLevelOffset) const
 {
 	//if(seaLevelOffset >= maxHeight)
 	//	return;
@@ -324,17 +577,18 @@ void Level::heightmapGL::renderPreview(float seaLevelOffset) const
 		setTex();
 		valid=true;
 	}
-
 	if(shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_NONE)
 	{
-		if(shaderType == SHADER_ISLAND)	dataManager.bind("island new terrain");
-		else							dataManager.bind("grass new terrain");
+		if(shaderType == SHADER_ISLAND)		dataManager.bind("island preview terrain");
+		else								dataManager.bind("grass preview terrain");
 
 		dataManager.bind("sand",0);
 		dataManager.bind("grass",1);
 		dataManager.bind("rock",2);
 		dataManager.bind("LCnoise",3);
 		dataManager.bindTex(groundTex,4);
+
+		dataManager.setUniform1f("heightScale",	scale);
 
 		dataManager.setUniform1f("maxHeight",	maxHeight);
 		dataManager.setUniform1f("minHeight",	0);
@@ -348,11 +602,13 @@ void Level::heightmapGL::renderPreview(float seaLevelOffset) const
 	}
 	else if(shaderType == SHADER_SNOW)
 	{
-		dataManager.bind("snow terrain");
+		dataManager.bind("snow preview terrain");
 
 		dataManager.bind("snow",0);
 		dataManager.bind("LCnoise",1);
 		dataManager.bindTex(groundTex,2);
+
+		dataManager.setUniform1f("heightScale",	scale);
 
 		dataManager.setUniform1f("maxHeight",	maxHeight);
 		dataManager.setUniform1f("minHeight",	0);
@@ -367,7 +623,7 @@ void Level::heightmapGL::renderPreview(float seaLevelOffset) const
 	{
 		glPushMatrix();
 			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
-			glScalef(mSize.x,1,mSize.y);
+			glScalef(mSize.x,scale,mSize.y);
 			glCallList(dispList);
 		glPopMatrix();
 
@@ -526,10 +782,10 @@ void Level::exportBMP(string filename)
 	delete[] colors;
 	fout.close();
 }
-void Level::renderPreview(bool drawWater, float seaLevelOffset)
+void Level::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 {
 	glPushMatrix();
-	mGround->renderPreview(seaLevelOffset);
+	mGround->renderPreview(scale, seaLevelOffset);
 
 	if(seaLevelOffset != 0.0 && (mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS))
 	{
@@ -552,10 +808,10 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
 		glBegin(GL_QUADS);
-			glVertex3f(0,seaLevelOffset,0);
-			glVertex3f(0,seaLevelOffset,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,seaLevelOffset,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,seaLevelOffset,0);
+			glVertex3f(0,seaLevelOffset*scale,0);
+			glVertex3f(0,seaLevelOffset*scale,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,seaLevelOffset*scale,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,seaLevelOffset*scale,0);
 		glEnd();
 
 		dataManager.bindTex(0,3);
@@ -569,7 +825,7 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 	if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
 	{
 		glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
-		float h = mGround->minHeight-20.0;
+		float h = mGround->minHeight*scale-20.0;
 		//float h = max(mGround->minHeight-20.0,seaLevelOffset);//needs to be adjusted for sea level
 		dataManager.bind("layers");
 		float t=0.0;
@@ -578,13 +834,13 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 		for(int i = 0; i < mGround->resolutionX()-1; i++)
 		{
 			glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
-			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0),h) ,0);
+			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0)*scale,h) ,0);
 			t+=0.2;
 		}
 		for(int i = 0; i < mGround->resolutionZ()-1; i++)
 		{
 			glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
-			glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i),h),i);
+			glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i)*scale,h),i);
 			t+=0.2;
 		}
 		t+=0.2;
@@ -592,13 +848,13 @@ void Level::renderPreview(bool drawWater, float seaLevelOffset)
 		{
 			t-=0.2;
 			glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
-			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1),h),mGround->resolutionZ()-1);
+			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1)*scale,h),mGround->resolutionZ()-1);
 		}
 		for(int i = mGround->resolutionZ()-1; i >= 0; i--)
 		{
 			t-=0.2;
 			glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
-			glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i),h),i);
+			glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i)*scale,h),i);
 		}
 		glEnd();
 		dataManager.bindTex(0);

@@ -8,6 +8,13 @@ const ShaderType SHADER_OCEAN		= 4;
 
 struct LevelFile
 {
+	//struct lhDr{
+	//	__int64			magicNumber;
+	//	unsigned int	version;
+	//	ShaderType		shaderType;	
+	//	Vec2f			mapSize;
+	//	Vec2u			mapResolution;
+	//};
 	struct Header{
 		__int64 magicNumber;
 		unsigned int version;
@@ -19,7 +26,7 @@ struct LevelFile
 		Vec2u			mapResolution;
 		unsigned short	numObjects;
 		unsigned short	numRegions;
-		Info(): mapSize(1,1), mapResolution(0,0), numObjects(0){}
+		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0), numObjects(0), numRegions(0){}
 	}*info;
 
 	struct Object{
@@ -70,6 +77,8 @@ struct LevelFile
 
 	void load(string filename);
 	void save(string filename);
+	void savePNG(string filename);
+	bool loadPNG(string filename);
 	LevelFile();
 	LevelFile(string filename);
 };
@@ -123,7 +132,7 @@ public:
 		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
 		virtual void render() const=0;
-		virtual void renderPreview(float seaLevelOffset=0.0) const=0;
+		virtual void renderPreview(float scale=1.0, float seaLevelOffset=0.0) const=0;
 		virtual void init()=0;
 
 		float operator() (unsigned int x, unsigned int z) const{return rasterHeight(x,z);}
@@ -157,7 +166,7 @@ public:
 		void setHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] = height; valid=false;}
 		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height; valid=false;}		
 		void increaseHeights(float amount);
-		void renderPreview(float seaLevelOffset=0.0) const;
+		void renderPreview(float scale=1.0, float seaLevelOffset=0.0) const;
 		void render() const;
 
 		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),dispList(0){init();}
@@ -185,7 +194,7 @@ public:
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
-	void renderPreview(bool drawWater, float seaLevelOffset=0.0);//for mapbuilder
+	void renderPreview(bool drawWater, float scale, float seaLevelOffset=0.0);//for mapbuilder
 	void renderObjectsPreview();
 	void render(Vec3f eye);
 

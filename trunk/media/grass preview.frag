@@ -3,6 +3,7 @@ varying vec3 position, lightDir, halfVector;
 varying float h;
 
 uniform float time;
+uniform float heightScale;
 
 uniform sampler2D sand;
 uniform sampler2D grass;
@@ -25,6 +26,7 @@ void main()
 	vec3 normal = texture2D(groundTex,position.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
 	normal.z = normal.z * 2.0 - 1.0;
+	normal.y /= heightScale;
 	normal = normalize(normal);
 
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
@@ -60,10 +62,10 @@ TexValues = vec3(0.0,h,1.0-h);
 	float NdotL = dot(normal,lightDir);
 	color = vec4(color.rgb*(NdotL*0.3+0.7),color.a);
 	///////////////////////
-	float z = gl_FragCoord.z / gl_FragCoord.w;
-	float d=0.00005;
-	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
-	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	//float z = gl_FragCoord.z / gl_FragCoord.w;
+	//float d=0.00005;
+	//float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
+	//color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
 	//////////////////
 
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));

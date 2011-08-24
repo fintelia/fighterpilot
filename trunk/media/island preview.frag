@@ -3,6 +3,7 @@ varying vec3 position, lightDir, halfVector;
 varying float h;
 
 uniform float time;
+uniform float heightScale;
 
 uniform sampler2D sand;
 uniform sampler2D grass;
@@ -25,6 +26,7 @@ void main()
 	vec3 normal = texture2D(groundTex,position.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
 	normal.z = normal.z * 2.0 - 1.0;
+	normal.y /= heightScale;
 	normal = normalize(normal);
 
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
@@ -36,16 +38,12 @@ void main()
 	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
 	vec3 TexValues;
-	//if(position.y<10.0)		TexValues = vec3(0.0,1.0,0.0);
-	//else if(position.y<0.4)	TexValues = vec3(0.0,1.0-(position.y-0.2)/0.2,(position.y-0.2)/0.2);
-	//else					TexValues = vec3(0.0,0.0,1.0);
-	
+	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
+	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
+	else				TexValues = vec3(0.0,0.0,1.0);
+
 	//if(r<TexValues[0]) r=0.0;
 	//else r-=TexValues[0];
-
-//	if(slope < 0.3) TexValues = vec3(0.0,1.0-(slope)/0.3*h,(slope)/0.3*h);
-//	else TexValues = vec3(0.0,0.0,1.0);
-TexValues = vec3(0.0,h,1.0-h);
 
 	TexValues *= 1.0-r;
 	TexValues += vec3(r,0.0,0.0);
@@ -56,14 +54,21 @@ TexValues = vec3(0.0,h,1.0-h);
 	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
 	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
 
-
 	float NdotL = dot(normal,lightDir);
-	color = vec4(color.rgb*(NdotL*0.3+0.7),color.a);
+
+	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
+	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
+
+	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
+
 	///////////////////////
-	float z = gl_FragCoord.z / gl_FragCoord.w;
-	float d=0.00005;
-	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
-	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	//if(position.y > 0.0)
+	//{
+		//float z = gl_FragCoord.z / gl_FragCoord.w;
+		//float d=0.00001;
+		//float fogFactor = clamp(exp2( -d * d * z * z * 1.442695 ), 0.0, 1.0);
+		//color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	//}
 	//////////////////
 
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
