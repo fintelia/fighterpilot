@@ -121,6 +121,7 @@ void levelEditor::operator() (popup* p)
 		string f=((saveFile*)p)->getFile();
 		LevelFile l = level->getLevelFile(sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 		l.save(f);
+	//	l.savePNG(f);
 	}
 	else if(awaitingNewObject)
 	{
@@ -826,8 +827,8 @@ void levelEditor::render3D()
 	float sl = sliders["sea level"]->getValue();
 
 	glPushMatrix();
-	glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
- 	level->renderPreview(w,sl * (maxHeight - minHeight) + minHeight);
+	//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
+ 	level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
 	glPopMatrix();
 
 	if(getTab() == menu::levelEditor::OBJECTS)

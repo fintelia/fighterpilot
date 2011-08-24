@@ -68,7 +68,7 @@
     <shader name="horizon2"             vertex="media/horizon2.vert"    fragment="media/horizon2.frag" />
     <shader name="island terrain"       vertex="media/island.vert"      fragment="media/island.frag" />
     <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />
-
+    
     <shader name="ocean"                vertex="media/ocean.vert"       fragment="media/ocean.frag" />
     <shader name="partical shader"      vertex="media/smoke.vert"       fragment="media/smoke.frag" />
     <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
@@ -78,7 +78,10 @@
     
     <shader name="island new terrain"     vertex="media/terrain.vert"   fragment="media/grass.frag" />
     <shader name="grass new terrain"      vertex="media/terrain.vert"   fragment="media/grass2.frag" />
+    <shader name="island preview terrain" vertex="media/terrain.vert"   fragment="media/island preview.frag" />
+    <shader name="grass preview terrain"  vertex="media/terrain.vert"   fragment="media/grass preview.frag" />
     <shader name="snow terrain"           vertex="media/terrain.vert"   fragment="media/snow.frag" />
+    <shader name="snow preview terrain"   vertex="media/terrain.vert"   fragment="media/snow preview.frag" />
   </shaders>
   
   <models>

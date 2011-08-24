@@ -151,6 +151,7 @@
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="planeContrail.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="pngHelper.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="pngHelper.h" />
     <ClInclude Include="profiler.h" />
     <ClInclude Include="quaternion.h" />
     <ClInclude Include="random.h" />
@@ -211,6 +213,7 @@
     </None>
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
+    <None Include="media\grass preview.frag" />
     <None Include="media\grass.frag" />
     <None Include="media\grass2.frag" />
     <None Include="media\health.frag" />
@@ -222,6 +225,7 @@
     <None Include="media\horizon2.frag" />
     <None Include="media\horizon2.vert" />
     <None Include="media\icon.ico" />
+    <None Include="media\island preview.frag" />
     <None Include="media\island.vert" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
@@ -240,6 +244,7 @@
     <None Include="media\radarPlane.vert" />
     <None Include="media\sky.frag" />
     <None Include="media\sky.vert" />
+    <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
     <None Include="media\terrain.frag" />
     <None Include="media\terrain.vert" />
