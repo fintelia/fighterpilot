@@ -524,6 +524,12 @@
     <None Include="media\snow preview.frag">
       <Filter>shaders\terrain</Filter>
     </None>
+    <None Include="media\radar bounds.frag">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar bounds.vert">
+      <Filter>shaders\radar</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

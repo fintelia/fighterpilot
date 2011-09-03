@@ -8,13 +8,13 @@ newmtl sphere
 	Tf 1 1 1
 	illum 2
 	Ka 0.5490 0.3451 0.8824
-	Kd 0.5000 0.5000 0.5000
+	Kd 1.0000 1.0000 1.0000
 	Ks 0.3500 0.3500 0.3500
 
 newmtl barrel
 	Ns 32
 	d 1
-	Tr 0
+	Tr 0.5
 	Tf 1 1 1
 	illum 2
 	Ka 0.1098 0.1098 0.6941

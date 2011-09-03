@@ -25,7 +25,7 @@
 #include <cassert>
 #include <fstream>
 #include "imageloader.h"
-
+#include "debugBreak.h"
 using namespace std;
 
 Image::Image(char* ps, int w, int h) : pixels(ps), width(w), height(h) {
@@ -134,10 +134,18 @@ namespace {
 Image* loadBMP(const char* filename) {
 	ifstream input;
 	input.open(filename, ifstream::binary);
-	assert(!input.fail() || !"Could not find file");
+	if(input.fail())
+	{
+		debugBreak();
+		return NULL; // Could not find file
+	}
 	char buffer[2];
 	input.read(buffer, 2);
-	assert(buffer[0] == 'B' && buffer[1] == 'M' || !"Not a bitmap file");
+	if(buffer[0] != 'B' || buffer[1] != 'M')
+	{
+		debugBreak();
+		return NULL;// Not a bitmap file
+	}
 	input.ignore(8);
 	int dataOffset = readInt(input);
 	
@@ -145,36 +153,34 @@ Image* loadBMP(const char* filename) {
 	int headerSize = readInt(input);
 	int width;
 	int height;
-	switch(headerSize) {
-		case 40:
-			//V3
-			width = readInt(input);
-			height = readInt(input);
-			input.ignore(2);
-			assert(readShort(input) == 24 || !"Image is not 24 bits per pixel");
-			assert(readShort(input) == 0 || !"Image is compressed");
-			break;
-		case 12:
-			//OS/2 V1
-			width = readInt(input);
-			height = readInt(input);
-			input.ignore(2);
-			assert(readShort(input) == 24 || !"Image is not 24 bits per pixel");
-			break;
-		case 64:
-			//OS/2 V2
-			assert(!"Can't load OS/2 V2 bitmaps");
-			break;
-		case 108:
-			//Windows V4
-			assert(!"Can't load Windows V4 bitmaps");
-			break;
-		case 124:
-			//Windows V5
-			assert(!"Can't load Windows V5 bitmaps");
-			break;
-		default:
-			assert(!"Unknown bitmap format");
+	if(headerSize == 40)
+	{
+		//V3
+		width = readInt(input);
+		height = readInt(input);
+		input.ignore(2);
+		if(readShort(input) != 24 || readShort(input) != 0)
+		{
+			debugBreak();// Image is not 24 bits per pixel || Image is compressed
+			return NULL;
+		}
+	}
+	else if(headerSize == 12)
+	{
+		//OS/2 V1
+		width = readInt(input);
+		height = readInt(input);
+		input.ignore(2);
+		if(readShort(input) != 24)
+		{
+			debugBreak();
+			return NULL; //Image is not 24 bits per pixel
+		}
+	}
+	else 
+	{
+		debugBreak();
+		return NULL;
 	}
 	
 	//Read the data

@@ -59,6 +59,7 @@
     <shader name="radar"                vertex="media/radar.vert"       fragment="media/radar.frag" sAspect="true" />
     <shader name="radar2"               vertex="media/radar2.vert"      fragment="media/radar2.frag" sAspect="true" />
 	  <shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" sAspect="true" />
+    <shader name="radar bounds"         vertex="media/radar bounds.vert" fragment="media/radar bounds.frag" sAspect="true" />
     <shader name="health"               vertex="media/health.vert"      fragment="media/health.frag" sAspect="true" />
     
     <shader name="grass terrain"        vertex="media/toon.vert"        fragment="media/toon.frag" />
@@ -82,6 +83,8 @@
     <shader name="grass preview terrain"  vertex="media/terrain.vert"   fragment="media/grass preview.frag" />
     <shader name="snow terrain"           vertex="media/terrain.vert"   fragment="media/snow.frag" />
     <shader name="snow preview terrain"   vertex="media/terrain.vert"   fragment="media/snow preview.frag" />
+    
+    
   </shaders>
   
   <models>

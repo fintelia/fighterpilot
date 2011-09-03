@@ -46,6 +46,7 @@ protected:
 	GLuint radarTexture;
 	GLuint radarFBO;
 	GLuint radarRBO;
+
 public:
 	modeDogFight(Level* lvl);
 	virtual ~modeDogFight();
@@ -60,13 +61,13 @@ public:
 	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawBullets();
 	void drawScene(int acplayer);
+	void drawSceneParticles(int acplayer);
 };
 
 class modeSplitScreen: public modeDogFight
 {
 public:
 	modeSplitScreen(Level* lvl): modeDogFight(lvl){}
-	modeSplitScreen(string lvlFile): modeDogFight(new Level(LevelFile(lvlFile))){}
 	int update();
 	void draw2D();
 	void draw3D();
@@ -80,7 +81,6 @@ protected:
 	bool levelup;
 public:
 	modeCampaign(Level* lvl): modeDogFight(lvl), levelup(false), countdown(0.0){}
-	modeCampaign(string lvlFile): modeDogFight(new Level(LevelFile(lvlFile))), levelup(false), countdown(0.0){}
 	int update();
 	void draw2D();
 	void draw3D();

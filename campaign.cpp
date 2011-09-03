@@ -43,11 +43,19 @@ int modeCampaign::update()
 	if(levelup)
 	{
 		countdown-=world.time.length();
-		if(countdown<0)
+		if(countdown<=0)
 		{
-			//need to add code to mode onto the next level
-			return 30;
+			Level* l = new Level();
+			if(l->init(/*world.level->getLevelNext()*/"media/map file.lvl"))
+			{
+				modeManager.setMode(new modeCampaign(l));
+			}
+			else
+			{
+				delete l;
+			}
 		}
+		return 30;
 	}
 	if(input->getKey(VK_F1))
 	{
@@ -74,10 +82,15 @@ int modeCampaign::update()
 	const map<objId,nPlane*>& planes = world.planes();
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		if((*i).second->team != world.objectList[players[0].objectNum()]->team)
+		if((*i).second->team != world.objectList[players[0].objectNum()]->team && !(*i).second->dead)
 			enemies_left++;
 	}
 
+	if(enemies_left == 0)
+	{
+		levelup=true;
+		countdown=1000;
+	}
 	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
 	//{
 	//	//need to add code to restart the level
@@ -131,11 +144,11 @@ void modeCampaign::draw2D()
 	}
 	
 
-	//if(levelup)
-	//{
-	//	float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
-	//	graphics->drawOverlay(Vec2f(sw/2-v*sw/2,sh-v*sh),Vec2f(sw,sh)*v,"next level");
-	//}
+	if(levelup)
+	{
+		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, sAspect*v, v), "next level");
+	}
 }
 void modeCampaign::draw3D()
 {
@@ -150,5 +163,6 @@ void modeCampaign::drawParticles()
 {
 	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
-	particleManager.render();
+	drawSceneParticles(0);
+	//particleManager.render();
 }

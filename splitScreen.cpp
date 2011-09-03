@@ -126,8 +126,10 @@ void modeSplitScreen::drawParticles()
 	glViewport(0, sh/2, sw, sh/2);
 	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 	frustum.setCamInternals(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
-	particleManager.render();
+	drawSceneParticles(0);
+	//particleManager.render();
 
 	glViewport(0, 0, sw, sh/2);
-	particleManager.render();
+	drawSceneParticles(1);
+	//particleManager.render();
 }

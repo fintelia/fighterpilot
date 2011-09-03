@@ -106,22 +106,25 @@ void levelEditor::operator() (popup* p)
 		awaitingLevelFile=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((openFile*)p)->getFile();
-		delete level;
-		LevelFile l(f);
-		level = new editLevel(l);
-		maxHeight=level->ground()->getMaxHeight();
-		minHeight=level->ground()->getMinHeight();
-		sliders["sea level"]->setValue(-minHeight/(maxHeight - minHeight));
-		resetView();
+
+		Level* l = new editLevel();
+		if(l->init(f))
+		{
+			delete level;
+			level = (editLevel*)l;
+			
+			maxHeight=level->ground()->getMaxHeight();
+			minHeight=level->ground()->getMinHeight();
+			sliders["sea level"]->setValue(-minHeight/(maxHeight - minHeight));
+			resetView();
+		}
 	}
 	else if(awaitingLevelSave)
 	{
 		awaitingLevelSave=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
-		LevelFile l = level->getLevelFile(sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
-		l.save(f);
-	//	l.savePNG(f);
+		level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
 	else if(awaitingNewObject)
 	{
