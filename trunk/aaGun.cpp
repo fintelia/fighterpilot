@@ -53,14 +53,7 @@ void aaGun::update(double time, double ms)
 	if(target != 0)
 	{
 		targeter = (world.objectList[target]->position - position).normalize();
-		Vec3f t = targeter.normalize();
-
-
-		Vec3f axis = t.cross(Vec3f(0,0,1));
-		Angle ang = acosA(axis.dot(t));
-
-		if(ang > PI/4) ang = PI/4;
-		rotation = Quat4f(axis,ang);
+		rotation = Quat4f(targeter);
 		shoot = true;
 	}
 	else

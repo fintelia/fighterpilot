@@ -453,10 +453,12 @@ bool openFile::keyDown(int vkey)
 	}
 	else
 	{
-		if(!input->getKey(VK_SHIFT))
-			file  += tolower(MapVirtualKey(vkey,MAPVK_VK_TO_CHAR));
-		else
-			file  += MapVirtualKey(vkey,MAPVK_VK_TO_CHAR);
+		char ascii = MapVirtualKey(vkey,MAPVK_VK_TO_CHAR);
+
+		if(ascii != 0 && !input->getKey(VK_SHIFT))
+			file  += tolower(ascii);
+		else if(ascii != 0)
+			file  += ascii;
 	}
 	return true;
 }
@@ -762,17 +764,25 @@ bool chooseMode::keyDown(int vkey)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu(NULL);
 
-		modeManager.setMode(new modeCampaign("media/map file.lvl"));
+		Level* l = new Level;
+		if(l->init("media/map file.lvl"))
+		{
+			menuManager.setMenu(NULL);
+			modeManager.setMode(new modeCampaign(l));
+		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
-		menuManager.setMenu(NULL);
 
-		modeManager.setMode(new modeSplitScreen("media/map file.lvl"));
+		Level* l = new Level;
+		if(l->init("media/map file.lvl"))
+		{
+			menuManager.setMenu(NULL);
+			modeManager.setMode(new modeSplitScreen(l));
+		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
@@ -796,18 +806,27 @@ void chooseMode::operator() (popup* p)
 		{
 			input->up(VK_SPACE);
 			input->up(VK_RETURN);
-			menuManager.setMenu(NULL);
-
-			modeManager.setMode(new modeCampaign(((openFile*)p)->getFile()));
+			
+			
+			Level* l = new Level;
+			if(l->init(((openFile*)p)->getFile()))
+			{
+				menuManager.setMenu(NULL);
+				modeManager.setMode(new modeCampaign(l));
+			}
 			return;
 		}
 		else if(activeChoice==MULTIPLAYER)
 		{
 			input->up(VK_SPACE);
 			input->up(VK_RETURN);
-			menuManager.setMenu(NULL);
 
-			modeManager.setMode(new modeSplitScreen(((openFile*)p)->getFile()));
+			Level* l = new Level;
+			if(l->init(((openFile*)p)->getFile()))
+			{
+				menuManager.setMenu(NULL);
+				modeManager.setMode(new modeSplitScreen(l));
+			}
 			return;
 		}
 		choosingFile = false;

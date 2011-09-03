@@ -1,49 +1,59 @@
 
 #include "main.h"
 
-void LevelFile::load(string filename)
-{
-	if(info != NULL) delete info;
-	if(objects != NULL) delete objects;
-	if(heights != NULL) delete heights;
-
-	ifstream fin(filename, ios::binary);
-	fin.read((char*)&header,sizeof(Header));
-	if(header.magicNumber == 0x454c49465f4c564c && header.version == 1)
-	{
-		info = new Info;
-		fin.read((char*)info,sizeof(Info));
-
-		objects = new Object[info->numObjects];
-		fin.read((char*)objects,info->numObjects*sizeof(Object));
-
-		regions = new Region[info->numRegions];
-		fin.read((char*)regions,info->numRegions*sizeof(Region));
-
-		heights = new float[info->mapResolution.x*info->mapResolution.y];
-		fin.read((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
-	}
-	fin.close();
-}
-void LevelFile::save(string filename)
-{
-	ofstream fout(filename, ios::binary);
-	fout.write((char*)&header,sizeof(Header));
-	if(header.version == 1 && info!=NULL && heights!=NULL && (objects!=NULL || info->numObjects==0))
-	{
-		fout.write((char*)info,sizeof(Info));
-		fout.write((char*)objects,info->numObjects*sizeof(Object));
-		fout.write((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
-	}
-	fout.close();
-}
-void LevelFile::savePNG(string filename)
+//bool LevelFile::load(string filename)
+//{
+//	ifstream fin(filename, ios::binary);
+//	if(!fin.is_open())
+//		return false;
+//
+//	fin.read((char*)&header,sizeof(Header));
+//	if(header.magicNumber == 0x454c49465f4c564c && header.version == 1)
+//	{
+//		if(info != NULL) delete info;
+//		if(objects != NULL) delete objects;
+//		if(heights != NULL) delete heights;
+//
+//		info = new Info;
+//		fin.read((char*)info,sizeof(Info));
+//
+//		objects = new Object[info->numObjects];
+//		fin.read((char*)objects,info->numObjects*sizeof(Object));
+//
+//		regions = new Region[info->numRegions];
+//		fin.read((char*)regions,info->numRegions*sizeof(Region));
+//
+//		heights = new float[info->mapResolution.x*info->mapResolution.y];
+//		fin.read((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
+//		fin.close();
+//		
+//		return true;
+//	}
+//	else
+//	{
+//		fin.close();
+//		return false;
+//	}
+//}
+//bool LevelFile::save(string filename)
+//{
+//	ofstream fout(filename, ios::binary);
+//	fout.write((char*)&header,sizeof(Header));
+//	if(header.version == 1 && info!=NULL && heights!=NULL && (objects!=NULL || info->numObjects==0))
+//	{
+//		fout.write((char*)info,sizeof(Info));
+//		fout.write((char*)objects,info->numObjects*sizeof(Object));
+//		fout.write((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
+//	}
+//	fout.close();
+//	return true;
+//}
+bool LevelFile::savePNG(string filename)
 {
 	int tWidth = 32;
 	int tHeight = 32;
 	int size = (3*tWidth+tWidth%4)*sh + 3*tWidth*tHeight%4;
 
-	//see: http://zarb.org/~gc/html/libpng.html
 	FILE *fp;
 	if(!fopen_s(&fp,(filename).c_str(), "wb") && fp)
 	{
@@ -57,7 +67,7 @@ void LevelFile::savePNG(string filename)
 		{
 			fclose(fp);
 			delete[] colors;
-			return;
+			return false;
 		}
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
@@ -65,7 +75,7 @@ void LevelFile::savePNG(string filename)
 			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 			fclose(fp);
 			delete[] colors;
-			return;
+			return false;
 		}
 		png_init_io(png_ptr, fp);
 		png_set_IHDR(png_ptr, info_ptr, tWidth, tHeight, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
@@ -73,8 +83,25 @@ void LevelFile::savePNG(string filename)
 
 		//////////////////////////////////////////WRITE SPECIAL CHUNKS/////////////////////////////////////////////
 		png_unknown_chunk chunks[2];
+		float minHeight = 0.0;
+		float maxHeight = 1.0;
+		unsigned short* sHeights = NULL;
 
-		pngUnknownChunk(chunks[0], "mhTs", heights, info->mapResolution.x*info->mapResolution.y*sizeof(float));
+		if(info->mapResolution.x != 0 && info->mapResolution.y != 0)
+		{
+			sHeights = new unsigned short[info->mapResolution.x*info->mapResolution.y];
+			minHeight = maxHeight = heights[0];
+			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
+			{
+				if(minHeight > heights[i]) minHeight = heights[i];
+				if(maxHeight < heights[i]) maxHeight = heights[i];
+			}
+			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
+			{
+				sHeights[i] = (heights[i] - minHeight) / (maxHeight - minHeight) * UCHAR_MAX;
+			}
+			pngUnknownChunk(chunks[0], "mhTs", sHeights, info->mapResolution.x*info->mapResolution.y*sizeof(unsigned short));
+		}
 		pngUnknownChunk(chunks[1], "obJs", objects, info->numObjects*sizeof(Object));
 
 		png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS, NULL, 0);
@@ -82,29 +109,34 @@ void LevelFile::savePNG(string filename)
 		png_set_unknown_chunk_location(png_ptr, info_ptr, 0, 0x02);
 		png_set_unknown_chunk_location(png_ptr, info_ptr, 1, 0x02);
 
-		png_text textFields[7];
-		string title = "untitled";
-		string nextLevel = "";
-		string shaderType;
-		string mapResolutionX = lexical_cast<string>(info->mapResolution.x);
-		string mapResolutionY = lexical_cast<string>(info->mapResolution.y);
-		string mapSizeX = lexical_cast<string>(info->mapSize.x);
-		string mapSizeY = lexical_cast<string>(info->mapSize.y);
+
+
+		png_text textFields[9];
+		string	title = "untitled",
+				nextLevel = "",
+				shaderType,
+				resX = lexical_cast<string>(info->mapResolution.x),
+				resY =lexical_cast<string>(info->mapResolution.y),
+				sizeX = lexical_cast<string>(info->mapSize.x),
+				sizeY = lexical_cast<string>(info->mapSize.y),
+				minH = lexical_cast<string>(minHeight),
+				maxH = lexical_cast<string>(maxHeight);
+
 		if(info->shaderType == SHADER_ISLAND) shaderType = "island";
 		if(info->shaderType == SHADER_GRASS) shaderType = "grass";
 		if(info->shaderType == SHADER_SNOW) shaderType = "snow";
 		if(info->shaderType == SHADER_OCEAN) shaderType = "ocean";
-		
 
 		pngTextField(&textFields[0],"Title",title.c_str());
 		pngTextField(&textFields[1],"Next Level",nextLevel.c_str());
 		pngTextField(&textFields[2],"Shader Type",shaderType.c_str());
-		pngTextField(&textFields[3],"Map X Resolution",mapResolutionX.c_str());
-		pngTextField(&textFields[4],"Map Y Resolution",mapResolutionY.c_str());
-		pngTextField(&textFields[5],"Map X Size",mapSizeX.c_str());
-		pngTextField(&textFields[6],"Map Y Size",mapSizeY.c_str());
-
-		png_set_text(png_ptr,info_ptr,textFields,7);
+		pngTextField(&textFields[3],"Map X Resolution",resX.c_str());
+		pngTextField(&textFields[4],"Map Y Resolution",resY.c_str());
+		pngTextField(&textFields[5],"Map X Size",sizeX.c_str());
+		pngTextField(&textFields[6],"Map Y Size",sizeY.c_str());
+		pngTextField(&textFields[7],"Minimum Height",minH.c_str());
+		pngTextField(&textFields[8],"Maximum Height",maxH.c_str());
+		png_set_text(png_ptr,info_ptr,textFields,9);
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////
 		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
@@ -114,7 +146,10 @@ void LevelFile::savePNG(string filename)
 		fclose(fp);
 		delete[] rows;
 		delete[] colors;
+		if(sHeights != NULL)
+			delete[] sHeights;
 	}
+	return true;
 }
 bool LevelFile::loadPNG(string filename)
 {
@@ -227,6 +262,8 @@ bool LevelFile::loadPNG(string filename)
 	info = new Info();
 
 	string title, nextLevel, shaderType;
+	float minHeight = 0;
+	float maxHeight = 1.0;
 	png_text* text_ptr;
 	int num_text;
 	png_get_text(png_ptr, info_ptr, &text_ptr, &num_text);
@@ -234,12 +271,14 @@ bool LevelFile::loadPNG(string filename)
 	{
 		try{
 			if(strcmp(text_ptr[i].key,"Title") == 0)			title = text_ptr[i].text;
-			if(strcmp(text_ptr[i].key,"Next Level") == 0)		nextLevel = text_ptr[i].text;
+			if(strcmp(text_ptr[i].key,"Next Level") == 0)		info->nextLevel = text_ptr[i].text;
 			if(strcmp(text_ptr[i].key,"Shader Type") == 0)		shaderType = text_ptr[i].text;
 			if(strcmp(text_ptr[i].key,"Map X Resolution") == 0)	info->mapResolution.x = lexical_cast<int>(text_ptr[i].text);
 			if(strcmp(text_ptr[i].key,"Map Y Resolution") == 0)	info->mapResolution.y = lexical_cast<int>(text_ptr[i].text);
 			if(strcmp(text_ptr[i].key,"Map X Size") == 0)		info->mapSize.x = lexical_cast<float>(text_ptr[i].text);
 			if(strcmp(text_ptr[i].key,"Map Y Size") == 0)		info->mapSize.y = lexical_cast<float>(text_ptr[i].text);
+			if(strcmp(text_ptr[i].key,"Minimum Height") == 0)	minHeight = lexical_cast<float>(text_ptr[i].text);
+			if(strcmp(text_ptr[i].key,"Maximum Height") == 0)	maxHeight = lexical_cast<float>(text_ptr[i].text);
 		}catch(...)
 		{
 			debugBreak();
@@ -257,9 +296,19 @@ bool LevelFile::loadPNG(string filename)
 	{
 		if(strcmp((const char*)unknowns[i].name,"mhTs") == 0)
 		{
+			unsigned int nSize = min(unknowns[i].size/sizeof(unsigned short), info->mapResolution.x*info->mapResolution.y);
+			unsigned short* sHeights = new unsigned short[nSize];
+			memcpy(sHeights, unknowns[i].data, nSize*sizeof(unsigned short));
+
 			if(heights != NULL) delete heights;
-			heights = new float[unknowns[i].size / sizeof(float)];
-			memcpy(heights, unknowns[i].data, unknowns[i].size - unknowns[i].size%sizeof(float));
+			heights = new float[nSize];
+
+			for(int i=0; i<nSize;i++)
+			{
+				heights[i] = minHeight + (maxHeight - minHeight) * sHeights[i] / (float)UCHAR_MAX;
+			}
+
+			delete[] sHeights;
 		}
 		else if(strcmp((const char*)unknowns[i].name,"obJs") == 0)
 		{
@@ -286,21 +335,12 @@ bool LevelFile::loadPNG(string filename)
 	free(row_pointers);
 	return true;
 }
-LevelFile::LevelFile(): info(NULL), objects(NULL), heights(NULL)
+LevelFile::LevelFile(): info(NULL), objects(NULL), regions(NULL), heights(NULL)
 {
-	header.magicNumber = 0x454c49465f4c564c;
+	header.magicNumber = 0;
 	header.version = 0;
 }
-LevelFile::LevelFile(string filename): info(NULL), objects(NULL), heights(NULL)
-{
-	header.magicNumber = 0x454c49465f4c564c;
-	header.version = 0;
-	load(filename);
-	//if(!loadPNG(filename))
-	//{
-	//	//load failed
-	//}
-}
+
 //________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 float Level::heightmapBase::rasterHeight(unsigned int x,unsigned int z) const
 {
@@ -659,34 +699,184 @@ void Level::heightmapGL::increaseHeights(float amount)
 }
 //________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 
-Level::Level(LevelFile file)
+Level::Level(): mGround(NULL)
 {
-	mGround = new heightmapGL(file.info->mapResolution,file.heights);
-	mGround->setSize(file.info->mapSize);
-	mGround->shaderType = file.info->shaderType;
+
+}
+Level::~Level()
+{
+	if(mGround)
+	{
+		delete mGround;
+	}
+}
+bool Level::init(string filename)
+{
+	LevelFile file;
+	if(!file.loadPNG(filename))
+		return false;
+
+	if(	(file.info == NULL) || 
+		(file.info->mapResolution.x != 0 && file.info->mapResolution.y != 0 && file.heights == NULL) ||
+		(file.info->numObjects != 0 && file.objects == NULL) ||
+		(file.info->numRegions != 0 && file.regions == NULL))
+	{
+		return false;
+	}
+
+	if(file.info->mapResolution.x != 0 && file.info->mapResolution.y != 0)
+	{
+		mGround = new heightmapGL(file.info->mapResolution,file.heights);
+		mGround->setSize(file.info->mapSize);
+		mGround->shaderType = file.info->shaderType;
+	}
+
+	nextLevel = file.info->nextLevel;
+
 	for(int i=0; i < file.info->numObjects; i++)
 		mObjects.push_back(file.objects[i]);
+
+	return true;
 }
-Level::Level(string BMP, Vec3f size, float seaLevel)
+
+void Level::render(Vec3f eye)
+{
+	//glDisable(GL_CULL_FACE);
+	glPushMatrix();
+
+	mGround->render();
+
+//	glDepthMask(false);
+
+	if(mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS)
+	{
+		Vec3d center(eye.x,0,eye.z);
+		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
+		float cAng,sAng;
+
+		dataManager.bind("horizon2");
+		dataManager.bind("hardNoise",0);
+		dataManager.bindTex(((Level::heightmapGL*)mGround)->groundTex,1);
+		dataManager.bind("sand",2);
+
+		dataManager.setUniform1i("bumpMap",	0);
+		dataManager.setUniform1i("ground",	1);
+		dataManager.setUniform1i("tex",		2);
+		dataManager.setUniform1f("time",	world.time());
+		dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
+		dataManager.setUniform2f("center",	center.x,center.z);
+		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
+
+		glEnable(GL_BLEND);
+		glBegin(GL_TRIANGLE_FAN);
+			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
+			glVertex3f(center.x,center.y,center.z);
+	
+			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
+			{
+				cAng=cos(ang);
+				sAng=sin(ang);
+				glTexCoord2f((center.x-cAng*radius)/mGround->sizeX(),(center.z-sAng*radius)/mGround->sizeZ());
+				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
+			}
+		glEnd();
+
+		dataManager.unbindTextures();
+		dataManager.unbindShader();
+
+		glDepthMask(true);
+	}
+	else if(mGround->shaderType == SHADER_GRASS)
+	{
+		glDepthMask(false);
+		dataManager.bind("ocean");
+
+		dataManager.bind("hardNoise",0);
+		if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
+		else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+		dataManager.bind("rock",2);
+		dataManager.bind("sand",3);
+
+		dataManager.setUniform1i("bumpMap", 0);
+		dataManager.setUniform1i("groundTex", 1);
+		dataManager.setUniform1i("rock", 2);
+		dataManager.setUniform1i("sand", 3);
+		dataManager.setUniform1f("time", world.time());
+		dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+		dataManager.setUniform1f("XZscale", mGround->mSize.x);
+
+		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
+
+		glBegin(GL_QUADS);
+			glVertex3f(0,0,0);
+			glVertex3f(0,0,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
+			glVertex3f(mGround->mSize.x,0,0);
+		glEnd();
+
+		dataManager.unbindTextures();
+		dataManager.unbindShader();
+		glDepthMask(true);
+	}
+	glPopMatrix();
+}
+//________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
+Level::heightmapBase* editLevel::ground()
+{
+	return mGround;
+}
+void editLevel::newGround(unsigned int x, unsigned int z, float* heights)
+{
+	if(mGround != NULL)
+		delete mGround;
+	if(heights != NULL)
+		mGround = new heightmapGL(Vec2u(x,z),heights);
+	else
+		mGround = new heightmapGL(Vec2u(x,z));
+}
+void editLevel::addObject(int type,int team,int controlType,Vec3f pos, Quat4f rot)
+{
+	LevelFile::Object o;
+	o.type=type;
+	o.team=team;
+	o.controlType=controlType;
+	o.startloc=pos;
+	o.startRot=rot;
+	mObjects.push_back(o);
+}
+void editLevel::setWater(string shaderName)
+{
+	water.name = shaderName;
+}
+bool editLevel::init(string BMP, Vec3f size, float seaLevel)
 {
 	Image* image = loadBMP(BMP.c_str());
+
+	if(image == NULL)
+		return false;
+
 	float* t = new float[image->width * image->height];
+
 	for(int y = 0; y < image->height; y++) {
 		for(int x = 0; x < image->width; x++) {
 			t[y * image->width + x] = (float)((unsigned char)image->pixels[3 * (y * image->width + x)])/255.0*size.y - seaLevel;
 		}
 	}
-	//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
-	mGround = new heightmapGL(Vec2u(image->height,image->width),t);
-	mGround->setSize(Vec2f(size.x,size.z));
-	mGround->init();
 
-	mGround->setMinMaxHeights();
+	if(image->height != 0 && image->width != 0)
+	{
+		mGround = new heightmapGL(Vec2u(image->height,image->width),t);
+		mGround->setSize(Vec2f(size.x,size.z));
+		mGround->init();
 
+		mGround->setMinMaxHeights();
+	}
 	delete[] t;
 	delete image;
+
+	return true;
 }
-LevelFile Level::getLevelFile() 
+void editLevel::save(string filename) 
 {
 	LevelFile f;
 	f.header.magicNumber = 0x454c49465f4c564c;
@@ -703,9 +893,9 @@ LevelFile Level::getLevelFile()
 		f.objects = new LevelFile::Object[mObjects.size()];
 		memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
 	}
-	return f;
+	f.savePNG(filename);
 }
-LevelFile Level::getLevelFile(float seaLevelOffset)
+void editLevel::save(string filename, float seaLevelOffset)
 {
 	LevelFile f;
 	f.header.magicNumber = 0x454c49465f4c564c;
@@ -731,12 +921,11 @@ LevelFile Level::getLevelFile(float seaLevelOffset)
 			f.heights[x+z*mGround->resolutionX()] -= seaLevelOffset;
 		}
 	}
-
-	return f;
+	f.savePNG(filename);
 }
 
 
-void Level::exportBMP(string filename)
+void editLevel::exportBMP(string filename)
 {
 	int width = mGround->resolutionX();
 	int size = (3*width+width%4)*mGround->resolutionZ() + 3*width*mGround->resolutionZ()%4;
@@ -782,7 +971,7 @@ void Level::exportBMP(string filename)
 	delete[] colors;
 	fout.close();
 }
-void Level::renderPreview(bool drawWater, float scale, float seaLevelOffset)
+void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 {
 	glPushMatrix();
 	mGround->renderPreview(scale, seaLevelOffset);
@@ -873,7 +1062,7 @@ void Level::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 	}
 	glPopMatrix();
 }
-void Level::renderObjectsPreview()
+void editLevel::renderObjectsPreview()
 {
 	for(auto i=mObjects.begin();i!=mObjects.end();i++)
 	{
@@ -886,117 +1075,4 @@ void Level::renderObjectsPreview()
 			glPopMatrix();
 		}
 	}
-}
-void Level::render(Vec3f eye)
-{
-	//glDisable(GL_CULL_FACE);
-	glPushMatrix();
-
-	mGround->render();
-
-//	glDepthMask(false);
-
-	if(mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS)
-	{
-		Vec3d center(eye.x,0,eye.z);
-		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
-		float cAng,sAng;
-
-		dataManager.bind("horizon2");
-		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(((Level::heightmapGL*)mGround)->groundTex,1);
-		dataManager.bind("sand",2);
-
-		dataManager.setUniform1i("bumpMap",	0);
-		dataManager.setUniform1i("ground",	1);
-		dataManager.setUniform1i("tex",		2);
-		dataManager.setUniform1f("time",	world.time());
-		dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
-		dataManager.setUniform2f("center",	center.x,center.z);
-		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
-
-		glEnable(GL_BLEND);
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
-			glVertex3f(center.x,center.y,center.z);
-	
-			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
-			{
-				cAng=cos(ang);
-				sAng=sin(ang);
-				glTexCoord2f((center.x-cAng*radius)/mGround->sizeX(),(center.z-sAng*radius)/mGround->sizeZ());
-				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
-			}
-		glEnd();
-
-		dataManager.unbindTextures();
-		dataManager.unbindShader();
-
-		glDepthMask(true);
-	}
-	else if(mGround->shaderType == SHADER_GRASS)
-	{
-		glDepthMask(false);
-		dataManager.bind("ocean");
-
-		dataManager.bind("hardNoise",0);
-		if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
-		else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
-		dataManager.bind("rock",2);
-		dataManager.bind("sand",3);
-
-		dataManager.setUniform1i("bumpMap", 0);
-		dataManager.setUniform1i("groundTex", 1);
-		dataManager.setUniform1i("rock", 2);
-		dataManager.setUniform1i("sand", 3);
-		dataManager.setUniform1f("time", world.time());
-		dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
-		dataManager.setUniform1f("XZscale", mGround->mSize.x);
-
-		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
-
-		glBegin(GL_QUADS);
-			glVertex3f(0,0,0);
-			glVertex3f(0,0,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,0,0);
-		glEnd();
-
-		dataManager.unbindTextures();
-		dataManager.unbindShader();
-		glDepthMask(true);
-	}
-	glPopMatrix();
-}
-//________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
-editLevel::editLevel()
-{
-
-}
-Level::heightmapBase* editLevel::ground()
-{
-	return mGround;
-}
-void editLevel::newGround(unsigned int x, unsigned int z, float* heights)
-{
-	if(mGround != NULL)
-		delete mGround;
-	if(heights != NULL)
-		mGround = new heightmapGL(Vec2u(x,z),heights);
-	else
-		mGround = new heightmapGL(Vec2u(x,z));
-}
-void editLevel::addObject(int type,int team,int controlType,Vec3f pos, Quat4f rot)
-{
-	LevelFile::Object o;
-	o.type=type;
-	o.team=team;
-	o.controlType=controlType;
-	o.startloc=pos;
-	o.startRot=rot;
-	mObjects.push_back(o);
-}
-void editLevel::setWater(string shaderName)
-{
-	water.name = shaderName;
 }

@@ -236,6 +236,8 @@
     <None Include="media\ortho.vert" />
     <None Include="media\particle.frag" />
     <None Include="media\particle.vert" />
+    <None Include="media\radar bounds.frag" />
+    <None Include="media\radar bounds.vert" />
     <None Include="media\radar.frag" />
     <None Include="media\radar.vert" />
     <None Include="media\radar2.frag" />

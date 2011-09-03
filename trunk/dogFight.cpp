@@ -5,40 +5,40 @@ modeDogFight::modeDogFight(Level* lvl)
 {
 	world.create(lvl);
 
-	//RADAR FRAME BUFFER OBJECTS
-	glGenTextures(1, &radarTexture);
-	glGenFramebuffersEXT(1, &radarFBO);
+	////RADAR FRAME BUFFER OBJECTS
+	//glGenTextures(1, &radarTexture);
+	//glGenFramebuffersEXT(1, &radarFBO);
 
-	glBindTexture(GL_TEXTURE_2D, radarTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
-	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, radarTexture, 0);
+	//glBindTexture(GL_TEXTURE_2D, radarTexture);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+	//
+	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, radarFBO);
+	//glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, radarTexture, 0);
 
-	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	switch(status)
-	{
-		case GL_FRAMEBUFFER_COMPLETE_EXT:							break;
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attachment is NOT complete.",L"",0);
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:		MessageBox(NULL,L"[ERROR] Framebuffer incomplete: No image is attached to FBO.",L"",0);
-		case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attached images have different dimensions.",L"",0);
-		case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:					MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Color attached images have different internal formats.",L"",0);
-		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Draw buffer.",L"",0);
-		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Read buffer.",L"",0);
-		case GL_FRAMEBUFFER_UNSUPPORTED_EXT:						MessageBox(NULL,L"[ERROR] Unsupported by FBO implementation.",L"",0);
-			return;
+	//GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	//switch(status)
+	//{
+	//	case GL_FRAMEBUFFER_COMPLETE_EXT:							break;
+	//	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attachment is NOT complete.",L"",0);
+	//	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:		MessageBox(NULL,L"[ERROR] Framebuffer incomplete: No image is attached to FBO.",L"",0);
+	//	case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Attached images have different dimensions.",L"",0);
+	//	case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:					MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Color attached images have different internal formats.",L"",0);
+	//	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Draw buffer.",L"",0);
+	//	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:				MessageBox(NULL,L"[ERROR] Framebuffer incomplete: Read buffer.",L"",0);
+	//	case GL_FRAMEBUFFER_UNSUPPORTED_EXT:						MessageBox(NULL,L"[ERROR] Unsupported by FBO implementation.",L"",0);
+	//		return;
 
-		default:
-			MessageBox(NULL,L"[ERROR] Unknow FBO error.",L"",0);
-			return;
-	}
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
-		return;
+	//	default:
+	//		MessageBox(NULL,L"[ERROR] Unknow FBO error.",L"",0);
+	//		return;
+	//}
+	//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	//if(status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	//	return;
 
 }
 modeDogFight::~modeDogFight()
@@ -119,8 +119,6 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		//dataManager.unbind("radar");
 		dataManager.unbindTextures();
 
-
-
 		Vec3f nC((x+width/2),(y+height/2),0);
 		float radius = width/2;
 
@@ -165,7 +163,24 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		dataManager.unbindTextures();
 		//dataManager.unbindShader();
 
-		
+#ifdef RADAR_MAP_BOUNDS
+		dataManager.bind("radar bounds");
+
+		Vec3f cCenter = (Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2) - p->position) / 16000.0;
+		float cR = sqrt(cCenter.x*cCenter.x + cCenter.z*cCenter.z);
+		float cA = atan2(cCenter.x, cCenter.z) - p->direction;
+		cCenter = Vec3f(sin(cA)*cR, 0, cos(cA)*cR);
+
+
+		double cRadius = world.ground()->sizeX() / 16000.0;
+
+		dataManager.setUniform2f("mapCenter",cCenter.x,cCenter.z);
+		dataManager.setUniform1f("mapRadius",cRadius);
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
+#endif
+
+
+
 		Vec3f nC((x+width/2),(y+height/2),0);
 		float radius = width/2;
 
@@ -197,7 +212,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		glColor3f(1,1,1);
 		dataManager.bind("ortho");
 
-		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
+	//	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
@@ -463,6 +478,7 @@ void modeDogFight::drawScene(int acplayer)
 		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
 		Angle ang = acosA(i->second->rotation.w);
 		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
+		glRotatef(90,1,0,0);
 		dataManager.draw("AA gun");
 		glPopMatrix();
 	}
@@ -522,4 +538,33 @@ void modeDogFight::drawScene(int acplayer)
 	lastDraw[acplayer] = time;
 	
 	glError();
+}
+void modeDogFight::drawSceneParticles(int acplayer)
+{
+	double interp = 1.0;//world.time.interpolate();
+	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	if(!players[acplayer].firstPerson() || p->controled || p->dead)
+	{
+		Vec3f e = lerp(p->camera.lastPosition,p->camera.position,interp);
+		Vec3f c = lerp(p->camera.lastCenter,p->camera.center,interp);
+		Vec3f u = lerp(p->camera.lastUp,p->camera.up,interp);
+
+		graphics->lookAt(e, c, u);
+		frustum.setCamDef(e,c,u);
+	}
+	else
+	{
+		Quat4f rot = slerp(p->rotation,p->lastRotation,interp);
+
+		Vec3f e = lerp(p->lastPosition,p->position,interp);
+		Vec3f c = rot * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
+		Vec3f u = rot * Vec3f(0,1,0);
+		
+		graphics->lookAt(e, c, u);
+		frustum.setCamDef(e,c,u);
+	}
+	particleManager.render();
 }

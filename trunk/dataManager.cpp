@@ -898,20 +898,18 @@ bool DataManager::registerOBJ(string name, string filename)
 				//}
 				if(s[0].compare("newmtl")==0)
 				{
-					if(!mstring.compare("")!=0)
+					if(mstring != "")
 					{
-						mMtl.name=mstring;
 						m.insert(pair<string,mtl>(mstring,mMtl));
-
 					}
 					mMtl.tex = "";
 					mMtl.diffuse = white;
-					mMtl.name = "";
+					mMtl.name = s[1];
 					mstring=s[1];
 				}
 				else if(s[0].compare(0,6,"map_Kd")==0)
 				{
-					if(!mstring.compare("")) continue;
+					if(mstring == "") continue;
 					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
 					//if(ext.compare("tga")==0)
 					mMtl.tex=mtlFile + "/" + s[1];
@@ -924,7 +922,7 @@ bool DataManager::registerOBJ(string name, string filename)
 				}
 				else if(s[0].compare(0,2,"Kd")==0)
 				{
-					if(!mstring.compare("")) continue;
+					if(mstring == "") continue;
 					try{
 					float r = lexical_cast<float>(s[1]);
 					float g = lexical_cast<float>(s[2]);
@@ -934,17 +932,16 @@ bool DataManager::registerOBJ(string name, string filename)
 				}
 				else if(s[0].compare(0,2,"d")==0)
 				{
-					if(!mstring.compare("")) continue;
+					if(mstring == "") continue;
 					mMtl.diffuse.a=atof(s[1].c_str());
 
 				}
 				else if(s[0].compare(0,2,"Tr")==0)
 				{
-					if(!mstring.compare("")) continue;
+					if(mstring == "") continue;
 					mMtl.diffuse.a=1.0-atof(s[1].c_str());
 				}
 			}
-			mMtl.name=mstring;
 			m.insert(pair<string,mtl>(mstring,mMtl));
 			mtl_map = m;
 		}

@@ -21,11 +21,12 @@ struct LevelFile
 	}header;
 
 	struct Info{//V1
-		ShaderType		shaderType;	
+		ShaderType		shaderType;
 		Vec2f			mapSize;
 		Vec2u			mapResolution;
 		unsigned short	numObjects;
 		unsigned short	numRegions;
+		string			nextLevel;
 		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0), numObjects(0), numRegions(0){}
 	}*info;
 
@@ -75,12 +76,12 @@ struct LevelFile
 
 	float* heights;						//in a V1 file this there would then just be a (mapSize.x) x (mapSize.y) grid of floats
 
-	void load(string filename);
-	void save(string filename);
-	void savePNG(string filename);
+	//bool load(string filename);
+	//bool save(string filename);
+	bool savePNG(string filename);
 	bool loadPNG(string filename);
+
 	LevelFile();
-	LevelFile(string filename);
 };
 
 class Level
@@ -146,6 +147,7 @@ public:
 								maxHeight;
 		ShaderType				shaderType;
 		friend class Level;
+		friend class editLevel;
 		friend class modeMapBuilder;
 		friend class menu::levelEditor;
 	};
@@ -173,6 +175,7 @@ public:
 		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),dispList(0){init();}
 		~heightmapGL();
 		friend class Level;
+		friend class editLevel;
 		friend class modeDogFight;
 		friend class modeMapBuilder;
 		friend class menu::levelEditor;
@@ -185,36 +188,34 @@ protected:
 	string						nextLevel;
 	shaderData					water;
 
-	Level(): mGround(NULL) {}
-	
 public:
-	Level(LevelFile file);
-	Level(string BMP, Vec3f size, float seaLevel);
-	~Level(){if(mGround)delete mGround;}
+	Level();
+	~Level();
+	virtual bool init(string filename);
+	void render(Vec3f eye);
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
-	void renderPreview(bool drawWater, float scale, float seaLevelOffset=0.0);//for mapbuilder
-	void renderObjectsPreview();
-	void render(Vec3f eye);
-
-	LevelFile getLevelFile();
-	LevelFile getLevelFile(float seaLevelOffset);
-	void exportBMP(string filename);
+	string getLevelNext(){nextLevel;}
 };
 
 class editLevel: public Level
 {
 public:
-	editLevel();
 	heightmapBase*	ground();
+
+	bool init(string BMP, Vec3f size, float seaLevel);
 
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
 	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
-	LevelFile::Object* getObject(int id){return &mObjects[id];}
-
 	void setWater(string shaderName);
 
-	editLevel(LevelFile file):Level(file){}
-	editLevel(string BMP):Level(BMP){}
+	void renderPreview(bool drawWater, float scale, float seaLevelOffset=0.0);//for mapbuilder
+	void renderObjectsPreview();
+
+	LevelFile::Object* getObject(int id){return &mObjects[id];}
+
+	void save(string filename);
+	void save(string filename, float seaLevelOffset);
+	void exportBMP(string filename);
 };
