@@ -48,7 +48,7 @@ protected:
 	GLuint radarRBO;
 
 public:
-	modeDogFight(Level* lvl);
+	modeDogFight(std::shared_ptr<Level> lvl);
 	virtual ~modeDogFight();
 
 	void healthBar(float x, float y, float width, float height, float health, bool firstPerson);
@@ -67,7 +67,7 @@ public:
 class modeSplitScreen: public modeDogFight
 {
 public:
-	modeSplitScreen(Level* lvl): modeDogFight(lvl){}
+	modeSplitScreen(std::shared_ptr<Level> lvl): modeDogFight(lvl){}
 	int update();
 	void draw2D();
 	void draw3D();
@@ -78,9 +78,10 @@ class modeCampaign: public modeDogFight
 {
 protected:
 	float countdown;
+	bool restart;
 	bool levelup;
 public:
-	modeCampaign(Level* lvl): modeDogFight(lvl), levelup(false), countdown(0.0){}
+	modeCampaign(std::shared_ptr<Level> lvl): modeDogFight(lvl), countdown(0.0), restart(false), levelup(false){}
 	int update();
 	void draw2D();
 	void draw3D();

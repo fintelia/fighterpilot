@@ -72,8 +72,6 @@ namespace menu{class levelEditor;}
 #include "enums.h"
 #include "time.h"
 
-#include "pngHelper.h"
-
 #include "text.h"
 #include "gameMath.h"
 #include "input.h"

@@ -1,10 +1,10 @@
 
 #include "main.h"
 
-void WorldManager::create(Level* lvl)
+void WorldManager::create(std::shared_ptr<Level> lvl)
 {
 	destroy();//just to be safe
-	level = lvl;
+	level = std::shared_ptr<Level>(lvl);
 	time.reset();
 
 	//((Level::heightmapGL*)level->ground())->setShader(dataManager.getId("grass new terrain"));
@@ -52,8 +52,6 @@ void WorldManager::create(Level* lvl)
 //}
 void WorldManager::destroy()
 {
-	if(level != NULL)
-		delete level;
 	objectList.clear();
 	bullets.clear();
 	smoke.clear();
@@ -63,7 +61,7 @@ void WorldManager::destroy()
 
 float WorldManager::elevation(Vec2f v) const
 {
-	if(level!=NULL)
+	if(level)
 	{
 		return max(0,level->ground()->height(v.x,v.y));
 	}
@@ -71,7 +69,7 @@ float WorldManager::elevation(Vec2f v) const
 }
 float WorldManager::elevation(float x, float z) const
 {
-	if(level!=NULL)
+	if(level)
 	{
 		return max(0,level->ground()->height(x,z));
 	}
@@ -79,7 +77,7 @@ float WorldManager::elevation(float x, float z) const
 }
 float WorldManager::altitude(Vec3f v) const
 {
-	if(level!=NULL)
+	if(level)
 	{
 		float h = level->ground()->height(v.x,v.z);
 		return v.y-max(0,h);
@@ -88,7 +86,7 @@ float WorldManager::altitude(Vec3f v) const
 }
 float WorldManager::altitude(float x, float y, float z) const
 {
-	if(level!=NULL)
+	if(level)
 	{
 		float h = level->ground()->height(x,z);
 		return y-max(0,h);
@@ -105,7 +103,7 @@ bool WorldManager::isLand(float x, float z) const
 }
 Level::heightmapGL* const WorldManager::ground() const
 {
-	if(level!=NULL)
+	if(level)
 	{
 		return (Level::heightmapGL*)level->ground();
 	}
@@ -184,10 +182,10 @@ void WorldManager::update()
 			}
 		}
 	}
-	//for(int i=0;i<(signed int)bullets.size();i++)
-	//{
-	//	bullets.erase(bullets.begin()+i);
-	//}
+	double t = time();
+
+	bullets.erase(remove_if(bullets.begin(), bullets.end(), [&t] (bullet& b) -> bool {return b.startTime + b.life < t;}), bullets.end());
+
 	smoke.update(ms);
 	exaust.update(ms);
 	particleManager.update();

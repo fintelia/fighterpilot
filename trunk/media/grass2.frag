@@ -14,13 +14,8 @@ uniform sampler2D groundTex;
 void main()
 {
 	vec4 color;
-	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
+	if(position.x < 0.0 || position.x > 1.0  || position.z < 0.0 || position.z > 1.0)
 	 discard;
-	//if(!gl_FrontFacing)
-	//{
-	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-	//	return;
-	//}
 
 	vec3 normal = texture2D(groundTex,position.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
@@ -36,16 +31,10 @@ void main()
 	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
 	vec3 TexValues;
-	//if(position.y<10.0)		TexValues = vec3(0.0,1.0,0.0);
-	//else if(position.y<0.4)	TexValues = vec3(0.0,1.0-(position.y-0.2)/0.2,(position.y-0.2)/0.2);
-	//else					TexValues = vec3(0.0,0.0,1.0);
-	
-	//if(r<TexValues[0]) r=0.0;
-	//else r-=TexValues[0];
-
-//	if(slope < 0.3) TexValues = vec3(0.0,1.0-(slope)/0.3*h,(slope)/0.3*h);
-//	else TexValues = vec3(0.0,0.0,1.0);
-TexValues = vec3(0.0,h,1.0-h);
+	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
+	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
+	else			TexValues = vec3(0.0,0.0,1.0);
+	//TexValues = vec3(0.0,h,1.0-h);
 
 	TexValues *= 1.0-r;
 	TexValues += vec3(r,0.0,0.0);

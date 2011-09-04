@@ -118,9 +118,6 @@
     <Filter Include="shaders\particle">
       <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\png helper">
-      <UniqueIdentifier>{29d25d8d-cb14-479b-9e8c-22b19da7788f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrustumG.cpp">
@@ -270,9 +267,6 @@
     <ClCompile Include="bomb.cpp">
       <Filter>Source Files\object</Filter>
     </ClCompile>
-    <ClCompile Include="pngHelper.cpp">
-      <Filter>Source Files\png helper</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrustumG.h">
@@ -395,9 +389,6 @@
     </ClInclude>
     <ClInclude Include="bomb.h">
       <Filter>Source Files\object</Filter>
-    </ClInclude>
-    <ClInclude Include="pngHelper.h">
-      <Filter>Source Files\png helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

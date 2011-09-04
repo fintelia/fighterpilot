@@ -17,7 +17,6 @@ public:
 //////////////functions////////////
 	void update(double time, double ms);
 	void findTargetVector();
-	void level(float value);
 	void shootMissile();
 	void dropBomb();
 	void die();

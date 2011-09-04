@@ -6,7 +6,7 @@ public:
 		static WorldManager* pInstance = new WorldManager();
 		return *pInstance;
 	}
-	void create(Level* lvl);
+	void create(std::shared_ptr<Level> lvl);
 	//void create();
 	void destroy();
 
@@ -27,7 +27,7 @@ public:
 
 	void update();
 
-	Level*				level;
+	std::shared_ptr<Level>	level;
 	vector<bullet>		bullets;
 	objectList			objectList;
 
@@ -36,7 +36,7 @@ public:
 	GameTime			time;
 
 private:
-	WorldManager():level(NULL){}
+	WorldManager(){}
 
 };
 

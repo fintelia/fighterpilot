@@ -765,7 +765,7 @@ bool chooseMode::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 
-		Level* l = new Level;
+		std::shared_ptr<Level> l(new Level);
 		if(l->init("media/map file.lvl"))
 		{
 			menuManager.setMenu(NULL);
@@ -777,7 +777,7 @@ bool chooseMode::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 
-		Level* l = new Level;
+		std::shared_ptr<Level> l(new Level);
 		if(l->init("media/map file.lvl"))
 		{
 			menuManager.setMenu(NULL);
@@ -808,7 +808,7 @@ void chooseMode::operator() (popup* p)
 			input->up(VK_RETURN);
 			
 			
-			Level* l = new Level;
+			std::shared_ptr<Level> l(new Level);
 			if(l->init(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(NULL);
@@ -821,7 +821,7 @@ void chooseMode::operator() (popup* p)
 			input->up(VK_SPACE);
 			input->up(VK_RETURN);
 
-			Level* l = new Level;
+			std::shared_ptr<Level> l(new Level);
 			if(l->init(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(NULL);

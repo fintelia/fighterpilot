@@ -40,23 +40,6 @@
 //}
 int modeCampaign::update()
 {
-	if(levelup)
-	{
-		countdown-=world.time.length();
-		if(countdown<=0)
-		{
-			Level* l = new Level();
-			if(l->init(/*world.level->getLevelNext()*/"media/map file.lvl"))
-			{
-				modeManager.setMode(new modeCampaign(l));
-			}
-			else
-			{
-				delete l;
-			}
-		}
-		return 30;
-	}
 	if(input->getKey(VK_F1))
 	{
 		players[0].toggleFirstPerson();
@@ -67,40 +50,7 @@ int modeCampaign::update()
 		menuManager.setMenu(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
-#ifdef _DEBUG
-	if(input->getKey(0x4c))
-	{
-		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
-	}
-#endif
-
-
-	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	world.update();
-
-	int enemies_left=0;
-	const map<objId,nPlane*>& planes = world.planes();
-	for(auto i = planes.begin(); i != planes.end();i++)
-	{
-		if((*i).second->team != world.objectList[players[0].objectNum()]->team && !(*i).second->dead)
-			enemies_left++;
-	}
-
-	if(enemies_left == 0)
-	{
-		levelup=true;
-		countdown=1000;
-	}
-	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
-	//{
-	//	//need to add code to restart the level
-	//	return 30;
-	//}
-	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
-	//{
-	//	levelup=true;//newLevel(level+1);
-	//	countdown=1000;
-	//}
 
 #ifdef _DEBUG
 	if(input->getKey(0x54))
@@ -116,6 +66,74 @@ int modeCampaign::update()
 		}
 	}
 #endif
+
+#ifdef _DEBUG
+	if(input->getKey(0x4c))
+	{
+		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
+	}
+#endif
+
+	if(levelup)
+	{
+		countdown-=world.time.length();
+		if(countdown<=0)
+		{
+			string nLevel = world.level->getLevelNext();
+			if(nLevel == "") nLevel="media/map file.lvl";
+
+			std::shared_ptr<Level> l(new Level);
+			if(l->init(nLevel))
+			{
+				modeManager.setMode(new modeCampaign(l));
+			}
+		}
+	}
+	else if(restart)
+	{
+		countdown-=world.time.length();
+		if(countdown<=0)
+		{
+			modeManager.setMode(new modeCampaign(world.level));
+		}
+	}
+	else
+	{
+		int enemies_left=0;
+		const map<objId,nPlane*>& planes = world.planes();
+		for(auto i = planes.begin(); i != planes.end();i++)
+		{
+			if((*i).second->team != world.objectList[players[0].objectNum()]->team && !(*i).second->dead)
+				enemies_left++;
+		}
+
+		if(enemies_left == 0)
+		{
+			levelup=true;
+			countdown=1000;
+		}
+		else if(world.objectList[players[0].objectNum()]->dead)
+		{
+			restart=true;
+			countdown=3000;
+		}
+	}
+
+
+	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
+	
+
+
+	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
+	//{
+	//	//need to add code to restart the level
+	//	return 30;
+	//}
+	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
+	//{
+	//	levelup=true;//newLevel(level+1);
+	//	countdown=1000;
+	//}
 	return 30;
 }
 void modeCampaign::draw2D()

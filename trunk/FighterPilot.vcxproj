@@ -151,7 +151,6 @@
     <ClCompile Include="plane.cpp" />
     <ClCompile Include="planeContrail.cpp" />
     <ClCompile Include="player.cpp" />
-    <ClCompile Include="pngHelper.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
@@ -193,7 +192,6 @@
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="player.h" />
-    <ClInclude Include="pngHelper.h" />
     <ClInclude Include="profiler.h" />
     <ClInclude Include="quaternion.h" />
     <ClInclude Include="random.h" />

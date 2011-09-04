@@ -418,6 +418,7 @@ void manager::render()
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1i("depth",1);
 
+	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{

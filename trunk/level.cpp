@@ -87,6 +87,23 @@ bool LevelFile::savePNG(string filename)
 		float maxHeight = 1.0;
 		unsigned short* sHeights = NULL;
 
+		auto pngUnknownChunk = [](png_unknown_chunk &chunk, string name, void* data, unsigned int size)
+		{
+			if(name.size() < 4)
+				return;
+
+			chunk.name[0] = name[0];
+			chunk.name[1] = name[1];
+			chunk.name[2] = name[2];
+			chunk.name[3] = name[3];
+			chunk.name[4] = 0;
+
+			chunk.data = (png_byte*)data;
+			chunk.size = size;
+
+			chunk.location = 0;//unused
+		};
+
 		if(info->mapResolution.x != 0 && info->mapResolution.y != 0)
 		{
 			sHeights = new unsigned short[info->mapResolution.x*info->mapResolution.y];
@@ -126,6 +143,18 @@ bool LevelFile::savePNG(string filename)
 		if(info->shaderType == SHADER_GRASS) shaderType = "grass";
 		if(info->shaderType == SHADER_SNOW) shaderType = "snow";
 		if(info->shaderType == SHADER_OCEAN) shaderType = "ocean";
+
+		auto pngTextField = [] (png_text* textField, const char* key, const char* text)
+		{
+			textField->compression = PNG_TEXT_COMPRESSION_NONE;
+			textField->key = (png_charp)key;
+			textField->text_length = strlen(text);
+			textField->text = (png_charp)text;
+
+			textField->itxt_length = 0;
+			textField->lang = 0;
+			textField->lang_key = 0;
+		};
 
 		pngTextField(&textFields[0],"Title",title.c_str());
 		pngTextField(&textFields[1],"Next Level",nextLevel.c_str());

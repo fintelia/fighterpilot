@@ -47,7 +47,9 @@ void main()
 
 //	if(slope < 0.3) TexValues = vec3(0.0,1.0-(slope)/0.3*h,(slope)/0.3*h);
 //	else TexValues = vec3(0.0,0.0,1.0);
-TexValues = vec3(0.0,h,1.0-h);
+	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
+	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
+	else			TexValues = vec3(0.0,0.0,1.0);
 
 	TexValues *= 1.0-r;
 	TexValues += vec3(r,0.0,0.0);
