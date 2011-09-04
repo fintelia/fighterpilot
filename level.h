@@ -196,7 +196,7 @@ public:
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
-	string getLevelNext(){nextLevel;}
+	string getLevelNext(){return nextLevel;}
 };
 
 class editLevel: public Level

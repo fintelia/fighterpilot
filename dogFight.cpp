@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-modeDogFight::modeDogFight(Level* lvl)
+modeDogFight::modeDogFight(std::shared_ptr<Level> lvl)
 {
 	world.create(lvl);
 
@@ -212,7 +212,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 		glColor3f(1,1,1);
 		dataManager.bind("ortho");
 
-	//	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
 void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
@@ -314,7 +314,9 @@ void modeDogFight::drawBullets()
 	up.y = modelview[5];
 	up.z = modelview[9];
 
-	
+
+	double t = GetTime();
+
 	dataManager.bind("bullet");
 
 	//float length;

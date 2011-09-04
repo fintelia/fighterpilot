@@ -64,15 +64,15 @@ void nPlane::update(double time, double ms)
 		else
 		{
 			const float maxSpeed = 537.1;
-			const float minSpeed = 100.0;
+			const float minSpeed = 200.0;
 
 		
 
-			float acceleration = 100.0f*controller.accelerate*(ms/1000) - 100.0f*controller.brake*(ms/1000);
+			float acceleration = 60.0f*controller.accelerate - 100.0f*controller.brake;
 			if(speed > maxSpeed && acceleration < 0.0)
-				speed += acceleration;
-			else if(speed < maxSpeed)
-				speed = clamp(speed + acceleration,minSpeed,maxSpeed);
+				speed += acceleration*(ms/1000);
+			else
+				speed = clamp(speed + acceleration*(ms/1000),minSpeed,maxSpeed);
 			
 		//	if(roll.inRange(PI/2,PI))	roll = PI/2;
 		//	if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
@@ -83,11 +83,11 @@ void nPlane::update(double time, double ms)
 			float rollAng = roll.getAngle();
 			if(rollAng > PI) rollAng -= PI*2;
 
-			if(roll.inRange(-PI/2,PI/2))
+			if(roll.inRange(-0.001,0.001) || (rollAng < 0.0 && rollAng + deltaRoll > 0.0) || (rollAng > 0.0 && rollAng + deltaRoll < 0.0))
 			{
 				lockRollRange = true;
 			}
-			else if(lockRollRange)//if roll is not in range but should be
+			else if(!roll.inRange(-PI/2,PI/2) && lockRollRange)//if roll is not in range but should be
 			{
 				if(roll.getAngle() < PI) 
 					roll = PI/2;
@@ -121,11 +121,13 @@ void nPlane::update(double time, double ms)
 				roll += deltaRoll;
 			}
 
-
-			if(roll.inRange(0, PI/2 + 0.001))
-				roll = max(0.0,roll.getAngle() - (ms/1000));
-			else if(roll.inRange(-PI/2 - 0.001,0))
-				roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
+			if(abs(deltaRoll/(ms/1000)) < 0.1)
+			{
+				if(roll.inRange(0, PI/2 + 0.001))
+					roll = max(0.0,roll.getAngle() - (ms/1000));
+				else if(roll.inRange(-PI/2 - 0.001,0))
+					roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
+			}
 
 			climb = climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
 
@@ -161,7 +163,6 @@ void nPlane::update(double time, double ms)
 				position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
 			}
 			////////////////////end move////////////////////////////////////
-			level(ms);
 
 			if(controller.shoot1 <= 0.75)
 				extraShootTime=0.0;
@@ -542,18 +543,6 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 
 }
 
-void nPlane::level(float ms)
-{
-	//int sgn=turn/abs(turn);
-	//turn-=0.1*(ms/1000)*sgn;			//this line causes a huge (60 fps -> 1 fps) performance hit?
-	//if(turn/abs(turn)!=sgn)
-	//	turn=0;
-
-	//sgn=climb/abs(climb);
-	//climb-=0.1*(ms/1000)*sgn;			//this line causes a huge (60 fps -> 1 fps) performance hit?
-	//if(climb/abs(climb)!=sgn)
-	//	climb=0;
-}
 void nPlane::die()
 {
 	//if(!dead)	explode=new explosion(position);
@@ -576,6 +565,7 @@ void nPlane::die()
 	{
 		death = DEATH_EXPLOSION;
 		particleManager.addEmitter(new particle::explosion(id));
+		particleManager.addEmitter(new particle::explosionSmoke(id));
 		//particleManager.addEmitter(new particle::explosionFlash(id));
 	}
 }

@@ -52,13 +52,13 @@ void main()
 	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
 	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
 
-	float NdotL = dot(normal,lightDir);
+	
 
 	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
-
+	
+	float NdotL = dot(normal,lightDir);
 	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
-
 	///////////////////////
 	//if(position.y > 0.0)
 	//{
