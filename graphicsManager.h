@@ -1,4 +1,26 @@
 
+struct texturedVertex2D
+{
+	Vec2f position;
+	Vec2f texCoord;
+};
+struct vertex3D
+{
+	Vec3f position;
+	float padding;
+};
+struct texturedVertex3D
+{
+	Vec3f position;
+	Vec2f UV;
+	float padding[3];
+};
+struct texturedLitVertex3D
+{
+	Vec3f position;
+	Vec3f normal;
+	Vec2f UV;
+};
 class GraphicsManager
 {
 public:
@@ -64,6 +86,10 @@ public:
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
 	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
 
+	virtual void drawText(string font, string text, Vec2f pos)=0;
+	virtual void drawText(string font, string text, Rect rect)=0;
+	virtual Vec2f textSize(string font, string text)=0;
+
 	virtual bool init()=0;
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
@@ -82,6 +108,15 @@ public:
 	virtual void drawSphere(Vec3f position, float radius)=0;
 	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
+
+	virtual void drawModel(string model, Vec3f position, Quat4f rotation)=0;
+	//void drawModel(string model, Vec3f position, Quat4f rotation, float scale){drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
+
+	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation){drawModel(objectTypeString(t),position,rotation);}
+	//void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale){drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
+
+	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation)=0;
+	//void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale){drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
 
 	virtual void viewport(int x,int y,int width,int height);
 	virtual void perspective(float fovy, float aspect, float near, float far);
@@ -110,16 +145,6 @@ public:
 		return pInstance;
 	}
 protected:
-	struct texturedVertex2D
-	{
-		Vec2f position;
-		Vec2f texCoord;
-	};
-	struct vertex3D
-	{
-		Vec3f position;
-	};
-
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
 
@@ -135,9 +160,6 @@ protected:
 	OpenGLgraphics();
 public:
 
-	bool drawOverlay(Rect4f r, string tex="");
-	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
-	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
 	bool init();
 	void resize(int w, int h);
@@ -156,6 +178,19 @@ public:
 	void drawSphere(Vec3f position, float radius);
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
 	void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4);
+
+	void drawModel(string model, Vec3f position, Quat4f rotation);
+	void drawModelCustomShader(string model, Vec3f position, Quat4f rotation);
+
+	bool drawOverlay(Rect4f r, string tex="");
+	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
+	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
+
+	void drawText(string font, string text, Vec2f pos);
+	void drawText(string font, string text, Rect rect);
+	Vec2f textSize(string font, string text);
+
+
 
 	void viewport(int x,int y,int width,int height);
 	void perspective(float fovy, float aspect, float near, float far);

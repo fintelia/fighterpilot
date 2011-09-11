@@ -60,7 +60,7 @@ bool ModeManager::setMode(modeScreen* newMode)
 	// initialize the menu
 	if (!mode->init())
 	{
-		// shutdown the menu system
+		// shutdown the mode system
 		shutdown();
 		return false;
 	}

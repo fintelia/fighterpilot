@@ -6,22 +6,56 @@ private:
 		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
 		int id;
 	};
+	struct textureAsset: public asset{
+		int width;
+		int height;
+		char bpp;				//bit per pixel
+		unsigned char* data;	//currently just set to NULL
+	};
 	struct shaderAsset: public asset{
 		bool use_sAspect;
 		map<string,int> uniforms;
 	};
+	struct modelAsset: public asset
+	{
+		//int numVertices;
+		//std::shared_ptr<texturedLitVertex3D> vertices;
+		GLuint VBO_id;
+
+		int numMaterials;
+		struct material{
+			string tex;
+			Color color;
+			//string shader;
+			int numIndices;		//for glDrawArrays 
+			int indicesOffset;	//for glDrawArrays 
+		};
+		vector<material> materials;
+
+		std::shared_ptr<CollisionChecker::triangleList> trl;
+	};
 	struct fontAsset: public asset{
 		//int id       --stores the texture id for the font 
-		string fontName;
+		string texName;
 		float height;//in px
 		struct character
 		{
-			float x, y, width, height;
-			float xOffset, yOffset;
-			float xAdvance;
+			Rect UV;					// UV coords in texture
+			float xOffset, yOffset;		// pixels that char is offset by
+			float width, height;		// width and height in pixels
+			float xAdvance;				// pixels that the insertion point is advanced
 		};
 		map<unsigned char,character> characters;
 	};
+
+	struct assetFile{
+		string name;
+		string filename[2];		//extra for shaders
+		set<string> options;
+		asset::assetType type; 
+	};
+	queue<assetFile> assetFiles;
+	queue<assetFile> assetFilesPreload;
 
 	map<string,asset*>	assets;
 
@@ -48,10 +82,9 @@ public:
 	void unbindTextures();
 	void unbindShader();
 
-	void draw(objectType p);
-	void draw(string name);
-	void drawCustomShader(string name);
-
+	const fontAsset* getFont(string name);
+	const modelAsset* getModel(string name);
+	const modelAsset* getModel(objectType t){return getModel(objectTypeString(t));}
 
 	bool assetLoaded(string name);
 
@@ -71,9 +104,9 @@ public:
 	int loadAsset();
 
 	void shutdown();
-
-	CollisionChecker::triangleList* getModel(objectType type);
 private:
+
+	void loadAssetFile(assetFile &file);
 
 	bool registerTGA(string name, string filename);
 	bool registerPNG(string name, string filename);
@@ -88,37 +121,8 @@ private:
 
 	char *textFileRead(char *fn);//for shaders
 
-	map<int, CollisionChecker::triangleList*> models;// <id,model>
-
-
-
-
 	DataManager():activeTextureUnit(0),boundShaderId(0){}
 	~DataManager();
-
-	struct textureFile{
-		string name;
-		string filename;
-	};
-	queue<textureFile> textureFiles;
-	queue<textureFile> textureFilesPreload;
-
-	struct shaderFile{
-		string name;
-		string vertexShaderFile;
-		string fragmentShaderFile;
-		bool use_sAspect;
-	};
-	queue<shaderFile> shaderFiles;
-	queue<shaderFile> shaderFilesPreload;
-
-	struct modelFile{
-		string name;
-		string filename;
-	};
-	queue<modelFile> modelFiles;
-
-	friend class CollisionChecker;
 };
 
 extern DataManager& dataManager;

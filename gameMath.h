@@ -101,7 +101,7 @@ public:
 	template <class T>
 	bool inRect(Vector2<T> v) const
 	{
-		return ((w > 0 && v.x > x && v.x < x + w) || (w < 0 && v.x < x && v.x > x + w)) && ((h > 0 && v.y > y && v.y < y + h) || (h < 0 && v.y < y && v.x > y + h));
+		return ((w >= 0 && v.x >= x && v.x <= x + w) || (w <= 0 && v.x <= x && v.x >= x + w)) && ((h >= 0 && v.y >= y && v.y <= y + h) || (h <= 0 && v.y <= y && v.x >= y + h));
 	}
 
 };

@@ -104,8 +104,6 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
 		
 		dataManager.bind("radar");
-		dataManager.bindTex(radarTexture);
-
 		dataManager.setUniform1f("radarAng", radarAng);
 
 		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0,(world.ground()->sizeZ()/2-p->position.z)/160.0);
@@ -153,7 +151,6 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 	{
 		dataManager.bind("radar2");
 		dataManager.bind("radarTex",0);
-		dataManager.bindTex(radarTexture,1);
 
 		dataManager.setUniform1f("radarAng", radarAng);
 		dataManager.setUniform1i("backgroundTexture", 0);
@@ -276,7 +273,7 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 				
 				//m.draw();
 				//glScalef(20,20,20);
-				dataManager.draw(cPlane->type);
+				graphics->drawModel(cPlane->type, Vec3f(), Quat4f());
 				//dataManager.draw("sphere");
 
 				int ml=0;
@@ -284,14 +281,14 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 				{
 					glPushMatrix();
 					glTranslatef(cPlane->rockets.ammoRounds[m].offset.x,cPlane->rockets.ammoRounds[m].offset.y,cPlane->rockets.ammoRounds[m].offset.z);
-					dataManager.draw(cPlane->rockets.ammoRounds[m].type);
+					graphics->drawModel(cPlane->rockets.ammoRounds[m].type, Vec3f(), Quat4f());
 					glPopMatrix();
 				}
 				for(int m = cPlane->bombs.roundsMax - cPlane->bombs.roundsLeft; m < cPlane->bombs.roundsMax; m++)
 				{
 					glPushMatrix();
 					glTranslatef(cPlane->bombs.ammoRounds[m].offset.x,cPlane->bombs.ammoRounds[m].offset.y,cPlane->bombs.ammoRounds[m].offset.z);
-					dataManager.draw(cPlane->bombs.ammoRounds[m].type);
+					graphics->drawModel(cPlane->bombs.ammoRounds[m].type, Vec3f(), Quat4f());
 					glPopMatrix();
 				}
 			glPopMatrix();
@@ -370,7 +367,7 @@ void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Col
 	glTranslatef(center.x,center.y,center.z);
 	glScalef(radius,height,radius);
 
-	dataManager.drawCustomShader("cylinder");
+	graphics->drawModelCustomShader("cylinder", Vec3f(), Quat4f());
 
 	glPopMatrix();
 
@@ -425,9 +422,9 @@ void modeDogFight::drawScene(int acplayer)
 	glTranslatef(e.x,0,e.z);
 	glScalef(30000,10000,30000);
 	//dataManager.bind("sky shader");
-	dataManager.draw("sky dome");
+	graphics->drawModel("sky dome",Vec3f(), Quat4f());
 	glScalef(1,-1,1);
-	dataManager.draw("sky dome");
+	graphics->drawModel("sky dome",Vec3f(), Quat4f());
 	dataManager.unbindShader();
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
@@ -451,7 +448,7 @@ void modeDogFight::drawScene(int acplayer)
 			//	axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
 			//	Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
 			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
-				dataManager.draw(i->second->type);
+				graphics->drawModel(i->second->type,Vec3f(), Quat4f());
 			glPopMatrix();
 		}
 	}
@@ -469,7 +466,7 @@ void modeDogFight::drawScene(int acplayer)
 			//	axis=(i->second->velocity.normalize()).cross(Vec3f(0,0,1)).normalize();
 			//	Angle a=acosA((i->second->velocity.normalize()).dot(Vec3f(0,0,1)));
 			//	glRotatef(-a.degrees(),axis.x,axis.y,axis.z);
-				dataManager.draw(i->second->type);
+				graphics->drawModel(i->second->type,Vec3f(), Quat4f());
 			glPopMatrix();
 		}
 	}
@@ -481,7 +478,7 @@ void modeDogFight::drawScene(int acplayer)
 		Angle ang = acosA(i->second->rotation.w);
 		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
 		glRotatef(90,1,0,0);
-		dataManager.draw("AA gun");
+		graphics->drawModel("AA gun",Vec3f(), Quat4f());
 		glPopMatrix();
 	}
 
@@ -510,7 +507,7 @@ void modeDogFight::drawScene(int acplayer)
 	double cRadius = world.ground()->sizeX();
 	//double d = abs(sqrt((e.x-cCenter.x)*(e.x-cCenter.x) + (e.z-cCenter.z)*(e.z-cCenter.z)) - cRadius);
 	drawHexCylinder(cCenter,cRadius,20000, white);
-
+	glDepthMask(true);
 	//glDepthMask(false);//needed since drawHexCylinder sets depthMask to true
 
 	//particleManager.render();

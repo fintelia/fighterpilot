@@ -400,7 +400,7 @@ class levelEditor: public screen
 {
 public:
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS};
-	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1), center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
+	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1), center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0),newRegionRadius(false){}
 	~levelEditor(){}
 	bool init();
 	int update();
@@ -428,6 +428,7 @@ protected:
 	void addObject(int type, int team, int controlType, float x, float y);
 	void updateObjectCircles();
 
+	Rect orthoView();
 
 	Tab lastTab;
 
@@ -439,7 +440,9 @@ protected:
 
 	int newObjectType;
 
-	
+	bool newRegionRadius;
+	Vec2f newRegionCenter;
+
 	map<int,circle<float>> objectCircles;
 
 	Quat4f rot;
@@ -451,8 +454,8 @@ protected:
 	float objPlacementAlt;
 
 	//bool ortho;
-	//Vec3f orthoCenter;
-	//float orthoScale;
+	Vec3f orthoCenter;
+	float orthoScale;
 
 
 };

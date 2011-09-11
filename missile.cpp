@@ -73,11 +73,11 @@ void missile::update(double time, double ms)
 			target = 0;
 		}
 		else 
-		if(angle < PI * 2.5 * ms/1000)
-		{
-			rotation = targetRot;
-		}
-		else
+		//if(angle < PI * 2.5 * ms/1000)
+		//{
+		//	rotation = targetRot;
+		//}
+		//else
 		{
 			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
 		}
@@ -102,7 +102,7 @@ void missile::update(double time, double ms)
 	}
 	else if(enemy != NULL && enemy->dead)
 	{
-		particleManager.addEmitter(new particle::explosion(position,5.0));
+		particleManager.addEmitter(new particle::explosionSmoke(position,2.0));
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
@@ -145,6 +145,6 @@ void missile::update(double time, double ms)
 	if(life < 0.0 || world.altitude(position) < 0.0)
 	{
 		awaitingDelete = true;
-		particleManager.addEmitter(new particle::explosion(position,5.0));
+	//	particleManager.addEmitter(new particle::explosionSmoke(position,5.0));
 	}
 }

@@ -65,7 +65,8 @@ extern const int MISSILE_SPEED;
 extern const double MAX_FPS;
 extern const double UPDATE_LENGTH;
 
-extern planeType planeTypeFromString(string s);
+extern objectType objectTypeFromString(string s);
+extern string objectTypeString(objectType t);
 
 struct controlState
 {

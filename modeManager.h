@@ -43,10 +43,6 @@ class modeDogFight: public modeScreen
 protected:
 	FrustumG frustum;
 
-	GLuint radarTexture;
-	GLuint radarFBO;
-	GLuint radarRBO;
-
 public:
 	modeDogFight(std::shared_ptr<Level> lvl);
 	virtual ~modeDogFight();

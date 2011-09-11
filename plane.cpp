@@ -68,12 +68,21 @@ void nPlane::update(double time, double ms)
 
 		
 
-			float acceleration = 60.0f*controller.accelerate - 100.0f*controller.brake;
-			if(speed > maxSpeed && acceleration < 0.0)
-				speed += acceleration*(ms/1000);
-			else
-				speed = clamp(speed + acceleration*(ms/1000),minSpeed,maxSpeed);
+			//float acceleration = 60.0f*controller.accelerate - 100.0f*controller.brake;
+			//if(speed > maxSpeed && acceleration < 0.0)
+			//	speed += acceleration*(ms/1000);
+			//else
+			//	speed = clamp(speed + acceleration*(ms/1000),minSpeed,maxSpeed);
 			
+			float T = 64000.0 + 144000.0f*controller.accelerate - 36000.0*controller.brake;
+			float D = 0.70743 * speed*speed;
+			float L = 14.1585 * speed*speed;
+			float m = 29300;
+
+			speed += ((T - D) / (m*0.1) + 9.8*sin(climb)) * (ms/1000);
+
+
+
 		//	if(roll.inRange(PI/2,PI))	roll = PI/2;
 		//	if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
 
@@ -114,7 +123,8 @@ void nPlane::update(double time, double ms)
 					roll += deltaRoll;
 					rollAng += deltaRoll;
 				}
-				direction -= rollAng * (ms/1000) * 0.3;
+				direction -= L / (m*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
+				//direction -= rollAng * (ms/1000) * 0.3;
 			}
 			else
 			{
@@ -129,7 +139,11 @@ void nPlane::update(double time, double ms)
 					roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
 			}
 
+
 			climb = climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
+			//climb -= (L * cos(roll) / (m*speed) - 9.8*cos(climb)/speed) * (ms/1000) -
+			//			(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
+
 
 			//if(roll.inRange(-PI/2 - 0.001, PI/2 + 0.001))
 			//	roll = roll - abs(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * sin(roll);

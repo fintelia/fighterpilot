@@ -815,38 +815,38 @@ void Level::render(Vec3f eye)
 
 		glDepthMask(true);
 	}
-	else if(mGround->shaderType == SHADER_GRASS)
-	{
-		glDepthMask(false);
-		dataManager.bind("ocean");
+	//else if(mGround->shaderType == SHADER_GRASS)
+	//{
+	//	glDepthMask(false);
+	//	dataManager.bind("ocean");
 
-		dataManager.bind("hardNoise",0);
-		if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
-		else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
-		dataManager.bind("rock",2);
-		dataManager.bind("sand",3);
+	//	dataManager.bind("hardNoise",0);
+	//	if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
+	//	else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+	//	dataManager.bind("rock",2);
+	//	dataManager.bind("sand",3);
 
-		dataManager.setUniform1i("bumpMap", 0);
-		dataManager.setUniform1i("groundTex", 1);
-		dataManager.setUniform1i("rock", 2);
-		dataManager.setUniform1i("sand", 3);
-		dataManager.setUniform1f("time", world.time());
-		dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
-		dataManager.setUniform1f("XZscale", mGround->mSize.x);
+	//	dataManager.setUniform1i("bumpMap", 0);
+	//	dataManager.setUniform1i("groundTex", 1);
+	//	dataManager.setUniform1i("rock", 2);
+	//	dataManager.setUniform1i("sand", 3);
+	//	dataManager.setUniform1f("time", world.time());
+	//	dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+	//	dataManager.setUniform1f("XZscale", mGround->mSize.x);
 
-		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
+	//	//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 
-		glBegin(GL_QUADS);
-			glVertex3f(0,0,0);
-			glVertex3f(0,0,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,0,0);
-		glEnd();
+	//	glBegin(GL_QUADS);
+	//		glVertex3f(0,0,0);
+	//		glVertex3f(0,0,mGround->mSize.y);
+	//		glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
+	//		glVertex3f(mGround->mSize.x,0,0);
+	//	glEnd();
 
-		dataManager.unbindTextures();
-		dataManager.unbindShader();
-		glDepthMask(true);
-	}
+	//	dataManager.unbindTextures();
+	//	dataManager.unbindShader();
+	//	glDepthMask(true);
+	//}
 	glPopMatrix();
 }
 //________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
@@ -872,6 +872,33 @@ void editLevel::addObject(int type,int team,int controlType,Vec3f pos, Quat4f ro
 	o.startloc=pos;
 	o.startRot=rot;
 	mObjects.push_back(o);
+}
+void editLevel::addRegionCircle(Vec2f c, float rad)
+{
+	LevelFile::Region r;
+	r.shape = 0;			//circle
+	r.type = 0;				//map bounds
+	r.centerXYZ[0] = c.x;
+	r.centerXYZ[2] = c.y;
+	r.radius = rad;
+	r.colorR = 0.0;
+	r.colorG = 1.0;
+	r.colorB = 0.0;
+	mRegions.push_back(r);
+}
+void editLevel::addRegionRect(Rect rect)
+{
+	LevelFile::Region r;
+	r.shape = 1;			//rect
+	r.type = 0;				//map bounds
+	r.minXYZ[0] = rect.x;
+	r.minXYZ[2] = rect.y;
+	r.maxXYZ[0] = rect.x + rect.w;
+	r.minXYZ[2] = rect.y + rect.h;
+	r.colorR = 0.0;
+	r.colorG = 1.0;
+	r.colorB = 0.0;
+	mRegions.push_back(r);
 }
 void editLevel::setWater(string shaderName)
 {
@@ -1100,7 +1127,7 @@ void editLevel::renderObjectsPreview()
 			glPushMatrix();
 			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
 			glScalef(10,10,10);
-			dataManager.draw((planeType)i->type);
+			graphics->drawModel(i->type,Vec3f(),Quat4f());
 			glPopMatrix();
 		}
 	}

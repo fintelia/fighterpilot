@@ -234,18 +234,18 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		}
 		else
 		{
-			//float time = GetTime();
-			//float waitTime=nextUpdate-time;
+			float time = GetTime();
+			float waitTime=nextUpdate-time;
 
 
-			//if(waitTime>4.0)
-			//	Sleep(waitTime-4.0);
-			//while(time < nextUpdate)
-			//{
-			//	time = GetTime();
-			//}
-			//nextUpdate=1000.0/(MAX_FPS+10.0) + time;
-			//lastUpdate = time;
+			if(waitTime>4.0)
+				Sleep(waitTime-4.0);
+			while(time < nextUpdate)
+			{
+				time = GetTime();
+			}
+			nextUpdate=1000.0/(MAX_FPS+10.0) + time;
+			lastUpdate = time;
 
 			update();
 
