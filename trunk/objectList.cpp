@@ -70,6 +70,7 @@ void objectList::deleteObject(objId id)
 	mObjects.erase(id);
 	if(objPtr->type & PLANE)	mPlanes.erase(id);
 	if(objPtr->type & MISSILE)	mMissiles.erase(id);
+	if(objPtr->type & BOMB)		mBombs.erase(id);
 	delete objPtr;
 }
 void objectList::clear()
@@ -80,6 +81,7 @@ void objectList::clear()
 	mObjects.clear();
 	mPlanes.clear();
 	mMissiles.clear();
+	mBombs.clear();
 	object::currentId = 0;
 }
 void objectList::update(double time, double ms)

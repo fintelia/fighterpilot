@@ -277,21 +277,21 @@ bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3
 
 bool CollisionChecker::operator() (objectType t1, objectType t2) const
 {
-	return operator()(*dataManager.models[dataManager.getId(t1)],*dataManager.models[dataManager.getId(t2)]);
+	return operator()(*dataManager.getModel(t1)->trl,*dataManager.getModel(t2)->trl);
 }
 bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) const
 {
-	return operator()(*dataManager.models[dataManager.getId(t1)], center, radius);
+	return operator()(*dataManager.getModel(t1)->trl, center, radius);
 }
 bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	return operator()(*dataManager.models[dataManager.getId(t1)], lineStart, lineEnd);
+	return operator()(*dataManager.getModel(t1)->trl, lineStart, lineEnd);
 }
 
 bool CollisionChecker::operator() (object* o1, object* o2) const
 {
-	triangleList* tr1 = dataManager.models[dataManager.getId(o1->type)];
-	triangleList* tr2 = dataManager.models[dataManager.getId(o2->type)];
+	auto tr1 = dataManager.getModel(o1->type)->trl;
+	auto tr2 = dataManager.getModel(o2->type)->trl;
 
 	Quat4f rot1 = o1->rotation;
 	Quat4f rot2 = o2->rotation;

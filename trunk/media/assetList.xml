@@ -16,9 +16,7 @@
     <texture name="particle"                  file="media/particle4.png" />	
     <texture name="radar plane"               file="media/plane radar2.png" />
     <texture name="hardNoise"                 file="media/hardNoiseDOT3.png" />
-    <texture name="explosion core"            file="media/explosion/core.png" />
     <texture name="explosion fireball"        file="media/explosion/fireball4.png" />
-    <texture name="explosion flash"           file="media/explosion/flash.png" />
     <texture name="explosion smoke"           file="media/explosion/smoke5.png" />
     <texture name="cockpit"                   file="media/cockpit.png" />
     <texture name="health bar"                file="media/health bar.png" />
@@ -101,4 +99,7 @@
     <model name="missile3"   file="media/m3(center).obj" />
     <model name="missile4"   file="media/m4(center).obj" />
   </models>
+  <fonts>
+    <font name="Times26"   file="media/Times26.fnt"   preload="true"/>
+  </fonts>
 </assets>

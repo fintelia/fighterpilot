@@ -138,7 +138,7 @@ void WorldManager::update()
 	//Vec3f p;			MUST CHECK FOR BULLET/MISSILE HITS
 	//int l;
 
-	CollisionChecker::triangleList *tr1, *tr2; 
+	std::shared_ptr<CollisionChecker::triangleList> trl1, trl2;
 
 	objectList.update(time(),ms);
 
@@ -165,10 +165,10 @@ void WorldManager::update()
 			}
 			for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
 			{
-				tr1 = dataManager.getModel(i->second->type);
-				tr2 = dataManager.getModel(l->second->type);
+				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
+				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				if(l->second->owner != i->second->id &&  l->second->owner != (*i).first && 
-					(i->second->position + i->second->rotation*(tr1!=NULL?tr1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(tr2!=NULL?tr2->getCenter():Vec3f(0,0,0))) < (tr1!=NULL?tr1->getRadius():0)+(tr2!=NULL?tr2->getRadius():0) )
+					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
 					//collisionCheck(i->second,l->second))
 				{
 					(*i).second->loseHealth(105.0);

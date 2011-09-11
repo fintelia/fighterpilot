@@ -102,7 +102,100 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
+void OpenGLgraphics::drawText(string font, string text, Vec2f pos)
+{
+	auto f = dataManager.getFont(font);
 
+	if(f != NULL)
+	{
+		dataManager.bind(f->texName);
+
+		Vec2f charPos = pos;
+		Rect charRect;
+		for(auto i = text.begin(); i != text.end(); i++)
+		{
+			if(*i == '\n')
+			{
+				charPos.x = pos.x;
+				charPos.y += f->height;
+			}
+			else if(f->characters.count(*i) != 0)
+			{
+				auto& c = f->characters.find(*i)->second;
+
+				charRect.x = charPos.x + c.xOffset;
+				charRect.y = charPos.y + c.yOffset;
+				charRect.w = c.width;
+				charRect.h = c.height;
+
+				drawPartialOverlay(charRect, c.UV);
+				charPos.x += c.xAdvance;
+			}
+		}
+		dataManager.unbind(f->texName);
+	}
+}
+void OpenGLgraphics::drawText(string font, string text, Rect rect)
+{
+	auto f = dataManager.getFont(font);
+
+	if(f == NULL)
+	{
+		dataManager.bind(f->texName);
+
+		Vec2f charPos = rect.origin();
+		Rect charRect;
+		for(auto i = text.begin(); i != text.end(); i++)
+		{
+			if(*i == '\n')
+			{
+				charPos.x = rect.x;
+				charPos.y += f->height;
+			}
+			else if(f->characters.count(*i) != 0 && rect.inRect(charPos))
+			{
+				auto& c = f->characters.find(*i)->second;
+
+				charRect.x = charPos.x + c.xOffset;
+				charRect.y = charPos.y + c.yOffset;
+				charRect.w = c.width;
+				charRect.h = c.height;
+
+				Rect UV = c.UV;
+				if(charRect.x < rect.x + rect.w && charRect.y < rect.y + rect.h)
+				{
+					if(charRect.x + charRect.w > rect.x + rect.w)	UV.w *= ((rect.x + rect.w) - charRect.x) / charRect.w;
+					if(charRect.y + charRect.h > rect.y + rect.h)	UV.h *= ((rect.y + rect.h) - charRect.y) / charRect.h;
+
+					drawPartialOverlay(charRect, UV);
+				}
+				charPos.x += c.xAdvance;
+			}
+		}
+
+		dataManager.unbind(f->texName);
+	}
+}
+Vec2f OpenGLgraphics::textSize(string font, string text)
+{
+	auto f = dataManager.getFont(font);
+	if(f == nullptr)
+		return Vec2f(0,0);
+
+	Vec2f textSize(0,f->height);
+	for(auto i = text.begin(); i != text.end(); i++)
+	{
+		if(*i == '\n')
+		{
+			textSize.y += f->height;
+		}
+		else if(f->characters.count(*i) != 0)
+		{
+			textSize.x += f->characters.find(*i)->second.xAdvance;
+		}
+	}
+	return textSize;
+}
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
 	if(t == SCREEN)
@@ -863,4 +956,103 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDisableClientState(GL_VERTEX_ARRAY);
+}
+void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation)
+{
+	auto m = dataManager.getModel(model);
+
+	if(m == nullptr)
+		return;
+
+	dataManager.bind("white");
+	dataManager.bind("model");
+	dataManager.setUniform1i("tex",0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m->id);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(3,	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)0);
+	glNormalPointer(	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(3*sizeof(float)));
+	glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(6*sizeof(float)));
+
+	bool dMask = true;
+
+	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
+	{
+		dataManager.bind(i->tex == "" ? "white" : i->tex);
+		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
+
+		if(i->color.a > 0.999 && !dMask)
+		{
+			dMask = true;
+			glDepthMask(true);
+		}
+		else if(i->color.a <= 0.999 && dMask)
+		{
+			dMask = false;
+			glDepthMask(false);
+		}
+
+		glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
+	}
+
+	if(!dMask)	glDepthMask(true);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	dataManager.unbind("model");
+	dataManager.unbindTextures();
+	glColor3f(1,1,1);
+}
+void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation)
+{
+	auto m = dataManager.getModel(model);
+
+	if(m == nullptr)
+		return;
+
+	glBindBuffer(GL_ARRAY_BUFFER, m->id);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(3,	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)0);
+	glNormalPointer(	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(3*sizeof(float)));
+	glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(6*sizeof(float)));
+
+	bool dMask = true;
+
+	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
+	{
+		dataManager.bind(i->tex == "" ? "white" : i->tex);
+		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
+
+		if(i->color.a > 0.999 && !dMask)
+		{
+			dMask = true;
+			glDepthMask(true);
+		}
+		else if(i->color.a <= 0.999 && dMask)
+		{
+			dMask = false;
+			glDepthMask(false);
+		}
+
+		glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
+	}
+
+	if(!dMask)	glDepthMask(true);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	dataManager.unbindTextures();
+	glColor3f(1,1,1);
 }

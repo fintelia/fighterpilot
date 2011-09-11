@@ -5,10 +5,102 @@ DataManager::~DataManager()
 {
 	shutdown();
 }
-bool DataManager::registerFont(string name, string filename) //loads a .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
+bool DataManager::registerFont(string name, string filename) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
-	//todo add code
-	return false;
+	//todo: add code
+	struct info_t
+	{
+		int lineHeight;
+		int base;
+		int width;
+		int height;
+	} info;
+	struct fontChar
+	{
+		int		id,
+				x, y,
+				w, h,
+				xOffset,
+				yOffset,
+				xAdvance;
+		fontChar():id(0), x(0), y(0), w(0), h(0), xOffset(0), yOffset(0), xAdvance(0){}
+	};
+	
+
+
+	ifstream fin(filename, ios::binary);
+	if(!fin.is_open()) return false;
+	fin.read((char*)(&info), sizeof(info));
+
+	string s;	
+	getline(fin,s);
+	getline(fin,s);
+	sscanf(s.c_str(),"common lineHeight=%d base=%d scaleW=%d scaleH=%d", &info.lineHeight, &info.base, &info.width, &info.height);
+
+	getline(fin,s);
+	char texturePath[256];
+	sscanf(s.c_str(),"page id=0 file=\"%s", texturePath);
+	string texPath(texturePath);
+	trim_right_if(texPath,is_any_of(" \"\t\n")); 
+
+	int dLoc=filename.find_last_of("/\\");
+	if(dLoc!=string::npos)	texPath = filename.substr(0,dLoc+1) + texPath;
+
+
+	getline(fin,s);
+
+	int numChars=0;
+	sscanf(s.c_str(),"chars count=%d", &numChars);
+
+	fontChar* fontChars = new fontChar[numChars];
+
+	int i=0;
+	while(!fin.eof() && i < numChars)
+	{
+		getline(fin, s);
+		
+		s.erase(remove_if(s.begin(), s.end(), isspace), s.end());
+
+		int n = sscanf(s.c_str(),"char id=%dx=%dy=%dwidth=%dheight=%dxoffset=%dyoffset=%dxadvance=%d", &fontChars[i].id, &fontChars[i].x, &fontChars[i].y, &fontChars[i].w, &fontChars[i].h, &fontChars[i].xOffset, &fontChars[i].yOffset, &fontChars[i].xAdvance);
+
+		i++;
+	}
+	if(i < numChars) numChars = i;
+
+	string texName = name+"_TEXTURE";
+	if(registerPNG(texName, texPath))
+	{
+		fontAsset* f = new fontAsset;
+		f->id = assets[texName]->id;
+		f->texName = texName;
+		f->type = asset::FONT;
+		f->height = (float)info.lineHeight;
+
+		float invW = 1.0 / ((textureAsset*)assets[texName])->width;
+		float invH = 1.0 / ((textureAsset*)assets[texName])->height;
+
+		fontAsset::character tmpChar;
+		for(auto i = 0; i < numChars; i++)
+		{
+			tmpChar.UV = Rect::XYWH(invW * fontChars[i].x, invH * fontChars[i].y, invW * fontChars[i].w, invH * fontChars[i].h);
+			tmpChar.width = fontChars[i].w;
+			tmpChar.height = fontChars[i].h;
+			tmpChar.xAdvance = fontChars[i].xAdvance;
+			tmpChar.xOffset = fontChars[i].xOffset;
+			tmpChar.yOffset = fontChars[i].yOffset;
+			f->characters[fontChars[i].id] = tmpChar;
+		}
+
+		assets[name] = f;
+
+		delete [] fontChars;
+		return true;
+	}
+	else
+	{
+		delete [] fontChars;
+		return false;
+	}
 }
 bool DataManager::registerTGA(string name, string filename)
 {
@@ -112,9 +204,13 @@ bool DataManager::registerTGA(string name, string filename)
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
 	
     free(texture.imageData);
-	asset* a = new asset;
+	textureAsset* a = new textureAsset;
 	a->id = texV;
 	a->type = asset::TEXTURE;
+	a->width = tga.Width;
+	a->height = tga.Height;
+	a->bpp = tga.Bpp;
+	a->data = NULL;
 	assets[name] = a;
 	return true;
 }
@@ -256,9 +352,13 @@ bool DataManager::registerPNG(string name, string filename)
 	free(image_data);
 	free(row_pointers);
 
-	asset* a = new asset;
+	textureAsset* a = new textureAsset;
 	a->id = texV;
 	a->type = asset::TEXTURE;
+	a->width = width;
+	a->height = height;
+	a->bpp = colorChannels*8;
+	a->data = NULL;
 	assets[name] = a;
 
 	return true;
@@ -388,56 +488,24 @@ void DataManager::unbindShader()
 	boundShaderId = 0;
 	boundShader = "";
 }
-void DataManager::draw(string name)
+const DataManager::fontAsset* DataManager::getFont(string name)
 {
-	if(assets.find(name)==assets.end() || assets[name]->type != asset::MODEL)
-		return;
-	if(activeTextureUnit != 0)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		activeTextureUnit = 0;
-	}
-	bind("white");
-	bind("model");
-	setUniform1i("tex",0);
-	glCallList(assets[name]->id);
-	unbind("model");
-	glColor3f(1,1,1);
-}
-void DataManager::drawCustomShader(string name)
-{
-	if(assets.find(name)==assets.end() || assets[name]->type != asset::MODEL)
-		return;
-	if(activeTextureUnit != 0)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		activeTextureUnit = 0;
-	}
-	bind("noTexture");
-	glCallList(assets[name]->id);
-	glColor3f(1,1,1);
-}
-void DataManager::draw(objectType p)
-{
-	if(p==F12)		draw("f12");
-	if(p==F16)		draw("f16");
-	if(p==F18)		draw("f18");
-	if(p==F22)		draw("f22");
-	if(p==UAV)		draw("UAV");
-	if(p==B2)		draw("B2");
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::FONT)
+		return nullptr;
 
-	if(p==MISSILE1)	draw("missile1");
-	if(p==MISSILE2)	draw("missile2");
-	if(p==MISSILE3)	draw("missile3");
-	if(p==MISSILE4)	draw("missile4");
+	return (const fontAsset*)i->second;
+}
+const DataManager::modelAsset* DataManager::getModel(string name)
+{
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::MODEL)
+		return nullptr;
 
-	if(p==BOMB1)	draw("missile1");
-	if(p==BOMB2)	draw("missile2");
+	return (const modelAsset*)i->second;
 }
 bool DataManager::loadAssetList()
 {
-
-
 	TiXmlDocument doc("media/assetList.xml");
 	if(!doc.LoadFile())
 	{
@@ -464,19 +532,20 @@ bool DataManager::loadAssetList()
 			node = texturesElement->FirstChildElement();
 			if(node != NULL) textureElement = node->ToElement();
 
-			textureFile tmpTextureFile;
+			assetFile tmpAssetFile;
+			tmpAssetFile.type = asset::TEXTURE;
 			while(textureElement != NULL)
 			{
-				c = textureElement->Attribute("name");	tmpTextureFile.name = c!=NULL ? c : "";
-				c = textureElement->Attribute("file");	tmpTextureFile.filename = c!=NULL ? c : "";
+				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 
-				if(tmpTextureFile.name != "" && tmpTextureFile.filename != "")
+				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
 				{
 					const char* preload = textureElement->Attribute("preload");
 					if(preload == NULL || string(preload) != "true")
-						textureFiles.push(tmpTextureFile);
+						assetFiles.push(tmpAssetFile);
 					else
-						textureFilesPreload.push(tmpTextureFile);
+						assetFilesPreload.push(tmpAssetFile);
 				}
 				else debugBreak();
 
@@ -497,23 +566,25 @@ bool DataManager::loadAssetList()
 			node = shadersElement->FirstChildElement();
 			if(node != NULL) shaderElement = node->ToElement();
 
-			shaderFile tmpShaderFile;
+			assetFile tmpAssetFile;
+			tmpAssetFile.type = asset::SHADER;
 			while(shaderElement != NULL)
 			{
-				c = shaderElement->Attribute("name");		tmpShaderFile.name = c!=NULL ? c : "";
-				c = shaderElement->Attribute("vertex");		tmpShaderFile.vertexShaderFile = c!=NULL ? c : "";
-				c = shaderElement->Attribute("fragment");	tmpShaderFile.fragmentShaderFile = c!=NULL ? c : "";
+				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=NULL ? c : "";
+				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=NULL ? c : "";
+				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=NULL ? c : "";
 
 				const char* use_sAspect = shaderElement->Attribute("sAspect");
-				tmpShaderFile.use_sAspect = (use_sAspect != NULL && string(use_sAspect) == "true");
+				if(use_sAspect != NULL && string(use_sAspect) == "true")
+					tmpAssetFile.options.insert("use_sAspect");
 
-				if(tmpShaderFile.name != "" && tmpShaderFile.vertexShaderFile != "" && tmpShaderFile.fragmentShaderFile != "")
+				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
 				{
 					const char* preload = shaderElement->Attribute("preload");
 					if(preload == NULL || string(preload) != "true")
-						shaderFiles.push(tmpShaderFile);
+						assetFiles.push(tmpAssetFile);
 					else
-						shaderFilesPreload.push(tmpShaderFile);
+						assetFilesPreload.push(tmpAssetFile);
 				}
 				else debugBreak();
 				shaderElement = shaderElement->NextSiblingElement();
@@ -533,14 +604,15 @@ bool DataManager::loadAssetList()
 			node = modelsElement->FirstChildElement();
 			if(node != NULL) modelElement = node->ToElement();
 
-			modelFile tmpModelFile;
+			assetFile tmpAssetFile;
+			tmpAssetFile.type = asset::MODEL;
 			while(modelElement != NULL)
 			{
-				c = modelElement->Attribute("name");	tmpModelFile.name = c!=NULL ? c : "";
-				c = modelElement->Attribute("file");	tmpModelFile.filename = c!=NULL ? c : "";
+				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 				
-				if(tmpModelFile.name !="" && tmpModelFile.filename != "")
-					modelFiles.push(tmpModelFile);
+				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+					assetFiles.push(tmpAssetFile);
 				else
 					debugBreak();
 
@@ -548,80 +620,92 @@ bool DataManager::loadAssetList()
 			}
 		}
 	}
+///////////////////////////////////////font//////////////////////////////////////////////
+	node = assetsNode->FirstChild("fonts");
+	if(node != NULL)
+	{
+		TiXmlElement* assetsElement		= NULL;
+		TiXmlElement* assetElement		= NULL;
+
+		assetsElement = node->ToElement();
+		if(assetsElement != NULL)
+		{
+			node = assetsElement->FirstChildElement();
+			if(node != NULL) assetElement = node->ToElement();
+
+			assetFile tmpAssetFile;
+			tmpAssetFile.type = asset::FONT;
+			while(assetElement != NULL)
+			{
+				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+
+				const char* preload = assetElement->Attribute("preload");
+				if(preload == NULL || string(preload) != "true")
+					assetFiles.push(tmpAssetFile);
+				else
+					assetFilesPreload.push(tmpAssetFile);
+
+				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+				{
+					const char* preload = assetElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+						assetFiles.push(tmpAssetFile);
+					else
+						assetFilesPreload.push(tmpAssetFile);
+				}
+				else debugBreak();
+
+				assetElement = assetElement->NextSiblingElement();
+			}
+		}
+	}
 
 	return true;
 }
+void DataManager::loadAssetFile(assetFile &file)
+{
+	if(file.type == asset::TEXTURE)
+	{
+		registerTexture(file.name, file.filename[0]);
+	}
+	else if(file.type == asset::SHADER)
+	{
+		if(registerShader(file.name, file.filename[0], file.filename[1]) && file.options.count("use_sAspect") != 0)
+		{
+			auto s = assets.find(file.name);
+			((shaderAsset*)(s->second))->use_sAspect = true;
+	
+			bind(file.name);
+			setUniform1f("sAspect",sAspect);
+			unbind(file.name);
+		}
+	}
+	else if(file.type == asset::MODEL)
+	{
+		registerOBJ(file.name, file.filename[0]);
+	}
+	else if(file.type == asset::FONT)
+	{
+		registerFont(file.name, file.filename[0]);
+	}
+}
 void DataManager::preloadAssets()
 {
-	while(!textureFilesPreload.empty())
+	while(!assetFilesPreload.empty())
 	{
-		textureFile i = textureFilesPreload.front();
-		textureFilesPreload.pop();
-
-		registerTexture(i.name, i.filename);
-	}
-
-	while(!shaderFilesPreload.empty())
-	{
-		shaderFile i = shaderFilesPreload.front();
-		shaderFilesPreload.pop();
-
-		registerShader(i.name, i.vertexShaderFile, i.fragmentShaderFile);
-		
-		if(i.use_sAspect)
-		{
-			auto s = assets.find(i.name);
-			if(s != assets.end())
-				((shaderAsset*)(s->second))->use_sAspect = true;
-
-			bind(i.name);
-			setUniform1f("sAspect",sAspect);
-			unbind(i.name);
-		}
+		loadAssetFile(assetFilesPreload.front());
+		assetFilesPreload.pop();
 	}
 }
 int DataManager::loadAsset()
 {
-	if(!textureFiles.empty())
+	if(!assetFiles.empty())
 	{
-		textureFile i = textureFiles.front();
-		textureFiles.pop();
-
-		registerTexture(i.name, i.filename);
-
-		return textureFiles.size() + shaderFiles.size() + modelFiles.size();
+		loadAssetFile(assetFiles.front());
+		assetFiles.pop();
 	}
-	else if(!shaderFiles.empty())
-	{
-		shaderFile i = shaderFiles.front();
-		shaderFiles.pop();
-
-		registerShader(i.name, i.vertexShaderFile, i.fragmentShaderFile);
-
-		if(i.use_sAspect)
-		{
-			auto s = assets.find(i.name);
-			if(s != assets.end())
-				((shaderAsset*)(s->second))->use_sAspect = true;
-
-			bind(i.name);
-			setUniform1f("sAspect",sAspect);
-			unbind(i.name);
-		}
-
-		return shaderFiles.size() + modelFiles.size();
-	}
-	else if(!modelFiles.empty())
-	{
-		modelFile i = modelFiles.front();
-		modelFiles.pop();
-
-		registerOBJ(i.name, i.filename);
-	//	registerModel(i.name, loadOBJ(i.filename));
-
-		return modelFiles.size();
-	}
-	return 0;
+	return assetFiles.size();
 }
 bool DataManager::registerTexture(string name, string filename)
 {
@@ -1047,63 +1131,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		}
 	}
 	fclose(fp);
-	int d = glGenLists(1);
-	glNewList (d, GL_COMPILE);
-	for(int pass=0;pass<=1;pass++)//pass 0 is opaque and pass 1 is translucent
-	{
-		if(pass==1)
-		{
-			glDepthMask(false);
-		}
-		for(int l=0; l<numMtls; l++)
-		{
-			glBindTexture(GL_TEXTURE_2D, mtls[l].tex != "" ? assets[mtls[l].tex]->id : assets["white"]->id);
-			if(mtls[l].diffuse.a>=0.999 && pass==0)
-				glColor3f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b);
-			else if(mtls[l].diffuse.a<0.999 && pass==1)
-				glColor4f(mtls[l].diffuse.r,mtls[l].diffuse.g,mtls[l].diffuse.b,mtls[l].diffuse.a);
-			if(mtls[l].diffuse.a>=0.999 && pass==0 || mtls[l].diffuse.a<0.999 && pass==1)
-			{
-				glBegin(GL_TRIANGLES);
-				for(int f=0;f<numFaces;f++)
-				{
-					if(faces[f].material==l)
-					{
-						if(mtls[faces[f].material].tex=="")
-						{
-							glNormal3fv(&normals[faces[f].n[0]].x);
-							glVertex3fv(&vertices[faces[f].v[0]].x);
 
-							glNormal3fv(&normals[faces[f].n[1]].x);
-							glVertex3fv(&vertices[faces[f].v[1]].x);
-
-							glNormal3fv(&normals[faces[f].n[2]].x);
-							glVertex3fv(&vertices[faces[f].v[2]].x);
-						}
-						else
-						{
-					//		glNormal3fv(&normals[faces[f].n[0]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[0]].u);
-							glVertex3fv(&vertices[	faces[f].v[0]].x);
-
-					//		glNormal3fv(&normals[	faces[f].n[1]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[1]].u);
-							glVertex3fv(&vertices[	faces[f].v[1]].x);
-							
-					//		glNormal3fv(&normals[	faces[f].n[2]].x);
-							glTexCoord2fv(&texCoords[faces[f].t[2]].u);
-							glVertex3fv(&vertices[	faces[f].v[2]].x);
-						}
-					}
-				}
-				glEnd();
-			}
-		}
-	}
-	glDepthMask(true);
-	glEndList();
-
-	//tmpModel.vertices = vertices;
 	unsigned int* fs = new unsigned int[totalFaces*3];
 	for(int itt = 0;itt<totalFaces;itt++)
 	{
@@ -1111,7 +1139,43 @@ bool DataManager::registerOBJ(string name, string filename)
 		fs[itt*3+1] = faces[itt].v[1];
 		fs[itt*3+2] = faces[itt].v[2];
 	}
-	models[d]=new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces);
+	modelAsset* a = new modelAsset;
+	a->type = asset::MODEL;
+	a->trl = std::shared_ptr<CollisionChecker::triangleList>(new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces));
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	texturedLitVertex3D* VBOverts = new texturedLitVertex3D[totalFaces*3];
+	unsigned int lNum=0, vNum = 0;
+	for(int m=0; m<numMtls; m++)
+	{
+		for(int i=0; i < totalFaces; i++)
+		{
+			if(faces[m].material == m)
+			{
+				for(int vi=0; vi < 3; vi++, vNum++)
+				{
+					VBOverts[vNum].position	= vertices[faces[i].v[vi]];
+					VBOverts[vNum].normal	= normals[faces[i].n[vi]];
+					VBOverts[vNum].UV		= Vec2f(texCoords[faces[i].t[vi]].u,texCoords[faces[i].t[vi]].v);
+				}
+			}
+		}
+		modelAsset::material mat;
+		mat.color = mtls[m].diffuse;
+		mat.tex = mtls[m].tex;
+		mat.numIndices = vNum - lNum;
+		mat.indicesOffset = lNum;
+		a->materials.push_back(mat);
+		lNum=vNum;
+	}
+
+	glGenBuffers(1,(GLuint*)&a->id);
+	glBindBuffer(GL_ARRAY_BUFFER, a->id);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texturedLitVertex3D)*vNum, VBOverts, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	assets[name] = a;
 
 	delete[] fs;
 	delete[] vertices;
@@ -1120,10 +1184,6 @@ bool DataManager::registerOBJ(string name, string filename)
 	delete[] normals;
 	delete[] mtls;
 	
-	asset* a = new asset;
-	a->id = d;
-	a->type = asset::MODEL;
-	assets[name] = a;
 	return true;
 }
 int DataManager::getId(string name)
@@ -1134,28 +1194,17 @@ int DataManager::getId(string name)
 }
 int DataManager::getId(objectType t)
 {
-	if(t==F12)	return getId("f12");
-	if(t==F16)	return getId("f16");
-	if(t==F18)	return getId("f18");
-	if(t==F22)	return getId("f22");
-	if(t==UAV)	return getId("UAV");
-	if(t==B2)	return getId("B2");
-
-	if(t==MISSILE1) return getId("missile1");
-	if(t==MISSILE2) return getId("missile2");
-	if(t==MISSILE3) return getId("missile3");
-	if(t==MISSILE4) return getId("missile4");
-	return 0;
+	return getId(objectTypeString(t));
 }
 bool DataManager::assetLoaded(string name)
 {
 	return assets.find(name) != assets.end();
 }
-CollisionChecker::triangleList* DataManager::getModel(objectType type)
-{
-	auto i = models.find(getId(type));
-	return i != models.end() ? i->second : NULL;
-}
+//CollisionChecker::triangleList* DataManager::getModel(objectType type)
+//{
+//	auto i = models.find(getId(type));
+//	return i != models.end() ? i->second : NULL;
+//}
 char* DataManager::textFileRead(char *fn) {
 	FILE *fp;
 	char *content = NULL;
@@ -1273,12 +1322,7 @@ void DataManager::shutdown()
 	{
 		if(i->second->type == asset::SHADER)			glDeleteProgram(i->second->id);
 		else if(i->second->type == asset::MODEL)		glDeleteLists(i->second->id,1);
-		else if(i->second->type == asset::TEXTURE)	glDeleteTextures(1,(const GLuint*)&i->second->id);
+		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&i->second->id);
 	}
 	assets.clear();
-	for(auto i = models.begin(); i!=models.end();i++)
-	{
-		i->second->~triangleList();
-	}
-	models.clear();
 }

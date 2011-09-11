@@ -65,9 +65,6 @@ int modeCampaign::update()
 			world.time.changeSpeed(1.0, 5.0);
 		}
 	}
-#endif
-
-#ifdef _DEBUG
 	if(input->getKey(0x4c))
 	{
 		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
@@ -118,7 +115,6 @@ int modeCampaign::update()
 			countdown=3000;
 		}
 	}
-
 
 	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	

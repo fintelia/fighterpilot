@@ -39,9 +39,9 @@ struct LevelFile
 	}*objects;
 
 	struct Region{
-		int shape;					//shape: 0 = circle; 1 = rectangle;  
+		int shape;					//shape: 0 = circle; 1 = rectangle;
 		int type;					//type of region: 0 = map bounds; 1 = off limits;
-		float maxTime;				//maximum amount of time in seconds inside/outside of the region before the place explodes
+//		float maxTime;				//maximum amount of time in seconds inside/outside of the region before the place explodes
 
 		union{
 			float centerXYZ[3];		//Vec3f's are not allowed in unions because they have constructors
@@ -184,6 +184,7 @@ public:
 protected:
 	heightmapBase*				mGround;
 	vector<LevelFile::Object>	mObjects;
+	vector<LevelFile::Region>	mRegions;
 
 	string						nextLevel;
 	shaderData					water;
@@ -196,6 +197,7 @@ public:
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}
+	const vector<LevelFile::Region>& regions() const {return mRegions;}
 	string getLevelNext(){return nextLevel;}
 };
 
@@ -208,6 +210,8 @@ public:
 
 	void newGround(unsigned int x, unsigned int z, float* heights=NULL);
 	void addObject(int type,int team, int controlType, Vec3f pos, Quat4f rot=Quat4f());
+	void addRegionCircle(Vec2f c, float r);
+	void addRegionRect(Rect r);
 	void setWater(string shaderName);
 
 	void renderPreview(bool drawWater, float scale, float seaLevelOffset=0.0);//for mapbuilder

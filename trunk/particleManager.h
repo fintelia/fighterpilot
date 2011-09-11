@@ -115,7 +115,7 @@ public:
 class explosion: public emitter
 {
 private:
-	CollisionChecker::triangleList* trl;
+	std::shared_ptr<CollisionChecker::triangleList> trl;
 public:
 	explosion(Vec3f pos, float radius);
 	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
@@ -125,7 +125,7 @@ public:
 class explosionFlash: public emitter
 {
 private:
-	CollisionChecker::triangleList* trl;
+	std::shared_ptr<CollisionChecker::triangleList> trl;
 public:
 	explosionFlash(Vec3f pos);
 	explosionFlash(int parent, Vec3f offset = Vec3f(0,0,0));
@@ -135,9 +135,9 @@ public:
 class explosionSmoke: public emitter
 {
 private:
-	CollisionChecker::triangleList* trl;
+	std::shared_ptr<CollisionChecker::triangleList> trl;
 public:
-	explosionSmoke(Vec3f pos);
+	explosionSmoke(Vec3f pos, float radius);
 	explosionSmoke(int parent, Vec3f offset = Vec3f(0,0,0));
 
 	void updateParticle(particle& p);

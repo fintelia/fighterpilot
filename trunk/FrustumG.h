@@ -42,11 +42,6 @@ public:
 
 	Vec2f project(Vec3f p);
 	//Vec3f unProject(Vec2f p);
-
-	void drawPoints();
-	void drawLines();
-	void drawgeoPlanes();
-	void drawNormals();
 };
 #define ANG2RAD 3.14159265358979323846/180.0
 

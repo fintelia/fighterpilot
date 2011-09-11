@@ -5,8 +5,6 @@ namespace menu{
 
 bool levelEditor::init()
 {
-	vector<button*> v;//for toggles
-
 	//terrain
 
 	//buttons["newShader"]	= new button(5,5,200,30,"new shader",lightGreen,white);
@@ -32,40 +30,38 @@ bool levelEditor::init()
 	buttons["addAAgun"]		= new button(5,40,200,30,"new AA gun",lightGreen,white);
 
 	//settings
-	v.clear();
-	v.push_back(new button(120,5,100,30,"respawn",black,white));
-	v.push_back(new button(225,5,100,30,"restart",black,white));
-	v.push_back(new button(330,5,100,30,"die",black,white));
-	toggles["onHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,5,"player hit:"));
+	//v.clear();
+	//v.push_back(new button(120,5,100,30,"respawn",black,white));
+	//v.push_back(new button(225,5,100,30,"restart",black,white));
+	//v.push_back(new button(330,5,100,30,"die",black,white));
+	//toggles["onHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,5,"player hit:"));
 
-	v.clear();
-	v.push_back(new button(120,45,100,30,"respawn",black,white));
-	v.push_back(new button(225,45,100,30,"restart",black,white));
-	v.push_back(new button(330,45,100,30,"die",black,white));
-	toggles["onAIHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,45,"AI hit:"));
+	//v.clear();
+	//v.push_back(new button(120,45,100,30,"respawn",black,white));
+	//v.push_back(new button(225,45,100,30,"restart",black,white));
+	//v.push_back(new button(330,45,100,30,"die",black,white));
+	//toggles["onAIHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,45,"AI hit:"));
 
-	v.clear();
-	v.push_back(new button(120,85,100,30,"ffa",black,white));
-	v.push_back(new button(225,85,100,30,"teams",black,white));
-	v.push_back(new button(330,85,100,30,"player vs",black,white));
-	toggles["gameType"]	= new toggle(v,darkBlue,lightBlue,new label(5,85,"game type:"));
+	//v.clear();
+	//v.push_back(new button(120,85,100,30,"ffa",black,white));
+	//v.push_back(new button(225,85,100,30,"teams",black,white));
+	//v.push_back(new button(330,85,100,30,"player vs",black,white));
+	//toggles["gameType"]	= new toggle(v,darkBlue,lightBlue,new label(5,85,"game type:"));
 
-	v.clear();
-	v.push_back(new button(120,125,100,30,"water",black,white));
-	v.push_back(new button(225,125,100,30,"land",black,white));
-	toggles["mapType"]	= new toggle(v,darkBlue,lightBlue,new label(5,125,"map type:"));
+	//v.clear();
+	//v.push_back(new button(120,125,100,30,"water",black,white));
+	//v.push_back(new button(225,125,100,30,"land",black,white));
+	//toggles["mapType"]	= new toggle(v,darkBlue,lightBlue,new label(5,125,"map type:"));
 
-	v.clear();
-	v.push_back(new button(120,165,100,30,"rock",black,white));
-	v.push_back(new button(225,165,100,30,"sand",black,white));
-	toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
+	//v.clear();
+	//v.push_back(new button(120,165,100,30,"rock",black,white));
+	//v.push_back(new button(225,165,100,30,"sand",black,white));
+	//toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
 
-	v.clear();
-	v.push_back(new button(5,sh-40,100,35,"Terrain",black,white));
-	v.push_back(new button(110,sh-40,100,35,"Objects",black,white));
-	v.push_back(new button(215,sh-40,100,35,"Settings",black,white));
-	toggles["tabs"]	= new toggle(v,Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
-
+	toggles["tabs"]	= new toggle(vector<button*>(),Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
+	toggles["tabs"]->addButton(new button(5,sh-40,100,35,"Terrain",black,white));
+	toggles["tabs"]->addButton(new button(110,sh-40,100,35,"Objects",black,white));
+	toggles["tabs"]->addButton(new button(215,sh-40,100,35,"Regions",black,white));
 
 	if(level != NULL) delete level;
 	level = new editLevel;
@@ -242,11 +238,11 @@ int levelEditor::update()
 		}
 		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{
-			toggles["onHit"]->setVisibility(newTab==REGIONS);
-			toggles["onAIHit"]->setVisibility(newTab==REGIONS);
-			toggles["gameType"]->setVisibility(newTab==REGIONS);
-			toggles["mapType"]->setVisibility(newTab==REGIONS);
-			toggles["seaFloorType"]->setVisibility(newTab==REGIONS);
+		//	toggles["onHit"]->setVisibility(newTab==REGIONS);
+		//	toggles["onAIHit"]->setVisibility(newTab==REGIONS);
+		//	toggles["gameType"]->setVisibility(newTab==REGIONS);
+		//	toggles["mapType"]->setVisibility(newTab==REGIONS);
+		//	toggles["seaFloorType"]->setVisibility(newTab==REGIONS);
 		}
 	}
 	lastTab = newTab;
@@ -256,7 +252,14 @@ int levelEditor::update()
 	//	rot+=value/1000;
 	POINT p;
 	GetCursorPos(&p);
-	if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
+	if(getTab() == REGIONS && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
+	{
+		if(p.x < 2)		orthoCenter += Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
+		if(p.x > sw-2)	orthoCenter -= Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
+		if(p.y < 2)		orthoCenter += Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
+		if(p.y > sh-2)	orthoCenter -= Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
+	}
+	else if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 	{
 		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
 		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
@@ -311,6 +314,23 @@ bool levelEditor::mouse(mouseButton button, bool down)
 				return false;
 			}
 		}
+		else if(getTab() == REGIONS)
+		{
+			
+			Rect view = orthoView();
+
+			p.x = (p.x*view.w/sAspect + view.x) - orthoCenter.x;
+			p.y = (p.y*view.h + view.y) + orthoCenter.z;
+			if(down)
+			{
+				newRegionRadius = true;
+				newRegionCenter = p;
+			}
+			else if(newRegionRadius)
+			{
+				level->addRegionCircle(newRegionCenter, newRegionCenter.distance(p));
+			}
+		}
 	}
 	else if(button == MIDDLE_BUTTON)
 	{
@@ -333,7 +353,10 @@ bool levelEditor::mouse(mouseButton button, bool down)
 }
 bool levelEditor::scroll(float rotations)
 {
-	scrollVal = clamp(scrollVal + rotations,-8,25);
+	if(getTab() == REGIONS)
+		orthoScale = clamp(orthoScale + rotations,-8,8);
+	else
+		scrollVal = clamp(scrollVal + rotations,-8,25);
 	return true;
 }
 int levelEditor::getShader()
@@ -352,6 +375,9 @@ void levelEditor::resetView()
 {
 	rot = Quat4f(Vec3f(1,0,0),1.0);
 	center = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
+
+	orthoCenter = Vec3f(level->ground()->sizeX()/2,minHeight,level->ground()->sizeZ()/2);
+	orthoScale = 0.0;
 }
 void levelEditor::updateObjectCircles()
 {
@@ -362,7 +388,7 @@ void levelEditor::updateObjectCircles()
 		Vec2f s = graphics->project(i->startloc);
 		float r;
 
-		auto p = dataManager.getModel(i->type);
+		auto p = dataManager.getModel(i->type)->trl;
 		if(p==NULL)
 		{
 			r = 0.006;
@@ -780,61 +806,107 @@ void levelEditor::addObject(int type, int team, int controlType, float x, float 
 	Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 	((editLevel*)level)->addObject(type,team,controlType,Vec3f(val.x,val.y,val.z));
 }
+Rect levelEditor::orthoView()
+{
+	Vec2f gSize = level->ground()->size() * 1.2 * pow(1.3f,-orthoScale);
+	gSize.x *= sAspect;
+
+	return Rect::CWH(Vec2f(0,0),gSize);
+}
 void levelEditor::render3D() 
 {	
-	graphics->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-	//static FrustumG frustum;
-	//frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-	
+	bool orthoTerrain = (getTab() == REGIONS);
 
-	Vec3f e,c,u;
-	c = center;
-	if(input->getMouseState(MIDDLE_BUTTON).down)
+	if(orthoTerrain)
 	{
-		POINT p;
-		GetCursorPos(&p);
+		Rect view = orthoView();
+		graphics->ortho(view.x,view.x+view.w,view.y,view.y+view.h,-10000,10000);
+		graphics->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
 
-		Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
-		Vec2f newP((float)p.x/sh,1.0 - (float)p.y/sh);
-		
-			
-		Vec3f xAxis = rot * Vec3f(1,0,0);
+		if(getShader() != -1)
+			((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
+		bool w = getShader() != 1;
+		float sl = sliders["sea level"]->getValue();
 
-		Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-		Angle ang = oldP.distance(newP);
+		glPushMatrix();
+	//	glScalef(0.01*pow(10.0f,orthoScale),1,0.01*pow(10.0f,orthoScale));
+		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
+ 		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
+		glPopMatrix();
 
-		Quat4f tmpRot;
-		if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
-		else			tmpRot = rot;
+		if(getTab() == REGIONS)
+		{
+			dataManager.bind("ortho");
+			glDisable(GL_DEPTH_TEST);
+			glColor3f(0,1,0);
 
-		e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
-		u = tmpRot * Vec3f(0,0,-1);
- 
+			auto v = level->regions();
+			for(auto i = v.begin(); i != v.end(); i++)
+			{
+				Vec2f c((i->centerXYZ[0] - view.x + orthoCenter.x)/view.w*sAspect, (i->centerXYZ[2] - view.y - orthoCenter.z)/view.h);
+				Vec2f s(i->radius/view.w*sAspect*2.0, i->radius/view.h*2.0);
+				graphics->drawOverlay(Rect::CWH(c,s), "target ring");
+			}
+
+			dataManager.unbindShader();
+			glEnable(GL_DEPTH_TEST);
+		}
 	}
 	else
 	{
-		e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
-		u = rot * Vec3f(0,0,-1);
-	}
-	graphics->lookAt(e,c,u);
+		graphics->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+		//static FrustumG frustum;
+		//frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+	
 
-	GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+		Vec3f e,c,u;
+		c = center;
+		if(input->getMouseState(MIDDLE_BUTTON).down)
+		{
+			POINT p;
+			GetCursorPos(&p);
+
+			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
+			Vec2f newP((float)p.x/sh,1.0 - (float)p.y/sh);
 		
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+			
+			Vec3f xAxis = rot * Vec3f(1,0,0);
 
-	if(getShader() != -1)
-		((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
-	bool w = getShader() != 1;
-	float sl = sliders["sea level"]->getValue();
+			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
+			Angle ang = oldP.distance(newP);
 
-	glPushMatrix();
-	//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
- 	level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-	glPopMatrix();
+			Quat4f tmpRot;
+			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
+			else			tmpRot = rot;
 
-	if(getTab() == menu::levelEditor::OBJECTS)
+			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
+			u = tmpRot * Vec3f(0,0,-1);
+ 
+		}
+		else
+		{
+			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
+			u = rot * Vec3f(0,0,-1);
+		}
+		graphics->lookAt(e,c,u);
+
+		GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+		
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+
+		if(getShader() != -1)
+			((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
+		bool w = getShader() != 1;
+		float sl = sliders["sea level"]->getValue();
+
+		glPushMatrix();
+		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
+ 		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
+		glPopMatrix();
+	}
+	if(getTab() == OBJECTS)
 	{
 		level->renderObjectsPreview();
 		if(newObjectType != 0)
@@ -851,7 +923,7 @@ void levelEditor::render3D()
 			glPushMatrix();
 			glTranslatef(val.x,val.y,val.z);
 			glScalef(10,10,10);
-			dataManager.draw(newObjectType);
+			graphics->drawModel(newObjectType, Vec3f(), Quat4f());
 			glPopMatrix();
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			glDepthMask(false);
