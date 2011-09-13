@@ -108,7 +108,6 @@
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AABox.cpp" />
     <ClCompile Include="aaGun.cpp" />
     <ClCompile Include="Angle.cpp" />
     <ClCompile Include="blackSmoke.cpp" />
@@ -124,9 +123,7 @@
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="explosionFlash.cpp" />
     <ClCompile Include="explosionSmoke.cpp" />
-    <ClCompile Include="FrustumG.cpp" />
     <ClCompile Include="GameMath.cpp" />
-    <ClCompile Include="geoPlane.cpp" />
     <ClCompile Include="GLee.c">
       <FloatingPointExceptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </FloatingPointExceptions>
@@ -144,7 +141,6 @@
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
     <ClCompile Include="OpenGLgraphics.cpp" />
-    <ClCompile Include="particle.cpp" />
     <ClCompile Include="particleExplosion.cpp" />
     <ClCompile Include="particleManager.cpp" />
     <ClCompile Include="path.cpp" />
@@ -162,7 +158,6 @@
     <ClCompile Include="worldManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AABox.h" />
     <ClInclude Include="aaGun.h" />
     <ClInclude Include="Angle.h" />
     <ClInclude Include="basicMath.h" />
@@ -175,9 +170,7 @@
     <ClInclude Include="matrix.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="enums.h" />
-    <ClInclude Include="FrustumG.h" />
     <ClInclude Include="gameMath.h" />
-    <ClInclude Include="geoPlane.h" />
     <ClInclude Include="graphicsManager.h" />
     <ClInclude Include="imageloader.h" />
     <ClInclude Include="input.h" />
@@ -187,7 +180,6 @@
     <ClInclude Include="missile.h" />
     <ClInclude Include="modeManager.h" />
     <ClInclude Include="objectList.h" />
-    <ClInclude Include="partical.h" />
     <ClInclude Include="particleManager.h" />
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />

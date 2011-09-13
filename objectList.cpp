@@ -24,86 +24,67 @@ objId objectList::newObject(LevelFile::Object obj)
 		//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
 		//}
 		p->team = obj.team;
-		mObjects[p->id] = p;
-		mPlanes[p->id] = p;
-		p->init();
-		return p->id;
+		return newObject(p);
 	}
 	else if(obj.type & AA_GUN)// can't be player controlled
 	{
-		aaGun* p = new aaGun(obj.startloc,obj.startRot,obj.type);
-		p->team = obj.team;
-		mObjects[p->id] = p;
-		mAAguns[p->id] = p;
-		p->init();
-		return p->id;
+		return newObject(new aaGun(obj.startloc,obj.startRot,obj.type));
 	}
 	return 0;
 }
-objId objectList::newMissile(missileType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int owner,int target)
+objId objectList::newObject(object* newObj)
 {
-	if(!(type & MISSILE)) return NULL;
+	if(newObj != nullptr)
+	{
+		std::shared_ptr<object> ptr(newObj);
 
-	missile* m = new missile(type,team,pos,rot,speed,owner,target);
-	mObjects[m->id] = m;
-	mMissiles[m->id] = m;
+		mObjects[ptr->id] = ptr;
+		mObjectTypes[ptr->type][ptr->id] = ptr;
+		mObjectTypes[ptr->type & MAJOR_OBJECT_TYPE][ptr->id] = ptr;
 
-	m->init();
-	return m->id;
-}
-objId objectList::newBomb(bombType type, teamNum team,Vec3f pos, Quat4f rot, float speed, int owner)
-{
-	if(!(type & BOMB)) return NULL;
-
-	bomb* m = new bomb(type,team,pos,rot,speed,owner);
-	mObjects[m->id] = m;
-	mBombs[m->id] = m;
-
-	m->init();
-	return m->id;
+		ptr->init();
+		return ptr->id;
+	}
+	return 0;
 }
 void objectList::deleteObject(objId id)
 {
-	if(mObjects.find(id)==mObjects.end()) return;
+	if(mObjects.count(id)==0) return;
 
-	object* objPtr = mObjects[id];
+	objectType t = mObjects[id]->type;
+
 	mObjects.erase(id);
-	if(objPtr->type & PLANE)	mPlanes.erase(id);
-	if(objPtr->type & MISSILE)	mMissiles.erase(id);
-	if(objPtr->type & BOMB)		mBombs.erase(id);
-	delete objPtr;
+	mObjectTypes[t].erase(id);
+	mObjectTypes[t & MAJOR_OBJECT_TYPE].erase(id);
 }
-void objectList::clear()
+void objectList::clearObjects()
 {
-	for(auto i = mObjects.begin(); i!= mObjects.end(); i++)
-		delete i->second;
-
 	mObjects.clear();
-	mPlanes.clear();
-	mMissiles.clear();
-	mBombs.clear();
+	mObjectTypes.clear();
 	object::currentId = 0;
 }
-void objectList::update(double time, double ms)
+void objectList::updateObjects(double time, double ms)
 {
-	vector<int> toDelete;
-	int m=0;
 	for(auto i = mObjects.begin(); i != mObjects.end();i++)
 	{
 		i->second->update(time,ms);
-		if(i->second->awaitingDelete)
-			toDelete.push_back((*i).first);
-		m++;
 	}
-	for(vector<int>::iterator i=toDelete.begin();i!=toDelete.end();i++)
+	for(auto i = mObjects.begin(); i != mObjects.end();)
 	{
-		deleteObject(*i);
+		if(i->second->awaitingDelete)
+			mObjects.erase(i++);
+		else
+			i++;
 	}
 }
-object* objectList::operator[] (objId id) const
+std::shared_ptr<object> objectList::operator[] (objId id) const
 {
-	map<objId,object*>::const_iterator o = mObjects.find(id);
+	auto o = mObjects.find(id);
 	if(o!=mObjects.end())
 		return o->second;
-	return NULL;
+	return std::shared_ptr<object>();
+}
+const map<objId,std::shared_ptr<object>>& objectList::operator() (objectType t)
+{
+	return mObjectTypes[t];
 }

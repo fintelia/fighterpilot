@@ -1,4 +1,4 @@
-class WorldManager
+class WorldManager: public objectList
 {
 public:
 	static WorldManager& getInstance()
@@ -19,20 +19,17 @@ public:
 
 	Level::heightmapGL* const WorldManager::ground() const;
 
-	const map<objId,object*>& objects()const;
-	const map<objId,nPlane*>& planes()const;
-	const map<objId,aaGun*>& aaGuns()const;
-	const map<objId,missile*>& missiles()const;
-	const map<objId,bomb*>& bombs()const;
+	//const map<objId,object*>& objects()const;
+	//const map<objId,nPlane*>& planes()const;
+	//const map<objId,aaGun*>& aaGuns()const;
+	//const map<objId,missile*>& missiles()const;
+	//const map<objId,bomb*>& bombs()const;
 
 	void update();
 
 	std::shared_ptr<Level>	level;
 	vector<bullet>		bullets;
-	objectList			objectList;
 
-	Smoke				smoke;
-	Smoke				exaust;
 	GameTime			time;
 
 private:

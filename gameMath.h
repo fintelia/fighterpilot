@@ -6,9 +6,6 @@
 #include "vector.h"
 #include "quaternion.h"
 #include "matrix.h"
-#include "geoPlane.h"//-------------------------//
-#include "AABox.h"/////---for frustum culling---//
-#include "FrustumG.h"//-------------------------//
 #include "collide.h"
 
 class SVertex

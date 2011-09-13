@@ -5,7 +5,7 @@ int humanControl::TotalPlayers=1;
 
 object* objectController::getObject()
 {
-	return world.objectList[mObjectNum];
+	return world[mObjectNum].get();
 }
 
 void AIcontrol::update()

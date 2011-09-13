@@ -948,7 +948,11 @@ int loading::update()
 	}
 
 	static int totalAssets = -1;
+
+	static vector<double> times;
+
 	int assetsLeft = dataManager.loadAsset();
+
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 
 	//graphics->minimizeWindow();

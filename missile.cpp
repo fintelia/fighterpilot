@@ -30,7 +30,7 @@ void missile::init()
 void missile::update(double time, double ms)
 {
 	/////////////////follow target////////////////////
-	nPlane* enemy = (nPlane*)world.objectList[target];
+	nPlane* enemy = (nPlane*)world[target].get();
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead)
 	{

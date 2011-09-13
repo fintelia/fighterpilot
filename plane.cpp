@@ -610,7 +610,7 @@ void nPlane::shootMissile()
 
 	int pId=0;
 	Angle minAng=PI/6;
-	const map<objId,nPlane*>& planes = world.planes();
+	auto planes = world(PLANE);
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
@@ -626,7 +626,7 @@ void nPlane::shootMissile()
 	missileType t = rockets.ammoRounds[rockets.max - rockets.left].type;
 	Vec3f o = rockets.ammoRounds[rockets.max - rockets.left].offset;
 
-	world.objectList.newMissile(t,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,id,pId);
+	world.newObject(new missile(t, team, position+right*o.x+up*o.y+fwd*o.z, rotation, speed, id, pId));
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -642,7 +642,7 @@ void nPlane::dropBomb()
 	bombType t = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].type;
 	Vec3f o = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].offset;
 
-	world.objectList.newBomb(t,team,position+right*o.x+up*o.y+fwd*o.z,rotation,speed,id);
+	world.newObject(new bomb(t, team, position+right*o.x+up*o.y+fwd*o.z, rotation, speed, id));
 	bombs.coolDownLeft += bombs.coolDown;
 	bombs.roundsLeft--;
 }

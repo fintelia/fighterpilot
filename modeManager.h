@@ -40,9 +40,6 @@ extern ModeManager& modeManager;
 
 class modeDogFight: public modeScreen
 {
-protected:
-	FrustumG frustum;
-
 public:
 	modeDogFight(std::shared_ptr<Level> lvl);
 	virtual ~modeDogFight();

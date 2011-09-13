@@ -127,7 +127,8 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 
 		Vec3f n;
 		Vec3f cent, u, v;
-		for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+		auto planes = world(PLANE);
+		for(auto i = planes.begin(); i != planes.end(); i++)
 		{
 			n = (i->second->position - p->position) / (16000.0);
 			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
@@ -135,7 +136,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 				float mag = n.magnitude();
 				Angle ang = atan2A(-n.x,n.z) + p->direction + 18.0 * PI/180;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = p->direction + i->second->direction + 18.0 * PI/180;
+				ang = p->direction + ((nPlane*)i->second.get())->direction + 18.0 * PI/180;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
@@ -189,7 +190,8 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 
 		Vec3f n;
 		Vec3f cent, u, v;
-		for(auto i = world.planes().begin(); i != world.planes().end(); i++)
+		auto planes = world(PLANE);
+		for(auto i = planes.begin(); i != planes.end(); i++)
 		{
 			n = (i->second->position - p->position) / (16000.0);
 			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
@@ -197,7 +199,7 @@ void modeDogFight::radar(float x, float y, float width, float height,bool firstP
 				float mag = n.magnitude();
 				Angle ang = atan2A(-n.x,n.z) + p->direction;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = p->direction + i->second->direction;
+				ang = p->direction + ((nPlane*)i->second.get())->direction;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
@@ -216,11 +218,12 @@ void modeDogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, flo
 {
 	if(!p->dead)
 	{
-		for(auto i = world.planes().begin(); i != world.planes().end();i++)
+		auto planes = world(PLANE);
+		for(auto i = planes.begin(); i != planes.end();i++)
 		{
-			if(p->id!=i->second->id && !i->second->dead &&    frustum.sphereInFrustum(i->second->position,8) != FrustumG::OUTSIDE)
+			if(p->id!=i->second->id && !i->second->dead)
 			{
-				Vec2f s = frustum.project(i->second->position);
+				Vec2f s = graphics->project(i->second->position);
 				double distSquared = i->second->position.distanceSquared(p->position);
 				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
 				{
@@ -249,17 +252,17 @@ void modeDogFight::targeter(float x, float y, float apothem, Angle tilt)
 //modes
 void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 {
-	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
-	const map<objId,nPlane*>& planes = world.planes();
+	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
+	auto planes = world(PLANE);
 	nPlane* cPlane;
 
 	//Vec3f axis;
 	Angle roll;
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		cPlane=(*i).second;
+		cPlane=(nPlane*)((*i).second.get());
 		Vec3f a=(*i).second->position;
-		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && frustum.sphereInFrustum(a,8) != FrustumG::OUTSIDE && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
+		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
 		{
 			//graphics->drawLine(a,a+(*i).second->rotation * Vec3f(0,0,100));
 			glPushMatrix();
@@ -379,7 +382,7 @@ void modeDogFight::drawScene(int acplayer)
 	double time=world.time();
 	double interp = 1.0;//world.time.interpolate();
 
-	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
+	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -402,7 +405,6 @@ void modeDogFight::drawScene(int acplayer)
 		u = lerp(p->camera.lastUp,p->camera.up,interp);
 
 		graphics->lookAt(e, c, u);
-		frustum.setCamDef(e,c,u);
 	}
 	else
 	{
@@ -413,7 +415,6 @@ void modeDogFight::drawScene(int acplayer)
 		u = rot * Vec3f(0,1,0);
 		
 		graphics->lookAt(e, c, u);
-		frustum.setCamDef(e,c,u);
 	}
 	//sky dome
 	glPushMatrix();
@@ -435,7 +436,7 @@ void modeDogFight::drawScene(int acplayer)
 
 	dataManager.bind("model");
 	Vec3f axis;
-	const map<objId,missile*>& missiles = world.missiles();
+	auto missiles = world(MISSILE);
 	for(auto i=missiles.begin();i != missiles.end();i++)
 	{
 		if(!i->second->awaitingDelete && !i->second->dead)
@@ -453,7 +454,7 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	const map<objId,bomb*>& bombs = world.bombs();
+	auto bombs = world(BOMB);
 	for(auto i=bombs.begin();i != bombs.end();i++)
 	{
 		if(!i->second->awaitingDelete && !i->second->dead)
@@ -471,7 +472,8 @@ void modeDogFight::drawScene(int acplayer)
 		}
 	}
 
-	for(auto i = world.aaGuns().begin(); i != world.aaGuns().end();i++)
+	auto aaGuns = world(AA_GUN);
+	for(auto i = aaGuns.begin(); i != aaGuns.end();i++)
 	{
 		glPushMatrix();	
 		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
@@ -483,20 +485,7 @@ void modeDogFight::drawScene(int acplayer)
 	}
 
 	drawPlanes(acplayer,false,true);
-#ifdef AI_TARGET_LINES 
-	int t;
-	for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	{
-		if(i->second->planeType & AI_PLANE)
-		{
-			t=((AIplane*)(i->second))->target;
-			if(planes.find(t)!=planes.end())
-			{
-				graphics->drawLine(*i->second,*planes[t]);
-			}
-		}
-	}
-#endif
+
 	glError();
 
 	glDepthMask(false);
@@ -541,7 +530,7 @@ void modeDogFight::drawScene(int acplayer)
 void modeDogFight::drawSceneParticles(int acplayer)
 {
 	double interp = 1.0;//world.time.interpolate();
-	nPlane* p=(nPlane*)world.objectList[players[acplayer].objectNum()];
+	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -552,7 +541,6 @@ void modeDogFight::drawSceneParticles(int acplayer)
 		Vec3f u = lerp(p->camera.lastUp,p->camera.up,interp);
 
 		graphics->lookAt(e, c, u);
-		frustum.setCamDef(e,c,u);
 	}
 	else
 	{
@@ -563,7 +551,6 @@ void modeDogFight::drawSceneParticles(int acplayer)
 		Vec3f u = rot * Vec3f(0,1,0);
 		
 		graphics->lookAt(e, c, u);
-		frustum.setCamDef(e,c,u);
 	}
 	particleManager.render();
 }

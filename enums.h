@@ -2,6 +2,8 @@
 #pragma once
 #include <map>
 
+const int MAJOR_OBJECT_TYPE = 0xff00;
+const int MINOR_OBJECT_TYPE = 0x00ff;
 //nst int TYPE				= 0xXXxx;
 const int PLANE				= 0x0100;
 const int F12				= 0x0101;

@@ -40,7 +40,8 @@ void aaGun::update(double time, double ms)
 	target=0;
 	float lDistSquared = 0.0;
 	float nDistSquared;
-	for(auto n = world.planes().begin(); n!=world.planes().end(); n++)
+	auto planes = world(PLANE);
+	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
 		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target == 0 || nDistSquared < lDistSquared))
@@ -52,7 +53,7 @@ void aaGun::update(double time, double ms)
 
 	if(target != 0)
 	{
-		targeter = (world.objectList[target]->position - position).normalize();
+		targeter = (world[target]->position - position).normalize();
 		rotation = Quat4f(targeter);
 		shoot = true;
 	}

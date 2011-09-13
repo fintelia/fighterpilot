@@ -88,7 +88,6 @@ namespace menu{class levelEditor;}
 #include "script.h"
 #include "profiler.h"
 #include "imageloader.h"//should be replaced!!!
-#include "partical.h"
 #include "player.h"
 #include "object.h"
 #include "bullet.h" 

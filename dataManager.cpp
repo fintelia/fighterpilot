@@ -328,7 +328,7 @@ bool DataManager::registerPNG(string name, string filename)
 	else if(colorChannels == 4) format = GL_RGBA;
 	
 	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
-	
+
 	GLuint texV;
 	glGenTextures(1,&texV);
 	glBindTexture(GL_TEXTURE_2D, texV);
