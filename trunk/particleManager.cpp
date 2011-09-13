@@ -210,7 +210,7 @@ emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesP
 	}
 	glGenBuffers(1,&VBO);
 }
-emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(world.objectList[parent]->position + world.objectList[parent]->rotation * offset),lastPosition(position),parentObject(parent),parentOffset(offset),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(world[parent]->position + world[parent]->rotation * offset),lastPosition(position),parentObject(parent),parentOffset(offset),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -269,14 +269,14 @@ void emitter::update()
 	
 	if(parentObject != 0)
 	{
-		if(world.objectList[parentObject] == NULL || world.objectList[parentObject]->awaitingDelete)
+		if(world[parentObject] == NULL || world[parentObject]->awaitingDelete)
 		{
 			parentObject = 0;
 			particlesPerSecond = 0;
 		}
 		else
 		{
-			position = world.objectList[parentObject]->position + world.objectList[parentObject]->rotation * parentOffset;
+			position = world[parentObject]->position + world[parentObject]->rotation * parentOffset;
 		}
 	}
 

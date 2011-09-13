@@ -33,7 +33,7 @@ namespace particle
 	}
 	explosion::explosion(int parent, Vec3f offset): emitter(EXPLOSION, parent, offset, "fire", 0.1, 0.0, 32,true)
 	{
-		trl = dataManager.getModel(world.objectList[parent]->type)->trl;
+		trl = dataManager.getModel(world[parent]->type)->trl;
 		radius = trl->getRadius()/2;
 
 		velocity =	fuzzyAttribute(30.0, 0.0);
@@ -49,7 +49,7 @@ namespace particle
 		
 			Vec3f dir = random<Vec3f>();
 			p.vel = dir * velocity();
-			p.pos = world.objectList[parent]->position + dir * spread() + p.vel * extraTime/1000.0;
+			p.pos = world[parent]->position + dir * spread() + p.vel * extraTime/1000.0;
 
 			p.size = 0.0;
 

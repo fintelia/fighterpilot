@@ -11,7 +11,7 @@ namespace particle
 	}
 	bool smokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		if(world.planes().find(parentObject)->second->death != nPlane::DEATH_TRAILING_SMOKE)
+		if(!world[parentObject] || world[parentObject]->type & PLANE && ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE)
 		{
 			particlesPerSecond = 0;
 			return false;

@@ -67,7 +67,7 @@ int modeCampaign::update()
 	}
 	if(input->getKey(0x4c))
 	{
-		((nPlane*)world.objectList[players[0].objectNum()])->loseHealth(world.time.length()/10.0);
+		((nPlane*)world[players[0].objectNum()].get())->loseHealth(world.time.length()/10.0);
 	}
 #endif
 
@@ -97,10 +97,10 @@ int modeCampaign::update()
 	else
 	{
 		int enemies_left=0;
-		const map<objId,nPlane*>& planes = world.planes();
+		auto planes = world(PLANE);
 		for(auto i = planes.begin(); i != planes.end();i++)
 		{
-			if((*i).second->team != world.objectList[players[0].objectNum()]->team && !(*i).second->dead)
+			if((*i).second->team != world[players[0].objectNum()]->team && !(*i).second->dead)
 				enemies_left++;
 		}
 
@@ -109,7 +109,7 @@ int modeCampaign::update()
 			levelup=true;
 			countdown=1000;
 		}
-		else if(world.objectList[players[0].objectNum()]->dead)
+		else if(world[players[0].objectNum()]->dead)
 		{
 			restart=true;
 			countdown=3000;
@@ -134,7 +134,7 @@ int modeCampaign::update()
 }
 void modeCampaign::draw2D()
 {
-	nPlane* p=(nPlane*)world.objectList[players[0].objectNum()];
+	nPlane* p = (nPlane*)world[players[0].objectNum()].get();
 	
 	if(players[0].firstPerson() && !p->controled && !p->dead)
 	{
@@ -170,13 +170,11 @@ void modeCampaign::draw3D()
 	//if(n <= 1) return;
 
 	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
-	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawScene(0);
 }
 void modeCampaign::drawParticles()
 {
 	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
-	frustum.setCamInternals(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawSceneParticles(0);
 	//particleManager.render();
 }

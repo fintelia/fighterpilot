@@ -25,9 +25,6 @@
     <Filter Include="Source Files\math\vector">
       <UniqueIdentifier>{1c4ed234-b520-4c24-8aef-fc2331f4b38d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math\AAbox">
-      <UniqueIdentifier>{08c0cf51-5ce1-4e3b-bcf9-d71955d1b177}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\math\angle">
       <UniqueIdentifier>{8fe210af-2efb-4bc1-bbde-7c452af7576b}</UniqueIdentifier>
     </Filter>
@@ -63,9 +60,6 @@
     </Filter>
     <Filter Include="Source Files\bullet">
       <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\particle">
-      <UniqueIdentifier>{4fcb2ece-878e-4287-a7db-6b63d38a63e0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\control">
       <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
@@ -118,14 +112,14 @@
     <Filter Include="shaders\particle">
       <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\AA_GAME">
+      <UniqueIdentifier>{441ec224-63b5-4ada-b572-fe5fc8605e5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AA_ENGINE">
+      <UniqueIdentifier>{5351d8cb-6c1c-4784-8742-e0d5cccad21b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FrustumG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="geoPlane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imageloader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -149,9 +143,6 @@
     </ClCompile>
     <ClCompile Include="GLee.c">
       <Filter>glee</Filter>
-    </ClCompile>
-    <ClCompile Include="AABox.cpp">
-      <Filter>Source Files\math\AAbox</Filter>
     </ClCompile>
     <ClCompile Include="Angle.cpp">
       <Filter>Source Files\math\angle</Filter>
@@ -194,9 +185,6 @@
     </ClCompile>
     <ClCompile Include="bullet.cpp">
       <Filter>Source Files\bullet</Filter>
-    </ClCompile>
-    <ClCompile Include="particle.cpp">
-      <Filter>Source Files\particle</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
       <Filter>Source Files\control</Filter>
@@ -269,12 +257,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FrustumG.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="geoPlane.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="imageloader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -288,9 +270,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="profiler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="random.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -316,9 +295,6 @@
     </ClInclude>
     <ClInclude Include="vector.h">
       <Filter>Source Files\math\vector</Filter>
-    </ClInclude>
-    <ClInclude Include="AABox.h">
-      <Filter>Source Files\math\AAbox</Filter>
     </ClInclude>
     <ClInclude Include="Angle.h">
       <Filter>Source Files\math\angle</Filter>
@@ -353,9 +329,6 @@
     <ClInclude Include="bullet.h">
       <Filter>Source Files\bullet</Filter>
     </ClInclude>
-    <ClInclude Include="partical.h">
-      <Filter>Source Files\particle</Filter>
-    </ClInclude>
     <ClInclude Include="player.h">
       <Filter>Source Files\control</Filter>
     </ClInclude>
@@ -377,7 +350,6 @@
     <ClInclude Include="particleManager.h">
       <Filter>Source Files\particleManager</Filter>
     </ClInclude>
-    <ClInclude Include="debugBreak.h" />
     <ClInclude Include="matrix.h">
       <Filter>Source Files\math\matrix</Filter>
     </ClInclude>
@@ -390,6 +362,10 @@
     <ClInclude Include="bomb.h">
       <Filter>Source Files\object</Filter>
     </ClInclude>
+    <ClInclude Include="debugBreak.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">
@@ -437,7 +413,6 @@
     <None Include="media\horizon2.vert">
       <Filter>shaders\horizon2</Filter>
     </None>
-    <None Include="ClassDiagram1.cd" />
     <None Include="media\grass.frag">
       <Filter>shaders\terrain</Filter>
     </None>
@@ -521,6 +496,7 @@
     <None Include="media\radar bounds.vert">
       <Filter>shaders\radar</Filter>
     </None>
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

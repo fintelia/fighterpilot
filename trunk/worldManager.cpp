@@ -12,7 +12,7 @@ void WorldManager::create(std::shared_ptr<Level> lvl)
 	int playerNum=0;
 	for(auto i = level->objects().begin(); i != level->objects().end(); i++)
 	{
-		world.objectList.newObject(*i);
+		world.newObject(*i);
 		//if(i->controlType & CONTROL_HUMAN)
 		//{
 		//	if(playerNum <= 1)
@@ -30,32 +30,10 @@ void WorldManager::create(std::shared_ptr<Level> lvl)
 	}
 	particleManager.init();
 }
-//void WorldManager::create()
-//{
-//	settings.ENEMY_PLANES=7;
-//	settings.GAME_TYPE=FFA;
-//	settings.HEIGHT_RANGE=1000;
-//	settings.KILL_PERCENT_NEEDED=100;
-//	settings.LEVEL_NAME="unnamed";
-//	settings.MAP_FILE="media/heightmap5.bmp";
-//	settings.MAP_TYPE=WATER;
-//	settings.MAX_X=level->ground()->sizeX();
-//	settings.MAX_Y=level->ground()->sizeZ();
-//	settings.MIN_X=0;
-//	settings.MIN_Y=0;
-//	settings.ON_AI_HIT=RESPAWN;
-//	settings.ON_HIT=RESPAWN;
-//	settings.SEA_FLOOR_TYPE=ROCK;
-//	settings.SEA_LEVEL=-150;
-//
-//	create(new Level("media/heightmap5.bmp",-150,1000));
-//}
 void WorldManager::destroy()
 {
-	objectList.clear();
+	clearObjects();
 	bullets.clear();
-	smoke.clear();
-	exaust.clear();
 	particleManager.shutdown();
 }
 
@@ -109,27 +87,6 @@ Level::heightmapGL* const WorldManager::ground() const
 	}
 	return NULL;
 }
-
-const map<objId,object*>& WorldManager::objects()const
-{
-	return objectList.objects();
-}
-const map<objId,nPlane*>& WorldManager::planes()const
-{
-	return objectList.planes();
-}
-const map<objId,aaGun*>& WorldManager::aaGuns() const
-{
-	return objectList.aaGuns();
-}
-const map<objId,missile*>& WorldManager::missiles()const
-{
-	return objectList.missiles();
-}
-const map<objId,bomb*>& WorldManager::bombs()const
-{
-	return objectList.bombs();
-}
 void WorldManager::update()
 {
 	double ms = time.length();
@@ -140,9 +97,9 @@ void WorldManager::update()
 
 	std::shared_ptr<CollisionChecker::triangleList> trl1, trl2;
 
-	objectList.update(time(),ms);
+	updateObjects(time(),ms);
 
-	for(auto i = objectList.planes().begin(); i != objectList.planes().end();i++)
+	for(auto i = mObjectTypes[PLANE].begin(); i != mObjectTypes[PLANE].end();i++)
 	{
 		if(!i->second->dead)
 		{
@@ -152,7 +109,7 @@ void WorldManager::update()
 				{
 					if(collisionCheck(i->second->type,bullets[l].startPos+bullets[l].velocity*(time()-bullets[l].startTime)/1000-i->second->position, bullets[l].startPos+bullets[l].velocity*(time.lastTime()-bullets[l].startTime)/1000-i->second->position))
 					{
-						(*i).second->loseHealth(25);
+						((nPlane*)(*i).second.get())->loseHealth(25);
 						if((*i).second->dead)
 						{
 							if(bullets[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();
@@ -163,19 +120,20 @@ void WorldManager::update()
 					}
 				}
 			}
-			for(auto l=objectList.missiles().begin();l!=objectList.missiles().end();l++)
+			for(auto l=mObjectTypes[MISSILE].begin();l!=mObjectTypes[MISSILE].end();l++)
 			{
 				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
-				if(l->second->owner != i->second->id &&  l->second->owner != (*i).first && 
+				objId owner = ((missile*)l->second.get())->owner;
+				if(owner != i->second->id &&  owner != (*i).first && 
 					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
 					//collisionCheck(i->second,l->second))
 				{
-					(*i).second->loseHealth(105.0);
+					((nPlane*)(*i).second.get())->loseHealth(105);
 					if((*i).second->dead) 
 					{
-						if(l->second->owner==players[0].objectNum() && players[0].active()) players[0].addKill();
-						if(l->second->owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+						if(owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+						if(owner==players[1].objectNum() && players[1].active()) players[1].addKill();
 					}
 					l->second->awaitingDelete = true;
 				}
@@ -186,7 +144,5 @@ void WorldManager::update()
 
 	bullets.erase(remove_if(bullets.begin(), bullets.end(), [&t] (bullet& b) -> bool {return b.startTime + b.life < t;}), bullets.end());
 
-	smoke.update(ms);
-	exaust.update(ms);
 	particleManager.update();
 }
