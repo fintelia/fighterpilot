@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Class Name="DataManager" Collapsed="true">
-    <Position X="19.75" Y="0.5" Width="1.5" />
+    <Position X="18" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AkKAANGhAIAAAAFBAAAhDAIgCAAVACQIBCQBgAAEhAI=</HashCode>
       <FileName>dataManager.h</FileName>
@@ -29,28 +29,28 @@
     </TypeIdentifier>
   </Class>
   <Class Name="ModeManager" Collapsed="true">
-    <Position X="11" Y="2.5" Width="1.5" />
+    <Position X="18" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAgAAAAABCCBYAIAAAAEAAAAAAYAAAAAAAAEAAA=</HashCode>
       <FileName>modeManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="particle::manager" Collapsed="true">
-    <Position X="18" Y="1.5" Width="1.5" />
+    <Position X="14.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAIAAAAAAAABAAAAAACEAAAAAAYAAAAAAAAUAAA=</HashCode>
       <FileName>particleManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Angle" Collapsed="true">
-    <Position X="12.75" Y="0.5" Width="1.5" />
+    <Position X="11" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAGAABAAYAAAAAAAAAQAAAAIAAAAAAEAgAAIAQAA=</HashCode>
       <FileName>Angle.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="bullet" Collapsed="true">
-    <Position X="14.5" Y="0.5" Width="1.5" />
+    <Position X="12.75" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAEAAAAAAAAAgAAAAAAgAAAAAAAAAAAAABQAAAAAAAI=</HashCode>
       <FileName>bullet.h</FileName>
@@ -85,14 +85,14 @@
     </TypeIdentifier>
   </Class>
   <Class Name="CameraManager" Collapsed="true">
-    <Position X="16.25" Y="0.5" Width="1.5" />
+    <Position X="14.5" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAggAEAAgEAAAAAAAAAQAAAAAAAIAAAA=</HashCode>
       <FileName>cameraManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CollisionChecker" Collapsed="true">
-    <Position X="18" Y="0.5" Width="1.5" />
+    <Position X="16.25" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAEQAABCAEAAAAAAAAAAARAQAEAAAAAAAAAA=</HashCode>
       <FileName>collide.h</FileName>
@@ -113,7 +113,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="GameTime" Collapsed="true">
-    <Position X="12.75" Y="1.5" Width="1.5" />
+    <Position X="11" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>BAAFEAAECAAEAAQBEEAIAkAIAAEMGgIBAEQABAAAIAg=</HashCode>
       <FileName>time.h</FileName>
@@ -127,7 +127,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Image" Collapsed="true">
-    <Position X="16.25" Y="1.5" Width="1.5" />
+    <Position X="12.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAUAQAAAAAAAAAAAABIAAAAAAAAAAAA=</HashCode>
       <FileName>imageloader.h</FileName>
@@ -148,14 +148,14 @@
     </TypeIdentifier>
   </Class>
   <Class Name="menu::messageBox_c" Collapsed="true">
-    <Position X="19.75" Y="1.5" Width="1.5" />
+    <Position X="16.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AEAAAAAAAAAAACQAQAAEAEAAAAACACIAAABgAAAUABA=</HashCode>
       <FileName>menuScreen.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="menu::openFile" Collapsed="true">
-    <Position X="19.75" Y="2.5" Width="1.5" />
+    <Position X="18" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AADCgAAAAAAQAAAAAIAAAEAAQAAQAAYAhAAggAIUAAA=</HashCode>
       <FileName>menuScreen.h</FileName>
@@ -211,7 +211,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="nControl" Collapsed="true">
-    <Position X="12.75" Y="2.5" Width="1.5" />
+    <Position X="11" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAJAAAFAAEAQAAAgAAACMAAQAAAAAAAAQ=</HashCode>
       <FileName>player.h</FileName>
@@ -232,21 +232,21 @@
     </TypeIdentifier>
   </Class>
   <Class Name="objectList" Collapsed="true">
-    <Position X="14.5" Y="2.5" Width="1.5" />
+    <Position X="12.75" Y="2.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEIAQAAACCAAAAAAQAAAQAAAAQEAAhNAAgAAAAAEQAA=</HashCode>
+      <HashCode>AAIAUAAAAAAAAAAAUAAAAAAAAAEAAQAAAAAAgAAAAAA=</HashCode>
       <FileName>objectList.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="objectPath" Collapsed="true">
-    <Position X="16.25" Y="2.5" Width="1.5" />
+    <Position X="14.5" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAQCCAAAQAAAAAAEEAgICMIAAAAAAAAAAAQAAAAAAA=</HashCode>
       <FileName>path.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ObjectStats" Collapsed="true">
-    <Position X="18" Y="2.5" Width="1.5" />
+    <Position X="16.25" Y="2.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAIAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>settings.h</FileName>
@@ -323,35 +323,35 @@
     </TypeIdentifier>
   </Class>
   <Struct Name="Color" Collapsed="true">
-    <Position X="12.75" Y="5.75" Width="1.5" />
+    <Position X="11" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAQABgAAAAAA=</HashCode>
       <FileName>enums.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="CONTROLER_STATE" Collapsed="true">
-    <Position X="14.5" Y="5.75" Width="1.5" />
+    <Position X="12.75" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABAAAAAA=</HashCode>
       <FileName>XboxContInput.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="controlState" Collapsed="true">
-    <Position X="16.25" Y="5.75" Width="1.5" />
+    <Position X="14.5" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAABAAEAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAgAA=</HashCode>
       <FileName>enums.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="LevelFile" Collapsed="true">
-    <Position X="18" Y="5.75" Width="1.5" />
+    <Position X="16.25" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAEQAAQAAAAAAAAAAAAAAAIAAQAAAAAAYAAAAAAAAAE=</HashCode>
       <FileName>level.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="particle::particle" Collapsed="true">
-    <Position X="19.75" Y="5.75" Width="1.5" />
+    <Position X="18" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAKAgAKAAAQAAAAAoAQABAAAAAAA=</HashCode>
       <FileName>particleManager.h</FileName>

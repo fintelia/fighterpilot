@@ -1,13 +1,13 @@
 
 #include "main.h"
 
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
+nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
 {
-
+	team = Team;
 }
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
+nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
 {
-
+	team = Team;
 }
 
 void nPlane::init()
@@ -199,7 +199,8 @@ void nPlane::update(double time, double ms)
 					rot = Quat4f(Vec3f(cos(randAng),sin(randAng),0.0),randF) * rot;
 
 					shotsFired++;
-					world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
+					((bulletCloud*)world[bullets].get())->addBullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown);
+	//				world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
 			if(controller.shoot2>0.75)	shootMissile();

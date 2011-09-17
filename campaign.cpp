@@ -51,6 +51,7 @@ int modeCampaign::update()
 		input->up(VK_ESCAPE);
 	}
 	world.update();
+	checkCollisions();
 
 #ifdef _DEBUG
 	if(input->getKey(0x54))

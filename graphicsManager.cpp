@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "engine.h"
 
 void GraphicsManager::flashTaskBar(int times, int length)
 {

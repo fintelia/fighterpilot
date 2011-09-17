@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "engine.h"
 
 OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
 {

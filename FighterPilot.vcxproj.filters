@@ -16,18 +16,6 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math">
-      <UniqueIdentifier>{0b20f20e-370d-4e36-9b55-c464e5757731}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\math\quaternion">
-      <UniqueIdentifier>{4d9b716a-eb2d-4488-87bd-1c5ea0fe69ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\math\vector">
-      <UniqueIdentifier>{1c4ed234-b520-4c24-8aef-fc2331f4b38d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\math\angle">
-      <UniqueIdentifier>{8fe210af-2efb-4bc1-bbde-7c452af7576b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\horizon">
       <UniqueIdentifier>{62a8ab34-7bf4-44f9-b7d4-d769313af93e}</UniqueIdentifier>
     </Filter>
@@ -43,41 +31,8 @@
     <Filter Include="shaders\radar">
       <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\graphicsManager">
-      <UniqueIdentifier>{28695228-5191-4f36-80fe-9e7a88adfc77}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\horizon2">
       <UniqueIdentifier>{3f4def0e-7e89-4d54-aa74-ba9504830540}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\dataManager">
-      <UniqueIdentifier>{77f31af8-6dec-4928-910b-7c3eeb004224}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\camera">
-      <UniqueIdentifier>{0ec79459-15bd-48ee-8cc7-87a6791ea212}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\modeManager">
-      <UniqueIdentifier>{49d6f32f-8280-433d-acd6-67b4cadcd7a3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\bullet">
-      <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\control">
-      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\object">
-      <UniqueIdentifier>{37fc8008-e0d0-403f-ba2d-261787f57435}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\object\plane">
-      <UniqueIdentifier>{151bbd08-5cdc-4a25-97c9-be1f446ae83e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\object\object list">
-      <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\enums">
-      <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\particleManager">
-      <UniqueIdentifier>{3c904835-fb15-4159-8d41-8b98ccf73a1d}</UniqueIdentifier>
     </Filter>
     <Filter Include="shaders\water">
       <UniqueIdentifier>{2c6329f1-12c1-4185-ab55-951126b3da50}</UniqueIdentifier>
@@ -88,17 +43,11 @@
     <Filter Include="shaders\model">
       <UniqueIdentifier>{44548fa7-2143-4966-b24f-508c90d85fd7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\math\matrix">
-      <UniqueIdentifier>{43b6d13e-2f94-45d6-a10f-091eabb61693}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\ortho">
       <UniqueIdentifier>{321d4ec7-3cab-492b-a0b8-cea94b587fbb}</UniqueIdentifier>
     </Filter>
     <Filter Include="shaders\hex grid">
       <UniqueIdentifier>{2f2f3799-4fac-4cb0-8d80-f2511f1a5b8b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\menu">
-      <UniqueIdentifier>{37781df0-5224-40cc-8c6e-a9f52cae4841}</UniqueIdentifier>
     </Filter>
     <Filter Include="shaders\gamma correction">
       <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
@@ -112,260 +61,374 @@
     <Filter Include="shaders\particle">
       <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\AA_GAME">
+    <Filter Include="Source Files\OTHER">
+      <UniqueIdentifier>{22d685ca-e04f-4f1d-87af-1a609a505f6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OTHER\camera">
+      <UniqueIdentifier>{0ec79459-15bd-48ee-8cc7-87a6791ea212}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OTHER\control">
+      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OTHER\enums">
+      <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME">
       <UniqueIdentifier>{441ec224-63b5-4ada-b572-fe5fc8605e5a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\AA_ENGINE">
+    <Filter Include="Source Files\GAME\menus">
+      <UniqueIdentifier>{fc40e84f-fd73-4e69-9a3e-51d98b08c174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\particle effects">
+      <UniqueIdentifier>{9f281b62-798f-4785-b5a8-ed9d5267f60a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects">
+      <UniqueIdentifier>{37fc8008-e0d0-403f-ba2d-261787f57435}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\plane">
+      <UniqueIdentifier>{151bbd08-5cdc-4a25-97c9-be1f446ae83e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\aaGun">
+      <UniqueIdentifier>{c65b9e77-25e3-4826-b21a-2e1353164237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\bomb">
+      <UniqueIdentifier>{30bcf0f0-5f97-46cf-b4f8-63b32671536b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\missile">
+      <UniqueIdentifier>{24df66b1-3311-49b9-9992-87aea85000b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\bullet">
+      <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\modes">
+      <UniqueIdentifier>{49d6f32f-8280-433d-acd6-67b4cadcd7a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE">
       <UniqueIdentifier>{5351d8cb-6c1c-4784-8742-e0d5cccad21b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\graphicsManager">
+      <UniqueIdentifier>{28695228-5191-4f36-80fe-9e7a88adfc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math">
+      <UniqueIdentifier>{0b20f20e-370d-4e36-9b55-c464e5757731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\quaternion">
+      <UniqueIdentifier>{4d9b716a-eb2d-4488-87bd-1c5ea0fe69ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\vector">
+      <UniqueIdentifier>{1c4ed234-b520-4c24-8aef-fc2331f4b38d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\angle">
+      <UniqueIdentifier>{8fe210af-2efb-4bc1-bbde-7c452af7576b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\matrix">
+      <UniqueIdentifier>{43b6d13e-2f94-45d6-a10f-091eabb61693}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\dataManager">
+      <UniqueIdentifier>{77f31af8-6dec-4928-910b-7c3eeb004224}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\objects">
+      <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\menu">
+      <UniqueIdentifier>{66a21f5d-f01a-4023-9907-2db76e9e5d6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\particle engine">
+      <UniqueIdentifier>{7e66df3a-a3fd-44b5-bf4d-1d658e9eaefb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\mode">
+      <UniqueIdentifier>{4068e04d-c8ed-4efe-8bc4-8e5cd42e57bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\random">
+      <UniqueIdentifier>{3dd6417d-bbbc-47e5-aa9e-6138943311ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\text">
+      <UniqueIdentifier>{93431558-7366-47dc-a1f4-a03a9c799170}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\time">
+      <UniqueIdentifier>{370e420e-f491-4c35-94e1-f224fc101fda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\input">
+      <UniqueIdentifier>{f1d057cc-fddc-4281-bdc7-95cc02e44054}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\file I/O">
+      <UniqueIdentifier>{d9ed103c-a250-4cf8-8096-e4c1ed3ccef1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\world">
+      <UniqueIdentifier>{d98c40e8-fc7a-42a7-8c48-a20cabfaa8d7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="imageloader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="level.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="random.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="settings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="time.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GLee.c">
       <Filter>glee</Filter>
     </ClCompile>
     <ClCompile Include="Angle.cpp">
-      <Filter>Source Files\math\angle</Filter>
+      <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClCompile>
     <ClCompile Include="collide.cpp">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\ENGINE\math</Filter>
     </ClCompile>
     <ClCompile Include="GameMath.cpp">
-      <Filter>Source Files\math</Filter>
-    </ClCompile>
-    <ClCompile Include="worldManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="path.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="input.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ENGINE\math</Filter>
     </ClCompile>
     <ClCompile Include="graphicsManager.cpp">
-      <Filter>Source Files\graphicsManager</Filter>
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
     </ClCompile>
     <ClCompile Include="dataManager.cpp">
-      <Filter>Source Files\dataManager</Filter>
+      <Filter>Source Files\ENGINE\dataManager</Filter>
     </ClCompile>
     <ClCompile Include="cameraManager.cpp">
-      <Filter>Source Files\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="modeManager.cpp">
-      <Filter>Source Files\modeManager</Filter>
+      <Filter>Source Files\OTHER\camera</Filter>
     </ClCompile>
     <ClCompile Include="splitScreen.cpp">
-      <Filter>Source Files\modeManager</Filter>
+      <Filter>Source Files\GAME\modes</Filter>
     </ClCompile>
     <ClCompile Include="campaign.cpp">
-      <Filter>Source Files\modeManager</Filter>
+      <Filter>Source Files\GAME\modes</Filter>
     </ClCompile>
     <ClCompile Include="dogFight.cpp">
-      <Filter>Source Files\modeManager</Filter>
+      <Filter>Source Files\GAME\modes</Filter>
     </ClCompile>
     <ClCompile Include="bullet.cpp">
-      <Filter>Source Files\bullet</Filter>
+      <Filter>Source Files\GAME\objects\bullet</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
-      <Filter>Source Files\control</Filter>
-    </ClCompile>
-    <ClCompile Include="object.cpp">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\OTHER\control</Filter>
     </ClCompile>
     <ClCompile Include="plane.cpp">
-      <Filter>Source Files\object\plane</Filter>
+      <Filter>Source Files\GAME\objects\plane</Filter>
     </ClCompile>
     <ClCompile Include="objectList.cpp">
-      <Filter>Source Files\object\object list</Filter>
-    </ClCompile>
-    <ClCompile Include="aaGun.cpp">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\ENGINE\objects</Filter>
     </ClCompile>
     <ClCompile Include="enums.cpp">
-      <Filter>Source Files\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="particleManager.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="blackSmoke.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="splash.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="particleExplosion.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="debugBreak.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="contrail.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="smokeTrail.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="planeContrail.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="explosionSmoke.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="contrailSmall.cpp">
-      <Filter>Source Files\particleManager</Filter>
-    </ClCompile>
-    <ClCompile Include="menuScreen.cpp">
-      <Filter>Source Files\menu</Filter>
-    </ClCompile>
-    <ClCompile Include="levelEditor.cpp">
-      <Filter>Source Files\menu</Filter>
-    </ClCompile>
-    <ClCompile Include="explosionFlash.cpp">
-      <Filter>Source Files\particleManager</Filter>
+      <Filter>Source Files\OTHER\enums</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLgraphics.cpp">
-      <Filter>Source Files\graphicsManager</Filter>
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
     </ClCompile>
-    <ClCompile Include="text.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="menuScreen.cpp">
+      <Filter>Source Files\ENGINE\menu</Filter>
+    </ClCompile>
+    <ClCompile Include="menus.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="levelEditor.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="particleManager.cpp">
+      <Filter>Source Files\ENGINE\particle engine</Filter>
+    </ClCompile>
+    <ClCompile Include="blackSmoke.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="contrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="contrailSmall.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionFlash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionSmoke.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="particleExplosion.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="planeContrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="smokeTrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="splash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files\ENGINE\objects</Filter>
     </ClCompile>
     <ClCompile Include="missile.cpp">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\GAME\objects\missile</Filter>
     </ClCompile>
     <ClCompile Include="bomb.cpp">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\GAME\objects\bomb</Filter>
+    </ClCompile>
+    <ClCompile Include="aaGun.cpp">
+      <Filter>Source Files\GAME\objects\aaGun</Filter>
+    </ClCompile>
+    <ClCompile Include="modeManager.cpp">
+      <Filter>Source Files\ENGINE\mode</Filter>
+    </ClCompile>
+    <ClCompile Include="debugBreak.cpp">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClCompile>
+    <ClCompile Include="random.cpp">
+      <Filter>Source Files\ENGINE\random</Filter>
+    </ClCompile>
+    <ClCompile Include="level.cpp">
+      <Filter>Source Files\OTHER</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files\OTHER</Filter>
+    </ClCompile>
+    <ClCompile Include="path.cpp">
+      <Filter>Source Files\OTHER</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp">
+      <Filter>Source Files\OTHER</Filter>
+    </ClCompile>
+    <ClCompile Include="text.cpp">
+      <Filter>Source Files\ENGINE\text</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>Source Files\ENGINE\time</Filter>
+    </ClCompile>
+    <ClCompile Include="worldManager.cpp">
+      <Filter>Source Files\ENGINE\world</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files\ENGINE\input</Filter>
+    </ClCompile>
+    <ClCompile Include="imageloader.cpp">
+      <Filter>Source Files\ENGINE\file I/O</Filter>
+    </ClCompile>
+    <ClCompile Include="script.cpp">
+      <Filter>Source Files\ENGINE\file I/O</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Source Files\GAME</Filter>
+    </ClCompile>
+    <ClCompile Include="engine.cpp">
+      <Filter>Source Files\ENGINE</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="imageloader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="input.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="level.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="main.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="profiler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="script.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="settings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="text.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="time.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="XboxContInput.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="quaternion.h">
-      <Filter>Source Files\math\quaternion</Filter>
+      <Filter>Source Files\ENGINE\math\quaternion</Filter>
     </ClInclude>
     <ClInclude Include="vector.h">
-      <Filter>Source Files\math\vector</Filter>
+      <Filter>Source Files\ENGINE\math\vector</Filter>
     </ClInclude>
     <ClInclude Include="Angle.h">
-      <Filter>Source Files\math\angle</Filter>
+      <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClInclude>
     <ClInclude Include="basicMath.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\ENGINE\math</Filter>
     </ClInclude>
     <ClInclude Include="collide.h">
-      <Filter>Source Files\math</Filter>
+      <Filter>Source Files\ENGINE\math</Filter>
     </ClInclude>
     <ClInclude Include="gameMath.h">
-      <Filter>Source Files\math</Filter>
-    </ClInclude>
-    <ClInclude Include="worldManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="path.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ENGINE\math</Filter>
     </ClInclude>
     <ClInclude Include="graphicsManager.h">
-      <Filter>Source Files\graphicsManager</Filter>
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
     </ClInclude>
     <ClInclude Include="dataManager.h">
-      <Filter>Source Files\dataManager</Filter>
+      <Filter>Source Files\ENGINE\dataManager</Filter>
     </ClInclude>
     <ClInclude Include="cameraManager.h">
-      <Filter>Source Files\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="modeManager.h">
-      <Filter>Source Files\modeManager</Filter>
+      <Filter>Source Files\OTHER\camera</Filter>
     </ClInclude>
     <ClInclude Include="bullet.h">
-      <Filter>Source Files\bullet</Filter>
+      <Filter>Source Files\GAME\objects\bullet</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
-      <Filter>Source Files\control</Filter>
-    </ClInclude>
-    <ClInclude Include="object.h">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\OTHER\control</Filter>
     </ClInclude>
     <ClInclude Include="plane.h">
-      <Filter>Source Files\object\plane</Filter>
+      <Filter>Source Files\GAME\objects\plane</Filter>
     </ClInclude>
     <ClInclude Include="objectList.h">
-      <Filter>Source Files\object\object list</Filter>
-    </ClInclude>
-    <ClInclude Include="aaGun.h">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\ENGINE\objects</Filter>
     </ClInclude>
     <ClInclude Include="enums.h">
-      <Filter>Source Files\enums</Filter>
-    </ClInclude>
-    <ClInclude Include="particleManager.h">
-      <Filter>Source Files\particleManager</Filter>
+      <Filter>Source Files\OTHER\enums</Filter>
     </ClInclude>
     <ClInclude Include="matrix.h">
-      <Filter>Source Files\math\matrix</Filter>
+      <Filter>Source Files\ENGINE\math\matrix</Filter>
     </ClInclude>
     <ClInclude Include="menuScreen.h">
-      <Filter>Source Files\menu</Filter>
+      <Filter>Source Files\ENGINE\menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menus.h">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClInclude>
+    <ClInclude Include="particleManager.h">
+      <Filter>Source Files\ENGINE\particle engine</Filter>
+    </ClInclude>
+    <ClInclude Include="particleEffects.h">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Source Files\ENGINE\objects</Filter>
     </ClInclude>
     <ClInclude Include="missile.h">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\GAME\objects\missile</Filter>
     </ClInclude>
     <ClInclude Include="bomb.h">
-      <Filter>Source Files\object</Filter>
+      <Filter>Source Files\GAME\objects\bomb</Filter>
+    </ClInclude>
+    <ClInclude Include="aaGun.h">
+      <Filter>Source Files\GAME\objects\aaGun</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="modeManager.h">
+      <Filter>Source Files\ENGINE\mode</Filter>
+    </ClInclude>
+    <ClInclude Include="modes.h">
+      <Filter>Source Files\GAME\modes</Filter>
     </ClInclude>
     <ClInclude Include="debugBreak.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ENGINE</Filter>
     </ClInclude>
-    <ClInclude Include="random.h" />
+    <ClInclude Include="random.h">
+      <Filter>Source Files\ENGINE\random</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler.h">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Source Files\OTHER</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Source Files\OTHER</Filter>
+    </ClInclude>
+    <ClInclude Include="path.h">
+      <Filter>Source Files\OTHER</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>Source Files\OTHER</Filter>
+    </ClInclude>
+    <ClInclude Include="XboxContInput.h">
+      <Filter>Source Files\OTHER</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\GLee.h">
+      <Filter>glee</Filter>
+    </ClInclude>
+    <ClInclude Include="text.h">
+      <Filter>Source Files\ENGINE\text</Filter>
+    </ClInclude>
+    <ClInclude Include="time.h">
+      <Filter>Source Files\ENGINE\time</Filter>
+    </ClInclude>
+    <ClInclude Include="worldManager.h">
+      <Filter>Source Files\ENGINE\world</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>Source Files\ENGINE\input</Filter>
+    </ClInclude>
+    <ClInclude Include="imageloader.h">
+      <Filter>Source Files\ENGINE\file I/O</Filter>
+    </ClInclude>
+    <ClInclude Include="script.h">
+      <Filter>Source Files\ENGINE\file I/O</Filter>
+    </ClInclude>
+    <ClInclude Include="engine.h">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\horizon.frag">

@@ -100,6 +100,6 @@
     <model name="missile4"   file="media/m4(center).obj" />
   </models>
   <fonts>
-    <font name="Times26"   file="media/Times26.fnt"   preload="true"/>
+    <font name="default font"      file="media/fonts/technic.fnt" preload="true"/>
   </fonts>
 </assets>

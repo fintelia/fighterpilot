@@ -28,7 +28,7 @@ public:
 	void update();
 
 	std::shared_ptr<Level>	level;
-	vector<bullet>		bullets;
+//	vector<bullet>		bullets;
 
 	GameTime			time;
 

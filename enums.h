@@ -25,6 +25,8 @@ const int BOMB				= 0x0800;
 const int BOMB1				= 0x0801;
 const int BOMB2				= 0x0802;
 
+const int BULLET_CLOUD		= 0x1000;
+
 const int NEUTRAL			= 0x00;
 const int TEAM0				= 0x01;
 const int TEAM1				= 0x02;

@@ -72,7 +72,7 @@ void aaGun::update(double time, double ms)
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
 
-			world.bullets.push_back(bullet(position,targeter+random<Vec3f>()*0.010,id,time-extraShootTime-machineGun.coolDown));
+	//		world.bullets.push_back(bullet(position,targeter+random<Vec3f>()*0.010,id,time-extraShootTime-machineGun.coolDown));
 	
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;

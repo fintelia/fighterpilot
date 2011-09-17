@@ -205,7 +205,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 //////
 	srand ((unsigned int)time(NULL));
 	textManager = new TextManager();
-	menuManager.setMenu(new menu::loading);
+	game->init();
 
 	//fireParticleEffect = graphics->newParticleEffect("explosion fireball",1000.0*r.right/1280,"partical shader");
 	//MessageBox(NULL,L"explosion fireball created",L"",0);
