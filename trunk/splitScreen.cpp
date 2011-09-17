@@ -88,6 +88,7 @@ int modeSplitScreen::update()
 	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 
 	world.update();
+	checkCollisions();
 
 	return 7;
 }

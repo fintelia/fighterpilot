@@ -28,8 +28,8 @@ public:
 	void initArmaments();
 	void init();
 
-	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
-	nPlane(Vec3f sPos, Quat4f sRot, objectType Type);
+	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
+	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
 	struct wayPoint
 	{

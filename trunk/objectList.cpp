@@ -1,37 +1,6 @@
 
-#include "main.h"
+#include "engine.h"
 
-objId objectList::newObject(LevelFile::Object obj)
-{
-	if(obj.type & PLANE)
-	{
-		nPlane* p = NULL;
-		//if(obj.controlType == CONTROL_HUMAN)
-		{
-			for(int i=0;i<NumPlayers;i++)
-			{
-				if(players[i].objectNum()==0)
-				{
-					p = new nPlane(obj.startloc,obj.startRot,obj.type,&players[i]);
-					break;
-				}
-				else if(i == NumPlayers-1)
-					p = new nPlane(obj.startloc,obj.startRot,obj.type);
-			}
-		}
-		//else
-		//{
-		//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
-		//}
-		p->team = obj.team;
-		return newObject(p);
-	}
-	else if(obj.type & AA_GUN)// can't be player controlled
-	{
-		return newObject(new aaGun(obj.startloc,obj.startRot,obj.type));
-	}
-	return 0;
-}
 objId objectList::newObject(object* newObj)
 {
 	if(newObj != nullptr)

@@ -767,7 +767,42 @@ bool Level::init(string filename)
 
 	return true;
 }
+void Level::initializeWorld()
+{
+	for(auto i=mObjects.begin(); i!=mObjects.end(); i++)
+	{
+		if(i->type & PLANE)
+		{
+			nPlane* p = NULL;
+			//if(obj.controlType == CONTROL_HUMAN)
+			{
+				for(int n=0;n<NumPlayers;n++)
+				{
+					if(players[n].objectNum()==0)
+					{
+						world.newObject(new nPlane(i->team,i->startloc,i->startRot,i->type,&players[n]));
+						break;
+					}
+					else if(n == NumPlayers-1)
+					{
+						world.newObject(new nPlane(i->team,i->startloc,i->startRot,i->type));
+						break;
+					}
+				}
+			}
+			//else
+			//{
+			//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
+			//}
+		}
+		else if(i->type & AA_GUN)// can't be player controlled
+		{
+			world.newObject(new aaGun(i->startloc,i->startRot,i->type));
+		}
+	}
 
+	bullets = world.newObject(new bulletCloud);
+}
 void Level::render(Vec3f eye)
 {
 	//glDisable(GL_CULL_FACE);

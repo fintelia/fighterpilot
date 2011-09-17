@@ -10,8 +10,6 @@ protected:
 	void updateObjects(double time, double ms);
 
 public:
-	
-	objId newObject(LevelFile::Object obj);
 	objId newObject(object* newObj);
 	void deleteObject(objId id);
 

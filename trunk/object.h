@@ -39,6 +39,7 @@ public:
 	virtual void update(double time, double ms)=0;
 	virtual void init(){}
 	virtual ~object(){}
+	virtual void draw();
 };
 
 class controlledObject: public object

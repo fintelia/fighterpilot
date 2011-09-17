@@ -1,7 +1,8 @@
 
-#include "debugBreak.h"
-#include "windows.h"
 #include <cmath>
+#include "windows.h"
+
+#include "debugBreak.h"
 #include "time.h"
 
 double GetTime()

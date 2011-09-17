@@ -193,6 +193,9 @@ public:
 	Level();
 	~Level();
 	virtual bool init(string filename);
+
+	void initializeWorld();//creates objects stored in level file
+
 	void render(Vec3f eye);
 
 	heightmapBase* const ground() const{return mGround;}

@@ -300,57 +300,58 @@ void modeDogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 }
 void modeDogFight::drawBullets()
 {
-	double time = world.time();
-	double lTime = time - 20.0;//world.time.getLastTime();
+	((bulletCloud*)world[bullets].get())->draw();
+	//double time = world.time();
+	//double lTime = time - 20.0;//world.time.getLastTime();
 
-	Vec3f up, right;
+	//Vec3f up, right;
 
-	float modelview[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-	right.x = modelview[0];
-	right.y = modelview[4];
-	right.z = modelview[8];
-	up.x = modelview[1];
-	up.y = modelview[5];
-	up.z = modelview[9];
+	//float modelview[16];
+	//glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	//right.x = modelview[0];
+	//right.y = modelview[4];
+	//right.z = modelview[8];
+	//up.x = modelview[1];
+	//up.y = modelview[5];
+	//up.z = modelview[9];
 
 
-	double t = GetTime();
+	//double t = GetTime();
 
-	dataManager.bind("bullet");
+	//dataManager.bind("bullet");
 
-	//float length;
-	Vec3f start, end, end2;
-	Vec3f v[4];
-	glBegin(GL_QUADS);
-		for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
-		{
-			if(time > i->startTime)
-			{
-				start=i->startPos+i->velocity*(time-i->startTime)/1000;
-				//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
-				end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
-				end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
+	////float length;
+	//Vec3f start, end, end2;
+	//Vec3f v[4];
+	//glBegin(GL_QUADS);
+	//	for(vector<bullet>::iterator i=world.bullets.begin();i!=world.bullets.end();i++)
+	//	{
+	//		if(time > i->startTime)
+	//		{
+	//			start=i->startPos+i->velocity*(time-i->startTime)/1000;
+	//			//length=max(min(frameLength,time-i->startTime)*i->velocity.magnitude()/1000,120)+20;
+	//			end=i->startPos+i->velocity*(time-i->startTime)/1000-i->velocity.normalize()*2;
+	//			end2=i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
 
-				Vec3f dir = i->velocity.normalize();
-				float a1 = dir.dot(up);
-				float a2 = dir.dot(right);
-				float len = 0.3/sqrt(a1*a1+a2*a2);
+	//			Vec3f dir = i->velocity.normalize();
+	//			float a1 = dir.dot(up);
+	//			float a2 = dir.dot(right);
+	//			float len = 0.3/sqrt(a1*a1+a2*a2);
 
-				v[0] = start + (right*a1 - up*a2)*len;
-				v[1] = start - (right*a1 - up*a2)*len;
-				v[2] = end2 - (right*a1 - up*a2)*len;
-				v[3] = end2 + (right*a1 - up*a2)*len;
+	//			v[0] = start + (right*a1 - up*a2)*len;
+	//			v[1] = start - (right*a1 - up*a2)*len;
+	//			v[2] = end2 - (right*a1 - up*a2)*len;
+	//			v[3] = end2 + (right*a1 - up*a2)*len;
 
-				glTexCoord2f(1,1);	glVertex3fv(&v[0].x);
-				glTexCoord2f(1,0);	glVertex3fv(&v[1].x);
-				glTexCoord2f(0,0);	glVertex3fv(&v[2].x);
-				glTexCoord2f(0,1);	glVertex3fv(&v[3].x);
-			}
-		}
-	glEnd();
-	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-	dataManager.unbind("bullet");
+	//			glTexCoord2f(1,1);	glVertex3fv(&v[0].x);
+	//			glTexCoord2f(1,0);	glVertex3fv(&v[1].x);
+	//			glTexCoord2f(0,0);	glVertex3fv(&v[2].x);
+	//			glTexCoord2f(0,1);	glVertex3fv(&v[3].x);
+	//		}
+	//	}
+	//glEnd();
+	//glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	//dataManager.unbind("bullet");
 }
 void modeDogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
 {
@@ -553,4 +554,56 @@ void modeDogFight::drawSceneParticles(int acplayer)
 		graphics->lookAt(e, c, u);
 	}
 	particleManager.render();
+}
+void modeDogFight::checkCollisions()
+{
+	std::shared_ptr<CollisionChecker::triangleList> trl1, trl2;
+
+	auto planes = world(PLANE);
+	auto missiles = world(MISSILE);
+	auto& bulletRef = ((bulletCloud*)world[bullets].get())->bullets;
+
+
+
+	for(auto i = planes.begin(); i != planes.end();i++)
+	{
+		if(!i->second->dead)
+		{
+			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			{
+				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				{
+					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
+					{
+						((nPlane*)(*i).second.get())->loseHealth(25);
+						if((*i).second->dead)
+						{
+							if(bulletRef[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+							if(bulletRef[l].owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+						}
+						bulletRef.erase(bulletRef.begin()+l);
+						l--;
+					}
+				}
+			}
+			for(auto l=missiles.begin();l!=missiles.end();l++)
+			{
+				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
+				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
+				objId owner = ((missile*)l->second.get())->owner;
+				if(owner != i->second->id &&  owner != (*i).first && 
+					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
+					//collisionCheck(i->second,l->second))
+				{
+					((nPlane*)(*i).second.get())->loseHealth(105);
+					if((*i).second->dead) 
+					{
+						if(owner==players[0].objectNum() && players[0].active()) players[0].addKill();
+						if(owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+					}
+					l->second->awaitingDelete = true;
+				}
+			}
+		}
+	}
 }

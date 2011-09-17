@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "engine.h"
 
 bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
 {
