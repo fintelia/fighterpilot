@@ -1132,6 +1132,34 @@ bool DataManager::registerOBJ(string name, string filename)
 	}
 	fclose(fp);
 
+////////////////////////////////////////////////bounding sphere///////////////////////////////////////////////////
+	Vec3f center;
+	float minx=0, maxx=0, miny=0, maxy=0, minz=0, maxz=0, radiusSquared=0;
+	if(numVertices >= 1)
+	{
+		minx = maxx = vertices[0].x;
+		miny = maxy = vertices[0].y;
+		minz = maxz = vertices[0].z;
+		for(i=1;i<numVertices;i++)
+		{
+			if(vertices[i].x<minx) minx=vertices[i].x;
+			if(vertices[i].y<miny) miny=vertices[i].y;
+			if(vertices[i].z<minz) minz=vertices[i].z;
+			if(vertices[i].x>maxx) maxx=vertices[i].x;
+			if(vertices[i].y>maxy) maxy=vertices[i].y;
+			if(vertices[i].z>maxz) maxz=vertices[i].z;
+		}
+		center = Vec3f((minx+maxx)/2,((miny+maxy)/2),(minz+maxz)/2);
+		radiusSquared = center.distanceSquared(vertices[0]);
+		for(i=1;i<numVertices;i++)
+		{
+			if(center.distanceSquared(vertices[i]) > radiusSquared)
+			{
+				radiusSquared = center.distanceSquared(vertices[i]);
+			}
+		}
+	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	unsigned int* fs = new unsigned int[totalFaces*3];
 	for(int itt = 0;itt<totalFaces;itt++)
 	{
@@ -1142,8 +1170,9 @@ bool DataManager::registerOBJ(string name, string filename)
 	modelAsset* a = new modelAsset;
 	a->type = asset::MODEL;
 	a->trl = std::shared_ptr<CollisionChecker::triangleList>(new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces));
-
+	a->boundingSphere = Sphere<float>(center, sqrt(radiusSquared));
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	texturedLitVertex3D* VBOverts = new texturedLitVertex3D[totalFaces*3];
 	unsigned int lNum=0, vNum = 0;
 	for(int m=0; m<numMtls; m++)

@@ -407,35 +407,40 @@ void OpenGLgraphics::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glViewport(0, 0, sw, sh);
+	
 
 	//dataManager.unbindShader();
 
 
 	//glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
-	if(stereo)
+	if(stereo) // only the first view is drawn with stereo rendering
 	{
+		glViewport(0, 0, sw, sh);
+
 		leftEye = true;
 		glColorMask(true,false,false,true);
-		modeManager.render3D();
-		menuManager.render3D();
+		menuManager.render3D(0);
 		
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		leftEye = false;
 		glColorMask(false,true,true,true);
-		modeManager.render3D();
-		menuManager.render3D();
+		menuManager.render3D(0);
 		
 		glColorMask(true,true,true,true);
 	}
 	else
 	{
-		modeManager.render3D();
-		menuManager.render3D();
-	}
+		for(currentView=0; currentView<views.size(); currentView++)
+		{
+			glViewport(views[currentView].viewport.x * sh, views[currentView].viewport.y * sh, views[currentView].viewport.width * sh, views[currentView].viewport.height * sh);
+			glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMat.ptr());
+			glMatrixMode(GL_MODELVIEW);		glLoadIdentity();
 
+			menuManager.render3D(currentView);
+		}
+	}
 ///////////////////////////////////START PARTICLES///////////////////////
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
@@ -448,7 +453,16 @@ void OpenGLgraphics::render()
 	glDisable(GL_DEPTH_TEST);
 	//glDepthMask(false);
 	dataManager.bindTex(depthTextures[1],1);
-	modeManager.renderParticles();
+
+	for(currentView=0; currentView<views.size(); currentView++)
+	{
+		glViewport(views[currentView].viewport.x * sh, views[currentView].viewport.y * sh, views[currentView].viewport.width * sh, views[currentView].viewport.height * sh);
+		glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMat.ptr());
+		glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMat.ptr());
+
+		particleManager.render();
+	}
+
 	dataManager.unbindTextures();
 	//glDepthMask(true);
 
@@ -458,7 +472,7 @@ void OpenGLgraphics::render()
 
 
 	dataManager.bind("ortho");
-	modeManager.render2D();
+//	modeManager.render2D();
 	dataManager.unbindShader();
 
 	glMatrixMode(GL_PROJECTION);			// Select Projection
@@ -506,25 +520,25 @@ void OpenGLgraphics::render()
 
 	glError();
 }
-void OpenGLgraphics::viewport(int x,int y,int width,int height)
-{
-	GraphicsManager::viewport(x,y,width,height);
-	glViewport(x,y,width,height);
-}
-void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zFar)
-{
-	GraphicsManager::perspective(fovy, aspect, zNear, zFar);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(fovy, aspect, zNear, zFar);
-}
-void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
-{
-	GraphicsManager::ortho(left, right, bottom, top, zNear, zFar);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(left, right, bottom, top, zNear, zFar);
-}
+//void OpenGLgraphics::viewport(int x,int y,int width,int height)
+//{
+//	GraphicsManager::viewport(x,y,width,height);
+//	glViewport(x,y,width,height);
+//}
+//void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zFar)
+//{
+//	GraphicsManager::perspective(fovy, aspect, zNear, zFar);
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	gluPerspective(fovy, aspect, zNear, zFar);
+//}
+//void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
+//{
+//	GraphicsManager::ortho(left, right, bottom, top, zNear, zFar);
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	glOrtho(left, right, bottom, top, zNear, zFar);
+//}
 void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 {
 	if(stereo)
@@ -957,11 +971,19 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
-void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation)
+void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
 	auto m = dataManager.getModel(model);
 
-	if(m == nullptr)
+	float s;
+	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
+		s = scale.x;
+	else if(abs(scale.y) >= abs(scale.z))
+		s = scale.y;
+	else
+		s = scale.z;
+
+	if(m == nullptr || !sphereInFrustum(m->boundingSphere * s + position))
 		return;
 
 	dataManager.bind("white");
@@ -1009,11 +1031,19 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation)
 	dataManager.unbindTextures();
 	glColor3f(1,1,1);
 }
-void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation)
+void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
 	auto m = dataManager.getModel(model);
 
-	if(m == nullptr)
+	float s;
+	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
+		s = scale.x;
+	else if(abs(scale.y) >= abs(scale.z))
+		s = scale.y;
+	else
+		s = scale.z;
+
+	if(m == nullptr || !sphereInFrustum(m->boundingSphere * s + position))
 		return;
 
 	glBindBuffer(GL_ARRAY_BUFFER, m->id);

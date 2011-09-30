@@ -24,12 +24,10 @@ TextManager* textManager;																														//	//
 ObjectStats settings;																															//	//
 																																				//	//
 menu::manager& menuManager=menu::manager::getInstance();																						//	//
-ModeManager& modeManager=ModeManager::getInstance();																							//	//
 DataManager& dataManager=DataManager::getInstance();																							//	//
 WorldManager& world=WorldManager::getInstance();																								//	//
 CollisionChecker& collisionCheck=CollisionChecker::getInstance();																				//	//
 GraphicsManager* graphics=OpenGLgraphics::getInstance();																						//	//
-CameraManager cameraManager=CameraManager::getInstance();																						//	//
 bool hasContext=true;																															//	//
 bool getContext=false;																															//	//
 bool done=false;//exits program																													//	//
@@ -49,13 +47,12 @@ void update()
 	//while(world.time.needsUpdate())
 	{
 	//	world.time.nextUpdate();
-		
+	
 	}
 
 	world.time.nextFrame();
 	
 	input->update();		//takes 2-11 ms
-	modeManager.update();	//takes almost no time
 
 	menuManager.update();	//takes almost no time
 }
@@ -259,7 +256,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	world.destroy();
 	textManager->shutdown();
 	menuManager.shutdown();
-	modeManager.shutdown();
 	dataManager.shutdown();
 	graphics->destroyWindow();
 	return 0;

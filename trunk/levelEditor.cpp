@@ -5,9 +5,11 @@ namespace menu{
 
 bool levelEditor::init()
 {
-	//terrain
+	graphics->resetViews(1);
+	graphics->viewport(0,0, sAspect,1.0);
+	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 
-	//buttons["newShader"]	= new button(5,5,200,30,"new shader",lightGreen,white);
+	//terrain
 	buttons["dSquare"]		= new button(sw-105,5,100,30,"d-square",lightGreen,white);
 	buttons["faultLine"]	= new button(sw-105,40,100,30,"fault line",lightGreen,white);
 	buttons["fromFile"]		= new button(sw-105,75,100,30,"from file",lightGreen,white);
@@ -152,7 +154,6 @@ int levelEditor::update()
 	}
 	else if(buttons["exit"]->checkChanged())
 	{
-		modeManager.setMode(NULL);
 		menuManager.setMenu(new menu::chooseMode);
 		return 0;
 	}
@@ -248,7 +249,7 @@ int levelEditor::update()
 	lastTab = newTab;
 
 
-	//if(input->getKey(0x52) && !menuManager.getMenu()->popupActive())//r key
+	//if(input->getKey(0x52) && !popupActive())//r key
 	//	rot+=value/1000;
 	POINT p;
 	GetCursorPos(&p);
@@ -292,7 +293,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			else if(!objectCircles.empty())
 			{
 				float minDist;
-				map<int,circle<float>>::iterator min = objectCircles.end();
+				map<int,Circle<float>>::iterator min = objectCircles.end();
 				for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 				{
 					float d = i->second.center.distanceSquared(p);
@@ -388,19 +389,20 @@ void levelEditor::updateObjectCircles()
 		Vec2f s = graphics->project(i->startloc);
 		float r;
 
-		auto p = dataManager.getModel(i->type)->trl;
-		if(p==NULL)
+		auto model = dataManager.getModel(i->type);
+		if(model==NULL)
 		{
 			r = 0.006;
 		}
 		else
 		{
-			Vec2f t = graphics->project(i->startloc + p->getCenter() + graphics->getView().camera.up*p->getRadius()*10);
+			Sphere<float> sphere= model->boundingSphere;
+			Vec2f t = graphics->project(i->startloc + sphere.center + graphics->getView().camera.up*sphere.radius*10);
 			r = max(0.004,s.distance(t));
 		}
 		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
 		{
-			objectCircles[n] = circle<float>(Vec2f(s.x,s.y),r);
+			objectCircles[n] = Circle<float>(Vec2f(s.x,s.y),r);
 		}
 	}
 }
@@ -596,7 +598,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
+	sliders["sea level"]->setValue(0.333);
 	resetView();
 }
 void levelEditor::faultLine()
@@ -645,7 +647,7 @@ void levelEditor::faultLine()
 	level->ground()->setMinMaxHeights();
 	maxHeight=level->ground()->getMaxHeight();
 	minHeight=level->ground()->getMinHeight();
-	((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
+	sliders["sea level"]->setValue(0.333);
 	resetView();
 }
 void levelEditor::fromFile(string filename)
@@ -670,7 +672,7 @@ void levelEditor::fromFile(string filename)
 		level->ground()->setMinMaxHeights();
 		maxHeight=level->ground()->getMaxHeight();
 		minHeight=level->ground()->getMinHeight();
-		((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.333);
+		sliders["sea level"]->setValue(0.333);
 		resetView();
 	}
 	else if(ext == ".bil")
@@ -758,7 +760,7 @@ void levelEditor::fromFile(string filename)
 		level->ground()->setMinMaxHeights();
 		maxHeight=level->ground()->getMaxHeight();
 		minHeight=level->ground()->getMinHeight();
-		((menu::levelEditor*)menuManager.getMenu())->sliders["sea level"]->setValue(0.0);
+		sliders["sea level"]->setValue(0.0);
 		level->ground()->setSizeX(nRows * 30.87 * xRes);
 		level->ground()->setSizeZ(nColumns * 30.87 * zRes);
 		resetView();
@@ -813,7 +815,7 @@ Rect levelEditor::orthoView()
 
 	return Rect::CWH(Vec2f(0,0),gSize);
 }
-void levelEditor::render3D() 
+void levelEditor::render3D(unsigned int view) 
 {	
 	bool orthoTerrain = (getTab() == REGIONS);
 

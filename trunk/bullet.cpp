@@ -29,8 +29,6 @@ void bulletCloud::draw()
 	Vec3f start, end, end2;
 
 	auto v = graphics->getView().camera;
-	Vec3f up = v.up.normalize();
-	Vec3f right = ( v.up.cross(v.center - v.eye) ).normalize();
 
 	if(totalVertices < bullets.size())
 	{
@@ -50,14 +48,14 @@ void bulletCloud::draw()
 		end2=i.startPos+i.velocity*max(lTime-i.startTime,0.0)/1000;
 
 		Vec3f dir = i.velocity.normalize();
-		float a1 = dir.dot(up);
-		float a2 = dir.dot(right);
+		float a1 = dir.dot(v.up);
+		float a2 = dir.dot(v.right);
 		float len = 0.3/sqrt(a1*a1+a2*a2);
 
-		vertices[n*4 + 0].position = start + (right*a1 - up*a2)*len;
-		vertices[n*4 + 1].position = start - (right*a1 - up*a2)*len;
-		vertices[n*4 + 2].position = end2 - (right*a1 - up*a2)*len;
-		vertices[n*4 + 3].position = end2 + (right*a1 - up*a2)*len;
+		vertices[n*4 + 0].position = start + (v.right*a1 - v.up*a2)*len;
+		vertices[n*4 + 1].position = start - (v.right*a1 - v.up*a2)*len;
+		vertices[n*4 + 2].position = end2 - (v.right*a1 - v.up*a2)*len;
+		vertices[n*4 + 3].position = end2 + (v.right*a1 - v.up*a2)*len;
 
 		vertices[n*4 + 0].UV = Vec2f(1,1);
 		vertices[n*4 + 1].UV = Vec2f(1,0);

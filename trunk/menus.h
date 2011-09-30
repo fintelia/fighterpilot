@@ -28,6 +28,18 @@ public:
 	int update();
 	void render();
 };
+class inGame: public popup
+{
+public:
+	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
+	inGame(): activeChoice(RESUME){world.time.pause();}
+	~inGame(){}
+	int update(){return 30;}
+	void render();
+	bool keyDown(int vkey);
+protected:
+	choice activeChoice;
+};
 class levelEditor: public screen
 {
 public:
@@ -37,7 +49,7 @@ public:
 	bool init();
 	int update();
 	void render();
-	void render3D();
+	void render3D(unsigned int view);
 	
 	bool mouse(mouseButton button, bool down);
 	bool scroll(float rotations);
@@ -75,7 +87,7 @@ protected:
 	bool newRegionRadius;
 	Vec2f newRegionCenter;
 
-	map<int,circle<float>> objectCircles;
+	map<int,Circle<float>> objectCircles;
 
 	Quat4f rot;
 	Vec3f center;
@@ -119,19 +131,7 @@ protected:
 	vector<string> mapChoices;
 	int currentChoice;
 };
-class inGame: public screen
-{
-public:
-	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
-	inGame(): activeChoice(RESUME){}
-	~inGame(){}
-	bool init();
-	int update(){return 30;}
-	void render();
-	bool keyDown(int vkey);
-protected:
-	choice activeChoice;
-};
+
 class loading:public screen
 {
 public:
@@ -142,5 +142,48 @@ public:
 	void render();
 protected:
 	float progress;
+};
+class dogFight: public screen
+{
+protected:
+	std::shared_ptr<Level> level;
+
+public:
+	dogFight(std::shared_ptr<Level> lvl);
+	virtual ~dogFight();
+
+	virtual bool init();
+
+	void healthBar(float x, float y, float width, float height, float health, bool firstPerson);
+	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
+	void radar(float x, float y, float width, float height,bool firstPerson, nPlane* p);
+	void targeter(float x, float y, float apothem, Angle tilt);
+	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
+
+	void drawHexCylinder(Vec3f center, float radius, float height, Color c);
+	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
+	void drawScene(int acplayer);
+
+	void checkCollisions();
+};
+class splitScreen: public dogFight
+{
+public:
+	splitScreen(std::shared_ptr<Level> lvl);
+	int update();
+	void render();
+	void render3D(unsigned int view);
+};
+class campaign: public dogFight
+{
+protected:
+	float countdown;
+	bool restart;
+	bool levelup;
+public:
+	campaign(std::shared_ptr<Level> lvl);
+	int update();
+	void render();
+	void render3D(unsigned int view);
 };
 }

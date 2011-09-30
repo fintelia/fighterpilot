@@ -79,7 +79,6 @@ namespace menu{class levelEditor;}
 #include "graphicsManager.h"
 #include "dataManager.h"
 #include "particleManager.h"
-#include "cameraManager.h"
 #include "input.h"
 #ifdef _DEBUG
 #include "XboxContInput.h"
@@ -91,9 +90,9 @@ namespace menu{class levelEditor;}
 #include "player.h"
 #include "object.h"
 #include "level.h"
+#include "terrain.h"
 #include "objectList.h"
 #include "menuScreen.h"
-#include "modeManager.h"
 #include "worldManager.h"
 
 extern int sh, sw;

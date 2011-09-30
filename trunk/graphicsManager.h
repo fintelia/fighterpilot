@@ -36,10 +36,10 @@ protected:
 	struct View
 	{
 		struct Viewport{
-			int x;
-			int y;
-			int width;
-			int height;
+			float x;
+			float y;
+			float width;
+			float height;
 		}viewport;
 
 		struct Projection{
@@ -61,14 +61,19 @@ protected:
 
 		struct Camera{
 			Vec3f eye;
-			Vec3f center;
-			Vec3f up;
+
+			Vec3f up;		//normalized
+			Vec3f fwd;		//normalized
+			Vec3f right;	//normalized
 		}camera;
 
 		matrix4x4<float> projectionMat;
 		matrix4x4<float> modelViewMat;
-	}view;
 
+		Plane<float> clipPlanes[6];
+	};
+	vector<View> views;
+	unsigned int currentView;
 
 	HDC			hDC;
 	HGLRC		hRC;
@@ -80,7 +85,7 @@ protected:
 	bool leftEye;
 	float interOcularDistance;
 
-	GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0){}
+	GraphicsManager();
 public:
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
@@ -109,28 +114,32 @@ public:
 	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
 
-	virtual void drawModel(string model, Vec3f position, Quat4f rotation)=0;
-	//void drawModel(string model, Vec3f position, Quat4f rotation, float scale){drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
+	virtual void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
+	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
 
-	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation){drawModel(objectTypeString(t),position,rotation);}
-	//void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale){drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
+	virtual void drawModel(string model, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
+	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
+	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}	
+	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
-	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation)=0;
-	//void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale){drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
-
-	virtual void viewport(int x,int y,int width,int height);
-	virtual void perspective(float fovy, float aspect, float near, float far);
-	virtual void ortho(float left, float right, float bottom, float top, float near, float far);
-	virtual void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
 	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up);
 
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
 
-	virtual Vec2f project(Vec3f p);
-	virtual Vec3f unProject(Vec3f p);
-	const View& getView(){return view;}
+	virtual Vec2f project(Vec3f p, unsigned int view=0);
+	virtual Vec3f unProject(Vec3f p, unsigned int view=0);
 
+	const View& getView(unsigned int view=0){return views[view < views.size() ? view : 0];}
+
+	void resetViews(unsigned int numViews=1);
+	void viewport(float x,float y,float width,float height, unsigned int view=0);
+	void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
+	void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
+	void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
+	
+	bool sphereInFrustum(Sphere<float> s);
+	
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 };
@@ -179,8 +188,8 @@ public:
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
 	void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4);
 
-	void drawModel(string model, Vec3f position, Quat4f rotation);
-	void drawModelCustomShader(string model, Vec3f position, Quat4f rotation);
+	void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale);
+	void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale);
 
 	bool drawOverlay(Rect4f r, string tex="");
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
@@ -192,9 +201,9 @@ public:
 
 
 
-	void viewport(int x,int y,int width,int height);
-	void perspective(float fovy, float aspect, float near, float far);
-	void ortho(float left, float right, float bottom, float top, float near, float far);
+	//void viewport(int x,int y,int width,int height);
+	//void perspective(float fovy, float aspect, float near, float far);
+	//void ortho(float left, float right, float bottom, float top, float near, float far);
 	void lookAt(Vec3f eye, Vec3f center, Vec3f up);
 };
 #endif

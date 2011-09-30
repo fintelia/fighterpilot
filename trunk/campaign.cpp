@@ -1,44 +1,14 @@
 
 #include "main.h"
 
-//modeCampaign::modeCampaign(): modeDogFight(new Level("media/heightmap5.bmp",1000)), levelup(false), countdown(0.0)
-//{
-//	//settings.ENEMY_PLANES=2;
-//	//settings.GAME_TYPE=FFA;
-//	//settings.HEIGHT_RANGE=1000;
-//	//settings.KILL_PERCENT_NEEDED=100;
-//	//settings.LEVEL_NAME="unnamed";
-//	//settings.MAP_FILE="media/heightmap5.bmp";
-//	//settings.MAP_TYPE=WATER;
-//	//settings.MAX_X=world.level->ground()->sizeX();
-//	//settings.MAX_Y=world.level->ground()->sizeZ();
-//	//settings.MIN_X=0;
-//	//settings.MIN_Y=0;
-//	//settings.ON_AI_HIT=RESPAWN;
-//	//settings.ON_HIT=RESPAWN;
-//	//settings.SEA_FLOOR_TYPE=ROCK;
-//	//settings.SEA_LEVEL=-150;
-//
-//	world.level->ground()->setSize(world.level->ground()->size()*128);
-//	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
-//
-//	LevelFile::Object obj;
-//	obj.controlType = CONTROL_HUMAN;
-//	obj.startRot = Quat4f();
-//	obj.type = defaultPlane;
-//	obj.team = TEAM0;
-//	obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
-//	world.objectList.newObject(obj);
-//
-//	obj.controlType = CONTROL_COMPUTER;
-//	for(int i = 0; i < 2; i++)
-//	{
-//		obj.team = TEAM0<<(i+1);
-//		obj.startloc = Vec3f(rand()%1000,300,rand()%1000);
-//		world.objectList.newObject(obj);
-//	}
-//}
-int modeCampaign::update()
+namespace menu{
+campaign::campaign(std::shared_ptr<Level> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
+{
+	graphics->resetViews(1);
+	graphics->viewport(0,0, sAspect,1.0);
+	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+}
+int campaign::update()
 {
 	if(input->getKey(VK_F1))
 	{
@@ -47,7 +17,7 @@ int modeCampaign::update()
 	}
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setMenu(new menu::inGame);
+		menuManager.setPopup(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
 	world.update();
@@ -83,7 +53,8 @@ int modeCampaign::update()
 			std::shared_ptr<Level> l(new Level);
 			if(l->init(nLevel))
 			{
-				modeManager.setMode(new modeCampaign(l));
+				menuManager.setMenu(new menu::campaign(l));
+		//		modeManager.setMode(new modeCampaign(l));
 			}
 		}
 	}
@@ -92,7 +63,7 @@ int modeCampaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			modeManager.setMode(new modeCampaign(world.level));
+			menuManager.setMenu(new menu::campaign(world.level));
 		}
 	}
 	else
@@ -133,7 +104,7 @@ int modeCampaign::update()
 	//}
 	return 30;
 }
-void modeCampaign::draw2D()
+void campaign::render()
 {
 	nPlane* p = (nPlane*)world[players[0].objectNum()].get();
 	
@@ -165,17 +136,12 @@ void modeCampaign::draw2D()
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, sAspect*v, v), "next level");
 	}
 }
-void modeCampaign::draw3D()
+void campaign::render3D(unsigned int view)
 {
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
 
-	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+//	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawScene(0);
 }
-void modeCampaign::drawParticles()
-{
-	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
-	drawSceneParticles(0);
-	//particleManager.render();
 }

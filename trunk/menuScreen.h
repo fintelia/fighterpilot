@@ -353,7 +353,7 @@ public:
 	virtual bool init()=0;
 	virtual int update()=0;
 	virtual void render()=0;
-	virtual void render3D(){}
+	virtual void render3D(unsigned int view){}
 	///////////////////////////////////////////
 	virtual bool mouse(mouseButton button, bool down){return false;}
 
@@ -378,26 +378,22 @@ public:
 	}
 
 	void setMenu(screen* m);
-	bool setPopup(popup* p){if(p != NULL)popups.push_back(p);return p!=NULL;}
+	bool setPopup(popup* p){if(p != NULL)popups.push_back(std::shared_ptr<popup>(p));return p!=NULL;}
 
 	void shutdown();
 	int update();
 	void render();
-	void render3D();
+	void render3D(unsigned int view);
 
 
 	void inputCallback(Input::callBack* callback);
 
-	screen* getMenu(){return menu;}
-	popup* getPopup(){return popups.empty() ? NULL : popups.back();}
-
 	void drawCursor(){mDrawCursor = true;}
 private:
-	vector<popup*> popups;
+	vector<std::shared_ptr<popup>> popups;
 	screen* menu;
 
-	manager(): menu(NULL){}
-	~manager() {setMenu(NULL);}
+	manager():menu(nullptr){}
 
 	bool mDrawCursor;
 };

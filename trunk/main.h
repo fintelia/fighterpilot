@@ -15,6 +15,5 @@
 extern humanControl players[NumPlayers];
 
 #include "menus.h"
-#include "modes.h"
 
 extern objId bullets;

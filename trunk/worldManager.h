@@ -1,4 +1,4 @@
-class WorldManager: public objectList
+class WorldManager: public objectList, public Terrain
 {
 public:
 	static WorldManager& getInstance()

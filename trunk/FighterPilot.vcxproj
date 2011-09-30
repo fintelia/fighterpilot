@@ -113,7 +113,6 @@
     <ClCompile Include="blackSmoke.cpp" />
     <ClCompile Include="bomb.cpp" />
     <ClCompile Include="bullet.cpp" />
-    <ClCompile Include="cameraManager.cpp" />
     <ClCompile Include="campaign.cpp" />
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="contrail.cpp" />
@@ -140,7 +139,6 @@
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="dogFight.cpp" />
-    <ClCompile Include="modeManager.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
     <ClCompile Include="OpenGLgraphics.cpp" />
@@ -156,6 +154,7 @@
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
+    <ClCompile Include="terrain.cpp" />
     <ClCompile Include="text.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="worldManager.cpp" />
@@ -163,18 +162,16 @@
   <ItemGroup>
     <ClInclude Include="aaGun.h" />
     <ClInclude Include="Angle.h" />
-    <ClInclude Include="basicMath.h" />
     <ClInclude Include="bomb.h" />
     <ClInclude Include="bullet.h" />
-    <ClInclude Include="cameraManager.h" />
     <ClInclude Include="collide.h" />
     <ClInclude Include="dataManager.h" />
     <ClInclude Include="debugBreak.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="geoPlane.h" />
     <ClInclude Include="GL\GLee.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="menus.h" />
-    <ClInclude Include="modes.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="gameMath.h" />
@@ -185,7 +182,6 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
-    <ClInclude Include="modeManager.h" />
     <ClInclude Include="objectList.h" />
     <ClInclude Include="particleEffects.h" />
     <ClInclude Include="particleManager.h" />
@@ -198,6 +194,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="terrain.h" />
     <ClInclude Include="text.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
