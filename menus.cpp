@@ -93,7 +93,56 @@ void objectProperties::render()
 	graphics->drawOverlay(Rect::CWH(sw/2,sh/2,800,500),"white");
 	glColor3f(1,1,1);
 }
+/****************************************************************************************************************************************
+/*																																		*
+/*														menu::inGame																	*
+/*																																		*
+/****************************************************************************************************************************************/
+void inGame::render()
+{
+	dataManager.bind("ortho");
+	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.620,0.559*sAspect,0.381),"menu in game");
 
+	if(activeChoice==RESUME)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.600,0.545*sAspect,0.550),"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.528,0.545*sAspect,0.478),"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.454,0.545*sAspect,0.404),"menu in game select");
+
+	dataManager.unbindShader();
+}
+bool inGame::keyDown(int vkey)
+{
+	if(vkey==VK_UP)		activeChoice = choice(int(activeChoice)-1);
+	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
+	if(activeChoice<RESUME) activeChoice=QUIT;
+	if(activeChoice>QUIT) activeChoice=RESUME;
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME || vkey==0x31 || vkey==VK_ESCAPE)
+	{
+		input->up(VK_SPACE);
+		input->up(VK_RETURN);
+		input->up(0x31);
+		input->up(VK_ESCAPE);
+		world.time.unpause();
+		menuManager.setMenu(NULL);
+	}
+	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
+	{
+		//
+	}
+	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==QUIT)
+	{
+		input->up(VK_SPACE);
+		input->up(VK_RETURN);
+
+		world.time.unpause();
+
+		menuManager.setMenu(new menu::chooseMode);
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
 /****************************************************************************************************************************************
 /*																																		*
 /*														menu::chooseMode																*
@@ -162,8 +211,8 @@ bool chooseMode::keyDown(int vkey)
 		std::shared_ptr<Level> l(new Level);
 		if(l->init("media/map file.lvl"))
 		{
-			menuManager.setMenu(NULL);
-			modeManager.setMode(new modeCampaign(l));
+			menuManager.setMenu(new menu::campaign(l));
+	//		modeManager.setMode(new modeCampaign(l));
 		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
@@ -174,8 +223,8 @@ bool chooseMode::keyDown(int vkey)
 		std::shared_ptr<Level> l(new Level);
 		if(l->init("media/map file.lvl"))
 		{
-			menuManager.setMenu(NULL);
-			modeManager.setMode(new modeSplitScreen(l));
+			menuManager.setMenu(new menu::splitScreen(l));
+		//	modeManager.setMode(new modeSplitScreen(l));
 		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
@@ -205,8 +254,7 @@ void chooseMode::operator() (popup* p)
 			std::shared_ptr<Level> l(new Level);
 			if(l->init(((openFile*)p)->getFile()))
 			{
-				menuManager.setMenu(NULL);
-				modeManager.setMode(new modeCampaign(l));
+				menuManager.setMenu(new menu::campaign(l));
 			}
 			return;
 		}
@@ -218,8 +266,7 @@ void chooseMode::operator() (popup* p)
 			std::shared_ptr<Level> l(new Level);
 			if(l->init(((openFile*)p)->getFile()))
 			{
-				menuManager.setMenu(NULL);
-				modeManager.setMode(new modeSplitScreen(l));
+				menuManager.setMenu(new menu::splitScreen(l));
 			}
 			return;
 		}
@@ -266,63 +313,7 @@ bool chooseMap::keyDown(int vkey)
 
 	return (vkey==VK_UP || vkey==VK_DOWN || vkey==VK_ESCAPE);
 }
-/****************************************************************************************************************************************
-/*																																		*
-/*														menu::inGame																	*
-/*																																		*
-/****************************************************************************************************************************************/
-bool inGame::init()
-{
-	activeChoice=RESUME;
-	world.time.pause();
-	return true;
-}
-void inGame::render()
-{
-	dataManager.bind("ortho");
-	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.620,0.559*sAspect,0.381),"menu in game");
 
-	if(activeChoice==RESUME)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.600,0.545*sAspect,0.550),"menu in game select");
-	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.528,0.545*sAspect,0.478),"menu in game select");
-	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.454,0.545*sAspect,0.404),"menu in game select");
-
-	dataManager.unbindShader();
-}
-bool inGame::keyDown(int vkey)
-{
-	if(vkey==VK_UP)		activeChoice = choice(int(activeChoice)-1);
-	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
-	if(activeChoice<RESUME) activeChoice=QUIT;
-	if(activeChoice>QUIT) activeChoice=RESUME;
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME || vkey==0x31 || vkey==VK_ESCAPE)
-	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
-		input->up(0x31);
-		input->up(VK_ESCAPE);
-		world.time.unpause();
-		menuManager.setMenu(NULL);
-	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
-	{
-		//
-	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==QUIT)
-	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
-
-		world.time.unpause();
-
-		modeManager.setMode(NULL);
-		menuManager.setMenu(new menu::chooseMode);
-	}
-	else
-	{
-		return false;
-	}
-	return true;
-}
 /****************************************************************************************************************************************
 /*																																		*
 /*														menu::loading																	*

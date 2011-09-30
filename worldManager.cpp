@@ -7,9 +7,7 @@ void WorldManager::create(std::shared_ptr<Level> lvl)
 	level = lvl;
 	time.reset();
 
-
 	//((Level::heightmapGL*)level->ground())->setShader(dataManager.getId("grass new terrain"));
-	level->initializeWorld();
 	particleManager.init();
 }
 void WorldManager::destroy()

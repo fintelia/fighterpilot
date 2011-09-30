@@ -102,11 +102,11 @@ void manager::render()
 		}
 	}
 }
-void manager::render3D()
+void manager::render3D(unsigned int view)
 {
 	if(menu != NULL)
 	{
-		menu->render3D();
+		menu->render3D(view);
 	}
 }
 int manager::update()
@@ -117,8 +117,7 @@ int manager::update()
 		if(popups.back()->isDone())
 		{
 			if(popups.back()->callback != NULL)
-				(*popups.back()->callback)(popups.back());
-			delete popups.back();
+				(*popups.back()->callback)(popups.back().get());
 			popups.erase(popups.end()-1);
 		}
 	}
@@ -130,19 +129,21 @@ int manager::update()
 }
 void manager::shutdown()
 {
-	for(vector<popup*>::iterator i = popups.begin(); i!=popups.end();i++)
-		delete (*i);
-	if(menu != NULL)
+	popups.clear();
+	if(menu == nullptr)
 		delete menu;
 }
 void manager::setMenu(screen* m)
 {
-	if(menu != NULL)
+	popups.clear();
+	bool b = menu;
+
+	if(menu != nullptr)
 		delete menu;
 
 	menu = m;
 
-	if(m != NULL)
+	if(m != nullptr)
 		m->init();
 }
 

@@ -3,7 +3,7 @@
 
 namespace particle
 {
-	explosion::explosion(Vec3f pos, float Radius): emitter(EXPLOSION, pos, "fire", 0.1, 0.0, 32,true), trl(NULL)
+	explosion::explosion(Vec3f pos, float Radius): emitter(EXPLOSION, pos, "fire", 0.1, 0.0, 32,true)
 	{
 		radius = Radius;
 		velocity =	fuzzyAttribute(4.0*radius, 0.0);
@@ -33,8 +33,7 @@ namespace particle
 	}
 	explosion::explosion(int parent, Vec3f offset): emitter(EXPLOSION, parent, offset, "fire", 0.1, 0.0, 32,true)
 	{
-		trl = dataManager.getModel(world[parent]->type)->trl;
-		radius = trl->getRadius()/2;
+		radius = dataManager.getModel(world[parent]->type)->boundingSphere.radius / 2;
 
 		velocity =	fuzzyAttribute(30.0, 0.0);
 		spread =	fuzzyAttribute(radius, radius);

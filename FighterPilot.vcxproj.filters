@@ -64,9 +64,6 @@
     <Filter Include="Source Files\OTHER">
       <UniqueIdentifier>{22d685ca-e04f-4f1d-87af-1a609a505f6a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\OTHER\camera">
-      <UniqueIdentifier>{0ec79459-15bd-48ee-8cc7-87a6791ea212}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\OTHER\control">
       <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
     </Filter>
@@ -99,9 +96,6 @@
     </Filter>
     <Filter Include="Source Files\GAME\objects\bullet">
       <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\GAME\modes">
-      <UniqueIdentifier>{49d6f32f-8280-433d-acd6-67b4cadcd7a3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\ENGINE">
       <UniqueIdentifier>{5351d8cb-6c1c-4784-8742-e0d5cccad21b}</UniqueIdentifier>
@@ -136,9 +130,6 @@
     <Filter Include="Source Files\ENGINE\particle engine">
       <UniqueIdentifier>{7e66df3a-a3fd-44b5-bf4d-1d658e9eaefb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ENGINE\mode">
-      <UniqueIdentifier>{4068e04d-c8ed-4efe-8bc4-8e5cd42e57bb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ENGINE\random">
       <UniqueIdentifier>{3dd6417d-bbbc-47e5-aa9e-6138943311ba}</UniqueIdentifier>
     </Filter>
@@ -156,6 +147,12 @@
     </Filter>
     <Filter Include="Source Files\ENGINE\world">
       <UniqueIdentifier>{d98c40e8-fc7a-42a7-8c48-a20cabfaa8d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\terrain">
+      <UniqueIdentifier>{1efa1c63-ecd3-4816-ad75-0d6539730654}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\plane">
+      <UniqueIdentifier>{5681ad1f-1a72-42dd-9f56-7787b12bfa1b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -176,18 +173,6 @@
     </ClCompile>
     <ClCompile Include="dataManager.cpp">
       <Filter>Source Files\ENGINE\dataManager</Filter>
-    </ClCompile>
-    <ClCompile Include="cameraManager.cpp">
-      <Filter>Source Files\OTHER\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="splitScreen.cpp">
-      <Filter>Source Files\GAME\modes</Filter>
-    </ClCompile>
-    <ClCompile Include="campaign.cpp">
-      <Filter>Source Files\GAME\modes</Filter>
-    </ClCompile>
-    <ClCompile Include="dogFight.cpp">
-      <Filter>Source Files\GAME\modes</Filter>
     </ClCompile>
     <ClCompile Include="bullet.cpp">
       <Filter>Source Files\GAME\objects\bullet</Filter>
@@ -258,9 +243,6 @@
     <ClCompile Include="aaGun.cpp">
       <Filter>Source Files\GAME\objects\aaGun</Filter>
     </ClCompile>
-    <ClCompile Include="modeManager.cpp">
-      <Filter>Source Files\ENGINE\mode</Filter>
-    </ClCompile>
     <ClCompile Include="debugBreak.cpp">
       <Filter>Source Files\ENGINE</Filter>
     </ClCompile>
@@ -303,6 +285,18 @@
     <ClCompile Include="engine.cpp">
       <Filter>Source Files\ENGINE</Filter>
     </ClCompile>
+    <ClCompile Include="terrain.cpp">
+      <Filter>Source Files\ENGINE\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="campaign.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="dogFight.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="splitScreen.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -313,9 +307,6 @@
     </ClInclude>
     <ClInclude Include="Angle.h">
       <Filter>Source Files\ENGINE\math\angle</Filter>
-    </ClInclude>
-    <ClInclude Include="basicMath.h">
-      <Filter>Source Files\ENGINE\math</Filter>
     </ClInclude>
     <ClInclude Include="collide.h">
       <Filter>Source Files\ENGINE\math</Filter>
@@ -328,9 +319,6 @@
     </ClInclude>
     <ClInclude Include="dataManager.h">
       <Filter>Source Files\ENGINE\dataManager</Filter>
-    </ClInclude>
-    <ClInclude Include="cameraManager.h">
-      <Filter>Source Files\OTHER\camera</Filter>
     </ClInclude>
     <ClInclude Include="bullet.h">
       <Filter>Source Files\GAME\objects\bullet</Filter>
@@ -375,12 +363,6 @@
       <Filter>Source Files\GAME\objects\aaGun</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="modeManager.h">
-      <Filter>Source Files\ENGINE\mode</Filter>
-    </ClInclude>
-    <ClInclude Include="modes.h">
-      <Filter>Source Files\GAME\modes</Filter>
-    </ClInclude>
     <ClInclude Include="debugBreak.h">
       <Filter>Source Files\ENGINE</Filter>
     </ClInclude>
@@ -428,6 +410,12 @@
     </ClInclude>
     <ClInclude Include="engine.h">
       <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
+    <ClInclude Include="terrain.h">
+      <Filter>Source Files\ENGINE\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="geoPlane.h">
+      <Filter>Source Files\ENGINE\math\plane</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

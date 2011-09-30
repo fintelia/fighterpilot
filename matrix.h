@@ -182,6 +182,13 @@ public:
 							v[2]*o,		v[6]*o,		v[10]*o,	v[14]*o,
 							v[3]*o,		v[7]*o,		v[11]*o,	v[15]*o);
 	}
+	T operator[] (int i)
+	{
+		if(i >= 0 && i <= 15)
+			return v[i];
+
+		return 0;
+	}
 	matrix4x4 transpose()
 	{
 		return matrix4x4(	v[0],	v[1],	v[2],	v[3],

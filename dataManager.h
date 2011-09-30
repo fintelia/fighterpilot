@@ -32,6 +32,7 @@ private:
 		};
 		vector<material> materials;
 
+		Sphere<float> boundingSphere;
 		std::shared_ptr<CollisionChecker::triangleList> trl;
 	};
 	struct fontAsset: public asset{

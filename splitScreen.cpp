@@ -1,72 +1,23 @@
 
 #include "main.h"
 
-//modeSplitScreen::modeSplitScreen(): modeDogFight(new Level("media/heightmap5.bmp",1000))
-//{
-//	//settings.ENEMY_PLANES=8;
-//	//settings.GAME_TYPE=FFA;
-//	//settings.HEIGHT_RANGE=1000;
-//	//settings.KILL_PERCENT_NEEDED=100;
-//	//settings.LEVEL_NAME="unnamed";
-//	//settings.MAP_FILE="media/heightmap5.bmp";
-//	//settings.MAP_TYPE=WATER;
-//	//settings.MAX_X=world.level->ground()->sizeX();
-//	//settings.MAX_Y=world.level->ground()->sizeZ();
-//	//settings.MIN_X=0;
-//	//settings.MIN_Y=0;
-//	//settings.ON_AI_HIT=RESPAWN;
-//	//settings.ON_HIT=RESPAWN;
-//	//settings.SEA_FLOOR_TYPE=ROCK;
-//	//settings.SEA_LEVEL=-150;
-//
-//	world.level->ground()->setSize(world.level->ground()->size()*size);
-//	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
-//
-//	LevelFile::Object obj;
-//	obj.controlType = CONTROL_HUMAN;
-//	obj.startRot = Quat4f();
-//	obj.type = defaultPlane;
-//	obj.team = TEAM0;
-//	for(int i = 0; i < 2; i++)
-//	{
-//		obj.startloc = Vec3f(rand()%1000,50,rand()%1000);
-//		world.objectList.newObject(obj);
-//	}
-//	obj.controlType = CONTROL_COMPUTER;
-//	for(int i = 0; i < 8; i++)
-//	{
-//		obj.team = TEAM0<<(i+1);
-//		obj.startloc = Vec3f(rand()%1000,50,rand()%1000);
-//		world.objectList.newObject(obj);
-//	}
-//}
-//modeSplitScreen::modeSplitScreen(Level* lvl): modeDogFight(lvl)
-//{
-//	//settings.ENEMY_PLANES=world.level->objects().size();
-//	//settings.GAME_TYPE=TEAMS;
-//	//settings.HEIGHT_RANGE=1000;
-//	//settings.KILL_PERCENT_NEEDED=100;
-//	//settings.LEVEL_NAME="unnamed";
-//	//settings.MAP_TYPE=WATER;
-//	//settings.MAX_X=world.level->ground()->sizeX();
-//	//settings.MAX_Y=world.level->ground()->sizeZ();
-//	//settings.MIN_X=0;
-//	//settings.MIN_Y=0;
-//	//settings.ON_AI_HIT=RESPAWN;
-//	//settings.ON_HIT=RESPAWN;
-//	//settings.SEA_FLOOR_TYPE=ROCK;
-//	//settings.SEA_LEVEL=world.level->water().seaLevel;
-//
-//	((Level::heightmapGL*)world.level->ground())->setShader(dataManager.getId("grass new terrain"));
-// }
-int modeSplitScreen::update()
+namespace menu{
+splitScreen::splitScreen(std::shared_ptr<Level> lvl): dogFight(lvl)
+{
+	graphics->resetViews(2);
+	graphics->viewport(0,0.5, sAspect,0.5,	0);
+	graphics->viewport(0,0.0, sAspect,0.5,	1);
+	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	0);
+	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	1);
+}
+int splitScreen::update()
 {
 	if(input->getKey(VK_F1))	{	players[0].toggleFirstPerson(); input->up(VK_F1);}
 	if(input->getKey(VK_F2))	{	players[1].toggleFirstPerson(); input->up(VK_F2);}
 
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setMenu(new menu::inGame);
+		menuManager.setPopup(new menu::inGame);
 		input->up(VK_ESCAPE);
 	}
 
@@ -92,7 +43,7 @@ int modeSplitScreen::update()
 
 	return 7;
 }
-void modeSplitScreen::draw2D()
+void splitScreen::render()
 {
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
@@ -111,24 +62,14 @@ void modeSplitScreen::draw2D()
 		}
 	}
 }
-void modeSplitScreen::draw3D()
+void splitScreen::render3D(unsigned int view)
 {
-	glClearColor(0.5f,0.8f,0.9f,1.0f);
-	glViewport(0, sh/2, sw, sh/2);
-	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
-	drawScene(0);
+//	glClearColor(0.5f,0.8f,0.9f,1.0f);
+//	glViewport(0, sh/2, sw, sh/2);
+//	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	drawScene(view);
 
-	glViewport(0, 0, sw, sh/2);
-	drawScene(1);
+//	glViewport(0, 0, sw, sh/2);
+//	drawScene(1);
 }
-void modeSplitScreen::drawParticles()
-{
-	glViewport(0, sh/2, sw, sh/2);
-	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
-	drawSceneParticles(0);
-	//particleManager.render();
-
-	glViewport(0, 0, sw, sh/2);
-	drawSceneParticles(1);
-	//particleManager.render();
 }

@@ -1,11 +1,10 @@
 #pragma once 
 
-#include "basicMath.h"
 #include "angle.h"
-//#include "vec3f.h"
 #include "vector.h"
 #include "quaternion.h"
 #include "matrix.h"
+#include "geoPlane.h"
 #include "collide.h"
 
 class SVertex
@@ -14,7 +13,44 @@ public:
 	float x,y,z;
 	float r,g,b,a;
 	float s,t;
-//	float padding[28];
+};
+
+template<class T>
+class Circle
+{
+public:
+	Vector2<T> center;
+	T radius;
+
+	Circle(): center(0,0), radius(0) {}
+	Circle(Vector2<T> c, T r): center(c), radius(r) {}
+};
+
+template<class T>
+class Sphere
+{
+public:
+	Vector3<T> center;
+	T radius;
+
+	Sphere(): center(0,0,0), radius(0) {}
+	Sphere(Vector3<T> c, T r): center(c), radius(r) {}
+	template<class U> Sphere operator+(const Vector3<U> &vec) const
+	{
+		return Sphere(center + vec,radius);
+	}
+	template<class U> Sphere operator-(const Vector3<U> &vec) const
+	{
+		return Sphere(center - vec,radius);
+	}
+	template<class U> Sphere operator*(const U &scale) const
+	{
+		return Sphere(center,radius*scale);
+	}
+	template<class U> Sphere operator/(const U &scale) const
+	{
+		return Sphere(center,radius/scale);
+	}
 };
 
 template <class T>
@@ -112,22 +148,6 @@ typedef rectangle<unsigned int>	Rect4u;
 typedef rectangle<long>			Rect4l;
 
 template <class T>
-void upAndRight(Vector3<T> fwd,Angle roll,Vector3<T>& up,Vector3<T>& right)
-{
-	if(fwd!=Vec3f(0,1,0))
-	{
-		Vec3f axis1=-((fwd.cross(Vec3f(0,1,0))).cross(fwd)).normalize();
-		Vec3f axis2=fwd.cross(axis1).normalize();
-		Vec3f s1=axis1*sin(-roll);
-		right=s1+axis2*cos(-roll);
-	}//+(float)PI/2
-	else
-		right=Vec3f(sin(roll+PI/2.0),0,cos(roll+PI/2.0));
-
-	up=(fwd.cross(right)).normalize();
-}
-
-template <class T>
 double dist_Point_to_Segment(Vector3<T> P, Vector3<T> S1,Vector3<T> S2)
 {
 	Vector3<T> v = S2 - S1;
@@ -166,19 +186,27 @@ bool SegmentSphereIntersect(Vector3<T> A, Vector3<T> B, Vector3<T> P, U r)
 
     return P.distanceSquared(Q) < r*r;
 }
+
 template <class T, class U, class V>
 T lerp(T a, U b, V t)
 {
 	return a+(b-a)*t;
 }
 
-template<class T>
-class circle
+template <class T,class U,class V>
+T clamp(T value, U v1, V v2)
 {
-public:
-	Vector2<T> center;
-	T radius;
+	if(v1<v2)
+	{
+		if(value<v1) return (T)v1;
+		if(value>v2) return (T)v2;
+		else return value;
+	}
+	else
+	{
+		if(value>v1) return (T)v1;
+		if(value<v2) return (T)v2;
+		else return value;
+	}
+}
 
-	circle(): center(0,0), radius(0) {}
-	circle(Vector2<T> c, T r): center(c), radius(r) {}
-};
