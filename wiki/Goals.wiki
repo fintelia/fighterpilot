@@ -3,7 +3,6 @@
  # Separate update interval from frame rate
  # Improved camera smoothing
  # Display map bounds on radar
- # Toggle fog in grass shader
  # Improve grass shader
  # support for chained levels to create a campaign
 
