@@ -20,7 +20,7 @@
 //}
 missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):selfControlledObject(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), owner(Owner)
 {
-	
+
 }
 void missile::init()
 {
@@ -37,7 +37,7 @@ void missile::update(double time, double ms)
 		destVec = (enemy->position - position).normalize();
 		Vec3f fwd = rotation * Vec3f(0,0,1);
 
-		Vec3f axis = fwd.cross(destVec);
+		//Vec3f axis = fwd.cross(destVec);
 		Angle angle = acosA(destVec.dot(fwd));
 
 		Quat4f targetRot(destVec);
@@ -72,7 +72,7 @@ void missile::update(double time, double ms)
 		{
 			target = 0;
 		}
-		else 
+		else
 		//if(angle < PI * 2.5 * ms/1000)
 		//{
 		//	rotation = targetRot;
@@ -94,10 +94,10 @@ void missile::update(double time, double ms)
 		//	difAng=7.5*(lastAng-(angle-difAng)/5)/abs(lastAng-(angle-difAng)/5);//if turn ang > 7.5 set it to 7.5
 		//}
 		//if(abs(angle-difAng)<60)
-		//{ 
+		//{
 		//	lastAng=(angle-difAng)/5;
 		//	angle-=(angle-difAng)/2;
-		//	climbAngle-=(climbAngle-asin( (e[1]-y)/e.distance(Vec3f(x,y,z))))/5;	
+		//	climbAngle-=(climbAngle-asin( (e[1]-y)/e.distance(Vec3f(x,y,z))))/5;
 		//}
 	}
 	else if(enemy != NULL && enemy->dead)

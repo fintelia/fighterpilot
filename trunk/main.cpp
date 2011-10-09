@@ -13,7 +13,6 @@ int sw=1280;																																	//	//
 float sAspect=((float)sw)/sh;																													//	//
 																																				//  //
 profiler Profiler;																																//	//
-TextManager* textManager;																														//	//
 																																				//	//
 //#undef USING_XINPUT																															//  //
 #if defined USING_XINPUT																														//	//
@@ -23,11 +22,12 @@ TextManager* textManager;																														//	//
 #endif																																			//	//
 ObjectStats settings;																															//	//
 																																				//	//
-menu::manager& menuManager=menu::manager::getInstance();																						//	//
+gui::manager& menuManager=gui::manager::getInstance();																						//	//
 DataManager& dataManager=DataManager::getInstance();																							//	//
 WorldManager& world=WorldManager::getInstance();																								//	//
 CollisionChecker& collisionCheck=CollisionChecker::getInstance();																				//	//
 GraphicsManager* graphics=OpenGLgraphics::getInstance();																						//	//
+FileManager& fileManager=FileManager::getInstance();
 bool hasContext=true;																															//	//
 bool getContext=false;																															//	//
 bool done=false;//exits program																													//	//
@@ -47,11 +47,11 @@ void update()
 	//while(world.time.needsUpdate())
 	{
 	//	world.time.nextUpdate();
-	
+
 	}
 
 	world.time.nextFrame();
-	
+
 	input->update();		//takes 2-11 ms
 
 	menuManager.update();	//takes almost no time
@@ -76,7 +76,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	switch (uMsg)									// Check For Windows Messages
 	{
 		case WM_SHOWWINDOW:
-		{	
+		{
 			if (!HIWORD(wParam))					// Check Minimization State
 			{
 				active=true;						// Program Is Active
@@ -96,7 +96,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				case SC_SCREENSAVE:					// Screensaver Trying To Start?
 				case SC_MONITORPOWER:				// Monitor Trying To Enter Powersave?
 					return 0;						// Prevent From Happening
-			} 
+			}
 			break;									// Exit
 		}
 		//case WM_MOVE:
@@ -109,7 +109,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			PostQuitMessage(0);						// Send A Quit Message
 			return 0;								// Jump Back
-		} 
+		}
 		case WM_ACTIVATEAPP:
 		{
 			//bool wActive = LOWORD(wParam) != 0;
@@ -151,6 +151,12 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	// Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+void outOfMemory()
+{
+	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION);
+	exit(EXIT_FAILURE);
+}
+
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
@@ -158,14 +164,11 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 {
 	MSG		msg;									// Windows Message Structure
 
-	if(!is_directory("media"))
+	set_new_handler(outOfMemory);
+
+	if(!fileManager.directoryExists("media"))
 	{
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
-		return 0;
-	}
-	else if(!exists("media/assetList.xml"))
-	{
-		MessageBox(NULL,L"Media/assetList.xml not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 		return 0;
 	}
 	else if(!dataManager.loadAssetList())
@@ -201,7 +204,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	ShowHideTaskBar(false);
 //////
 	srand ((unsigned int)time(NULL));
-	textManager = new TextManager();
 	game->init();
 
 	//fireParticleEffect = graphics->newParticleEffect("explosion fireball",1000.0*r.right/1280,"partical shader");
@@ -212,9 +214,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	//MessageBox(NULL,L"missile smoke created",L"",0);
 
 //////
-	float nextUpdate=0;
-	float lastUpdate=0;
 
+	float nextUpdate=0;
+	//float lastUpdate=0;
+	auto a = fileManager.getAllDirectories("media");
 	while(!done)									// Loop That Runs While done=FALSE
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
@@ -242,7 +245,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				time = GetTime();
 			}
 			nextUpdate=1000.0/(MAX_FPS+10.0) + time;
-			lastUpdate = time;
+			//lastUpdate = time;
 
 			update();
 
@@ -254,7 +257,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		}
 	}
 	world.destroy();
-	textManager->shutdown();
 	menuManager.shutdown();
 	dataManager.shutdown();
 	graphics->destroyWindow();

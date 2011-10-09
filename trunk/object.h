@@ -9,7 +9,7 @@
 //	Vec3f		pos;
 //
 //	virtual bool Update(float value)=0;
-//	entity(int Id, int Type, int Team, Vec3f Pos=Vec3f(0,0,0)): id(Id), type(Type), team(Team), dead(false), pos(Pos){} 
+//	entity(int Id, int Type, int Team, Vec3f Pos=Vec3f(0,0,0)): id(Id), type(Type), team(Team), dead(false), pos(Pos){}
 //};
 
 typedef unsigned int objId;
@@ -49,14 +49,14 @@ private:
 
 protected:
 	objectController* control;
-	controlledObject(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c): object(sPos, sRot, Type), control(c), ownsControl(false)
+	controlledObject(Vec3f sPos, Quat4f sRot, objectType Type, objectController* c): object(sPos, sRot, Type), ownsControl(false), control(c)
 	{
 		if(control != NULL)
 		{
 			control->objectNum(id);
 		}
 	}
-	controlledObject(Vec3f sPos, Quat4f sRot, objectType Type, controlType c): object(sPos, sRot, Type), control(NULL), ownsControl(true)
+	controlledObject(Vec3f sPos, Quat4f sRot, objectType Type, controlType c): object(sPos, sRot, Type), ownsControl(true), control(NULL)
 	{
 		if(c == CONTROL_HUMAN)
 		{

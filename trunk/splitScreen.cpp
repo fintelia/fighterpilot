@@ -1,7 +1,8 @@
 
+
 #include "main.h"
 
-namespace menu{
+namespace gui{
 splitScreen::splitScreen(std::shared_ptr<Level> lvl): dogFight(lvl)
 {
 	graphics->resetViews(2);
@@ -17,7 +18,7 @@ int splitScreen::update()
 
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setPopup(new menu::inGame);
+		menuManager.setPopup(new gui::inGame);
 		input->up(VK_ESCAPE);
 	}
 

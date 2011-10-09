@@ -26,7 +26,7 @@
 //		heights = new float[info->mapResolution.x*info->mapResolution.y];
 //		fin.read((char*)heights,info->mapResolution.x*info->mapResolution.y*sizeof(float));
 //		fin.close();
-//		
+//
 //		return true;
 //	}
 //	else
@@ -55,7 +55,7 @@ bool LevelFile::savePNG(string filename)
 	int size = (3*tWidth+tWidth%4)*sh + 3*tWidth*tHeight%4;
 
 	FILE *fp;
-	if(!fopen_s(&fp,(filename).c_str(), "wb") && fp)
+	if((fp = fopen((filename).c_str(), "wb")) != nullptr)
 	{
 		unsigned char* colors = new unsigned char[size];
 		memset(colors,255,size);
@@ -182,24 +182,23 @@ bool LevelFile::savePNG(string filename)
 }
 bool LevelFile::loadPNG(string filename)
 {
-	png_uint_32		i, 
+	png_uint_32		i,
 					width,
 					height,
 					rowbytes;
 	int				bit_depth,
-					color_type,
-					colorChannels;
+					color_type;
 	unsigned char*	image_data;
 	png_bytep*		row_pointers;
-	
+
 	/* Open the PNG file. */
 	FILE *infile;
-	fopen_s(&infile,filename.c_str(), "rb");
-	
+	infile = fopen(filename.c_str(), "rb");
+
 	if (!infile) {
 		return false;
 	}
-	
+
 	unsigned char sig[8];
 	/* Check for the 8-byte signature */
 	fread(sig, 1, 8, infile);
@@ -207,31 +206,31 @@ bool LevelFile::loadPNG(string filename)
 		fclose(infile);
 		return false;
 	}
-	/* 
-	 * Set up the PNG structs 
+	/*
+	 * Set up the PNG structs
 	 */
 	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!png_ptr) {
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
 		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	png_infop end_ptr = png_create_info_struct(png_ptr);
 	if (!end_ptr) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	/*
-	 * block to handle libpng errors, 
+	 * block to handle libpng errors,
 	 * then check whether the PNG file had a bKGD chunk
 	 */
 	if (setjmp(png_jmpbuf(png_ptr))) {
@@ -239,16 +238,16 @@ bool LevelFile::loadPNG(string filename)
 		fclose(infile);
 		return false;
 	}
-	
+
 	/*
-	 * takes our file stream pointer (infile) and 
+	 * takes our file stream pointer (infile) and
 	 * stores it in the png_ptr struct for later use.
 	 */
 	png_init_io(png_ptr, infile);
-	
+
 	/*
-	 * lets libpng know that we already checked the 8 
-	 * signature bytes, so it should not expect to find 
+	 * lets libpng know that we already checked the 8
+	 * signature bytes, so it should not expect to find
 	 * them at the current file pointer location
 	 */
 	png_set_sig_bytes(png_ptr, 8);
@@ -257,21 +256,21 @@ bool LevelFile::loadPNG(string filename)
 
 	png_read_info(png_ptr, info_ptr);
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-	
-	
+
+
 	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
 	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
 	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
 	if (bit_depth == 16)																png_set_strip_16(png_ptr);
 	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
-	
+
 	/* snipped out the color type code, see source pngLoad.c */
 	/* Update the png info struct.*/
 	png_read_update_info(png_ptr, info_ptr);
-	
+
 	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
-	
+	//colorChannels = (int)png_get_channels(png_ptr, info_ptr);
+
 	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		return false;
@@ -279,10 +278,10 @@ bool LevelFile::loadPNG(string filename)
 	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		return false;
-	}	
+	}
 	for (i = 0;  i < height;  i++)
 		row_pointers[i] = image_data + i*rowbytes;
-	
+
 	png_read_image(png_ptr, row_pointers);
 	png_read_end(png_ptr, NULL);
 
@@ -325,7 +324,7 @@ bool LevelFile::loadPNG(string filename)
 	{
 		if(strcmp((const char*)unknowns[i].name,"mhTs") == 0)
 		{
-			unsigned int nSize = min(unknowns[i].size/sizeof(unsigned short), info->mapResolution.x*info->mapResolution.y);
+			unsigned int nSize = min((int)(unknowns[i].size/sizeof(unsigned short)), info->mapResolution.x*info->mapResolution.y);
 			unsigned short* sHeights = new unsigned short[nSize];
 			memcpy(sHeights, unknowns[i].data, nSize*sizeof(unsigned short));
 
@@ -359,7 +358,7 @@ bool LevelFile::loadPNG(string filename)
 
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	fclose(infile);
-	
+
 	free(image_data);
 	free(row_pointers);
 	return true;
@@ -416,7 +415,7 @@ Vec3f Level::heightmapBase::rasterNormal(unsigned int h, unsigned int k) const
 	//if(x >= resolutionX()-1) Ay=By;
 	//if(z <= 0) Dy = Cy;
 	//if(x <= 0) By = Ay;
-	return Vec3f(Cy - Ay, 3.0 / 15.0, Dy - By).normalize();	
+	return Vec3f(Cy - Ay, 3.0 / 15.0, Dy - By).normalize();
 }
 Vec3f Level::heightmapBase::interpolatedNormal(float x, float z) const
 {
@@ -447,12 +446,12 @@ Vec3f Level::heightmapBase::normal(float x, float z) const
 	z *= mResolution.y/mSize.y;
 	return interpolatedNormal(x,z);
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL), shaderType(SHADER_NONE)
+Level::heightmapBase::heightmapBase(Vec2u Resolution): mPosition(0,0,0), mSize(Resolution.x,Resolution.y), mResolution(Resolution),  heights(NULL), shaderType(SHADER_NONE)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memset(heights,0,mResolution.x*mResolution.y*sizeof(float));
 }
-Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mResolution(Resolution), mPosition(0,0,0), mSize(Resolution.x,Resolution.y), heights(NULL), shaderType(SHADER_NONE)
+Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mPosition(0,0,0), mSize(Resolution.x,Resolution.y), mResolution(Resolution), heights(NULL), shaderType(SHADER_NONE)
 {
 	heights = new float[mResolution.x*mResolution.y];
 	memcpy(heights,hts,mResolution.x*mResolution.y*sizeof(float));
@@ -534,7 +533,7 @@ void Level::heightmapGL::createList() const
 		glEnd();
 	}
 	glEndList();
-	
+
 }
 void Level::heightmapGL::render() const
 {
@@ -745,7 +744,7 @@ bool Level::init(string filename)
 	if(!file.loadPNG(filename))
 		return false;
 
-	if(	(file.info == NULL) || 
+	if(	(file.info == NULL) ||
 		(file.info->mapResolution.x != 0 && file.info->mapResolution.y != 0 && file.heights == NULL) ||
 		(file.info->numObjects != 0 && file.objects == NULL) ||
 		(file.info->numRegions != 0 && file.regions == NULL))
@@ -773,7 +772,7 @@ void Level::initializeWorld()
 	{
 		if(i->type & PLANE)
 		{
-			nPlane* p = NULL;
+			//nPlane* p = NULL;
 			//if(obj.controlType == CONTROL_HUMAN)
 			{
 				for(int n=0;n<NumPlayers;n++)
@@ -802,6 +801,13 @@ void Level::initializeWorld()
 	}
 
 	bullets = world.newObject(new bulletCloud);
+
+	int w = min(mGround->resolutionX(), mGround->resolutionZ());
+	float minHeight = mGround->getMinHeight();
+	float maxHeight = mGround->getMaxHeight();
+	unsigned short* h = new unsigned short[w*w];
+	for(int i=0;i<w*w;i++) h[i] = ((mGround->rasterHeight(i%w,i/w)-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;//(unsigned short)((mGround->rasterHeight(i%w,i/w)-minHeight)/maxHeight * ((unsigned short)USHRT_MAX));
+	world.initTerrain(h, w-1,Vec3f(0,mGround->getMinHeight(),0),Vec3f(mGround->sizeX(),mGround->getMaxHeight() - mGround->getMinHeight(),mGround->sizeZ()));
 }
 void Level::render(Vec3f eye)
 {
@@ -835,7 +841,7 @@ void Level::render(Vec3f eye)
 		glBegin(GL_TRIANGLE_FAN);
 			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
 			glVertex3f(center.x,center.y,center.z);
-	
+
 			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
 			{
 				cAng=cos(ang);
@@ -967,7 +973,7 @@ bool editLevel::init(string BMP, Vec3f size, float seaLevel)
 
 	return true;
 }
-void editLevel::save(string filename) 
+void editLevel::save(string filename)
 {
 	LevelFile f;
 	f.header.magicNumber = 0x454c49465f4c564c;

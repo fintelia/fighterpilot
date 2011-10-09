@@ -27,8 +27,8 @@ private:
 			string tex;
 			Color color;
 			//string shader;
-			int numIndices;		//for glDrawArrays 
-			int indicesOffset;	//for glDrawArrays 
+			int numIndices;		//for glDrawArrays
+			int indicesOffset;	//for glDrawArrays
 		};
 		vector<material> materials;
 
@@ -36,7 +36,7 @@ private:
 		std::shared_ptr<CollisionChecker::triangleList> trl;
 	};
 	struct fontAsset: public asset{
-		//int id       --stores the texture id for the font 
+		//int id       --stores the texture id for the font
 		string texName;
 		float height;//in px
 		struct character
@@ -53,7 +53,7 @@ private:
 		string name;
 		string filename[2];		//extra for shaders
 		set<string> options;
-		asset::assetType type; 
+		asset::assetType type;
 	};
 	queue<assetFile> assetFiles;
 	queue<assetFile> assetFilesPreload;
@@ -104,6 +104,8 @@ public:
 	void preloadAssets();
 	int loadAsset();
 
+	string getBoundShader() const{return boundShader;}
+
 	void shutdown();
 private:
 
@@ -120,7 +122,7 @@ private:
 	int getId(string name);
 	int getId(objectType t);
 
-	char *textFileRead(char *fn);//for shaders
+	char *textFileRead(const char *fn);//for shaders
 
 	DataManager():activeTextureUnit(0),boundShaderId(0){}
 	~DataManager();

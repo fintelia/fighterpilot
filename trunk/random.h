@@ -1,7 +1,4 @@
 
-typedef linear_congruential<unsigned long, 48271, 0, 2147483647>
-	minstd_rand;
-
 //float randf(float min,float max);
 //float randf(float max);
 //float randf();
@@ -29,25 +26,26 @@ typedef linear_congruential<unsigned long, 48271, 0, 2147483647>
 //{
 //	return 0;
 //}
+/*
 class Rand
 {
 private:
 	template <class T>
 	T gRand()
 	{
-		static_assert(tr1::is_integral::value,"Rand::gRand() called with invalid type");
-		static bool isUnsigned = tr1::is_unsigned<T>::value;
-		static tr1::uniform_real<T> dist(isUnsigned ? ((T)0) : ~((T)0), isUnsigned ? ~((T)0) : -(~((T)0)));
+		static_assert(is_integral::value,"Rand::gRand() called with invalid type");
+		static bool isUnsigned = is_unsigned<T>::value;
+		static uniform_real<T> dist(isUnsigned ? ((T)0) : ~((T)0), isUnsigned ? ~((T)0) : -(~((T)0)));
 		return dist(gen);
 	}
-	template<> float gRand<float>() 
+	template<> float gRand<float>()
 	{
-		static tr1::uniform_real<float> dist(0.0f,1.0f);
+		static uniform_real<float> dist(0.0f,1.0f);
 		return dist(gen);
 	}
-	template<> double gRand<double>() 
+	template<> double gRand<double>()
 	{
-		static tr1::uniform_real<double> dist(0.0,1.0);
+		static uniform_real<double> dist(0.0,1.0);
 		return dist(gen);
 	}
 public:
@@ -106,25 +104,81 @@ public:
 		return Vector2<double>(cos(t),sin(t));
 	}
 private:
-	tr1::minstd_rand gen;
+	minstd_rand gen;
 
 	Rand()
 	{
 		gen.seed((unsigned int)time(NULL));
 	}
-};
-extern Rand& randomGen;
+};*/
 
-template<class T> T random()
-{
-	return randomGen.operator()<T>();
-}
-template<class T> T random(T max)
-{
-	return randomGen.operator()<T>(max);
-}
+#include <random>
 
-template<class T> T random(T min, T max)
-{
-	return randomGen.operator()<T>(min,max);
+extern minstd_rand randomGen;
+
+
+#ifdef VISUAL_STUDIO
+	struct Rand{
+    template<class T> static T random(T min, T max)
+    {
+        static uniform_real_distribution<double> dist(0.0, 1.0);
+
+		return min + dist(randomGen) * max;
+    }
+////////////////////////////////////////////////////////////////////////
+    template<class T> static T random(T max)
+    {
+        return random<T>((T)0, max);
+    }
+////////////////////////////////////////////////////////////////////////
+    template<class T> static T random()
+    {
+		static uniform_real_distribution<T> dist;
+		return dist(randomGen);
+    }
+	template<> static float random<float>()
+	{
+		static uniform_real_distribution<float> dist(0.0f,1.0f);
+		return dist(randomGen);
+	}
+	template <>	static Vec3f random<Vec3f> ()
+	{
+		float t = random<float>() * 2.0f*PI;
+		float z = random<float>() * 2.0f - 1.0f;
+		return Vec3f(z*cos(t),z*sin(t),(z < 0.0f) ? -sqrt(1.0f-z*z) : sqrt(1.0f-z*z));
+	}
+	template <>	static Vec3d random<Vec3d> ()
+	{
+		double t = random<double>() * 2.0*PI;
+		double z = random<double>();
+		return Vec3d(cos(t),sin(t),sqrt(1.0-z*z));
+	}
+	template <>	static Vector2<float> random<Vector2<float>> ()
+	{
+		float t = random<float>() * 2.0f*PI;
+		return Vector2<float>(cos(t),sin(t));
+	}
+	template <>	static Vector2<double> random<Vector2<double>> ()
+	{
+		double t = random<double>() * 2.0*PI;
+		return Vector2<double>(cos(t),sin(t));
+	}
+	};
+	template<class T> T random(T min, T max){return Rand::random<T>(min,max);}
+	template<class T> T random(T max){return Rand::random<T>(max);}
+	template<class T> T random(){return Rand::random<T>();}
+#else
+namespace Rand{
+    template<class T> T random(T min, T max);
+////////////////////////////////////////////////////////////////////////
+    template<class T> T random(T max);
+////////////////////////////////////////////////////////////////////////
+    template<class T> T random();
+	template<> float random<float>();
+	template <>	Vec3f random<Vec3f> ();
+	template <>	Vec3d random<Vec3d> ();
+	template <>	Vector2<float> random<Vector2<float>> ();
+	template <>	Vector2<double> random<Vector2<double>> ();
 }
+using namespace Rand;
+#endif

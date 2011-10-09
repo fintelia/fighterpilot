@@ -31,6 +31,9 @@ public:
 
 		Vec3f center;
 		float radius;
+
+		triangleList(const triangleList&);
+		triangleList* operator=(const triangleList&);
 	public:
 		Vec3f getCenter(){return center;}
 		float getRadius(){return radius;}
@@ -49,7 +52,7 @@ private:
 	bool pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z) const;
 	bool triangleCollision(const triangle& tri1, const triangle& tri2) const;
 public:
-	
+
 	//void findPolygonRadius(triangle& tri);
 	bool boundingCollision(const triangle& tri1, const triangle& tri2) const;
 	bool operator() (const triangleList& t1, const triangleList& t2) const;

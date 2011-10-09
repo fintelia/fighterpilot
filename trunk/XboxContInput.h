@@ -1,17 +1,19 @@
 
+#define XINPUT
+
 #pragma comment (lib,"xinput")
 
 #include <commdlg.h>
 #include <Xinput.h> // XInput API
 #include <basetsd.h>
-//#pragma warning( disable : 4996 ) // disable deprecated warning 
+//#pragma warning( disable : 4996 ) // disable deprecated warning
 #include <strsafe.h>
 #pragma warning( default : 4996 )
 
 #define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=NULL; } }
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=NULL; } }
 
-#define MAX_CONTROLLERS 4  // XInput handles up to 4 controllers 
+#define MAX_CONTROLLERS 4  // XInput handles up to 4 controllers
 //#define INPUT_DEADZONE  ( 0.24f * FLOAT(0x7FFF) )  // Default to 24% of the +/- 32767 range.   This is a reasonable default value but can be altered if needed.
 #define USING_XINPUT
 

@@ -22,9 +22,9 @@ class Matrix2
 		set( v0, v2,
 			 v1, v3);
 	}
-	Matrix2(T* ptr)
+	Matrix2(T* p)
 	{
-		memcpy(v,ptr,4*sizeof(T));
+		memcpy(v,p,4*sizeof(T));
 	}
 	T* ptr()
 	{
@@ -69,9 +69,15 @@ class Matrix3
 			 v1, v4, v7,
 			 v2, v5, v8);
 	}
-	Matrix3(T* ptr)
+	Matrix3(Quaternion<T> q)
 	{
-		memcpy(v,ptr,9*sizeof(T));
+		set(	1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z,		2.0*q.x*q.y + 2.0*q.z*w,				2.0*q.x*q.z + 2.0*q.y*w,
+				2.0*q.x*q.y - 2.0*q.z*w,				1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z,		2.0*q.y*q.z + 2.0*q.x*w,
+				2.0*q.x*q.z + 2.0*q.y*w,				2.0*q.y*q.z - 2.0*q.x*w,				1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y);
+	}
+	Matrix3(T* p)
+	{
+		memcpy(v,p,9*sizeof(T));
 	}
 	T* ptr()
 	{
@@ -123,6 +129,34 @@ public:
 			 v2, v6, v10, v14,
 			 v3, v7, v11, v15);
 	}
+	matrix4x4(Quaternion<T> q)
+	{
+		set(	1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z,		2.0*q.x*q.y + 2.0*q.z*w,				2.0*q.x*q.z + 2.0*q.y*w,			0.0,
+				2.0*q.x*q.y - 2.0*q.z*w,				1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z,		2.0*q.y*q.z + 2.0*q.x*w,			0.0,
+				2.0*q.x*q.z + 2.0*q.y*w,				2.0*q.y*q.z - 2.0*q.x*w,				1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y		0.0,
+				0.0,									0.0,									0.0,								1.0);
+	}
+	matrix4x4(Quaternion<T> q, Vector3<T> t)
+	{
+		set(	1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z,		2.0*q.x*q.y + 2.0*q.z*w,				2.0*q.x*q.z + 2.0*q.y*w,			0.0,
+				2.0*q.x*q.y - 2.0*q.z*w,				1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z,		2.0*q.y*q.z + 2.0*q.x*w,			0.0,
+				2.0*q.x*q.z + 2.0*q.y*w,				2.0*q.y*q.z - 2.0*q.x*w,				1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y		0.0,
+				t.x,									t.y,									t.z,								1.0);
+	}
+	matrix4x4(Quaternion<T> q, Vector3<T> t, T s)
+	{
+		set(	s*(1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z),	s*(2.0*q.x*q.y + 2.0*q.z*w),			s*(2.0*q.x*q.z + 2.0*q.y*w),			0.0,
+				s*(2.0*q.x*q.y - 2.0*q.z*w),			s*(1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z),	s*(2.0*q.y*q.z + 2.0*q.x*w),			0.0,
+				s*(2.0*q.x*q.z + 2.0*q.y*w),			s*(2.0*q.y*q.z - 2.0*q.x*w),			s*(1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y)		0.0,
+				t.x,									t.y,									t.z,									1.0);
+	}
+	matrix4x4(Quaternion<T> q, Vector3<T> t, Vector3<T> s)
+	{
+		set(	s.x*(1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z),	s.y*(2.0*q.x*q.y + 2.0*q.z*w),			s.z*(2.0*q.x*q.z + 2.0*q.y*w),			0.0,
+				s.x*(2.0*q.x*q.y - 2.0*q.z*w),			s.y*(1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z),	s.z*(2.0*q.y*q.z + 2.0*q.x*w),			0.0,
+				s.x*(2.0*q.x*q.z + 2.0*q.y*w),			s.y*(2.0*q.y*q.z - 2.0*q.x*w),			s.z*(1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y)	0.0,
+				t.x,									t.y,									t.z,									1.0);
+	}
 	template <class U>
 	matrix4x4(matrix4x4<U> u)
 	{
@@ -131,9 +165,9 @@ public:
 		v[8]=(T)u.v[8];		v[9]=(T)u.v[9];		v[10]=(T)u.v[10];	v[11]=(T)u.v[11];
 		v[12]=(T)u.v[12];	v[13]=(T)u.v[13];	v[14]=(T)u.v[14];	v[15]=(T)u.v[15];
 	}
-	matrix4x4(T* ptr)
+	matrix4x4(T* p)
 	{
-		memcpy(v,ptr,16*sizeof(T));
+		memcpy(v,p,16*sizeof(T));
 	}
 	T* ptr()
 	{
@@ -224,9 +258,9 @@ public:
 			output.v[i] = cofactor(i);
 
 		output = output.transpose();
-		T det = v[0] * output.v[0] + 
-				v[4] * output.v[1] + 
-				v[8] * output.v[2] + 
+		T det = v[0] * output.v[0] +
+				v[4] * output.v[1] +
+				v[8] * output.v[2] +
 				v[12] *output.v[3];
 
 		if(det == 0.0)

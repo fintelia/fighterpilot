@@ -123,6 +123,7 @@
     <ClCompile Include="enums.cpp" />
     <ClCompile Include="explosionFlash.cpp" />
     <ClCompile Include="explosionSmoke.cpp" />
+    <ClCompile Include="fileManager.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="GameMath.cpp" />
     <ClCompile Include="GLee.c">
@@ -155,7 +156,6 @@
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="terrain.cpp" />
-    <ClCompile Include="text.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="worldManager.cpp" />
   </ItemGroup>
@@ -168,6 +168,7 @@
     <ClInclude Include="dataManager.h" />
     <ClInclude Include="debugBreak.h" />
     <ClInclude Include="engine.h" />
+    <ClInclude Include="fileManager.h" />
     <ClInclude Include="geoPlane.h" />
     <ClInclude Include="GL\GLee.h" />
     <ClInclude Include="matrix.h" />
@@ -195,7 +196,6 @@
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="terrain.h" />
-    <ClInclude Include="text.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="worldManager.h" />

@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include "angle.h"
 #include "vector.h"
@@ -60,11 +60,11 @@ public:
 	T x, y, w, h;
 	rectangle(): x(), y(), w(), h()
 	{
-		
+
 	}
 	rectangle(T X, T Y, T W, T H): x(X), y(Y), w(W), h(H)
 	{
-		
+
 	}
 
 	static rectangle XYWH(T X, T Y, T W, T H)
@@ -131,8 +131,8 @@ public:
 		return abs(w * h);
 	}
 
-	template <class T>
-	bool inRect(Vector2<T> v) const
+	template <class U>
+	bool inRect(Vector2<U> v) const
 	{
 		return ((w >= 0 && v.x >= x && v.x <= x + w) || (w <= 0 && v.x <= x && v.x >= x + w)) && ((h >= 0 && v.y >= y && v.y <= y + h) || (h <= 0 && v.y <= y && v.x >= y + h));
 	}
@@ -152,15 +152,15 @@ double dist_Point_to_Segment(Vector3<T> P, Vector3<T> S1,Vector3<T> S2)
 {
 	Vector3<T> v = S2 - S1;
 	Vector3<T> w = P - S1;
-	
+
 	double c1 = w.dot(v);
 	if ( c1 <= 0 )
 		return P.distance(S1);
-	
+
 	double c2 = v.dot(v);
 	if ( c2 <= c1 )
 		return P.distance(S2);
-	
+
 	double b = c1 / c2;
 	Vector3<T> Pb = S1 + v * b;
 	return P.distance(Pb);
@@ -210,3 +210,15 @@ T clamp(T value, U v1, V v2)
 	}
 }
 
+template <class T> T taylor(T t, T x, T dx)
+{
+	return x + dx * t;
+}
+template <class T> T taylor(T t, T x, T dx, T ddx)
+{
+	return x + dx * t + ddx * t*t;
+}
+template <class T> T taylor(T t, T x, T dx, T ddx, T dddx)
+{
+	return x + dx * t + ddx * t*t + dddx * t*t*t;
+}

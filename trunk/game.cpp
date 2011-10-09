@@ -5,7 +5,7 @@ objId bullets;
 
 void Game::init()
 {
-	menuManager.setMenu(new menu::loading);
+	menuManager.setMenu(new gui::loading);
 }
 
 void Game::update()

@@ -1,4 +1,5 @@
 
+
 #include "engine.h"
 
 particle::manager& particleManager = particle::manager::getInstance();
@@ -24,7 +25,7 @@ namespace particle{
 //	{
 //		p.startTime = time;
 //		p.endTime = time + life();
-//		
+//
 //		p.vel = random<Vec3f>() * random<float>() * velocity();
 //		p.pos = Vec3f();
 //
@@ -56,7 +57,7 @@ namespace particle{
 //	static Vec3f lastPos = position;
 //	double ms = world.time.getLength();
 //	double time = world.time();
-//	
+//
 //	if(parentObject != 0)
 //	{
 //		position = world.objectList[parentObject]->position + world.objectList[parentObject]->rotation * parentOffset;
@@ -87,7 +88,7 @@ namespace particle{
 //
 //		//particles[i].a = 1.0 - t;
 //	}
-//	
+//
 //	particle p;
 //	extraTime += ms;
 //	while(extraTime > particlesPerSecond)
@@ -96,7 +97,7 @@ namespace particle{
 //
 //		p.startTime = time - extraTime;
 //		p.endTime = time + life();
-//		
+//
 //		p.vel = random<Vec3f>();
 //		p.pos = /*position*(1.0-(ms-extraTime)/ms) + lastPos*(ms-extraTime)/ms +*/ random<Vec3f>()*spread() + p.vel * extraTime/1000.0;
 //
@@ -110,7 +111,7 @@ namespace particle{
 //
 //		addParticle(p);
 //	}
-//	
+//
 //	lastPos = position;
 //}
 //void explosion::render(Vec3f up, Vec3f right)
@@ -198,7 +199,7 @@ namespace particle{
 //
 //}
 
-emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(pos),lastPosition(position),parentObject(0),parentOffset(0,0,0),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(0),parentOffset(0,0,0),position(pos),lastPosition(position),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -210,7 +211,7 @@ emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesP
 	}
 	glGenBuffers(1,&VBO);
 }
-emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),position(world[parent]->position + world[parent]->rotation * offset),lastPosition(position),parentObject(parent),parentOffset(offset),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(parent),parentOffset(offset),position(world[parent]->position + world[parent]->rotation * offset),lastPosition(position),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -266,7 +267,7 @@ void emitter::update()
 {
 	double ms = world.time.length();
 	double time = world.time();
-	
+
 	if(parentObject != 0)
 	{
 		if(world[parentObject] == NULL || world[parentObject]->awaitingDelete)
@@ -343,7 +344,7 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 		}
 	}
 
-	
+
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
@@ -388,7 +389,7 @@ void emitter::render()
 
 void manager::init()
 {
-	
+
 }
 void manager::addEmitter(emitter* e)
 {

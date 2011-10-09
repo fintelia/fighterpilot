@@ -86,21 +86,28 @@ protected:
 	float interOcularDistance;
 
 	GraphicsManager();
+	virtual ~GraphicsManager(){}
 public:
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
 	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
 
-	virtual void drawText(string font, string text, Vec2f pos)=0;
-	virtual void drawText(string font, string text, Rect rect)=0;
-	virtual Vec2f textSize(string font, string text)=0;
+	virtual void drawText(string text, Vec2f pos, string font)=0;
+	virtual void drawText(string text, Rect rect, string font)=0;
+	virtual Vec2f textSize(string text, string font)=0;
+
+	virtual void drawText(string text, Vec2f pos){drawText(text, pos, "default font");}
+	virtual void drawText(string text, Rect rect){drawText(text, rect, "default font");}
+	virtual Vec2f textSize(string text){return textSize(text, "default font");}
+
+
 
 	virtual bool init()=0;
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
-	virtual bool createWindow(char* title, RECT WindowRect, bool checkMultisample)=0;
+	virtual bool createWindow(const char* title, RECT WindowRect, bool checkMultisample)=0;
 	virtual bool recreateWindow(Vec2i resolution, int multisample)=0;
 	virtual bool changeResolution(Vec2f resolution)=0;
 	virtual void swapBuffers()=0;
@@ -119,7 +126,7 @@ public:
 
 	virtual void drawModel(string model, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
 	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
-	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}	
+	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
 	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
 	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up);
@@ -137,9 +144,9 @@ public:
 	void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
 	void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
 	void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
-	
+
 	bool sphereInFrustum(Sphere<float> s);
-	
+
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 };
@@ -162,7 +169,7 @@ protected:
 	GLuint colorRenderBuffers;//only used with multisampling
 	GLuint depthRenderBuffers;//only used with multisampling
 	GLuint FBOs[2];
-	
+
 
 	RenderTarget renderTarget;
 
@@ -175,7 +182,7 @@ public:
 	void render();
 	void destroyWindow();
 	void setGamma(float gamma);
-	bool createWindow(char* title, RECT WindowRect, bool checkMultisample);
+	bool createWindow(const char* title, RECT WindowRect, bool checkMultisample);
 	bool recreateWindow(Vec2i resolution, int multisample);
 	bool changeResolution(Vec2f resolution);
 	void swapBuffers();
@@ -195,10 +202,9 @@ public:
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
 	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
-	void drawText(string font, string text, Vec2f pos);
-	void drawText(string font, string text, Rect rect);
-	Vec2f textSize(string font, string text);
-
+	void drawText(string text, Vec2f pos, string font);
+	void drawText(string text, Rect rect, string font);
+	Vec2f textSize(string text, string font);
 
 
 	//void viewport(int x,int y,int width,int height);

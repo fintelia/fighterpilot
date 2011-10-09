@@ -1,11 +1,12 @@
 
 #include "engine.h"
-GraphicsManager::GraphicsManager(): currentId(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0), currentView(0)
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0)
 {
 	resetViews(1);
 }
 void GraphicsManager::flashTaskBar(int times, int length)
 {
+#ifdef VISUAL_STUDIO
 	FLASHWINFO f;
 	f.cbSize = sizeof(FLASHWINFO);
 	f.hwnd = hWnd;
@@ -13,6 +14,7 @@ void GraphicsManager::flashTaskBar(int times, int length)
 	f.dwTimeout = length;
 	f.uCount = times;
 	FlashWindowEx(&f);
+#endif
 }
 void GraphicsManager::minimizeWindow()
 {
@@ -33,7 +35,7 @@ Vec2f GraphicsManager::project(Vec3f p, unsigned int view)
 
 	Vec3f s = (f.cross(UP)).normalize();
 	Vec3f u = (s.cross(f)).normalize();
-	
+
 	float F = 1.0/tan((views[view].projection.fovy*PI/180.0) / 2.0);
 
 	Vec3f v = Vec3f(s.dot(p)*F/views[view].projection.aspect,   -u.dot(p)*F,   f.dot(p)*(views[view].projection.zNear+views[view].projection.zFar)-2.0*views[view].projection.zNear*views[view].projection.zFar) / (f.dot(p));

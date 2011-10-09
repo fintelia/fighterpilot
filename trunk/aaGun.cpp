@@ -1,3 +1,4 @@
+
 #include "main.h"
 
 void aaGun::update(double time, double ms)
@@ -17,11 +18,11 @@ void aaGun::update(double time, double ms)
 	}
 	machineGun.coolDownLeft-=ms;
 
-	Quat4f lastRotation=rotation;
+	//Quat4f lastRotation=rotation;
 
 	//elevation	+= 1.0*controller.up*(ms/1000) - 1.0*controller.down*(ms/1000);
 	//angle		+= 1.5*controller.left*(ms/1000) - 1.5*controller.right*(ms/1000);
-		
+
 	//speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
 	//climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
 	//turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
@@ -73,7 +74,7 @@ void aaGun::update(double time, double ms)
 		{
 
 	//		world.bullets.push_back(bullet(position,targeter+random<Vec3f>()*0.010,id,time-extraShootTime-machineGun.coolDown));
-	
+
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
 			shotsFired++;
@@ -143,13 +144,13 @@ void aaGun::spawn()
 }
 void aaGun::initArmaments()
 {
-	machineGun.max			= machineGun.left			= 1000; 
+	machineGun.max			= machineGun.left			= 1000;
 	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
 	machineGun.rechargeTime	= machineGun.rechargeLeft	= 150.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 20.0;
 	machineGun.firing									= false;
 }
-aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
 {
 	spawn();
 }

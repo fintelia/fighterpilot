@@ -1,4 +1,4 @@
-namespace menu
+namespace gui
 {
 
 class newObject: public popup
@@ -44,20 +44,20 @@ class levelEditor: public screen
 {
 public:
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS};
-	levelEditor():awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),lastTab((Tab)-1), center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0),newRegionRadius(false){}
+	levelEditor():lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
 	int update();
 	void render();
 	void render3D(unsigned int view);
-	
+
 	bool mouse(mouseButton button, bool down);
 	bool scroll(float rotations);
 	Tab getTab();
 	int getShader();
 	void operator() (popup* p);
 protected:
-	
+
 
 	float randomDisplacement(float h1, float h2, float d);
 	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
@@ -103,7 +103,7 @@ protected:
 
 
 };
-class chooseMode: public screen 
+class chooseMode: public screen
 {
 public:
 	enum choice{SINGLE_PLAYER=0,MULTIPLAYER=1,MAP_EDITOR=2};

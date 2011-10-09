@@ -37,7 +37,7 @@ void standard_input::up(int k)
 }
 bool standard_input::getKey(int key)
 {
-	if(key>=256 || key<0) false;
+	if(key>=256 || key<0) return false;
 	WaitForSingleObject( inputMutex, INFINITE );
 	bool b=keys[key];
 	ReleaseMutex( inputMutex );
@@ -125,6 +125,7 @@ void standard_input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
 	}
 }
+#ifdef XINPUT
 
 xinput_input::xinput_input(): standard_input(), deadZone(0.25)
 {
@@ -236,7 +237,7 @@ xinput_input::~xinput_input()
 {
 	//XInputEnable( false );
 }
-float xinput_input::operator() (int key) 
+float xinput_input::operator() (int key)
 {
 	float i=0;
 	WaitForSingleObject( inputMutex, INFINITE );
@@ -275,3 +276,4 @@ float xinput_input::operator() (int key)
 	else
 		return min(0.0,i/(1.0-deadZone) + deadZone);
 }
+#endif

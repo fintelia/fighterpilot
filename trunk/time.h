@@ -17,10 +17,10 @@ private:
 	double timeSpeed;//time speed in    ms(gametime) / ms(realtime)
 	bool paused;//wether time is paused
 
-	__int64 lReal;//ticks at last frame 
+	__int64 lReal;//ticks at last frame
 	double lGame;//time in ms at last frame
 
-	__int64 cReal;//ticks at current frame 
+	__int64 cReal;//ticks at current frame
 	double cGame;//ticks in ms at current frame
 
 
@@ -35,7 +35,7 @@ private:
 	double trueGameTime() const
 	{
 		__int64 real = totalTicks();
-		
+
 		if(changingSpeed)
 		{
 			if(paused)
@@ -64,7 +64,7 @@ private:
 			else
 			{
 				return cGame + timeSpeed*(1000*(real - cReal)/ticksPerSecond);
-			}		
+			}
 		}
 	}
 
@@ -73,7 +73,7 @@ private:
 	unsigned long numUpdates;
 
 public:
-	GameTime(): changingSpeed(false), timeSpeed(1.0), paused(false), lGame(0.0), cGame(0.0), updateStage(false), numUpdates(0)
+	GameTime(): sReal(0), eReal(0), sGame(0), sSpeed(0), eSpeed(0), changingSpeed(false), timeSpeed(1.0), paused(false), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), numUpdates(0)
 	{
 		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
 			ticksPerSecond = 1000;
@@ -107,7 +107,7 @@ public:
 		lGame = cGame;
 
 		cReal = totalTicks();
-		
+
 		if(changingSpeed)
 		{
 			if(paused)
@@ -139,7 +139,7 @@ public:
 			else
 			{
 				cGame = lGame + timeSpeed*(1000*(cReal - lReal)/ticksPerSecond);
-			}		
+			}
 		}
 	}
 
@@ -216,7 +216,7 @@ public:
 	}
 	double interpolate()
 	{
-		return min((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH, 1.0);
+		return ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH < 1.0) ? ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH) : 1.0;
 	}
 	double getSpeed()
 	{

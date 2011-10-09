@@ -43,30 +43,30 @@ public:
 		float v=0;
 		for(auto i=elements.begin();i!=elements.end();i++,y+=20)
 		{
-			textManager->renderText(i->first,10,y);
+			graphics->drawText(i->first,Vec2f(10,y));
 			v=0;
 			for(auto s=i->second.begin();s!=i->second.end();s++)
 				v+=*s;
 			ostringstream buffer;
 			buffer << std::fixed << std::setprecision(1) << max(v/i->second.size(),0.0f);
-			textManager->renderText(buffer.str(),200,y);
+			graphics->drawText(buffer.str(),Vec2f(200,y));
 		}
 		for(auto i=output.begin();i!=output.end();i++,y+=20)
 		{
-			textManager->renderText(i->first,10,y);
-			textManager->renderText(lexical_cast<string>(i->second),200,y);
+			graphics->drawText(i->first, Vec2f(10,y));
+			graphics->drawText(lexical_cast<string>(i->second),Vec2f(200,y));
 		}
 		for(auto i=outputd.begin();i!=outputd.end();i++,y+=20)
 		{
-			textManager->renderText(i->first,10,y);
+			graphics->drawText(i->first,Vec2f(10,y));
 			ostringstream buffer;
 			buffer << std::fixed << std::setprecision(2) << i->second;
-			textManager->renderText(buffer.str(),200,y);
+			graphics->drawText(buffer.str(),Vec2f(200,y));
 		}
 		for(auto i=counter.begin();i!=counter.end();i++,y+=20)
 		{
-			textManager->renderText(i->first,10,y);
-			textManager->renderText(lexical_cast<string>(i->second),200,y);
+			graphics->drawText(i->first,Vec2f(10,y));
+			graphics->drawText(lexical_cast<string>(i->second),Vec2f(200,y));
 		}
 		output.clear();
 		glColor3f(1,1,1);

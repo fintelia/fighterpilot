@@ -47,8 +47,6 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 
 	float w2 = r.w/2;
 	float h2 = r.h/2;
-	float cosRot = cos(rotation);
-	float sinRot = sin(rotation);
 	overlay[0].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*0.25) , r.y+h2 + h2*sin(-rotation+PI*0.25));
 	overlay[1].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*0.75) , r.y+h2 + h2*sin(-rotation+PI*0.75));
 	overlay[2].position = Vec2f(r.x+w2 + w2*cos(-rotation+PI*1.25) , r.y+h2 + h2*sin(-rotation+PI*1.25));
@@ -102,7 +100,7 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
-void OpenGLgraphics::drawText(string font, string text, Vec2f pos)
+void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
 	auto f = dataManager.getFont(font);
 
@@ -112,30 +110,56 @@ void OpenGLgraphics::drawText(string font, string text, Vec2f pos)
 
 		Vec2f charPos = pos;
 		Rect charRect;
-		for(auto i = text.begin(); i != text.end(); i++)
+		if(dataManager.getBoundShader() == "ortho")
 		{
-			if(*i == '\n')
+			for(auto i = text.begin(); i != text.end(); i++)
 			{
-				charPos.x = pos.x;
-				charPos.y += f->height;
+				if(*i == '\n')
+				{
+					charPos.x = pos.x;
+					charPos.y += f->height / sh;
+				}
+				else if(f->characters.count(*i) != 0)
+				{
+					auto& c = f->characters.find(*i)->second;
+
+					charRect.x = charPos.x + c.xOffset / sh;
+					charRect.y = charPos.y + c.yOffset / sh + c.height / sh;
+					charRect.w = c.width / sh;
+					charRect.h = - c.height / sh;
+
+					drawPartialOverlay(charRect, c.UV);
+					charPos.x += c.xAdvance  / sh;
+				}
 			}
-			else if(f->characters.count(*i) != 0)
+		}
+		else
+		{
+			for(auto i = text.begin(); i != text.end(); i++)
 			{
-				auto& c = f->characters.find(*i)->second;
+				if(*i == '\n')
+				{
+					charPos.x = pos.x;
+					charPos.y += f->height;
+				}
+				else if(f->characters.count(*i) != 0)
+				{
+					auto& c = f->characters.find(*i)->second;
 
-				charRect.x = charPos.x + c.xOffset;
-				charRect.y = charPos.y + c.yOffset;
-				charRect.w = c.width;
-				charRect.h = c.height;
+					charRect.x = charPos.x + c.xOffset;
+					charRect.y = charPos.y + c.yOffset;
+					charRect.w = c.width;
+					charRect.h = c.height;
 
-				drawPartialOverlay(charRect, c.UV);
-				charPos.x += c.xAdvance;
+					drawPartialOverlay(charRect, c.UV);
+					charPos.x += c.xAdvance;
+				}
 			}
 		}
 		dataManager.unbind(f->texName);
 	}
 }
-void OpenGLgraphics::drawText(string font, string text, Rect rect)
+void OpenGLgraphics::drawText(string text, Rect rect, string font)
 {
 	auto f = dataManager.getFont(font);
 
@@ -176,7 +200,7 @@ void OpenGLgraphics::drawText(string font, string text, Rect rect)
 		dataManager.unbind(f->texName);
 	}
 }
-Vec2f OpenGLgraphics::textSize(string font, string text)
+Vec2f OpenGLgraphics::textSize(string text, string font)
 {
 	auto f = dataManager.getFont(font);
 	if(f == nullptr)
@@ -194,7 +218,11 @@ Vec2f OpenGLgraphics::textSize(string font, string text)
 			textSize.x += f->characters.find(*i)->second.xAdvance;
 		}
 	}
-	return textSize;
+
+	if(dataManager.getBoundShader() == "ortho")
+		return textSize / sh;
+	else
+		return textSize;
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
@@ -218,7 +246,7 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 //	glOrtho( 0, sw , sh , 0, -1, 1 );
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	
+
 	//double time = world.time()/10000;
 	//double r = sqrt((float)sw*sw + sh*sh)/2;
 
@@ -257,7 +285,7 @@ bool OpenGLgraphics::init()
 	glEnable(GL_COLOR_MATERIAL);
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
-	glEnable(GL_BLEND);	
+	glEnable(GL_BLEND);
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -279,7 +307,7 @@ bool OpenGLgraphics::init()
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 
 	//FRAME BUFFER OBJECTS
-	
+
 	glGenFramebuffersEXT(2, FBOs);
 
 	int samples;
@@ -323,7 +351,7 @@ bool OpenGLgraphics::init()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	
+
 			glGenTextures(1, depthTextures+i);
 			glBindTexture(GL_TEXTURE_2D, depthTextures[i]);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -386,7 +414,6 @@ void OpenGLgraphics::resize(int w, int h)
 void OpenGLgraphics::render()
 {
 /////////////////////////////////////START TIMING/////////////////////////////////////
-	double t=GetTime();
 	static double frameTimes[20]={20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20};//in milliseconds
 	static int curentFrame=0;
 	double time=GetTime();
@@ -407,7 +434,7 @@ void OpenGLgraphics::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	
+
 
 	//dataManager.unbindShader();
 
@@ -421,13 +448,13 @@ void OpenGLgraphics::render()
 		leftEye = true;
 		glColorMask(true,false,false,true);
 		menuManager.render3D(0);
-		
+
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		leftEye = false;
 		glColorMask(false,true,true,true);
 		menuManager.render3D(0);
-		
+
 		glColorMask(true,true,true,true);
 	}
 	else
@@ -488,7 +515,7 @@ void OpenGLgraphics::render()
 	#ifdef _DEBUG
 		if(fps<29.0)glColor3f(1,0,0);
 		else glColor3f(0,0,0);
- 		textManager->renderText(lexical_cast<string>(floor(fps)),sw/2-25,25);
+ 		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sw/2-25,25));
 		glColor3f(1,1,1);
 		Profiler.draw();
 	#endif
@@ -577,7 +604,7 @@ void OpenGLgraphics::destroyWindow()
 
 
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
-	
+
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
 	ShowCursor(true);								// Show Mouse Pointer
 
@@ -615,7 +642,7 @@ void OpenGLgraphics::destroyWindow()
 }
 void OpenGLgraphics::setGamma(float gamma)
 {
-	if(hDC == NULL)
+	/*if(hDC == NULL)
 		return;
 
 	WORD gammaRamp[3][256];
@@ -623,19 +650,19 @@ void OpenGLgraphics::setGamma(float gamma)
 	{
 		int value = i*((int)((gamma*0.5f+0.5f)*255)+128);
 		value = min(value,65535);
-		gammaRamp[0][i] = 
-		gammaRamp[1][i] = 
+		gammaRamp[0][i] =
+		gammaRamp[1][i] =
 		gammaRamp[2][i] = value;
 	}
-	
+
 	if (SetDeviceGammaRamp(hDC, gammaRamp))
 	{
 		currentGamma = gamma; // Store gama setting
 	}
 	else
-		assert(false);
+		assert(false);*/
 }
-bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultisample)
+bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool checkMultisample)
 {
 	static bool arbMultisampleSupported=false;
 	static int arbMultisampleFormat=0;
@@ -665,7 +692,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 		MessageBox(NULL,L"Failed To Register The Window Class.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;											// Return false
 	}
-	
+
 	DEVMODE dmScreenSettings;								// Device Mode
 	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));	// Makes Sure Memory's Cleared
 	dmScreenSettings.dmSize=sizeof(dmScreenSettings);		// Size Of The Devmode Structure
@@ -747,11 +774,11 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 	//	0,											// Reserved
 	//	0, 0, 0										// Layer Masks Ignored
 	//};
-	
+
 	PIXELFORMATDESCRIPTOR pfd;
 	pfd.nSize = sizeof( pfd );
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_SUPPORT_COMPOSITION;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | 0x00008000/*PFD_SUPPORT_COMPOSITION*/;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 24;
 	pfd.cDepthBits = 24;
@@ -824,7 +851,7 @@ bool OpenGLgraphics::createWindow(char* title, RECT WindowRect, bool checkMultis
 			if (wglChoosePixelFormatARB(hDC,iAttributes,fAttributes,1,&pixelFormat,&numFormats) && numFormats >= 1)
 			{
 				arbMultisampleSupported = true;
-				arbMultisampleFormat	= pixelFormat;	
+				arbMultisampleFormat	= pixelFormat;
 				destroyWindow();
 				return graphics->createWindow(title, WindowRect, false);
 			}
@@ -882,21 +909,24 @@ void OpenGLgraphics::takeScreenshot()
 	GetLocalTime(&sTime);
 
 	string filename = "screen shots\\FighterPilot ";
-	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" + lexical_cast<string>(sTime.wDay) + " " + 
+	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" + lexical_cast<string>(sTime.wDay) + " " +
 				lexical_cast<string>(sTime.wHour+1) + "-" + lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" + lexical_cast<string>(sTime.wMilliseconds) + ".png";
-	
-	if(!filesystem::is_directory("screen shots"))
-		filesystem::create_directory("screen shots");
+
+	//if(!filesystem::is_directory("screen shots"))
+	//	filesystem::create_directory("screen shots");
+
+	fileManager.createDirectory("screen shots");//(windows only) if it already exists then nothing happens
+
 
 	int size = (3*sw+sw%4)*sh + 3*sw*sh%4;
 
 	//see: http://zarb.org/~gc/html/libpng.html
 	FILE *fp;
-	if(!fopen_s(&fp,filename.c_str(), "wb") && fp)
+	if((fp=fopen(filename.c_str(), "wb")) != nullptr && fp)
 	{
 		unsigned char* colors = new unsigned char[size];
 		memset(colors,0,size);
-		glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors); 
+		glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors);
 		png_bytepp rows = new unsigned char*[sh];
 		for(int i=0;i<sh;i++) rows[i] = colors +  (3*sw+sw%4) * (sh-i);
 

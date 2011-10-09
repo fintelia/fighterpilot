@@ -101,7 +101,7 @@ public:
 	}
 	nControl getCotrol(int con)
 	{
-		
+
 		if(con>=0 && con<8)
 			return c[con];
 		else
@@ -114,7 +114,7 @@ public:
 		if(con>=0 && con<8)
 			c[con]=k;
 	}
-	float playerControls::operator[](int index) {
+	float operator[](int index) {
 		return c[index]();
 	}
 };
@@ -137,8 +137,8 @@ public:
 
 	virtual void update(){}
 	virtual controlState getControlState()=0;
-	
-	objectController(controlType t, int objectNum):type(t),mObjectNum(objectNum),mKills(0){}
+
+	objectController(controlType t, int oNum):mObjectNum(oNum),mKills(0),type(t){}
 };
 
 class humanControl: public objectController
@@ -151,7 +151,7 @@ private:
 
 	static int		TotalPlayers;
 public:
-	humanControl(int objectNum):objectController(CONTROL_HUMAN,objectNum), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
+	humanControl(int oNum):objectController(CONTROL_HUMAN,oNum), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
 	humanControl():objectController(CONTROL_HUMAN,0), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
 
 	int playerNum()				{return PlayerNum;}
@@ -183,7 +183,7 @@ private:
 	int	target;
 	controlState contState;
 public:
-	AIcontrol(int objectNum): objectController(CONTROL_COMPUTER,objectNum)
+	AIcontrol(int oNum): objectController(CONTROL_COMPUTER,oNum)
 	{
 		contState.accelerate=0.0;
 		contState.brake=0.0;

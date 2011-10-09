@@ -133,9 +133,6 @@
     <Filter Include="Source Files\ENGINE\random">
       <UniqueIdentifier>{3dd6417d-bbbc-47e5-aa9e-6138943311ba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ENGINE\text">
-      <UniqueIdentifier>{93431558-7366-47dc-a1f4-a03a9c799170}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ENGINE\time">
       <UniqueIdentifier>{370e420e-f491-4c35-94e1-f224fc101fda}</UniqueIdentifier>
     </Filter>
@@ -153,6 +150,9 @@
     </Filter>
     <Filter Include="Source Files\ENGINE\math\plane">
       <UniqueIdentifier>{5681ad1f-1a72-42dd-9f56-7787b12bfa1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\fileManager">
+      <UniqueIdentifier>{5c76260d-0f5b-4e4d-acd5-7ec168a2b030}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -261,9 +261,6 @@
     <ClCompile Include="settings.cpp">
       <Filter>Source Files\OTHER</Filter>
     </ClCompile>
-    <ClCompile Include="text.cpp">
-      <Filter>Source Files\ENGINE\text</Filter>
-    </ClCompile>
     <ClCompile Include="time.cpp">
       <Filter>Source Files\ENGINE\time</Filter>
     </ClCompile>
@@ -296,6 +293,9 @@
     </ClCompile>
     <ClCompile Include="splitScreen.cpp">
       <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="fileManager.cpp">
+      <Filter>Source Files\ENGINE\fileManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -390,9 +390,6 @@
     <ClInclude Include="GL\GLee.h">
       <Filter>glee</Filter>
     </ClInclude>
-    <ClInclude Include="text.h">
-      <Filter>Source Files\ENGINE\text</Filter>
-    </ClInclude>
     <ClInclude Include="time.h">
       <Filter>Source Files\ENGINE\time</Filter>
     </ClInclude>
@@ -416,6 +413,9 @@
     </ClInclude>
     <ClInclude Include="geoPlane.h">
       <Filter>Source Files\ENGINE\math\plane</Filter>
+    </ClInclude>
+    <ClInclude Include="fileManager.h">
+      <Filter>Source Files\ENGINE\fileManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
