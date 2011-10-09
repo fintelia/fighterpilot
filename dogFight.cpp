@@ -1,10 +1,10 @@
 
 #include "main.h"
 
-namespace menu{
+namespace gui{
 dogFight::dogFight(std::shared_ptr<Level> lvl): level(lvl)
 {
-	
+
 }
 bool dogFight::init()
 {
@@ -23,7 +23,7 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 		glColor3f(1,1,1);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
-	
+
 		Vec2f v1 = Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*8.0);
 		Vec2f v2 = Vec2f(x + width/150*125, y + height/25*16.0);
 
@@ -52,7 +52,6 @@ void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 void dogFight::radar(float x, float y, float width, float height,bool firstPerson, nPlane* p)
 {
 	//plane p = *(plane*)planes[players[acplayer].planeNum()];
-	int xc=x+width/2,yc=y+height/2;
 
 	float radarAng = 45.0*world.time()/1000;
 	radarAng = (radarAng/360.0 - floor(radarAng/360.0)) * 360;
@@ -60,7 +59,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 	if(firstPerson)
 	{
 	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
-		
+
 		dataManager.bind("radar");
 		dataManager.setUniform1f("radarAng", radarAng);
 
@@ -100,7 +99,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
 			}
-		
+
 		}
 
 		glColor3f(1,1,1);
@@ -163,7 +162,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
 			}
-		
+
 		}
 
 		glColor3f(1,1,1);
@@ -230,7 +229,6 @@ void dogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
 
 				graphics->drawModel(cPlane->type, (*i).second->position, Quat4f());
 
-				int ml=0;
 				for(int m = cPlane->rockets.max - cPlane->rockets.left; m < cPlane->rockets.max; m++)
 				{
 					glPushMatrix();
@@ -269,7 +267,7 @@ void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c
 
 	dataManager.unbindShader();
 }
-void dogFight::drawScene(int acplayer) 
+void dogFight::drawScene(int acplayer)
 {
 	static map<int,double> lastDraw;
 	double time=world.time();
@@ -283,13 +281,12 @@ void dogFight::drawScene(int acplayer)
 
 	GLfloat ambientColor[] = {0.85f, 0.85f, 0.85f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
-	
+
 	GLfloat lightColor0[] = {0.6f, 0.6f, 0.6f, 0.0f};
 	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-	
-	float ly= 0.5;
+
 	Vec3f e;
 	Vec3f c;
 	Vec3f u;
@@ -308,7 +305,7 @@ void dogFight::drawScene(int acplayer)
 		e = lerp(p->lastPosition,p->position,interp);
 		c = rot * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
 		u = rot * Vec3f(0,1,0);
-		
+
 		graphics->lookAt(e, c, u);
 	}
 	//sky dome
@@ -325,9 +322,9 @@ void dogFight::drawScene(int acplayer)
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 
-
-	if(world.level != NULL)
-		world.level->render(e);
+	world.renderTerrain();
+//	if(world.level != NULL)
+//		world.level->render(e);
 
 	dataManager.bind("model");
 	Vec3f axis;
@@ -364,7 +361,7 @@ void dogFight::drawScene(int acplayer)
 	auto aaGuns = world(AA_GUN);
 	for(auto i = aaGuns.begin(); i != aaGuns.end();i++)
 	{
-		glPushMatrix();	
+		glPushMatrix();
 		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
 		Angle ang = acosA(i->second->rotation.w);
 		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
@@ -386,9 +383,9 @@ void dogFight::drawScene(int acplayer)
 
 	drawHexCylinder(cCenter,cRadius,20000, white);
 	glDepthMask(true);
-	
+
 	lastDraw[acplayer] = time;
-	
+
 	glError();
 }
 void dogFight::checkCollisions()
@@ -427,12 +424,12 @@ void dogFight::checkCollisions()
 				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = ((missile*)l->second.get())->owner;
-				if(owner != i->second->id &&  owner != (*i).first && 
+				if(owner != i->second->id &&  owner != (*i).first &&
 					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
 					//collisionCheck(i->second,l->second))
 				{
 					((nPlane*)(*i).second.get())->loseHealth(105);
-					if((*i).second->dead) 
+					if((*i).second->dead)
 					{
 						if(owner==players[0].objectNum() && players[0].active()) players[0].addKill();
 						if(owner==players[1].objectNum() && players[1].active()) players[1].addKill();

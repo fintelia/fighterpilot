@@ -4,14 +4,16 @@
 
 //typedef map<string,MenuCreateFunc>::iterator Iterator;
 //manager* pInstance=NULL;
-namespace menu
+namespace gui
 {
 void manager::render()
 {
 	mDrawCursor = false;
 	if(menu != NULL)
 	{
+		dataManager.bind("ortho");
 		menu->render();
+		dataManager.unbindShader();
 		for(auto e = menu->labels.begin(); e != menu->labels.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -50,7 +52,9 @@ void manager::render()
 	}
 	for(auto i = popups.begin(); i!=popups.end();i++)
 	{
+		dataManager.bind("ortho");
 		(*i)->render();
+		dataManager.unbindShader();
 
 		for(auto e = (*i)->labels.begin(); e != (*i)->labels.end(); e++)
 		{
@@ -90,16 +94,19 @@ void manager::render()
 	}
 	if(mDrawCursor)
 	{
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
+		dataManager.bind("ortho");
+		Vec2f cursorPos = input->getMousePos();
 		if(dataManager.assetLoaded("cursor"))
-			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,21,25),"cursor");
+			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,0.02,-0.025),"cursor");
 		else
 		{
-			glColor3f(0,0,0);
-			graphics->drawTriangle(Vec3f(cursorPos.x,cursorPos.y,0),Vec3f(cursorPos.x,cursorPos.y+25,0),Vec3f(cursorPos.x+12,cursorPos.y+22,0));
-			glColor3f(1,1,1);
+			dataManager.bind("white");
+			graphics->drawTriangle(	Vec3f(cursorPos.x,cursorPos.y,0),
+									Vec3f(cursorPos.x+0.015,cursorPos.y-0.023,0),
+									Vec3f(cursorPos.x,cursorPos.y-0.028,0) );
+			dataManager.unbindTextures();
 		}
+		dataManager.unbindShader();
 	}
 }
 void manager::render3D(unsigned int view)
@@ -136,7 +143,6 @@ void manager::shutdown()
 void manager::setMenu(screen* m)
 {
 	popups.clear();
-	bool b = menu;
 
 	if(menu != nullptr)
 		delete menu;
@@ -175,16 +181,16 @@ void manager::inputCallback(Input::callBack* callback)
 	else if(callback->type == MOUSE_CLICK)
 	{
 		Input::mouseClick* call = (Input::mouseClick*)callback;
-		
+
 		if(!popups.empty())
 		{
+			int pSize = popups.size();
 			call->pos.x *= sh;
 			call->pos.y = (1.0 - call->pos.y) * sh;
 
-			int pSize = popups.size();
 			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
 			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;
-			
+
 			debugAssert(popups.size() == pSize);
 
 			popups.back()->inputCallback(call);
@@ -240,17 +246,17 @@ void elementContainer::inputCallback(Input::callBack* callback)
 {
 	if(callback->type == KEY_STROKE && focus != NULL)
 	{
-		Input::keyStroke* call = (Input::keyStroke*)callback;
+	//	Input::keyStroke* call = (Input::keyStroke*)callback;
 		issueInputCallback(callback,focus);
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
 		Input::mouseClick* call = (Input::mouseClick*)callback;
-	
-		
+
+
 	//	call->pos.x *= sh;
 	//	call->pos.y = (1.0 - call->pos.y) * sh;
-		
+
 		if(call->down)
 		{
 			if(focus != NULL)
@@ -273,7 +279,7 @@ void elementContainer::inputCallback(Input::callBack* callback)
 			for(auto e = checkBoxes.begin(); this!=NULL && e != checkBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
 			for(auto e = textBoxes.begin(); this!=NULL && e != textBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
 			for(auto e = listBoxes.begin(); this!=NULL && e != listBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-		
+
 			debugAssert(focus == NULL);//break if focus is not NULL
 			focus = NULL;//if anything responded to the mouse press, this will execute
 		}
@@ -321,21 +327,23 @@ void openFile::refreshView()
 	folderButtons.clear();
 	fileButtons.clear();
 
+	folders = fileManager.getAllDirectories(directory);
+	files = fileManager.getAllFiles(directory,extFilters);
 	folders.push_back("..");
-	filesystem::directory_iterator end_itr; // default construction yields past-the-end
-	for ( filesystem::directory_iterator itr( directory );	itr != end_itr;	 ++itr )
-	{
-		if ( is_directory(itr->status()) && itr->path().generic_string().compare(".svn") != 0)
-		{
-			folders.push_back(itr->path().leaf().generic_string());
-		}
-		if(extFilters.find(extension(itr->path())) != extFilters.end())
-		{
-			files.push_back(itr->path().leaf().generic_string());
-		}
-	}
+	//filesystem::directory_iterator end_itr; // default construction yields past-the-end
+	//for ( filesystem::directory_iterator itr( directory );	itr != end_itr;	 ++itr )
+	//{
+	//	if ( is_directory(itr->status()) && itr->path().generic_string().compare(".svn") != 0)
+	//	{
+	//		folders.push_back(itr->path().leaf().generic_string());
+	//	}
+	//	if(extFilters.find(extension(itr->path())) != extFilters.end())
+	//	{
+	//		files.push_back(itr->path().leaf().generic_string());
+	//	}
+	//}
 	int row=0, column=0;
-	for(auto i=folders.begin();i!=folders.end();i++)	
+	for(auto i=folders.begin();i!=folders.end();i++)
 	{
 		folderButtons.push_back(new button(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4)));
 		if(++column==4){column=0;row++;}
@@ -350,8 +358,8 @@ int openFile::update()
 {
 	if(buttons["desktop"]->checkChanged())
 	{
-		char aFolder[MAX_PATH]; 
-		if(!SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		char aFolder[MAX_PATH];
+		if(!SHGetFolderPathA(0, CSIDL_DESKTOPDIRECTORY, NULL, 0/*SHGFP_TYPE_CURRENT*/, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -360,8 +368,8 @@ int openFile::update()
 	}
 	else if(buttons["myDocuments"]->checkChanged())
 	{
-		char aFolder[MAX_PATH]; 
-		if(!SHGetFolderPathA(0, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		char aFolder[MAX_PATH];
+		if(!SHGetFolderPathA(0, CSIDL_PERSONAL, NULL, 0/*SHGFP_TYPE_CURRENT*/, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -370,8 +378,8 @@ int openFile::update()
 	}
 	else if(buttons["myComputer"]->checkChanged())
 	{
-		char aFolder[MAX_PATH]; 
-		if(!SHGetFolderPathA(0, CSIDL_DRIVES, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		char aFolder[MAX_PATH];
+		if(!SHGetFolderPathA(0, CSIDL_DRIVES, NULL, 0/*SHGFP_TYPE_CURRENT*/, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -380,8 +388,8 @@ int openFile::update()
 	}
 	else if(buttons["myNetwork"]->checkChanged())
 	{
-		char aFolder[MAX_PATH]; 
-		if(!SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, SHGFP_TYPE_CURRENT, aFolder))
+		char aFolder[MAX_PATH];
+		if(!SHGetFolderPathA(0, CSIDL_NETHOOD, NULL, 0/*SHGFP_TYPE_CURRENT*/, aFolder))
 		{
 			directory = aFolder;
 			refreshView();
@@ -392,7 +400,7 @@ int openFile::update()
 	{
 		if((*i)->checkChanged())
 		{
-			directory/=(*i)->getText();
+			directory = directory + "/" + (*i)->getText();
 			refreshView();
 			return 0;
 		}
@@ -410,11 +418,14 @@ int openFile::update()
 }
 void openFile::render()
 {
-	graphics->drawOverlay(Rect::CWH(sw/2,sh/2,841,523),"file viewer");
-	graphics->drawOverlay(Rect::XYXY(sw/2-180,sh/2+189,sw/2+190,sh/2+235),"entry bar");
+	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.821,-0.511),"file viewer");
+	graphics->drawOverlay(Rect::XYXY(0.5*sAspect-0.176,0.5-0.185,0.5*sAspect+0.186,0.5-0.229),"entry bar");
+	graphics->drawText(file,Vec2f(0.5*sAspect-0.166,0.5-0.207+graphics->textSize(file).y/2));
+
+	dataManager.unbindShader();//unbind ortho shader for rendering the buttons
+
 
 	glColor3f(0,0,0);
-	textManager->renderText(file,sw/2-170,sh/2+212-textManager->getTextHeight(file)/2);
 	glPushMatrix();
 	glTranslatef((sw/2-190),(sh/2-246),0);
 	for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
@@ -425,12 +436,12 @@ void openFile::render()
 }
 void openFile::fileSelected()
 {
-	string e = extension(file);
+	string e = fileManager.extension(file);
 	if(extFilters.find(e) == extFilters.end())
 	{
 		file += *extFilters.begin();
 	}
-	if(!exists(directory/file))
+	if(!fileManager.fileExists(directory + file))
 		file = "";
 
 	done = true;
@@ -454,7 +465,7 @@ bool openFile::keyDown(int vkey)
 	}
 	else
 	{
-		char ascii = MapVirtualKey(vkey,MAPVK_VK_TO_CHAR);
+		char ascii = MapVirtualKey(vkey,2/*MAPVK_VK_TO_CHAR*/);
 
 		if(ascii != 0 && !input->getKey(VK_SHIFT))
 			file  += tolower(ascii);
@@ -475,7 +486,7 @@ bool openFile::mouseL(bool down, int x, int y)
 	}
 	else
 	{
-		if(clicking) 
+		if(clicking)
 		{
 			clicking = false;
 			fileSelected();
@@ -495,7 +506,7 @@ void saveFile::operator() (popup* p)
 		{
 			done = true;
 		}
-		else 
+		else
 		{
 			replaceDialog = false;
 		}
@@ -510,7 +521,7 @@ void saveFile::fileSelected()
 	}
 	if(file.find(".") == file.npos)
 		file += *extFilters.begin();
-	if(exists(directory/file))//if file exists
+	if(fileManager.fileExists(directory + file))//if file exists
 	{
 		messageBox_c* m = new messageBox_c;
 		vector<string> s;
@@ -535,20 +546,26 @@ bool messageBox_c::init(string t, vector<string> names)
 {
 	if(names.empty()) return init(t);//watch out for infinite loop!!
 
-	width = max(textManager->getTextWidth(t)+40,715);
-	height = max(textManager->getTextHeight(t)-170,0) + 295;
+	Vec2f tSize = graphics->textSize(t);
+	width = max(tSize.x+40,715.0f);
+	height = max(tSize.y-170,0.0f) + 295;
 	x = (sw-width)/2;
 	y = (sh-height)/2;
 	if(x < 5) x = 5;
 	if(y < 5) y = 5;
 
-	labels["label"] = new label(x+(width-textManager->getTextWidth(t))/2, y+height*95/295-textManager->getTextHeight(t)/2, t, Color(1,1,1,0.8));
+	labels["label"] = new label(x+(width-tSize.x)/2, y+height*95/295-tSize.y/2, t, Color(1,1,1,0.8));
 
 	float slotWidth = (685.0*width/715) / names.size();
 	int slotNum = 0;
 	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
-		options.push_back(new label(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-textManager->getTextWidth(*i)/2,y + (235.0/295*height)-textManager->getTextHeight(*i)/2, *i, white));
+		options.push_back(new label(
+
+									((float)(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-graphics->textSize(*i).x/2))/sh,
+									1.0 - ((float)(y + (235.0/295*height)-graphics->textSize(*i).y/2))/sh - 0.023,
+
+									*i, white));
 	}
 	value=-1;
 	clicking=-1;
@@ -557,32 +574,34 @@ bool messageBox_c::init(string t, vector<string> names)
 void messageBox_c::render()
 {
 	if(dataManager.assetLoaded("dialog box"))
-		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"dialog box");
+		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,-(float)height/sh),"dialog box");
 	else
 	{
 		dataManager.bind("noTexture");
 		glColor3f(0.3,0.3,0.3);
-		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
+		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,-(float)height/sh));
 		glColor3f(1,1,1);
 	}
 
-	int startX = (15.0*width/715)+x;
-	int startY = (193.0*height/295)+y;
-	float slotWidth = (685.0*width/715) / options.size();
-	float slotHeight = (84.0*height/295);
+	float slotWidth = ((float)(685.0*width/715) / options.size())/sh;
+	float slotHeight = ((float)(84.0*height/295))/sh;
+	float startX = ((float)(15.0*width/715)+x)/sh;
+	float startY = 1.0 - ((float)(193.0*height/295)+y)/sh - slotHeight;
+
 	int slotNum=0;
-	POINT cursorPos;
-	GetCursorPos(&cursorPos);
-	for(vector<label*>::iterator i = options.begin(); i!=options.end();i++,slotNum++)
+
+	Vec2f cursorPos = input->getMousePos();
+	for(auto i = options.begin(); i!=options.end();i++,slotNum++)
 	{
 		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
-			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-textManager->getTextWidth((*i)->getText())*0.75-20,		startY+slotHeight*0.5-35,						
-												startX+slotWidth*(0.5+slotNum)+textManager->getTextWidth((*i)->getText())*0.75+20,		startY+slotHeight*0.5+35),
+			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-graphics->textSize((*i)->getText()).x*0.75-0.03,		startY+slotHeight*0.5-0.034,
+												startX+slotWidth*(0.5+slotNum)+graphics->textSize((*i)->getText()).x*0.75+0.03,		startY+slotHeight*0.5+0.034),
 												"glow");
 		}
 		(*i)->render();
 	}
+
 	menuManager.drawCursor();
 }
 bool messageBox_c::mouseL(bool down, int X, int Y)
@@ -605,7 +624,6 @@ bool messageBox_c::mouseL(bool down, int X, int Y)
 	}
 	else
 	{
-		int slotNum = 0;
 		for(int slotNum = 0; slotNum < options.size();slotNum++)
 		{
 			if(X > startX+slotNum*slotWidth && X < startX+(slotNum+1)*slotWidth && Y > startY && Y < startY+slotHeight && clicking == slotNum)
@@ -624,23 +642,22 @@ void button::setElementText(string t)
 {
 	text=t;
 	clampedText=t;
-	if(textManager->getTextWidth(clampedText) < shape.w-6)
+	if(graphics->textSize(clampedText).x < shape.w-6)
 	{
 		return;
 	}
-	else if(textManager->getTextWidth("...") > shape.w-6)
+	else if(graphics->textSize("...").x > shape.w-6)
 	{
 		clampedText="";
 	}
 	else
 	{
-		while(textManager->getTextWidth(clampedText + "...") > shape.w-6)
+		while(graphics->textSize(clampedText + "...").x > shape.w-6)
 			clampedText.erase(clampedText.size()-1);
 		int l=clampedText.find_last_not_of(" \t\f\v\n\r")+1;
 		clampedText=clampedText.substr(0,l);
 		clampedText += "...";
 	}
-
 }
 void button::setElementTextColor(Color c)
 {
@@ -666,49 +683,49 @@ void button::render()
 				tPos.x=0.0;
 				tSize.x=10.0/140;
 				rPos.x=shape.x;
-				rSize.x=min(10,shape.w/2);
+				rSize.x=min(10.0f,shape.w/2);
 			}
 			else if(ix==1)
 			{
 				tPos.x=10.0/140;
 				tSize.x=1.0-20.0/140;
 				rPos.x=shape.x+10;
-				rSize.x=max(shape.w-20,0);
+				rSize.x=max(shape.w-20,0.0f);
 			}
 			else if(ix==2)
 			{
 				tPos.x=1.0-10.0/140;
 				tSize.x=10.0/140;
-				rPos.x=shape.x+shape.w-min(10,shape.w/2);
-				rSize.x=min(10,shape.w/2);
+				rPos.x=shape.x+shape.w-min(10.0f,shape.w/2);
+				rSize.x=min(10.0f,shape.w/2);
 			}
 			if(iy==0)
 			{
 				tPos.y=0.0;
 				tSize.y=10.0/45;
 				rPos.y=shape.y;
-				rSize.y=min(10,shape.h/2);
+				rSize.y=min(10.0f,shape.h/2);
 			}
 			else if(iy==1)
 			{
 				tPos.y=10.0/45;
 				tSize.y=1.0-20.0/45;
 				rPos.y=shape.y+10;
-				rSize.y=max(shape.h-20,0);
+				rSize.y=max(shape.h-20,0.0f);
 			}
 			else if(iy==2)
 			{
 				tPos.y=1.0-10.0/45;
 				tSize.y=10.0/45;
-				rPos.y=shape.y+shape.h-min(10,shape.h/2);
-				rSize.y=min(10,shape.h/2);
+				rPos.y=shape.y+shape.h-min(10.0f,shape.h/2);
+				rSize.y=min(10.0f,shape.h/2);
 			}
 			graphics->drawPartialOverlay(Rect::XYWH(rPos,rSize),Rect::XYWH(tPos,tSize),"button");
 		}
 	}
 	dataManager.unbindTextures();
 	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
-	textManager->renderText(clampedText,shape.x+(shape.w-textManager->getTextWidth(clampedText))/2,shape.y+(shape.h-textManager->getTextHeight(clampedText))/2);
+	graphics->drawText(clampedText,Vec2f(shape.x+(shape.w-graphics->textSize(clampedText).x)/2,shape.y+(shape.h-graphics->textSize(clampedText).y)/2));
 	glColor3f(1,1,1);
 }
 bool button::mouseDownL(int X, int Y)
@@ -738,7 +755,7 @@ void checkBox::render()
 		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check");
 
 	glColor4f(color.r,color.g,color.b,color.a);
-	textManager->renderText(text,shape.x+30,shape.y);
+	graphics->drawText(text,Vec2f(shape.x+30,shape.y));
 	glColor3f(1,1,1);
 }
 bool checkBox::mouseDownL(int X, int Y)
@@ -782,7 +799,7 @@ bool textBox::mouseUpL(int X, int Y)
 {
 	if(clicking)
 	{
-		bool f = shape.inRect(Vec2f(X,Y));
+	//	bool f = shape.inRect(Vec2f(X,Y));
 		cursorPos = text.length();
 		clicking = false;
 		return true;
@@ -802,19 +819,17 @@ void textBox::render()
 	glColor3f(color.r,color.g,color.b);
 	if(focus)
 	{
-		
-		float w = textManager->getTextWidth(text.substr(0,cursorPos));
-		float h = textManager->getTextHeight(text);
+		Vec2f tSize = graphics->textSize(text.substr(0,cursorPos));
 
-		textManager->renderText(text,shape.x+2,shape.y);
+		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 		if(int(floor(world.time()/500)) % 2 == 1)
 		{
-			graphics->drawLine(Vec3f(shape.x+w,shape.y+2,0),Vec3f(shape.x+w,shape.y+h,0));
+			graphics->drawLine(Vec3f(shape.x+tSize.x,shape.y+2,0),Vec3f(shape.x+tSize.x,shape.y+tSize.y,0));
 		}
 	}
 	else
 	{
-		textManager->renderText(text,shape.x+2,shape.y);
+		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 	}
 
 	glColor3f(1,1,1);
@@ -890,7 +905,7 @@ bool textBox::keyDown(int vkey)
 }
 void numericTextBox::addChar(char c)
 {
-	if(c >= '0' && c <= '9' || c=='.')
+	if((c >= '0' && c <= '9') || c=='.')
 	{
 		text.insert(text.begin()+cursorPos,c);
 		cursorPos++;
@@ -995,13 +1010,13 @@ void listBox::render()
 							Vec3f(shape.x+shape.w-30.0 * 0.5,	shape.y + 30.0 * 0.666,	0));
 	glColor3f(color.r,color.g,color.b);
 
-	textManager->renderText(text,shape.x+2,shape.y);
+	graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 	if(focus)
 	{
 		float h = shape.y + 30 + 1;
 		for(auto i = options.begin(); i!= options.end(); i++)
 		{
-			textManager->renderText(*i,shape.x+2,h);
+			graphics->drawText(*i,Vec2f(shape.x+2,h));
 			h += 30;
 		}
 	}
@@ -1017,20 +1032,20 @@ void listBox::render()
 void label::render()
 {
 	glColor4f(color.r,color.g,color.b,color.a);
-	graphics->drawText("default font", text, shape.origin());
+	graphics->drawText(text, shape.origin());
 	//textManager->renderText(text,shape.x,shape.y);
 	glColor3f(1,1,1);
 }
-toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), value(startValue), Label(l)
+toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), Label(l), value(startValue)
 {
 	buttons=b;
 	if(startValue >= 0 && startValue < buttons.size())
 		value=startValue;
-	else 
+	else
 		value=-1;
 	clicked=clickedC;
 	unclicked=unclickedC;
-	
+
 	int n=0;
 	for(auto i = buttons.begin(); i!=buttons.end();i++,n++)
 	{
@@ -1148,7 +1163,7 @@ void slider::render()
 }
 bool slider::mouseDownL(int X, int Y)
 {
-	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 22 && Y > shape.y && Y < shape.y + shape.h)	
+	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 22 && Y > shape.y && Y < shape.y + shape.h)
 	{
 		clicking = true;
 		mouseOffset = value - ((maxValue - minValue) * (X - shape.x) / shape.w + minValue);
@@ -1211,13 +1226,13 @@ void slider::setMaxValue(float m)
 }
 void messageBox(string text)
 {
-	menu::messageBox_c* m = new menu::messageBox_c;
+	gui::messageBox_c* m = new gui::messageBox_c;
 	m->init(text);
 	menuManager.setPopup(m);
 }
 void closingMessage(string text,string title)
 {
-	if(!textManager->loadSuccessful())
+	if(!dataManager.assetLoaded("default font"))
 	{
 		graphics->destroyWindow();
 		MessageBoxA(NULL,text.c_str(),title.c_str(),MB_ICONERROR);
@@ -1225,13 +1240,13 @@ void closingMessage(string text,string title)
 	}
 	else
 	{
-		struct exitor: public functor<void,menu::popup*>
+		struct exitor: public functor<void,gui::popup*>
 		{
-			void operator() (menu::popup*){exit(0);}
+			void operator() (gui::popup*){exit(0);}
 		};
-		menu::messageBox_c* m = new menu::messageBox_c;
+		gui::messageBox_c* m = new gui::messageBox_c;
 		m->init(text);
-		m->callback = (functor<void,menu::popup*>*)(new exitor);
+		m->callback = (functor<void,gui::popup*>*)(new exitor);
 		menuManager.setPopup(m);
 	}
 }

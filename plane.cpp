@@ -1,11 +1,12 @@
 
+
 #include "main.h"
 
-nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
+nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 {
 	team = Team;
 }
-nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), maxHealth(100), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true)
+nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 {
 	team = Team;
 }
@@ -63,23 +64,36 @@ void nPlane::update(double time, double ms)
 		}
 		else
 		{
-			const float maxSpeed = 537.1;
-			const float minSpeed = 200.0;
+		//	const float maxSpeed = 537.1;
+		//	const float minSpeed = 200.0;
 
-		
+
 
 			//float acceleration = 60.0f*controller.accelerate - 100.0f*controller.brake;
 			//if(speed > maxSpeed && acceleration < 0.0)
 			//	speed += acceleration*(ms/1000);
 			//else
 			//	speed = clamp(speed + acceleration*(ms/1000),minSpeed,maxSpeed);
-			
-			float T = 64000.0 + 144000.0f*controller.accelerate - 36000.0*controller.brake;
-			float D = 0.70743 * speed*speed;
-			float L = 14.1585 * speed*speed;
-			float m = 29300;
 
-			speed += ((T - D) / (m*0.1) + 9.8*sin(climb)) * (ms/1000);
+			float Thrust = 64000.0 + 144000.0f*controller.accelerate - 36000.0*controller.brake;
+			float Drag = 0.70743 * speed*speed;
+			float Lift = 14.1585 * speed*speed;
+			float mass = 29300;
+
+
+		//	speed += ((Thrust - Drag) / (mass*0.1) + 9.8*sin(climb)) * (ms/1000);
+
+			float acceleration = (Thrust - Drag) / (mass*0.1) + 9.8*sin(climb);
+			float jerk = -2.0f * (Drag/(speed*speed)) / (mass*0.1) * speed * acceleration;
+			speed = taylor<float>(ms/1000, speed, acceleration, jerk);
+
+
+			//float maxSpeed = sqrt(T / (D/(speed*speed)));
+			//if(maxSpeed < 1.0)
+			//	speed = maxSpeed * tanh( math::atanh(speed / maxSpeed) + ms/1000 * 0.01);
+			//else
+			//	speed = maxSpeed + 1.0 / (1/(speed - maxSpeed) + ms/1000 * 0.01);
+
 
 
 
@@ -98,9 +112,9 @@ void nPlane::update(double time, double ms)
 			}
 			else if(!roll.inRange(-PI/2,PI/2) && lockRollRange)//if roll is not in range but should be
 			{
-				if(roll.getAngle() < PI) 
+				if(roll.getAngle() < PI)
 					roll = PI/2;
-				else 
+				else
 					roll = -PI/2;
 			}
 
@@ -123,7 +137,7 @@ void nPlane::update(double time, double ms)
 					roll += deltaRoll;
 					rollAng += deltaRoll;
 				}
-				direction -= L / (m*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
+				direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
 				//direction -= rollAng * (ms/1000) * 0.3;
 			}
 			else
@@ -273,7 +287,7 @@ void nPlane::update(double time, double ms)
 		}
 
 		findTargetVector();
-		
+
 
 
 
@@ -319,7 +333,7 @@ void nPlane::update(double time, double ms)
 			//climb -= 0.3 * (ms/1000);
 			//if(climb < -PI/2)
 			//	climb = -PI/2;
-			
+
 			Vec3f vel2D = rotation * Vec3f(0,0,1);
 			vel2D.y=0;
 			vel2D = vel2D.normalize();
@@ -385,21 +399,21 @@ void nPlane::smoothCamera()
 	float ang=0.0;
 	Vec3f vel;
 	Vec3f pos;
-	float dt;
+	//float dt;
 	if(cameraStates.size() > 1)
 	{
 		for(auto i = cameraStates.begin(); i+1 != cameraStates.end(); i++)
 		{
 			ang += (i->angle + (i+1)->angle) * ((i+1)->time - i->time) / 2;
 			pos += (i->position + (i+1)->position) * ((i+1)->time - i->time) / 2;
-			vel += (i->velocity + (i+1)->velocity) * ((i+1)->time - i->time) / 2; 
+			vel += (i->velocity + (i+1)->velocity) * ((i+1)->time - i->time) / 2;
 			//dir += (i->rot * Vec3f(0,0,1) + (i+1)->rot * Vec3f(0,0,1)) * ((i+1)->time - i->time) / 2;
 			//v += (i->rot * Vec3f(0,0.385,-0.923) + (i+1)->rot * Vec3f(0,0.385,-0.923)) * ((i+1)->time - i->time) / 2;
 		}
 		ang /= world.time() - cameraStates.front().time;
 		pos /= world.time() - cameraStates.front().time;
 		vel /= world.time() - cameraStates.front().time;
-		dt = (world.time() - cameraStates.front().time)/2000;
+		//dt = (world.time() - cameraStates.front().time)/2000;
 		//dir = dir / (world.time() - cameraStates.front().time);
 		//v = v / (world.time() - cameraStates.front().time);
 	}
@@ -408,11 +422,11 @@ void nPlane::smoothCamera()
 		ang = a.angle;
 		pos = a.position;
 		vel = a.velocity;
-		dt = 0.0;
+		//dt = 0.0;
 		//dir = a.rot * Vec3f(0,0,1);
 		//v = a.rot * Vec3f(0,0.385,-0.923);
 	}
-	
+
 
 	camera.position = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 35.0;
 	camera.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 35.0;
@@ -531,8 +545,8 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 	double time=world.time();
 
 	Vec3f fwd	= rotation * Vec3f(0,0,1);
-	Vec3f up	= rotation * Vec3f(0,1,0);
-	Vec3f right	= rotation * Vec3f(1,0,0);
+	//Vec3f up	= rotation * Vec3f(0,1,0);
+	//Vec3f right	= rotation * Vec3f(1,0,0);
 	fwd.y=0; fwd=fwd.normalize();
 
 	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.ground()->sizeX()/2,position.z-world.ground()->sizeZ()/2));
@@ -621,7 +635,7 @@ void nPlane::shootMissile()
 			pId = i->second->id;
 		}
 	}
-	//if(pId == 0) 
+	//if(pId == 0)
 	//	return;
 
 	missileType t = rockets.ammoRounds[rockets.max - rockets.left].type;
@@ -685,7 +699,7 @@ void nPlane::initArmaments()
 	bombs.rechargeTime		= bombs.rechargeLeft		= 8000.0f;
 	bombs.firing										= false;
 
-	machineGun.max			= machineGun.left			= 1000; 
+	machineGun.max			= machineGun.left			= 1000;
 	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
 	machineGun.rechargeTime	= machineGun.rechargeLeft	= 450.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 26.0;

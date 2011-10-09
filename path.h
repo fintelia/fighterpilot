@@ -8,7 +8,7 @@ public:
 		Quat4f	rotation;
 		float	time;
 		point(Vec3f pos, Quat4f rot, float t): position(pos), rotation(rot), time(t){}
-		point(){}
+		point(): position(0,0,0), rotation(), time(0){}
 	};
 	class pathSegment
 	{

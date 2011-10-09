@@ -25,14 +25,14 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 				xAdvance;
 		fontChar():id(0), x(0), y(0), w(0), h(0), xOffset(0), yOffset(0), xAdvance(0){}
 	};
-	
+
 
 
 	ifstream fin(filename, ios::binary);
 	if(!fin.is_open()) return false;
 	fin.read((char*)(&info), sizeof(info));
 
-	string s;	
+	string s;
 	getline(fin,s);
 	getline(fin,s);
 	sscanf(s.c_str(),"common lineHeight=%d base=%d scaleW=%d scaleH=%d", &info.lineHeight, &info.base, &info.width, &info.height);
@@ -41,7 +41,7 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 	char texturePath[256];
 	sscanf(s.c_str(),"page id=0 file=\"%s", texturePath);
 	string texPath(texturePath);
-	trim_right_if(texPath,is_any_of(" \"\t\n")); 
+	trim_right_if(texPath,is_any_of(" \"\t\n"));
 
 	int dLoc=filename.find_last_of("/\\");
 	if(dLoc!=string::npos)	texPath = filename.substr(0,dLoc+1) + texPath;
@@ -58,10 +58,10 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 	while(!fin.eof() && i < numChars)
 	{
 		getline(fin, s);
-		
-		s.erase(remove_if(s.begin(), s.end(), isspace), s.end());
 
-		int n = sscanf(s.c_str(),"char id=%dx=%dy=%dwidth=%dheight=%dxoffset=%dyoffset=%dxadvance=%d", &fontChars[i].id, &fontChars[i].x, &fontChars[i].y, &fontChars[i].w, &fontChars[i].h, &fontChars[i].xOffset, &fontChars[i].yOffset, &fontChars[i].xAdvance);
+		s.erase(remove_if(s.begin(), s.end(), ::isspace), s.end());
+
+		sscanf(s.c_str(),"char id=%dx=%dy=%dwidth=%dheight=%dxoffset=%dyoffset=%dxadvance=%d", &fontChars[i].id, &fontChars[i].x, &fontChars[i].y, &fontChars[i].w, &fontChars[i].h, &fontChars[i].xOffset, &fontChars[i].yOffset, &fontChars[i].xAdvance);
 
 		i++;
 	}
@@ -111,28 +111,25 @@ bool DataManager::registerTGA(string name, string filename)
 		GLuint bytesPerPixel;		// Number Of BYTES Per Pixel (3 Or 4)
 		GLuint imageSize;			// Amount Of Memory Needed To Hold The Image
 		GLuint type;				// The Type Of Image, GL_RGB Or GL_RGBA
-		GLuint Height;				// Height Of Image					
-		GLuint Width;				// Width Of Image				
+		GLuint Height;				// Height Of Image
+		GLuint Width;				// Width Of Image
 		GLuint Bpp;					// Number Of BITS Per Pixel (24 Or 32)
 	} TGA;
 	typedef struct
 	{
 		unsigned char* imageData;	// Hold All The Color Values For The Image.
-		GLuint bpp; 				// Hold The Number Of Bits Per Pixel.			
-		GLuint width;				// The Width Of The Entire Image.	
-		GLuint height;				// The Height Of The Entire Image.	
-		GLuint texID;				// Texture ID For Use With glBindTexture.	
+		GLuint bpp; 				// Hold The Number Of Bits Per Pixel.
+		GLuint width;				// The Width Of The Entire Image.
+		GLuint height;				// The Height Of The Entire Image.
+		GLuint texID;				// Texture ID For Use With glBindTexture.
 		GLuint type;			 	// Data Stored In * ImageData (GL_RGB Or GL_RGBA)
 	} Texture;
 
 /////////////variables/////////////////////////
 	GLuint texV=0;
-    int j=0; //Index variables
-	
 	Texture texture;
 	GLubyte tgaheader[12];		// Used To Store Our File Header
 	TGA tga;					// Used To Store File Information
-	GLubyte uTGAcompare[12] = {0,0,2,0,0,0,0,0,0,0,0,0};// Uncompressed TGA Header
 
 	bool NPOT;//determined later
 //////////////////code////////////////////////
@@ -142,7 +139,7 @@ bool DataManager::registerTGA(string name, string filename)
     texture.width  = tga.header[1] * 256 + tga.header[0];					// Determine The TGA Width	(highbyte*256+lowbyte)
 	texture.height = tga.header[3] * 256 + tga.header[2];					// Determine The TGA Height	(highbyte*256+lowbyte)
 	texture.bpp	= tga.header[4];											// Determine the bits per pixel
-	tga.Width		= texture.width;										// Copy width into local structure						
+	tga.Width		= texture.width;										// Copy width into local structure
 	tga.Height		= texture.height;										// Copy height into local structure
 	tga.Bpp			= texture.bpp;											// Copy BPP into local structure
 	if((texture.width <= 0) || (texture.height <= 0) || ((texture.bpp != 24) && (texture.bpp !=32)))	// Make sure all information is valid
@@ -161,8 +158,8 @@ bool DataManager::registerTGA(string name, string filename)
 	tga.imageSize		= (tga.bytesPerPixel * tga.Width * tga.Height);		// Compute the total amout ofmemory needed to store data
 	texture.imageData	= (GLubyte *)malloc(tga.imageSize);					// Allocate that much memory
 
-	
-	if(texture.imageData == NULL)											// If no space was allocated 
+
+	if(texture.imageData == NULL)											// If no space was allocated
 	{
 		fin.close();
 		//assert (0);
@@ -170,13 +167,14 @@ bool DataManager::registerTGA(string name, string filename)
 	}
 	fin.read((char *)(texture.imageData), tga.imageSize);
 	//Byte Swapping Optimized By Steve Thomas
-	for(GLuint cswap = 0; cswap < (int)tga.imageSize; cswap += tga.bytesPerPixel)
+	for(int cswap = 0; cswap < (int)tga.imageSize; cswap += tga.bytesPerPixel)
 	{
-		texture.imageData[cswap] ^= texture.imageData[cswap+2] ^= texture.imageData[cswap] ^= texture.imageData[cswap+2];
+		//texture.imageData[cswap] ^= texture.imageData[cswap+2] ^= texture.imageData[cswap] ^= texture.imageData[cswap+2];
+		swap(texture.imageData[cswap], texture.imageData[cswap+2]);
 	}
-	
+
 	fin.close();
-	
+
 	glGenTextures(1,&texV);
     glBindTexture(GL_TEXTURE_2D, texV);
 
@@ -184,7 +182,7 @@ bool DataManager::registerTGA(string name, string filename)
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	
+
 	if(NPOT)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -197,12 +195,12 @@ bool DataManager::registerTGA(string name, string filename)
 	}
 
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	
+
 	if(NPOT)
 		glTexImage2D(GL_TEXTURE_2D,0, texture.type, tga.Width, tga.Height,0, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
 	else
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
-	
+
     free(texture.imageData);
 	textureAsset* a = new textureAsset;
 	a->id = texV;
@@ -216,7 +214,7 @@ bool DataManager::registerTGA(string name, string filename)
 }
 bool DataManager::registerPNG(string name, string filename)
 {
-	png_uint_32		i, 
+	png_uint_32		i,
 					width,
 					height,
 					rowbytes;
@@ -225,15 +223,15 @@ bool DataManager::registerPNG(string name, string filename)
 					colorChannels;
 	unsigned char*	image_data;
 	png_bytep*		row_pointers;
-	
+
 	/* Open the PNG file. */
 	FILE *infile;
-	fopen_s(&infile,filename.c_str(), "rb");
-	
+	infile = fopen(filename.c_str(), "rb");
+
 	if (!infile) {
 		return false;
 	}
-	
+
 	unsigned char sig[8];
 	/* Check for the 8-byte signature */
 	fread(sig, 1, 8, infile);
@@ -241,31 +239,31 @@ bool DataManager::registerPNG(string name, string filename)
 		fclose(infile);
 		return false;
 	}
-	/* 
-	 * Set up the PNG structs 
+	/*
+	 * Set up the PNG structs
 	 */
 	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!png_ptr) {
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
 		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	png_infop end_ptr = png_create_info_struct(png_ptr);
 	if (!end_ptr) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
 		fclose(infile);
 		return false; /* out of memory */
 	}
-	
+
 	/*
-	 * block to handle libpng errors, 
+	 * block to handle libpng errors,
 	 * then check whether the PNG file had a bKGD chunk
 	 */
 	if (setjmp(png_jmpbuf(png_ptr))) {
@@ -273,37 +271,37 @@ bool DataManager::registerPNG(string name, string filename)
 		fclose(infile);
 		return false;
 	}
-	
+
 	/*
-	 * takes our file stream pointer (infile) and 
+	 * takes our file stream pointer (infile) and
 	 * stores it in the png_ptr struct for later use.
 	 */
 	png_init_io(png_ptr, infile);
-	
+
 	/*
-	 * lets libpng know that we already checked the 8 
-	 * signature bytes, so it should not expect to find 
+	 * lets libpng know that we already checked the 8
+	 * signature bytes, so it should not expect to find
 	 * them at the current file pointer location
 	 */
 	png_set_sig_bytes(png_ptr, 8);
-	
+
 	png_read_info(png_ptr, info_ptr);
 	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-	
-	
+
+
 	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
 	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
 	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
 	if (bit_depth == 16)																png_set_strip_16(png_ptr);
 	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
-	
+
 	/* snipped out the color type code, see source pngLoad.c */
 	/* Update the png info struct.*/
 	png_read_update_info(png_ptr, info_ptr);
-	
+
 	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
-	
+
 	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		return false;
@@ -311,22 +309,22 @@ bool DataManager::registerPNG(string name, string filename)
 	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		return false;
-	}	
+	}
 	for (i = 0;  i < height;  i++)
 		row_pointers[i] = image_data + i*rowbytes;
-	
+
 	png_read_image(png_ptr, row_pointers);
 	png_read_end(png_ptr, NULL);
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	fclose(infile);
-	
-	
+
+
 	int format;
 	if(colorChannels == 1)		format = GL_LUMINANCE;
 	else if(colorChannels == 2)	format = GL_LUMINANCE_ALPHA;
 	else if(colorChannels == 3) format = GL_RGB;
 	else if(colorChannels == 4) format = GL_RGBA;
-	
+
 	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
 
 	GLuint texV;
@@ -348,7 +346,7 @@ bool DataManager::registerPNG(string name, string filename)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);
 	}
-	
+
 	free(image_data);
 	free(row_pointers);
 
@@ -610,7 +608,7 @@ bool DataManager::loadAssetList()
 			{
 				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
 				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
-				
+
 				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
 					assetFiles.push(tmpAssetFile);
 				else
@@ -675,7 +673,7 @@ void DataManager::loadAssetFile(assetFile &file)
 		{
 			auto s = assets.find(file.name);
 			((shaderAsset*)(s->second))->use_sAspect = true;
-	
+
 			bind(file.name);
 			setUniform1f("sAspect",sAspect);
 			unbind(file.name);
@@ -709,7 +707,7 @@ int DataManager::loadAsset()
 }
 bool DataManager::registerTexture(string name, string filename)
 {
-	string ext=filesystem::extension(filename);
+	string ext=fileManager.extension(filename);
 	if(ext.compare(".tga") == 0)		return registerTGA(name, filename);
 	else if(ext.compare(".png") == 0)	return registerPNG(name, filename);
 	else return false;
@@ -772,7 +770,7 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 		messageBox(frag + "(link): " + cl);
 		errorFlag = true;
 	}
-	glUseProgram(0); 
+	glUseProgram(0);
 
 	if(!errorFlag)
 	{
@@ -788,11 +786,11 @@ bool DataManager::registerTerrainShader(string name, string frag)
 {
 	bool errorFlag = false;
 	static GLuint v=0;
-	
+
 	if(v==0)
 	{
 		v = glCreateShader(GL_VERTEX_SHADER);
-		char * vv = textFileRead("media/terrain.vert");
+		char* vv = textFileRead("media/terrain.vert");
 		if(vv == NULL) return false;
 		glShaderSource(v, 1, (const char **)&vv, NULL);
 		glCompileShader(v);
@@ -816,7 +814,7 @@ bool DataManager::registerTerrainShader(string name, string frag)
 			*cf=(char*)malloc(512);
 	int		lf=0;
 
-	if(ff != NULL) 
+	if(ff != NULL)
 	{
 		glShaderSource(f, 1, (const char **)&ff, NULL);
 		glCompileShader(f);
@@ -896,11 +894,11 @@ bool DataManager::registerOBJ(string name, string filename)
 	unsigned int	totalVerts,totalFaces;
 
 	FILE *fp;
-	if(fopen_s(&fp,filename.c_str(), "r"))
+	if((fp=fopen(filename.c_str(), "r")) == nullptr)
 		return false;
 
 	char buffer[200];
-	char *token, *nextToken=NULL;
+	char *token;
 	///////
 	map<string,mtl>	mtl_map;
 	string file(filename);
@@ -911,14 +909,14 @@ bool DataManager::registerOBJ(string name, string filename)
 		file=file.substr(0,i+1);
 	string mtlFile;
 	//////
-	while(fgets(buffer, 200, fp) != NULL) 
+	while(fgets(buffer, 200, fp) != NULL)
 	{
-		token = strtok_s(buffer, " ", &nextToken);
+		token = strtok(buffer, " ");
 		if(strcmp(token, "v") == 0) 	numVertices++;
 		if(strcmp(token, "vt") == 0) 	numTexcoords++;
 		if(strcmp(token, "f") == 0) 	numFaces++;
 		if(strcmp(token, "vn") == 0)	numNormals++;
-		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok_s(NULL, " ", &nextToken);
+		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok(NULL, " ");
 	}
 	rewind(fp);
 	//fclose(fp);
@@ -957,7 +955,7 @@ bool DataManager::registerOBJ(string name, string filename)
 
 				fin.getline(l,256);
 				line.assign(l);
-				if(line.empty()) 
+				if(line.empty())
 					continue;
 
 				if(line[0] == '\t')
@@ -1046,7 +1044,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		return false;
 	}
 	//fopen_s(&fp,filename, "r");
-	
+
 	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
 		mtls[numMtls++]=itt->second;
 
@@ -1059,50 +1057,50 @@ bool DataManager::registerOBJ(string name, string filename)
 	numFaces=0;
 
 	int cMtl=-1;
-	while(fgets(buffer, 200, fp) != NULL) 
+	while(fgets(buffer, 200, fp) != NULL)
 	{
-		token = strtok_s(buffer, " \t", &nextToken);
+		token = strtok(buffer, " \t");
 		if(strcmp(token, "v") == 0)
 		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].x);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].y);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &vertices[numVertices].z);
-		
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].x);
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].y);
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].z);
+
 			vertices[numVertices].x = -vertices[numVertices].x;
 			numVertices++;
 		}
-		else if(strcmp(token, "vt") == 0) 
+		else if(strcmp(token, "vt") == 0)
 		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].u);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &texCoords[numTexcoords].v);
-		
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].u);
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].v);
+
 			texCoords[numTexcoords].v = 1.0f - texCoords[numTexcoords].v;
 			numTexcoords++;
 		}
-		else if(strcmp(token, "vn") == 0) 
+		else if(strcmp(token, "vn") == 0)
 		{
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].x);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].y);
-			sscanf_s(strtok_s(NULL, " ", &nextToken), "%f", &normals[numNormals].z);
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].x);
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].y);
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].z);
 			numNormals++;
 		}
-		else if(strcmp(token, "f") == 0) 
+		else if(strcmp(token, "f") == 0)
 		{
 			int i, v = 0, t = 0, n = 0;
-		
+
 			for(i = 0; i<3; i++)
 			{
-				token = strtok_s(NULL, " \t",&nextToken);
-				sscanf_s(token, "%d/%d/%d", &v, &t, &n);
-		
+				token = strtok(NULL, " \t");
+				sscanf(token, "%d/%d/%d", &v, &t, &n);
+
 				faces[numFaces].n[i] = n - 1;
 				faces[numFaces].t[i] = t - 1;
 				faces[numFaces].v[i] = v - 1;
 			}
-		
+
 			Vec3f a, b;
-		
-			for(i = 0; i<3; i++) 
+
+			for(i = 0; i<3; i++)
 			{
 				a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
 				b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
@@ -1115,7 +1113,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		//else if(strcmp(token, "mtllib") == 0)  already loaded
 		else if(strcmp(token, "usemtl") == 0)
 		{
-			string name=strtok_s(NULL, " ",&nextToken);
+			string name=strtok(NULL, " ");
 			if(name.size()!=0)
 			{
 				name=name.substr(0,name.size()-1);
@@ -1212,7 +1210,7 @@ bool DataManager::registerOBJ(string name, string filename)
 	delete[] faces;
 	delete[] normals;
 	delete[] mtls;
-	
+
 	return true;
 }
 int DataManager::getId(string name)
@@ -1234,17 +1232,17 @@ bool DataManager::assetLoaded(string name)
 //	auto i = models.find(getId(type));
 //	return i != models.end() ? i->second : NULL;
 //}
-char* DataManager::textFileRead(char *fn) {
+char* DataManager::textFileRead(const char *fn) {
 	FILE *fp;
 	char *content = NULL;
 
 	int count=0;
 
-	if (fn != NULL) 
+	if (fn != NULL)
 	{
-		fopen_s(&fp,fn,"rt");
+		fp = fopen(fn,"rt");
 
-		if (fp != NULL) 
+		if (fp != NULL)
 		{
 			fseek(fp, 0, SEEK_END);
 			count = ftell(fp);
@@ -1342,7 +1340,6 @@ void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
 		glUniform4i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
 	}
 }
-
 void DataManager::shutdown()
 {
 	boundShader = "";

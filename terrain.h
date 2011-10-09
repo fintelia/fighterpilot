@@ -32,26 +32,34 @@ public:
 class TerrainPage
 {
 public:
-	int x;
-	int y;
+	Vec3f minXYZ;
+	Vec3f maxXYZ;
+
 	unsigned int height;
 	unsigned int width;
 
 	unsigned int levelsDeep;
 	unsigned int blockLength;
 
-	unsigned char* heights;
+	unsigned short* heights;
 	TerrainPatch* trunk;
+
+	GLuint VBO;
+
+	struct IndexBuffer
+	{
+		unsigned int numVertices;
+		GLuint id;
+	}indexBuffer;
 
 	vector<TerrainPatch*> renderQueue;
 
-	TerrainPage():heights(nullptr), trunk(nullptr){}
+	TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsigned short patchResolution, Vec3f position, Vec3f scale);
 	~TerrainPage()
 	{
 		if(heights)	delete[] heights;
 		if(trunk)	delete[] trunk;
 	}
-	void initQuadTree(unsigned int length_Pow2);
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y);
 
 	void render();
@@ -62,9 +70,9 @@ protected:
 	Vec3f terrainPosition;
 	Vec3f terrainScale;
 
-	vector<TerrainPage> terrainPages;
+	vector<std::shared_ptr<TerrainPage>> terrainPages;
 public:
 
-	void initTerrain();
+	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale);
 	void renderTerrain();
 };

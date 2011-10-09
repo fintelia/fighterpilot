@@ -1,4 +1,5 @@
 
+
 #include "engine.h"
 
 void WorldManager::create(std::shared_ptr<Level> lvl)
@@ -20,7 +21,7 @@ float WorldManager::elevation(Vec2f v) const
 {
 	if(level)
 	{
-		return max(0,level->ground()->height(v.x,v.y));
+		return max(0.0f,level->ground()->height(v.x,v.y));
 	}
 	return 0;
 }
@@ -28,7 +29,7 @@ float WorldManager::elevation(float x, float z) const
 {
 	if(level)
 	{
-		return max(0,level->ground()->height(x,z));
+		return max(0.0f,level->ground()->height(x,z));
 	}
 	return 0;
 }
@@ -37,7 +38,7 @@ float WorldManager::altitude(Vec3f v) const
 	if(level)
 	{
 		float h = level->ground()->height(v.x,v.z);
-		return v.y-max(0,h);
+		return v.y-max(0.0f,h);
 	}
 	return 0;
 }
@@ -46,7 +47,7 @@ float WorldManager::altitude(float x, float y, float z) const
 	if(level)
 	{
 		float h = level->ground()->height(x,z);
-		return y-max(0,h);
+		return y-max(0.0f,h);
 	}
 	return 0;
 }

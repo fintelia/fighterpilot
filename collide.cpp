@@ -79,8 +79,8 @@ bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert, bo
 		tri2.b.z=0;
 		tri2.c.z=0;
 	}
-	Angle ang = acosA((tri2.a-p).normalize().dot((tri2.b-p).normalize())) + 
-				acosA((tri2.b-p).normalize().dot((tri2.c-p).normalize())) + 
+	Angle ang = acosA((tri2.a-p).normalize().dot((tri2.b-p).normalize())) +
+				acosA((tri2.b-p).normalize().dot((tri2.c-p).normalize())) +
 				acosA((tri2.c-p).normalize().dot((tri2.a-p).normalize()));
 	return ang > 2.0 * PI - 0.01;
 }
@@ -88,7 +88,7 @@ bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& t
 {
 	Vec3f p;
 	bool temp = false;
-  
+
 	// Scroll thru 3 line segments of the other triangle
 
 	// First iteration  (a,b)
@@ -191,7 +191,7 @@ void CollisionChecker::triangle::findRadius() const
 	if (c.y < miny)	miny = c.y;
 	if (b.z < minz)	minz = b.z;
 	if (c.z < minz)	minz = c.z;
-    
+
 	if (b.x > maxx)	maxx = b.x;
 	if (c.x > maxx)	maxx = c.x;
 	if (b.y > maxy)	maxy = b.y;
@@ -256,7 +256,6 @@ bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float r
 }
 bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	static double smallestD = 1000000000000000000.0;
 	double d1 = t1.center.distanceSquared(lineStart);
 	double d2 = t1.center.distanceSquared(lineEnd);
 

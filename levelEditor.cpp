@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-namespace menu{
+namespace gui{
 
 bool levelEditor::init()
 {
@@ -110,7 +110,7 @@ void levelEditor::operator() (popup* p)
 		{
 			delete level;
 			level = (editLevel*)l;
-			
+
 			maxHeight=level->ground()->getMaxHeight();
 			minHeight=level->ground()->getMinHeight();
 			sliders["sea level"]->setValue(-minHeight/(maxHeight - minHeight));
@@ -154,7 +154,7 @@ int levelEditor::update()
 	}
 	else if(buttons["exit"]->checkChanged())
 	{
-		menuManager.setMenu(new menu::chooseMode);
+		menuManager.setMenu(new gui::chooseMode);
 		return 0;
 	}
 	else if(getTab() == TERRAIN)
@@ -307,7 +307,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 				if(min != objectCircles.end())
 				{
 					//object found
-					auto* m = new menu::objectProperties();
+					auto* m = new objectProperties();
 					m->init(((editLevel*)level)->getObject(min->first));
 					menuManager.setPopup(m);
 					return true;
@@ -317,7 +317,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 		}
 		else if(getTab() == REGIONS)
 		{
-			
+
 			Rect view = orthoView();
 
 			p.x = (p.x*view.w/sAspect + view.x) - orthoCenter.x;
@@ -338,7 +338,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 		if(!down)
 		{
 			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
-			if(oldP == p) 
+			if(oldP == p)
 				return true;
 
 			Vec3f xAxis = rot * Vec3f(1,0,0);
@@ -398,11 +398,11 @@ void levelEditor::updateObjectCircles()
 		{
 			Sphere<float> sphere= model->boundingSphere;
 			Vec2f t = graphics->project(i->startloc + sphere.center + graphics->getView().camera.up*sphere.radius*10);
-			r = max(0.004,s.distance(t));
+			r = max(0.004f,s.distance(t));
 		}
 		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
 		{
-			objectCircles[n] = Circle<float>(Vec2f(s.x,s.y),r);
+			objectCircles[n] = Circle<float>(Vec2f(s.x,1.0-s.y),r);
 		}
 	}
 }
@@ -420,12 +420,12 @@ float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, flo
 }
 void levelEditor::diamondSquareFill(int x1, int y1, int x2, int y2)
 {
-	if(x1 == x2 && y1 == y2) 
+	if(x1 == x2 && y1 == y2)
 		return;
 
 	auto& g = *level->ground();
 
-	float h[5] = {g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), min(x2-x1,y2-y1)};
+//	float h[5] = {g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), (float)min(x2-x1,y2-y1)};
 
 	int midx = (x1 + x2) / 2;
 	int midy = (y1 + y2) / 2;
@@ -436,7 +436,7 @@ void levelEditor::diamondSquareFill(int x1, int y1, int x2, int y2)
 	if(x2-x1 > 1)	g(midx, y2, randomDisplacement(g(x1,y2), g(x2,y2), x2-x1) );
 	if(y2-y1 > 1)	g(x2, midy, randomDisplacement(g(x2,y1), g(x2,y2), y2-y1) );
 
-	if(x2-x1 > 1 && y2-y1 > 1)	
+	if(x2-x1 > 1 && y2-y1 > 1)
 		g(midx, midy, randomDisplacement(g(x1,y1), g(x1,y2), g(x2,y1), g(x2,y2), min(x2-x1,y2-y1)) );
 
 
@@ -465,13 +465,9 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 
 	//set corners
 
-	int x, z, numSquares, squareSize;
-
-	float c[4];
+	int x, y;
 
 	//h=pow(2.0f,-h);
-	float rVal=h, y;
-	
 
 	for(x=0;x<sLen;x++)
 	{
@@ -486,9 +482,9 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//level->ground()->setHeight(sLen-1,0,0);
 
 	int n = (sLen-1)/subdivide;
-	for(int x=0;x<subdivide;x++)
+	for(x=0;x<subdivide;x++)
 	{
-		for(int y=0;y<subdivide;y++)
+		for(y=0;y<subdivide;y++)
 		{
 			diamondSquareFill(n*x, n*y, n*(x+1), n*(y+1));
 		}
@@ -577,8 +573,8 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	////		if(h<minHeight) minHeight=h;
 	////	}
 	////}
-	
-	
+
+
 	level->ground()->setMinMaxHeights();
 	minHeight=level->ground()->getMinHeight();
 
@@ -628,7 +624,7 @@ void levelEditor::faultLine()
 				else if (pd < 0.05) pd = 0.05;
 				level->ground()->increaseHeight(x,-disp/2 + sin(pd)*disp,y);
 			}
-		}		
+		}
 	}
 
 	//float h;
@@ -652,7 +648,7 @@ void levelEditor::faultLine()
 }
 void levelEditor::fromFile(string filename)
 {
-	string ext = extension(filename);
+	string ext = fileManager.extension(filename);
 	if(ext == ".bmp")
 	{
 		Image* image = loadBMP(filename.c_str());
@@ -662,13 +658,13 @@ void levelEditor::fromFile(string filename)
 				t[y * image->width + x] = (unsigned char)image->pixels[3 * (y * image->width + x)] * 10.0;
 			}
 		}
-		//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL"); 
+		//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL");
 		level->newGround(image->height,image->width,t);
 		level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 		delete[] t;
 		delete image;
-		
-		
+
+
 		level->ground()->setMinMaxHeights();
 		maxHeight=level->ground()->getMaxHeight();
 		minHeight=level->ground()->getMinHeight();
@@ -687,8 +683,8 @@ void levelEditor::fromFile(string filename)
 
 		string line;
 		vector<string> tokens;
-		 
-		string file = change_extension(filename, ".hdr").generic_string();
+
+		string file = fileManager.changeExtension(filename, ".hdr");
 		ifstream fin(file);
 		if(!fin.is_open())
 			return;
@@ -751,8 +747,8 @@ void levelEditor::fromFile(string filename)
 			}
 		}
 		fin.close();
-		
-		
+
+
 		level->newGround(nRows,nColumns,fHeights);
 		delete[] heights;
 		delete[] fHeights;
@@ -803,7 +799,7 @@ void levelEditor::addObject(int type, int team, int controlType, float x, float 
 	Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
 	Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 	Vec3d dir = P0-P1;
-				
+
 	if(abs(dir.y) < 0.001) return;
 	Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 	((editLevel*)level)->addObject(type,team,controlType,Vec3f(val.x,val.y,val.z));
@@ -815,8 +811,8 @@ Rect levelEditor::orthoView()
 
 	return Rect::CWH(Vec2f(0,0),gSize);
 }
-void levelEditor::render3D(unsigned int view) 
-{	
+void levelEditor::render3D(unsigned int view)
+{
 	bool orthoTerrain = (getTab() == REGIONS);
 
 	if(orthoTerrain)
@@ -859,7 +855,7 @@ void levelEditor::render3D(unsigned int view)
 		graphics->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
 		//static FrustumG frustum;
 		//frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
-	
+
 
 		Vec3f e,c,u;
 		c = center;
@@ -870,8 +866,8 @@ void levelEditor::render3D(unsigned int view)
 
 			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
 			Vec2f newP((float)p.x/sh,1.0 - (float)p.y/sh);
-		
-			
+
+
 			Vec3f xAxis = rot * Vec3f(1,0,0);
 
 			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
@@ -883,7 +879,7 @@ void levelEditor::render3D(unsigned int view)
 
 			e = c + tmpRot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
 			u = tmpRot * Vec3f(0,0,-1);
- 
+
 		}
 		else
 		{
@@ -894,7 +890,7 @@ void levelEditor::render3D(unsigned int view)
 
 		GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
 		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-		
+
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 
@@ -919,7 +915,7 @@ void levelEditor::render3D(unsigned int view)
 			Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
 			Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 			Vec3d dir = P0-P1;
-				
+
 			if(abs(dir.y) < 0.001) return;
 			Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
 			glPushMatrix();
@@ -930,9 +926,9 @@ void levelEditor::render3D(unsigned int view)
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			glDepthMask(false);
 			glColor4f(0.1,0.3,1.0,0.3);
-				
+
 			graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
-								
+
 								Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
 								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
 								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
@@ -956,7 +952,7 @@ void levelEditor::render3D(unsigned int view)
 		}
 
 		glDisable(GL_DEPTH_TEST);
-	
+
 		//glBindTexture(GL_TEXTURE_2D,0);
 		//glMatrixMode(GL_PROJECTION);
 		//glPushMatrix();
@@ -965,7 +961,7 @@ void levelEditor::render3D(unsigned int view)
 		//glMatrixMode(GL_MODELVIEW);
 		//glLoadIdentity();
 
-	
+
 
 		dataManager.bind("ortho");
 
@@ -996,9 +992,9 @@ void levelEditor::render3D(unsigned int view)
 		//	if(frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE && s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
 		//	{
 		//		graphics->drawOverlay(s.x - r, s.y*sh/sw - r, s.x + r, s.y*sh/sw + r,"target ring");
-		//	}	
+		//	}
 		//}
-	
+
 	//	glMatrixMode( GL_PROJECTION );			// Select Projection
 	//	glPopMatrix();							// Pop The Matrix
 	//	glMatrixMode( GL_MODELVIEW );			// Select Modelview

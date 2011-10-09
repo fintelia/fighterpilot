@@ -1,4 +1,5 @@
 
+
 #include "main.h"
 
 objectPath::objectPath(Vec3f sPos,Quat4f sRot, float tResolution): pointsValid(true), startPoint(sPos,sRot,world.time()), endPoint(sPos,sRot,world.time()),timeResolution(tResolution)

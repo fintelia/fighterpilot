@@ -17,7 +17,7 @@ public:
 	bool isLand(Vec2f v) const;
 	bool isLand(float x, float z) const;
 
-	Level::heightmapGL* const WorldManager::ground() const;
+	Level::heightmapGL* const ground() const;
 
 	//const map<objId,object*>& objects()const;
 	//const map<objId,nPlane*>& planes()const;

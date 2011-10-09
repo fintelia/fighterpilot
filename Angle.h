@@ -5,14 +5,13 @@ class Angle
 private:
 	double ang;
 public:
-	Angle(double a)
+	Angle(double a): ang(a)
 	{
-		ang=a;
 		normalize();
 	}
-	Angle()
+	Angle(): ang(0)
 	{
-		ang=0;
+
 	}
 	void normalize()
 	{
@@ -33,7 +32,7 @@ public:
 	{
 		return ang*180.0/PI;
 	}
-	
+
 	bool inRange(Angle low,Angle high, bool inclusive = true)
 	{
 		if(inclusive)
@@ -53,12 +52,12 @@ public:
 	{
 		while(low>2.0*PI)
 			low-=2.0*PI;
-		while(low<0.0)		
+		while(low<0.0)
 			low+=2.0*PI;
 
 		while(high>2.0*PI)
 			high-=2.0*PI;
-		while(high<0.0)		
+		while(high<0.0)
 			high+=2.0*PI;
 
 		if(inclusive)
@@ -75,19 +74,19 @@ public:
 	}
 	void clampedAdd(double amount, double low,double high)
 	{
-		if(low>high) 
+		if(low>high)
 			return;
 
 		if(amount > 0)
 		{
 			ang+=amount;
-			if(ang > high) 
+			if(ang > high)
 				ang=high;
 		}
 		else
 		{
 			ang+=amount;
-			if(ang < low) 
+			if(ang < low)
 				ang=low;
 		}
 		normalize();
@@ -155,7 +154,7 @@ Angle clamp(Angle angle, U v1, V v2)
 	else									center = (high.getAngle()-PI*2 + low.getAngle())/2;
 
 	Angle opp = center + PI;
-	
+
 	if(angle.inRange(high,opp))
 		return high;
 

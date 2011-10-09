@@ -1,7 +1,7 @@
 
 #include "main.h"
 
-namespace menu{
+namespace gui{
 campaign::campaign(std::shared_ptr<Level> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
 {
 	graphics->resetViews(1);
@@ -17,7 +17,7 @@ int campaign::update()
 	}
 	if(input->getKey(VK_ESCAPE))
 	{
-		menuManager.setPopup(new menu::inGame);
+		menuManager.setPopup(new gui::inGame);
 		input->up(VK_ESCAPE);
 	}
 	world.update();
@@ -53,7 +53,7 @@ int campaign::update()
 			std::shared_ptr<Level> l(new Level);
 			if(l->init(nLevel))
 			{
-				menuManager.setMenu(new menu::campaign(l));
+				menuManager.setMenu(new gui::campaign(l));
 		//		modeManager.setMode(new modeCampaign(l));
 			}
 		}
@@ -63,7 +63,7 @@ int campaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			menuManager.setMenu(new menu::campaign(world.level));
+			menuManager.setMenu(new gui::campaign(world.level));
 		}
 	}
 	else

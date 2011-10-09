@@ -20,8 +20,6 @@
  * www.videotutorialsrock.com
  */
 
-
-
 #include <cassert>
 #include <fstream>
 #include "imageloader.h"

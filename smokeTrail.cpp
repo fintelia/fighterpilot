@@ -1,4 +1,5 @@
 
+
 #include "main.h"
 
 namespace particle
@@ -11,7 +12,7 @@ namespace particle
 	}
 	bool smokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		if(!world[parentObject] || world[parentObject]->type & PLANE && ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE)
+		if(!world[parentObject] || !(world[parentObject]->type & PLANE) || ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE)
 		{
 			particlesPerSecond = 0;
 			return false;
@@ -19,7 +20,7 @@ namespace particle
 
 		p.startTime = world.time() - extraTime;
 		p.endTime = world.time() - extraTime + life();
-		
+
 		p.vel = random<Vec3f>() * velocity();
 		p.pos = currentPosition + random<Vec3f>()*spread() + p.vel * extraTime/1000.0;
 

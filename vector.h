@@ -5,432 +5,200 @@ class Vector2
 public:
 	T x,y;
 
-	Vector2();
-	Vector2(T x, T y);
+	Vector2(): x(), y() {}
+	Vector2(T X, T Y): x(X), y(Y) {}
 
-	T &operator[](int index);
-	T operator[](int index) const;
-	Vector2 operator*(T scale) const;
-	Vector2 operator/(T scale) const;
-	Vector2 operator+(const Vector2 &other) const;
-	Vector2 operator-(const Vector2 &other) const;
-	Vector2 operator-() const;
+	T& operator[](int index)
+	{
+		if(index==0)	return x;
+		if(index==1)	return y;
+		debugBreak();
+		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
+	}
+	T operator[](int index) const
+	{
+		if(index==0)	return x;
+		if(index==1)	return y;
+		debugBreak();
+		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
+	}
+	Vector2 operator*(T scale) const{return Vector2(x * scale, y * scale);}
+	Vector2 operator/(T scale) const{return Vector2(x / scale, y / scale);}
+	Vector2 operator+(const Vector2& other) const{return Vector2(x + other.x, y + other.y);}
+	Vector2 operator-(const Vector2& other) const{return Vector2(x - other.x, y - other.y);}
+	Vector2 operator-() const{return Vector2(-x, -y);}
 
-	const Vector2 &operator*=(T scale);
-	const Vector2 &operator/=(T scale);
-	const Vector2 &operator+=(const Vector2 &other);
-	const Vector2 &operator-=(const Vector2 &other);
+	Vector2& operator*=(T scale){	return *this = (*this)*scale;}
+	Vector2& operator/=(T scale){	return *this = (*this)/scale;}
+	Vector2& operator+=(const Vector2 &other){return *this = (*this)+other;}
+	Vector2& operator-=(const Vector2 &other){return *this = (*this)-other;}
 
-	bool operator!=(const Vector2 &other);
-	bool operator==(const Vector2 &other);
+	bool operator!=(const Vector2& other) const{return !equal(other);}
+	bool operator==(const Vector2& other) const{return equal(other);}
 
-	T magnitude() const;
-	T magnitudeSquared() const;
-	T signedMagnitude() const;
-	Vector2 normalize() const;
-	Vector2 normalizeSigned() const;
-	T dot(const Vector2 &other) const;
-	void set(T x, T y);
-	bool equal(Vector2 v,T maxDifference=0.01);
-	T distance(Vector2 v);
-	T distanceSquared(Vector2 v);
+	T magnitude() const
+	{
+		return sqrt(x*x + y*y);
+	}
+	T magnitudeSquared() const
+	{
+		return x*x + y*y;
+	}
+	Vector2 normalize() const
+	{
+		T m = x * x + y * y;
+		if(m > 0)
+		{
+			m = sqrt(m);
+			return Vector2(x / m, y / m);
+		}
+		else
+		{
+			return *this;
+		}
+	}
+	T dot(const Vector2& other) const
+	{
+		return x * other.x + y * other.y;
+	}
+	Vector2& set(T X, T Y)
+	{
+		x=X;
+		y=Y;
+		return *this;
+	}
+	bool equal(const Vector2& v, T maxDifference=0.01) const
+	{
+		return (abs(x-v.x) < maxDifference && abs(y-v.y) < maxDifference);
+	}
+	T distance(const Vector2& v) const
+	{
+		return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));
+	}
+	T distanceSquared(const Vector2& v)const
+	{
+		return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
+	}
 };
-typedef Vector2<float>			Vec2f;
-typedef Vector2<double>			Vec2d;
-typedef Vector2<int>			Vec2i;
-typedef Vector2<unsigned int>	Vec2u;
-typedef Vector2<long>			Vec2l;
+typedef Vector2<float>		Vec2f;
+typedef Vector2<double>		Vec2d;
+typedef Vector2<int>		Vec2i;
+typedef Vector2<int>		Vec2u;
+
+template <class T, class U>
+Vector2<T> operator*(const Vector2<T> v, U scale)
+{
+	return Vector2<T>(v.x * scale, v.y * scale);
+}
+
+template <class T> Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t)
+{
+	if (t <= (T)0.0)	return v1;
+	if (t >= (T)1.0)	return v2;
+	return (v1 * ((T)1.0 - t) + v2 * t).normalize();
+};
+
 template <class T>
 class Vector3
 {
 public:
 	T x,y,z;
-	Vector3();
-	Vector3(T x, T y, T z);
-	template<class U>
-	Vector3(Vector3<U> u):x(u.x), y(u.y), z(u.z)
+	Vector3(): x(), y(), z() {}
+	Vector3(T X, T Y, T Z): x(X), y(Y), z(Z) {}
+	template<class U> Vector3(const Vector3<U>& u):x(u.x), y(u.y), z(u.z) {}
+
+	T &operator[](int index)
 	{
-	
+		if(index==0)	return x;
+		if(index==1)	return y;
+		if(index==2)	return z;
+		debugBreak();
+		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
+	}
+	T operator[](int index) const
+	{
+		if(index==0)	return x;
+		if(index==1)	return y;
+		if(index==2)	return z;
+		debugBreak();
+		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
 	}
 
-	T &operator[](int index);
-	T operator[](int index) const;
-		
-	Vector3 operator*(T scale) const;
-	Vector3 operator/(T scale) const;
-	Vector3 operator+(const Vector3 &other) const;
-	Vector3 operator-(const Vector3 &other) const;
-	Vector3 operator-() const;
 
-	const Vector3 &operator*=(T scale);
-	const Vector3 &operator/=(T scale);
-	const Vector3 &operator+=(const Vector3 &other);
-	const Vector3 &operator-=(const Vector3 &other);
+	Vector3 operator/(T scale) const{				return Vector3(x / scale, y / scale, z / scale);		}
+	Vector3 operator+(const Vector3 &other) const{	return Vector3(x + other.x, y + other.y, z + other.z);	}
+	Vector3 operator-(const Vector3 &other) const{	return Vector3(x - other.x, y - other.y, z - other.z);	}
+	Vector3 operator-() const{						return Vector3(-x, -y, -z);								}
 
-	bool operator!=(const Vector3 &other) const;
-	bool operator==(const Vector3 &other) const;
+	Vector3& operator*=(T scale){return *this = (*this)*scale;}
+	Vector3& operator/=(T scale){return *this = (*this)/scale;}
+	Vector3& operator+=(const Vector3& other){return *this = (*this)+other;}
+	Vector3& operator-=(const Vector3& other){return *this = (*this)-other;}
 
-	T magnitude() const;
-	T magnitudeSquared() const;
-	T signedMagnitude() const;
-	Vector3 normalize() const;
-	Vector3 normalizeSigned() const;
-	T dot(const Vector3 &other) const;
-	Vector3 cross(const Vector3 &other) const;
-	void set(T x, T y, T z);
-	bool equal(Vector3 v,T maxDifference=0.01) const;
-	T distance(Vector3 v) const;
-	T distanceSquared(Vector3 v) const;
-};
-typedef Vector3<float>			Vec3f;
-typedef Vector3<double>			Vec3d;
-typedef Vector3<int>			Vec3i;
-typedef Vector3<unsigned int>	Vec3u;
-typedef Vector3<long>			Vec3l;
-/////////////////////////////////////////////////////////////definitions///////////////////////////////////////////////////////////////////////
-template <class T>
-Vector3<T>::Vector3(): x(0), y(0), z(0)
-{
-	
-}
+	bool operator!=(const Vector3& other) const{return !equal(other);}
+	bool operator==(const Vector3& other) const{return equal(other);}
 
-template <class T>
-Vector3<T>::Vector3(T X, T Y, T Z): x(X), y(Y), z(Z)
-{
-
-}
-
-template <class T>
-T& Vector3<T>::operator[](int index)
-{
-	if(index==0)	return x;
-	if(index==1)	return y;
-	if(index==2)	return z;
-	return z;
-}
-
-template <class T>
-T Vector3<T>::operator[](int index) const
-{
-	if(index==0)	return x;
-	if(index==1)	return y;
-	if(index==2)	return z;
-	return 0;
-}
-
-template <class T>
-Vector3<T> Vector3<T>::operator*(T scale) const
-{
-	return Vector3(x * scale, y * scale, z * scale);
-}
-template <class T>
-Vector3<T> Vector3<T>::operator/(T scale) const
-{
-	return Vector3(x / scale, y / scale, z / scale);
-}
-template <class T>
-Vector3<T> Vector3<T>::operator+(const Vector3 &other) const
-{
-	return Vector3(x + other.x, y + other.y, z + other.z);
-}
-template <class T>
-Vector3<T> Vector3<T>::operator-(const Vector3 &other) const
-{
-	return Vector3(x - other.x, y - other.y, z - other.z);
-}
-template <class T>
-Vector3<T> Vector3<T>::operator-() const
-{
-	return Vector3(-x, -y, -z);
-}
-template <class T>
-const Vector3<T>& Vector3<T>::operator*=(T scale)
-{
-	x *= scale;
-	y *= scale;
-	z *= scale;
-	return *this;
-}
-template <class T>
-const Vector3<T>& Vector3<T>::operator/=(T scale)
-{
-	x /= scale;
-	y /= scale;
-	z /= scale;
-	return *this;
-}
-template <class T>
-const Vector3<T>& Vector3<T>::operator+=(const Vector3 &other)
-{
-	x += other.x;
-	y += other.y;
-	z += other.z;
-	return *this;
-}
-template <class T>
-const Vector3<T>& Vector3<T>::operator-=(const Vector3 &other)
-{
-	x -= other.x;
-	y -= other.y;
-	z -= other.z;
-	return *this;
-}
-template <class T>
-bool Vector3<T>::operator!=(const Vector3 &other) const
-{
-	return !equal(other);
-}
-template <class T>
-bool Vector3<T>::operator==(const Vector3 &other) const
-{
-	return equal(other);
-}
-
-template <class T>
-T Vector3<T>::magnitude() const
-{
-	return sqrt(x * x + y * y + z * z);
-}
-template <class T>
-T Vector3<T>::magnitudeSquared() const
-{
-	return x * x + y * y + z * z;
-}
-template <class T>
-T Vector3<T>::signedMagnitude() const
-{
-	return sqrt(x*x*x/abs(x) + y*y*y/abs(y) + z*z*z/abs(z));
-}
-template <class T>
-Vector3<T> Vector3<T>::normalize() const
-{
-	T m2 = x * x + y * y + z * z;
-	if(m2 > 0.0)
+	T magnitude() const
 	{
-		T m = sqrt(m2);
-		return Vector3(x / m, y / m, z / m);
+		return sqrt(x*x + y*y + z*z);
 	}
-	else
+	T magnitudeSquared() const
 	{
+		return x*x + y*y + z*z;
+	}
+	Vector3 normalize() const
+	{
+		T m = x * x + y * y + z * z;
+		if(m > 0)
+		{
+			m = sqrt(m);
+			return Vector3(x / m, y / m, z / m);
+		}
+		else
+		{
+			return *this;
+		}
+	}
+	T dot(const Vector3& other) const
+	{
+		return x * other.x + y * other.y + z * other.z;
+	}
+	Vector3 cross(const Vector3& other) const
+	{
+		return Vector3(y * other.z - z * other.y,	 z * other.x - x * other.z,	 x * other.y - y * other.x);
+	}
+	Vector3& set(T X, T Y, T Z)
+	{
+		x=X;
+		y=Y;
+		z=Z;
 		return *this;
 	}
-}
-template <class T>
-Vector3<T> Vector3<T>::normalizeSigned() const
+	bool equal(const Vector3& v,T maxDifference=0.01) const
+	{
+		return (abs(x-v.x) < maxDifference && abs(y-v.y) < maxDifference && abs(z-v.z) < maxDifference);
+	}
+	T distance(const Vector3& v) const
+	{
+		return sqrt((v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z));
+	}
+	T distanceSquared(const Vector3& v) const
+	{
+		return (v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
+	}
+};
+typedef Vector3<float>		Vec3f;
+typedef Vector3<double>		Vec3d;
+
+template <class T, class U>
+Vector3<T> operator*(const Vector3<T> v, U scale)
 {
-	float m = sqrt(x * x + y * y + z * z);
-	if(x+y+z<0) m*=-1;
-	return Vector3(x / m, y / m, z / m);
-}
-template <class T>
-T Vector3<T>::dot(const Vector3 &other) const
-{
-	return x * other.x + y * other.y + z * other.z;
-}
-template <class T>
-Vector3<T> Vector3<T>::cross(const Vector3 &other) const
-{
-	return Vec3f(y * other.z - z * other.y,
-			 z * other.x - x * other.z,
-			 x * other.y - y * other.x);
-}
-template <class T>
-void Vector3<T>::set(T X, T Y, T Z)
-{
-	x=X;
-	y=Y;
-	z=Z;
-}
-template <class T>
-bool Vector3<T>::equal(Vector3 v,T maxDifference=0.01) const
-{
-	return (abs(x-v.x)< maxDifference && abs(y-v.y)< maxDifference && abs(z-v.z)< maxDifference);
-}
-template <class T>
-T Vector3<T>::distance(Vector3 v) const
-{
-	return sqrt((v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z));
-}
-template <class T>
-T Vector3<T>::distanceSquared(Vector3 v) const
-{
-	return (v.x-x)*(v.x-x)+(v.y-y)*(v.y-y)+(v.z-z)*(v.z-z);
+	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
 }
 
-template <class T>
-Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T t)
+template <class T> Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T t)
 {
-	if (t <= (T)0.0)
-		return v1;
-	if (t >= (T)1.0)
-		return v2;
-
+	if (t <= (T)0.0)	return v1;
+	if (t >= (T)1.0)	return v2;
 	return (v1 * ((T)1.0 - t) + v2 * t);
 };
-
-////////////////////////////////////////////////////////////Vector2/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <class T>
-Vector2<T>::Vector2(): x(0), y(0)
-{
-
-}
-template <class T>
-Vector2<T>::Vector2(T X, T Y): x(X), y(Y)
-{
-
-}
-
-template <class T>
-T &Vector2<T>::operator[](int index)
-{
-	if(index==0)	return x;
-	if(index==1)	return y;
-	return 0;
-}
-template <class T>
-T Vector2<T>::operator[](int index) const
-{
-	if(index==0)	return x;
-	if(index==1)	return y;
-	return 0;
-}
-template <class T>
-Vector2<T> Vector2<T>::operator*(T scale) const
-{
-	return Vector2(x * scale, y * scale);
-}
-template <class T>
-Vector2<T> Vector2<T>::operator/(T scale) const
-{
-	return Vector2(x / scale, y / scale);
-}
-template <class T>
-Vector2<T> Vector2<T>::operator+(const Vector2 &other) const
-{
-	return Vector2(x + other.x, y + other.y);
-}
-template <class T>
-Vector2<T> Vector2<T>::operator-(const Vector2 &other) const
-{
-	return Vector2(x - other.x, y - other.y);
-}
-template <class T>
-Vector2<T> Vector2<T>::operator-() const
-{
-	return Vector2(-x, -y);
-}
-template <class T>
-const Vector2<T> &Vector2<T>::operator*=(T scale)
-{
-	x *= scale;
-	y *= scale;
-	return *this;
-}
-template <class T>
-const Vector2<T> &Vector2<T>::operator/=(T scale)
-{
-	x /= scale;
-	y /= scale;
-	return *this;
-}
-template <class T>
-const Vector2<T> &Vector2<T>::operator+=(const Vector2 &other)
-{
-	x += other.x;
-	y += other.y;
-	return *this;
-}
-template <class T>
-const Vector2<T> &Vector2<T>::operator-=(const Vector2 &other)
-{
-	x -= other.x;
-	y -= other.y;
-	return *this;
-}
-template <class T>
-bool Vector2<T>::operator!=(const Vector2 &other)
-{
-	return !equal(other);
-}
-template <class T>
-bool Vector2<T>::operator==(const Vector2 &other)
-{
-	return equal(other);
-}
-template <class T>
-T Vector2<T>::magnitude() const
-{
-	return sqrt(x * x + y * y);
-}
-template <class T>
-T Vector2<T>::magnitudeSquared() const
-{
-	return x * x + y * y;
-}
-template <class T>
-T Vector2<T>::signedMagnitude() const
-{
-	T m sqrt(x*x+ y*y);
-	if(x+y<0) m*=-1;
-	return m;
-}
-template <class T>
-Vector2<T> Vector2<T>::normalize() const
-{
-	T m = sqrt(x * x + y * y);
-	return Vector2(x / m, y / m);
-}
-template <class T>
-Vector2<T> Vector2<T>::normalizeSigned() const
-{
-	T m = sqrt(x * x + y * y);
-	if(x+y<0) m*=-1;
-	return Vector2(x / m, y / m);
-}
-template <class T>
-T Vector2<T>::dot(const Vector2 &other) const
-{
-	return x * other.x + y * other.y;
-}
-template <class T>
-void Vector2<T>::set(T X, T Y)
-{
-	x = X;
-	y = Y;
-}
-template <class T>
-bool Vector2<T>::equal(Vector2 v,T maxDifference=0.01)
-{
-	return (abs(x-v.x)< maxDifference && abs(y-v.y)< maxDifference);
-}
-template <class T>
-T Vector2<T>::distance(Vector2 v)
-{
-	return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));
-}
-template <class T>
-T Vector2<T>::distanceSquared(Vector2 v)
-{
-	return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
-}
-template <class T>
-Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t)
-{
-	if (t <= (T)0.0)
-		return v1;
-	if (t >= (T)1.0)
-		return v2;
-
-	return (v1 * ((T)1.0 - t) + v2 * t).normalize();
-};
-
-
-//Vec3f operator*(float scale, const Vec3f &v);
-//void upAndRight(Vec3f fwd,Angle roll,Vec3f& up,Vec3f& right);
-//float dist(Vec3f P1,Vec3f P2);
-//float dist_Point_to_Segment( Vec3f P, Vec3f S1,Vec3f S2);
-//double intersect(Vec3f rOrigin, Vec3f rNormal, Vec3f pOrigin, Vec3f pNormal);
-//Vec3f collide(Vec3f rOrigin, Vec3f rNormal, Vec3f pOrigin, Vec3f pNormal);
-//float dist_squared(Vec3f P1,Vec3f P2);
-//bool SegmentSphereIntersect(Vec3f A, Vec3f B, Vec3f P, float r);

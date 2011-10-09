@@ -149,7 +149,7 @@ public:
 		friend class Level;
 		friend class editLevel;
 		friend class modeMapBuilder;
-		friend class menu::levelEditor;
+		friend class gui::levelEditor;
 	};
 	class heightmapGL: public heightmapBase
 	{
@@ -178,7 +178,7 @@ public:
 		friend class editLevel;
 		friend class modeDogFight;
 		friend class modeMapBuilder;
-		friend class menu::levelEditor;
+		friend class gui::levelEditor;
 	};
 
 protected:

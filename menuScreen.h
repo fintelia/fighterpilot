@@ -1,5 +1,5 @@
 
-namespace menu{
+namespace gui{
 
 class element
 {
@@ -8,9 +8,9 @@ public:
 	enum elementState{ACTIVE=0,DISABLED};
 	enum elementView{VISABLE=0,HIDDEN};
 
-	element(elementType t): type(t), active(true), view(true), focus(false), changed(false) {}
-	element(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,0,0), text(Text), color(c), active(true), view(true), focus(false), changed(false) {}
-	element(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,Width,Height), text(Text), color(c), active(true), view(true), focus(false), changed(false) {}
+	element(elementType t): type(t), active(true), view(true), changed(false), focus(false) {}
+	element(elementType t, float X, float Y, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,0,0), text(Text), color(c), active(true), view(true), changed(false), focus(false) {}
+	element(elementType t, float X, float Y, float Width, float Height, string Text="", Color c=Color(0,0,0)): type(t), shape(X,Y,Width,Height), text(Text), color(c), active(true), view(true), changed(false), focus(false) {}
 
 	virtual ~element(){}
 
@@ -33,7 +33,7 @@ public:
 	void setVisibility(bool v)	{view = v;}
 
 	string getText()			{return text;}
-	
+
 	//changed
 	bool getChanged()			{return changed;}
 	bool checkChanged()			{bool b = changed; changed=false; return b;}//returns changed then sets it to false
@@ -72,7 +72,7 @@ protected:
 class label: public element
 {
 public:
-	label(int X, int Y, string t,Color c=Color(0,0,0)): element(LABEL, X, Y,t,c){}
+	label(float X, float Y, string t,Color c=Color(0,0,0)): element(LABEL, X, Y,t,c){}
 	virtual ~label(){}
 
 	void render();
@@ -104,7 +104,7 @@ protected:
 class checkBox:public element
 {
 public:
-	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,textManager->getTextWidth(t) + 30,textManager->getTextHeight(t),t,c),checked(startChecked),clicking(false){}
+	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,graphics->textSize(t).x + 30,graphics->textSize(t).y,t,c),checked(startChecked),clicking(false){}
 	virtual ~checkBox(){}
 
 	void render();
@@ -162,7 +162,7 @@ public:
 	listBox(int X, int Y, int Width, string str, Color textColor): element(LISTBOX,X,Y,Width,30,str,textColor),clicking(false),choosing(false),optionNum(-1){}
 
 	void addOption(string option);
-	
+
 	bool mouseDownL(int X, int Y);
 	bool mouseUpL(int X, int Y);
 
@@ -236,7 +236,7 @@ class elementContainer
 {
 protected:
 	element* focus;
-	
+
 	map<string,button*> buttons;
 	map<string,label*> labels;
 	map<string,toggle*> toggles;
@@ -244,7 +244,7 @@ protected:
 	map<string,checkBox*> checkBoxes;
 	map<string,textBox*> textBoxes;
 	map<string,listBox*> listBoxes;
-	
+
 	friend class manager;
 
 	void inputCallback(Input::callBack* callback);
@@ -256,7 +256,7 @@ protected:
 class popup: public elementContainer
 {
 public:
-	popup(): done(false),callback(NULL){}
+	popup(): callback(NULL), done(false){}
 	virtual ~popup(){}
 
 	virtual int update()=0;
@@ -287,10 +287,10 @@ public:
 	bool init(set<string> ExtFilters);
 	int update();
 	void render();
-	
+
 	void refreshView();
 	bool validFile() {return file != "";}
-	string getFile() {return (directory/file).string();}
+	string getFile() {return directory+"/"+file;}
 
 	bool keyDown(int vkey);
 	bool mouseL(bool down, int x, int y);
@@ -298,7 +298,7 @@ protected:
 	virtual void fileSelected();
 	string file;
 
-	filesystem::path directory;
+	string directory;
 
 	set<string> extFilters;
 	vector<string> files;
@@ -399,7 +399,7 @@ private:
 };
 }
 
-extern menu::manager& menuManager;
+extern gui::manager& menuManager;
 
 void messageBox(string text);
 void closingMessage(string text,string title="error");

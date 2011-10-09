@@ -153,10 +153,24 @@ extern char* errorString;
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+template <class T>
+T uPowerOfTwo(T i)
+{
+    static_assert(std::is_integral<T>::value,"value must be of integral type");
+    --i;
+    unsigned char n=1;
+    while(sizeof(T)*8 > n)
+    {
+        i |= i >> n;
+        n = n<<1;
+    }
+    return ++i;
+}
 extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);
 extern unsigned __int16 uPowerOfTwo(unsigned __int16 i);
 extern unsigned __int32 uPowerOfTwo(unsigned __int32 i);
 extern unsigned __int64 uPowerOfTwo(unsigned __int64 i);
+
 extern __int8 uPowerOfTwo(__int8 i);
 extern __int16 uPowerOfTwo(__int16 i);
 extern __int32 uPowerOfTwo(__int32 i);
