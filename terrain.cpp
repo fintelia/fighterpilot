@@ -134,7 +134,7 @@ TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned 
 	return trunk + trunk->levelOffset(level) + x + y*(1<<level);
 }
 
-void TerrainPage::render()
+void TerrainPage::render(Vec3f eye)
 {
 	renderQueue.clear();
 
@@ -214,10 +214,49 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	terrainPages.push_back(p);
 	glError()
 }
-void Terrain::renderTerrain()
+void Terrain::renderTerrain(Vec3f eye)
 {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	glDepthMask(false);
+	Vec3d center(eye.x,0,eye.z);
+	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
+	float cAng,sAng;
+
+	dataManager.bind("horizon2");
+	dataManager.bind("hardNoise",0);
+	dataManager.bindTex(0,1);
+	dataManager.bind("sand",2);
+
+	dataManager.setUniform1i("bumpMap",	0);
+	dataManager.setUniform1i("ground",	1);
+	dataManager.setUniform1i("tex",		2);
+	dataManager.setUniform1f("time",	world.time());
+	dataManager.setUniform1f("seaLevel",0);
+	dataManager.setUniform2f("center",	center.x,center.z);
+	dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
+	dataManager.setUniform1f("scale", radius);
+	glEnable(GL_BLEND);
+	glPushMatrix();
+	glTranslatef(center.x, center.y, center.z);
+	glScalef(radius,1,radius);
+	graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
+	glPopMatrix();
+
+	dataManager.unbindTextures();
+	dataManager.unbindShader();
+
+	glDepthMask(true);
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
-		(*i)->render();
+		(*i)->render(eye);
 	}
+	glColorMask(false,false,false,false);//this code interferes with stereo rendering...
+	glPushMatrix();
+	glTranslatef(center.x, center.y, center.z);
+	glScalef(radius,1,radius);
+	graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
+	glPopMatrix();
+	glColorMask(true,true,true,true);
 }

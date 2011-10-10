@@ -54,6 +54,8 @@ void main()
 	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
 	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
 	//////////////////
+	if(position.y < 0.0)
+		color.a *= 0.7*(1.0 + position.y*0.01);
 
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }

@@ -224,7 +224,8 @@ void FileManager::lTextFile(std::shared_ptr<file> f)
 		if(fin.is_open())
 		{
 			int size = fin.tellg();
-			std::shared_ptr<char> data(new char[size]);
+			std::shared_ptr<char> data(new char[size+1]);
+			memset(data.get(),0,size+1);
 			f->fileContents = data;
 			fin.seekg (0, ios::beg);
 			fin.read (data.get(), size);
@@ -244,6 +245,7 @@ void FileManager::lBinaryFile(std::shared_ptr<file> f)
 		{
 			int size = fin.tellg();
 			std::shared_ptr<char> data(new char[size]);
+			memset(data.get(),0,size);
 			f->fileContents = data;
 			fin.seekg (0, ios::beg);
 			fin.read (data.get(), size);
