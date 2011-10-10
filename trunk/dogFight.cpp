@@ -322,7 +322,7 @@ void dogFight::drawScene(int acplayer)
 	glEnable(GL_DEPTH_TEST);
 	glPopMatrix();
 
-	world.renderTerrain();
+	world.renderTerrain(e);
 //	if(world.level != NULL)
 //		world.level->render(e);
 

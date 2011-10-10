@@ -62,7 +62,7 @@ public:
 	}
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y);
 
-	void render();
+	void render(Vec3f eye);
 };
 class Terrain
 {
@@ -74,5 +74,5 @@ protected:
 public:
 
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale);
-	void renderTerrain();
+	void renderTerrain(Vec3f eye);
 };

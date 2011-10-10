@@ -88,6 +88,7 @@
   <models>
     <model name="sky dome"   file="media/dome.obj" />
     <model name="cylinder"   file="media/cylinder.obj" />
+    <model name="disk"       file="media/disk.obj" />
     <model name="f16"        file="media/f16.obj" />
     <model name="f18"        file="media/f18hornet.obj" />
     <model name="f22"        file="media/f22.obj" />

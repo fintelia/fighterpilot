@@ -719,16 +719,15 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 	v = glCreateShader(GL_VERTEX_SHADER);
 	f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	char * ff = textFileRead((char*)frag.c_str());
-	char * vv = textFileRead((char*)vert.c_str());
-	if(ff == NULL || vv == NULL) return false;
+	auto ff = fileManager.loadTextFile(frag);
+	auto vv = fileManager.loadTextFile(vert);
+	if(ff->loadFailed  || vv->loadFailed) return false;
 
-	glShaderSource(v, 1, (const char **)&vv, NULL);
-	glShaderSource(f, 1, (const char **)&ff, NULL);
+	const char* ptr = vv->fileContents.get();	glShaderSource(v, 1, (const char **)&ptr, NULL);
+	ptr = ff->fileContents.get();				glShaderSource(f, 1, (const char **)&ptr, NULL);
+
 	glCompileShader(v);
 	glCompileShader(f);
-	free(ff);
-	free(vv);
 
 	string vertErrors;
 	string fragErrors;
@@ -786,15 +785,17 @@ bool DataManager::registerTerrainShader(string name, string frag)
 {
 	bool errorFlag = false;
 	static GLuint v=0;
+	const char* ptr;
 
 	if(v==0)
 	{
 		v = glCreateShader(GL_VERTEX_SHADER);
-		char* vv = textFileRead("media/terrain.vert");
-		if(vv == NULL) return false;
-		glShaderSource(v, 1, (const char **)&vv, NULL);
+		
+		auto vv = fileManager.loadTextFile("media/terrain.vert");
+		if(vv->loadFailed) return false;
+		ptr = vv->fileContents.get();
+		glShaderSource(v, 1, (const char **)&ptr, NULL);
 		glCompileShader(v);
-		free(vv);
 
 		int i;//used whenever a pointer to int is required
 		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
@@ -810,15 +811,15 @@ bool DataManager::registerTerrainShader(string name, string frag)
 
 	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
 			p = 0;
-	char	*ff = textFileRead((char*)frag.c_str()),
-			*cf=(char*)malloc(512);
+	auto	ff = fileManager.loadTextFile(frag);
+	char	*cf=(char*)malloc(512);
 	int		lf=0;
 
-	if(ff != NULL)
+	if(!ff->loadFailed)
 	{
-		glShaderSource(f, 1, (const char **)&ff, NULL);
+		ptr = ff->fileContents.get();
+		glShaderSource(f, 1, (const char **)&ptr, NULL);
 		glCompileShader(f);
-		free(ff);
 		memset(cf,0,512);
 		glGetShaderInfoLog(f,512,&lf,cf);
 
@@ -1232,33 +1233,6 @@ bool DataManager::assetLoaded(string name)
 //	auto i = models.find(getId(type));
 //	return i != models.end() ? i->second : NULL;
 //}
-char* DataManager::textFileRead(const char *fn) {
-	FILE *fp;
-	char *content = NULL;
-
-	int count=0;
-
-	if (fn != NULL)
-	{
-		fp = fopen(fn,"rt");
-
-		if (fp != NULL)
-		{
-			fseek(fp, 0, SEEK_END);
-			count = ftell(fp);
-			rewind(fp);
-
-			if (count > 0) {
-				content = (char *)malloc(sizeof(char) * (count+1));
-				memset(content,0,sizeof(char) * (count+1));
-				count = fread(content,sizeof(char),count,fp);
-				content[count] = '\0';
-			}
-			fclose(fp);
-		}
-	}
-	return content;
-}
 
 void DataManager::setUniform1f(string name, float v0)
 {

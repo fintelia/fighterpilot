@@ -122,8 +122,6 @@ private:
 	int getId(string name);
 	int getId(objectType t);
 
-	char *textFileRead(const char *fn);//for shaders
-
 	DataManager():activeTextureUnit(0),boundShaderId(0){}
 	~DataManager();
 };

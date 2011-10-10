@@ -1,4 +1,4 @@
-newmtl sky
+newmtl disk
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
 Kd 1.000000 1.000000 1.000000
@@ -6,4 +6,4 @@ Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd sky.png
+map_Kd hardNoiseDOT3.png
