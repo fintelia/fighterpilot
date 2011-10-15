@@ -8,7 +8,7 @@ dogFight::dogFight(std::shared_ptr<Level> lvl): level(lvl)
 }
 bool dogFight::init()
 {
-	world.create(level);
+	world.create();
 	level->initializeWorld();
 	return true;
 }
@@ -58,20 +58,10 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 	if(firstPerson)
 	{
-	//	static int radarAng = glGetUniformLocation(dataManager.getId("radar"), "radarAng");
-
 		dataManager.bind("radar");
 		dataManager.setUniform1f("radarAng", radarAng);
 
-		//Vec2f mCenter((world.ground()->sizeX()/2-p->position.x)/160.0,(world.ground()->sizeZ()/2-p->position.z)/160.0);
-		//dataManager.setUniform2f("mapCenter", mCenter.x + 0.5, mCenter.y + 0.5);
-		//dataManager.setUniform1f("mapRadius", world.ground()->sizeX()/160.0);
-
-		//dataManager.setUniform1i("radarTexture", 0);
-	//	glUniform1f(radarAng, radarAng);
-
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-		//dataManager.unbind("radar");
 		dataManager.unbindTextures();
 
 		Vec3f nC((x+width/2),(y+height/2),0);
@@ -121,15 +111,15 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 #ifdef RADAR_MAP_BOUNDS
 		dataManager.bind("radar bounds");
 
-		Vec3f cCenter = (Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2) - p->position) / 16000.0;
-		float cR = sqrt(cCenter.x*cCenter.x + cCenter.z*cCenter.z);
-		float cA = atan2(cCenter.x, cCenter.z) - p->direction;
-		cCenter = Vec3f(sin(cA)*cR, 0, cos(cA)*cR);
+		Vec2f cCenter =world.bounds().center;
+		float cR = sqrt(cCenter.x*cCenter.x + cCenter.y*cCenter.y);
+		float cA = atan2(cCenter.x, cCenter.y) - p->direction;
+		cCenter = Vec3f(sin(cA)*cR, cos(cA)*cR);
 
 
-		double cRadius = world.ground()->sizeX() / 16000.0;
+		double cRadius = world.bounds().radius / 8000.0;
 
-		dataManager.setUniform2f("mapCenter",cCenter.x,cCenter.z);
+		dataManager.setUniform2f("mapCenter",cCenter);
 		dataManager.setUniform1f("mapRadius",cRadius);
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 #endif
@@ -378,8 +368,8 @@ void dogFight::drawScene(int acplayer)
 
 	((bulletCloud*)world[bullets].get())->draw();
 
-	Vec3f cCenter = Vec3f(world.ground()->sizeX()/2,0,world.ground()->sizeZ()/2);
-	double cRadius = world.ground()->sizeX();
+	Vec3f cCenter(world.bounds().center.x,0,world.bounds().center.y);
+	double cRadius = world.bounds().radius;
 
 	drawHexCylinder(cCenter,cRadius,20000, white);
 	glDepthMask(true);

@@ -32,7 +32,7 @@ class inGame: public popup
 {
 public:
 	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
-	inGame(): activeChoice(RESUME){world.time.pause();}
+	inGame();
 	~inGame(){}
 	int update(){return 30;}
 	void render();

@@ -397,7 +397,6 @@ bool OpenGLgraphics::init()
 			return false;
 		}
 	}
-
 	return true;
 }
 void OpenGLgraphics::resize(int w, int h)

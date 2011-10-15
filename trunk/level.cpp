@@ -271,14 +271,9 @@ bool LevelFile::loadPNG(string filename)
 	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 	//colorChannels = (int)png_get_channels(png_ptr, info_ptr);
 
-	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-		return false;
-	}
-	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-		return false;
-	}
+	image_data = new unsigned char[rowbytes*height];
+	row_pointers = new png_bytep[height];
+
 	for (i = 0;  i < height;  i++)
 		row_pointers[i] = image_data + i*rowbytes;
 
@@ -359,8 +354,8 @@ bool LevelFile::loadPNG(string filename)
 	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 	fclose(infile);
 
-	free(image_data);
-	free(row_pointers);
+	delete[] image_data;
+	delete[] row_pointers;
 	return true;
 }
 LevelFile::LevelFile(): info(NULL), objects(NULL), regions(NULL), heights(NULL)
@@ -460,7 +455,7 @@ void Level::heightmapGL::init()
 {
 	setMinMaxHeights();
 	glGenTextures(1,(GLuint*)&groundTex);
-	groundValues = (unsigned char*)malloc(uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
+	groundValues = new unsigned char[uPowerOfTwo(mResolution.x) * uPowerOfTwo(mResolution.y) * 4];
 	memset(groundValues,0,uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
 	glBindTexture(GL_TEXTURE_2D, groundTex);
 	glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
@@ -480,7 +475,7 @@ Level::heightmapGL::~heightmapGL()
 	glDeleteLists(dispList,1);
 	glDeleteTextures(1,(const GLuint*)&groundTex);
 	if(groundValues)
-		free(groundValues);
+		delete[] groundValues;
 }
 void Level::heightmapGL::setTex() const
 {	//////////////////////////////////

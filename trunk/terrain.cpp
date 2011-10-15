@@ -56,10 +56,11 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 }
 TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsigned short patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), height((1 << LevelsDeep) * patchResolution + 1), width((1 << LevelsDeep) * patchResolution + 1), levelsDeep(LevelsDeep), heights(Heights), trunk(nullptr)
 {
-//////////////////////////////////////////////////////VBO//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////VBO and texture//////////////////////////////////////////////////////
 	glGenBuffers(1,&VBO);
 	glGenBuffers(1,&indexBuffer.id);
 
+	glGenTextures(1,&texture);
 
 	GLfloat* heightMap = new float[width*height*3];
 	for(int x = 0; x < width; x++)
@@ -97,6 +98,33 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indexBuffer.numVertices, indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+	//////////////////
+	Vec3f n;
+	unsigned char* groundValues = new unsigned char[width*height*4];
+	int xPOT = uPowerOfTwo(width);
+	int zPOT = uPowerOfTwo(height);
+	for(unsigned int x=0; x < xPOT; x++)
+	{
+		for(unsigned int z=0; z < zPOT; z++)
+		{
+			n = interpolatedNormal(Vec2f(float(x*width)/xPOT,float(z*height)/zPOT));
+			if(n.magnitudeSquared() < 0.001)
+				n = Vec3f(0.0,1.0,0.0);
+
+			groundValues[(x + z * xPOT)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
+			groundValues[(x + z * xPOT)*4 + 1] = (unsigned char)(n.y*255.0);
+			groundValues[(x + z * xPOT)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
+			groundValues[(x + z * xPOT)*4 + 3] = (unsigned char)(255.0*(interpolatedHeight(Vec2f(float(x*width)/xPOT,float(z*height)/zPOT))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
+		}
+	}
+	glBindTexture(GL_TEXTURE_2D, texture);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, xPOT, zPOT, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xPOT, zPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	delete[] groundValues;
+	/////////////////
+
 	delete[] heightMap;
 	delete[] indices;
 ///////////////////////////////////////////////////QUAD TREE///////////////////////////////////////////////////
@@ -129,12 +157,100 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 	}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
-TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned int y)
+TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned int y) const
 {
 	return trunk + trunk->levelOffset(level) + x + y*(1<<level);
 }
+Vec3f TerrainPage::rasterNormal(Vec2u loc) const
+{
+	float Cy = (loc.y < height-1)	? ((float)heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float Ay = (loc.x < width-1)	? ((float)heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float By = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 
-void TerrainPage::render(Vec3f eye)
+	return Vec3f(Cy - Ay, 30.0, Dy - By).normalize();
+}
+float TerrainPage::rasterHeight(Vec2u loc) const
+{
+	return minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[min(loc.x,width) + min(loc.y,height) * width] / USHRT_MAX;
+}
+Vec3f TerrainPage::interpolatedNormal(Vec2f loc) const
+{
+	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
+	{
+		Vec3f A = rasterNormal(Vec2u(floor(loc.x),floor(loc.y)));
+		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
+		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
+	}
+	else
+	{
+		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
+		Vec3f C = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y+1)));
+		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
+	}
+}
+float TerrainPage::interpolatedHeight(Vec2f loc) const
+{
+	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
+	{
+		float A = rasterHeight(Vec2u(floor(loc.x),floor(loc.y)));
+		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
+		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
+	}
+	else
+	{
+		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
+		float C = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y+1)));
+		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
+	}
+}
+Vec3f TerrainPage::getNormal(Vec2f loc) const
+{
+	loc -= Vec2f(minXYZ.x, minXYZ.z);
+	loc.x *= (maxXYZ.x - minXYZ.x) / width;
+	loc.y *= (maxXYZ.z - minXYZ.z) / height;
+
+	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
+	{
+		Vec3f A = rasterNormal(Vec2u(floor(loc.x),floor(loc.y)));
+		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
+		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
+	}
+	else
+	{
+		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
+		Vec3f C = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y+1)));
+		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
+	}
+}
+float TerrainPage::getHeight(Vec2f loc) const
+{
+	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
+	loc.x *= width / (maxXYZ.x - minXYZ.x);
+	loc.y *= height / (maxXYZ.z - minXYZ.z);
+
+	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
+	{
+		float A = rasterHeight(Vec2u(floor(loc.x),floor(loc.y)));
+		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
+		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
+	}
+	else
+	{
+		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
+		float C = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y+1)));
+		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
+		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
+	}
+}
+void TerrainPage::render(Vec3f eye) const
 {
 	renderQueue.clear();
 
@@ -179,7 +295,7 @@ void TerrainPage::render(Vec3f eye)
 	dataManager.bind("grass",1);
 	dataManager.bind("rock",2);
 	dataManager.bind("LCnoise",3);
-	dataManager.bind("white",4);
+	dataManager.bindTex(texture,4);
 
 	dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
 	dataManager.setUniform1f("minHeight",	minXYZ.y);
@@ -208,55 +324,116 @@ void TerrainPage::render(Vec3f eye)
 	dataManager.unbindShader();
 	dataManager.unbindTextures();
 }
-void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale)
+void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water)
 {
+	waterPlane = water;
 	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,0,patchResolution,position,scale));
 	terrainPages.push_back(p);
-	glError()
+	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z));
+	glError();
 }
-void Terrain::renderTerrain(Vec3f eye)
+void Terrain::renderTerrain(Vec3f eye) const
 {
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	glDepthMask(false);
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
-	float cAng,sAng;
+	if(waterPlane)
+	{
+		glDepthMask(false);
+		
+		dataManager.bind("horizon2");
+		dataManager.bind("hardNoise",0);
+		dataManager.bindTex(0,1);
+		dataManager.bind("sand",2);
 
-	dataManager.bind("horizon2");
-	dataManager.bind("hardNoise",0);
-	dataManager.bindTex(0,1);
-	dataManager.bind("sand",2);
+		dataManager.setUniform1i("bumpMap",	0);
+		dataManager.setUniform1i("ground",	1);
+		dataManager.setUniform1i("tex",		2);
+		dataManager.setUniform1f("time",	world.time());
+		dataManager.setUniform1f("seaLevel",0);
+		dataManager.setUniform2f("center",	center.x,center.z);
+		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
+		dataManager.setUniform1f("scale", radius);
+		glEnable(GL_BLEND);
+		glPushMatrix();
+		glTranslatef(center.x, center.y, center.z);
+		glScalef(radius,1,radius);
+		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
+		glPopMatrix();
 
-	dataManager.setUniform1i("bumpMap",	0);
-	dataManager.setUniform1i("ground",	1);
-	dataManager.setUniform1i("tex",		2);
-	dataManager.setUniform1f("time",	world.time());
-	dataManager.setUniform1f("seaLevel",0);
-	dataManager.setUniform2f("center",	center.x,center.z);
-	dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
-	dataManager.setUniform1f("scale", radius);
-	glEnable(GL_BLEND);
-	glPushMatrix();
-	glTranslatef(center.x, center.y, center.z);
-	glScalef(radius,1,radius);
-	graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
-	glPopMatrix();
+		dataManager.unbindTextures();
+		dataManager.unbindShader();
 
-	dataManager.unbindTextures();
-	dataManager.unbindShader();
-
-	glDepthMask(true);
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		glDepthMask(true);
+	}
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(eye);
 	}
-	glColorMask(false,false,false,false);//this code interferes with stereo rendering...
-	glPushMatrix();
-	glTranslatef(center.x, center.y, center.z);
-	glScalef(radius,1,radius);
-	graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
-	glPopMatrix();
-	glColorMask(true,true,true,true);
+	if(waterPlane)
+	{
+		glColorMask(false,false,false,false);//this code interferes with stereo rendering...
+		glPushMatrix();
+		glTranslatef(center.x, center.y, center.z);
+		glScalef(radius,1,radius);
+		graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
+		glPopMatrix();
+		glColorMask(true,true,true,true);
+	}
+}
+std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
+{
+	for(auto i=terrainPages.begin(); i!=terrainPages.end(); i++)
+	{
+		if((*i)->minXYZ.x <= position.x && (*i)->maxXYZ.x >= position.x && (*i)->minXYZ.z <= position.y && (*i)->maxXYZ.z >= position.y)
+		{
+			return *i;
+		}
+	}
+	return std::shared_ptr<TerrainPage>();
+}
+std::shared_ptr<TerrainPage> Terrain::getPage(Vec3f position) const // position.y is ignored
+{
+	for(auto i=terrainPages.begin(); i!=terrainPages.end(); i++)
+	{
+		if((*i)->minXYZ.x <= position.x && (*i)->maxXYZ.x >= position.x && (*i)->minXYZ.z <= position.z && (*i)->maxXYZ.z >= position.z)
+		{
+			return *i;
+		}
+	}
+	return std::shared_ptr<TerrainPage>();
+}
+float Terrain::elevation(Vec2f v) const
+{
+	auto ptr = getPage(v);
+	if(ptr)
+	{
+		return waterPlane ? max(0.0f,ptr->getHeight(v)) : ptr->getHeight(v);
+	}
+	return 0.0f;
+}
+float Terrain::elevation(float x, float z) const
+{
+	return elevation(Vec2f(x,z));
+}
+float Terrain::altitude(Vec3f v) const
+{
+	auto ptr = getPage(v);
+	if(ptr)
+	{
+		return waterPlane ? v.y-max(0.0f,ptr->getHeight(Vec2f(v.x,v.z))) : v.y-ptr->getHeight(Vec2f(v.x,v.z));
+	}
+	return v.y;
+}
+float Terrain::altitude(float x, float y, float z) const
+{
+	return altitude(Vec3f(x,y,z));
+}
+bool Terrain::isLand(Vec2f v) const
+{
+	auto ptr = getPage(v);
+	return ptr && ptr->getHeight(v) > 0.0f;
+}
+bool Terrain::isLand(float x, float z) const
+{
+	return isLand(Vec2f(x,z));
 }

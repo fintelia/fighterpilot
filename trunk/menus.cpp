@@ -25,7 +25,7 @@ bool objectProperties::init(LevelFile::Object* obj)
 	textBoxes["y location"]	= new numericTextBox(sw/2-100,sh/2+25,100,floor(object->startloc.y+0.5),black);
 	textBoxes["z location"]	= new numericTextBox(sw/2-100,sh/2+65,100,floor(object->startloc.z+0.5),black);
 
-	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",object->controlType & CONTROL_HUMAN,black);
+	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",(object->controlType & CONTROL_HUMAN)!=0,black);
 	checkBoxes["respawn"]	= new checkBox(sw/2+100,sh/2+80,"respawn when destroyed\n(comming soon)",false,black);
 
 	listBox* l = new listBox(sw/2+100,sh/2-15,100,"team " + lexical_cast<string>(object->team+1),black);
@@ -96,6 +96,10 @@ void objectProperties::render()
 // | 													gui::inGame										            			|
 // |____________________________________________________________________________________________________________________________|
 //
+inGame::inGame(): activeChoice(RESUME)
+{
+	world.time.pause();
+}
 void inGame::render()
 {
 	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.620,0.559*sAspect,0.381),"menu in game");
@@ -110,14 +114,14 @@ bool inGame::keyDown(int vkey)
 	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if(((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME) || vkey==0x31 || vkey==VK_ESCAPE)
+	if(((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME) || vkey==VK_PAUSE || vkey==VK_ESCAPE)
 	{
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 		input->up(0x31);
 		input->up(VK_ESCAPE);
 		world.time.unpause();
-		menuManager.setMenu(NULL);
+		done = true;
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
 	{

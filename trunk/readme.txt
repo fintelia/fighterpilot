@@ -3,7 +3,6 @@ System Requirements:
     Windows Operating System
     Reasonably fast computer
     OpenGL 2.0 compatible graphics card
-    Xbox 360 controllers are optional 
 
 After extracting, run FighterPilot.exe. Then choose high graphics settings (or, if this runs too slowly try low graphics settings). Once the loading bar finishes you will see the main menu. Use the arrow keys and Space/Enter to navigate the menu. To exit from the main menu, press the escape key. Pressing escape while in the game will bring up the in-game menu. The flight controls are as follows:
 
@@ -16,6 +15,5 @@ Climb                  Numpad 5              U Key
 Dive                   Numpad 2              J Key
 Cannon                 Numpad 0            Space Key
 Fire Missiles          Numpad 9              B Key
+Drop bombs             Numpad 8				 V Key
 Toggle First Person       F1                   F2
-
-Note: If one or more Xbox 360 controllers are attached to the system these will be used instead of the keyboard controls for their respective players.

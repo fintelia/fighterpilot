@@ -80,10 +80,10 @@ public:
 		return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
 	}
 };
-typedef Vector2<float>		Vec2f;
-typedef Vector2<double>		Vec2d;
-typedef Vector2<int>		Vec2i;
-typedef Vector2<int>		Vec2u;
+typedef Vector2<float>			Vec2f;
+typedef Vector2<double>			Vec2d;
+typedef Vector2<int>			Vec2i;
+typedef Vector2<unsigned int>	Vec2u;
 
 template <class T, class U>
 Vector2<T> operator*(const Vector2<T> v, U scale)

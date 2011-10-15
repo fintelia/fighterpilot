@@ -47,7 +47,7 @@ int campaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			string nLevel = world.level->getLevelNext();
+			string nLevel = level->getLevelNext();
 			if(nLevel == "") nLevel="media/map file.lvl";
 
 			std::shared_ptr<Level> l(new Level);
@@ -63,7 +63,7 @@ int campaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			menuManager.setMenu(new gui::campaign(world.level));
+			menuManager.setMenu(new gui::campaign(level));
 		}
 	}
 	else

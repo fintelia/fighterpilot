@@ -73,7 +73,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 	bool FileManager::directoryExists(string directory)
 	{
 		DWORD d = GetFileAttributesA(directory.c_str());
-		return d & FILE_ATTRIBUTE_DIRECTORY;
+		return (d & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 	bool FileManager::createDirectory(string directory)
 	{
