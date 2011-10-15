@@ -137,7 +137,8 @@ public:
 	virtual Vec2f project(Vec3f p, unsigned int view=0);
 	virtual Vec3f unProject(Vec3f p, unsigned int view=0);
 
-	const View& getView(unsigned int view=0){return views[view < views.size() ? view : 0];}
+	const View& getView(unsigned int view){return views[view < views.size() ? view : 0];}
+	const View& getView(){return views[currentView];}
 
 	void resetViews(unsigned int numViews=1);
 	void viewport(float x,float y,float width,float height, unsigned int view=0);

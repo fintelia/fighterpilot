@@ -12,7 +12,7 @@ void main()
 {
 	position.xz = gl_Vertex.xz/XZscale;
 	position.y = gl_Vertex.y;
-	h = (gl_Vertex.y-minHeight)/(maxHeight-minHeight);
+	h = (gl_Vertex.y-0)/(maxHeight-0);
 	lightDir = normalize(vec3(gl_LightSource[0].position));
 	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
 

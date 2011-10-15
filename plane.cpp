@@ -248,8 +248,8 @@ void nPlane::update(double time, double ms)
 
 
 			Vec2f positionXZ(position.x,position.z);
-			Vec2f mapCenter(world.ground()->sizeX()/2, world.ground()->sizeZ()/2);
-			float r = max(mapCenter.x,mapCenter.y)*2.0 + 60.0f;
+			Vec2f mapCenter = world.bounds().center;
+			float r = world.bounds().radius;
 			if(positionXZ.distanceSquared(mapCenter) > r*r)
 			{
 				returnToBattle();
@@ -549,7 +549,7 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 	//Vec3f right	= rotation * Vec3f(1,0,0);
 	fwd.y=0; fwd=fwd.normalize();
 
-	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.ground()->sizeX()/2,position.z-world.ground()->sizeZ()/2));
+	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.bounds().center.x,position.z-world.bounds().center.y));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
 	camera.position = Vec3f(position.x - fwd.x*20, position.y + sin(45.0)*20,	 position.z - fwd.z*20);

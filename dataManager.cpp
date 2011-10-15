@@ -156,7 +156,7 @@ bool DataManager::registerTGA(string name, string filename)
 
 	tga.bytesPerPixel	= (tga.Bpp / 8);									// Compute the number of BYTES per pixel
 	tga.imageSize		= (tga.bytesPerPixel * tga.Width * tga.Height);		// Compute the total amout ofmemory needed to store data
-	texture.imageData	= (GLubyte *)malloc(tga.imageSize);					// Allocate that much memory
+	texture.imageData	= new GLubyte[tga.imageSize];						// Allocate that much memory
 
 
 	if(texture.imageData == NULL)											// If no space was allocated
@@ -201,7 +201,7 @@ bool DataManager::registerTGA(string name, string filename)
 	else
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
 
-    free(texture.imageData);
+    delete[] texture.imageData;
 	textureAsset* a = new textureAsset;
 	a->id = texV;
 	a->type = asset::TEXTURE;
@@ -302,14 +302,9 @@ bool DataManager::registerPNG(string name, string filename)
 	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
 
-	if ((image_data = (unsigned char*)malloc(rowbytes*height)) == NULL) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-		return false;
-	}
-	if ((row_pointers = (png_bytep*)malloc(height*sizeof(png_bytep))) == NULL) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-		return false;
-	}
+	image_data = new unsigned char[rowbytes*height];
+	row_pointers = new png_bytep[height];
+
 	for (i = 0;  i < height;  i++)
 		row_pointers[i] = image_data + i*rowbytes;
 
@@ -347,8 +342,8 @@ bool DataManager::registerPNG(string name, string filename)
 		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);
 	}
 
-	free(image_data);
-	free(row_pointers);
+	delete[] image_data;
+	delete[] row_pointers;
 
 	textureAsset* a = new textureAsset;
 	a->id = texV;
@@ -738,19 +733,21 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 	if(i == GL_FALSE)
 	{
 		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-		char* cv=(char*)malloc(i); memset(cv,0,i);
+		char* cv=new char[i]; memset(cv,0,i);
 		glGetShaderInfoLog(v,i,&i,cv);
 		messageBox(vert + ": " + cv);
 		errorFlag = true;
+		delete[] cv;
 	}
 	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
 	if(i == GL_FALSE && !errorFlag)
 	{
 		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-		char* cf=(char*)malloc(i); memset(cf,0,i);
+		char* cf=new char[i]; memset(cf,0,i);
 		glGetShaderInfoLog(f,i,&i,cf);
 		messageBox(frag + ": " + cf);
 		errorFlag = true;
+		delete[] cf;
 	}
 
 
@@ -764,10 +761,11 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 	if(i == GL_FALSE && !errorFlag)
 	{
 		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-		char* cl=(char*)malloc(i); memset(cl,0,i);
+		char* cl=new char[i]; memset(cl,0,i);
 		glGetProgramInfoLog(p,i,&i,cl);
 		messageBox(frag + "(link): " + cl);
 		errorFlag = true;
+		delete[] cl;
 	}
 	glUseProgram(0);
 
@@ -802,36 +800,40 @@ bool DataManager::registerTerrainShader(string name, string frag)
 		if(i == GL_FALSE)
 		{
 			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-			char* cv=(char*)malloc(i); memset(cv,0,i);
+			char* cv=new char[i]; memset(cv,0,i);
 			glGetShaderInfoLog(v,i,&i,cv);
 			messageBox(string("terrain.vert: ") + cv);
 			errorFlag = true;
+			delete[] cv;
 		}
 	}
 
 	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
 			p = 0;
+	
 	auto	ff = fileManager.loadTextFile(frag);
-	char	*cf=(char*)malloc(512);
 	int		lf=0;
 
 	if(!ff->loadFailed)
 	{
+		char* cf=new char[512];
 		ptr = ff->fileContents.get();
 		glShaderSource(f, 1, (const char **)&ptr, NULL);
 		glCompileShader(f);
 		memset(cf,0,512);
 		glGetShaderInfoLog(f,512,&lf,cf);
+		delete[] cf;
 
 		int i;
 		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
 		if(i == GL_FALSE && !errorFlag)
 		{
 			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-			char* cf=(char*)malloc(i); memset(cf,0,i);
+			char* cf=new char[i]; memset(cf,0,i);
 			glGetShaderInfoLog(f,i,&i,cf);
 			messageBox(frag + ": " + cf);
 			errorFlag = true;
+			delete[] cf;
 		}
 
 		p = glCreateProgram();
@@ -843,10 +845,11 @@ bool DataManager::registerTerrainShader(string name, string frag)
 		if(i == GL_FALSE && !errorFlag)
 		{
 			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-			char* cl=(char*)malloc(i); memset(cl,0,i);
+			char* cl=new char[i]; memset(cl,0,i);
 			glGetProgramInfoLog(p,i,&i,cl);
 			messageBox(frag + "(link): " + cl);
 			errorFlag = true;
+			delete[] cl;
 		}
 
 	}

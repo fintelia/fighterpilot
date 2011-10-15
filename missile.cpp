@@ -72,12 +72,7 @@ void missile::update(double time, double ms)
 		{
 			target = 0;
 		}
-		else
-		//if(angle < PI * 2.5 * ms/1000)
-		//{
-		//	rotation = targetRot;
-		//}
-		//else
+		else if(angle > 0.01)// we don't want to (or need to) divide by zero
 		{
 			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
 		}

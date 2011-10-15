@@ -57,8 +57,7 @@ void main()
 	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 	
-	float NdotL = dot(normal,lightDir);
-	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
+
 	///////////////////////
 	//if(position.y > 0.0)
 	//{
@@ -68,8 +67,13 @@ void main()
 		//color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
 	//}
 	//////////////////
+	float NdotL = dot(normal,lightDir);
+	
 	if(position.y < 0.0)
+	{
+		NdotL *= 0.7*(1.0 + (position.y)*0.01);
 		color.a *= 0.7*(1.0 + position.y*0.01);
-
+	}
+	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }
