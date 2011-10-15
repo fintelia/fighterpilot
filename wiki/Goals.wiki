@@ -1,10 +1,8 @@
 *Things To Do:*
 
- # Separate update interval from frame rate
- # Improved camera smoothing
- # Display map bounds on radar
- # Improve grass shader
- # support for chained levels to create a campaign
+ # Colored text
+ # Terrain LOD
+ # Expand fileManager
 
 * New Models To Make *
  # AA gun
@@ -14,9 +12,11 @@
 
 *Possible Things To Do*
 
+ * Separate update interval from frame rate
  * Add lua scripting for AI's
  * Add lua scripting for the GUI
- * Load the GUI element properties from an xml document (with tinyXML?)
+ * Load the GUI element properties from an xml document
+ * Write custom xml parser
  * Terrain LOD
 
 *Future Plans*
