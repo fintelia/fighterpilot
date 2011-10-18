@@ -92,7 +92,7 @@ namespace gui{class levelEditor;}
 #include "particleManager.h"
 #include "input.h"
 #ifdef _DEBUG
-#include "XboxContInput.h"
+//#include "XboxContInput.h"
 #endif
 #include "path.h"
 #include "script.h"

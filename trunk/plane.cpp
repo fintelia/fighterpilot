@@ -700,8 +700,8 @@ void nPlane::initArmaments()
 	bombs.firing										= false;
 
 	machineGun.max			= machineGun.left			= 1000;
-	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
-	machineGun.rechargeTime	= machineGun.rechargeLeft	= 450.0;
+	machineGun.roundsMax	= machineGun.roundsLeft		= 30;
+	machineGun.rechargeTime	= machineGun.rechargeLeft	= 350.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 26.0;
 	machineGun.firing									= false;
 }
