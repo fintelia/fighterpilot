@@ -68,12 +68,11 @@ void main()
 	//}
 	//////////////////
 	float NdotL = dot(normal,lightDir);
+
+	float m = 1.0 + clamp(position.y/fwidth(position.y),-1.0,0.0)*(0.3-position.y*0.01);
+	NdotL *= m;
+	color.a *= m;
 	
-	if(position.y < 0.0)
-	{
-		NdotL *= 0.7*(1.0 + (position.y)*0.01);
-		color.a *= 0.7*(1.0 + position.y*0.01);
-	}
 	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
 	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
 }
