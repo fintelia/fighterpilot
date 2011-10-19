@@ -5,7 +5,6 @@ There is a new version of Fighter-Pilot! It can be downloaded [http://code.googl
   * Windows Operating System
   * Reasonably fast computer
   * OpenGL 2.0 compatible graphics card
-  * Xbox 360 controllers are optional
 
 *Instructions:*
 
