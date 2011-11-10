@@ -32,18 +32,27 @@ void objectList::clearObjects()
 	mObjectTypes.clear();
 	object::currentId = 0;
 }
-void objectList::updateObjects(double time, double ms)
+void objectList::objectsSimulationUpdate(double time, double ms)
 {
 	for(auto i = mObjects.begin(); i != mObjects.end();i++)
 	{
-		i->second->update(time,ms);
+		i->second->updateSimulation(time,ms);
 	}
 	for(auto i = mObjects.begin(); i != mObjects.end();)
 	{
 		if(i->second->awaitingDelete)
+		{
 			mObjects.erase(i++);
+		}
 		else
 			i++;
+	}
+}
+void objectList::objectsFrameUpdate(double interpolation)
+{
+	for(auto i = mObjects.begin(); i != mObjects.end();i++)
+	{
+		i->second->updateFrame(interpolation);
 	}
 }
 std::shared_ptr<object> objectList::operator[] (objId id) const

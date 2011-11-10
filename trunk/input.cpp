@@ -1,62 +1,111 @@
 
 #include "engine.h"
-
+#include <Windows.h>
+#include <Xinput.h>
 void Input::sendCallbacks(callBack* c)
 {
 	menuManager.inputCallback(c);
 }
-standard_input::standard_input(): Input()
+Input::Input(): tPresses(0)
 {
-	int i;
-	for(i=0;i<256;i++)
+
+	for(int i=0; i<256; i++)
+	{
 		keys[i]=false;
-	inputMutex=CreateMutex(NULL,false,NULL);
-	tPresses=0;
+	}
+
+	for(int i=0; i<4; i++)
+	{
+		xboxControllers[i].state = new XINPUT_STATE;
+		xboxControllers[i].connected = true;
+	}
+	update();
 }
-standard_input::~standard_input()
+Input::~Input()
 {
-	CloseHandle( inputMutex );
+	for(int i=0; i<4; i++)
+	{
+		delete xboxControllers[i].state;
+	}
 }
-void standard_input::down(int k)
+void Input::down(int k)
 {
 	if(k>=256 || k<0) return;
-	WaitForSingleObject( inputMutex, INFINITE );
+	inputMutex.lock();
 	keys[k]=true;
 	tPresses++;
 	lastKey=k;
-	ReleaseMutex( inputMutex );
+	inputMutex.unlock();
 
 
 }
-void standard_input::up(int k)
+void Input::up(int k)
 {
 	if(k>=256 || k<0) return;
-	WaitForSingleObject( inputMutex, INFINITE );
+	inputMutex.lock();
 	keys[k]=false;
-	ReleaseMutex( inputMutex );
+	inputMutex.unlock();
 }
-bool standard_input::getKey(int key)
+bool Input::getKey(int key)
 {
 	if(key>=256 || key<0) return false;
-	WaitForSingleObject( inputMutex, INFINITE );
-	bool b=keys[key];
-	ReleaseMutex( inputMutex );
-	return b;
+	return keys[key];
 }
-void standard_input::update()
+const Input::xboxControllerState& Input::getXboxController(unsigned char controllerNum)
+{
+	return xboxControllers[clamp(controllerNum,0,3)];
+}
+
+void Input::update()
 {
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
-	mousePos.set(((float)cursorPos.x) / sh, 1.0 - ((float)cursorPos.y) / sh);
 
+
+	char newKeyStates[256];
+	GetKeyboardState((PBYTE)newKeyStates);
+
+
+#ifdef USING_XINPUT
+	bool xboxControllersConnected[4];
+	XINPUT_STATE newXboxControllerStates[4];
+	for(int i = 0; i < 4; i++)
+	{
+		if(xboxControllers[i].connected)
+		{
+			xboxControllersConnected[i] = XInputGetState(i, &newXboxControllerStates[i]) == ERROR_SUCCESS;
+		}
+	}
+#endif
+	inputMutex.lock();
+
+	mousePos.set(((float)cursorPos.x) / sh, ((float)cursorPos.y) / sh);
+
+	for(int i = 0; i<256; i++)
+	{
+		keys[i] = newKeyStates[i] & 0x80;
+	}
+
+#ifdef USING_XINPUT
+	for(int i = 0; i<4; i++)
+	{
+		xboxControllers[i].connected = xboxControllersConnected[i];
+		if(xboxControllers[i].connected)
+		{
+			*xboxControllers[i].state = newXboxControllerStates[i];
+		}
+	}
+#endif
+
+	inputMutex.unlock();
 }
-const Input::mouseButtonState& standard_input::getMouseState(mouseButton m)
+const Input::mouseButtonState& Input::getMouseState(mouseButton m)
 {
 	if(m == LEFT_BUTTON)		return leftMouse;
 	else if(m == MIDDLE_BUTTON) return middleMouse;
 	else						return rightMouse;
 }
-void standard_input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
+void Input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if(uMsg == WM_KEYDOWN)
 	{
@@ -82,42 +131,42 @@ void standard_input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		leftMouse.down = true;
 		leftMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		leftMouse.downPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		leftMouse.downPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(true, LEFT_BUTTON, leftMouse.downPos));
 	}
 	else if(uMsg == WM_MBUTTONDOWN)
 	{
 		middleMouse.down = true;
 		middleMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		middleMouse.downPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		middleMouse.downPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(true, MIDDLE_BUTTON, middleMouse.downPos));
 	}
 	else if(uMsg == WM_RBUTTONDOWN)
 	{
 		rightMouse.down = true;
 		rightMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		rightMouse.downPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		rightMouse.downPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(true, RIGHT_BUTTON, rightMouse.downPos));
 	}
 	else if(uMsg == WM_LBUTTONUP)
 	{
 		leftMouse.down = false;
 		leftMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		leftMouse.upPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		leftMouse.upPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(false, LEFT_BUTTON, leftMouse.upPos));
 	}
 	else if(uMsg == WM_MBUTTONUP)
 	{
 		middleMouse.down = false;
 		middleMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		middleMouse.upPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		middleMouse.upPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(false, MIDDLE_BUTTON, middleMouse.upPos));
 	}
 	else if(uMsg == WM_RBUTTONUP)
 	{
 		rightMouse.down = false;
 		rightMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		rightMouse.upPos.y = 1.0 - (float)HIWORD(lParam) / sh;
+		rightMouse.upPos.y = (float)HIWORD(lParam) / sh;
 		sendCallbacks(new mouseClick(false, RIGHT_BUTTON, rightMouse.upPos));
 	}
 	else if(uMsg == WM_MOUSEWHEEL)
@@ -125,155 +174,188 @@ void standard_input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
 	}
 }
-#ifdef XINPUT
-
-xinput_input::xinput_input(): standard_input(), deadZone(0.25)
-{
-	int i;
-	for(int l=0;l<4;l++)
-	{
-		for(i=0;i<14;i++)
-			joy[i][l]=false;
-		for(i=0;i<6;i++)
-			axes[i*l]=0;
-	}
-	tPresses=0;
-	//XInputEnable( true );
-	update();
-}
-
-void xinput_input::update()
-{
-	standard_input::update();
-
-	double t = GetTime();
-	DWORD dwResult;
-	int contN=256;
-	for( DWORD i = 0; i < MAX_CONTROLLERS; i++ )
-	{
-		// Simply get the state of the controller from XInput.
-
-
-
-		dwResult = XInputGetState( i, &g_Controllers[i].state );
-
-
-
-		if( dwResult == ERROR_SUCCESS )
-			g_Controllers[i].bConnected = true;
-		else
-			g_Controllers[i].bConnected = false;
-		if( g_Controllers[i].bConnected )
-		{
-			//int curMask=0x00000001;
-			//for(int l=0;l<14;l++)
-			//{
-			//	if(l==9)curMask=0x0100;
-			//	if(l==11)curMask=0x1000;
-			//	if(joy[l][i]!= ((g_Controllers[i].state.Gamepad.wButtons & curMask)!=0) )
-			//	{
-			//		//tPresses++;
-			//		//lastKey=&joy[l][i];
-			//		//lastAscii=-1;
-			//		joy[l][i]=((g_Controllers[i].state.Gamepad.wButtons & curMask)!=0);
-			//	}
-			//	curMask*=2;
-			//}//-----------------
-			XINPUT_GAMEPAD oldGamePad=gamepads[i];
-			gamepads[i]=g_Controllers[i].state.Gamepad;
-			int lKey=0;
-
-			if(abs(oldGamePad.bLeftTrigger-gamepads[i].bLeftTrigger)>60)				lKey = LEFT_TRIGGER + GAMEPAD1_OFFSET + i*20;
-			if(abs(oldGamePad.bRightTrigger-gamepads[i].bRightTrigger)>60)				lKey = RIGHT_TRIGGER + GAMEPAD1_OFFSET + i*20;
-			if(abs(oldGamePad.sThumbLX-gamepads[i].sThumbLX)>5000)						lKey = THUMB_LX + GAMEPAD1_OFFSET + i*20;
-			if(abs(oldGamePad.sThumbLY-gamepads[i].sThumbLY)>5000)						lKey = THUMB_LY + GAMEPAD1_OFFSET + i*20;
-			if(abs(oldGamePad.sThumbRX-gamepads[i].sThumbRX)>5000)						lKey = THUMB_RX + GAMEPAD1_OFFSET + i*20;
-			if(abs(oldGamePad.sThumbRY-gamepads[i].sThumbRY)>5000)						lKey = THUMB_RY + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_DPAD_UP))			lKey = DPAD_UP + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_DPAD_DOWN))		lKey = DPAD_DOWN + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_DPAD_LEFT))		lKey = DPAD_LEFT + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_DPAD_RIGHT))		lKey = DPAD_RIGHT + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_START))			lKey = GAMEPAD_START + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_BACK))				lKey = GAMEPAD_BACK + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_LEFT_THUMB))		lKey = LEFT_THUMB + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_RIGHT_THUMB))		lKey = RIGHT_THUMB + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_LEFT_SHOULDER))	lKey = LEFT_SHOULDER + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_RIGHT_SHOULDER))	lKey = RIGHT_SHOULDER + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_A))				lKey = GAMEPAD_A + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_B))				lKey = GAMEPAD_B + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_X))				lKey = GAMEPAD_X + GAMEPAD1_OFFSET + i*20;
-			if(!compareButtons(oldGamePad,gamepads[i],XINPUT_GAMEPAD_Y))				lKey = GAMEPAD_Y + GAMEPAD1_OFFSET + i*20;
-			if(lKey!=0)
-			{
-				tPresses++;
-				lastKey=lKey;
-			}
-
-			//int oldAxes[6];
-			//for(int m=0;m<6;m++)
-			//	oldAxes[m]=axes[m*i];
-			//axes[0*i]=(float)Gamepad.bLeftTrigger/255*1000;
-			//axes[1*i]=(float)Gamepad.bRightTrigger/255*1000;
-			//axes[2*i]=(float)Gamepad.sThumbLX/32768*1000;
-			//axes[3*i]=(float)Gamepad.sThumbLY/32768*1000;
-			//axes[4*i]=(float)Gamepad.sThumbRX/32768*1000;
-			//axes[5*i]=(float)Gamepad.sThumbRY/32768*1000;
-
-			//for(int l=0;l<6;l++)
-			//{
-			//	if(abs(axes[l*i]-oldAxes[l])>500)
-			//	{
-			//		tPresses++;
-			//		lastKey=contN;
-			//	}
-			//	contN++;
-			//}
-		}
-	}
-	t = GetTime() - t;
-	t = GetTime();
-}
-xinput_input::~xinput_input()
-{
-	//XInputEnable( false );
-}
-float xinput_input::operator() (int key)
+float Input::operator() (int key)
 {
 	float i=0;
-	WaitForSingleObject( inputMutex, INFINITE );
+	inputMutex.lock();
+
 
 	if(key>=0 && key<256)
 		i=keys[key] ? 1 : 0;
-	else if(key>=GAMEPAD1_OFFSET && key<GAMEPAD4_OFFSET+20)
+	else if(key>=XBOX_GAMEPAD_OFFSET[0] && key<XBOX_GAMEPAD_OFFSET[3]+20)
 	{
-		int a=(key-GAMEPAD1_OFFSET)/20;
-		key -= a*20 + GAMEPAD1_OFFSET;
-		if(key == LEFT_TRIGGER)		i = 1.0/255*gamepads[a].bLeftTrigger;
-		if(key == RIGHT_TRIGGER)	i = 1.0/255*gamepads[a].bRightTrigger;
-		if(key == THUMB_LX)			i = 1.0/32767*gamepads[a].sThumbLX;
-		if(key == THUMB_LY)			i = 1.0/32767*gamepads[a].sThumbLY;
-		if(key == THUMB_RX)			i = 1.0/32767*gamepads[a].sThumbRX;
-		if(key == THUMB_RY)			i = 1.0/32767*gamepads[a].sThumbRY;
-		if(key == DPAD_UP)			i = gamepads[a].wButtons & XINPUT_GAMEPAD_DPAD_UP ? 1 : 0;
-		if(key == DPAD_DOWN)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_DPAD_DOWN ? 1 : 0;
-		if(key == DPAD_LEFT)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_DPAD_LEFT ? 1 : 0;
-		if(key == DPAD_RIGHT)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_DPAD_RIGHT ? 1 : 0;
-		if(key == GAMEPAD_START)	i = gamepads[a].wButtons & XINPUT_GAMEPAD_START ? 1 : 0;
-		if(key == GAMEPAD_BACK)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_BACK ? 1 : 0;
-		if(key == LEFT_THUMB)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_LEFT_THUMB ? 1 : 0;
-		if(key == RIGHT_THUMB)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_RIGHT_THUMB ? 1 : 0;
-		if(key == LEFT_SHOULDER)	i = gamepads[a].wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER ? 1 : 0;
-		if(key == RIGHT_SHOULDER)	i = gamepads[a].wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER ? 1 : 0;
-		if(key == GAMEPAD_A)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_A ? 1 : 0;
-		if(key == GAMEPAD_B)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_B ? 1 : 0;
-		if(key == GAMEPAD_X)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_X ? 1 : 0;
-		if(key == GAMEPAD_Y)		i = gamepads[a].wButtons & XINPUT_GAMEPAD_Y ? 1 : 0;
+		int a=(key-XBOX_GAMEPAD_OFFSET[0])/20;
+		key -= a*20 + XBOX_GAMEPAD_OFFSET[0];
+		if(key == XINPUT_LEFT_TRIGGER)		i = 1.0/255*xboxControllers[a].state->Gamepad.bLeftTrigger;
+		if(key == XINPUT_RIGHT_TRIGGER)		i = 1.0/255*xboxControllers[a].state->Gamepad.bRightTrigger;
+		if(key == XINPUT_THUMB_LX)			i = 1.0/32767*xboxControllers[a].state->Gamepad.sThumbLX;
+		if(key == XINPUT_THUMB_LY)			i = 1.0/32767*xboxControllers[a].state->Gamepad.sThumbLY;
+		if(key == XINPUT_THUMB_RX)			i = 1.0/32767*xboxControllers[a].state->Gamepad.sThumbRX;
+		if(key == XINPUT_THUMB_RY)			i = 1.0/32767*xboxControllers[a].state->Gamepad.sThumbRY;
+		if(key == XINPUT_DPAD_UP)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP ? 1 : 0;
+		if(key == XINPUT_DPAD_DOWN)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN ? 1 : 0;
+		if(key == XINPUT_DPAD_LEFT)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT ? 1 : 0;
+		if(key == XINPUT_DPAD_RIGHT)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_START)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_START ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_BACK)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_BACK ? 1 : 0;
+		if(key == XINPUT_LEFT_THUMB)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB ? 1 : 0;
+		if(key == XINPUT_RIGHT_THUMB)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB ? 1 : 0;
+		if(key == XINPUT_LEFT_SHOULDER)		i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER ? 1 : 0;
+		if(key == XINPUT_RIGHT_SHOULDER)	i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_A)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_A ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_B)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_B ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_X)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_X ? 1 : 0;
+		if(key == XINPUT_GAMEPAD_Y)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_Y ? 1 : 0;
 	}
-	ReleaseMutex( inputMutex );
+	inputMutex.unlock();
 
+	const float deadZone = 0.15;
 	if(i >= 0.0)
+	{
 		return max(0.0,i/(1.0-deadZone) - deadZone);
+	}
 	else
+	{
 		return min(0.0,i/(1.0-deadZone) + deadZone);
+	}
 }
-#endif
+void Input::checkNewHardware()
+{
+	for(int i=0; i<4; i++)
+	{
+		xboxControllers[i].connected = true;
+	}
+}
+//#ifdef XINPUT
+//
+//xinput_input::xinput_input(): Input(), deadZone(0.25)
+//{
+//	int i;
+//	for(int l=0;l<4;l++)
+//	{
+//		for(i=0;i<14;i++)
+//			joy[i][l]=false;
+//		for(i=0;i<6;i++)
+//			axes[i*l]=0;
+//
+//		controllers[l].connected = true; // controllers are updated only if they are attached
+//	}
+//	//XInputEnable( true );
+//	update();
+//
+//}
+//void xinput_input::checkNewHardware()
+//{
+//	controllers[0].connected = true;
+//	controllers[1].connected = true;
+//	controllers[2].connected = true;
+//	controllers[3].connected = true;
+//}
+//bool xinput_input::controllerConnected(int controller)
+//{
+//	return controller >= 0 && controller < 4 ? controllers[0].connected : false;
+//}
+//bool xinput_input::compareButtons(const XINPUT_GAMEPAD& g1, const XINPUT_GAMEPAD& g2, int button)
+//{
+//	return (g1.wButtons & button) == (g2.wButtons & button);
+//}
+//void xinput_input::update()
+//{
+//	Input::update();
+//
+//	DWORD dwResult;
+//	int contN=256;
+//	for(int i = 0; i < 4; i++)
+//	{
+//		if(controllers[i].connected)
+//		{
+//			XINPUT_GAMEPAD oldGamePad=controllers[i].state.Gamepad;
+//
+//			dwResult = XInputGetState( i, &controllers[i].state );
+//
+//			if(dwResult == ERROR_SUCCESS)
+//			{
+//				controllers[i].connected = true;
+//			
+//				int lKey=0;
+//
+//				if(abs(oldGamePad.bLeftTrigger-controllers[i].state.Gamepad.bLeftTrigger)>60)				lKey = XBOX_LEFT_TRIGGER + XBOX_GAMEPAD_OFFSET[i];
+//				if(abs(oldGamePad.bRightTrigger-controllers[i].state.Gamepad.bRightTrigger)>60)				lKey = XBOX_RIGHT_TRIGGER + XBOX_GAMEPAD_OFFSET[i];
+//				if(abs(oldGamePad.sThumbLX-controllers[i].state.Gamepad.sThumbLX)>5000)						lKey = XBOX_THUMB_LX + XBOX_GAMEPAD_OFFSET[i];
+//				if(abs(oldGamePad.sThumbLY-controllers[i].state.Gamepad.sThumbLY)>5000)						lKey = XBOX_THUMB_LY + XBOX_GAMEPAD_OFFSET[i];
+//				if(abs(oldGamePad.sThumbRX-controllers[i].state.Gamepad.sThumbRX)>5000)						lKey = XBOX_THUMB_RX + XBOX_GAMEPAD_OFFSET[i];
+//				if(abs(oldGamePad.sThumbRY-controllers[i].state.Gamepad.sThumbRY)>5000)						lKey = XBOX_THUMB_RY + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_DPAD_UP))			lKey = XBOX_DPAD_UP + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_DPAD_DOWN))		lKey = XBOX_DPAD_DOWN + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_DPAD_LEFT))		lKey = XBOX_DPAD_LEFT + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_DPAD_RIGHT))		lKey = XBOX_DPAD_RIGHT + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_START))			lKey = XBOX_GAMEPAD_START + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_BACK))			lKey = XBOX_GAMEPAD_BACK + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_LEFT_THUMB))		lKey = XBOX_LEFT_THUMB + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_RIGHT_THUMB))		lKey = XBOX_RIGHT_THUMB + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_LEFT_SHOULDER))	lKey = XBOX_LEFT_SHOULDER + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_RIGHT_SHOULDER))	lKey = XBOX_RIGHT_SHOULDER + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_A))				lKey = XBOX_GAMEPAD_A + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_B))				lKey = XBOX_GAMEPAD_B + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_X))				lKey = XBOX_GAMEPAD_X + XBOX_GAMEPAD_OFFSET[i];
+//				if(!compareButtons(oldGamePad,controllers[i].state.Gamepad,XINPUT_GAMEPAD_Y))				lKey = XBOX_GAMEPAD_Y + XBOX_GAMEPAD_OFFSET[i];
+//				if(lKey!=0)
+//				{
+//					tPresses++;
+//					lastKey=lKey;
+//				}
+//			}
+//			else
+//			{
+//				controllers[i].connected = false;
+//
+//				for(int l=0;l<14;l++)	joy[l][i] = false;
+//				for(int l=0;l<6;l++)	axes[l*i] = 0;
+//			}
+//		}
+//	}
+//}
+//xinput_input::~xinput_input()
+//{
+//	//XInputEnable( false );
+//}
+//float xinput_input::operator() (int key)
+//{
+//	float i=0;
+//	WaitForSingleObject( inputMutex, INFINITE );
+//
+//	if(key>=0 && key<256)
+//		i=keys[key] ? 1 : 0;
+//	else if(key>=XBOX_GAMEPAD_OFFSET[0] && key<XBOX_GAMEPAD_OFFSET[3]+20)
+//	{
+//		int a=(key-XBOX_GAMEPAD_OFFSET[0])/20;
+//		key -= a*20 + XBOX_GAMEPAD_OFFSET[0];
+//		if(key == XBOX_LEFT_TRIGGER)		i = 1.0/255*controllers[a].state.Gamepad.bLeftTrigger;
+//		if(key == XBOX_RIGHT_TRIGGER)	i = 1.0/255*controllers[a].state.Gamepad.bRightTrigger;
+//		if(key == XBOX_THUMB_LX)			i = 1.0/32767*controllers[a].state.Gamepad.sThumbLX;
+//		if(key == XBOX_THUMB_LY)			i = 1.0/32767*controllers[a].state.Gamepad.sThumbLY;
+//		if(key == XBOX_THUMB_RX)			i = 1.0/32767*controllers[a].state.Gamepad.sThumbRX;
+//		if(key == XBOX_THUMB_RY)			i = 1.0/32767*controllers[a].state.Gamepad.sThumbRY;
+//		if(key == XBOX_DPAD_UP)			i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP ? 1 : 0;
+//		if(key == XBOX_DPAD_DOWN)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN ? 1 : 0;
+//		if(key == XBOX_DPAD_LEFT)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT ? 1 : 0;
+//		if(key == XBOX_DPAD_RIGHT)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_START)	i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_START ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_BACK)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK ? 1 : 0;
+//		if(key == XBOX_LEFT_THUMB)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB ? 1 : 0;
+//		if(key == XBOX_RIGHT_THUMB)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB ? 1 : 0;
+//		if(key == XBOX_LEFT_SHOULDER)	i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER ? 1 : 0;
+//		if(key == XBOX_RIGHT_SHOULDER)	i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_A)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_A ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_B)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_B ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_X)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_X ? 1 : 0;
+//		if(key == XBOX_GAMEPAD_Y)		i = controllers[a].state.Gamepad.wButtons & XINPUT_GAMEPAD_Y ? 1 : 0;
+//	}
+//	ReleaseMutex( inputMutex );
+//
+//	if(i >= 0.0)
+//		return max(0.0,i/(1.0-deadZone) - deadZone);
+//	else
+//		return min(0.0,i/(1.0-deadZone) + deadZone);
+//}
+//#endif

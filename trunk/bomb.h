@@ -7,5 +7,6 @@ public:
 	int owner;
 
 	bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner);
-	void update(double time, double ms);
+	void updateSimulation(double time, double ms);
+	void updateFrame(float interpolation) const;
 };

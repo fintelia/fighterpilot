@@ -20,7 +20,7 @@ private:
 	{
 		//int numVertices;
 		//std::shared_ptr<texturedLitVertex3D> vertices;
-		GLuint VBO_id;
+		unsigned int VBO_id;
 
 		int numMaterials;
 		struct material{
@@ -95,10 +95,16 @@ public:
 	void setUniform4f(string name, float v0, float v1, float v2, float v3);
 	void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
 	void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
+	void setUniform3f(string name, Color c){setUniform3f(name,c.r,c.r,c.b);}
+	void setUniform4f(string name, Color c, float a = 1.0){setUniform4f(name,c.r,c.r,c.b,a);}
 	void setUniform1i(string name, int v0);
 	void setUniform2i(string name, int v0, int v1);
 	void setUniform3i(string name, int v0, int v1, int v2);
 	void setUniform4i(string name, int v0, int v1, int v2, int v3);
+
+	void setUniformMatrix(string name, const Mat3f& m);
+	void setUniformMatrix(string name, const Mat4f& m);
+
 
 	bool loadAssetList();
 	void preloadAssets();

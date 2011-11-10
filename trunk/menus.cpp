@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "game.h"
 namespace gui{
 // ______________________________________________________________________________________________________________________________
 // | 																															|
@@ -102,11 +102,11 @@ inGame::inGame(): activeChoice(RESUME)
 }
 void inGame::render()
 {
-	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.620,0.559*sAspect,0.381),"menu in game");
+	graphics->drawOverlay(Rect::XYXY(0.440*sAspect,0.381,0.559*sAspect,0.620),"menu in game");
 
-	if(activeChoice==RESUME)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.600,0.545*sAspect,0.550),"menu in game select");
-	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.528,0.545*sAspect,0.478),"menu in game select");
-	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.454,0.545*sAspect,0.404),"menu in game select");
+	if(activeChoice==RESUME)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.400,0.545*sAspect,0.450),"menu in game select");
+	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.472,0.545*sAspect,0.522),"menu in game select");
+	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.546,0.545*sAspect,0.596),"menu in game select");
 }
 bool inGame::keyDown(int vkey)
 {
@@ -165,18 +165,18 @@ void chooseMode::render()
 	//	graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
 	}
  */
-	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
-	graphics->drawOverlay(Rect::XYXY((-0.409+0.525)*sAspect,0.493,0.903*sAspect,0.302),"menu pictures");
+	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	graphics->drawOverlay(Rect::XYXY((-0.409+0.525)*sAspect,0.507,0.903*sAspect,0.698),"menu pictures");
 	for(int i=1;i<=5;i++)
 	{
 		if(i!=activeChoice+2)
 		{
-			graphics->drawOverlay(Rect::XYXY((-0.409+i*0.263)*sAspect,0.5,(-0.148+i*0.263)*sAspect,0.25),"menu slot");
+			graphics->drawOverlay(Rect::XYXY((-0.409+i*0.263)*sAspect,0.5,(-0.148+i*0.263)*sAspect,0.75),"menu slot");
 		}
 	}
 	for(int i=1;i<=3;i++)
 	{
-		graphics->drawPartialOverlay(Rect::XYWH((i*0.263-0.144)*sAspect,0.503,0.256*sAspect,-0.0417),Rect::XYWH(0,0.33*(i-1),1,0.33),"menu mode choices");
+		graphics->drawPartialOverlay(Rect::XYWH((i*0.263-0.144)*sAspect,1.0-0.503,0.256*sAspect,0.0417),Rect::XYWH(0,0.33*(i-1),1,0.33),"menu mode choices");
 	}
 }
 bool chooseMode::keyDown(int vkey)
@@ -203,8 +203,8 @@ bool chooseMode::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 
-		std::shared_ptr<Level> l(new Level);
-		if(l->init("media/map file.lvl"))
+		std::shared_ptr<LevelFile> l(new LevelFile);
+		if(l->loadPNG("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::campaign(l));
 	//		modeManager.setMode(new modeCampaign(l));
@@ -215,8 +215,8 @@ bool chooseMode::keyDown(int vkey)
 		input->up(VK_SPACE);
 		input->up(VK_RETURN);
 
-		std::shared_ptr<Level> l(new Level);
-		if(l->init("media/map file.lvl"))
+		std::shared_ptr<LevelFile> l(new LevelFile);
+		if(l->loadPNG("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
 		//	modeManager.setMode(new modeSplitScreen(l));
@@ -246,8 +246,8 @@ void chooseMode::operator() (popup* p)
 			input->up(VK_RETURN);
 
 
-			std::shared_ptr<Level> l(new Level);
-			if(l->init(((openFile*)p)->getFile()))
+			std::shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadPNG(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::campaign(l));
 			}
@@ -258,8 +258,8 @@ void chooseMode::operator() (popup* p)
 			input->up(VK_SPACE);
 			input->up(VK_RETURN);
 
-			std::shared_ptr<Level> l(new Level);
-			if(l->init(((openFile*)p)->getFile()))
+			std::shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadPNG(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::splitScreen(l));
 			}
@@ -283,7 +283,7 @@ bool chooseMap::init()
 }
 void chooseMap::render()
 {
-	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
+	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 }
 bool chooseMap::keyDown(int vkey)
 {
@@ -334,7 +334,7 @@ int loading::update()
 
 		//messageBox("hello, this is a test."); //for testing fonts
 	}
-
+	
 	static int totalAssets = -1;
 
 	static vector<double> times;
@@ -356,18 +356,16 @@ void loading::render()
 {
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
-	graphics->drawOverlay(Rect::XYXY(0.0,1.0,sAspect,0.0),"menu background");
-	graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,0.95*sAspect,0.02),"progress back");
+	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,0.95*sAspect,0.98),"progress back");
 
 	if(dataManager.assetLoaded("progress front"))
 	{
-		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02),"progress front");
+		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,(0.05+0.9*progress)*sAspect,0.98),"progress front");
 	}
 	else
 	{
-		glColor3f(0,1,0);
-		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.04,(0.05+0.9*progress)*sAspect,0.02));
-		glColor3f(1,1,1);
+		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,(0.05+0.9*progress)*sAspect,0.98));
 	}
 }
 }

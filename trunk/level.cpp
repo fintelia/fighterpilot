@@ -1,6 +1,9 @@
 
-#include "main.h"
-
+#include "game.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
+#include "png/png.h"
+#include <Windows.h>
 //bool LevelFile::load(string filename)
 //{
 //	ifstream fin(filename, ios::binary);
@@ -357,6 +360,61 @@ bool LevelFile::loadPNG(string filename)
 	delete[] image_data;
 	delete[] row_pointers;
 	return true;
+}
+void LevelFile::initializeWorld()
+{
+	for(int i=0; i<info->numObjects; i++)
+	{
+		if(objects[i].type & PLANE)
+		{
+			//nPlane* p = NULL;
+			//if(obj.controlType == CONTROL_HUMAN)
+			{
+				for(int n=0;n<NumPlayers;n++)
+				{
+					if(players[n].objectNum()==0)
+					{
+						world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type,&players[n]));
+						break;
+					}
+					else if(n == NumPlayers-1)
+					{
+						world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type));
+						break;
+					}
+				}
+			}
+			//else
+			//{
+			//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
+			//}
+		}
+		else if(objects[i].type & AA_GUN)// can't be player controlled
+		{
+			world.newObject(new aaGun(objects[i].startloc,objects[i].startRot,objects[i].type));
+		}
+	}
+
+	bullets = world.newObject(new bulletCloud);
+
+	int w = min(info->mapResolution.x, info->mapResolution.y);
+	if(w != 0 && heights != nullptr)
+	{
+		float maxHeight=heights[0]+0.001;
+		float minHeight=heights[0];
+		for(int x=0;x<info->mapResolution.x;x++)
+		{
+			for(int z=0;z<info->mapResolution.y;z++)
+			{
+				if(heights[x+z*info->mapResolution.x]>maxHeight) maxHeight=heights[x+z*info->mapResolution.x];
+				if(heights[x+z*info->mapResolution.x]<minHeight) minHeight=heights[x+z*info->mapResolution.x];
+			}
+		}
+
+		unsigned short* h = new unsigned short[w*w];
+		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info->mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
+		world.initTerrain(h, w-1,Vec3f(0,minHeight,0),Vec3f(info->mapSize.x,maxHeight - minHeight,info->mapSize.y));
+	}
 }
 LevelFile::LevelFile(): info(NULL), objects(NULL), regions(NULL), heights(NULL)
 {
@@ -832,7 +890,6 @@ void Level::render(Vec3f eye)
 		dataManager.setUniform2f("center",	center.x,center.z);
 		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 
-		glEnable(GL_BLEND);
 		glBegin(GL_TRIANGLE_FAN);
 			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
 			glVertex3f(center.x,center.y,center.z);
@@ -1087,13 +1144,10 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 		dataManager.setUniform1f("XZscale", mGround->mSize.x);
 
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
-
-		glBegin(GL_QUADS);
-			glVertex3f(0,seaLevelOffset*scale,0);
-			glVertex3f(0,seaLevelOffset*scale,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,seaLevelOffset*scale,mGround->mSize.y);
-			glVertex3f(mGround->mSize.x,seaLevelOffset*scale,0);
-		glEnd();
+		graphics->drawQuad(	Vec3f(0,seaLevelOffset*scale,0),
+							Vec3f(0,seaLevelOffset*scale,mGround->mSize.y),
+							Vec3f(mGround->mSize.x,seaLevelOffset*scale,0),
+							Vec3f(mGround->mSize.x,seaLevelOffset*scale,mGround->mSize.y));
 
 		dataManager.bindTex(0,3);
 		dataManager.bindTex(0,2);

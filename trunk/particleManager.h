@@ -90,7 +90,7 @@ protected:
 	Vec3f minXYZ;
 	Vec3f maxXYZ;
 
-	GLuint VBO;
+	unsigned int VBO;
 	bool additiveBlending;
 
 public:

@@ -1,6 +1,9 @@
 
 #include "engine.h"
-
+#include "GL/glee.h"
+#include <GL/glu.h>
+#include "png/png.h"
+#include "xml/tinyxml.h"
 DataManager::~DataManager()
 {
 	shutdown();
@@ -41,7 +44,7 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 	char texturePath[256];
 	sscanf(s.c_str(),"page id=0 file=\"%s", texturePath);
 	string texPath(texturePath);
-	trim_right_if(texPath,is_any_of(" \"\t\n"));
+	boost::trim_right_if(texPath,boost::is_any_of(" \"\t\n"));
 
 	int dLoc=filename.find_last_of("/\\");
 	if(dLoc!=string::npos)	texPath = filename.substr(0,dLoc+1) + texPath;
@@ -633,12 +636,6 @@ bool DataManager::loadAssetList()
 				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
 				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 
-				const char* preload = assetElement->Attribute("preload");
-				if(preload == NULL || string(preload) != "true")
-					assetFiles.push(tmpAssetFile);
-				else
-					assetFilesPreload.push(tmpAssetFile);
-
 				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
 				{
 					const char* preload = assetElement->Attribute("preload");
@@ -716,10 +713,10 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 
 	auto ff = fileManager.loadTextFile(frag);
 	auto vv = fileManager.loadTextFile(vert);
-	if(ff->loadFailed  || vv->loadFailed) return false;
+	if(ff->invalid()  || vv->invalid()) return false;
 
-	const char* ptr = vv->fileContents.get();	glShaderSource(v, 1, (const char **)&ptr, NULL);
-	ptr = ff->fileContents.get();				glShaderSource(f, 1, (const char **)&ptr, NULL);
+	const char* ptr = vv->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
+	ptr = ff->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
 
 	glCompileShader(v);
 	glCompileShader(f);
@@ -790,8 +787,8 @@ bool DataManager::registerTerrainShader(string name, string frag)
 		v = glCreateShader(GL_VERTEX_SHADER);
 		
 		auto vv = fileManager.loadTextFile("media/terrain.vert");
-		if(vv->loadFailed) return false;
-		ptr = vv->fileContents.get();
+		if(vv->invalid()) return false;
+		ptr = vv->contents.c_str();
 		glShaderSource(v, 1, (const char **)&ptr, NULL);
 		glCompileShader(v);
 
@@ -814,10 +811,10 @@ bool DataManager::registerTerrainShader(string name, string frag)
 	auto	ff = fileManager.loadTextFile(frag);
 	int		lf=0;
 
-	if(!ff->loadFailed)
+	if(ff->valid())
 	{
 		char* cf=new char[512];
-		ptr = ff->fileContents.get();
+		ptr = ff->contents.c_str();
 		glShaderSource(f, 1, (const char **)&ptr, NULL);
 		glCompileShader(f);
 		memset(cf,0,512);
@@ -920,7 +917,7 @@ bool DataManager::registerOBJ(string name, string filename)
 		if(strcmp(token, "vt") == 0) 	numTexcoords++;
 		if(strcmp(token, "f") == 0) 	numFaces++;
 		if(strcmp(token, "vn") == 0)	numNormals++;
-		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok(NULL, " ");
+		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok(NULL, "");
 	}
 	rewind(fp);
 	//fclose(fp);
@@ -947,8 +944,8 @@ bool DataManager::registerOBJ(string name, string filename)
 				file=mtlFile.substr(0,i+1);
 			if(!fin.is_open())
 			{
-				messageBox("mtl file could not be loaded");
-				exit(0);
+				messageBox(mtlFile + " could not be loaded");
+				return false;
 			}
 			while (!fin.eof())
 			{
@@ -963,7 +960,7 @@ bool DataManager::registerOBJ(string name, string filename)
 					continue;
 
 				if(line[0] == '\t')
-					erase_head(line,1);
+					boost::erase_head(line,1);
 
 				h=line.find(" ");
 				for(int n=0;n<4;n++)
@@ -998,8 +995,8 @@ bool DataManager::registerOBJ(string name, string filename)
 					if(mstring == "") continue;
 					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
 					//if(ext.compare("tga")==0)
-					mMtl.tex=mtlFile + "/" + s[1];
-					if(!registerTexture(mMtl.tex, file+s[1]))
+					mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
+					if(!registerTexture(mMtl.tex, mMtl.tex))
 						mMtl.tex = "";
 						//mMtl.tex=dataManager.loadPNG(file+s[1]);
 						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);
@@ -1317,6 +1314,26 @@ void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
 		glUniform4i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
 	}
 }
+void DataManager::setUniformMatrix(string name, const Mat3f& m)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniformMatrix3fv(((shaderAsset*)assets[boundShader])->uniforms[name],1,false,m.ptr());
+	}
+}
+void DataManager::setUniformMatrix(string name, const Mat4f& m)
+{
+	if(boundShaderId != 0 && boundShader != "noShader")
+	{
+		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
+			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+
+		glUniformMatrix4fv(((shaderAsset*)assets[boundShader])->uniforms[name],1,false,m.ptr());
+	}
+}
 void DataManager::shutdown()
 {
 	boundShader = "";
@@ -1324,7 +1341,7 @@ void DataManager::shutdown()
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
 		if(i->second->type == asset::SHADER)			glDeleteProgram(i->second->id);
-		else if(i->second->type == asset::MODEL)		glDeleteLists(i->second->id,1);
+		else if(i->second->type == asset::MODEL)		glDeleteBuffers(1,(const GLuint*)&i->second->id);
 		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&i->second->id);
 	}
 	assets.clear();

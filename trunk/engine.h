@@ -20,6 +20,12 @@
     #pragma comment (lib, "zlib.lib")
     #pragma comment (lib, "libpng15.lib")
     #pragma comment (lib, "tinyxml.lib")
+	
+	#pragma comment (lib,"xinput")
+	#define XINPUT
+	#define USING_XINPUT
+
+	typedef void* HANDLE;
 
 #elif defined __GNUG__
 
@@ -55,18 +61,21 @@
 #include <boost/algorithm/string.hpp>
 //--Namespaces
 using namespace std;
-using namespace boost;
+using boost::lexical_cast;
 
 #ifndef UNICODE
 #define UNICODE
 #endif
-#include <windows.h>
-#include <Shlobj.h>
-#include <process.h>
-#include "GL/glee.h"
-#include <GL/glu.h>
-#include "png/png.h"
-#include "xml/tinyxml.h"
+//#include <windows.h>
+//#include <Shlobj.h>
+//#include <process.h>
+//#include "GL/glee.h"
+//#include <GL/glu.h>
+//#include "png/png.h"
+//#include "xml/tinyxml.h"
+#ifdef XINPUT
+//#include <Xinput.h>
+#endif
 
 extern bool	active;		// Window Active Flag
 extern const double PI;
@@ -75,11 +84,16 @@ extern bool done;//setting this to true will terminate the program
 
 const int NumPlayers = 2;
 
-LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
+//LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
 namespace gui{class levelEditor;}
 
 #define OPENGL2
 #define WINDOWS
+
+extern int sh, sw;
+extern float sAspect;
+extern int frame,Time,timebase;
+extern float fps;
 
 #include "enums.h"
 
@@ -89,11 +103,9 @@ namespace gui{class levelEditor;}
 #include "fileManager.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
+#include "sceneManager.h"
 #include "particleManager.h"
 #include "input.h"
-#ifdef _DEBUG
-//#include "XboxContInput.h"
-#endif
 #include "path.h"
 #include "script.h"
 #include "imageloader.h"//should be replaced!!!
@@ -106,16 +118,11 @@ namespace gui{class levelEditor;}
 #include "menuScreen.h"
 #include "worldManager.h"
 
-extern int sh, sw;
-extern float sAspect;
-extern int frame,Time,timebase;
-extern float fps;
-
 class Game
 {
 public:
-	void init();
-	void update();
+	virtual bool init();
+	virtual void update();
 };
 
 extern Game* game;

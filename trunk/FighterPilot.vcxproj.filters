@@ -154,6 +154,9 @@
     <Filter Include="Source Files\ENGINE\fileManager">
       <UniqueIdentifier>{5c76260d-0f5b-4e4d-acd5-7ec168a2b030}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ENGINE\sceneManager">
+      <UniqueIdentifier>{9c56d5ad-3a5e-49d3-9fec-3764fe98f99f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -252,9 +255,6 @@
     <ClCompile Include="level.cpp">
       <Filter>Source Files\OTHER</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files\OTHER</Filter>
-    </ClCompile>
     <ClCompile Include="path.cpp">
       <Filter>Source Files\OTHER</Filter>
     </ClCompile>
@@ -296,6 +296,9 @@
     </ClCompile>
     <ClCompile Include="fileManager.cpp">
       <Filter>Source Files\ENGINE\fileManager</Filter>
+    </ClCompile>
+    <ClCompile Include="sceneManager.cpp">
+      <Filter>Source Files\ENGINE\sceneManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -375,16 +378,10 @@
     <ClInclude Include="level.h">
       <Filter>Source Files\OTHER</Filter>
     </ClInclude>
-    <ClInclude Include="main.h">
-      <Filter>Source Files\OTHER</Filter>
-    </ClInclude>
     <ClInclude Include="path.h">
       <Filter>Source Files\OTHER</Filter>
     </ClInclude>
     <ClInclude Include="settings.h">
-      <Filter>Source Files\OTHER</Filter>
-    </ClInclude>
-    <ClInclude Include="XboxContInput.h">
       <Filter>Source Files\OTHER</Filter>
     </ClInclude>
     <ClInclude Include="GL\GLee.h">
@@ -416,6 +413,12 @@
     </ClInclude>
     <ClInclude Include="fileManager.h">
       <Filter>Source Files\ENGINE\fileManager</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Source Files\GAME</Filter>
+    </ClInclude>
+    <ClInclude Include="sceneManager.h">
+      <Filter>Source Files\ENGINE\sceneManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

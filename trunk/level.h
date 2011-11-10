@@ -81,6 +81,8 @@ struct LevelFile
 	bool savePNG(string filename);
 	bool loadPNG(string filename);
 
+	void initializeWorld();//creates objects stored in level file
+
 	LevelFile();
 };
 

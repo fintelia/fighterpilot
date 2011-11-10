@@ -1,10 +1,13 @@
 
-#include "main.h"
+#include "game.h"
+#ifdef WINDOWS
+#include <Windows.h>
+#endif
 
 const int BULLET_SPEED		= 1000;// 2000 m/s
 const int MISSILE_SPEED		= 1180;// 1180 m/s = mach 4 (max speed)
-const double MAX_FPS		= 100.0;
-const double UPDATE_LENGTH	= 20.0;
+const double MAX_FPS		= 60.0;
+const double UPDATE_LENGTH	= 10.0;
 
 const Color white(1.0f,1.0f,1.0f);
 const Color black(0.0f,0.0f,0.0f);
@@ -132,3 +135,25 @@ string objectTypeString(objectType t)
 	debugBreak();
 	return "";
 }
+#ifdef WINDOWS
+inline void sleep(unsigned long milliseconds)
+{
+	Sleep(milliseconds);
+}
+mutex::mutex()
+{
+	handle = CreateMutex(nullptr, false, nullptr);
+}
+mutex::~mutex()
+{
+	CloseHandle(handle);
+}
+bool mutex::lock(unsigned long timeout)
+{
+	return WaitForSingleObject(handle, timeout)==WAIT_OBJECT_0;
+}
+void mutex::unlock()
+{
+	ReleaseMutex(handle);
+}
+#endif

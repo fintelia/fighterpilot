@@ -18,5 +18,6 @@ public:
 	missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target);
 	void init();
 	//void findTarget();
-	void update(double time, double ms);
+	void updateSimulation(double time, double ms);
+	void updateFrame(float interpolation) const;
 };

@@ -7,13 +7,14 @@ private:
 	unsigned long shotsFired;
 public:
 //////////////functions////////////
-	void update(double time, double ms);
 	void findTargetVector();
 	void die();
 	void loseHealth(float healthLoss);
 	void spawn();
 	void initArmaments();
 	aaGun(Vec3f sPos, Quat4f sRot, objectType Type);
+	void updateSimulation(double time, double ms);
+	void updateFrame(float interpolation) const;
 //////////////structs//////////////
 	struct wayPoint
 	{

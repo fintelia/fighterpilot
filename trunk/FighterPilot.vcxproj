@@ -135,7 +135,6 @@
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="levelEditor.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="menus.cpp" />
     <ClCompile Include="menuScreen.cpp" />
     <ClCompile Include="missile.cpp" />
@@ -150,6 +149,7 @@
     <ClCompile Include="planeContrail.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="random.cpp" />
+    <ClCompile Include="sceneManager.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
@@ -169,6 +169,7 @@
     <ClInclude Include="debugBreak.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="fileManager.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="geoPlane.h" />
     <ClInclude Include="GL\GLee.h" />
     <ClInclude Include="matrix.h" />
@@ -180,7 +181,6 @@
     <ClInclude Include="imageloader.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="level.h" />
-    <ClInclude Include="main.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
     <ClInclude Include="objectList.h" />
@@ -193,13 +193,13 @@
     <ClInclude Include="quaternion.h" />
     <ClInclude Include="random.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="sceneManager.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="terrain.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="worldManager.h" />
-    <ClInclude Include="XboxContInput.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />

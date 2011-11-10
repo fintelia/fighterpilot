@@ -18,6 +18,8 @@
 //const int F1    = VK_F1;
 //const int F2    = VK_F2;
 //const int ENTER = 13;
+struct _XINPUT_STATE;
+typedef _XINPUT_STATE XINPUT_STATE;
 
 class Input: public functor<float,int>
 {
@@ -30,7 +32,17 @@ protected:
 		bool down;
 		mouseButtonState(): downPos(0,0), upPos(0,0), down(false){}
 	};
-
+	struct gamepadState{};
+	struct xboxControllerState: public gamepadState
+	{
+		XINPUT_STATE* state;
+		bool connected;
+		
+		bool getButton(int b);
+	} xboxControllers[4];
+	bool keys[256];
+	mouseButtonState leftMouse, rightMouse, middleMouse;
+	mutex  inputMutex;
 public:
 	struct callBack
 	{
@@ -60,38 +72,232 @@ public:
 
 protected:
 	void sendCallbacks(callBack* c);
-	friend LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam){}
+	//friend LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 public:
-	int lastKey; 
+	virtual void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
+	int lastKey;
 	int tPresses;
-	virtual void down(int k)=0;
-	virtual void up(int k)=0;
-	virtual void joystick(unsigned int buttonMask,int x,int y,int z){}
-	virtual void update(){}
-	virtual bool getKey(int key)=0;
-	virtual const mouseButtonState& getMouseState(mouseButton m)=0;
-	virtual float operator() (int key)=0;
-	virtual Vec2f getMousePos(){return mousePos;}
- };
-
-class standard_input: public Input
-{
-protected:
-	bool keys[256];
-	mouseButtonState leftMouse, rightMouse, middleMouse;
-	HANDLE  inputMutex;
-
-public:
-	standard_input();
-	~standard_input();
 	virtual void down(int k);
 	virtual void up(int k);
+	virtual void joystick(unsigned int buttonMask,int x,int y,int z){}
+	virtual void update();
 	virtual bool getKey(int key);
 	virtual const mouseButtonState& getMouseState(mouseButton m);
-	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	virtual void update();
-	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
-};
+	virtual const xboxControllerState& getXboxController(unsigned char controllerNum);
+	virtual float operator() (int key);
+	virtual Vec2f getMousePos(){return mousePos;}
+	virtual void checkNewHardware();//scan for new hardware
+
+	Input();
+	~Input();
+ };
+
+//class standard_input: public Input
+//{
+//protected:
+//
+//
+//public:
+//	standard_input();
+//	~standard_input();
+//	virtual void down(int k);
+//	virtual void up(int k);
+//	virtual bool getKey(int key);
+//	virtual const mouseButtonState& getMouseState(mouseButton m);
+//	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
+//	virtual void update();
+//	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
+//};
 
 extern Input *input;
+//
+//typedef int inputSource;
+//const inputSource INPUT_MOUSE		= 0;
+//const inputSource INPUT_KEYBOARD	= 1;
+//const inputSource INPUT_XBOX		= 2;
+//const inputSource INPUT_XBOX_1		= 2;
+//const inputSource INPUT_XBOX_2		= 3;
+//const inputSource INPUT_XBOX_3		= 4;
+//const inputSource INPUT_XBOX_4		= 5;
+//
+//typedef int inputType;
+//const int INPUT_MOUSE_X	= 0;
+//const int INPUT_MOUSE_Y	= 1;
+//const int INPUT_MOUSE_DX	= 2;
+//const int INPUT_MOUSE_DY	= 3;
+//
+//class InputManager
+//{
+//	class InputSource{
+//	protected:
+//		virtual void update(){}
+//		friend class InputManager;
+//	public:
+//		virtual ~InputSource(){}
+//		virtual float operator() (int)=0;
+//	};
+//	class Mouse: public InputSource
+//	{
+//	private:
+//		Vec2f position;
+//	public
+//		virtual float operator() (int key);
+//	};
+//	class Keyboard: public InputSource
+//	{
+//	private:
+//		unsigned char keyStates;
+//
+//	};
+//
+//public:
+//
+//	void update()
+//};
+
+const int VK_LBUTTON        = 0x01;
+const int VK_RBUTTON        = 0x02;
+const int VK_CANCEL         = 0x03;
+const int VK_MBUTTON        = 0x04;    /* NOT contiguous with L & RBUTTON */
+const int VK_BACK           = 0x08;
+const int VK_TAB            = 0x09;
+const int VK_CLEAR          = 0x0C;
+const int VK_RETURN         = 0x0D;
+const int VK_SHIFT          = 0x10;
+const int VK_CONTROL        = 0x11;
+const int VK_MENU           = 0x12;
+const int VK_PAUSE          = 0x13;
+const int VK_CAPITAL        = 0x14;
+const int VK_ESCAPE         = 0x1B;
+const int VK_CONVERT        = 0x1C;
+const int VK_NONCONVERT     = 0x1D;
+const int VK_ACCEPT         = 0x1E;
+const int VK_MODECHANGE     = 0x1F;
+const int VK_SPACE          = 0x20;
+const int VK_PRIOR          = 0x21;
+const int VK_NEXT           = 0x22;
+const int VK_END            = 0x23;
+const int VK_HOME           = 0x24;
+const int VK_LEFT           = 0x25;
+const int VK_UP             = 0x26;
+const int VK_RIGHT          = 0x27;
+const int VK_DOWN           = 0x28;
+const int VK_SELECT         = 0x29;
+const int VK_PRINT          = 0x2A;
+const int VK_EXECUTE        = 0x2B;
+const int VK_SNAPSHOT       = 0x2C;
+const int VK_INSERT         = 0x2D;
+const int VK_DELETE         = 0x2E;
+const int VK_HELP           = 0x2F;
+const int VK_NUMPAD0		= 0x60;
+const int VK_NUMPAD1		= 0x61;
+const int VK_NUMPAD2		= 0x62;
+const int VK_NUMPAD3		= 0x63;
+const int VK_NUMPAD4		= 0x64;
+const int VK_NUMPAD5		= 0x65;
+const int VK_NUMPAD6		= 0x66;
+const int VK_NUMPAD7		= 0x67;
+const int VK_NUMPAD8		= 0x68;
+const int VK_NUMPAD9		= 0x69;
+const int VK_MULTIPLY		= 0x6A;
+const int VK_ADD			= 0x6B;
+const int VK_SEPARATOR		= 0x6C;
+const int VK_SUBTRACT		= 0x6D;
+const int VK_DECIMAL		= 0x6E;
+const int VK_DIVIDE			= 0x6F;
+const int VK_F1				= 0x70;
+const int VK_F2				= 0x71;
+const int VK_F3				= 0x72;
+const int VK_F4				= 0x73;
+const int VK_F5				= 0x74;
+const int VK_F6				= 0x75;
+const int VK_F7				= 0x76;
+const int VK_F8				= 0x77;
+const int VK_F9				= 0x78;
+const int VK_F10			= 0x79;
+const int VK_F11			= 0x7A;
+const int VK_F12			= 0x7B;
+const int VK_F13			= 0x7C;
+const int VK_F14			= 0x7D;
+const int VK_F15			= 0x7E;
+const int VK_F16			= 0x7F;
+const int VK_F17			= 0x80;
+const int VK_F18			= 0x81;
+const int VK_F19			= 0x82;
+const int VK_F20			= 0x83;
+const int VK_F21			= 0x84;
+const int VK_F22			= 0x85;
+const int VK_F23			= 0x86;
+const int VK_F24			= 0x87;
+const int VK_LSHIFT         = 0xA0;
+const int VK_RSHIFT         = 0xA1;
+const int VK_LCONTROL       = 0xA2;
+const int VK_RCONTROL       = 0xA3;
+const int VK_LMENU          = 0xA4;
+const int VK_RMENU          = 0xA5;
+
+const int XINPUT_LEFT_TRIGGER	= 0;
+const int XINPUT_RIGHT_TRIGGER	= 1;
+const int XINPUT_THUMB_LX		= 2;
+const int XINPUT_THUMB_LY		= 3;
+const int XINPUT_THUMB_RX		= 4;
+const int XINPUT_THUMB_RY		= 5;
+
+const int XINPUT_DPAD_UP        = 0x0001;
+const int XINPUT_DPAD_DOWN      = 0x0002;
+const int XINPUT_DPAD_LEFT      = 0x0004;
+const int XINPUT_DPAD_RIGHT     = 0x0008;
+const int XINPUT_START          = 0x0010;
+const int XINPUT_BACK           = 0x0020;
+const int XINPUT_LEFT_THUMB     = 0x0040;
+const int XINPUT_RIGHT_THUMB    = 0x0080;
+const int XINPUT_LEFT_SHOULDER  = 0x0100;
+const int XINPUT_RIGHT_SHOULDER = 0x0200;
+const int XINPUT_A              = 0x1000;
+const int XINPUT_B              = 0x2000;
+const int XINPUT_X              = 0x4000;
+const int XINPUT_Y              = 0x8000;
+//
+//const int XBOX_DPAD_UP			= 6;
+//const int XBOX_DPAD_DOWN		= 7;
+//const int XBOX_DPAD_LEFT		= 8;
+//const int XBOX_DPAD_RIGHT		= 9;
+//const int XBOX_GAMEPAD_START	= 10;
+//const int XBOX_GAMEPAD_BACK		= 11;
+//const int XBOX_LEFT_THUMB		= 12;
+//const int XBOX_RIGHT_THUMB		= 13;
+//const int XBOX_LEFT_SHOULDER	= 14;
+//const int XBOX_RIGHT_SHOULDER	= 15;
+//const int XBOX_GAMEPAD_A		= 16;
+//const int XBOX_GAMEPAD_B		= 17;
+//const int XBOX_GAMEPAD_X		= 18;
+//const int XBOX_GAMEPAD_Y		= 19;
+
+const int XBOX_GAMEPAD_OFFSET[4]	= {256,276,296,316};
+
+//class xinput_input: public Input
+//{
+//protected:
+//	bool joy[14][4];
+//	int axes[6 * 4];
+//	float deadZone;
+//
+//	struct ControllerState
+//	{
+//		XINPUT_STATE state;
+//		bool connected;
+//	} controllers[4];
+//
+//	inline bool compareButtons(const XINPUT_GAMEPAD& g1, const XINPUT_GAMEPAD& g2, int button);
+//
+//public:
+//
+//	xinput_input();
+//	~xinput_input();
+//
+//	void update();
+//
+//	float operator() (int key);
+//	void checkNewHardware();
+//	bool controllerConnected(int controller);
+//};

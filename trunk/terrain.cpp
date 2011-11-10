@@ -1,6 +1,8 @@
 
 
 #include "engine.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
 
 const unsigned char LEFT		= 0x01; //patch to the left is one level above this patch
 const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
@@ -336,10 +338,14 @@ void Terrain::renderTerrain(Vec3f eye) const
 {
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
+
+	glDepthMask(false);
+	glDisable(GL_DEPTH_TEST);
+	graphics->drawModel("sky dome",Vec3f(eye.x,0,eye.y),Quat4f());
+	glEnable(GL_DEPTH_TEST);
+
 	if(waterPlane)
 	{
-		glDepthMask(false);
-		
 		dataManager.bind("horizon2");
 		dataManager.bind("hardNoise",0);
 		dataManager.bindTex(0,1);
@@ -353,18 +359,14 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.setUniform2f("center",	center.x,center.z);
 		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 		dataManager.setUniform1f("scale", radius);
-		glEnable(GL_BLEND);
-		glPushMatrix();
-		glTranslatef(center.x, center.y, center.z);
-		glScalef(radius,1,radius);
+
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
-		glPopMatrix();
 
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
-
-		glDepthMask(true);
 	}
+	glDepthMask(true);
+
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(eye);
@@ -372,11 +374,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 	if(waterPlane)
 	{
 		glColorMask(false,false,false,false);//this code interferes with stereo rendering...
-		glPushMatrix();
-		glTranslatef(center.x, center.y, center.z);
-		glScalef(radius,1,radius);
 		graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
-		glPopMatrix();
 		glColorMask(true,true,true,true);
 	}
 }

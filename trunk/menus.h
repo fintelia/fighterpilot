@@ -146,10 +146,10 @@ protected:
 class dogFight: public screen
 {
 protected:
-	std::shared_ptr<Level> level;
+	std::shared_ptr<LevelFile> level;
 
 public:
-	dogFight(std::shared_ptr<Level> lvl);
+	dogFight(std::shared_ptr<LevelFile> lvl);
 	virtual ~dogFight();
 
 	virtual bool init();
@@ -161,7 +161,6 @@ public:
 	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
 
 	void drawHexCylinder(Vec3f center, float radius, float height, Color c);
-	void drawPlanes(int acplayer,bool showBehind=false,bool showDead=false);
 	void drawScene(int acplayer);
 
 	void checkCollisions();
@@ -169,7 +168,7 @@ public:
 class splitScreen: public dogFight
 {
 public:
-	splitScreen(std::shared_ptr<Level> lvl);
+	splitScreen(std::shared_ptr<LevelFile> lvl);
 	int update();
 	void render();
 	void render3D(unsigned int view);
@@ -181,7 +180,7 @@ protected:
 	bool restart;
 	bool levelup;
 public:
-	campaign(std::shared_ptr<Level> lvl);
+	campaign(std::shared_ptr<LevelFile> lvl);
 	int update();
 	void render();
 	void render3D(unsigned int view);

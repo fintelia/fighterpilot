@@ -1,7 +1,36 @@
 
 #include "engine.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
+#include "png/png.h"
 
-OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
+
+struct OpenGLgraphics::Context
+{
+	HDC			hDC;
+	HGLRC		hRC;
+	HWND		hWnd;
+	HINSTANCE	hInstance; // not initialized?
+	Context(): hDC(NULL),hRC(NULL),hWnd(NULL){}
+};
+
+void OpenGLgraphics::flashTaskBar(int times, int length)
+{
+#ifdef VISUAL_STUDIO
+	FLASHWINFO f;
+	f.cbSize = sizeof(FLASHWINFO);
+	f.hwnd = context->hWnd;
+	f.dwFlags = FLASHW_TRAY;
+	f.dwTimeout = length;
+	f.uCount = times;
+	FlashWindowEx(&f);
+#endif
+}
+void OpenGLgraphics::minimizeWindow()
+{
+	ShowWindow(context->hWnd, SW_MINIMIZE);
+}
+OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(SCREEN)
 {
 	FBOs[0]					= FBOs[1]				= 0;
 	renderTextures[0]		= renderTextures[1]		= 0;
@@ -9,22 +38,28 @@ OpenGLgraphics::OpenGLgraphics():renderTarget(SCREEN)
 	colorRenderBuffers	= 0;
 	depthRenderBuffers	= 0;
 
+	context = new Context;
+
 	//useAnagricStereo(true);
 	//setInterOcularDistance(0.75);
+}
+OpenGLgraphics::~OpenGLgraphics()
+{
+	delete context;
 }
 bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 {
 	if(tex != "") dataManager.bind(tex);
 
-	overlay[0].position = Vec2f(r.x,		r.y);
-	overlay[1].position = Vec2f(r.x+r.w,	r.y);
-	overlay[2].position = Vec2f(r.x+r.w,	r.y+r.h);
-	overlay[3].position = Vec2f(r.x,		r.y+r.h);
+	overlay[0].position = Vec2f(r.x,		r.y+r.h);
+	overlay[1].position = Vec2f(r.x+r.w,	r.y+r.h);
+	overlay[2].position = Vec2f(r.x+r.w,	r.y);
+	overlay[3].position = Vec2f(r.x,		r.y);
 
-	overlay[0].texCoord = Vec2f(0.0,0.0);
-	overlay[1].texCoord = Vec2f(1.0,0.0);
-	overlay[2].texCoord = Vec2f(1.0,1.0);
-	overlay[3].texCoord = Vec2f(0.0,1.0);
+	overlay[0].texCoord = Vec2f(0.0,1.0);
+	overlay[1].texCoord = Vec2f(1.0,1.0);
+	overlay[2].texCoord = Vec2f(1.0,0.0);
+	overlay[3].texCoord = Vec2f(0.0,0.0);
 
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -33,7 +68,7 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
 
-	glDrawArrays(GL_QUADS, 0, 4);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -110,8 +145,8 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 
 		Vec2f charPos = pos;
 		Rect charRect;
-		if(dataManager.getBoundShader() == "ortho")
-		{
+		//if(dataManager.getBoundShader() == "ortho")
+		//{
 			for(auto i = text.begin(); i != text.end(); i++)
 			{
 				if(*i == '\n')
@@ -124,38 +159,38 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 					auto& c = f->characters.find(*i)->second;
 
 					charRect.x = charPos.x + c.xOffset / sh;
-					charRect.y = charPos.y + c.yOffset / sh + c.height / sh;
+					charRect.y = charPos.y + c.yOffset / sh;
 					charRect.w = c.width / sh;
-					charRect.h = - c.height / sh;
+					charRect.h = c.height / sh;
 
 					drawPartialOverlay(charRect, c.UV);
 					charPos.x += c.xAdvance  / sh;
 				}
 			}
-		}
-		else
-		{
-			for(auto i = text.begin(); i != text.end(); i++)
-			{
-				if(*i == '\n')
-				{
-					charPos.x = pos.x;
-					charPos.y += f->height;
-				}
-				else if(f->characters.count(*i) != 0)
-				{
-					auto& c = f->characters.find(*i)->second;
+		//}
+		//else
+		//{
+		//	for(auto i = text.begin(); i != text.end(); i++)
+		//	{
+		//		if(*i == '\n')
+		//		{
+		//			charPos.x = pos.x;
+		//			charPos.y += f->height;
+		//		}
+		//		else if(f->characters.count(*i) != 0)
+		//		{
+		//			auto& c = f->characters.find(*i)->second;
 
-					charRect.x = charPos.x + c.xOffset;
-					charRect.y = charPos.y + c.yOffset;
-					charRect.w = c.width;
-					charRect.h = c.height;
+		//			charRect.x = charPos.x + c.xOffset;
+		//			charRect.y = charPos.y + c.yOffset;
+		//			charRect.w = c.width;
+		//			charRect.h = c.height;
 
-					drawPartialOverlay(charRect, c.UV);
-					charPos.x += c.xAdvance;
-				}
-			}
-		}
+		//			drawPartialOverlay(charRect, c.UV);
+		//			charPos.x += c.xAdvance;
+		//		}
+		//	}
+		//}
 		dataManager.unbind(f->texName);
 	}
 }
@@ -219,10 +254,10 @@ Vec2f OpenGLgraphics::textSize(string text, string font)
 		}
 	}
 
-	if(dataManager.getBoundShader() == "ortho")
+	//if(dataManager.getBoundShader() == "ortho")
 		return textSize / sh;
-	else
-		return textSize;
+	//else
+	//	return textSize;
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
@@ -241,14 +276,6 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 		return;
 
 	glViewport(0,0,sw,sh);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-//	glOrtho( 0, sw , sh , 0, -1, 1 );
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	//double time = world.time()/10000;
-	//double r = sqrt((float)sw*sw + sh*sh)/2;
 
 	dataManager.bindTex(renderTextures[src]);
 	drawOverlay(Rect::XYXY(-1,-1,1,1));
@@ -258,25 +285,13 @@ bool OpenGLgraphics::init()
 {
 	if(!GLEE_VERSION_2_0)
 	{
-		string s("Your version of OpenGL must be above 2.0");
-		s+="\n   OpenGL version: ";
-		s+=(char*)glGetString(GL_VERSION);
-		s+="\n   Renderer: ";
-		s+=(char*)glGetString(GL_RENDERER);
-		s+="\n   Vender: ";
-		s+=(char*)glGetString(GL_VENDOR);
+		string s = string("Your version of OpenGL must be at least 2.0\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
-	else if(!GLEE_EXT_framebuffer_object)
+	else if(!GLEE_EXT_framebuffer_blit)
 	{
-		string s("Your graphics card must support GL_EXT_framebuffer_object");
-		s+="\n   OpenGL version: ";
-		s+=(char*)glGetString(GL_VERSION);
-		s+="\n   Renderer: ";
-		s+=(char*)glGetString(GL_RENDERER);
-		s+="\n   Vender: ";
-		s+=(char*)glGetString(GL_VENDOR);
+		string s = string("Your graphics card must support GL_EXT_framebuffer_blit\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
@@ -287,44 +302,31 @@ bool OpenGLgraphics::init()
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_BLEND);
 	glEnable(GL_MULTISAMPLE);
-	glEnable(GL_POINT_SPRITE);
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
 
 	glShadeModel(GL_SMOOTH);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	//if(GLEE_ARB_framebuffer_sRGB)	glEnable(GL_FRAMEBUFFER_SRGB);
-	glActiveTextureARB(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTextureARB(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTextureARB(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTextureARB(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTextureARB(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
 
-	float quadratic[] =  {0.0f, 0.0f, 0.000001f};
-	glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION_ARB, quadratic);
-	glPointParameterf(GL_POINT_SIZE_MIN_ARB, 1);
-	glPointParameterf(GL_POINT_SIZE_MAX_ARB, 8192);
-	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 
 	//FRAME BUFFER OBJECTS
 
 	glGenFramebuffersEXT(2, FBOs);
 
-	int samples;
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
-	samples = 8;
+	samples = samples >= 8 ? 8 : samples;
+	multisampling = GLEE_EXT_framebuffer_multisample && samples > 1;
 	for(int i=0;i<2;i++)
 	{
-		if(GLEE_EXT_framebuffer_multisample && i == 0 )
+		if(multisampling && i == 0 )
 		{
 			glGenRenderbuffersEXT(1, &colorRenderBuffers);
 			glGenRenderbuffersEXT(1, &depthRenderBuffers);
-			//glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
-			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
 			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, colorRenderBuffers);
 			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
@@ -335,12 +337,6 @@ bool OpenGLgraphics::init()
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
 			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, colorRenderBuffers);
 			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers);
-
-
-
-			////glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
-			////glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
-			////glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 		}
 		else
 		{
@@ -359,25 +355,13 @@ bool OpenGLgraphics::init()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-				//glTexParameteri (GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-
-		//glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-		//glTexParameteri (GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_ALPHA);
-		//glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-		//glCopyTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, 0, sw, sh, 0);
-
-				glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
 
 			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
 			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextures[i], 0);
-
-			//glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
-			//glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, sw, sh);
-
-			//glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers[i]);
 		}
 		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 		string errorMsg;
@@ -397,6 +381,7 @@ bool OpenGLgraphics::init()
 			return false;
 		}
 	}
+
 	return true;
 }
 void OpenGLgraphics::resize(int w, int h)
@@ -406,8 +391,6 @@ void OpenGLgraphics::resize(int w, int h)
 		sh = h;
 		sw = w;
 		sAspect = ((float)sw)/sh;
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
 	}
 }
 void OpenGLgraphics::render()
@@ -433,7 +416,7 @@ void OpenGLgraphics::render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-
+	glEnable(GL_DEPTH_TEST);
 
 	//dataManager.unbindShader();
 
@@ -465,9 +448,11 @@ void OpenGLgraphics::render()
 			glMatrixMode(GL_MODELVIEW);		glLoadIdentity();
 
 			menuManager.render3D(currentView);
+			sceneManager.renderScene();
 		}
 	}
 ///////////////////////////////////START PARTICLES///////////////////////
+
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
 	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
@@ -498,31 +483,19 @@ void OpenGLgraphics::render()
 
 
 	dataManager.bind("ortho");
-//	modeManager.render2D();
-	dataManager.unbindShader();
-
-	glMatrixMode(GL_PROJECTION);			// Select Projection
-	glPushMatrix();							// Push The Matrix
-	glLoadIdentity();						// Reset The Matrix
-	glOrtho( 0, sw , sh , 0, -1, 1 );		// Select Ortho Mode
-	glMatrixMode(GL_MODELVIEW);				// Select Modelview Matrix
-	glLoadIdentity();						// Reset The Matrix
-
-
+	dataManager.setUniform4f("color",white);
 	menuManager.render();
 
 	#ifdef _DEBUG
-		if(fps<29.0)glColor3f(1,0,0);
-		else glColor3f(0,0,0);
- 		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sw/2-25,25));
-		glColor3f(1,1,1);
+		if(fps<59.0)dataManager.setUniform4f("color",red);
+		else dataManager.setUniform4f("color",black);
+ 		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->textSize(lexical_cast<string>(floor(fps))).x,0.02));
+		dataManager.setUniform4f("color",white);
 		Profiler.draw();
 	#endif
 
-	glEnable(GL_DEPTH_TEST);
-	glMatrixMode( GL_PROJECTION );			// Select Projection
-	glPopMatrix();							// Pop The Matrix
-	glMatrixMode( GL_MODELVIEW );			// Select Modelview
+	dataManager.unbindShader();
+
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
@@ -595,8 +568,8 @@ void OpenGLgraphics::destroyWindow()
 	if(depthTextures[0] != 0)		glDeleteTextures(1, depthTextures);
 	if(depthTextures[1] != 0)		glDeleteTextures(1, depthTextures+1);
 
-	if(colorRenderBuffers != 0)	glDeleteTextures(1, &colorRenderBuffers);
-	if(depthRenderBuffers != 0)	glDeleteTextures(1, &depthRenderBuffers);
+	if(colorRenderBuffers != 0)		glDeleteRenderbuffers(1, &colorRenderBuffers);
+	if(depthRenderBuffers != 0)		glDeleteRenderbuffers(1, &depthRenderBuffers);
 
 	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
 	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
@@ -607,36 +580,36 @@ void OpenGLgraphics::destroyWindow()
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
 	ShowCursor(true);								// Show Mouse Pointer
 
-	if (hRC)											// Do We Have A Rendering Context?
+	if (context->hRC)											// Do We Have A Rendering Context?
 	{
 		if (!wglMakeCurrent(NULL,NULL))					// Are We Able To Release The DC And RC Contexts?
 		{
 			//MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		}
 
-		if (!wglDeleteContext(hRC))						// Are We Able To Delete The RC?
+		if (!wglDeleteContext(context->hRC))						// Are We Able To Delete The RC?
 		{
 			//MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		}
-		hRC=NULL;										// Set RC To NULL
+		context->hRC=NULL;										// Set RC To NULL
 	}
 
-	if (hDC && !ReleaseDC(hWnd,hDC))					// Are We Able To Release The DC
+	if (context->hDC && !ReleaseDC(context->hWnd,context->hDC))					// Are We Able To Release The DC
 	{
 		//MessageBox(NULL,"Release Device Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		hDC=NULL;										// Set DC To NULL
+		context->hDC=NULL;										// Set DC To NULL
 	}
 
-	if (hWnd && !DestroyWindow(hWnd))					// Are We Able To Destroy The Window?
+	if (context->hWnd && !DestroyWindow(context->hWnd))					// Are We Able To Destroy The Window?
 	{
 		//MessageBox(NULL,"Could Not Release hWnd.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		hWnd=NULL;										// Set hWnd To NULL
+		context->hWnd=NULL;										// Set hWnd To NULL
 	}
 
-	if (!UnregisterClass(L"OpenGL",hInstance))			// Are We Able To Unregister Class
+	if (!UnregisterClass(L"OpenGL",context->hInstance))			// Are We Able To Unregister Class
 	{
 		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		hInstance=NULL;									// Set hInstance To NULL
+		context->hInstance=NULL;									// Set hInstance To NULL
 	}
 }
 void OpenGLgraphics::setGamma(float gamma)
@@ -661,7 +634,8 @@ void OpenGLgraphics::setGamma(float gamma)
 	else
 		assert(false);*/
 }
-bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool checkMultisample)
+extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution)
 {
 	static bool arbMultisampleSupported=false;
 	static int arbMultisampleFormat=0;
@@ -672,13 +646,13 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	DWORD		dwExStyle;				// Window Extended Style
 	DWORD		dwStyle;				// Window Style
 
-	hInstance			= GetModuleHandle(NULL);				// Grab An Instance For Our Window
+	context->hInstance	= GetModuleHandle(NULL);				// Grab An Instance For Our Window
 	wc.cbSize			= sizeof(WNDCLASSEX);
 	wc.style			= CS_HREDRAW | CS_VREDRAW | CS_OWNDC;	// Redraw On Size, And Own DC For Window.
 	wc.lpfnWndProc		= (WNDPROC) WndProc;					// WndProc Handles Messages
 	wc.cbClsExtra		= 0;									// No Extra Window Data
 	wc.cbWndExtra		= 0;									//- No Extra Window Data
-	wc.hInstance		= hInstance;							// Set The Instance
+	wc.hInstance		= context->hInstance;					// Set The Instance
 	wc.hIcon			= (HICON)LoadImage(NULL,L"media/icon.ico",IMAGE_ICON,256,256,LR_LOADFROMFILE);// Load The Icon
 	wc.hIconSm			= wc.hIcon;
 	wc.hCursor			= LoadCursor(NULL, IDC_ARROW);			// Load The Arrow Pointer
@@ -691,6 +665,12 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 		MessageBox(NULL,L"Failed To Register The Window Class.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;											// Return false
 	}
+
+	RECT WindowRect;
+	WindowRect.top = 0;
+	WindowRect.left = 0;
+	WindowRect.right = screenResolution.x;
+	WindowRect.bottom = screenResolution.y;
 
 	DEVMODE dmScreenSettings;								// Device Mode
 	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));	// Makes Sure Memory's Cleared
@@ -730,9 +710,9 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	AdjustWindowRectEx(&WindowRect, dwStyle, false, dwExStyle);		// Adjust Window To True Requested Size
 
 	// Create The Window
-	if (!(hWnd=CreateWindowExA(	dwExStyle,							// Extended Style For The Window
+	if (!(context->hWnd=CreateWindowExA(	dwExStyle,				// Extended Style For The Window
 								"OpenGL",							// Class Name
-								title,								// Window Title
+								title.c_str(),						// Window Title
 								dwStyle |							// Defined Window Style
 								WS_CLIPSIBLINGS |					// Required Window Style
 								WS_CLIPCHILDREN,					// Required Window Style
@@ -741,7 +721,7 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 								WindowRect.bottom-WindowRect.top,	// Calculate Window Height
 								NULL,								// No Parent Window
 								NULL,								// No Menu
-								hInstance,							// Instance
+								context->hInstance,					// Instance
 								NULL)))								// Dont Pass Anything To WM_CREATE
 	{
 		destroyWindow();					// Reset The Display
@@ -777,14 +757,14 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	PIXELFORMATDESCRIPTOR pfd;
 	pfd.nSize = sizeof( pfd );
 	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | 0x00008000/*PFD_SUPPORT_COMPOSITION*/;
+	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | 0x00008000/*PFD_SUPPORT_COMPOSITION*/ | PFD_STEREO;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 24;
 	pfd.cDepthBits = 24;
 	pfd.cAlphaBits = 8;
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
-	if (!(hDC=GetDC(hWnd)))							// Did We Get A Device Context?
+	if (!(context->hDC=GetDC(context->hWnd)))			// Did We Get A Device Context?
 	{
 		destroyWindow();								// Reset The Display
 		MessageBox(NULL,L"Can't Create A GL Device Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
@@ -792,7 +772,7 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	}
 	if(!arbMultisampleSupported)
 	{
-		if (!(PixelFormat=ChoosePixelFormat(hDC,&pfd)))	// Did Windows Find A Matching Pixel Format?
+		if (!(PixelFormat=ChoosePixelFormat(context->hDC,&pfd)))	// Did Windows Find A Matching Pixel Format?
 		{
 			destroyWindow();								// Reset The Display
 			MessageBox(NULL,L"Can't Find A Suitable PixelFormat.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
@@ -803,7 +783,7 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	{
 		PixelFormat = arbMultisampleFormat;
 	}
-	if(!SetPixelFormat(hDC,PixelFormat,&pfd))		// Are We Able To Set The Pixel Format?
+	if(!SetPixelFormat(context->hDC,PixelFormat,&pfd))		// Are We Able To Set The Pixel Format?
 	{
 		destroyWindow();								// Reset The Display
 		MessageBox(NULL,L"Can't Set The PixelFormat.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
@@ -811,7 +791,7 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	}
 
 
-	if (!(hRC=wglCreateContext(hDC)))				// Are We Able To Get A Rendering Context?
+	if (!(context->hRC=wglCreateContext(context->hDC)))				// Are We Able To Get A Rendering Context?
 	{
 		destroyWindow();								// Reset The Display
 		MessageBox(NULL,L"Can't Create A GL Rendering Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
@@ -819,48 +799,48 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 	}
 
 
-	if(!wglMakeCurrent(hDC,hRC))					// Try To Activate The Rendering Context
+	if(!wglMakeCurrent(context->hDC,context->hRC))					// Try To Activate The Rendering Context
 	{
 		destroyWindow();								// Reset The Display
 		MessageBox(NULL,L"Can't Activate The GL Rendering Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
 
-	if(!arbMultisampleSupported && checkMultisample && wglChoosePixelFormatARB)
-	{
-		int pixelFormat;
-		UINT numFormats;
-		float fAttributes[] = {0,0};
-		int iAttributes[] = {
-			WGL_SAMPLES_ARB,			16,					// Check For 16x Multisampling
-			WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
-			WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
-			WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
-			//WGL_PIXEL_TYPE_ARB,		WGL_TYPE_RGBA_ARB,
-			WGL_COLOR_BITS_ARB,			24,
-			WGL_ALPHA_BITS_ARB,			8,
-			WGL_DEPTH_BITS_ARB,			24,
-//			WGL_STENCIL_BITS_ARB,		0,
-			WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
-			WGL_SAMPLE_BUFFERS_ARB,		GL_TRUE,
-			0,0};
+//	if(!arbMultisampleSupported && checkMultisample && wglChoosePixelFormatARB)
+//	{
+//		int pixelFormat;
+//		UINT numFormats;
+//		float fAttributes[] = {0,0};
+//		int iAttributes[] = {
+//			WGL_SAMPLES_ARB,			16,					// Check For 16x Multisampling
+//			WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
+//			WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
+//			WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
+//			//WGL_PIXEL_TYPE_ARB,		WGL_TYPE_RGBA_ARB,
+//			WGL_COLOR_BITS_ARB,			24,
+//			WGL_ALPHA_BITS_ARB,			8,
+//			WGL_DEPTH_BITS_ARB,			24,
+////			WGL_STENCIL_BITS_ARB,		0,
+//			WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
+//			WGL_SAMPLE_BUFFERS_ARB,		GL_TRUE,
+//			0,0};
+//
+//		while(iAttributes[1] > 1)
+//		{
+//			if (wglChoosePixelFormatARB(context->hDC,iAttributes,fAttributes,1,&pixelFormat,&numFormats) && numFormats >= 1)
+//			{
+//				arbMultisampleSupported = true;
+//				arbMultisampleFormat	= pixelFormat;
+//				destroyWindow();
+//				return graphics->createWindow(title, screenResolution, false);
+//			}
+//			iAttributes[1] >>= 1;
+//		}
+//	}
 
-		while(iAttributes[1] > 1)
-		{
-			if (wglChoosePixelFormatARB(hDC,iAttributes,fAttributes,1,&pixelFormat,&numFormats) && numFormats >= 1)
-			{
-				arbMultisampleSupported = true;
-				arbMultisampleFormat	= pixelFormat;
-				destroyWindow();
-				return graphics->createWindow(title, WindowRect, false);
-			}
-			iAttributes[1] >>= 1;
-		}
-	}
-
-	ShowWindow(hWnd,SW_SHOW);						// Show The Window
-	SetForegroundWindow(hWnd);						// Slightly Higher Priority
-	SetFocus(hWnd);									// Sets Keyboard Focus To The Window
+	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
+	SetForegroundWindow(context->hWnd);				// Slightly Higher Priority
+	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
 	graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
 	//setGamma(0.0);
 
@@ -871,14 +851,10 @@ bool OpenGLgraphics::createWindow(const char* title, RECT WindowRect, bool check
 		return false;								// Return false
 	}
 
-	RegisterHotKey(hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
-	RegisterHotKey(hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
+	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
+	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
 
 	return true;									// Success
-}
-bool OpenGLgraphics::recreateWindow(Vec2i resolution, int multisample)
-{
-	return false;
 }
 bool OpenGLgraphics::changeResolution(Vec2f resolution)
 {
@@ -892,7 +868,7 @@ bool OpenGLgraphics::changeResolution(Vec2f resolution)
 
 	if(ChangeDisplaySettings(&dmScreenSettings,CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
 	{
-		SetWindowPos(hWnd,0,0,0,resolution.x,resolution.y,0);
+		SetWindowPos(context->hWnd,0,0,0,resolution.x,resolution.y,0);
 		resize(resolution.x,resolution.y);
 		return true;
 	}
@@ -900,7 +876,7 @@ bool OpenGLgraphics::changeResolution(Vec2f resolution)
 }
 void OpenGLgraphics::swapBuffers()
 {
-	SwapBuffers(hDC);
+	SwapBuffers(context->hDC);
 }
 void OpenGLgraphics::takeScreenshot()
 {
@@ -1019,6 +995,18 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	dataManager.bind("model");
 	dataManager.setUniform1i("tex",0);
 
+
+	//Mat4f matV = views[currentView].modelViewMat  * Mat4f(rotation,position,scale);
+	//Mat4f matP = views[currentView].projectionMat;
+	//Mat4f mat =  matP * matV;
+	//Mat4f matV2;	glGetFloatv(GL_MODELVIEW_MATRIX,matV2.ptr());
+	//Mat4f matP2;	glGetFloatv(GL_PROJECTION_MATRIX,matP2.ptr());
+	//dataManager.setUniformMatrix("modelviewProjection",mat);
+	Mat4f cameraProjectionMat = getView().projectionMat * getView().modelViewMat;
+	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
+
+	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
+
 	glBindBuffer(GL_ARRAY_BUFFER, m->id);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
@@ -1074,6 +1062,11 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 
 	if(m == nullptr || !sphereInFrustum(m->boundingSphere * s + position))
 		return;
+
+	Mat4f cameraProjectionMat = getView().projectionMat * getView().modelViewMat;
+	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
+
+	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
 
 	glBindBuffer(GL_ARRAY_BUFFER, m->id);
 	glEnableClientState(GL_VERTEX_ARRAY);

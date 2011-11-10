@@ -25,13 +25,7 @@ private:
 
 
 	__int64 ticksPerSecond;
-	__int64 totalTicks() const
-	{
-		__int64 ticks;
-		if( !QueryPerformanceCounter((LARGE_INTEGER *)&ticks) )
-			ticks = (__int64)GetTickCount();
-		return ticks;
-	}
+	__int64 totalTicks() const;
 	double trueGameTime() const
 	{
 		__int64 real = totalTicks();
@@ -73,27 +67,8 @@ private:
 	unsigned long numUpdates;
 
 public:
-	GameTime(): sReal(0), eReal(0), sGame(0), sSpeed(0), eSpeed(0), changingSpeed(false), timeSpeed(1.0), paused(false), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), numUpdates(0)
-	{
-		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
-			ticksPerSecond = 1000;
-
-		lReal = totalTicks();
-		cReal = lReal;
-	}
-	void reset()
-	{
-		if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
-			ticksPerSecond = 1000;
-
-		lReal = cReal = totalTicks();
-		lGame = cGame = 0.0;
-		timeSpeed=1.0;
-		paused = false;
-		changingSpeed = false;
-		updateStage = false;
-		numUpdates = 0;
-	}
+	GameTime();
+	void reset();
 	void nextUpdate()
 	{
 		updateStage = true;

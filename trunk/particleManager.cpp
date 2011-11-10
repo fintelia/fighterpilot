@@ -1,6 +1,8 @@
 
 
 #include "engine.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
 
 particle::manager& particleManager = particle::manager::getInstance();
 
@@ -133,7 +135,6 @@ namespace particle{
 //
 //
 //	glDisable(GL_DEPTH_TEST);
-//	glEnable(GL_BLEND);
 //	glEnable(GL_TEXTURE_2D);
 //
 //	double time = world.time();

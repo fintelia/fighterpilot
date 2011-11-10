@@ -6,6 +6,9 @@ varying vec2 texCoord;
 uniform vec2 center;
 uniform float scale;
 
+uniform mat4 cameraProjection;
+uniform mat4 modelTransform;
+
 void main()
 {
 	lightDir = normalize(vec3(gl_LightSource[0].position));
@@ -18,6 +21,6 @@ void main()
 	//rad = 1.0;
 	//if((center.x-gl_Vertex.x)*(center.x-gl_Vertex.x)+(center.y-gl_Vertex.z)*(center.y-gl_Vertex.z) < 0.01)	rad = 0.0;
 
-	gl_Position = ftransform();
+	gl_Position = cameraProjection * modelTransform * gl_Vertex;
 	//pos=gl_Vertex.xyz;
 } 

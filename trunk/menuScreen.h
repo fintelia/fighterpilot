@@ -40,10 +40,10 @@ public:
 	void resetChanged()			{changed = false;}
 
 	//events
-	virtual bool mouseDownR(int X, int Y){return false;}
-	virtual bool mouseDownL(int X, int Y){return false;}
-	virtual bool mouseUpR(int X, int Y){return false;}
-	virtual bool mouseUpL(int X, int Y){return false;}
+	virtual bool mouseDownR(float X, float Y){return false;}
+	virtual bool mouseDownL(float X, float Y){return false;}
+	virtual bool mouseUpR(float X, float Y){return false;}
+	virtual bool mouseUpL(float X, float Y){return false;}
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
 
@@ -81,13 +81,13 @@ class button: public element
 {
 public:
 
-	button(int X, int Y, int Width, int Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0)): element(BUTTON,X,Y,Width,Height,t,c),textColor(textC){setElementText(text);}
+	button(float X, float Y, float Width, float Height, string t, Color c = Color(0,1,0), Color textC = Color(0,0,0)): element(BUTTON,X,Y,Width,Height,t,c),textColor(textC){setElementText(text);}
 	virtual ~button(){}
 
 	void render();
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 
 	void setElementText(string t);
 	void setElementTextColor(Color c);
@@ -109,8 +109,8 @@ public:
 
 	void render();
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 
 	bool getChecked(){return checked;}
 protected:
@@ -126,8 +126,8 @@ class textBox: public element
 public:
 	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),clicking(false),cursorPos(0){}
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 	bool keyDown(int vkey);
 
 	void render();
@@ -163,8 +163,8 @@ public:
 
 	void addOption(string option);
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 
 	void gainFocus();
 	void looseFocus();
@@ -192,8 +192,8 @@ public:
 	void setLabel(label* l){Label=l;}
 	void render();
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 
 	int getValue(){return value;}
 	void setValue(int v){value = clamp(v,0,buttons.size()-1);updateColors();}
@@ -214,8 +214,8 @@ public:
 
 	void render();
 
-	bool mouseDownL(int X, int Y);
-	bool mouseUpL(int X, int Y);
+	bool mouseDownL(float X, float Y);
+	bool mouseUpL(float X, float Y);
 
 	void setMinValue(float m);
 	void setMaxValue(float m);
@@ -295,17 +295,28 @@ public:
 	bool keyDown(int vkey);
 	bool mouseL(bool down, int x, int y);
 protected:
+	struct thumbnail
+	{
+		string filename;
+		string displayName;
+		enum Type{FOLDER,BMP,UNKNOWN_FILE} type;
+		thumbnail(){}
+		thumbnail(string f, string n, Type t):filename(f),displayName(n),type(t){}
+	};
+
 	virtual void fileSelected();
 	string file;
 
 	string directory;
 
 	set<string> extFilters;
-	vector<string> files;
-	vector<string> folders;
+	vector<thumbnail> files;
+	vector<thumbnail> folders;
 
-	vector<button*> folderButtons;
-	vector<button*> fileButtons;
+	float scroll;
+
+	//vector<button*> folderButtons;
+	//vector<button*> fileButtons;
 
 	//menuButton* desktop;
 	//menuButton* myDocuments;

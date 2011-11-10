@@ -1,5 +1,7 @@
 
-#include "main.h"
+#include "game.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
 
 namespace gui{
 
@@ -10,26 +12,26 @@ bool levelEditor::init()
 	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 
 	//terrain
-	buttons["dSquare"]		= new button(sw-105,5,100,30,"d-square",lightGreen,white);
-	buttons["faultLine"]	= new button(sw-105,40,100,30,"fault line",lightGreen,white);
-	buttons["fromFile"]		= new button(sw-105,75,100,30,"from file",lightGreen,white);
-	buttons["exportBMP"]	= new button(sw-105,110,100,30,"export",lightGreen,white);
-	sliders["sea level"]	= new slider(sw-105,145,100,30,1.0,0.0);
-	sliders["height scale"] = new slider(sw-105,165,100,30,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
+	buttons["dSquare"]		= new button(sAspect-0.1,0.005,0.1,0.030,"d-square",lightGreen,white);
+	buttons["faultLine"]	= new button(sAspect-0.1,0.040,0.1,0.030,"fault line",lightGreen,white);
+	buttons["fromFile"]		= new button(sAspect-0.1,0.075,0.1,0.030,"from file",lightGreen,white);
+	buttons["exportBMP"]	= new button(sAspect-0.1,0.110,0.1,0.030,"export",lightGreen,white);
+	sliders["sea level"]	= new slider(sAspect-0.1,0.145,0.1,0.030,1.0,0.0);
+	sliders["height scale"] = new slider(sAspect-0.1,0.180,0.1,0.030,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
 
-	buttons["load"]			= new button(sw-320,sh-40,100,35,"Load",Color(0.8,0.8,0.8),white);
-	buttons["save"]			= new button(sw-215,sh-40,100,35,"Save",Color(0.8,0.8,0.8),white);
-	buttons["exit"]			= new button(sw-110,sh-40,100,35,"Exit",Color(0.8,0.8,0.8),white);
+	buttons["load"]			= new button(0.938,0.965,0.1,0.030,"Load",Color(0.8,0.8,0.8),white);
+	buttons["save"]			= new button(1.040,0.965,0.1,0.030,"Save",Color(0.8,0.8,0.8),white);
+	buttons["exit"]			= new button(1.143,0.965,0.1,0.030,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
 
-	toggles["shaders"]->addButton(new button(5,5,200,30,"grass",black,white));
-	toggles["shaders"]->addButton(new button(5,40,200,30,"snow",black,white));
-	toggles["shaders"]->addButton(new button(5,75,200,30,"ocean",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.005,0.195,0.030,"grass",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.040,0.195,0.030,"snow",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.075,0.195,0.030,"ocean",black,white));
 
 	//objects
-	buttons["addPlane"]		= new button(5,5,200,30,"new plane",lightGreen,white);
-	buttons["addAAgun"]		= new button(5,40,200,30,"new AA gun",lightGreen,white);
+	buttons["addPlane"]		= new button(0.005,0.005,0.195,0.030,"new plane",lightGreen,white);
+	buttons["addAAgun"]		= new button(0.005,0.040,0.195,0.030,"new AA gun",lightGreen,white);
 
 	//settings
 	//v.clear();
@@ -61,9 +63,9 @@ bool levelEditor::init()
 	//toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
 
 	toggles["tabs"]	= new toggle(vector<button*>(),Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
-	toggles["tabs"]->addButton(new button(5,sh-40,100,35,"Terrain",black,white));
-	toggles["tabs"]->addButton(new button(110,sh-40,100,35,"Objects",black,white));
-	toggles["tabs"]->addButton(new button(215,sh-40,100,35,"Regions",black,white));
+	toggles["tabs"]->addButton(new button(0.005,0.965,0.1,0.030,"Terrain",black,white));
+	toggles["tabs"]->addButton(new button(0.107,0.965,0.1,0.030,"Objects",black,white));
+	toggles["tabs"]->addButton(new button(0.210,0.965,0.1,0.030,"Regions",black,white));
 
 	if(level != NULL) delete level;
 	level = new editLevel;
@@ -341,7 +343,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			if(oldP == p)
 				return true;
 
-			Vec3f xAxis = rot * Vec3f(1,0,0);
+			Vec3f xAxis = rot * Vec3f(-1,0,0);
 
 			Vec3f axis = xAxis * (p.y-oldP.y) + Vec3f(0,-1,0) * (p.x-oldP.x);
 			Angle ang = oldP.distance(p);
@@ -608,7 +610,7 @@ void levelEditor::fromFile(string filename)
 		while(fin.good())
 		{
 			getline(fin,line);
-			split(tokens,line,is_any_of(" "));
+			boost::split(tokens,line,boost::is_any_of(" "));
 
 			if(tokens.size() < 2)
 				continue;
@@ -777,14 +779,11 @@ void levelEditor::render3D(unsigned int view)
 		c = center;
 		if(input->getMouseState(MIDDLE_BUTTON).down)
 		{
-			POINT p;
-			GetCursorPos(&p);
-
 			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
-			Vec2f newP((float)p.x/sh,1.0 - (float)p.y/sh);
+			Vec2f newP = input->getMousePos();
 
 
-			Vec3f xAxis = rot * Vec3f(1,0,0);
+			Vec3f xAxis = rot * Vec3f(-1,0,0);
 
 			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
 			Angle ang = oldP.distance(newP);
@@ -837,7 +836,7 @@ void levelEditor::render3D(unsigned int view)
 			glPushMatrix();
 			glTranslatef(val.x,val.y,val.z);
 			glScalef(10,10,10);
-			graphics->drawModel(newObjectType, Vec3f(), Quat4f());
+			graphics->drawModel(newObjectType, Vec3f(val), Quat4f(),10.0);
 			glPopMatrix();
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			glDepthMask(false);

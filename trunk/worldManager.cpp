@@ -14,8 +14,11 @@ void WorldManager::destroy()
 	clearObjects();
 	particleManager.shutdown();
 }
-void WorldManager::update()
+void WorldManager::simulationUpdate()
 {
-	updateObjects(time(),time.length());
-	particleManager.update();
+	objectsSimulationUpdate(time(),time.length());
+}
+void WorldManager::frameUpdate()
+{
+	objectsFrameUpdate(time.interpolate());
 }

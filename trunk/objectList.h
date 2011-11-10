@@ -7,8 +7,8 @@ protected:
 	map<objectType, map<objId,std::shared_ptr<object>>> mObjectTypes;
 
 	void clearObjects();
-	void updateObjects(double time, double ms);
-
+	void objectsSimulationUpdate(double time, double ms);
+	void objectsFrameUpdate(double interpolation);
 public:
 	objId newObject(object* newObj);
 	void deleteObject(objId id);

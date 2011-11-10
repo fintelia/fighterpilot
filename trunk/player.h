@@ -46,6 +46,40 @@ public:
 	}
 };
 
+class controls
+{
+public:
+	virtual float operator[] (int control) = 0;
+};
+
+class keyboardControls: public controls
+{
+private:
+	unsigned char virtualKeys[9];
+public:
+	keyboardControls(int player);
+	float operator[] (int control);
+};
+
+#ifdef USING_XINPUT
+class xboxControls: public controls
+{
+	int mControllerNum;
+	struct mapping{
+		enum Type{BUTTON,AXIS,AXIS_POSITIVE,AXIS_NEGATIVE}type;
+		int m;
+
+		float operator() (int controllerNum);
+		mapping(int M, Type t): type(t), m(M){}
+		mapping(){}
+	};
+	map<int,mapping> mappings;
+public:
+	xboxControls(int player);
+	int getControllerNum(){return mControllerNum;}
+	float operator[] (int control);
+};
+#endif
 
 class playerControls
 {
@@ -55,68 +89,10 @@ public:
 	nControl c[9];
 
 	playerControls(){}
-	playerControls(int p)//default controls for player p
-	{
-		#ifdef USING_XINPUT
-			xinput_input* x=(xinput_input*)input;
-			if(x->g_Controllers[0].bConnected)
-			{
-				c[CON_CLIMB]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-				c[CON_DIVE]=nControl		(THUMB_LY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-				c[CON_LEFT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-				c[CON_RIGHT]=nControl		(THUMB_LX +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-				c[CON_ACCEL]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-				c[CON_BRAKE]=nControl		(THUMB_RY +	GAMEPAD1_OFFSET, nControl::NEGATIVE);
-				c[CON_SHOOT]=nControl		(RIGHT_TRIGGER + GAMEPAD1_OFFSET, nControl::POSITIVE);
-				c[CON_MISSILE]=nControl		(LEFT_TRIGGER +	GAMEPAD1_OFFSET, nControl::POSITIVE);
-				c[CON_BOMB]=nControl		(LEFT_SHOULDER + GAMEPAD1_OFFSET, nControl::POSITIVE);
-			}
-			else
-		#endif
-		if(p==1)
-		{
-			c[CON_CLIMB]=nControl(VK_DOWN);
-			c[CON_DIVE]=nControl(VK_UP);
-			c[CON_LEFT]=nControl(VK_LEFT);
-			c[CON_RIGHT]=nControl(VK_RIGHT);
-			c[CON_ACCEL]=nControl(VK_NUMPAD5);
-			c[CON_BRAKE]=nControl(VK_NUMPAD2);
-			c[CON_SHOOT]=nControl(VK_NUMPAD0);
-			c[CON_MISSILE]=nControl(VK_NUMPAD9);
-			c[CON_BOMB]=nControl(VK_NUMPAD8);
-		}
-		else if(p==2)
-		{
-
-			c[CON_CLIMB]=nControl(0x57);	//U
-			c[CON_DIVE]=nControl(0x53);		//J
-			c[CON_LEFT]=nControl(0x41);		//A
-			c[CON_RIGHT]=nControl(0x44);	//D
-			c[CON_ACCEL]=nControl(0x55);	//W
-			c[CON_BRAKE]=nControl(0x4A);	//S
-			c[CON_SHOOT]=nControl(0x20);	//SPACE
-			c[CON_MISSILE]=nControl(0x42);	//B
-			c[CON_BOMB]=nControl(0x56);	//V
-		}
-	}
-	nControl getCotrol(int con)
-	{
-
-		if(con>=0 && con<8)
-			return c[con];
-		else
-		{
-			return nControl();
-		}
-	}
-	void setControl(int con,nControl k)
-	{
-		if(con>=0 && con<8)
-			c[con]=k;
-	}
-	float operator[](int index) {
-		return c[index]();
-	}
+	playerControls(int p);
+	nControl getCotrol(int con);
+	void setControl(int con,nControl k);
+	float operator[](int index);
 };
 
 class objectController
@@ -124,14 +100,27 @@ class objectController
 protected:
 	int		mObjectNum,
 			mKills;
-
+	
 public:
-	const controlType type;
+	struct camera{
+		Vec3f eye;
+		Vec3f center;
+		Vec3f up;
+	};
+
+	camera	firstPerson;
+	camera	thirdPerson;
+	bool	firstPersonView;
+	const	controlType type;
 
 	int objectNum()				{return mObjectNum;}
 	void objectNum(int value)	{mObjectNum=value;}
 	int kills()					{return mKills;}
 	void addKill()				{mKills++;}
+
+	const camera& getCamera() const {return firstPersonView ? firstPerson : thirdPerson;}
+
+	void toggleFirstPerson() 	{firstPersonView = !firstPersonView;}
 
 	object* getObject();
 
@@ -144,9 +133,7 @@ public:
 class humanControl: public objectController
 {
 private:
-
 	int				PlayerNum;
-	bool			FirstPerson;
 	playerControls	controls;
 
 	static int		TotalPlayers;
@@ -155,11 +142,6 @@ public:
 	humanControl():objectController(CONTROL_HUMAN,0), PlayerNum(TotalPlayers), controls(TotalPlayers){TotalPlayers++;}
 
 	int playerNum()				{return PlayerNum;}
-
-	bool firstPerson()			{return FirstPerson;}
-	void toggleFirstPerson()	{FirstPerson=!FirstPerson;}
-	void firstPerson(bool value){FirstPerson=value;}
-
 	bool active()				{return mObjectNum!=0;}
 
 	controlState getControlState(){
