@@ -1,8 +1,8 @@
 
-#include "main.h"
+#include "game.h"
 
 namespace gui{
-campaign::campaign(std::shared_ptr<Level> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
+campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
 {
 	graphics->resetViews(1);
 	graphics->viewport(0,0, sAspect,1.0);
@@ -20,7 +20,6 @@ int campaign::update()
 		menuManager.setPopup(new gui::inGame);
 		input->up(VK_ESCAPE);
 	}
-	world.update();
 	checkCollisions();
 
 #ifdef _DEBUG
@@ -47,11 +46,11 @@ int campaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			string nLevel = level->getLevelNext();
+			string nLevel = level->info->nextLevel;
 			if(nLevel == "") nLevel="media/map file.lvl";
 
-			std::shared_ptr<Level> l(new Level);
-			if(l->init(nLevel))
+			std::shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadPNG(nLevel))
 			{
 				menuManager.setMenu(new gui::campaign(l));
 		//		modeManager.setMode(new modeCampaign(l));
@@ -108,25 +107,25 @@ void campaign::render()
 {
 	nPlane* p = (nPlane*)world[players[0].objectNum()].get();
 	
-	if(players[0].firstPerson() && !p->controled && !p->dead)
+	if(players[0].firstPersonView && !p->controled && !p->dead)
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
 	//	dataManager.bind("ortho");
-		graphics->drawOverlay(Rect::XYXY(0,1.0,sAspect,0.0),"cockpit square");
+		graphics->drawOverlay(Rect::XYXY(0,0.0,sAspect,1.0),"cockpit square");
 	//	dataManager.unbindShader();
 
 		targeter(0.5*sAspect, 0.5, 0.08, p->roll);
-		radar(0.2 * sAspect, 0.433, 0.125, -0.125, true, p);
+		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
 		
-		healthBar(0.175*sAspect, 1.0-0.35, 0.25*sAspect, -0.333, p->health/p->maxHealth,true);
+		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);
 	}
 	else if(!p->dead  && !p->controled)
 	{
-		radar(sAspect-0.167, 0.167, 0.1333, -0.1333, false, p);
-		healthBar(0.768*sAspect, 0.958, 0.188*sAspect, -0.042, p->health/p->maxHealth,false);
+		radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
+		healthBar(0.768*sAspect, 0.042, 0.188*sAspect, 0.042, p->health/p->maxHealth,false);
 	}
 	
 

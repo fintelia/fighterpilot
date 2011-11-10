@@ -67,18 +67,16 @@ protected:
 			Vec3f right;	//normalized
 		}camera;
 
-		matrix4x4<float> projectionMat;
-		matrix4x4<float> modelViewMat;
+		Mat4f projectionMat;
+		Mat4f modelViewMat;
 
 		Plane<float> clipPlanes[6];
 	};
 	vector<View> views;
 	unsigned int currentView;
 
-	HDC			hDC;
-	HGLRC		hRC;
-	HWND		hWnd;
-	HINSTANCE	hInstance;
+
+
 	float		currentGamma;
 
 	bool stereo;
@@ -107,8 +105,7 @@ public:
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
-	virtual bool createWindow(const char* title, RECT WindowRect, bool checkMultisample)=0;
-	virtual bool recreateWindow(Vec2i resolution, int multisample)=0;
+	virtual bool createWindow(string title, Vec2i screenResolution)=0;
 	virtual bool changeResolution(Vec2f resolution)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
@@ -148,8 +145,8 @@ public:
 
 	bool sphereInFrustum(Sphere<float> s);
 
-	void flashTaskBar(int times, int length=0);
-	void minimizeWindow();
+	virtual void flashTaskBar(int times, int length=0)=0;
+	virtual void minimizeWindow()=0;
 };
 
 #ifdef OPENGL2
@@ -165,27 +162,34 @@ protected:
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
 
-	GLuint renderTextures[2];//only second is used with multisampling
-	GLuint depthTextures[2];//only second is used with multisampling
-	GLuint colorRenderBuffers;//only used with multisampling
-	GLuint depthRenderBuffers;//only used with multisampling
-	GLuint FBOs[2];
+	unsigned int renderTextures[2];//only second is used with multisampling
+	unsigned int depthTextures[2];//only second is used with multisampling
+	unsigned int colorRenderBuffers;//only used with multisampling
+	unsigned int depthRenderBuffers;//only used with multisampling
+	unsigned int FBOs[2];
 
+	bool multisampling;
+	int samples;
 
 	RenderTarget renderTarget;
 
+	struct Context;
+	Context* context;
+
 	OpenGLgraphics();
+	~OpenGLgraphics();
 public:
-
-
-	bool init();
-	void resize(int w, int h);
-	void render();
-	void destroyWindow();
-	void setGamma(float gamma);
-	bool createWindow(const char* title, RECT WindowRect, bool checkMultisample);
-	bool recreateWindow(Vec2i resolution, int multisample);
+	bool createWindow(string title, Vec2i screenResolution);
 	bool changeResolution(Vec2f resolution);
+	bool init();
+
+	void resize(int w, int h);
+	void setGamma(float gamma);
+
+	void destroyWindow();
+
+	void render();
+
 	void swapBuffers();
 	void takeScreenshot();
 	void bindRenderTarget(RenderTarget t);
@@ -212,6 +216,9 @@ public:
 	//void perspective(float fovy, float aspect, float near, float far);
 	//void ortho(float left, float right, float bottom, float top, float near, float far);
 	void lookAt(Vec3f eye, Vec3f center, Vec3f up);
+
+	void flashTaskBar(int times, int length=0);
+	void minimizeWindow();
 };
 #endif
 

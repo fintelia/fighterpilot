@@ -18,7 +18,7 @@ private:
 	texturedVertex3D* vertices;
 	unsigned int totalVertices; // total number of vertices allocated
 
-	GLuint VBO;
+	unsigned int VBO;
 
 public:
 	vector<bullet> bullets;
@@ -28,11 +28,12 @@ public:
 	bulletCloud(): object(Vec3f(), Quat4f(), BULLET_CLOUD), vertices(NULL), totalVertices(0), VBO(0){}
 	~bulletCloud(){if(vertices) delete[] vertices;}
 
-	void update(double time, double ms);
-
 	void init();
 	void draw();
 
 	void addBullet(Vec3f pos,Vec3f vel,int Owner, double StartTime);
 	void addBullet(Vec3f pos,Vec3f vel,int Owner);
+
+	void updateSimulation(double time, double ms);
+	void updateFrame(float interpolation) const;
 };

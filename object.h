@@ -1,16 +1,3 @@
-//
-//class entity
-//{
-//public:
-//	const int	id;
-//	int			type;
-//	int			team;
-//	bool		dead;
-//	Vec3f		pos;
-//
-//	virtual bool Update(float value)=0;
-//	entity(int Id, int Type, int Team, Vec3f Pos=Vec3f(0,0,0)): id(Id), type(Type), team(Team), dead(false), pos(Pos){}
-//};
 
 typedef unsigned int objId;
 
@@ -34,13 +21,15 @@ public:
 	bool				dead;
 	int					team;
 	bool				awaitingDelete;
-
+	meshInstancePtr		meshInstance;
 	object(Vec3f sPos, Quat4f sRot, objectType Type): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(NEUTRAL), awaitingDelete(false){}
-	virtual void update(double time, double ms)=0;
 	virtual void init(){}
-	virtual ~object(){}
+	virtual ~object(){if(meshInstance)meshInstance->setDeleteFlag(true);}
 	virtual void draw();
-};
+
+	virtual void updateSimulation(double time, double ms) {}
+	virtual void updateFrame(float interpolation) const {}
+}; 
 
 class controlledObject: public object
 {

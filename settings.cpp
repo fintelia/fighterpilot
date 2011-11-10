@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "game.h"
 void ObjectStats::load(string filename)
 {
 	string line;
@@ -11,9 +11,9 @@ void ObjectStats::load(string filename)
 	//int			cH	= -1,//hardpoint #
 	bool		mirror = false;
 
-	char_separator<char> sep(" ,/", "");
+	boost::char_separator<char> sep(" ,/", "");
 		
-	tokenizer<char_separator<char> >::iterator t;
+	boost::tokenizer<boost::char_separator<char> >::iterator t;
 
 	if(fin.is_open())
 	{
@@ -74,7 +74,7 @@ void ObjectStats::load(string filename)
 					Vec3f v;
 					int d = 0;
 
-					tokenizer<char_separator<char> > Tokenizer(value, sep);
+					boost::tokenizer<boost::char_separator<char> > Tokenizer(value, sep);
 					for (t = Tokenizer.begin(); t != Tokenizer.end(); t++, d++)
 					{
 						v[d]=lexical_cast<float>(*t);
@@ -89,7 +89,7 @@ void ObjectStats::load(string filename)
 					Vec3f v;
 					int d = 0;
 
-					tokenizer<char_separator<char> > Tokenizer(value, sep);
+					boost::tokenizer<boost::char_separator<char> > Tokenizer(value, sep);
 					for (t = Tokenizer.begin(); t != Tokenizer.end(); t++, d++)
 					{
 						v[d]=lexical_cast<float>(*t);
@@ -104,7 +104,7 @@ void ObjectStats::load(string filename)
 					mirror = (value == "TRUE");
 				}
 			}
-			catch(bad_lexical_cast &)
+			catch(boost::bad_lexical_cast &)
 			{
 				debugBreak();//boost type conversion failed
 				closingMessage("Error reading 'modelData.txt'. Fighter-Pilot will now close.","Error");

@@ -1,5 +1,5 @@
 
-#include "main.h"
+#include "game.h"
 
 namespace particle
 {

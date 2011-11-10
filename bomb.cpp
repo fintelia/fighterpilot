@@ -1,11 +1,11 @@
 
-#include "main.h"
+#include "game.h"
 
 bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):selfControlledObject(sPos, sRot, Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
 {
-	
+	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
-void bomb::update(double time, double ms)
+void bomb::updateSimulation(double time, double ms)
 {
 	lastPosition = position;
 	lastRotation = rotation;
@@ -17,5 +17,12 @@ void bomb::update(double time, double ms)
 	{
 		particleManager.addEmitter(new particle::explosion(position-Vec3f(0,alt,0),4.0));
 		awaitingDelete = true;
+		meshInstance->setDeleteFlag(true);
+		meshInstance = nullptr;
 	}
+}
+void bomb::updateFrame(float interpolation) const
+{
+	if(meshInstance)
+	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !awaitingDelete);
 }

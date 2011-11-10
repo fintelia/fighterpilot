@@ -1,9 +1,9 @@
 
 
-#include "main.h"
+#include "game.h"
 
 namespace gui{
-splitScreen::splitScreen(std::shared_ptr<Level> lvl): dogFight(lvl)
+splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 {
 	graphics->resetViews(2);
 	graphics->viewport(0,0.5, sAspect,0.5,	0);
@@ -39,7 +39,6 @@ int splitScreen::update()
 	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 
-	world.update();
 	checkCollisions();
 
 	return 7;
@@ -49,7 +48,7 @@ void splitScreen::render()
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
 		nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
-		if(players[acplayer].firstPerson() && !p->controled)
+		if(players[acplayer].firstPersonView && !p->controled)
 		{
 			graphics->drawOverlay(Rect::XYXY(0,sh/2*acplayer,sw,sh/2*(acplayer+1)),"cockpit");
 			targeter(400,150+300*acplayer,50,p->roll);

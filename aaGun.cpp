@@ -1,7 +1,6 @@
 
-#include "main.h"
-
-void aaGun::update(double time, double ms)
+#include "game.h"
+void aaGun::updateSimulation(double time, double ms)
 {
 	//control->update();
 	//controlState controller=control->getControlState();
@@ -17,23 +16,6 @@ void aaGun::update(double time, double ms)
 		extraShootTime = 0.0;
 	}
 	machineGun.coolDownLeft-=ms;
-
-	//Quat4f lastRotation=rotation;
-
-	//elevation	+= 1.0*controller.up*(ms/1000) - 1.0*controller.down*(ms/1000);
-	//angle		+= 1.5*controller.left*(ms/1000) - 1.5*controller.right*(ms/1000);
-
-	//speed = max(speed,clamp(speed + 10.0f*controller.accelerate*ms - 10.0f*controller.brake*ms,250.0,669.0));
-	//climb = clamp(climb + 1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000),-PI/3,PI/4);
-	//turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
-	//direction -= turn*ms/3000.0;//needs to be adjusted to be continious
-
-	//rotation = Quat4f(0,0,0,1);
-	//rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
-	//rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-	//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
-
-//	findTargetVector();
 
 	/////////////////////CONTROL//////////////////////
 	bool shoot;
@@ -80,7 +62,6 @@ void aaGun::update(double time, double ms)
 			shotsFired++;
 		}
 	}
-
 	//static float missileCoolDown = 7000;
 	//missileCoolDown -= ms;
 	//if(missileCoolDown <= 0.0 && target != 0)
@@ -89,6 +70,11 @@ void aaGun::update(double time, double ms)
 	//	missileCoolDown = 7000;
 	//	world.objectList.newMissile(MISSILE1,team,p,rotation*Quat4f(Vec3f(-1,0,0),PI/2),0,id,target);
 	//}
+}
+void aaGun::updateFrame(float interpolation) const
+{
+	if(meshInstance)
+	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !dead);
 }
 void aaGun::findTargetVector()
 {
@@ -152,5 +138,6 @@ void aaGun::initArmaments()
 }
 aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
 {
+	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 	spawn();
 }

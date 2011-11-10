@@ -44,13 +44,13 @@ public:
 	unsigned short* heights;
 	TerrainPatch* trunk;
 
-	GLuint VBO;
-	GLuint texture;
+	unsigned int VBO;
+	unsigned int texture;
 
 	struct IndexBuffer
 	{
 		unsigned int numVertices;
-		GLuint id;
+		unsigned int id;
 	}indexBuffer;
 
 	mutable vector<TerrainPatch*> renderQueue;

@@ -80,13 +80,11 @@
     <shader name="island preview terrain" vertex="media/terrain.vert"   fragment="media/island preview.frag" />
     <shader name="grass preview terrain"  vertex="media/terrain.vert"   fragment="media/grass preview.frag" />
     <shader name="snow terrain"           vertex="media/terrain.vert"   fragment="media/snow.frag" />
-    <shader name="snow preview terrain"   vertex="media/terrain.vert"   fragment="media/snow preview.frag" />
-    
-    
+    <shader name="snow preview terrain"   vertex="media/terrain.vert"   fragment="media/snow preview.frag" />    
   </shaders>
   
   <models>
-    <model name="sky dome"   file="media/dome.obj" />
+    <model name="sky dome"   file="media/skyDome.obj" />
     <model name="cylinder"   file="media/cylinder.obj" />
     <model name="disk"       file="media/disk.obj" />
     <model name="f16"        file="media/f16.obj" />
@@ -102,5 +100,6 @@
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>
+    <font name="font small"        file="media/fonts/Times12.fnt" preload="true"/>
   </fonts>
 </assets>

@@ -12,24 +12,7 @@ private:
 	double extraShootTime;//time since it last shot;
 	unsigned long shotsFired;
 
-	void smoothCamera();
 public:
-//////////////functions////////////
-	void update(double time, double ms);
-	void findTargetVector();
-	void shootMissile();
-	void dropBomb();
-	void die();
-	void loseHealth(float healthLoss);
-	void autoPilotUpdate(float value);
-	void exitAutoPilot();
-	void returnToBattle();
-	void spawn();
-	void initArmaments();
-	void init();
-
-	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
-	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 //////////////structs//////////////
 	struct wayPoint
 	{
@@ -49,8 +32,16 @@ public:
 		struct ammo{
 			Vec3f offset;
 			objectType type;
+			meshInstancePtr meshInstance;
 		};
 		vector<ammo> ammoRounds;
+	};
+	struct cameraState{
+		float time;
+		float angle;
+		Vec3f position;
+		Vec3f velocity;
+		//Quat4f rot;
 	};
 //////////////flight specs/////////
 	float speed;
@@ -66,33 +57,42 @@ public:
 	armament bombs;
 ////////////life///////////////////
 	//bool dead; (from entity)
-	//int respawn;
 	float health;
 	float maxHealth;
 	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_EXPLOSION,DEATH_TRAILING_SMOKE,DEATH_MISSILE,DEATH_BULLETS}death;
-	//explosion* explode;
 	bool respawning;
 	float respawnTime;
 ////////////auto-pilot/////////////
 	int maneuver;
 	bool controled;
 	vector<wayPoint> wayPoints;
-
 	objectPath planePath;
-///////////camera view/////////////
-	objectCamera camera;
-	//Vec3f camera;
-	//Vec3f center;
-	//Vec3f up;
-	struct cameraState{
-		float time;
-		float angle;
-		Vec3f position;
-		Vec3f velocity;
-		//Quat4f rot;
-	};
 
+///////////camera view/////////////
 	vector<cameraState> cameraStates;
+	objectCamera camera;
+
+////////////methods////////////////
+	void findTargetVector();
+	void shootMissile();
+	void dropBomb();
+	void die();
+	void loseHealth(float healthLoss);
+	void autoPilotUpdate(float value);
+	void exitAutoPilot();
+	void returnToBattle();
+	void spawn();
+	void initArmaments();
+	void init();
+
+	void updateSimulation(double time, double ms);
+	void updateFrame(float interpolation) const;
+
+	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
+	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
+
+private:
+	void smoothCamera();
 };
 
 //class plane: public planeBase

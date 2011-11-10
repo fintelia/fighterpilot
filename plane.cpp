@@ -1,21 +1,23 @@
 
 
-#include "main.h"
+#include "game.h"
 
 nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 {
 	team = Team;
+	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
 nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):controlledObject(sPos, sRot, Type, CONTROL_COMPUTER), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 {
 	team = Team;
+	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
 
 void nPlane::init()
 {
 	spawn();
 }
-void nPlane::update(double time, double ms)
+void nPlane::updateSimulation(double time, double ms)
 {
 	control->update();
 	controlState controller=control->getControlState();
@@ -26,6 +28,8 @@ void nPlane::update(double time, double ms)
 	camera.lastPosition = camera.position;
 	camera.lastCenter = camera.center;
 	camera.lastUp = camera.up;
+
+	
 
 	if(!dead)
 	{
@@ -367,8 +371,30 @@ void nPlane::update(double time, double ms)
 			}
 		}
 	}
+}
+void nPlane::updateFrame(float interpolation) const
+{
+	Vec3f pos = lerp(lastPosition, position, interpolation);
+	Quat4f rot = slerp(lastRotation, rotation, interpolation);
 
 
+	bool visible = !dead || death != DEATH_EXPLOSION;
+	meshInstance->update(pos, rot, visible);
+	int n=0;
+	for(auto i = bombs.ammoRounds.begin(); i != bombs.ammoRounds.end(); i++, n++)
+		i->meshInstance->update(pos + rotation * i->offset, rot, bombs.roundsMax - bombs.roundsLeft <= n && visible);
+	n=0;
+	for(auto i = rockets.ammoRounds.begin(); i != rockets.ammoRounds.end(); i++, n++)
+		i->meshInstance->update(pos + rotation * i->offset, rot, rockets.max - rockets.left <= n && visible);
+
+
+	control->firstPerson.eye		= pos;
+	control->firstPerson.center		= rot * Vec3f(0,0,1) + pos;
+	control->firstPerson.up			= rot * Vec3f(0,1,0);
+
+	control->thirdPerson.center		= lerp(camera.lastCenter, camera.center, interpolation);
+	control->thirdPerson.eye		= lerp(camera.lastPosition, camera.position, interpolation);
+	control->thirdPerson.up			= lerp(camera.lastUp, camera.up, interpolation);
 }
 void nPlane::smoothCamera()
 {
@@ -677,6 +703,7 @@ void nPlane::initArmaments()
 	{
 		a.type = settings.planeStats[type].hardpoints[i].mType;
 		a.offset = settings.planeStats[type].hardpoints[i].offset;
+		a.meshInstance = sceneManager.newMeshInstance(objectTypeString(a.type), position + rotation * a.offset, rotation);
 		if(settings.planeStats[type].hardpoints[i].mType & MISSILE)
 		{
 			rockets.ammoRounds.push_back(a);
@@ -700,8 +727,8 @@ void nPlane::initArmaments()
 	bombs.firing										= false;
 
 	machineGun.max			= machineGun.left			= 1000;
-	machineGun.roundsMax	= machineGun.roundsLeft		= 30;
-	machineGun.rechargeTime	= machineGun.rechargeLeft	= 350.0;
+	machineGun.roundsMax	= machineGun.roundsLeft		= 200;
+	machineGun.rechargeTime	= machineGun.rechargeLeft	= 450.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 26.0;
 	machineGun.firing									= false;
 }

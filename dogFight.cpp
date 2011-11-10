@@ -1,8 +1,10 @@
 
-#include "main.h"
+#include "game.h"
+#include "GL/glee.h"
+#include <GL/glu.h>
 
 namespace gui{
-dogFight::dogFight(std::shared_ptr<Level> lvl): level(lvl)
+dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl)
 {
 
 }
@@ -28,7 +30,6 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 		Vec2f v2 = Vec2f(x + width/150*125, y + height/25*16.0);
 
 		graphics->drawOverlay(Rect::XYXY(v1, v2),"white");
-
 	}
 	else
 	{
@@ -122,7 +123,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.setUniform2f("mapCenter",cCenter);
 		dataManager.setUniform1f("mapRadius",cRadius);
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-#endif
+#endif  
 
 
 
@@ -144,13 +145,13 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
 			{
 				float mag = n.magnitude();
-				Angle ang = atan2A(-n.x,n.z) + p->direction;
+				Angle ang = atan2A(n.x,n.z) + PI - p->direction;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = p->direction + ((nPlane*)i->second.get())->direction;
+				ang = -p->direction + ((nPlane*)i->second.get())->direction;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
-				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
+				graphics->drawTriangle(cent - u * 0.004, cent + u * 0.004 + v * 0.003, cent + u * 0.004 - v * 0.003);
 			}
 
 		}
@@ -196,47 +197,48 @@ void dogFight::targeter(float x, float y, float apothem, Angle tilt)
 	graphics->drawOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),"targeter");
 	//dataManager.unbindShader();
 }
-void dogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
-{
-	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
-	auto planes = world(PLANE);
-	nPlane* cPlane;
-
-	//Vec3f axis;
-	Angle roll;
-	for(auto i = planes.begin(); i != planes.end();i++)
-	{
-		cPlane=(nPlane*)((*i).second.get());
-		Vec3f a=(*i).second->position;
-		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
-		{
-			//graphics->drawLine(a,a+(*i).second->rotation * Vec3f(0,0,100));
-			glPushMatrix();
-				glTranslatef(a.x,a.y,a.z);
-
-				Angle ang = acosA(cPlane->rotation.w);
-				glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
-
-				graphics->drawModel(cPlane->type, (*i).second->position, Quat4f());
-
-				for(int m = cPlane->rockets.max - cPlane->rockets.left; m < cPlane->rockets.max; m++)
-				{
-					glPushMatrix();
-					glTranslatef(cPlane->rockets.ammoRounds[m].offset.x,cPlane->rockets.ammoRounds[m].offset.y,cPlane->rockets.ammoRounds[m].offset.z);
-					graphics->drawModel(cPlane->rockets.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->rockets.ammoRounds[m].offset, Quat4f());
-					glPopMatrix();
-				}
-				for(int m = cPlane->bombs.roundsMax - cPlane->bombs.roundsLeft; m < cPlane->bombs.roundsMax; m++)
-				{
-					glPushMatrix();
-					glTranslatef(cPlane->bombs.ammoRounds[m].offset.x,cPlane->bombs.ammoRounds[m].offset.y,cPlane->bombs.ammoRounds[m].offset.z);
-					graphics->drawModel(cPlane->bombs.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->bombs.ammoRounds[m].offset, Quat4f());
-					glPopMatrix();
-				}
-			glPopMatrix();
-		}
-	}
-}
+//void dogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
+//{
+//	return;
+//	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
+//	auto planes = world(PLANE);
+//	nPlane* cPlane;
+//
+//	//Vec3f axis;
+//	Angle roll;
+//	for(auto i = planes.begin(); i != planes.end();i++)
+//	{
+//		cPlane=(nPlane*)((*i).second.get());
+//		Vec3f a=(*i).second->position;
+//		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
+//		{
+//			//graphics->drawLine(a,a+(*i).second->rotation * Vec3f(0,0,100));
+//			glPushMatrix();
+//				glTranslatef(a.x,a.y,a.z);
+//
+//				Angle ang = acosA(cPlane->rotation.w);
+//				glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
+//
+//				graphics->drawModel(cPlane->type, (*i).second->position, Quat4f());
+//
+//				for(int m = cPlane->rockets.max - cPlane->rockets.left; m < cPlane->rockets.max; m++)
+//				{
+//					glPushMatrix();
+//					glTranslatef(cPlane->rockets.ammoRounds[m].offset.x,cPlane->rockets.ammoRounds[m].offset.y,cPlane->rockets.ammoRounds[m].offset.z);
+//					graphics->drawModel(cPlane->rockets.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->rockets.ammoRounds[m].offset, Quat4f());
+//					glPopMatrix();
+//				}
+//				for(int m = cPlane->bombs.roundsMax - cPlane->bombs.roundsLeft; m < cPlane->bombs.roundsMax; m++)
+//				{
+//					glPushMatrix();
+//					glTranslatef(cPlane->bombs.ammoRounds[m].offset.x,cPlane->bombs.ammoRounds[m].offset.y,cPlane->bombs.ammoRounds[m].offset.z);
+//					graphics->drawModel(cPlane->bombs.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->bombs.ammoRounds[m].offset, Quat4f());
+//					glPopMatrix();
+//				}
+//			glPopMatrix();
+//		}
+//	}
+//}
 void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
 {
 	dataManager.bind("hex grid shader");
@@ -261,106 +263,26 @@ void dogFight::drawScene(int acplayer)
 {
 	static map<int,double> lastDraw;
 	double time=world.time();
-	double interp = 1.0;//world.time.interpolate();
+	double interp = 1.0 - world.time.interpolate();
 
 	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
 	if(!p)
 	{
 		return;
 	}
-
-	GLfloat ambientColor[] = {0.85f, 0.85f, 0.85f, 1.0f};
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
-
-	GLfloat lightColor0[] = {0.6f, 0.6f, 0.6f, 0.0f};
-	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-
 	Vec3f e;
-	Vec3f c;
-	Vec3f u;
-	if(!players[acplayer].firstPerson() || p->controled || p->dead)
+	if(!players[acplayer].firstPersonView || p->controled || p->dead)
 	{
-		e = lerp(p->camera.lastPosition,p->camera.position,interp);
-		c = lerp(p->camera.lastCenter,p->camera.center,interp);
-		u = lerp(p->camera.lastUp,p->camera.up,interp);
-
-		graphics->lookAt(e, c, u);
+		e = players[acplayer].thirdPerson.eye;
+		graphics->lookAt(players[acplayer].thirdPerson.eye, players[acplayer].thirdPerson.center, players[acplayer].thirdPerson.up);
 	}
 	else
 	{
-		Quat4f rot = slerp(p->rotation,p->lastRotation,interp);
-
-		e = lerp(p->lastPosition,p->position,interp);
-		c = rot * Vec3f(0,0,1) + e;//(p->x + sin(p->angle * DegToRad),p->y + p->climb,p->z + cos(p->angle * DegToRad));
-		u = rot * Vec3f(0,1,0);
-
-		graphics->lookAt(e, c, u);
+		e = players[acplayer].firstPerson.eye;
+		graphics->lookAt(players[acplayer].firstPerson.eye, players[acplayer].firstPerson.center, players[acplayer].firstPerson.up);
 	}
-	//sky dome
-	glPushMatrix();
-	glDisable(GL_DEPTH_TEST);
-
-	glTranslatef(e.x,0,e.z);
-	glScalef(30000,10000,30000);
-	//dataManager.bind("sky shader");
-	graphics->drawModel("sky dome",Vec3f(e.x,0,e.z), Quat4f(), Vec3f(30000,10000,30000));
-	glScalef(1,-1,1);
-	graphics->drawModel("sky dome",Vec3f(e.x,0,e.z), Quat4f(), Vec3f(30000,-10000,30000));
-	dataManager.unbindShader();
-	glEnable(GL_DEPTH_TEST);
-	glPopMatrix();
-
 	world.renderTerrain(e);
-//	if(world.level != NULL)
-//		world.level->render(e);
 
-	dataManager.bind("model");
-	Vec3f axis;
-	auto missiles = world(MISSILE);
-	for(auto i=missiles.begin();i != missiles.end();i++)
-	{
-		if(!i->second->awaitingDelete && !i->second->dead)
-		{
-			glPushMatrix();
-				glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
-
-				Angle ang = acosA(i->second->rotation.w);
-				glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
-				graphics->drawModel(i->second->type,i->second->position, i->second->rotation);
-			glPopMatrix();
-		}
-	}
-
-	auto bombs = world(BOMB);
-	for(auto i=bombs.begin();i != bombs.end();i++)
-	{
-		if(!i->second->awaitingDelete && !i->second->dead)
-		{
-			glPushMatrix();
-				glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
-
-				Angle ang = acosA(i->second->rotation.w);
-				glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
-				graphics->drawModel(i->second->type,i->second->position, i->second->rotation);
-			glPopMatrix();
-		}
-	}
-
-	auto aaGuns = world(AA_GUN);
-	for(auto i = aaGuns.begin(); i != aaGuns.end();i++)
-	{
-		glPushMatrix();
-		glTranslatef(i->second->position.x,i->second->position.y,i->second->position.z);
-		Angle ang = acosA(i->second->rotation.w);
-		glRotatef((ang*2.0).degrees(), i->second->rotation.x/sin(ang),i->second->rotation.y/sin(ang),i->second->rotation.z/sin(ang));
-		glRotatef(90,1,0,0);
-		graphics->drawModel("AA gun",i->second->position, i->second->rotation);
-		glPopMatrix();
-	}
-
-	drawPlanes(acplayer,false,true);
 
 	glError();
 

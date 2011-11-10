@@ -1,7 +1,9 @@
 
 #include "engine.h"
-
-
+#include "GL/glee.h"
+#include <GL/glu.h>
+//#include <Windows.h>
+#include <Shlobj.h>
 //typedef map<string,MenuCreateFunc>::iterator Iterator;
 //manager* pInstance=NULL;
 namespace gui
@@ -11,9 +13,8 @@ void manager::render()
 	mDrawCursor = false;
 	if(menu != NULL)
 	{
-		dataManager.bind("ortho");
 		menu->render();
-		dataManager.unbindShader();
+
 		for(auto e = menu->labels.begin(); e != menu->labels.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -29,6 +30,7 @@ void manager::render()
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
 		}
+		
 		for(auto e = menu->sliders.begin(); e != menu->sliders.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -52,9 +54,8 @@ void manager::render()
 	}
 	for(auto i = popups.begin(); i!=popups.end();i++)
 	{
-		dataManager.bind("ortho");
 		(*i)->render();
-		dataManager.unbindShader();
+		
 
 		for(auto e = (*i)->labels.begin(); e != (*i)->labels.end(); e++)
 		{
@@ -94,10 +95,9 @@ void manager::render()
 	}
 	if(mDrawCursor)
 	{
-		dataManager.bind("ortho");
 		Vec2f cursorPos = input->getMousePos();
 		if(dataManager.assetLoaded("cursor"))
-			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,0.02,-0.025),"cursor");
+			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,0.02,0.025),"cursor");
 		else
 		{
 			dataManager.bind("white");
@@ -106,7 +106,6 @@ void manager::render()
 									Vec3f(cursorPos.x,cursorPos.y-0.028,0) );
 			dataManager.unbindTextures();
 		}
-		dataManager.unbindShader();
 	}
 }
 void manager::render3D(unsigned int view)
@@ -185,8 +184,8 @@ void manager::inputCallback(Input::callBack* callback)
 		if(!popups.empty())
 		{
 			int pSize = popups.size();
-			call->pos.x *= sh;
-			call->pos.y = (1.0 - call->pos.y) * sh;
+			//call->pos.x *= sh;
+			//call->pos.y = (1.0 - call->pos.y) * sh;
 
 			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
 			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;
@@ -200,8 +199,8 @@ void manager::inputCallback(Input::callBack* callback)
 			if(menu->mouse(call->button,call->down))
 				return;
 
-			call->pos.x *= sh;
-			call->pos.y = (1.0 - call->pos.y) * sh;
+			//call->pos.x *= sh;
+			//call->pos.y = (1.0 - call->pos.y) * sh;
 
 			debugAssert(menu != NULL);
 
@@ -218,7 +217,7 @@ void manager::inputCallback(Input::callBack* callback)
 }
 bool elementContainer::issueInputCallback(Input::callBack* callback, element* e)
 {
-	if(e == NULL)
+	if(e == nullptr)
 		return false;
 
 	if(callback->type == KEY_STROKE)
@@ -259,7 +258,7 @@ void elementContainer::inputCallback(Input::callBack* callback)
 
 		if(call->down)
 		{
-			if(focus != NULL)
+			if(focus != nullptr)
 			{
 				if(focus->inElement(call->pos))
 				{
@@ -269,7 +268,7 @@ void elementContainer::inputCallback(Input::callBack* callback)
 				else
 				{
 					focus->looseFocus();
-					focus = NULL;
+					focus = nullptr;
 				}
 			}
 
@@ -280,12 +279,12 @@ void elementContainer::inputCallback(Input::callBack* callback)
 			for(auto e = textBoxes.begin(); this!=NULL && e != textBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
 			for(auto e = listBoxes.begin(); this!=NULL && e != listBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
 
-			debugAssert(focus == NULL);//break if focus is not NULL
-			focus = NULL;//if anything responded to the mouse press, this will execute
+			debugAssert(focus == nullptr);//break if focus is not NULL
+			focus = nullptr;//if anything responded to the mouse press, this will execute
 		}
 		else
 		{
-			if(focus != NULL)	issueInputCallback(callback,focus);
+			if(focus != nullptr)	issueInputCallback(callback,focus);
 		}
 	}
 }
@@ -320,16 +319,17 @@ bool openFile::init(set<string> ExtFilters)
 }
 void openFile::refreshView()
 {
-	for(auto i=folderButtons.begin();i!=folderButtons.end();i++)		if(*i!=NULL) delete (*i);
-	for(auto i=fileButtons.begin();i!=fileButtons.end();i++)			if(*i!=NULL) delete (*i);
+//	for(auto i=folderButtons.begin();i!=folderButtons.end();i++)		if(*i!=NULL) delete (*i);
+//	for(auto i=fileButtons.begin();i!=fileButtons.end();i++)			if(*i!=NULL) delete (*i);
 	files.clear();
 	folders.clear();
-	folderButtons.clear();
-	fileButtons.clear();
+//	folderButtons.clear();
+//	fileButtons.clear();
 
-	folders = fileManager.getAllDirectories(directory);
-	files = fileManager.getAllFiles(directory,extFilters);
-	folders.push_back("..");
+	auto Folders = fileManager.getAllDirectories(directory);
+	auto Files = fileManager.getAllFiles(directory,extFilters);
+
+
 	//filesystem::directory_iterator end_itr; // default construction yields past-the-end
 	//for ( filesystem::directory_iterator itr( directory );	itr != end_itr;	 ++itr )
 	//{
@@ -342,17 +342,40 @@ void openFile::refreshView()
 	//		files.push_back(itr->path().leaf().generic_string());
 	//	}
 	//}
-	int row=0, column=0;
-	for(auto i=folders.begin();i!=folders.end();i++)
+	for(auto i=Folders.begin();i!=Folders.end();i++)
 	{
-		folderButtons.push_back(new button(12+140*column,5+40*row,135,35,(*i),Color(0.4,0.4,0.4)));
-		if(++column==4){column=0;row++;}
+		if(*i == "..")
+			folders.push_back(thumbnail("<up dir>","<up dir>",thumbnail::FOLDER));
+		else if(*i != ".svn" && *i != ".")
+			folders.push_back(thumbnail(*i,*i,thumbnail::FOLDER));
 	}
-	for(auto i=files.begin();i!=files.end();i++)
+	for(auto i=Files.begin();i!=Files.end();i++)
 	{
-		fileButtons.push_back(new button(12+140*column,5+40*row,135,35,(*i),Color(0.6,0.6,0.6)));
-		if(++column==4){column=0;row++;}
+		files.push_back(thumbnail(*i,*i,thumbnail::UNKNOWN_FILE));
 	}
+
+	for(auto i=folders.begin(); i!=folders.end(); i++)
+	{
+		if(graphics->textSize(i->displayName,"font small").x > 0.0625)
+		{
+			string folder = i->displayName;
+			while(graphics->textSize(folder + "...","font small").x > 0.06 && folder != "")
+				folder = folder.substr(0,folder.size()-1);
+			i->displayName = folder + "...";
+		}
+	}
+	for(auto i=files.begin(); i!=files.end(); i++)
+	{
+		if(graphics->textSize(i->displayName,"font small").x > 0.0625)
+		{
+			string file = i->displayName;
+			while(graphics->textSize(file + "...","font small").x > 0.06 && file != "")
+				file = file.substr(0,file.size()-1);
+			i->displayName = file + "...";
+		}
+	}
+
+	scroll = 0.0;
 }
 int openFile::update()
 {
@@ -396,43 +419,56 @@ int openFile::update()
 		}
 		return 0;
 	}
-	for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
-	{
-		if((*i)->checkChanged())
-		{
-			directory = directory + "/" + (*i)->getText();
-			refreshView();
-			return 0;
-		}
-	}
-	for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
-	{
-		if((*i)->checkChanged())
-		{
-			file=(*i)->getText();
-			fileSelected();
-			return 0;
-		}
-	}
+	//for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
+	//{
+	//	if((*i)->checkChanged())
+	//	{
+	//		directory = directory + "/" + (*i)->getText();
+	//		refreshView();
+	//		return 0;
+	//	}
+	//}
+	//for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)
+	//{
+	//	if((*i)->checkChanged())
+	//	{
+	//		file=(*i)->getText();
+	//		fileSelected();
+	//		return 0;
+	//	}
+	//}
 	return 0;
 }
 void openFile::render()
 {
-	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.821,-0.511),"file viewer");
-	graphics->drawOverlay(Rect::XYXY(0.5*sAspect-0.176,0.5-0.185,0.5*sAspect+0.186,0.5-0.229),"entry bar");
-	graphics->drawText(file,Vec2f(0.5*sAspect-0.166,0.5-0.207+graphics->textSize(file).y/2));
+	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.505),"file viewer");
+	graphics->drawOverlay(Rect::XYXY(0.5*sAspect-0.176,0.5+0.18,0.5*sAspect+0.186,0.5+0.224),"entry bar");
+	graphics->drawText(file,Vec2f(0.5*sAspect-0.166,0.5+0.202-graphics->textSize(file).y/2));
 
-	dataManager.unbindShader();//unbind ortho shader for rendering the buttons
-
-
-	glColor3f(0,0,0);
-	glPushMatrix();
-	glTranslatef((sw/2-190),(sh/2-246),0);
-	for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
-	for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
-	glPopMatrix();
-	menuManager.drawCursor();
-	glColor3f(1,1,1);
+	float row=scroll; int column=0;
+	float size = 0.0625;
+	for(auto i=folders.begin(); i != folders.end(); i++)
+	{
+		if(row >= 0)
+		graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
+		graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.321 + size*1.05*row),"font small");
+		if(++column == 7){column=0;row+=1.0;}
+	}
+	for(auto i=files.begin(); i != files.end(); i++)
+	{
+		if(row >= 0)
+		graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
+		graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.321 + size*1.05*row),"font small");
+		if(++column == 7){column=0;row+=1.0;}
+	}
+	//glColor3f(0,0,0);
+	//glPushMatrix();
+	//glTranslatef(sAspect/2-0.856,0.260,0);
+	//for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
+	//for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
+	//glPopMatrix();
+	//menuManager.drawCursor();
+	//glColor3f(1,1,1);
 }
 void openFile::fileSelected()
 {
@@ -479,8 +515,8 @@ bool openFile::mouseL(bool down, int x, int y)
 	static bool clicking = false;
 	if(down)
 	{
-		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
-		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
+//		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
+//		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
 		clicking = (x>sw/2+144) && (x<sw/2+184) && (y>sh/2+190) && (y<sh/2+230);
 		return clicking;
 	}
@@ -493,8 +529,8 @@ bool openFile::mouseL(bool down, int x, int y)
 			return true;
 		}
 
-		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if((*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246))) return true;
-		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if((*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246))) return true;
+//		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if((*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246))) return true;
+//		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if((*i)->mouseUpL(x-(sw/2-190),y-(sh/2-246))) return true;
 		return false;
 	}
 }
@@ -574,12 +610,12 @@ bool messageBox_c::init(string t, vector<string> names)
 void messageBox_c::render()
 {
 	if(dataManager.assetLoaded("dialog box"))
-		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,-(float)height/sh),"dialog box");
+		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,(float)height/sh),"dialog box");
 	else
 	{
 		dataManager.bind("noTexture");
 		glColor3f(0.3,0.3,0.3);
-		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,-(float)height/sh));
+		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,(float)height/sh));
 		glColor3f(1,1,1);
 	}
 
@@ -595,8 +631,8 @@ void messageBox_c::render()
 	{
 		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
-			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-graphics->textSize((*i)->getText()).x*0.75-0.03,		startY+slotHeight*0.5-0.034,
-												startX+slotWidth*(0.5+slotNum)+graphics->textSize((*i)->getText()).x*0.75+0.03,		startY+slotHeight*0.5+0.034),
+			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-graphics->textSize((*i)->getText()).x*0.75-0.03,		startY+slotHeight*0.5+0.034,
+												startX+slotWidth*(0.5+slotNum)+graphics->textSize((*i)->getText()).x*0.75+0.03,		startY+slotHeight*0.5-0.034),
 												"glow");
 		}
 		(*i)->render();
@@ -658,6 +694,7 @@ void button::setElementText(string t)
 		clampedText=clampedText.substr(0,l);
 		clampedText += "...";
 	}
+	clampedText = text;//set clamped text to whole text so it is not trucnated (while otho shader is not in use)
 }
 void button::setElementTextColor(Color c)
 {
@@ -683,52 +720,52 @@ void button::render()
 				tPos.x=0.0;
 				tSize.x=10.0/140;
 				rPos.x=shape.x;
-				rSize.x=min(10.0f,shape.w/2);
+				rSize.x=min(10.0f/sh,shape.w/2);
 			}
 			else if(ix==1)
 			{
 				tPos.x=10.0/140;
 				tSize.x=1.0-20.0/140;
-				rPos.x=shape.x+10;
-				rSize.x=max(shape.w-20,0.0f);
+				rPos.x=shape.x+10.0/sh;
+				rSize.x=max(shape.w-20.0/sh,0.0f);
 			}
 			else if(ix==2)
 			{
 				tPos.x=1.0-10.0/140;
 				tSize.x=10.0/140;
-				rPos.x=shape.x+shape.w-min(10.0f,shape.w/2);
-				rSize.x=min(10.0f,shape.w/2);
+				rPos.x=shape.x+shape.w-min(10.0f/sh,shape.w/2);
+				rSize.x=min(10.0f/sh,shape.w/2);
 			}
 			if(iy==0)
 			{
 				tPos.y=0.0;
 				tSize.y=10.0/45;
 				rPos.y=shape.y;
-				rSize.y=min(10.0f,shape.h/2);
+				rSize.y=min(10.0f/sh,shape.h/2);
 			}
 			else if(iy==1)
 			{
 				tPos.y=10.0/45;
 				tSize.y=1.0-20.0/45;
-				rPos.y=shape.y+10;
-				rSize.y=max(shape.h-20,0.0f);
+				rPos.y=shape.y+10.0/sh;
+				rSize.y=max(shape.h-20.0/sh,0.0f);
 			}
 			else if(iy==2)
 			{
 				tPos.y=1.0-10.0/45;
 				tSize.y=10.0/45;
-				rPos.y=shape.y+shape.h-min(10.0f,shape.h/2);
-				rSize.y=min(10.0f,shape.h/2);
+				rPos.y=shape.y+shape.h-min(10.0f/sh,shape.h/2);
+				rSize.y=min(10.0f/sh,shape.h/2);
 			}
 			graphics->drawPartialOverlay(Rect::XYWH(rPos,rSize),Rect::XYWH(tPos,tSize),"button");
 		}
 	}
-	dataManager.unbindTextures();
+	//graphics->drawOverlay(shape,"button");
 	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
 	graphics->drawText(clampedText,Vec2f(shape.x+(shape.w-graphics->textSize(clampedText).x)/2,shape.y+(shape.h-graphics->textSize(clampedText).y)/2));
 	glColor3f(1,1,1);
 }
-bool button::mouseDownL(int X, int Y)
+bool button::mouseDownL(float X, float Y)
 {
 	if(view && active && shape.inRect(Vec2f(X,Y)))
 	{
@@ -737,7 +774,7 @@ bool button::mouseDownL(int X, int Y)
 	}
 	return false;
 }
-bool button::mouseUpL(int X, int Y)
+bool button::mouseUpL(float X, float Y)
 {
 	if(view && active && clicking && shape.inRect(Vec2f(X,Y)))
 	{
@@ -758,7 +795,7 @@ void checkBox::render()
 	graphics->drawText(text,Vec2f(shape.x+30,shape.y));
 	glColor3f(1,1,1);
 }
-bool checkBox::mouseDownL(int X, int Y)
+bool checkBox::mouseDownL(float X, float Y)
 {
 	if(view && active && shape.inRect(Vec2f(X,Y)))
 	{
@@ -767,7 +804,7 @@ bool checkBox::mouseDownL(int X, int Y)
 	}
 	return false;
 }
-bool checkBox::mouseUpL(int X, int Y)
+bool checkBox::mouseUpL(float X, float Y)
 {
 	if(view && active && clicking && shape.inRect(Vec2f(X,Y)) )
 	{
@@ -782,7 +819,7 @@ bool checkBox::mouseUpL(int X, int Y)
 	}
 	return false;
 }
-bool textBox::mouseDownL(int X, int Y)
+bool textBox::mouseDownL(float X, float Y)
 {
 	if(!clicking)
 	{
@@ -795,7 +832,7 @@ bool textBox::mouseDownL(int X, int Y)
 		return !clicking;
 	}
 }
-bool textBox::mouseUpL(int X, int Y)
+bool textBox::mouseUpL(float X, float Y)
 {
 	if(clicking)
 	{
@@ -957,12 +994,12 @@ void listBox::looseFocus()
 	shape.h = 30;
 	focus = false;
 }
-bool listBox::mouseDownL(int X, int Y)
+bool listBox::mouseDownL(float X, float Y)
 {
 	choosing = shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30;
 	return true;
 }
-bool listBox::mouseUpL(int X, int Y)
+bool listBox::mouseUpL(float X, float Y)
 {
 	if(choosing)
 	{
@@ -1107,7 +1144,7 @@ void toggle::render()
 	}
 	if(Label != NULL) Label->render();
 }
-bool toggle::mouseDownL(int X, int Y)
+bool toggle::mouseDownL(float X, float Y)
 {
 	if(view && active)
 	{
@@ -1119,7 +1156,7 @@ bool toggle::mouseDownL(int X, int Y)
 	}
 	return false;
 }
-bool toggle::mouseUpL(int X, int Y)
+bool toggle::mouseUpL(float X, float Y)
 {
 	bool retVal=false;
 	if(view && active)
@@ -1152,8 +1189,7 @@ void slider::render()
 {
 	if(clicking)
 	{
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
+		Vec2f cursorPos = input->getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
 	graphics->drawOverlay(Rect::XYXY(shape.x,0.5*shape.h+shape.y-11,shape.x+shape.w,0.5*shape.h+shape.y+11),"slider bar");
@@ -1161,7 +1197,7 @@ void slider::render()
 	float xv = (value-minValue)*shape.w/(maxValue-minValue)+shape.x;
 	graphics->drawOverlay(Rect::XYXY(xv-22,shape.y,xv+22,shape.y+shape.h),"slider");
 }
-bool slider::mouseDownL(int X, int Y)
+bool slider::mouseDownL(float X, float Y)
 {
 	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 22 && Y > shape.y && Y < shape.y + shape.h)
 	{
@@ -1177,7 +1213,7 @@ bool slider::mouseDownL(int X, int Y)
 	}
 	return false;
 }
-bool slider::mouseUpL(int X, int Y)
+bool slider::mouseUpL(float X, float Y)
 {
 	if(view && active && clicking)
 	{
@@ -1191,8 +1227,7 @@ float slider::getValue()
 {
 	if(clicking)
 	{
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
+		Vec2f cursorPos = input->getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
 	return value;
@@ -1201,8 +1236,7 @@ void slider::setMinValue(float m)
 {
 	if(clicking)
 	{
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
+		Vec2f cursorPos = input->getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}
@@ -1214,8 +1248,7 @@ void slider::setMaxValue(float m)
 {
 	if(clicking)
 	{
-		POINT cursorPos;
-		GetCursorPos(&cursorPos);
+		Vec2f cursorPos = input->getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}

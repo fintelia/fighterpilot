@@ -6,8 +6,9 @@ public:
 
 	void create();
 	void destroy();
-	void update();
 
+	void simulationUpdate();
+	void frameUpdate();
 private:
 	WorldManager(){}
 	WorldManager(const WorldManager& w){}

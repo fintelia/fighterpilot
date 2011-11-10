@@ -1,25 +1,13 @@
 
 #include "engine.h"
-GraphicsManager::GraphicsManager(): currentId(0), currentView(0),hDC(NULL),hRC(NULL),hWnd(NULL), stereo(false), leftEye(true), interOcularDistance(0.0)
+#include <Windows.h>
+
+
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0), stereo(false), leftEye(true), interOcularDistance(0.0)
 {
 	resetViews(1);
 }
-void GraphicsManager::flashTaskBar(int times, int length)
-{
-#ifdef VISUAL_STUDIO
-	FLASHWINFO f;
-	f.cbSize = sizeof(FLASHWINFO);
-	f.hwnd = hWnd;
-	f.dwFlags = FLASHW_TRAY;
-	f.dwTimeout = length;
-	f.uCount = times;
-	FlashWindowEx(&f);
-#endif
-}
-void GraphicsManager::minimizeWindow()
-{
-	ShowWindow(hWnd, SW_MINIMIZE);
-}
+
 Vec2f GraphicsManager::project(Vec3f p, unsigned int view)
 {
 	if(view >= views.size())
@@ -50,8 +38,8 @@ Vec3f GraphicsManager::unProject(Vec3f p, unsigned int view)// from x=0 to sAspe
 		return Vec3f();
 	}
 
-	matrix4x4<double> A = views[view].projectionMat * views[view].modelViewMat;
-	matrix4x4<double> inv;
+	Mat4d A = views[view].projectionMat * views[view].modelViewMat;
+	Mat4d inv;
 
 	if(!A.inverse(inv))
 		return Vec3f();//inverse could not be calculated
@@ -134,7 +122,7 @@ void GraphicsManager::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 	views[currentView].camera.up = u;
 	views[currentView].camera.right = f.cross(u);
 
-	matrix4x4<float> mvp = views[currentView].projectionMat * views[currentView].modelViewMat;
+	Mat4f mvp = views[currentView].projectionMat * views[currentView].modelViewMat;
 
 	views[currentView].clipPlanes[0] = Plane<float>( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );	// Right clipping plane
 	views[currentView].clipPlanes[1] = Plane<float>( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );	// Left clipping plane

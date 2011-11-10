@@ -166,6 +166,20 @@ T uPowerOfTwo(T i)
     }
     return ++i;
 }
+#ifdef WINDOWS
+class mutex
+{
+private:
+	HANDLE handle;
+public:
+	mutex();
+	~mutex();
+	bool lock(unsigned long timeout=0xffffffff);
+	void unlock();
+};
+extern inline void sleep(unsigned long milliseconds);
+#endif
+
 extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);
 extern unsigned __int16 uPowerOfTwo(unsigned __int16 i);
 extern unsigned __int32 uPowerOfTwo(unsigned __int32 i);
