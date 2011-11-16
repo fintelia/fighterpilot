@@ -1,5 +1,5 @@
 
-class bomb: public selfControlledObject
+class bomb: public object
 {
 public:
 	double launchTime;

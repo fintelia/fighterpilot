@@ -47,15 +47,15 @@ const int LEFT_BUTTON		= 0x201;
 const int MIDDLE_BUTTON		= 0x202;
 const int RIGHT_BUTTON		= 0x203;
 
-const int CONTROL_NONE		= 0x001;
-const int CONTROL_HUMAN		= 0x002;
-const int CONTROL_COMPUTER	= 0x004;
+const int PLAYER_NONE		= 0x001;
+const int PLAYER_HUMAN		= 0x002;
+const int PLAYER_COMPUTER	= 0x004;
 
 typedef int objectType;
 typedef int planeType;
 typedef int missileType;
 typedef int bombType;
-typedef int controlType;
+typedef int playerType;
 
 typedef int teamNum;
 typedef int inputCallbackType;
@@ -72,31 +72,31 @@ extern const double UPDATE_LENGTH;
 extern objectType objectTypeFromString(string s);
 extern string objectTypeString(objectType t);
 
-struct controlState
-{
-	union{
-		float climb;
-		float up;
-	};
-	union{
-		float dive;
-		float down;
-	};
-	union{
-		float accelerate;
-		float forward;
-	};
-	union{
-		float brake;
-		float reverse;
-	};
-	float	right;
-	float	left;
-	float	shoot1;
-	float	shoot2;
-	float	shoot3;
-	controlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(0), shoot2(0), shoot3(0) {}
-};
+//struct controlState
+//{
+//	union{
+//		float climb;
+//		float up;
+//	};
+//	union{
+//		float dive;
+//		float down;
+//	};
+//	union{
+//		float accelerate;
+//		float forward;
+//	};
+//	union{
+//		float brake;
+//		float reverse;
+//	};
+//	float	right;
+//	float	left;
+//	float	shoot1;
+//	float	shoot2;
+//	float	shoot3;
+//	controlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(0), shoot2(0), shoot3(0) {}
+//};
 
 struct Color
 {
@@ -190,3 +190,14 @@ extern __int16 uPowerOfTwo(__int16 i);
 extern __int32 uPowerOfTwo(__int32 i);
 extern __int64 uPowerOfTwo(__int64 i);
 
+template <class T, class U> inline
+T (max)(const T& a,const U& b)
+{
+	return (a > b) ? a : b;
+}
+
+template<class T,class U> inline
+T (min)(const T& a, const U& b)
+{
+	return (a < b) ? a : b;
+}

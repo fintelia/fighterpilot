@@ -336,6 +336,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 }
 void Terrain::renderTerrain(Vec3f eye) const
 {
+
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 
@@ -343,6 +344,11 @@ void Terrain::renderTerrain(Vec3f eye) const
 	glDisable(GL_DEPTH_TEST);
 	graphics->drawModel("sky dome",Vec3f(eye.x,0,eye.y),Quat4f());
 	glEnable(GL_DEPTH_TEST);
+	
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthMask(true);
+	//graphics->drawModel("terrain",Vec3f(0,0,0),Quat4f());
+	//return;
 
 	if(waterPlane)
 	{

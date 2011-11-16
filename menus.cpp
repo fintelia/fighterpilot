@@ -25,7 +25,7 @@ bool objectProperties::init(LevelFile::Object* obj)
 	textBoxes["y location"]	= new numericTextBox(sw/2-100,sh/2+25,100,floor(object->startloc.y+0.5),black);
 	textBoxes["z location"]	= new numericTextBox(sw/2-100,sh/2+65,100,floor(object->startloc.z+0.5),black);
 
-	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",(object->controlType & CONTROL_HUMAN)!=0,black);
+	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
 	checkBoxes["respawn"]	= new checkBox(sw/2+100,sh/2+80,"respawn when destroyed\n(comming soon)",false,black);
 
 	listBox* l = new listBox(sw/2+100,sh/2-15,100,"team " + lexical_cast<string>(object->team+1),black);
@@ -71,7 +71,7 @@ int objectProperties::update()
 			if(ptype == 3)	object->type = UAV;
 			if(ptype == 4)	object->type = B2;
 
-			object->controlType = checkBoxes["control"]->getChecked() ? CONTROL_HUMAN : CONTROL_COMPUTER;
+			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
 		}
 		catch(...)
 		{
@@ -116,10 +116,10 @@ bool inGame::keyDown(int vkey)
 	if(activeChoice>QUIT) activeChoice=RESUME;
 	if(((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME) || vkey==VK_PAUSE || vkey==VK_ESCAPE)
 	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
-		input->up(0x31);
-		input->up(VK_ESCAPE);
+		input.up(VK_SPACE);
+		input.up(VK_RETURN);
+		input.up(0x31);
+		input.up(VK_ESCAPE);
 		world.time.unpause();
 		done = true;
 	}
@@ -129,8 +129,8 @@ bool inGame::keyDown(int vkey)
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==QUIT)
 	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
+		input.up(VK_SPACE);
+		input.up(VK_RETURN);
 
 		world.time.unpause();
 
@@ -187,7 +187,7 @@ bool chooseMode::keyDown(int vkey)
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
 //#ifdef _DEBUG
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && input->getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
+	if((vkey==VK_SPACE || vkey==VK_RETURN) && input.getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
 	{
 		openFile* p = new openFile;
 		p->callback = (functor<void,popup*>*)this;
@@ -200,8 +200,8 @@ bool chooseMode::keyDown(int vkey)
 
 	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
 	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
+		input.up(VK_SPACE);
+		input.up(VK_RETURN);
 
 		std::shared_ptr<LevelFile> l(new LevelFile);
 		if(l->loadPNG("media/map file.lvl"))
@@ -212,8 +212,8 @@ bool chooseMode::keyDown(int vkey)
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
 	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
+		input.up(VK_SPACE);
+		input.up(VK_RETURN);
 
 		std::shared_ptr<LevelFile> l(new LevelFile);
 		if(l->loadPNG("media/map file.lvl"))
@@ -224,8 +224,8 @@ bool chooseMode::keyDown(int vkey)
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
 	{
-		input->up(VK_SPACE);
-		input->up(VK_RETURN);
+		input.up(VK_SPACE);
+		input.up(VK_RETURN);
 		menuManager.setMenu(new gui::levelEditor);
 
 		//modeManager.setMode(new modeMapBuilder);
@@ -242,8 +242,8 @@ void chooseMode::operator() (popup* p)
 	{
 		if(activeChoice==SINGLE_PLAYER)
 		{
-			input->up(VK_SPACE);
-			input->up(VK_RETURN);
+			input.up(VK_SPACE);
+			input.up(VK_RETURN);
 
 
 			std::shared_ptr<LevelFile> l(new LevelFile);
@@ -255,8 +255,8 @@ void chooseMode::operator() (popup* p)
 		}
 		else if(activeChoice==MULTIPLAYER)
 		{
-			input->up(VK_SPACE);
-			input->up(VK_RETURN);
+			input.up(VK_SPACE);
+			input.up(VK_RETURN);
 
 			std::shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadPNG(((openFile*)p)->getFile()))
@@ -292,7 +292,7 @@ bool chooseMap::keyDown(int vkey)
 
 	if(vkey==VK_ESCAPE)
 	{
-		input->up(VK_ESCAPE);
+		input.up(VK_ESCAPE);
 		menuManager.setMenu(new chooseMode);
 	}
 	if(vkey==VK_UP)		currentChoice--;

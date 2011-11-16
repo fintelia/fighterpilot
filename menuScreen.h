@@ -247,8 +247,8 @@ protected:
 
 	friend class manager;
 
-	void inputCallback(Input::callBack* callback);
-	bool issueInputCallback(Input::callBack* callback, element* e);
+	void inputCallback(InputManager::callBack* callback);
+	bool issueInputCallback(InputManager::callBack* callback, element* e);
 
 	elementContainer():focus(NULL){}
 };
@@ -397,7 +397,7 @@ public:
 	void render3D(unsigned int view);
 
 
-	void inputCallback(Input::callBack* callback);
+	void inputCallback(InputManager::callBack* callback);
 
 	void drawCursor(){mDrawCursor = true;}
 private:

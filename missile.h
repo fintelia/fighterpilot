@@ -1,5 +1,5 @@
 
-class missile: public selfControlledObject
+class missile: public object
 {
 public:
 	float life;//life in seconds

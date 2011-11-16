@@ -95,7 +95,7 @@ void manager::render()
 	}
 	if(mDrawCursor)
 	{
-		Vec2f cursorPos = input->getMousePos();
+		Vec2f cursorPos = input.getMousePos();
 		if(dataManager.assetLoaded("cursor"))
 			graphics->drawOverlay(Rect::XYWH(cursorPos.x,cursorPos.y,0.02,0.025),"cursor");
 		else
@@ -152,11 +152,11 @@ void manager::setMenu(screen* m)
 		m->init();
 }
 
-void manager::inputCallback(Input::callBack* callback)
+void manager::inputCallback(InputManager::callBack* callback)
 {
 	if(callback->type == KEY_STROKE)
 	{
-		Input::keyStroke* call = (Input::keyStroke*)callback;
+		InputManager::keyStroke* call = (InputManager::keyStroke*)callback;
 		if(!popups.empty())
 		{
 			int pSize = popups.size();
@@ -179,7 +179,7 @@ void manager::inputCallback(Input::callBack* callback)
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
-		Input::mouseClick* call = (Input::mouseClick*)callback;
+		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;
 
 		if(!popups.empty())
 		{
@@ -210,25 +210,25 @@ void manager::inputCallback(Input::callBack* callback)
 	}
 	else if(callback->type == MOUSE_SCROLL)
 	{
-		Input::mouseScroll* call = (Input::mouseScroll*)callback;
+		InputManager::mouseScroll* call = (InputManager::mouseScroll*)callback;
 		if(!popups.empty() && popups.back()->scroll(call->rotations)) return;
 		if(menu!=NULL && menu->scroll(call->rotations)) return;
 	}
 }
-bool elementContainer::issueInputCallback(Input::callBack* callback, element* e)
+bool elementContainer::issueInputCallback(InputManager::callBack* callback, element* e)
 {
 	if(e == nullptr)
 		return false;
 
 	if(callback->type == KEY_STROKE)
 	{
-		Input::keyStroke* call = (Input::keyStroke*)callback;
+		InputManager::keyStroke* call = (InputManager::keyStroke*)callback;
 		if(call->up)	return e->keyUp(call->vkey);
 		else			return e->keyDown(call->vkey);
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
-		Input::mouseClick* call = (Input::mouseClick*)callback;
+		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;
 
 		if(call->button == LEFT_BUTTON && call->down)
 		{
@@ -241,7 +241,7 @@ bool elementContainer::issueInputCallback(Input::callBack* callback, element* e)
 	}
 	return false;
 }
-void elementContainer::inputCallback(Input::callBack* callback)
+void elementContainer::inputCallback(InputManager::callBack* callback)
 {
 	if(callback->type == KEY_STROKE && focus != NULL)
 	{
@@ -250,7 +250,7 @@ void elementContainer::inputCallback(Input::callBack* callback)
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
-		Input::mouseClick* call = (Input::mouseClick*)callback;
+		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;
 
 
 	//	call->pos.x *= sh;
@@ -492,7 +492,7 @@ bool openFile::keyDown(int vkey)
 	{
 		file = "";
 		fileSelected();
-		input->up(VK_ESCAPE);//so the program will not quit
+		input.up(VK_ESCAPE);//so the program will not quit
 	}
 	else if(vkey == VK_BACK)
 	{
@@ -503,7 +503,7 @@ bool openFile::keyDown(int vkey)
 	{
 		char ascii = MapVirtualKey(vkey,2/*MAPVK_VK_TO_CHAR*/);
 
-		if(ascii != 0 && !input->getKey(VK_SHIFT))
+		if(ascii != 0 && !input.getKey(VK_SHIFT))
 			file  += tolower(ascii);
 		else if(ascii != 0)
 			file  += ascii;
@@ -626,7 +626,7 @@ void messageBox_c::render()
 
 	int slotNum=0;
 
-	Vec2f cursorPos = input->getMousePos();
+	Vec2f cursorPos = input.getMousePos();
 	for(auto i = options.begin(); i!=options.end();i++,slotNum++)
 	{
 		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
@@ -911,7 +911,7 @@ bool textBox::keyDown(int vkey)
 		}
 
 
-		else if(input->getKey(VK_SHIFT))
+		else if(input.getKey(VK_SHIFT))
 		{
 			if(0x41 <= vkey && 0x5a >= vkey)	addChar(vkey);
 			if(vkey == 0xba)					addChar(':');
@@ -1189,7 +1189,7 @@ void slider::render()
 {
 	if(clicking)
 	{
-		Vec2f cursorPos = input->getMousePos();
+		Vec2f cursorPos = input.getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
 	graphics->drawOverlay(Rect::XYXY(shape.x,0.5*shape.h+shape.y-11,shape.x+shape.w,0.5*shape.h+shape.y+11),"slider bar");
@@ -1227,7 +1227,7 @@ float slider::getValue()
 {
 	if(clicking)
 	{
-		Vec2f cursorPos = input->getMousePos();
+		Vec2f cursorPos = input.getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
 	return value;
@@ -1236,7 +1236,7 @@ void slider::setMinValue(float m)
 {
 	if(clicking)
 	{
-		Vec2f cursorPos = input->getMousePos();
+		Vec2f cursorPos = input.getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}
@@ -1248,7 +1248,7 @@ void slider::setMaxValue(float m)
 {
 	if(clicking)
 	{
-		Vec2f cursorPos = input->getMousePos();
+		Vec2f cursorPos = input.getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 		clicking = false;
 	}

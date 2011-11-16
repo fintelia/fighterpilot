@@ -136,7 +136,7 @@ void aaGun::initArmaments()
 	machineGun.coolDown		= machineGun.coolDownLeft	= 20.0;
 	machineGun.firing									= false;
 }
-aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):selfControlledObject(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
+aaGun::aaGun(Vec3f sPos, Quat4f sRot, objectType Type):object(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 	spawn();

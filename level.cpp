@@ -363,31 +363,22 @@ bool LevelFile::loadPNG(string filename)
 }
 void LevelFile::initializeWorld()
 {
+	players.resetPlayers();
+
 	for(int i=0; i<info->numObjects; i++)
 	{
 		if(objects[i].type & PLANE)
 		{
-			//nPlane* p = NULL;
-			//if(obj.controlType == CONTROL_HUMAN)
-			{
-				for(int n=0;n<NumPlayers;n++)
-				{
-					if(players[n].objectNum()==0)
-					{
-						world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type,&players[n]));
-						break;
-					}
-					else if(n == NumPlayers-1)
-					{
-						world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type));
-						break;
-					}
-				}
+			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < 2)
+			{	
+				auto id = world.newObject(new nPlane(objects[i].team, objects[i].startloc, objects[i].startRot, objects[i].type));
+				players.addHumanPlayer(id);
 			}
-			//else
-			//{
-			//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
-			//}
+			else
+			{
+				auto id = world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type));
+				players.addAIplayer(id);
+			}
 		}
 		else if(objects[i].type & AA_GUN)// can't be player controlled
 		{
@@ -825,27 +816,16 @@ void Level::initializeWorld()
 	{
 		if(i->type & PLANE)
 		{
-			//nPlane* p = NULL;
-			//if(obj.controlType == CONTROL_HUMAN)
-			{
-				for(int n=0;n<NumPlayers;n++)
-				{
-					if(players[n].objectNum()==0)
-					{
-						world.newObject(new nPlane(i->team,i->startloc,i->startRot,i->type,&players[n]));
-						break;
-					}
-					else if(n == NumPlayers-1)
-					{
-						world.newObject(new nPlane(i->team,i->startloc,i->startRot,i->type));
-						break;
-					}
-				}
+			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < 2)
+			{	
+				auto id = world.newObject(new nPlane(i->team, i->startloc, i->startRot, i->type));
+				players.addHumanPlayer(id);
 			}
-			//else
-			//{
-			//	p = new nPlane(obj.startloc,obj.startRot,obj.type);
-			//}
+			else
+			{
+				auto id = world.newObject(new nPlane(i->team, i->startloc, i->startRot, i->type));
+				players.addAIplayer(id);
+			}
 		}
 		else if(i->type & AA_GUN)// can't be player controlled
 		{

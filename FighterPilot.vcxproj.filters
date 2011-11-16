@@ -157,6 +157,9 @@
     <Filter Include="Source Files\ENGINE\sceneManager">
       <UniqueIdentifier>{9c56d5ad-3a5e-49d3-9fec-3764fe98f99f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ENGINE\controlManager">
+      <UniqueIdentifier>{273b9718-dd01-462a-847b-5bb7a354d35f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -300,6 +303,9 @@
     <ClCompile Include="sceneManager.cpp">
       <Filter>Source Files\ENGINE\sceneManager</Filter>
     </ClCompile>
+    <ClCompile Include="controlManager.cpp">
+      <Filter>Source Files\ENGINE\controlManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -419,6 +425,9 @@
     </ClInclude>
     <ClInclude Include="sceneManager.h">
       <Filter>Source Files\ENGINE\sceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="controlManager.h">
+      <Filter>Source Files\ENGINE\controlManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

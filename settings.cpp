@@ -1,6 +1,6 @@
 
 #include "game.h"
-void ObjectStats::load(string filename)
+void SettingsManager::load(string filename)
 {
 	string line;
 	ifstream fin(filename, ios::in);
@@ -117,6 +117,13 @@ void ObjectStats::load(string filename)
 	{
 		debugBreak();//could not open model data file
 		closingMessage("'modelData.txt' not found. Fighter-Pilot will now close.","Missing File");
+	}
+}
+void SettingsManager::load(const map<string,map<string,string>>& m)
+{
+	for(auto i = m.begin(); i != m.end(); i++)
+	{
+		categories[i->first].insert(i->second.begin(), i->second.end());
 	}
 }
 //void ObjectStats::loadModelData(char* filename)

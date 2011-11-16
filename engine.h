@@ -25,6 +25,8 @@
 	#define XINPUT
 	#define USING_XINPUT
 
+	#define NOMINMAX
+
 	typedef void* HANDLE;
 
 #elif defined __GNUG__
@@ -100,7 +102,9 @@ extern float fps;
 #include "time.h"
 #include "gameMath.h"
 #include "random.h"
+#include "settings.h"
 #include "fileManager.h"
+#include "controlManager.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
 #include "sceneManager.h"
@@ -110,8 +114,8 @@ extern float fps;
 #include "script.h"
 #include "imageloader.h"//should be replaced!!!
 #include "profiler.h"
-#include "player.h"
 #include "object.h"
+#include "player.h"
 #include "level.h"
 #include "terrain.h"
 #include "objectList.h"

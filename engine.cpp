@@ -14,20 +14,21 @@ float sAspect=((float)sw)/sh;																													//	//
 																																				//  //
 profiler Profiler;																																//	//
 																																				//	//
-Input *input=new Input;
-
-																																				//	//
-gui::manager& menuManager=gui::manager::getInstance();																							//	//
-DataManager& dataManager=DataManager::getInstance();																							//	//
-WorldManager& world=WorldManager::getInstance();																								//	//
-CollisionChecker& collisionCheck=CollisionChecker::getInstance();																				//	//
-GraphicsManager* graphics=OpenGLgraphics::getInstance();																						//	//
-FileManager& fileManager=FileManager::getInstance();
-SceneManager& sceneManager=SceneManager::getInstance();
+InputManager& input=InputManager::getInstance();																								//	//
+gui::manager& menuManager = gui::manager::getInstance();																						//	//
+DataManager& dataManager = DataManager::getInstance();																							//	//
+WorldManager& world = WorldManager::getInstance();																								//	//
+CollisionChecker& collisionCheck = CollisionChecker::getInstance();																				//	//
+GraphicsManager* graphics = OpenGLgraphics::getInstance();																						//	//
+FileManager& fileManager = FileManager::getInstance();																							//  //
+SceneManager& sceneManager = SceneManager::getInstance();																						//  //
+SettingsManager& settings = SettingsManager::getInstance();																						//  //
+//ControlManager& controlManager = ControlManager::getInstance();
+PlayerManager& players = PlayerManager::getInstance();
 bool done=false;//exits program																													//	//
 																																				//	//
 bool lowQuality;																																//	//
-humanControl players[NumPlayers];																												//	//
+//humanControl players[NumPlayers];																												//	//
 																																				//	//
 																																				//	//
 int frame=0,Time,timebase=0;																													//	//
@@ -108,7 +109,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		case WM_MBUTTONDOWN:
 		case WM_MBUTTONUP:
 		case WM_MOUSEWHEEL:
-			input->windowsInput(uMsg,wParam,lParam);
+			input.windowsInput(uMsg,wParam,lParam);
 			return 0;
 		case WM_ERASEBKGND:									// Check To See If Windows Is Trying To Erase The Background
 			return 0;										// either return 0 or 1, does not seem to be much of a difference...
@@ -130,7 +131,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		case WM_DEVICECHANGE:
 			if(wParam == 0x007) //DBT_DEVNODES_CHANGED
 			{
-				input->checkNewHardware();
+				input.checkNewHardware();
 				return 0;
 			}
 			break;
@@ -160,10 +161,12 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	}
 
 
-	auto f = fileManager.loadZipFile("test.zip");
-
+	auto f = fileManager.loadBmpFile("test.bmp");
+	
 
 	float nextUpdate=0;
+	float swapTime=0.0;
+	float time=0.0;
 	while(!done)
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
@@ -180,23 +183,29 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		}
 		else
 		{
-			float time = GetTime();
-			float waitTime=nextUpdate-time;
-
-
-			if(waitTime>1.0)
-				Sleep(waitTime-1);
-			while(time < nextUpdate)
-				time = GetTime();
-			nextUpdate=1000.0/MAX_FPS + time;
-
-
 			game->update();
 
-			if(/*hasContext &&*/ active)
+			if(active)
 			{
 				graphics->render();
+
+				///timing code
+				float waitTime = (nextUpdate - max(swapTime,0)) - GetTime();
+				if(waitTime>1.0)	sleep(waitTime-1);
+				do{
+					time = GetTime();
+				}while(time < nextUpdate - max(swapTime,0));		
+				nextUpdate = 1000.0/MAX_FPS + GetTime();
+				//end timing code
+
 				graphics->swapBuffers();
+
+				//more timing code:  
+				swapTime =  time - GetTime();
+			}
+			else
+			{
+				sleep(10);
 			}
 		}
 	}
