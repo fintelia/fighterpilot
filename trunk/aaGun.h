@@ -1,5 +1,5 @@
  
-class aaGun: public selfControlledObject
+class aaGun: public object
 {
 private:
 	double lastUpdateTime;

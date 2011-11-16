@@ -18,7 +18,7 @@
 //		}
 //	}
 //}
-missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):selfControlledObject(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), owner(Owner)
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):object(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), owner(Owner)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }

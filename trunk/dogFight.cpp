@@ -265,24 +265,18 @@ void dogFight::drawScene(int acplayer)
 	double time=world.time();
 	double interp = 1.0 - world.time.interpolate();
 
-	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
+	nPlane* p=(nPlane*)players[acplayer]->getObject();
 	if(!p)
 	{
 		return;
 	}
-	Vec3f e;
-	if(!players[acplayer].firstPersonView || p->controled || p->dead)
-	{
-		e = players[acplayer].thirdPerson.eye;
-		graphics->lookAt(players[acplayer].thirdPerson.eye, players[acplayer].thirdPerson.center, players[acplayer].thirdPerson.up);
-	}
-	else
-	{
-		e = players[acplayer].firstPerson.eye;
-		graphics->lookAt(players[acplayer].firstPerson.eye, players[acplayer].firstPerson.center, players[acplayer].firstPerson.up);
-	}
-	world.renderTerrain(e);
 
+	auto camera = players[acplayer]->getCamera(p->controled || p->dead);
+	Vec3f e = camera.eye;
+	graphics->lookAt(camera.eye, camera.center, camera.up);
+
+
+	world.renderTerrain(e);
 
 	glError();
 
@@ -323,8 +317,8 @@ void dogFight::checkCollisions()
 						((nPlane*)(*i).second.get())->loseHealth(25);
 						if((*i).second->dead)
 						{
-							if(bulletRef[l].owner==players[0].objectNum() && players[0].active()) players[0].addKill();
-							if(bulletRef[l].owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
+							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
 						}
 						bulletRef.erase(bulletRef.begin()+l);
 						l--;
@@ -343,8 +337,8 @@ void dogFight::checkCollisions()
 					((nPlane*)(*i).second.get())->loseHealth(105);
 					if((*i).second->dead)
 					{
-						if(owner==players[0].objectNum() && players[0].active()) players[0].addKill();
-						if(owner==players[1].objectNum() && players[1].active()) players[1].addKill();
+						if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
+						if(players.numPlayers() >= 2 && owner==players[1]->objectNum()) players[1]->addKill();
 					}
 					l->second->awaitingDelete = true;
 				}

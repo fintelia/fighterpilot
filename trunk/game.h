@@ -10,9 +10,8 @@
 #include "bomb.h"
 #include "plane.h"
 #include "aaGun.h"
-#include "settings.h"
 
-extern humanControl players[NumPlayers];
+//extern humanControl players[NumPlayers];
 
 #include "menus.h"
 

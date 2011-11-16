@@ -10,22 +10,22 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 }
 int campaign::update()
 {
-	if(input->getKey(VK_F1))
+	if(input.getKey(VK_F1))
 	{
-		players[0].toggleFirstPerson();
-		input->up(VK_F1);
+		players[0]->toggleFirstPerson();
+		input.up(VK_F1);
 	}
-	if(input->getKey(VK_ESCAPE))
+	if(input.getKey(VK_ESCAPE))
 	{
 		menuManager.setPopup(new gui::inGame);
-		input->up(VK_ESCAPE);
+		input.up(VK_ESCAPE);
 	}
 	checkCollisions();
 
 #ifdef _DEBUG
-	if(input->getKey(0x54))
+	if(input.getKey(0x54))
 	{
-		input->up(0x54);
+		input.up(0x54);
 		if(world.time.getSpeed() > 0.5)
 		{
 			world.time.changeSpeed(0.1, 5.0);
@@ -35,9 +35,9 @@ int campaign::update()
 			world.time.changeSpeed(1.0, 5.0);
 		}
 	}
-	if(input->getKey(0x4c))
+	if(input.getKey(0x4c))
 	{
-		((nPlane*)world[players[0].objectNum()].get())->loseHealth(world.time.length()/10.0);
+		((nPlane*)players[0]->getObject())->loseHealth(world.time.length()/10.0);
 	}
 #endif
 
@@ -71,7 +71,7 @@ int campaign::update()
 		auto planes = world(PLANE);
 		for(auto i = planes.begin(); i != planes.end();i++)
 		{
-			if((*i).second->team != world[players[0].objectNum()]->team && !(*i).second->dead)
+			if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
 				enemies_left++;
 		}
 
@@ -80,7 +80,7 @@ int campaign::update()
 			levelup=true;
 			countdown=1000;
 		}
-		else if(world[players[0].objectNum()]->dead)
+		else if(players[0]->getObject()->dead)
 		{
 			restart=true;
 			countdown=3000;
@@ -96,7 +96,7 @@ int campaign::update()
 	//	//need to add code to restart the level
 	//	return 30;
 	//}
-	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input->getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
+	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input.getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
 	//{
 	//	levelup=true;//newLevel(level+1);
 	//	countdown=1000;
@@ -105,9 +105,9 @@ int campaign::update()
 }
 void campaign::render()
 {
-	nPlane* p = (nPlane*)world[players[0].objectNum()].get();
+	nPlane* p = ((nPlane*)players[0]->getObject());
 	
-	if(players[0].firstPersonView && !p->controled && !p->dead)
+	if(players[0]->firstPersonView && !p->controled && !p->dead)
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
 	//	dataManager.bind("ortho");

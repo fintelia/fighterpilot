@@ -1,7 +1,7 @@
 
 #include "game.h"
 
-bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):selfControlledObject(sPos, sRot, Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
+bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):object(sPos, sRot, Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }

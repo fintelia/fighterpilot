@@ -13,9 +13,15 @@ const int SNOW		=3;
 
 const int ROCK		=0;
 const int SAND		=1;
-class ObjectStats
+class SettingsManager
 {
+	SettingsManager(){}
 public:
+	static SettingsManager& getInstance()
+	{
+		static SettingsManager* pInstance = new SettingsManager();
+		return *pInstance;
+	}
 	//string MAP_FILE;
 	//string LEVEL_NAME;
 	//int KILL_PERCENT_NEEDED;
@@ -31,6 +37,7 @@ public:
 	//int SEA_FLOOR_TYPE;
 	//float HEIGHT_RANGE;
 	//float SEA_LEVEL;
+	map<string,map<string,string>> categories;
 
 	struct planeStat
 	{
@@ -56,6 +63,25 @@ public:
 
 	//void loadMap(char *filename);
 //	void loadModelData(char* filename);
+	template <class T> T get (string category, string name)
+	{
+		try{
+			if(categories.find(category)!=categories.end() && categories[category].find(name)!=categories[category].end())
+				return lexical_cast<T>(categories[category][name]);
+			else
+				return T();
+		}catch(...){
+			return T();
+		}
+	}
+	string operator() (string category, string name)
+	{
+		if(categories.find(category)!=categories.end() && categories[category].find(name)!=categories[category].end())
+			return categories[category][name];
+		else
+			return "";
+	}
 	void load(string filename);
+	void load(const map<string,map<string,string>>& m);
 };
-extern ObjectStats settings;
+extern SettingsManager& settings;

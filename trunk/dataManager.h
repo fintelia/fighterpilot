@@ -20,7 +20,7 @@ private:
 	{
 		//int numVertices;
 		//std::shared_ptr<texturedLitVertex3D> vertices;
-		unsigned int VBO_id;
+//		unsigned int VBO_id;
 
 		int numMaterials;
 		struct material{

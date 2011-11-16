@@ -2,11 +2,44 @@
 #include "engine.h"
 #include <Windows.h>
 #include <Xinput.h>
-void Input::sendCallbacks(callBack* c)
+
+InputManager::xboxControllerState::xboxControllerState():state(new XINPUT_STATE),connected(false),deadZone(0.15)
+{
+
+}
+InputManager::xboxControllerState::~xboxControllerState()
+{
+	delete state;
+}
+
+bool InputManager::xboxControllerState::getButton(int b) const
+{
+	return (state->Gamepad.wButtons & b) != 0;
+}
+float InputManager::xboxControllerState::getAxis(int a) const
+{
+	float f = 0.0;
+	if(a == XINPUT_LEFT_TRIGGER)		f = 1.0/255 * state->Gamepad.bLeftTrigger;
+	if(a == XINPUT_RIGHT_TRIGGER)		f = 1.0/255 * state->Gamepad.bRightTrigger;
+	if(a == XINPUT_THUMB_LX)			f = 1.0/32768 * state->Gamepad.sThumbLX;
+	if(a == XINPUT_THUMB_LY)			f = 1.0/32768 * state->Gamepad.sThumbLY;
+	if(a == XINPUT_THUMB_RX)			f = 1.0/32768 * state->Gamepad.sThumbRX;
+	if(a == XINPUT_THUMB_RY)			f = 1.0/32768 * state->Gamepad.sThumbRY;
+
+	debugAssert(deadZone > -1.0 && deadZone < 1.0);
+
+	if(f < -deadZone)
+		return (f + deadZone) / (1.0 - deadZone);
+	else if(f < deadZone)
+		return 0.0;
+	else
+		return (f - deadZone) / (1.0 - deadZone);
+}
+void InputManager::sendCallbacks(callBack* c)
 {
 	menuManager.inputCallback(c);
 }
-Input::Input(): tPresses(0)
+InputManager::InputManager(): tPresses(0)
 {
 
 	for(int i=0; i<256; i++)
@@ -21,14 +54,14 @@ Input::Input(): tPresses(0)
 	}
 	update();
 }
-Input::~Input()
+InputManager::~InputManager()
 {
 	for(int i=0; i<4; i++)
 	{
 		delete xboxControllers[i].state;
 	}
 }
-void Input::down(int k)
+void InputManager::down(int k)
 {
 	if(k>=256 || k<0) return;
 	inputMutex.lock();
@@ -39,24 +72,24 @@ void Input::down(int k)
 
 
 }
-void Input::up(int k)
+void InputManager::up(int k)
 {
 	if(k>=256 || k<0) return;
 	inputMutex.lock();
 	keys[k]=false;
 	inputMutex.unlock();
 }
-bool Input::getKey(int key)
+bool InputManager::getKey(int key)
 {
 	if(key>=256 || key<0) return false;
 	return keys[key];
 }
-const Input::xboxControllerState& Input::getXboxController(unsigned char controllerNum)
+const InputManager::xboxControllerState& InputManager::getXboxController(unsigned char controllerNum)
 {
 	return xboxControllers[clamp(controllerNum,0,3)];
 }
 
-void Input::update()
+void InputManager::update()
 {
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
@@ -74,6 +107,10 @@ void Input::update()
 		if(xboxControllers[i].connected)
 		{
 			xboxControllersConnected[i] = XInputGetState(i, &newXboxControllerStates[i]) == ERROR_SUCCESS;
+		}
+		else
+		{
+			xboxControllersConnected[i] = false;
 		}
 	}
 #endif
@@ -99,13 +136,13 @@ void Input::update()
 
 	inputMutex.unlock();
 }
-const Input::mouseButtonState& Input::getMouseState(mouseButton m)
+const InputManager::mouseButtonState& InputManager::getMouseState(mouseButton m)
 {
 	if(m == LEFT_BUTTON)		return leftMouse;
 	else if(m == MIDDLE_BUTTON) return middleMouse;
 	else						return rightMouse;
 }
-void Input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
+void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if(uMsg == WM_KEYDOWN)
 	{
@@ -174,7 +211,7 @@ void Input::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
 	}
 }
-float Input::operator() (int key)
+float InputManager::operator() (int key)
 {
 	float i=0;
 	inputMutex.lock();
@@ -219,7 +256,7 @@ float Input::operator() (int key)
 		return min(0.0,i/(1.0-deadZone) + deadZone);
 	}
 }
-void Input::checkNewHardware()
+void InputManager::checkNewHardware()
 {
 	for(int i=0; i<4; i++)
 	{

@@ -18,9 +18,9 @@ public:
 		void update(const Vec3f& pos,bool render=true);
 		void update(const Vec3f& pos, const Quat4f& rot,bool render=true);
 
-		inline bool renderFlag()	{return flags & 0x01;}
-		inline bool deleteFlag()	{return flags & 0x02;}
-		inline bool temperaryFlag()	{return flags & 0x04;}
+		inline bool renderFlag()	{return (flags & 0x01) != 0;}
+		inline bool deleteFlag()	{return (flags & 0x02) != 0;}
+		inline bool temperaryFlag()	{return (flags & 0x04) != 0;}
 
 		inline void setRenderFlag(bool b);
 		inline void setDeleteFlag(bool b);

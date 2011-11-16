@@ -6,6 +6,7 @@ struct particle
 {
 	Vec3f pos;
 	Vec3f vel;
+	Angle ang;
 	float friction;
 	float size;
 	float r, g, b, a;

@@ -98,20 +98,16 @@ public:
 	virtual void drawText(string text, Rect rect){drawText(text, rect, "default font");}
 	virtual Vec2f textSize(string text){return textSize(text, "default font");}
 
-
-
-	virtual bool init()=0;
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
-	virtual bool createWindow(string title, Vec2i screenResolution)=0;
-	virtual bool changeResolution(Vec2f resolution)=0;
+	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)=0;
+	virtual bool changeResolution(Vec2f resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
 	virtual void bindRenderTarget(RenderTarget t)=0;
 	virtual void renderFBO(RenderTarget src)=0;
-
 
 	virtual void drawLine(Vec3f start, Vec3f end)=0;
 	virtual void drawSphere(Vec3f position, float radius)=0;
@@ -178,10 +174,14 @@ protected:
 
 	OpenGLgraphics();
 	~OpenGLgraphics();
+
+	bool initFBOs(unsigned int maxSamples);
+	void destroyFBOs();
 public:
-	bool createWindow(string title, Vec2i screenResolution);
-	bool changeResolution(Vec2f resolution);
-	bool init();
+	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
+	bool changeResolution(Vec2f resolution, unsigned int maxSamples);
+
+
 
 	void resize(int w, int h);
 	void setGamma(float gamma);

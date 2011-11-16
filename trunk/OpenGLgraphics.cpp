@@ -281,45 +281,15 @@ void OpenGLgraphics::renderFBO(RenderTarget src)
 	drawOverlay(Rect::XYXY(-1,-1,1,1));
 	dataManager.bindTex(0);
 }
-bool OpenGLgraphics::init()
+bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
-	if(!GLEE_VERSION_2_0)
-	{
-		string s = string("Your version of OpenGL must be at least 2.0\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
-		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
-		return false;
-	}
-	else if(!GLEE_EXT_framebuffer_blit)
-	{
-		string s = string("Your graphics card must support GL_EXT_framebuffer_blit\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
-		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
-		return false;
-	}
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_COLOR_MATERIAL);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_BLEND);
-	glEnable(GL_MULTISAMPLE);
-
-	glShadeModel(GL_SMOOTH);
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
-
-	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
 
 	//FRAME BUFFER OBJECTS
 
 	glGenFramebuffersEXT(2, FBOs);
 
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
-	samples = samples >= 8 ? 8 : samples;
+	samples = samples >= maxSamples ? maxSamples : samples;
 	multisampling = GLEE_EXT_framebuffer_multisample && samples > 1;
 	for(int i=0;i<2;i++)
 	{
@@ -383,6 +353,20 @@ bool OpenGLgraphics::init()
 	}
 
 	return true;
+}
+void OpenGLgraphics::destroyFBOs()
+{
+	if(renderTextures[0] != 0)		glDeleteTextures(1, renderTextures);
+	if(renderTextures[1] != 0)		glDeleteTextures(1, renderTextures+1);
+
+	if(depthTextures[0] != 0)		glDeleteTextures(1, depthTextures);
+	if(depthTextures[1] != 0)		glDeleteTextures(1, depthTextures+1);
+
+	if(colorRenderBuffers != 0)		glDeleteRenderbuffers(1, &colorRenderBuffers);
+	if(depthRenderBuffers != 0)		glDeleteRenderbuffers(1, &depthRenderBuffers);
+
+	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
+	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -510,7 +494,7 @@ void OpenGLgraphics::render()
 	glClearColor(0.0,0.0,0.0,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	dataManager.bind("gamma shader");
-	dataManager.setUniform1f("gamma",2.2);
+	dataManager.setUniform1f("gamma",currentGamma);
 	dataManager.setUniform1i("tex",0);
 	renderFBO(FBO_1);
 	dataManager.unbindShader();
@@ -562,18 +546,7 @@ void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 }
 void OpenGLgraphics::destroyWindow()
 {
-	if(renderTextures[0] != 0)		glDeleteTextures(1, renderTextures);
-	if(renderTextures[1] != 0)		glDeleteTextures(1, renderTextures+1);
-
-	if(depthTextures[0] != 0)		glDeleteTextures(1, depthTextures);
-	if(depthTextures[1] != 0)		glDeleteTextures(1, depthTextures+1);
-
-	if(colorRenderBuffers != 0)		glDeleteRenderbuffers(1, &colorRenderBuffers);
-	if(depthRenderBuffers != 0)		glDeleteRenderbuffers(1, &depthRenderBuffers);
-
-	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
-	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
-
+	destroyFBOs();
 
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
 
@@ -614,6 +587,7 @@ void OpenGLgraphics::destroyWindow()
 }
 void OpenGLgraphics::setGamma(float gamma)
 {
+	currentGamma = gamma;
 	/*if(hDC == NULL)
 		return;
 
@@ -635,7 +609,7 @@ void OpenGLgraphics::setGamma(float gamma)
 		assert(false);*/
 }
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution)
+bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
 {
 	static bool arbMultisampleSupported=false;
 	static int arbMultisampleFormat=0;
@@ -806,49 +780,49 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution)
 		return false;								// Return false
 	}
 
-//	if(!arbMultisampleSupported && checkMultisample && wglChoosePixelFormatARB)
-//	{
-//		int pixelFormat;
-//		UINT numFormats;
-//		float fAttributes[] = {0,0};
-//		int iAttributes[] = {
-//			WGL_SAMPLES_ARB,			16,					// Check For 16x Multisampling
-//			WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
-//			WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
-//			WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
-//			//WGL_PIXEL_TYPE_ARB,		WGL_TYPE_RGBA_ARB,
-//			WGL_COLOR_BITS_ARB,			24,
-//			WGL_ALPHA_BITS_ARB,			8,
-//			WGL_DEPTH_BITS_ARB,			24,
-////			WGL_STENCIL_BITS_ARB,		0,
-//			WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
-//			WGL_SAMPLE_BUFFERS_ARB,		GL_TRUE,
-//			0,0};
-//
-//		while(iAttributes[1] > 1)
-//		{
-//			if (wglChoosePixelFormatARB(context->hDC,iAttributes,fAttributes,1,&pixelFormat,&numFormats) && numFormats >= 1)
-//			{
-//				arbMultisampleSupported = true;
-//				arbMultisampleFormat	= pixelFormat;
-//				destroyWindow();
-//				return graphics->createWindow(title, screenResolution, false);
-//			}
-//			iAttributes[1] >>= 1;
-//		}
-//	}
+	if(!GLEE_VERSION_2_0)
+	{
+		destroyWindow();
+		string s = string("Your version of OpenGL must be at least 2.0\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
+		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+		return false;
+	}
+	else if(!GLEE_EXT_framebuffer_blit)
+	{
+		destroyWindow();
+		string s = string("Your graphics card must support GL_EXT_framebuffer_blit\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
+		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+		return false;
+	}
 
 	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
 	SetForegroundWindow(context->hWnd);				// Slightly Higher Priority
 	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
 	graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
-	//setGamma(0.0);
 
-	if (!graphics->init())							// Initialize Our Newly Created GL Window
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_NORMALIZE);
+	glEnable(GL_BLEND);
+	glEnable(GL_MULTISAMPLE);
+
+	glShadeModel(GL_SMOOTH);
+	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
+
+	GLfloat lightPos0[] = {-0.5f, 0.8f, 0.1f, 0.0f};
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+
+
+	if (!initFBOs(maxSamples))
 	{
-		destroyWindow();					// Reset The Display
-		MessageBox(NULL,L"Initialization Failed.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
-		return false;								// Return false
+		destroyWindow();
+		return false;
 	}
 
 	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
@@ -856,7 +830,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution)
 
 	return true;									// Success
 }
-bool OpenGLgraphics::changeResolution(Vec2f resolution)
+bool OpenGLgraphics::changeResolution(Vec2f resolution, unsigned int maxSamples)
 {
 	DEVMODE dmScreenSettings;										// Device Mode
 	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
@@ -870,6 +844,8 @@ bool OpenGLgraphics::changeResolution(Vec2f resolution)
 	{
 		SetWindowPos(context->hWnd,0,0,0,resolution.x,resolution.y,0);
 		resize(resolution.x,resolution.y);
+		destroyFBOs();
+		initFBOs(maxSamples);
 		return true;
 	}
 	return false;

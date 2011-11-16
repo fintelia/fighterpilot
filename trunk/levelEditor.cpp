@@ -251,7 +251,7 @@ int levelEditor::update()
 	lastTab = newTab;
 
 
-	//if(input->getKey(0x52) && !popupActive())//r key
+	//if(input.getKey(0x52) && !popupActive())//r key
 	//	rot+=value/1000;
 	POINT p;
 	GetCursorPos(&p);
@@ -262,7 +262,7 @@ int levelEditor::update()
 		if(p.y < 2)		orthoCenter += Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
 		if(p.y > sh-2)	orthoCenter -= Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
 	}
-	else if(!input->getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
+	else if(!input.getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
 	{
 		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
 		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
@@ -278,7 +278,7 @@ void levelEditor::render()
 }
 bool levelEditor::mouse(mouseButton button, bool down)
 {
-	Vec2f p = down ? input->getMouseState(button).downPos : input->getMouseState(button).upPos;
+	Vec2f p = down ? input.getMouseState(button).downPos : input.getMouseState(button).upPos;
 
 	if(button == LEFT_BUTTON)
 	{
@@ -287,7 +287,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			if(newObjectType != 0)
 			{
 				static int teamNum=0;
-				addObject(newObjectType, teamNum, teamNum<=1 ? CONTROL_HUMAN : CONTROL_COMPUTER, p.x, p.y);
+				addObject(newObjectType, teamNum, teamNum<=1 ? PLAYER_HUMAN : PLAYER_COMPUTER, p.x, p.y);
 				newObjectType = 0;
 				teamNum++;
 				return true;
@@ -339,7 +339,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 	{
 		if(!down)
 		{
-			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
+			Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
 			if(oldP == p)
 				return true;
 
@@ -713,7 +713,7 @@ void levelEditor::smooth(int a)
 }
 void levelEditor::addObject(int type, int team, int controlType, float x, float y)//in screen coordinates
 {
-	Vec2f cursorPos = input->getMousePos();
+	Vec2f cursorPos = input.getMousePos();
 	Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
 	Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 	Vec3d dir = P0-P1;
@@ -777,10 +777,10 @@ void levelEditor::render3D(unsigned int view)
 
 		Vec3f e,c,u;
 		c = center;
-		if(input->getMouseState(MIDDLE_BUTTON).down)
+		if(input.getMouseState(MIDDLE_BUTTON).down)
 		{
-			Vec2f oldP = input->getMouseState(MIDDLE_BUTTON).downPos;
-			Vec2f newP = input->getMousePos();
+			Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
+			Vec2f newP = input.getMousePos();
 
 
 			Vec3f xAxis = rot * Vec3f(-1,0,0);
@@ -826,7 +826,7 @@ void levelEditor::render3D(unsigned int view)
 		{
 			////////////////////////////////draw object//////////////////////////////////
 
-			Vec2f cursorPos = input->getMousePos();
+			Vec2f cursorPos = input.getMousePos();
 			Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
 			Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 			Vec3d dir = P0-P1;

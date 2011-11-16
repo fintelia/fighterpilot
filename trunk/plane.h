@@ -5,7 +5,7 @@ using namespace std;
 void spawn();
 void die();
 
-class nPlane: public controlledObject
+class nPlane: public object
 {
 private:
 	double lastUpdateTime;
@@ -43,6 +43,11 @@ public:
 		Vec3f velocity;
 		//Quat4f rot;
 	};
+	struct objectCamera //for interpolating between frames
+	{
+		camera currentFrame;
+		camera lastFrame;
+	};
 //////////////flight specs/////////
 	float speed;
 	Angle roll;
@@ -70,8 +75,22 @@ public:
 
 ///////////camera view/////////////
 	vector<cameraState> cameraStates;
-	objectCamera camera;
+	objectCamera observer;
 
+/////////////control///////////////
+	struct ControlState
+	{
+		float climb;
+		float dive;
+		float accelerate;
+		float brake;
+		float right;
+		float left;
+		bool shoot1;
+		bool shoot2;
+		bool shoot3;
+		ControlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(false), shoot2(false), shoot3(false) {}
+	}controls;
 ////////////methods////////////////
 	void findTargetVector();
 	void shootMissile();
@@ -88,7 +107,7 @@ public:
 	void updateSimulation(double time, double ms);
 	void updateFrame(float interpolation) const;
 
-	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c);
+//	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 
 private:

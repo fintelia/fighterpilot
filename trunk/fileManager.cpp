@@ -443,6 +443,24 @@ shared_ptr<FileManager::zipFile> FileManager::loadZipFile(string filename, bool 
 	}
 	return f;
 }
+shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, bool asinc)
+{
+	std::shared_ptr<textureFile> f(new bmpFile(filename));
+
+	if(asinc)
+	{
+		fileQueueMutex.lock();
+		fileQueue.push(f);
+		fileQueueMutex.unlock();		
+	}
+	else
+	{
+		fileContents data = loadFileContents(f->filename);
+		parseBmpFile(f, data);
+		delete[] data.contents;
+	}
+	return f;
+}
 shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileContents data)
 {
 	string ext = extension(filename);
@@ -462,6 +480,12 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 	{
 		shared_ptr<zipFile> f(new zipFile(filename));
 		parseZipFile(f, data);
+		return f;
+	}
+	else if(ext == ".bmp")
+	{
+		shared_ptr<textureFile> f(new bmpFile(filename));
+		parseBmpFile(f, data);
 		return f;
 	}
 	else
@@ -708,6 +732,95 @@ void FileManager::parseZipFile(shared_ptr<zipFile> f, fileContents data)
 		f->completeLoad(false);
 	}
 }
+void FileManager::parseBmpFile(shared_ptr<textureFile> f, fileContents data)
+{
+	struct Header
+	{
+		unsigned short	type;
+		unsigned long	size;
+		unsigned short	reserved1;
+		unsigned short	reserved2;
+		unsigned long	offBits;
+	}header;
+	struct InfoHeader
+	{
+		unsigned long	size;
+		long			width;
+		long			height;
+		unsigned short	planes;
+		unsigned short	bitCount;
+		unsigned long	compression;
+		unsigned long	sizeImage;
+		long			xPelsPerMeter;
+		long			yPelsPerMeter;
+		unsigned long	clrUsed;
+		unsigned long	clrImportant;
+	}infoHeader;
+
+
+
+	if(data.contents != nullptr && data.size > sizeof(header) + sizeof(infoHeader))
+	{
+		unsigned int position=0;
+
+		header.type			= readAs<unsigned short>(data.contents+position);	position +=2;
+		header.size			= readAs<unsigned long>(data.contents+position);	position +=4;
+		header.reserved1	= readAs<unsigned short>(data.contents+position);	position +=2;
+		header.reserved2	= readAs<unsigned short>(data.contents+position);	position +=2;
+		header.offBits		= readAs<unsigned long>(data.contents+position);	position +=4;
+
+		infoHeader.size				= readAs<unsigned long>(data.contents+position);	position +=4;
+		infoHeader.width			= readAs<long>(data.contents+position);				position +=4;
+		infoHeader.height			= readAs<long>(data.contents+position);				position +=4;
+		infoHeader.planes			= readAs<unsigned short>(data.contents+position);	position +=2;
+		infoHeader.bitCount			= readAs<unsigned short>(data.contents+position);	position +=2;
+		infoHeader.compression		= readAs<unsigned long>(data.contents+position);	position +=4;
+		infoHeader.sizeImage		= readAs<unsigned long>(data.contents+position);	position +=4;
+		infoHeader.xPelsPerMeter	= readAs<long>(data.contents+position);				position +=4;
+		infoHeader.yPelsPerMeter	= readAs<long>(data.contents+position);				position +=4;
+		infoHeader.clrUsed			= readAs<unsigned long>(data.contents+position);	position +=4;
+		infoHeader.clrImportant		= readAs<unsigned long>(data.contents+position);	position +=4;
+
+		if(	infoHeader.width > 0 && 
+			infoHeader.height > 0 &&
+			(infoHeader.bitCount == 8 || infoHeader.bitCount == 24 || infoHeader.bitCount == 32)
+			/*&& data.size >= position + ???? */)
+		{
+			f->width = infoHeader.width;
+			f->height = infoHeader.height;
+
+			if(infoHeader.bitCount == 8)		f->channels = 1;
+			else if(infoHeader.bitCount == 24)	f->channels = 3;
+			else if(infoHeader.bitCount == 32)	f->channels = 4;
+
+			f->contents = new unsigned char[f->width * f->height * f->channels];
+
+			int rowExtra = 3 - (f->width*f->channels - 1) % 4;
+
+			for(long y = 0; y < f->height; y++)
+			{
+				for(long x = 0; x < f->width; x++)
+				{
+					for(char c = 0; c < f->channels; c++)
+					{
+						f->contents[f->channels * ((f->width) * y + x) + c] = readAs<unsigned char>(data.contents + position);
+						position++;
+					}
+				}
+				position += rowExtra;
+			}
+			f->completeLoad(true);
+		}
+		else
+		{
+			f->completeLoad(false);
+		}
+	}
+	else
+	{
+		f->completeLoad(false);
+	}
+}
 FileManager::fileContents FileManager::loadFileContents(string filename)
 {
 	fileContents f;
@@ -754,6 +867,7 @@ void FileManager::workerThread()
 			else if(f->type == file::TEXT)	parseTextFile(dynamic_pointer_cast<textFile>(f),data);
 			else if(f->type == file::INI)	parseIniFile(dynamic_pointer_cast<iniFile>(f),data);
 			else if(f->type == file::ZIP)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
+			else if(f->type == file::TEXTURE && f->format == file::BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
 #ifdef _DEBUG
 			else __debugbreak();
 #endif

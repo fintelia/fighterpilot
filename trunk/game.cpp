@@ -1,7 +1,7 @@
 
 #include "game.h"
 #include <Windows.h>
-ObjectStats settings;
+//ObjectStats settings;
 Game* game = new Game;
 objId bullets;
 
@@ -18,29 +18,41 @@ bool Game::init()
 		return false;
 	}
 
-	// Ask The User Which Screen Mode They Prefer
-	if (MessageBox(NULL,L"Would you like to run with high graphics settings?", L"Start High Quality?",MB_YESNO|MB_ICONQUESTION)==IDNO)
-	{
-		lowQuality=true;
-	}
+	auto s = fileManager.loadIniFile("media/settings.ini");
+	settings.load(s->bindings);
 
-	Vec2i r;
-	if(!lowQuality)
-	{
-		r.x = GetSystemMetrics(SM_CXSCREEN);
-		r.y = GetSystemMetrics(SM_CYSCREEN);
-	}
-	else
-	{
-		r.x = 800;
-		r.y = 600;
-	}
+#ifdef _DEBUG
+	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
+#endif
 
+	Vec2i r, rWanted;
+	r.x = GetSystemMetrics(SM_CXSCREEN);
+	r.y = GetSystemMetrics(SM_CYSCREEN);
+	rWanted.x = settings.get<int>("graphics","resolutionX");
+	rWanted.y = settings.get<int>("graphics","resolutionY");
+
+	DEVMODE d;
+	d.dmSize = sizeof(d);
+	d.dmDriverExtra = 0;
+	int i=0;
+	while(EnumDisplaySettings(NULL, i++, &d) != 0 || (rWanted.x != 0 && rWanted.y != 0))
+	{
+		if(d.dmPelsWidth == rWanted.x && d.dmPelsHeight == rWanted.y)
+		{
+			r = rWanted;
+			break;
+		}
+	}
+	float gamma = settings.get<float>("graphics","gamma");
+	if(gamma > 0.5 && gamma < 5.0)
+		graphics->setGamma(gamma);
+
+	unsigned int maxSamples = settings.get<unsigned int>("graphics","samples");
 
 	// Create Our OpenGL Window
-	if (!graphics->createWindow("Fighter Pilot",r))
+	if (!graphics->createWindow("Fighter Pilot",r,maxSamples))
 	{
-		return false;									// Quit If Window Was Not Created
+		return false;
 	}
 	//if(wglSwapIntervalEXT)
 	//	wglSwapIntervalEXT(0);//turn on/off vsync (0 = off and 1 = on)
@@ -49,6 +61,10 @@ bool Game::init()
 	srand ((unsigned int)time(NULL));
 
 	menuManager.setMenu(new gui::loading);
+
+//	controlManager.addController(shared_ptr<controller>(new controller(0)));
+//	controlManager.addController(shared_ptr<controller>(new controller(1)));
+
 	return true;
 }
 
@@ -67,16 +83,19 @@ void Game::update()
 	{
 		world.time.nextUpdate();
 
+		input.update();
+		players.update();
+
 		world.simulationUpdate();
 		particleManager.update();
 
-		input->update();
+
 	}
 	menuManager.update();
 	world.frameUpdate();
 
 	world.time.nextFrame();
 
-//	input->update();		//takes 2-11 ms
+//	input.update();		//takes 2-11 ms
 //	menuManager.update();	//takes almost no time
 }

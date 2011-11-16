@@ -318,6 +318,8 @@ void emitter::update()
 void emitter::prepareRender(Vec3f up, Vec3f right)
 {
 	int pNum,n;
+	float sAng, cAng;
+	Vec3f r, u;
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
 		if(particles[pNum].endTime > world.time())
@@ -331,10 +333,16 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 
 				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
 			}
-			vertices[vNum*4 + 0].position = particles[pNum].pos + up * particles[pNum].size + right * particles[pNum].size;
-			vertices[vNum*4 + 1].position = particles[pNum].pos + up * particles[pNum].size - right * particles[pNum].size;
-			vertices[vNum*4 + 2].position = particles[pNum].pos - up * particles[pNum].size - right * particles[pNum].size;
-			vertices[vNum*4 + 3].position = particles[pNum].pos - up * particles[pNum].size + right * particles[pNum].size;
+			sAng = sin(particles[pNum].ang);
+			cAng = cos(particles[pNum].ang);
+			u = -right * sAng + up * cAng;
+			r = right * cAng + up * sAng;
+
+
+			vertices[vNum*4 + 0].position = particles[pNum].pos + u * particles[pNum].size + r * particles[pNum].size;
+			vertices[vNum*4 + 1].position = particles[pNum].pos + u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 2].position = particles[pNum].pos - u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 3].position = particles[pNum].pos - u * particles[pNum].size + r * particles[pNum].size;
 
 			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
 			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
@@ -407,14 +415,15 @@ void manager::render()
 {
 	Vec3f up, right;
 
-	float modelview[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	Mat4f modelview = graphics->getView().modelViewMat;
 	right.x = modelview[0];
 	right.y = modelview[4];
 	right.z = modelview[8];
 	up.x = modelview[1];
 	up.y = modelview[5];
 	up.z = modelview[9];
+
+
 
 	dataManager.bind("particle shader");
 	dataManager.setUniform1i("tex",0);

@@ -117,6 +117,7 @@
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="contrail.cpp" />
     <ClCompile Include="contrailSmall.cpp" />
+    <ClCompile Include="controlManager.cpp" />
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="path.h" />
     <ClInclude Include="plane.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="controlManager.h" />
     <ClInclude Include="profiler.h" />
     <ClInclude Include="quaternion.h" />
     <ClInclude Include="random.h" />

@@ -7,7 +7,7 @@
 
     <texture name="dialog box"                file="media/dialog box.png" />
     <texture name="white"                     file="media/white.png" />
-	  <texture name="grass"                     file="media/grass.png" />
+	<texture name="grass"                     file="media/grass.png" />
     <texture name="rock"                      file="media/rock.png" />
     <texture name="sand"                      file="media/sand.png" />
     <texture name="snow"                      file="media/snow.png" />

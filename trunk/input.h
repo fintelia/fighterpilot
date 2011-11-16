@@ -21,7 +21,7 @@
 struct _XINPUT_STATE;
 typedef _XINPUT_STATE XINPUT_STATE;
 
-class Input: public functor<float,int>
+class InputManager
 {
 protected:
 	Vec2f mousePos;
@@ -32,13 +32,27 @@ protected:
 		bool down;
 		mouseButtonState(): downPos(0,0), upPos(0,0), down(false){}
 	};
-	struct gamepadState{};
-	struct xboxControllerState: public gamepadState
+	class gamepadState
 	{
+	public:
+		virtual bool getButton(int b) const=0;
+		virtual float getAxis(int a) const=0;
+	};
+	class xboxControllerState: public gamepadState
+	{
+	private:
 		XINPUT_STATE* state;
-		bool connected;
+		friend class InputManager;
 		
-		bool getButton(int b);
+	public:
+		bool connected;
+		float deadZone;
+
+		bool getButton(int b) const;
+		float getAxis(int a) const;
+
+		xboxControllerState();
+		~xboxControllerState();
 	} xboxControllers[4];
 	bool keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
@@ -74,6 +88,12 @@ protected:
 	void sendCallbacks(callBack* c);
 	//friend LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 public:
+	static InputManager& getInstance()
+	{
+		static InputManager* pInstance = new InputManager();
+		return *pInstance;
+	}
+
 	virtual void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
 	int lastKey;
 	int tPresses;
@@ -88,8 +108,8 @@ public:
 	virtual Vec2f getMousePos(){return mousePos;}
 	virtual void checkNewHardware();//scan for new hardware
 
-	Input();
-	~Input();
+	InputManager();
+	~InputManager();
  };
 
 //class standard_input: public Input
@@ -109,7 +129,7 @@ public:
 //	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
 //};
 
-extern Input *input;
+extern InputManager& input;
 //
 //typedef int inputSource;
 //const inputSource INPUT_MOUSE		= 0;

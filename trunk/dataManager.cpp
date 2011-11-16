@@ -1216,9 +1216,10 @@ bool DataManager::registerOBJ(string name, string filename)
 }
 int DataManager::getId(string name)
 {
-	if(assets.find(name)==assets.end())
-		return 0;
-	return assets[name]->id;
+	auto a = assets.find(name);
+	if(a != assets.end())
+		return a->second->id;
+	return 0;
 }
 int DataManager::getId(objectType t)
 {

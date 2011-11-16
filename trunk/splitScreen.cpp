@@ -13,19 +13,19 @@ splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 }
 int splitScreen::update()
 {
-	if(input->getKey(VK_F1))	{	players[0].toggleFirstPerson(); input->up(VK_F1);}
-	if(input->getKey(VK_F2))	{	players[1].toggleFirstPerson(); input->up(VK_F2);}
+//	if(input.getKey(VK_F1))	{	players[0].toggleFirstPerson(); input.up(VK_F1);}
+//	if(input.getKey(VK_F2))	{	players[1].toggleFirstPerson(); input.up(VK_F2);}
 
-	if(input->getKey(VK_ESCAPE))
+	if(input.getKey(VK_ESCAPE))
 	{
 		menuManager.setPopup(new gui::inGame);
-		input->up(VK_ESCAPE);
+		input.up(VK_ESCAPE);
 	}
 
 #ifdef _DEBUG
-	if(input->getKey(0x54))
+	if(input.getKey(0x54))
 	{
-		input->up(0x54);
+		input.up(0x54);
 		if(world.time.getSpeed() > 0.5)
 		{
 			world.time.changeSpeed(0.1, 5.0);
@@ -47,8 +47,8 @@ void splitScreen::render()
 {
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
-		nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
-		if(players[acplayer].firstPersonView && !p->controled)
+		nPlane* p=(nPlane*)players[acplayer]->getObject();
+		if(players[acplayer]->firstPersonView && !p->controled)
 		{
 			graphics->drawOverlay(Rect::XYXY(0,sh/2*acplayer,sw,sh/2*(acplayer+1)),"cockpit");
 			targeter(400,150+300*acplayer,50,p->roll);
