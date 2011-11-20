@@ -262,8 +262,8 @@ public:
 	virtual int update()=0;
 	virtual void render()=0;
 
-	virtual bool mouseL(bool down, int x, int y){return false;}
-	virtual bool mouseR(bool down, int x, int y){return false;}
+	virtual bool mouseL(bool down, float x, float y){return false;}
+	virtual bool mouseR(bool down, float x, float y){return false;}
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
 	virtual bool scroll(float rotations){return false;}
@@ -293,18 +293,18 @@ public:
 	string getFile() {return directory+"/"+file;}
 
 	bool keyDown(int vkey);
-	bool mouseL(bool down, int x, int y);
+	bool mouseL(bool down, float x, float y);
 protected:
 	struct thumbnail
 	{
-		string filename;
+		string name;
 		string displayName;
 		enum Type{FOLDER,BMP,UNKNOWN_FILE} type;
 		thumbnail(){}
-		thumbnail(string f, string n, Type t):filename(f),displayName(n),type(t){}
+		thumbnail(string f, string n, Type t):name(f),displayName(n),type(t){}
 	};
 
-	virtual void fileSelected();
+
 	string file;
 
 	string directory;
@@ -314,6 +314,11 @@ protected:
 	vector<thumbnail> folders;
 
 	float scroll;
+
+	vector<thumbnail>::iterator clickingThumbnail;
+
+	virtual void fileSelected();
+	bool getThumbnail(Vec2f v, vector<thumbnail>::iterator& i);
 
 	//vector<button*> folderButtons;
 	//vector<button*> fileButtons;
@@ -343,14 +348,14 @@ public:
 	int update(){return 0;}
 	void render();
 
-	bool mouseL(bool down, int x, int y);
+	bool mouseL(bool down, float x, float y);
 	int getValue(){return value;}
 protected:
 	vector<label*> options;
 	//menuLabel* label;
 	int value;
 
-	int x, y, width, height;
+	float x, y, width, height;
 
 	int clicking;
 

@@ -18,7 +18,7 @@ namespace particle
 			p.startTime = world.time();
 			p.endTime = world.time() + life();
 		
-			Vec3f dir = random<Vec3f>();
+			Vec3f dir = random3<float>();
 			p.vel = dir * velocity();
 			p.pos = pos + dir * spread() + p.vel * extraTime/1000.0;
 
@@ -47,7 +47,7 @@ namespace particle
 			p.startTime = world.time();
 			p.endTime = world.time() + life();
 		
-			Vec3f dir = random<Vec3f>();
+			Vec3f dir = random3<float>();
 			p.vel = dir * velocity();
 			p.pos = world[parent]->position + dir * spread() + p.vel * extraTime/1000.0;
 

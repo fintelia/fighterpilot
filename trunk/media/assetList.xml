@@ -6,18 +6,17 @@
     <texture name="progress front"            file="media/progress front.png"         preload="true" />
 
     <texture name="dialog box"                file="media/dialog box.png" />
-    <texture name="white"                     file="media/white.png" />
-	<texture name="grass"                     file="media/grass.png" />
-    <texture name="rock"                      file="media/rock.png" />
-    <texture name="sand"                      file="media/sand.png" />
-    <texture name="snow"                      file="media/snow.png" />
-    <texture name="LCnoise"                   file="media/LCnoise.png" />
+    <texture name="white"                     file="media/white.png" tileable="true"/>
+  	<texture name="grass"                     file="media/grass.png" tileable="true" />
+    <texture name="rock"                      file="media/rock.png" tileable="true" />
+    <texture name="sand"                      file="media/sand.png" tileable="true" />
+    <texture name="snow"                      file="media/snow.png" tileable="true" />
+    <texture name="LCnoise"                   file="media/LCnoise.png" tileable="true" />
     <texture name="radarTex"                  file="media/radar2.png" />
     <texture name="particle"                  file="media/particle4.png" />	
     <texture name="radar plane"               file="media/plane radar2.png" />
-    <texture name="hardNoise"                 file="media/hardNoiseDOT3.png" />
-    <texture name="explosion fireball"        file="media/explosion/fireball4.png" />
-    <texture name="explosion smoke"           file="media/explosion/smoke5.png" />
+    <texture name="explosion fireball"        file="media/fireball4.png" />
+    <texture name="explosion smoke"           file="media/smoke5.png" />
     <texture name="cockpit"                   file="media/cockpit.png" />
     <texture name="health bar"                file="media/health bar.png" />
     <texture name="tilt"                      file="media/tilt.png" />
@@ -31,13 +30,14 @@
     <texture name="file viewer"               file="media/file viewer.png" />
     <texture name="entry bar"                 file="media/entry bar.png" />
     <texture name="target ring"               file="media/target ring.png" />
-    <texture name="smoke"                     file="media/particles/smoke.png" />
+    <texture name="smoke"                     file="media/smoke.png" />
+    <texture name="splash"                    file="media/splash.png" />
     <texture name="fire"                      file="media/fire.png" />
-    <texture name="hex grid"                  file="media/hexGrid.png" />
+    <texture name="hex grid"                  file="media/hexGrid.png" tileable="true" />
     <texture name="bullet"                    file="media/bullet.png" />
     <texture name="glow"                      file="media/glow.png" />
     <texture name="cursor"                    file="media/cursor.png" />
-    <texture name="layers"                    file="media/layers.png" />
+    <texture name="layers"                    file="media/layers.png" tileable="true"/>
     <texture name="check"                     file="media/check.png" />
     <texture name="check box"                 file="media/check box.png" />
     <texture name="slider"                    file="media/slider.png" />
@@ -48,6 +48,8 @@
     <texture name="menu pictures"             file="media/menu/choice pics.png" />
     <texture name="menu in game"              file="media/menu/in game.png" />
     <texture name="menu in game select"       file="media/menu/in game select.png" />
+    <texture name="thumbnails"                file="media/thumbnails.png" />
+	
   </textures>
 
   <shaders>
@@ -56,14 +58,14 @@
     
     <shader name="radar"                vertex="media/radar.vert"       fragment="media/radar.frag" sAspect="true" />
     <shader name="radar2"               vertex="media/radar2.vert"      fragment="media/radar2.frag" sAspect="true" />
-	  <shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" sAspect="true" />
+	<shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" sAspect="true" />
     <shader name="radar bounds"         vertex="media/radar bounds.vert" fragment="media/radar bounds.frag" sAspect="true" />
     <shader name="health"               vertex="media/health.vert"      fragment="media/health.frag" sAspect="true" />
     
     <shader name="grass terrain"        vertex="media/toon.vert"        fragment="media/toon.frag" />
     <shader name="water"                vertex="media/water.vert"       fragment="media/water.frag" />
     <shader name="sea floor"            vertex="media/sea floor.vert"   fragment="media/sea floor.frag" />
-	  <shader name="horizon"              vertex="media/horizon.vert"     fragment="media/horizon.frag" />
+	<shader name="horizon"              vertex="media/horizon.vert"     fragment="media/horizon.frag" />
     <shader name="horizon2"             vertex="media/horizon2.vert"    fragment="media/horizon2.frag" />
     <shader name="island terrain"       vertex="media/island.vert"      fragment="media/island.frag" />
     <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />

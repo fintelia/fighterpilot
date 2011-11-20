@@ -65,7 +65,7 @@ class player
 protected:
 	int		mObjectNum,
 			mKills;
-	
+
 public:
 	const	playerType type;
 
@@ -95,9 +95,9 @@ private:
 		int m;
 
 		float operator() ();
-		controlMapping():type(NONE),m(0),controllerNum(-1){}
-		controlMapping(int M): type(KEY), m(M),controllerNum(-1){}
-		controlMapping(int M, Type t, int cNum): type(t), m(M),controllerNum(cNum){}
+		controlMapping():type(NONE), controllerNum(-1), m(0){}
+		controlMapping(int M): type(KEY),controllerNum(-1), m(M){}
+		controlMapping(int M, Type t, int cNum): type(t),controllerNum(cNum), m(M){}
 	};
 	map<int,controlMapping> controls;
 

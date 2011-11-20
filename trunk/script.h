@@ -8,7 +8,7 @@ struct scriptVar
 	{
 		try{
 			return lexical_cast<T>(value);
-		}catch(bad_lexical_cast &){
+		}catch(boost::bad_lexical_cast &){
 			debugBreak();//boost type conversion failed
 			return T();
 		}

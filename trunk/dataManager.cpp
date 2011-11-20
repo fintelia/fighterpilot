@@ -10,7 +10,6 @@ DataManager::~DataManager()
 }
 bool DataManager::registerFont(string name, string filename) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
-	//todo: add code
 	struct info_t
 	{
 		int lineHeight;
@@ -105,7 +104,7 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 		return false;
 	}
 }
-bool DataManager::registerTGA(string name, string filename)
+bool DataManager::registerTGA(string name, string filename, bool tileable)
 {
 /////////////structs///////////////
 	typedef struct
@@ -183,8 +182,8 @@ bool DataManager::registerTGA(string name, string filename)
 
     glTexImage2D(GL_TEXTURE_2D, 0, 4 , tga.Width, tga.Height, 0,texture.type, GL_UNSIGNED_BYTE, (GLvoid *)texture.imageData);
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
 
 	if(NPOT)
 	{
@@ -215,7 +214,7 @@ bool DataManager::registerTGA(string name, string filename)
 	assets[name] = a;
 	return true;
 }
-bool DataManager::registerPNG(string name, string filename)
+bool DataManager::registerPNG(string name, string filename, bool tileable)
 {
 	png_uint_32		i,
 					width,
@@ -330,17 +329,25 @@ bool DataManager::registerPNG(string name, string filename)
 	glBindTexture(GL_TEXTURE_2D, texV);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	if(NPOT)
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+	if(tileable)
+	{
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	else
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+	if(NPOT)
+	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D,0, colorChannels, width, height,0, format, GL_UNSIGNED_BYTE, image_data);
 	}
 	else
 	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);
 	}
@@ -528,12 +535,17 @@ bool DataManager::loadAssetList()
 			node = texturesElement->FirstChildElement();
 			if(node != NULL) textureElement = node->ToElement();
 
-			assetFile tmpAssetFile;
-			tmpAssetFile.type = asset::TEXTURE;
 			while(textureElement != NULL)
 			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::TEXTURE;
+
 				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
 				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+
+				const char* tileable = textureElement->Attribute("tileable");
+				if(tileable != NULL && string(tileable) == "true")
+					tmpAssetFile.options.insert("tileable");
 
 				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
 				{
@@ -562,10 +574,12 @@ bool DataManager::loadAssetList()
 			node = shadersElement->FirstChildElement();
 			if(node != NULL) shaderElement = node->ToElement();
 
-			assetFile tmpAssetFile;
-			tmpAssetFile.type = asset::SHADER;
+
 			while(shaderElement != NULL)
 			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::SHADER;
+
 				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=NULL ? c : "";
 				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=NULL ? c : "";
 				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=NULL ? c : "";
@@ -600,10 +614,11 @@ bool DataManager::loadAssetList()
 			node = modelsElement->FirstChildElement();
 			if(node != NULL) modelElement = node->ToElement();
 
-			assetFile tmpAssetFile;
-			tmpAssetFile.type = asset::MODEL;
 			while(modelElement != NULL)
 			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::MODEL;
+
 				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
 				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 
@@ -629,10 +644,12 @@ bool DataManager::loadAssetList()
 			node = assetsElement->FirstChildElement();
 			if(node != NULL) assetElement = node->ToElement();
 
-			assetFile tmpAssetFile;
-			tmpAssetFile.type = asset::FONT;
+
 			while(assetElement != NULL)
-			{
+			{	
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::FONT;
+
 				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
 				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 
@@ -657,7 +674,8 @@ void DataManager::loadAssetFile(assetFile &file)
 {
 	if(file.type == asset::TEXTURE)
 	{
-		registerTexture(file.name, file.filename[0]);
+		bool t = file.options.count("tileable") != 0;
+		registerTexture(file.name, file.filename[0], t);
 	}
 	else if(file.type == asset::SHADER)
 	{
@@ -697,11 +715,11 @@ int DataManager::loadAsset()
 	}
 	return assetFiles.size();
 }
-bool DataManager::registerTexture(string name, string filename)
+bool DataManager::registerTexture(string name, string filename, bool tileable)
 {
 	string ext=fileManager.extension(filename);
-	if(ext.compare(".tga") == 0)		return registerTGA(name, filename);
-	else if(ext.compare(".png") == 0)	return registerPNG(name, filename);
+	if(ext.compare(".tga") == 0)		return registerTGA(name, filename, tileable);
+	else if(ext.compare(".png") == 0)	return registerPNG(name, filename, tileable);
 	else return false;
 }
 bool DataManager::registerShader(string name, string vert, string frag, bool use_sAspect)
@@ -996,7 +1014,7 @@ bool DataManager::registerOBJ(string name, string filename)
 					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
 					//if(ext.compare("tga")==0)
 					mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-					if(!registerTexture(mMtl.tex, mMtl.tex))
+					if(!registerTexture(mMtl.tex, mMtl.tex,true))
 						mMtl.tex = "";
 						//mMtl.tex=dataManager.loadPNG(file+s[1]);
 						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);

@@ -117,12 +117,12 @@ private:
 
 	void loadAssetFile(assetFile &file);
 
-	bool registerTGA(string name, string filename);
-	bool registerPNG(string name, string filename);
+	bool registerTGA(string name, string filename, bool tileable=false);
+	bool registerPNG(string name, string filename, bool tileable=false);
 	bool registerOBJ(string name, string filename);
 	bool registerShader(string name, string vert, string frag, bool use_sAspect=false);
 	bool registerTerrainShader(string name, string frag);
-	bool registerTexture(string name, string filename);
+	bool registerTexture(string name, string filename, bool tileable=false);
 	bool registerFont(string name, string filename);
 
 	int getId(string name);

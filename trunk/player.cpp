@@ -2,7 +2,9 @@
 
 #include "game.h"
 #include <Windows.h>
+#ifdef XINPUT
 #include <Xinput.h>
+#endif
 //
 //playerControls::playerControls(int p)//default controls for player p
 //{
@@ -89,7 +91,7 @@
 //	{
 //		type = KEYBOARD;
 //		mControllerNum = 0;
-//		
+//
 //		mappings[CON_CLIMB]		= mapping(VK_DOWN);
 //		mappings[CON_DIVE]		= mapping(VK_UP);
 //		mappings[CON_LEFT]		= mapping(VK_LEFT);
@@ -161,7 +163,7 @@ object* player::getObject()
 //void AIcontrol::update()
 //{
 //	if(getObject()->type & PLANE)
-//	{	
+//	{
 //		// ...
 //	}
 //}

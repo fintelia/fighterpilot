@@ -353,13 +353,8 @@ void Terrain::renderTerrain(Vec3f eye) const
 	if(waterPlane)
 	{
 		dataManager.bind("horizon2");
-		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(0,1);
-		dataManager.bind("sand",2);
 
 		dataManager.setUniform1i("bumpMap",	0);
-		dataManager.setUniform1i("ground",	1);
-		dataManager.setUniform1i("tex",		2);
 		dataManager.setUniform1f("time",	world.time());
 		dataManager.setUniform1f("seaLevel",0);
 		dataManager.setUniform2f("center",	center.x,center.z);

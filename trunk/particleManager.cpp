@@ -28,7 +28,7 @@ namespace particle{
 //		p.startTime = time;
 //		p.endTime = time + life();
 //
-//		p.vel = random<Vec3f>() * random<float>() * velocity();
+//		p.vel = random3<float>() * random<float>() * velocity();
 //		p.pos = Vec3f();
 //
 //		p.friction = 0.07;
@@ -100,8 +100,8 @@ namespace particle{
 //		p.startTime = time - extraTime;
 //		p.endTime = time + life();
 //
-//		p.vel = random<Vec3f>();
-//		p.pos = /*position*(1.0-(ms-extraTime)/ms) + lastPos*(ms-extraTime)/ms +*/ random<Vec3f>()*spread() + p.vel * extraTime/1000.0;
+//		p.vel = random3<float>();
+//		p.pos = /*position*(1.0-(ms-extraTime)/ms) + lastPos*(ms-extraTime)/ms +*/ random3<float>()*spread() + p.vel * extraTime/1000.0;
 //
 //		p.friction = 1.0;
 //		p.size = 0.0;

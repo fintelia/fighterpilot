@@ -1,10 +1,11 @@
 
 uniform sampler2D tex;
-uniform float gamma;
+varying float g;
 
 varying vec2 texCoord;
 
 void main()
 {
-	gl_FragColor = vec4(pow(texture2D(tex,texCoord).rgb,1.0/gamma),1.0);
+	vec3 t = texture2D(tex,texCoord).rgb;
+	gl_FragColor = vec4(pow(t.x,g),pow(t.y,g),pow(t.z,g),1.0);
 }

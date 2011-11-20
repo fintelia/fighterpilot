@@ -2,10 +2,10 @@
 #include "engine.h"
 #include "GL/glee.h"
 #include <GL/glu.h>
-//#include <Windows.h>
+#ifdef WINDOWS
 #include <Shlobj.h>
-//typedef map<string,MenuCreateFunc>::iterator Iterator;
-//manager* pInstance=NULL;
+#endif
+
 namespace gui
 {
 void manager::render()
@@ -30,7 +30,7 @@ void manager::render()
 			if(e->second != NULL && e->second->getVisibility())
 				e->second->render();
 		}
-		
+
 		for(auto e = menu->sliders.begin(); e != menu->sliders.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -55,7 +55,7 @@ void manager::render()
 	for(auto i = popups.begin(); i!=popups.end();i++)
 	{
 		(*i)->render();
-		
+
 
 		for(auto e = (*i)->labels.begin(); e != (*i)->labels.end(); e++)
 		{
@@ -184,8 +184,6 @@ void manager::inputCallback(InputManager::callBack* callback)
 		if(!popups.empty())
 		{
 			int pSize = popups.size();
-			//call->pos.x *= sh;
-			//call->pos.y = (1.0 - call->pos.y) * sh;
 
 			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
 			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;
@@ -198,9 +196,6 @@ void manager::inputCallback(InputManager::callBack* callback)
 		{
 			if(menu->mouse(call->button,call->down))
 				return;
-
-			//call->pos.x *= sh;
-			//call->pos.y = (1.0 - call->pos.y) * sh;
 
 			debugAssert(menu != NULL);
 
@@ -345,7 +340,7 @@ void openFile::refreshView()
 	for(auto i=Folders.begin();i!=Folders.end();i++)
 	{
 		if(*i == "..")
-			folders.push_back(thumbnail("<up dir>","<up dir>",thumbnail::FOLDER));
+			folders.push_back(thumbnail("..","<up dir>",thumbnail::FOLDER));
 		else if(*i != ".svn" && *i != ".")
 			folders.push_back(thumbnail(*i,*i,thumbnail::FOLDER));
 	}
@@ -450,15 +445,19 @@ void openFile::render()
 	for(auto i=folders.begin(); i != folders.end(); i++)
 	{
 		if(row >= 0)
-		graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
-		graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.321 + size*1.05*row),"font small");
+		{
+			graphics->drawPartialOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),Rect::XYWH(0,0,0.5,0.5),"thumbnails");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.05*row),"font small");
+		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
 	for(auto i=files.begin(); i != files.end(); i++)
 	{
 		if(row >= 0)
-		graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
-		graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.321 + size*1.05*row),"font small");
+		{
+			graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.05*row),"font small");
+		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
 	//glColor3f(0,0,0);
@@ -510,22 +509,69 @@ bool openFile::keyDown(int vkey)
 	}
 	return true;
 }
-bool openFile::mouseL(bool down, int x, int y)
+bool openFile::getThumbnail(Vec2f v, vector<thumbnail>::iterator& itt)
 {
+	float row=scroll; int column=0;
+	float size = 0.0625;
+	for(auto i=folders.begin(); i != folders.end(); i++)
+	{
+		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size).inRect(v))
+		{
+			itt = i;
+			return true;
+		}
+		if(++column == 7)
+		{
+			column=0;
+			row+=1.0;
+		}
+	}
+	for(auto i=files.begin(); i != files.end(); i++)
+	{
+		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size).inRect(v))
+		{
+			itt = i;
+			return true;
+		}
+		if(++column == 7)
+		{
+			column=0;
+			row+=1.0;
+		}
+	}
+	return false;
+}
+bool openFile::mouseL(bool down, float x, float y)
+{ 
 	static bool clicking = false;
 	if(down)
 	{
 //		for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
 //		for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			if((*i)->mouseDownL(x-(sw/2-190),y-(sh/2-246))) return true;
-		clicking = (x>sw/2+144) && (x<sw/2+184) && (y>sh/2+190) && (y<sh/2+230);
+
+		clicking = getThumbnail(Vec2f(x,y), clickingThumbnail);
 		return clicking;
 	}
 	else
 	{
+		
 		if(clicking)
 		{
 			clicking = false;
-			fileSelected();
+			vector<thumbnail>::iterator i;
+			if(getThumbnail(Vec2f(x,y), i))
+			{
+				if(i == clickingThumbnail && clickingThumbnail->type == thumbnail::FOLDER)
+				{
+					directory = directory + "/" + clickingThumbnail->name + "/";
+					refreshView();
+				}
+				else if(i == clickingThumbnail) // thumbnail must be some type of file
+				{
+					file = clickingThumbnail->name;
+					fileSelected();
+				}
+			}
 			return true;
 		}
 
@@ -583,23 +629,23 @@ bool messageBox_c::init(string t, vector<string> names)
 	if(names.empty()) return init(t);//watch out for infinite loop!!
 
 	Vec2f tSize = graphics->textSize(t);
-	width = max(tSize.x+40,715.0f);
-	height = max(tSize.y-170,0.0f) + 295;
-	x = (sw-width)/2;
-	y = (sh-height)/2;
-	if(x < 5) x = 5;
-	if(y < 5) y = 5;
+	width = clamp(tSize.x+0.039,0.700,sAspect-0.01);
+	height = 0.288 + max(tSize.y-0.166,0.0);
+	x = 0.5 - width/2;
+	y = 0.5 - height/2;
+	if(x < 0.005) x = 0.005;
+	if(y < 0.005) y = 0.005;
 
-	labels["label"] = new label(x+(width-tSize.x)/2, y+height*95/295-tSize.y/2, t, Color(1,1,1,0.8));
+	labels["label"] = new label(max(x+(width-tSize.x)/2,0.05), y+height*0.322-tSize.y/2, t, Color(1,1,1,0.8));
 
-	float slotWidth = (685.0*width/715) / names.size();
+	float slotWidth = (0.958*width) / names.size();
 	int slotNum = 0;
 	for(vector<string>::iterator i = names.begin();i !=names.end(); i++, slotNum++)
 	{
 		options.push_back(new label(
 
-									((float)(x + (15.0/715*width)+(0.5+slotNum)*slotWidth-graphics->textSize(*i).x/2))/sh,
-									1.0 - ((float)(y + (235.0/295*height)-graphics->textSize(*i).y/2))/sh - 0.023,
+									((float)(x + (0.021*width)+(0.5+slotNum)*slotWidth-graphics->textSize(*i).x/2)),
+									((float)(y + (0.797*height)-graphics->textSize(*i).y/2)),
 
 									*i, white));
 	}
@@ -610,19 +656,19 @@ bool messageBox_c::init(string t, vector<string> names)
 void messageBox_c::render()
 {
 	if(dataManager.assetLoaded("dialog box"))
-		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,(float)height/sh),"dialog box");
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"dialog box");
 	else
 	{
 		dataManager.bind("noTexture");
 		glColor3f(0.3,0.3,0.3);
-		graphics->drawOverlay(Rect::XYWH((float)x/sh,(float)(y+height)/sh,(float)width/sh,(float)height/sh));
+		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		glColor3f(1,1,1);
 	}
 
-	float slotWidth = ((float)(685.0*width/715) / options.size())/sh;
-	float slotHeight = ((float)(84.0*height/295))/sh;
-	float startX = ((float)(15.0*width/715)+x)/sh;
-	float startY = 1.0 - ((float)(193.0*height/295)+y)/sh - slotHeight;
+	float slotWidth = ((float)(685.0*width/715) / options.size());
+	float slotHeight = ((float)(84.0*height/295));
+	float startX = ((float)(15.0*width/715)+x);
+	float startY = ((float)(193.0*height/295)+y);
 
 	int slotNum=0;
 
@@ -640,14 +686,14 @@ void messageBox_c::render()
 
 	menuManager.drawCursor();
 }
-bool messageBox_c::mouseL(bool down, int X, int Y)
+bool messageBox_c::mouseL(bool down, float X, float Y)
 {
 	if(done) return false;
 
-	int startX = (15.0*width/715)+x;
-	int startY = (193.0*height/295)+y;
-	float slotWidth = (685.0*width/715) / options.size();
-	float slotHeight = (84.0*height/295);
+	float slotWidth = ((float)(685.0*width/715) / options.size());
+	float slotHeight = ((float)(84.0*height/295));
+	float startX = ((float)(15.0*width/715)+x);
+	float startY = ((float)(193.0*height/295)+y);
 	if(down)
 	{
 		clicking=-1;
