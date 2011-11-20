@@ -1,5 +1,6 @@
 
 #include "engine.h"
+#include <Windows.h>
 #include "GL/glee.h"
 #include <GL/glu.h>
 #include "png/png.h"
@@ -393,7 +394,7 @@ void OpenGLgraphics::render()
 		spf+=(frameTimes[i]*0.001)/20;
 	fps=1.0/spf;
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0]);
+	bindRenderTarget(FBO_0);
 
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
@@ -465,7 +466,6 @@ void OpenGLgraphics::render()
 	glViewport(0,0,sw,sh);
 	glDisable(GL_DEPTH_TEST);
 
-
 	dataManager.bind("ortho");
 	dataManager.setUniform4f("color",white);
 	menuManager.render();
@@ -482,13 +482,15 @@ void OpenGLgraphics::render()
 
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
-	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
-	glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST );
-	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
-	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
-
+    if(multisampling)
+    {
+        glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
+        glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
+        glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
+        glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST );
+        glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
+        glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
+    }
 
 	bindRenderTarget(SCREEN);
 	glClearColor(0.0,0.0,0.0,1.0f);
@@ -496,7 +498,7 @@ void OpenGLgraphics::render()
 	dataManager.bind("gamma shader");
 	dataManager.setUniform1f("gamma",currentGamma);
 	dataManager.setUniform1i("tex",0);
-	renderFBO(FBO_1);
+	renderFBO(multisampling ? FBO_1 : FBO_0);
 	dataManager.unbindShader();
 ////////////////////////////////////START RESET///////////////////////////////////////
 	//reset();

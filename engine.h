@@ -17,17 +17,16 @@
     #pragma comment (lib, "OpenGL32.lib")
     #pragma comment (lib, "glu32.lib")
 
-    #pragma comment (lib, "zlib.lib")
+    #pragma comment (lib, "libz.lib")
     #pragma comment (lib, "libpng15.lib")
     #pragma comment (lib, "tinyxml.lib")
-	
+
 	#pragma comment (lib,"xinput")
 	#define XINPUT
 	#define USING_XINPUT
 
-	#define NOMINMAX
 
-	typedef void* HANDLE;
+
 
 #elif defined __GNUG__
 
@@ -37,6 +36,8 @@
 
 #endif
 
+#define NOMINMAX
+typedef void* HANDLE;
 
 #include "debugBreak.h"
 

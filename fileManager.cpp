@@ -36,7 +36,7 @@ using namespace std;
 //	delete t;
 //}
 //
-//template <class T> 
+//template <class T>
 //void startInNewThread(void(*func)( T ), T val)
 //{
 //	threadData<T>* t = new threadData<T>();
@@ -357,7 +357,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 //					}
 //
 //					f->bindings[section][key] = value;
-//					
+//
 //					if(d[i] != '\n')
 //						advanceToNextLine();
 //				}
@@ -378,7 +378,7 @@ shared_ptr<FileManager::textFile> FileManager::loadTextFile(string filename, boo
 	{
 		fileQueueMutex.lock();
 		fileQueue.push(f);
-		fileQueueMutex.unlock();		
+		fileQueueMutex.unlock();
 	}
 	else
 	{
@@ -396,7 +396,7 @@ shared_ptr<FileManager::binaryFile> FileManager::loadBinaryFile(string filename,
 	{
 		fileQueueMutex.lock();
 		fileQueue.push(f);
-		fileQueueMutex.unlock();		
+		fileQueueMutex.unlock();
 	}
 	else
 	{
@@ -415,7 +415,7 @@ shared_ptr<FileManager::iniFile> FileManager::loadIniFile(string filename, bool 
 	{
 		fileQueueMutex.lock();
 		fileQueue.push(f);
-		fileQueueMutex.unlock();		
+		fileQueueMutex.unlock();
 	}
 	else
 	{
@@ -433,7 +433,7 @@ shared_ptr<FileManager::zipFile> FileManager::loadZipFile(string filename, bool 
 	{
 		fileQueueMutex.lock();
 		fileQueue.push(f);
-		fileQueueMutex.unlock();		
+		fileQueueMutex.unlock();
 	}
 	else
 	{
@@ -451,7 +451,7 @@ shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, b
 	{
 		fileQueueMutex.lock();
 		fileQueue.push(f);
-		fileQueueMutex.unlock();		
+		fileQueueMutex.unlock();
 	}
 	else
 	{
@@ -540,7 +540,7 @@ void FileManager::parseIniFile(std::shared_ptr<iniFile> f, fileContents data)
 		string section="", key, value;
 
 		char* d = (char*)data.contents;
-		unsigned int size = data.size;
+		int size = data.size;
 
 		int i=0;
 		auto advanceToNextLine = [&i, &size,&d]()
@@ -589,7 +589,7 @@ void FileManager::parseIniFile(std::shared_ptr<iniFile> f, fileContents data)
 				}
 
 				f->bindings[section][key] = value;
-					
+
 				if(d[i] != '\n')
 					advanceToNextLine();
 			}
@@ -608,7 +608,7 @@ void FileManager::parseIniFile(std::shared_ptr<iniFile> f, fileContents data)
 	}
 }
 void FileManager::parseZipFile(shared_ptr<zipFile> f, fileContents data)
-{	
+{
 	struct LocalHeader
 	{
 		unsigned int	signature;
@@ -617,7 +617,7 @@ void FileManager::parseZipFile(shared_ptr<zipFile> f, fileContents data)
 		unsigned short	compression;
 		unsigned short	modificationTime;
 		unsigned short	modificationDate;
-		//signed short	padding 
+		//signed short	padding
 		unsigned int	crc32;
 		unsigned int	compressedSize;
 		unsigned int	uncompressedSize;
@@ -655,16 +655,16 @@ void FileManager::parseZipFile(shared_ptr<zipFile> f, fileContents data)
 			localHeader.extraLength		 = readAs<unsigned short>(data.contents + position + 28);
 
 			position += 30;
-			
+
 			name.assign((const char*)(data.contents + position), localHeader.nameLength);
 			position += localHeader.nameLength;
 
 			extra.assign((const char*)(data.contents + position), localHeader.extraLength);
 			position += localHeader.extraLength;
 
-			
-			
-			
+
+
+
 			if(localHeader.uncompressedSize != 0 && (localHeader.compression == 0 || localHeader.compression == 8)) //make sure size and compression are valid
 			{
 				fileContents d;
@@ -781,7 +781,7 @@ void FileManager::parseBmpFile(shared_ptr<textureFile> f, fileContents data)
 		infoHeader.clrUsed			= readAs<unsigned long>(data.contents+position);	position +=4;
 		infoHeader.clrImportant		= readAs<unsigned long>(data.contents+position);	position +=4;
 
-		if(	infoHeader.width > 0 && 
+		if(	infoHeader.width > 0 &&
 			infoHeader.height > 0 &&
 			(infoHeader.bitCount == 8 || infoHeader.bitCount == 24 || infoHeader.bitCount == 32)
 			/*&& data.size >= position + ???? */)
@@ -797,9 +797,9 @@ void FileManager::parseBmpFile(shared_ptr<textureFile> f, fileContents data)
 
 			int rowExtra = 3 - (f->width*f->channels - 1) % 4;
 
-			for(long y = 0; y < f->height; y++)
+			for(unsigned long y = 0; y < f->height; y++)
 			{
-				for(long x = 0; x < f->width; x++)
+				for(unsigned long x = 0; x < f->width; x++)
 				{
 					for(char c = 0; c < f->channels; c++)
 					{
@@ -847,7 +847,7 @@ void FileManager::workerThread()
 	{
 		fileQueueMutex.lock();
 		empty = fileQueue.empty();
-		
+
 		if(!empty)
 		{
 			shared_ptr<file> f = fileQueue.front();

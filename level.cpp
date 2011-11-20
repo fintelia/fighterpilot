@@ -859,12 +859,8 @@ void Level::render(Vec3f eye)
 
 		dataManager.bind("horizon2");
 		dataManager.bind("hardNoise",0);
-		dataManager.bindTex(((Level::heightmapGL*)mGround)->groundTex,1);
-		dataManager.bind("sand",2);
 
 		dataManager.setUniform1i("bumpMap",	0);
-		dataManager.setUniform1i("ground",	1);
-		dataManager.setUniform1i("tex",		2);
 		dataManager.setUniform1f("time",	world.time());
 		dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
 		dataManager.setUniform2f("center",	center.x,center.z);

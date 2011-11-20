@@ -14,17 +14,17 @@ void SceneManager::meshInstance::update(const Vec3f& pos, const Quat4f& rot,bool
 	rotation=rot;
 	setRenderFlag(render);
 }
-inline void SceneManager::meshInstance::setRenderFlag(bool b)			
+void SceneManager::meshInstance::setRenderFlag(bool b)
 {
 	if(b)	flags |=  0x01;
 	else	flags &= ~0x01;
 }
-inline void SceneManager::meshInstance::setDeleteFlag(bool b)
+void SceneManager::meshInstance::setDeleteFlag(bool b)
 {
 	if(b)	flags |=  0x02;
 	else	flags &= ~0x02;
 }
-inline void SceneManager::meshInstance::setTemperaryFlag(bool b)
+void SceneManager::meshInstance::setTemperaryFlag(bool b)
 {
 	if(b)	flags |=  0x04;
 	else	flags &= ~0x04;
@@ -44,7 +44,7 @@ void SceneManager::newTemperaryMesh(string model, Vec3f position, Quat4f rotatio
 void SceneManager::resetMeshInstances()
 {
 	meshInstances.clear();
-}	
+}
 void SceneManager::renderScene()
 {
 	for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
@@ -93,7 +93,7 @@ void SceneManager::renderScene()
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
 							glDrawArrays(GL_TRIANGLES, material->indicesOffset, material->numIndices);
-							
+
 						}
 						(*instance)->setRenderFlag(false);
 						if((*instance)->temperaryFlag())

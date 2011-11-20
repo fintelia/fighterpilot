@@ -25,7 +25,7 @@ void nPlane::updateSimulation(double time, double ms)
 	lastPosition = position;
 	lastRotation = rotation;
 
-	observer.lastFrame = observer.currentFrame;	
+	observer.lastFrame = observer.currentFrame;
 
 	if(!dead)
 	{
@@ -367,8 +367,6 @@ void nPlane::updateSimulation(double time, double ms)
 			}
 		}
 	}
-	if(id==1)
-		Profiler.setOutput("speed", speed);
 }
 void nPlane::updateFrame(float interpolation) const
 {
@@ -428,7 +426,7 @@ void nPlane::smoothCamera()
 	Vec3f vel;
 	Vec3f pos;
 	//float dt;
-	float t;
+	//float t;
 	if(cameraStates.size() > 1)
 	{
 		for(auto i = cameraStates.begin(); i+1 != cameraStates.end(); i++)

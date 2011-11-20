@@ -6,7 +6,7 @@ varying vec2 texCoord;
 
 uniform vec3 eyePos;
 
-uniform sampler2D bumpMap, ground, tex;
+uniform sampler2D bumpMap;
 uniform float time, seaLevel;
 void main()
 {

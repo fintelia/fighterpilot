@@ -123,7 +123,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.setUniform2f("mapCenter",cCenter);
 		dataManager.setUniform1f("mapRadius",cRadius);
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-#endif  
+#endif
 
 
 
@@ -263,7 +263,7 @@ void dogFight::drawScene(int acplayer)
 {
 	static map<int,double> lastDraw;
 	double time=world.time();
-	double interp = 1.0 - world.time.interpolate();
+//	double interp = 1.0 - world.time.interpolate();
 
 	nPlane* p=(nPlane*)players[acplayer]->getObject();
 	if(!p)

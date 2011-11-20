@@ -177,7 +177,7 @@ public:
 	bool lock(unsigned long timeout=0xffffffff);
 	void unlock();
 };
-extern inline void sleep(unsigned long milliseconds);
+void sleep(unsigned long milliseconds);
 #endif
 
 extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);

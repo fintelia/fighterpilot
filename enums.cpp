@@ -136,7 +136,7 @@ string objectTypeString(objectType t)
 	return "";
 }
 #ifdef WINDOWS
-inline void sleep(unsigned long milliseconds)
+void sleep(unsigned long milliseconds)
 {
 	Sleep(milliseconds);
 }

@@ -1,23 +1,37 @@
 
 #include "engine.h"
 #include <Windows.h>
+#ifdef XINPUT
 #include <Xinput.h>
-
-InputManager::xboxControllerState::xboxControllerState():state(new XINPUT_STATE),connected(false),deadZone(0.15)
+#endif
+InputManager::xboxControllerState::xboxControllerState():
+#ifdef XINPUT
+                    state(new XINPUT_STATE),
+#else
+                    state(nullptr),
+#endif
+                    connected(false),deadZone(0.15)
 {
 
 }
 InputManager::xboxControllerState::~xboxControllerState()
 {
+#ifdef XINPUT
 	delete state;
+#endif
 }
 
 bool InputManager::xboxControllerState::getButton(int b) const
 {
+#ifdef XINPUT
 	return (state->Gamepad.wButtons & b) != 0;
+#else
+	return false;
+#endif
 }
 float InputManager::xboxControllerState::getAxis(int a) const
 {
+#ifdef XINPUT
 	float f = 0.0;
 	if(a == XINPUT_LEFT_TRIGGER)		f = 1.0/255 * state->Gamepad.bLeftTrigger;
 	if(a == XINPUT_RIGHT_TRIGGER)		f = 1.0/255 * state->Gamepad.bRightTrigger;
@@ -34,6 +48,9 @@ float InputManager::xboxControllerState::getAxis(int a) const
 		return 0.0;
 	else
 		return (f - deadZone) / (1.0 - deadZone);
+#else
+	return 0.0f;
+#endif
 }
 void InputManager::sendCallbacks(callBack* c)
 {
@@ -49,17 +66,13 @@ InputManager::InputManager(): tPresses(0)
 
 	for(int i=0; i<4; i++)
 	{
-		xboxControllers[i].state = new XINPUT_STATE;
 		xboxControllers[i].connected = true;
 	}
 	update();
 }
 InputManager::~InputManager()
 {
-	for(int i=0; i<4; i++)
-	{
-		delete xboxControllers[i].state;
-	}
+
 }
 void InputManager::down(int k)
 {
@@ -219,6 +232,7 @@ float InputManager::operator() (int key)
 
 	if(key>=0 && key<256)
 		i=keys[key] ? 1 : 0;
+#ifdef XINPUT
 	else if(key>=XBOX_GAMEPAD_OFFSET[0] && key<XBOX_GAMEPAD_OFFSET[3]+20)
 	{
 		int a=(key-XBOX_GAMEPAD_OFFSET[0])/20;
@@ -244,6 +258,7 @@ float InputManager::operator() (int key)
 		if(key == XINPUT_GAMEPAD_X)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_X ? 1 : 0;
 		if(key == XINPUT_GAMEPAD_Y)			i = xboxControllers[a].state->Gamepad.wButtons & XINPUT_GAMEPAD_Y ? 1 : 0;
 	}
+#endif
 	inputMutex.unlock();
 
 	const float deadZone = 0.15;
@@ -313,7 +328,7 @@ void InputManager::checkNewHardware()
 //			if(dwResult == ERROR_SUCCESS)
 //			{
 //				controllers[i].connected = true;
-//			
+//
 //				int lKey=0;
 //
 //				if(abs(oldGamePad.bLeftTrigger-controllers[i].state.Gamepad.bLeftTrigger)>60)				lKey = XBOX_LEFT_TRIGGER + XBOX_GAMEPAD_OFFSET[i];

@@ -14,17 +14,17 @@ public:
 		friend class SceneManager;
 	public:
 		meshInstance(string model, Vec3f pos, Quat4f rot): modelName(model), rotation(rot), position(pos), flags(0x01) {}
-		
+
 		void update(const Vec3f& pos,bool render=true);
 		void update(const Vec3f& pos, const Quat4f& rot,bool render=true);
 
-		inline bool renderFlag()	{return (flags & 0x01) != 0;}
-		inline bool deleteFlag()	{return (flags & 0x02) != 0;}
-		inline bool temperaryFlag()	{return (flags & 0x04) != 0;}
+		bool renderFlag()	{return (flags & 0x01) != 0;}
+		bool deleteFlag()	{return (flags & 0x02) != 0;}
+		bool temperaryFlag()	{return (flags & 0x04) != 0;}
 
-		inline void setRenderFlag(bool b);
-		inline void setDeleteFlag(bool b);
-		inline void setTemperaryFlag(bool b);
+		void setRenderFlag(bool b);
+		void setDeleteFlag(bool b);
+		void setTemperaryFlag(bool b);
 	};
 private:
 	SceneManager(){}

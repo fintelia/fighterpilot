@@ -17,7 +17,7 @@ Angle acosA(double X)
 }
 Angle lerp(Angle a1,Angle a2,double l)
 {
-	if(abs(a2.getAngle()-a1.getAngle())<=PI)
+	if(std::abs(a2.getAngle()-a1.getAngle())<=PI)
 		return a1*l+a2*(1.0-l);
 	else if(a1<a2)
 		return a1*l+a2*(1.0-l)+2.0*PI*l;

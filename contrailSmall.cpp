@@ -6,16 +6,16 @@ namespace particle
 	contrailSmall::contrailSmall(int parent, Vec3f offset): emitter(CONTRAIL_SMALL, parent, offset, "particle", 1.0, 300.0, 48)
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
-		//spread =	fuzzyAttribute(0.0);
+		spread =	fuzzyAttribute(0.0);
 		life =		fuzzyAttribute(200.0);
 	}
 	bool contrailSmall::createParticle(particle& p, Vec3f currentPosition)
 	{
 		p.startTime = world.time() - extraTime;
 		p.endTime = world.time() - extraTime + life();
-		
-		p.vel = random<Vec3f>() * velocity();
-		p.pos = currentPosition + random<Vec3f>()*spread() + p.vel * extraTime/1000.0;
+
+		p.vel = random3<float>() * velocity();
+		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
 		p.size = 0.0;
 
