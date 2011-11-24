@@ -102,6 +102,6 @@
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>
-    <font name="font small"        file="media/fonts/Times12.fnt" preload="true"/>
+    <font name="font small"        file="media/fonts/tahoma12.fnt" preload="true"/>
   </fonts>
 </assets>

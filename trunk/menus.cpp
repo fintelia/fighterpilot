@@ -321,7 +321,7 @@ int loading::update()
 	static bool toLoad = true;
 	if(toLoad)
 	{
-		dataManager.preloadAssets();
+		dataManager.loadAsset(); // does preload if this is the first time it is called
 
 		settings.load("media/modelData.txt");
 
@@ -356,6 +356,8 @@ void loading::render()
 {
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
+	dataManager.bindTex(0);
+
 	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 	graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,0.95*sAspect,0.98),"progress back");
 

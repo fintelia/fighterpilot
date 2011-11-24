@@ -161,7 +161,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	}
 
 
-	auto f = fileManager.loadBmpFile("test.bmp");
+	//auto f = fileManager.loadPngFile("media/key.png");
 	
 
 	float nextUpdate=0;

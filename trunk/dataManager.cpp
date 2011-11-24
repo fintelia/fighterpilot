@@ -8,8 +8,11 @@ DataManager::~DataManager()
 {
 	shutdown();
 }
-bool DataManager::registerFont(string name, string filename) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
+bool DataManager::registerFont(string name, shared_ptr<FileManager::textFile> f) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
+	if(f->invalid())
+		return false;
+
 	struct info_t
 	{
 		int lineHeight;
@@ -30,11 +33,13 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 
 
 
-	ifstream fin(filename, ios::binary);
-	if(!fin.is_open()) return false;
-	fin.read((char*)(&info), sizeof(info));
+	//ifstream fin(filename, ios::binary);
+	//if(!fin.is_open()) return false;
+	//fin.read((char*)(&info), sizeof(info));
 
 	string s;
+	stringstream fin(f->contents);
+
 	getline(fin,s);
 	getline(fin,s);
 	sscanf(s.c_str(),"common lineHeight=%d base=%d scaleW=%d scaleH=%d", &info.lineHeight, &info.base, &info.width, &info.height);
@@ -45,8 +50,8 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 	string texPath(texturePath);
 	boost::trim_right_if(texPath,boost::is_any_of(" \"\t\n"));
 
-	int dLoc=filename.find_last_of("/\\");
-	if(dLoc!=string::npos)	texPath = filename.substr(0,dLoc+1) + texPath;
+	int dLoc=f->filename.find_last_of("/\\");
+	if(dLoc!=string::npos)	texPath = f->filename.substr(0,dLoc+1) + texPath;
 
 
 	getline(fin,s);
@@ -70,7 +75,7 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 	if(i < numChars) numChars = i;
 
 	string texName = name+"_TEXTURE";
-	if(registerPNG(texName, texPath))
+	if(registerTexture(texName, fileManager.loadTextureFile(texPath)))
 	{
 		fontAsset* f = new fontAsset;
 		f->id = assets[texName]->id;
@@ -104,233 +109,138 @@ bool DataManager::registerFont(string name, string filename) //loads a "text" .f
 		return false;
 	}
 }
-bool DataManager::registerTGA(string name, string filename, bool tileable)
+//bool DataManager::registerTGA(string name, string filename, bool tileable)
+//{
+///////////////structs///////////////
+//	typedef struct
+//	{
+//		GLubyte header[6];			// Holds The First 6 Useful Bytes Of The File
+//		GLuint bytesPerPixel;		// Number Of BYTES Per Pixel (3 Or 4)
+//		GLuint imageSize;			// Amount Of Memory Needed To Hold The Image
+//		GLuint type;				// The Type Of Image, GL_RGB Or GL_RGBA
+//		GLuint Height;				// Height Of Image
+//		GLuint Width;				// Width Of Image
+//		GLuint Bpp;					// Number Of BITS Per Pixel (24 Or 32)
+//	} TGA;
+//	typedef struct
+//	{
+//		unsigned char* imageData;	// Hold All The Color Values For The Image.
+//		GLuint bpp; 				// Hold The Number Of Bits Per Pixel.
+//		GLuint width;				// The Width Of The Entire Image.
+//		GLuint height;				// The Height Of The Entire Image.
+//		GLuint texID;				// Texture ID For Use With glBindTexture.
+//		GLuint type;			 	// Data Stored In * ImageData (GL_RGB Or GL_RGBA)
+//	} Texture;
+//
+///////////////variables/////////////////////////
+//	GLuint texV=0;
+//	Texture texture;
+//	GLubyte tgaheader[12];		// Used To Store Our File Header
+//	TGA tga;					// Used To Store File Information
+//
+//	bool NPOT;//determined later
+////////////////////code////////////////////////
+//	ifstream fin(filename, ios::binary);
+//    fin.read((char *)(&tgaheader), sizeof(tgaheader));
+//	fin.read((char *)(&tga.header), sizeof(tga.header));
+//    texture.width  = tga.header[1] * 256 + tga.header[0];					// Determine The TGA Width	(highbyte*256+lowbyte)
+//	texture.height = tga.header[3] * 256 + tga.header[2];					// Determine The TGA Height	(highbyte*256+lowbyte)
+//	texture.bpp	= tga.header[4];											// Determine the bits per pixel
+//	tga.Width		= texture.width;										// Copy width into local structure
+//	tga.Height		= texture.height;										// Copy height into local structure
+//	tga.Bpp			= texture.bpp;											// Copy BPP into local structure
+//	if((texture.width <= 0) || (texture.height <= 0) || ((texture.bpp != 24) && (texture.bpp !=32)))	// Make sure all information is valid
+//	{
+//		fin.close();
+//		//assert (0);
+//		return FALSE;
+//	}
+//	NPOT = GLEE_ARB_texture_non_power_of_two && ((texture.width & (texture.width-1)) || (texture.height & (texture.height-1)));
+//	if(texture.bpp == 24)													// If the BPP of the image is 24...
+//		texture.type	= GL_RGB;											// Set Image type to GL_RGB
+//	else																	// Else if its 32 BPP
+//		texture.type	= GL_RGBA;											// Set image type to GL_RGBA
+//
+//	tga.bytesPerPixel	= (tga.Bpp / 8);									// Compute the number of BYTES per pixel
+//	tga.imageSize		= (tga.bytesPerPixel * tga.Width * tga.Height);		// Compute the total amout ofmemory needed to store data
+//	texture.imageData	= new GLubyte[tga.imageSize];						// Allocate that much memory
+//
+//
+//	if(texture.imageData == NULL)											// If no space was allocated
+//	{
+//		fin.close();
+//		//assert (0);
+//		return false;
+//	}
+//	fin.read((char *)(texture.imageData), tga.imageSize);
+//	//Byte Swapping Optimized By Steve Thomas
+//	for(int cswap = 0; cswap < (int)tga.imageSize; cswap += tga.bytesPerPixel)
+//	{
+//		//texture.imageData[cswap] ^= texture.imageData[cswap+2] ^= texture.imageData[cswap] ^= texture.imageData[cswap+2];
+//		swap(texture.imageData[cswap], texture.imageData[cswap+2]);
+//	}
+//
+//	fin.close();
+//
+//	glGenTextures(1,&texV);
+//    glBindTexture(GL_TEXTURE_2D, texV);
+//
+//    glTexImage2D(GL_TEXTURE_2D, 0, 4 , tga.Width, tga.Height, 0,texture.type, GL_UNSIGNED_BYTE, (GLvoid *)texture.imageData);
+//
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+//
+//	if(NPOT)
+//	{
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	}
+//	else
+//	{
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+//		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	}
+//
+//    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+//
+//	if(NPOT)
+//		glTexImage2D(GL_TEXTURE_2D,0, texture.type, tga.Width, tga.Height,0, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
+//	else
+//		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
+//
+//    delete[] texture.imageData;
+//	textureAsset* a = new textureAsset;
+//	a->id = texV;
+//	a->type = asset::TEXTURE;
+//	a->width = tga.Width;
+//	a->height = tga.Height;
+//	a->bpp = tga.Bpp;
+//	a->data = NULL;
+//	assets[name] = a;
+//	return true;
+//}
+bool DataManager::registerTexture(string name, shared_ptr<FileManager::textureFile> f, bool tileable)
 {
-/////////////structs///////////////
-	typedef struct
-	{
-		GLubyte header[6];			// Holds The First 6 Useful Bytes Of The File
-		GLuint bytesPerPixel;		// Number Of BYTES Per Pixel (3 Or 4)
-		GLuint imageSize;			// Amount Of Memory Needed To Hold The Image
-		GLuint type;				// The Type Of Image, GL_RGB Or GL_RGBA
-		GLuint Height;				// Height Of Image
-		GLuint Width;				// Width Of Image
-		GLuint Bpp;					// Number Of BITS Per Pixel (24 Or 32)
-	} TGA;
-	typedef struct
-	{
-		unsigned char* imageData;	// Hold All The Color Values For The Image.
-		GLuint bpp; 				// Hold The Number Of Bits Per Pixel.
-		GLuint width;				// The Width Of The Entire Image.
-		GLuint height;				// The Height Of The Entire Image.
-		GLuint texID;				// Texture ID For Use With glBindTexture.
-		GLuint type;			 	// Data Stored In * ImageData (GL_RGB Or GL_RGBA)
-	} Texture;
-
-/////////////variables/////////////////////////
-	GLuint texV=0;
-	Texture texture;
-	GLubyte tgaheader[12];		// Used To Store Our File Header
-	TGA tga;					// Used To Store File Information
-
-	bool NPOT;//determined later
-//////////////////code////////////////////////
-	ifstream fin(filename, ios::binary);
-    fin.read((char *)(&tgaheader), sizeof(tgaheader));
-	fin.read((char *)(&tga.header), sizeof(tga.header));
-    texture.width  = tga.header[1] * 256 + tga.header[0];					// Determine The TGA Width	(highbyte*256+lowbyte)
-	texture.height = tga.header[3] * 256 + tga.header[2];					// Determine The TGA Height	(highbyte*256+lowbyte)
-	texture.bpp	= tga.header[4];											// Determine the bits per pixel
-	tga.Width		= texture.width;										// Copy width into local structure
-	tga.Height		= texture.height;										// Copy height into local structure
-	tga.Bpp			= texture.bpp;											// Copy BPP into local structure
-	if((texture.width <= 0) || (texture.height <= 0) || ((texture.bpp != 24) && (texture.bpp !=32)))	// Make sure all information is valid
-	{
-		fin.close();
-		//assert (0);
-		return FALSE;
-	}
-	NPOT = GLEE_ARB_texture_non_power_of_two && ((texture.width & (texture.width-1)) || (texture.height & (texture.height-1)));
-	if(texture.bpp == 24)													// If the BPP of the image is 24...
-		texture.type	= GL_RGB;											// Set Image type to GL_RGB
-	else																	// Else if its 32 BPP
-		texture.type	= GL_RGBA;											// Set image type to GL_RGBA
-
-	tga.bytesPerPixel	= (tga.Bpp / 8);									// Compute the number of BYTES per pixel
-	tga.imageSize		= (tga.bytesPerPixel * tga.Width * tga.Height);		// Compute the total amout ofmemory needed to store data
-	texture.imageData	= new GLubyte[tga.imageSize];						// Allocate that much memory
-
-
-	if(texture.imageData == NULL)											// If no space was allocated
-	{
-		fin.close();
-		//assert (0);
+	if(!f->valid())
 		return false;
-	}
-	fin.read((char *)(texture.imageData), tga.imageSize);
-	//Byte Swapping Optimized By Steve Thomas
-	for(int cswap = 0; cswap < (int)tga.imageSize; cswap += tga.bytesPerPixel)
-	{
-		//texture.imageData[cswap] ^= texture.imageData[cswap+2] ^= texture.imageData[cswap] ^= texture.imageData[cswap+2];
-		swap(texture.imageData[cswap], texture.imageData[cswap+2]);
-	}
-
-	fin.close();
-
-	glGenTextures(1,&texV);
-    glBindTexture(GL_TEXTURE_2D, texV);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, 4 , tga.Width, tga.Height, 0,texture.type, GL_UNSIGNED_BYTE, (GLvoid *)texture.imageData);
-
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-
-	if(NPOT)
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	else
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-	if(NPOT)
-		glTexImage2D(GL_TEXTURE_2D,0, texture.type, tga.Width, tga.Height,0, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
-	else
-		gluBuild2DMipmaps(GL_TEXTURE_2D, 4, tga.Width, tga.Height, texture.type, GL_UNSIGNED_BYTE, texture.imageData);
-
-    delete[] texture.imageData;
-	textureAsset* a = new textureAsset;
-	a->id = texV;
-	a->type = asset::TEXTURE;
-	a->width = tga.Width;
-	a->height = tga.Height;
-	a->bpp = tga.Bpp;
-	a->data = NULL;
-	assets[name] = a;
-	return true;
-}
-bool DataManager::registerPNG(string name, string filename, bool tileable)
-{
-	png_uint_32		i,
-					width,
-					height,
-					rowbytes;
-	int				bit_depth,
-					color_type,
-					colorChannels;
-	unsigned char*	image_data;
-	png_bytep*		row_pointers;
-
-	/* Open the PNG file. */
-	FILE *infile;
-	infile = fopen(filename.c_str(), "rb");
-
-	if (!infile) {
-		return false;
-	}
-
-	unsigned char sig[8];
-	/* Check for the 8-byte signature */
-	fread(sig, 1, 8, infile);
-	if (!png_check_sig((unsigned char *) sig, 8)) {
-		fclose(infile);
-		return false;
-	}
-	/*
-	 * Set up the PNG structs
-	 */
-	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (!png_ptr) {
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	png_infop info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr) {
-		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	png_infop end_ptr = png_create_info_struct(png_ptr);
-	if (!end_ptr) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	/*
-	 * block to handle libpng errors,
-	 * then check whether the PNG file had a bKGD chunk
-	 */
-	if (setjmp(png_jmpbuf(png_ptr))) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
-		fclose(infile);
-		return false;
-	}
-
-	/*
-	 * takes our file stream pointer (infile) and
-	 * stores it in the png_ptr struct for later use.
-	 */
-	png_init_io(png_ptr, infile);
-
-	/*
-	 * lets libpng know that we already checked the 8
-	 * signature bytes, so it should not expect to find
-	 * them at the current file pointer location
-	 */
-	png_set_sig_bytes(png_ptr, 8);
-
-	png_read_info(png_ptr, info_ptr);
-	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-
-
-	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
-	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
-	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
-	if (bit_depth == 16)																png_set_strip_16(png_ptr);
-	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
-
-	/* snipped out the color type code, see source pngLoad.c */
-	/* Update the png info struct.*/
-	png_read_update_info(png_ptr, info_ptr);
-
-	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-	colorChannels = (int)png_get_channels(png_ptr, info_ptr);
-
-	image_data = new unsigned char[rowbytes*height];
-	row_pointers = new png_bytep[height];
-
-	for (i = 0;  i < height;  i++)
-		row_pointers[i] = image_data + i*rowbytes;
-
-	png_read_image(png_ptr, row_pointers);
-	png_read_end(png_ptr, NULL);
-	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-	fclose(infile);
-
 
 	int format;
-	if(colorChannels == 1)		format = GL_LUMINANCE;
-	else if(colorChannels == 2)	format = GL_LUMINANCE_ALPHA;
-	else if(colorChannels == 3) format = GL_RGB;
-	else if(colorChannels == 4) format = GL_RGBA;
+	if(f->channels == 1)		format = GL_LUMINANCE;
+	else if(f->channels == 2)	format = GL_LUMINANCE_ALPHA;
+	else if(f->channels == 3)	format = GL_RGB;
+	else if(f->channels == 4)	format = GL_RGBA;
+	else{
+		debugBreak();
+		return false;
+	}
 
-	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
+	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((f->width & (f->width-1)) || (f->height & (f->height-1)));
 
 	GLuint texV;
 	glGenTextures(1,&texV);
 	glBindTexture(GL_TEXTURE_2D, texV);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-//    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, tileable ? GL_REPEAT : GL_CLAMP_TO_EDGE);
 	if(tileable)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -344,384 +254,36 @@ bool DataManager::registerPNG(string name, string filename, bool tileable)
 	if(NPOT)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D,0, colorChannels, width, height,0, format, GL_UNSIGNED_BYTE, image_data);
+		glTexImage2D(GL_TEXTURE_2D, 0, f->channels, f->width, f->height,0, format, GL_UNSIGNED_BYTE, f->contents);
 	}
 	else
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		gluBuild2DMipmaps(GL_TEXTURE_2D, colorChannels, width, height, format, GL_UNSIGNED_BYTE, image_data);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, f->channels, f->width, f->height, format, GL_UNSIGNED_BYTE, f->contents);
 	}
-
-	delete[] image_data;
-	delete[] row_pointers;
 
 	textureAsset* a = new textureAsset;
 	a->id = texV;
 	a->type = asset::TEXTURE;
-	a->width = width;
-	a->height = height;
-	a->bpp = colorChannels*8;
+	a->width = f->width;
+	a->height = f->height;
+	a->bpp = f->channels * 8;
 	a->data = NULL;
 	assets[name] = a;
 
 	return true;
 }
-
-void DataManager::bind(string name, int textureUnit)
-{
-	if(assets.find(name)==assets.end())
-		return;
-	else if(assets[name]->type==asset::TEXTURE)
-	{
-		if(boundTextures[textureUnit] == name)
-			return;
-		else if(boundTextureIds[textureUnit] == assets[name]->id)
-		{
-			boundTextures[textureUnit] = name;
-			return;
-		}
-
-		if(activeTextureUnit != textureUnit)
-		{
-			glActiveTexture(GL_TEXTURE0+textureUnit);
-			activeTextureUnit = textureUnit;
-		}
-
-		glBindTexture(GL_TEXTURE_2D,assets[name]->id);
-		boundTextureIds[textureUnit] = assets[name]->id;
-		boundTextures[textureUnit] = name;
-	}
-	else if(assets[name]->type==asset::SHADER)
-	{
-		if(boundShader == name)
-			return;
-		else if(boundShaderId == assets[name]->id)
-		{
-			boundShader = name;
-			return;
-		}
-
-		glUseProgram(assets[name]->id);
-		boundShaderId = assets[name]->id;
-		boundShader = name;
-	}
-}
-void DataManager::bindTex(int id, int textureUnit)
-{
-	if(boundTextureIds[textureUnit] == id)
-		return;
-
-	if(activeTextureUnit != textureUnit)
-	{
-		glActiveTexture(GL_TEXTURE0+textureUnit);
-		activeTextureUnit = textureUnit;
-	}
-
-	glBindTexture(GL_TEXTURE_2D,id);
-
-	boundTextureIds[textureUnit] = id;
-	if(id == 0)		boundTextures[textureUnit] = "noTexture";
-	else			boundTextures[textureUnit] = "";
-}
-void DataManager::bindShader(int id)
-{
-	if(boundShaderId == id)
-		return;
-
-	glUseProgram(id);
-
-	boundShaderId = id;
-	if(id == 0)		boundShader = "noShader";
-	else			boundShader = "";
-}
-void DataManager::unbind(string name)
-{
-	if(boundShader == name)
-	{
-		glUseProgram(0);
-		boundShaderId = 0;
-		boundShader = "noShader";
-	}
-	else
-	{
-		for(auto i = boundTextures.begin();i!=boundTextures.end();i++)
-		{
-			if(i->second == name)
-			{
-				if(activeTextureUnit != i->first)
-				{
-					glActiveTexture(GL_TEXTURE0+i->first);
-					activeTextureUnit = i->first;
-				}
-				glBindTexture(GL_TEXTURE_2D,0);
-				boundTextureIds[i->first] = 0;
-				boundTextures[i->first] = "noTexture";
-				return;
-			}
-		}
-	}
-}
-void DataManager::unbindTextures()
-{
-	if(boundTextureIds[activeTextureUnit] != 0)
-	{
-		glBindTexture(GL_TEXTURE_2D,0);
-		boundTextureIds[activeTextureUnit] = 0;
-		boundTextures[activeTextureUnit] = "noTexture";
-	}
-
-	for(unsigned int i = 0; i < boundTextureIds.size(); i++)
-	{
-		if(boundTextureIds[i] != 0)
-		{
-			if(activeTextureUnit != i)
-			{
-				glActiveTexture(GL_TEXTURE0+i);
-				activeTextureUnit = i;
-			}
-			glBindTexture(GL_TEXTURE_2D,0);
-			boundTextures[i] = "noTexture";
-			boundTextureIds[i] = 0;
-		}
-	}
-}
-void DataManager::unbindShader()
-{
-	glUseProgram(0);
-	boundShaderId = 0;
-	boundShader = "";
-}
-const DataManager::fontAsset* DataManager::getFont(string name)
-{
-	auto i = assets.find(name);
-	if(i == assets.end() || i->second->type != asset::FONT)
-		return nullptr;
-
-	return (const fontAsset*)i->second;
-}
-const DataManager::modelAsset* DataManager::getModel(string name)
-{
-	auto i = assets.find(name);
-	if(i == assets.end() || i->second->type != asset::MODEL)
-		return nullptr;
-
-	return (const modelAsset*)i->second;
-}
-bool DataManager::loadAssetList()
-{
-	TiXmlDocument doc("media/assetList.xml");
-	if(!doc.LoadFile())
-	{
-		return false;
-	}
-
-	const char* c;
-	TiXmlNode* node					= NULL;
-	TiXmlNode* assetsNode			= NULL;
-
-	assetsNode = doc.FirstChild("assets");
-	if(assetsNode == NULL) return false;
-
-////////////////////////////////////////textures//////////////////////////////////////////
-	node = assetsNode->FirstChild("textures");
-	if(node != NULL)
-	{
-		TiXmlElement* texturesElement	= NULL;
-		TiXmlElement* textureElement	= NULL;
-
-		texturesElement = node->ToElement();
-		if(texturesElement != NULL)
-		{
-			node = texturesElement->FirstChildElement();
-			if(node != NULL) textureElement = node->ToElement();
-
-			while(textureElement != NULL)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::TEXTURE;
-
-				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
-
-				const char* tileable = textureElement->Attribute("tileable");
-				if(tileable != NULL && string(tileable) == "true")
-					tmpAssetFile.options.insert("tileable");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
-				{
-					const char* preload = textureElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
-						assetFiles.push(tmpAssetFile);
-					else
-						assetFilesPreload.push(tmpAssetFile);
-				}
-				else debugBreak();
-
-				textureElement = textureElement->NextSiblingElement();
-			}
-		}
-	}
-////////////////////////////////////////shaders///////////////////////////////////////////
-	node = assetsNode->FirstChild("shaders");
-	if(node != NULL)
-	{
-		TiXmlElement* shadersElement	= NULL;
-		TiXmlElement* shaderElement		= NULL;
-
-		shadersElement = node->ToElement();
-		if(shadersElement != NULL)
-		{
-			node = shadersElement->FirstChildElement();
-			if(node != NULL) shaderElement = node->ToElement();
-
-
-			while(shaderElement != NULL)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::SHADER;
-
-				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=NULL ? c : "";
-				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=NULL ? c : "";
-				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=NULL ? c : "";
-
-				const char* use_sAspect = shaderElement->Attribute("sAspect");
-				if(use_sAspect != NULL && string(use_sAspect) == "true")
-					tmpAssetFile.options.insert("use_sAspect");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
-				{
-					const char* preload = shaderElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
-						assetFiles.push(tmpAssetFile);
-					else
-						assetFilesPreload.push(tmpAssetFile);
-				}
-				else debugBreak();
-				shaderElement = shaderElement->NextSiblingElement();
-			}
-		}
-	}
-////////////////////////////////////////models///////////////////////////////////////////
-	node = assetsNode->FirstChild("models");
-	if(node != NULL)
-	{
-		TiXmlElement* modelsElement		= NULL;
-		TiXmlElement* modelElement		= NULL;
-
-		modelsElement = node->ToElement();
-		if(modelsElement != NULL)
-		{
-			node = modelsElement->FirstChildElement();
-			if(node != NULL) modelElement = node->ToElement();
-
-			while(modelElement != NULL)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::MODEL;
-
-				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
-
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
-					assetFiles.push(tmpAssetFile);
-				else
-					debugBreak();
-
-				modelElement = modelElement->NextSiblingElement();
-			}
-		}
-	}
-///////////////////////////////////////font//////////////////////////////////////////////
-	node = assetsNode->FirstChild("fonts");
-	if(node != NULL)
-	{
-		TiXmlElement* assetsElement		= NULL;
-		TiXmlElement* assetElement		= NULL;
-
-		assetsElement = node->ToElement();
-		if(assetsElement != NULL)
-		{
-			node = assetsElement->FirstChildElement();
-			if(node != NULL) assetElement = node->ToElement();
-
-
-			while(assetElement != NULL)
-			{	
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::FONT;
-
-				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
-
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
-				{
-					const char* preload = assetElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
-						assetFiles.push(tmpAssetFile);
-					else
-						assetFilesPreload.push(tmpAssetFile);
-				}
-				else debugBreak();
-
-				assetElement = assetElement->NextSiblingElement();
-			}
-		}
-	}
-
-	return true;
-}
-void DataManager::loadAssetFile(assetFile &file)
-{
-	if(file.type == asset::TEXTURE)
-	{
-		bool t = file.options.count("tileable") != 0;
-		registerTexture(file.name, file.filename[0], t);
-	}
-	else if(file.type == asset::SHADER)
-	{
-		if(registerShader(file.name, file.filename[0], file.filename[1]) && file.options.count("use_sAspect") != 0)
-		{
-			auto s = assets.find(file.name);
-			((shaderAsset*)(s->second))->use_sAspect = true;
-
-			bind(file.name);
-			setUniform1f("sAspect",sAspect);
-			unbind(file.name);
-		}
-	}
-	else if(file.type == asset::MODEL)
-	{
-		registerOBJ(file.name, file.filename[0]);
-	}
-	else if(file.type == asset::FONT)
-	{
-		registerFont(file.name, file.filename[0]);
-	}
-}
-void DataManager::preloadAssets()
-{
-	while(!assetFilesPreload.empty())
-	{
-		loadAssetFile(assetFilesPreload.front());
-		assetFilesPreload.pop();
-	}
-}
-int DataManager::loadAsset()
-{
-	if(!assetFiles.empty())
-	{
-		loadAssetFile(assetFiles.front());
-		assetFiles.pop();
-	}
-	return assetFiles.size();
-}
-bool DataManager::registerTexture(string name, string filename, bool tileable)
-{
-	string ext=fileManager.extension(filename);
-	if(ext.compare(".tga") == 0)		return registerTGA(name, filename, tileable);
-	else if(ext.compare(".png") == 0)	return registerPNG(name, filename, tileable);
-	else return false;
-}
+//bool DataManager::registerTexture(string name, string filename, bool tileable)
+//{
+//	//string ext=fileManager.extension(filename);
+//	//if(ext.compare(".tga") == 0)		return registerTGA(name, filename, tileable);
+//	//else if(ext.compare(".png") == 0)
+//	//{
+//		auto f = fileManager.loadTextureFile(filename);
+//		return registerTexture(name, f, tileable);
+//	//}
+//	//else return false;
+//}
 bool DataManager::registerShader(string name, string vert, string frag, bool use_sAspect)
 {
 	bool errorFlag = false;
@@ -1011,24 +573,19 @@ bool DataManager::registerOBJ(string name, string filename)
 				else if(s[0].compare(0,6,"map_Kd")==0)
 				{
 					if(mstring == "") continue;
-					//string ext=(file+s[1]).substr((file+s[1]).find_last_of(".")+1);
-					//if(ext.compare("tga")==0)
+
 					mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-					if(!registerTexture(mMtl.tex, mMtl.tex,true))
+					if(!registerTexture(mMtl.tex, fileManager.loadTextureFile(mMtl.tex), true))
 						mMtl.tex = "";
-						//mMtl.tex=dataManager.loadPNG(file+s[1]);
-						//registerTexture(mtlFile + "/" + s[1],mMtl.tex);
-					//else if(ext.compare("mmp")==0)
-					//	mMtl.tex=loadMMP( (char*)(file+s[1]).c_str());
 				}
 				else if(s[0].compare(0,2,"Kd")==0)
 				{
 					if(mstring == "") continue;
 					try{
-					float r = lexical_cast<float>(s[1]);
-					float g = lexical_cast<float>(s[2]);
-					float b = lexical_cast<float>(s[3]);
-					mMtl.diffuse=Color(r,g,b,mMtl.diffuse.a);
+						float r = lexical_cast<float>(s[1]);
+						float g = lexical_cast<float>(s[2]);
+						float b = lexical_cast<float>(s[3]);
+						mMtl.diffuse=Color(r,g,b,mMtl.diffuse.a);
 					}catch(...){}
 				}
 				else if(s[0].compare(0,2,"d")==0)
@@ -1232,6 +789,371 @@ bool DataManager::registerOBJ(string name, string filename)
 
 	return true;
 }
+
+void DataManager::bind(string name, int textureUnit)
+{
+	if(assets.find(name)==assets.end())
+		return;
+	else if(assets[name]->type==asset::TEXTURE)
+	{
+		if(boundTextures[textureUnit] == name)
+			return;
+		else if(boundTextureIds[textureUnit] == assets[name]->id)
+		{
+			boundTextures[textureUnit] = name;
+			return;
+		}
+
+		if(activeTextureUnit != textureUnit)
+		{
+			glActiveTexture(GL_TEXTURE0+textureUnit);
+			activeTextureUnit = textureUnit;
+		}
+
+		glBindTexture(GL_TEXTURE_2D,assets[name]->id);
+		boundTextureIds[textureUnit] = assets[name]->id;
+		boundTextures[textureUnit] = name;
+	}
+	else if(assets[name]->type==asset::SHADER)
+	{
+		if(boundShader == name)
+			return;
+		else if(boundShaderId == assets[name]->id)
+		{
+			boundShader = name;
+			return;
+		}
+
+		glUseProgram(assets[name]->id);
+		boundShaderId = assets[name]->id;
+		boundShader = name;
+	}
+}
+void DataManager::bindTex(int id, int textureUnit)
+{
+	if(boundTextureIds[textureUnit] == id)
+		return;
+
+	if(activeTextureUnit != textureUnit)
+	{
+		glActiveTexture(GL_TEXTURE0+textureUnit);
+		activeTextureUnit = textureUnit;
+	}
+
+	glBindTexture(GL_TEXTURE_2D,id);
+
+	boundTextureIds[textureUnit] = id;
+	if(id == 0)		boundTextures[textureUnit] = "noTexture";
+	else			boundTextures[textureUnit] = "";
+}
+void DataManager::bindShader(int id)
+{
+	if(boundShaderId == id)
+		return;
+
+	glUseProgram(id);
+
+	boundShaderId = id;
+	if(id == 0)		boundShader = "noShader";
+	else			boundShader = "";
+}
+void DataManager::unbind(string name)
+{
+	if(boundShader == name)
+	{
+		glUseProgram(0);
+		boundShaderId = 0;
+		boundShader = "noShader";
+	}
+	else
+	{
+		for(auto i = boundTextures.begin();i!=boundTextures.end();i++)
+		{
+			if(i->second == name)
+			{
+				if(activeTextureUnit != i->first)
+				{
+					glActiveTexture(GL_TEXTURE0+i->first);
+					activeTextureUnit = i->first;
+				}
+				glBindTexture(GL_TEXTURE_2D,0);
+				boundTextureIds[i->first] = 0;
+				boundTextures[i->first] = "noTexture";
+				return;
+			}
+		}
+	}
+}
+void DataManager::unbindTextures()
+{
+	if(boundTextureIds[activeTextureUnit] != 0)
+	{
+		glBindTexture(GL_TEXTURE_2D,0);
+		boundTextureIds[activeTextureUnit] = 0;
+		boundTextures[activeTextureUnit] = "noTexture";
+	}
+
+	for(unsigned int i = 0; i < boundTextureIds.size(); i++)
+	{
+		if(boundTextureIds[i] != 0)
+		{
+			if(activeTextureUnit != i)
+			{
+				glActiveTexture(GL_TEXTURE0+i);
+				activeTextureUnit = i;
+			}
+			glBindTexture(GL_TEXTURE_2D,0);
+			boundTextures[i] = "noTexture";
+			boundTextureIds[i] = 0;
+		}
+	}
+}
+void DataManager::unbindShader()
+{
+	glUseProgram(0);
+	boundShaderId = 0;
+	boundShader = "";
+}
+
+bool DataManager::loadAssetList()
+{
+	TiXmlDocument doc("media/assetList.xml");
+	if(!doc.LoadFile())
+	{
+		return false;
+	}
+
+	const char* c;
+	TiXmlNode* node					= NULL;
+	TiXmlNode* assetsNode			= NULL;
+
+	assetsNode = doc.FirstChild("assets");
+	if(assetsNode == NULL) return false;
+
+////////////////////////////////////////textures//////////////////////////////////////////
+	node = assetsNode->FirstChild("textures");
+	if(node != NULL)
+	{
+		TiXmlElement* texturesElement	= NULL;
+		TiXmlElement* textureElement	= NULL;
+
+		texturesElement = node->ToElement();
+		if(texturesElement != NULL)
+		{
+			node = texturesElement->FirstChildElement();
+			if(node != NULL) textureElement = node->ToElement();
+
+			while(textureElement != NULL)
+			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::TEXTURE;
+
+				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+
+				const char* tileable = textureElement->Attribute("tileable");
+				if(tileable != NULL && string(tileable) == "true")
+					tmpAssetFile.options.insert("tileable");
+
+				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
+				{
+					const char* preload = textureElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+					{
+						tmpAssetFile.file = fileManager.loadTextureFile(tmpAssetFile.filename[0],true);
+						assetFiles.push(tmpAssetFile);
+					}
+					else
+					{
+						tmpAssetFile.file = fileManager.loadTextureFile(tmpAssetFile.filename[0],false);
+						assetFilesPreload.push(tmpAssetFile);
+					}
+				}
+				else debugBreak();
+
+				textureElement = textureElement->NextSiblingElement();
+			}
+		}
+	}
+////////////////////////////////////////shaders///////////////////////////////////////////
+	node = assetsNode->FirstChild("shaders");
+	if(node != NULL)
+	{
+		TiXmlElement* shadersElement	= NULL;
+		TiXmlElement* shaderElement		= NULL;
+
+		shadersElement = node->ToElement();
+		if(shadersElement != NULL)
+		{
+			node = shadersElement->FirstChildElement();
+			if(node != NULL) shaderElement = node->ToElement();
+
+
+			while(shaderElement != NULL)
+			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::SHADER;
+
+				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=NULL ? c : "";
+				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=NULL ? c : "";
+				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=NULL ? c : "";
+
+				const char* use_sAspect = shaderElement->Attribute("sAspect");
+				if(use_sAspect != NULL && string(use_sAspect) == "true")
+					tmpAssetFile.options.insert("use_sAspect");
+
+				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
+				{
+					const char* preload = shaderElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+						assetFiles.push(tmpAssetFile);
+					else
+						assetFilesPreload.push(tmpAssetFile);
+				}
+				else debugBreak();
+				shaderElement = shaderElement->NextSiblingElement();
+			}
+		}
+	}
+////////////////////////////////////////models///////////////////////////////////////////
+	node = assetsNode->FirstChild("models");
+	if(node != NULL)
+	{
+		TiXmlElement* modelsElement		= NULL;
+		TiXmlElement* modelElement		= NULL;
+
+		modelsElement = node->ToElement();
+		if(modelsElement != NULL)
+		{
+			node = modelsElement->FirstChildElement();
+			if(node != NULL) modelElement = node->ToElement();
+
+			while(modelElement != NULL)
+			{
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::MODEL;
+
+				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+
+				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+					assetFiles.push(tmpAssetFile);
+				else
+					debugBreak();
+
+				modelElement = modelElement->NextSiblingElement();
+			}
+		}
+	}
+///////////////////////////////////////font//////////////////////////////////////////////
+	node = assetsNode->FirstChild("fonts");
+	if(node != NULL)
+	{
+		TiXmlElement* assetsElement		= NULL;
+		TiXmlElement* assetElement		= NULL;
+
+		assetsElement = node->ToElement();
+		if(assetsElement != NULL)
+		{
+			node = assetsElement->FirstChildElement();
+			if(node != NULL) assetElement = node->ToElement();
+
+
+			while(assetElement != NULL)
+			{	
+				assetFile tmpAssetFile;
+				tmpAssetFile.type = asset::FONT;
+
+				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+
+				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+				{
+					const char* preload = assetElement->Attribute("preload");
+					if(preload == NULL || string(preload) != "true")
+					{
+						tmpAssetFile.file = fileManager.loadTextFile(tmpAssetFile.filename[0],true);
+						assetFiles.push(tmpAssetFile);
+					}
+					else
+					{
+						tmpAssetFile.file = fileManager.loadTextFile(tmpAssetFile.filename[0],false);
+						assetFilesPreload.push(tmpAssetFile);
+					}
+				}
+				else debugBreak();
+
+				assetElement = assetElement->NextSiblingElement();
+			}
+		}
+	}
+
+	return true;
+}
+int DataManager::loadAsset()
+{
+	if(assetFilesPreload.empty() && assetFiles.empty())
+		return 0;
+
+	bool loadedAsset=false;
+	assetFile file;
+	bool preload;
+	auto pop = [this](bool p)
+	{
+		if(p)
+			assetFilesPreload.pop();
+		else assetFiles.pop();
+	};
+
+	do
+	{
+		////////////////////set file////////////////////////
+		file = (preload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
+		////////////////////////////////////////////////////
+		if(file.type == asset::TEXTURE)
+		{
+			if(file.file == nullptr) file.file = fileManager.loadTextureFile(file.filename[0]);
+			if(!file.file->complete()) break;
+
+			bool t = file.options.count("tileable") != 0;
+			//registerTexture(file.name, file.filename[0], t);
+			registerTexture(file.name, dynamic_pointer_cast<FileManager::textureFile>(file.file), t);
+			pop(preload);
+		}
+		else if(file.type == asset::SHADER)
+		{
+			if(registerShader(file.name, file.filename[0], file.filename[1]) && file.options.count("use_sAspect") != 0)
+			{
+				auto s = assets.find(file.name);
+				((shaderAsset*)(s->second))->use_sAspect = true;
+
+				bind(file.name);
+				setUniform1f("sAspect",sAspect);
+				unbind(file.name);
+			}
+			pop(preload);
+			break;
+		}
+		else if(file.type == asset::MODEL)
+		{
+			registerOBJ(file.name, file.filename[0]);
+			pop(preload);
+			break;
+		}
+		else if(file.type == asset::FONT)
+		{
+			if(file.file == nullptr) file.file = fileManager.loadTextFile(file.filename[0]);
+			if(!file.file->complete()) break;
+
+			registerFont(file.name, dynamic_pointer_cast<FileManager::textFile>(file.file));
+			pop(preload);
+			break;
+		}
+	}while(!assetFilesPreload.empty() && !assetFiles.empty());
+	
+	return assetFiles.size();
+}
+
 int DataManager::getId(string name)
 {
 	auto a = assets.find(name);
@@ -1243,15 +1165,26 @@ int DataManager::getId(objectType t)
 {
 	return getId(objectTypeString(t));
 }
+const DataManager::fontAsset* DataManager::getFont(string name)
+{
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::FONT)
+		return nullptr;
+
+	return (const fontAsset*)i->second;
+}
+const DataManager::modelAsset* DataManager::getModel(string name)
+{
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::MODEL)
+		return nullptr;
+
+	return (const modelAsset*)i->second;
+}
 bool DataManager::assetLoaded(string name)
 {
 	return assets.find(name) != assets.end();
 }
-//CollisionChecker::triangleList* DataManager::getModel(objectType type)
-//{
-//	auto i = models.find(getId(type));
-//	return i != models.end() ? i->second : NULL;
-//}
 
 void DataManager::setUniform1f(string name, float v0)
 {
@@ -1353,6 +1286,7 @@ void DataManager::setUniformMatrix(string name, const Mat4f& m)
 		glUniformMatrix4fv(((shaderAsset*)assets[boundShader])->uniforms[name],1,false,m.ptr());
 	}
 }
+
 void DataManager::shutdown()
 {
 	boundShader = "";

@@ -16,6 +16,7 @@
 #endif
 
 #include "zlib/zlib.h"
+#include "png/png.h"
 
 using namespace std;
 
@@ -252,124 +253,6 @@ string FileManager::changeExtension(string filename, string newExtension)
 		return v;
 	}
 #endif
-//
-//void FileManager::lTextFile(std::shared_ptr<textFile> f)
-//{
-//	try{
-//		ifstream fin(f->filename,ios::in|ios::ate);
-//		if(fin.is_open())
-//		{
-//			int size = fin.tellg();
-//			std::unique_ptr<char> data(new char[size+1]);
-//			memset(data.get(),0,size+1);
-//			fin.seekg (0, ios::beg);
-//			fin.read (data.get(), size);
-//			fin.close();
-//
-//			f->contents = data.get();
-//
-//			f->completeLoad(true);
-//			return;
-//		}
-//	}catch(...){}
-//	f->completeLoad(false);
-//}
-//void FileManager::lBinaryFile(std::shared_ptr<binaryFile> f)
-//{
-//	try{
-//		ifstream fin(f->filename,ios::in|ios::ate|ios::binary);
-//		if(fin.is_open())
-//		{
-//			int size = fin.tellg();
-//			unsigned char* data = new unsigned char[size];
-//			memset(data,0,size);
-//			f->contents = data;
-//			f->size = size;
-//
-//			fin.seekg (0, ios::beg);
-//			fin.read ((char*)data, size);
-//			fin.close();
-//
-//			f->completeLoad(true);
-//			return;
-//		}
-//	}catch(...){}
-//	f->completeLoad(false);
-//}
-//void FileManager::lIniFile(std::shared_ptr<iniFile> f)
-//{
-//	try{
-//		ifstream fin(f->filename,ios::in|ios::ate);
-//		if(fin.is_open())
-//		{
-//			int size = fin.tellg();
-//			std::unique_ptr<char> data(new char[size]);
-//			memset(data.get(),0,size);
-//			fin.seekg (0, ios::beg);
-//			fin.read (data.get(), size);
-//			fin.close();
-//
-//			string section="", key, value;
-//
-//			char* d = data.get();
-//
-//			int i=0;
-//			auto advanceToNextLine = [&i, &size,&d]()
-//			{
-//				while(i < size && d[i] != '\n')
-//					++i;
-//				++i;
-//			};
-//
-//
-//			while(i < size)
-//			{
-//				key = "";
-//				value = "";
-//				if(d[i] == '[')
-//				{
-//					++i;
-//					while(i < size && d[i] != ']' && d[i] != '\n')
-//					{
-//						section += d[i];
-//						++i;
-//					}
-//				}
-//				else
-//				{
-//					if(d[i] == ';' || d[i] == '#'){ advanceToNextLine(); continue;}
-//
-//					while(i < size && d[i] != '\n' && d[i] != '=' && d[i] != ';' && d[i] != '#')
-//					{
-//						key += d[i];
-//						++i;
-//					}
-//
-//					if(d[i] == ';' || d[i] == '#'){ advanceToNextLine();continue;}
-//					else if(d[i] == '\n'){++i; continue;}
-//					else if(i >= size) break;
-//					else if(d[i] == '=') i++;
-//
-//					while(i < size && d[i] != '\n' && d[i] != ';' && d[i] != '#')
-//					{
-//						value += d[i];
-//						++i;
-//					}
-//
-//					f->bindings[section][key] = value;
-//
-//					if(d[i] != '\n')
-//						advanceToNextLine();
-//				}
-//
-//			}
-//
-//			f->completeLoad(true);
-//			return;
-//		}
-//	}catch(...){}
-//	f->completeLoad(false);
-//}
 shared_ptr<FileManager::textFile> FileManager::loadTextFile(string filename, bool asinc)
 {
 	std::shared_ptr<textFile> f(new textFile(filename));
@@ -443,6 +326,15 @@ shared_ptr<FileManager::zipFile> FileManager::loadZipFile(string filename, bool 
 	}
 	return f;
 }
+shared_ptr<FileManager::textureFile> FileManager::loadTextureFile(string filename, bool asinc)
+{
+	string ext = extension(filename);
+	if(ext == ".bmp")	return loadBmpFile(filename, asinc);
+	if(ext == ".tga")	return loadPngFile(filename, asinc);
+	if(ext == ".png")	return loadPngFile(filename, asinc);
+
+	return shared_ptr<FileManager::textureFile>();
+}
 shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, bool asinc)
 {
 	std::shared_ptr<textureFile> f(new bmpFile(filename));
@@ -457,6 +349,42 @@ shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, b
 	{
 		fileContents data = loadFileContents(f->filename);
 		parseBmpFile(f, data);
+		delete[] data.contents;
+	}
+	return f;
+}
+shared_ptr<FileManager::textureFile> FileManager::loadTgaFile(string filename, bool asinc)
+{
+	std::shared_ptr<textureFile> f(new tgaFile(filename));
+
+	if(asinc)
+	{
+		fileQueueMutex.lock();
+		fileQueue.push(f);
+		fileQueueMutex.unlock();
+	}
+	else
+	{
+		fileContents data = loadFileContents(f->filename);
+		parseTgaFile(f, data);
+		delete[] data.contents;
+	}
+	return f;
+}
+shared_ptr<FileManager::textureFile> FileManager::loadPngFile(string filename, bool asinc)
+{
+	std::shared_ptr<textureFile> f(new pngFile(filename));
+
+	if(asinc)
+	{
+		fileQueueMutex.lock();
+		fileQueue.push(f);
+		fileQueueMutex.unlock();
+	}
+	else
+	{
+		fileContents data = loadFileContents(f->filename);
+		parsePngFile(f, data);
 		delete[] data.contents;
 	}
 	return f;
@@ -486,6 +414,18 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 	{
 		shared_ptr<textureFile> f(new bmpFile(filename));
 		parseBmpFile(f, data);
+		return f;
+	}
+	else if(ext == ".tga")
+	{
+		shared_ptr<textureFile> f(new bmpFile(filename));
+		parseBmpFile(f, data);
+		return f;
+	}
+	else if(ext == ".png")
+	{
+		shared_ptr<textureFile> f(new pngFile(filename));
+		parsePngFile(f, data);
 		return f;
 	}
 	else
@@ -821,6 +761,235 @@ void FileManager::parseBmpFile(shared_ptr<textureFile> f, fileContents data)
 		f->completeLoad(false);
 	}
 }
+void FileManager::parseTgaFile(shared_ptr<textureFile> f, fileContents data)
+{
+/////////////structs///////////////
+	//struct TGA
+	//{
+	//	GLubyte header[6];			// Holds The First 6 Useful Bytes Of The File
+	//	GLuint bytesPerPixel;		// Number Of BYTES Per Pixel (3 Or 4)
+	//	GLuint imageSize;			// Amount Of Memory Needed To Hold The Image
+	//	GLuint type;				// The Type Of Image, GL_RGB Or GL_RGBA
+	//	GLuint Height;				// Height Of Image
+	//	GLuint Width;				// Width Of Image
+	//	GLuint Bpp;					// Number Of BITS Per Pixel (24 Or 32)
+	//};
+	//struct Header
+	//{
+	//	short width;				// image width in pixels
+	//	short height;				// image height in pixels
+	//	unsigned char bpp;			// image bits per pixel 8,16,24,32
+	//};
+
+
+		//unsigned char* imageData;	// Hold All The Color Values For The Image.
+		//unsigned int bpp; 			// Hold The Number Of Bits Per Pixel.
+		//unsigned int width;			// The Width Of The Entire Image.
+		//unsigned int height;		// The Height Of The Entire Image.
+		//unsigned int texID;			// Texture ID For Use With glBindTexture.
+		//unsigned int type;			// Data Stored In * ImageData (GL_RGB Or GL_RGBA)
+
+
+	if(data.contents != nullptr)
+	{
+		f->width = readAs<short>(data.contents + 9);
+		f->height = readAs<short>(data.contents + 11);
+		char bpp = readAs<char>(data.contents + 13) / 8;
+
+		f->channels = bpp / 8;
+
+
+		//ifstream fin(filename, ios::binary);
+		//fin.read((char *)(&tgaheader), sizeof(tgaheader));
+		//fin.read((char *)(&tga.header), sizeof(tga.header));
+		//texture.width  = tga.header[1] * 256 + tga.header[0];					// Determine The TGA Width	(highbyte*256+lowbyte)
+		//texture.height = tga.header[3] * 256 + tga.header[2];					// Determine The TGA Height	(highbyte*256+lowbyte)
+		//texture.bpp	= tga.header[4];											// Determine the bits per pixel
+		//tga.Width		= texture.width;										// Copy width into local structure
+		//tga.Height		= texture.height;										// Copy height into local structure
+		//tga.Bpp			= texture.bpp;											// Copy BPP into local structure
+
+		if((f->width <= 0) || (f->height <= 0) || ((bpp != 24) && (bpp !=32)))
+		{
+			f->completeLoad(false);
+			return;
+		}
+
+		f->contents = new unsigned char[f->width*f->height*f->channels];
+		memcpy(f->contents, data.contents + 18, f->width*f->height*f->channels);
+
+		for(int cswap = 0; cswap < (int)f->width*f->height*f->channels; cswap += f->channels)
+		{
+			swap(f->contents[cswap], f->contents[cswap+2]);
+		}
+
+		f->completeLoad(true);
+	}
+	else
+	{
+		f->completeLoad(false);
+	}
+}
+void pngStreamRead(png_structp png_ptr, png_bytep outBytes, png_size_t byteCountToRead)
+{
+	FileManager::fileContents* ptr = (FileManager::fileContents*)png_get_io_ptr(png_ptr);
+	if(ptr  != nullptr && ptr->size >= byteCountToRead)
+	{
+		memcpy(outBytes, ptr->contents, byteCountToRead);
+
+		ptr->contents += byteCountToRead;
+		ptr->size -= byteCountToRead;
+	}
+	else if(ptr != nullptr)
+	{
+		memcpy(outBytes, ptr->contents, byteCountToRead);
+
+		ptr->contents += ptr->size;
+		ptr->size = 0;
+	}
+};
+void FileManager::parsePngFile(shared_ptr<textureFile> f, fileContents data)
+{
+	if(data.contents != nullptr)
+	{
+		png_uint_32		i,
+						width,
+						height,
+						rowbytes;
+		int				bit_depth,
+						color_type,
+						colorChannels;
+		unsigned char*	image_data;
+		png_bytep*		row_pointers;
+
+		/* Open the PNG file. */
+		//FILE *infile;
+		//infile = fopen(filename.c_str(), "rb");
+
+		if (!png_check_sig(data.contents, 8)) {
+			//fclose(infile);
+			f->completeLoad(false);
+			return;
+		}
+		/*
+		 * Set up the PNG structs
+		 */
+		png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		if (!png_ptr) {
+			//fclose(infile);
+			f->completeLoad(false);
+			return; /* out of memory */
+		}
+
+		png_infop info_ptr = png_create_info_struct(png_ptr);
+		if (!info_ptr) {
+			png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+			//fclose(infile);
+			f->completeLoad(false);
+			return; /* out of memory */
+		}
+
+		fileContents streamPtr = data;
+
+		/*
+		 * lets libpng know that we already checked the 8
+		 * signature bytes, so it should not expect to find
+		 * them at the current file pointer location
+		 */
+		streamPtr.contents += 8;
+		streamPtr.size -= 8;
+		png_set_sig_bytes(png_ptr, 8);
+
+
+		png_set_read_fn(png_ptr, &streamPtr, pngStreamRead);
+
+		png_infop end_ptr = png_create_info_struct(png_ptr);
+		if (!end_ptr) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+			//fclose(infile);
+			f->completeLoad(false);
+			return; /* out of memory */
+		}
+
+		/*
+		 * block to handle libpng errors,
+		 * then check whether the PNG file had a bKGD chunk
+		 */
+		if (setjmp(png_jmpbuf(png_ptr))) {
+			png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
+			//fclose(infile);
+			f->completeLoad(false);
+			return;
+		}
+
+		/*
+		 * takes our file stream pointer (infile) and
+		 * stores it in the png_ptr struct for later use.
+		 */
+		//png_init_io(png_ptr, infile);
+
+
+		//png_set_sig_bytes(png_ptr, 8);
+
+		png_read_info(png_ptr, info_ptr);
+		png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+
+
+		if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
+		if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
+		if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
+		if (bit_depth == 16)																png_set_strip_16(png_ptr);
+		if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
+
+		/* snipped out the color type code, see source pngLoad.c */
+		/* Update the png info struct.*/
+		png_read_update_info(png_ptr, info_ptr);
+
+		rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+		colorChannels = (int)png_get_channels(png_ptr, info_ptr);
+
+		image_data = new unsigned char[rowbytes*height];
+		row_pointers = new png_bytep[height];
+
+		for (i = 0;  i < height;  i++)
+			row_pointers[i] = image_data + i*rowbytes;
+
+		png_read_image(png_ptr, row_pointers);
+		png_read_end(png_ptr, NULL);
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		//fclose(infile);
+
+
+		//int format;
+		//if(colorChannels == 1)		format = GL_LUMINANCE;
+		//else if(colorChannels == 2)	format = GL_LUMINANCE_ALPHA;
+		//else if(colorChannels == 3) format = GL_RGB;
+		//else if(colorChannels == 4) format = GL_RGBA;
+
+		f->channels = colorChannels;
+		f->contents = image_data;
+		f->height = height;
+		f->width = width;
+
+		delete[] row_pointers;
+
+		//textureAsset* a = new textureAsset;
+		//a->id = texV;
+		//a->type = asset::TEXTURE;
+		//a->width = width;
+		//a->height = height;
+		//a->bpp = colorChannels*8;
+		//a->data = NULL;
+		//assets[name] = a;
+
+
+		f->completeLoad(true);
+	}
+	else
+	{
+		f->completeLoad(false);
+	}
+}
 FileManager::fileContents FileManager::loadFileContents(string filename)
 {
 	fileContents f;
@@ -868,6 +1037,8 @@ void FileManager::workerThread()
 			else if(f->type == file::INI)	parseIniFile(dynamic_pointer_cast<iniFile>(f),data);
 			else if(f->type == file::ZIP)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
 			else if(f->type == file::TEXTURE && f->format == file::BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
+			else if(f->type == file::TEXTURE && f->format == file::TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
+			else if(f->type == file::TEXTURE && f->format == file::PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);
 #ifdef _DEBUG
 			else __debugbreak();
 #endif

@@ -7,6 +7,10 @@ objId bullets;
 
 bool Game::init()
 {
+#ifdef _DEBUG
+	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
+#endif
+
 	if(!fileManager.directoryExists("media"))
 	{
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
@@ -21,9 +25,7 @@ bool Game::init()
 	auto s = fileManager.loadIniFile("media/settings.ini");
 	settings.load(s->bindings);
 
-#ifdef _DEBUG
-	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
-#endif
+
 
 	Vec2i r, rWanted;
 	r.x = GetSystemMetrics(SM_CXSCREEN);

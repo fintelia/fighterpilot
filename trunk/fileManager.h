@@ -73,19 +73,30 @@ public:
 		unsigned int height;
 		unsigned char* contents;
 
-		textureFile(string fName, Format f):file(fName, TEXTURE, BMP),channels(0),width(0),height(0),contents(nullptr){}
+		textureFile(string fName, Format fmt):file(fName, TEXTURE, fmt),channels(0),width(0),height(0),contents(nullptr){}
 		~textureFile(){delete[] contents;}
 	};
 	struct bmpFile: public textureFile
 	{
 		bmpFile(string fName):textureFile(fName, BMP){}
 	};
+	struct pngFile: public textureFile
+	{
+		pngFile(string fName):textureFile(fName, PNG){}
+	};
+	struct tgaFile: public textureFile
+	{
+		tgaFile(string fName):textureFile(fName, TGA){}
+	};
 
 	shared_ptr<binaryFile> loadBinaryFile(string filename, bool asinc = false);
 	shared_ptr<textFile> loadTextFile(string filename, bool asinc = false);
 	shared_ptr<iniFile> loadIniFile(string filename, bool asinc = false);
 	shared_ptr<zipFile> loadZipFile(string filename, bool asinc = false);
+	shared_ptr<textureFile> loadTextureFile(string filename, bool asinc = false);
 	shared_ptr<textureFile> loadBmpFile(string filename, bool asinc = false);
+	shared_ptr<textureFile> loadTgaFile(string filename, bool asinc = false);
+	shared_ptr<textureFile> loadPngFile(string filename, bool asinc = false);
 
 	string filename(string filename);
 	string extension(string filename);
@@ -121,6 +132,8 @@ private:
 	void parseIniFile(shared_ptr<iniFile> f, fileContents data);
 	void parseZipFile(shared_ptr<zipFile> f, fileContents data);
 	void parseBmpFile(shared_ptr<textureFile> f, fileContents data);
+	void parseTgaFile(shared_ptr<textureFile> f, fileContents data);
+	void parsePngFile(shared_ptr<textureFile> f, fileContents data);
 
 	FileManager();
 	~FileManager(){}
