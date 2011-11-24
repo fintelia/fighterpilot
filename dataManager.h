@@ -10,7 +10,7 @@ private:
 		int width;
 		int height;
 		char bpp;				//bit per pixel
-		unsigned char* data;	//currently just set to NULL
+		unsigned char* data;	//currently just set to nullptr
 	};
 	struct shaderAsset: public asset{
 		bool use_sAspect;
@@ -54,6 +54,7 @@ private:
 		string filename[2];		//extra for shaders
 		set<string> options;
 		asset::assetType type;
+		shared_ptr<FileManager::file> file; //for textures
 	};
 	queue<assetFile> assetFiles;
 	queue<assetFile> assetFilesPreload;
@@ -107,23 +108,20 @@ public:
 
 
 	bool loadAssetList();
-	void preloadAssets();
-	int loadAsset();
+	int loadAsset(); //also does preload if not already done
 
 	string getBoundShader() const{return boundShader;}
 
 	void shutdown();
 private:
 
-	void loadAssetFile(assetFile &file);
-
-	bool registerTGA(string name, string filename, bool tileable=false);
-	bool registerPNG(string name, string filename, bool tileable=false);
+	//bool registerTGA(string name, string filename, bool tileable=false);
+	//bool registerPNG(string name, string filename, bool tileable=false);
 	bool registerOBJ(string name, string filename);
 	bool registerShader(string name, string vert, string frag, bool use_sAspect=false);
 	bool registerTerrainShader(string name, string frag);
-	bool registerTexture(string name, string filename, bool tileable=false);
-	bool registerFont(string name, string filename);
+	bool registerTexture(string name, shared_ptr<FileManager::textureFile> f, bool tileable=false);
+	bool registerFont(string name, shared_ptr<FileManager::textFile> f);
 
 	int getId(string name);
 	int getId(objectType t);

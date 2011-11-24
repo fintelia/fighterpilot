@@ -113,7 +113,6 @@ extern float fps;
 #include "input.h"
 #include "path.h"
 #include "script.h"
-#include "imageloader.h"//should be replaced!!!
 #include "profiler.h"
 #include "object.h"
 #include "player.h"

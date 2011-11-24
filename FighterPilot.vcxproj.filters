@@ -273,9 +273,6 @@
     <ClCompile Include="input.cpp">
       <Filter>Source Files\ENGINE\input</Filter>
     </ClCompile>
-    <ClCompile Include="imageloader.cpp">
-      <Filter>Source Files\ENGINE\file I/O</Filter>
-    </ClCompile>
     <ClCompile Include="script.cpp">
       <Filter>Source Files\ENGINE\file I/O</Filter>
     </ClCompile>
@@ -401,9 +398,6 @@
     </ClInclude>
     <ClInclude Include="input.h">
       <Filter>Source Files\ENGINE\input</Filter>
-    </ClInclude>
-    <ClInclude Include="imageloader.h">
-      <Filter>Source Files\ENGINE\file I/O</Filter>
     </ClInclude>
     <ClInclude Include="script.h">
       <Filter>Source Files\ENGINE\file I/O</Filter>

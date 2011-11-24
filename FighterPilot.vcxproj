@@ -132,7 +132,6 @@
       </FloatingPointExceptions>
     </ClCompile>
     <ClCompile Include="graphicsManager.cpp" />
-    <ClCompile Include="imageloader.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="levelEditor.cpp" />
@@ -179,7 +178,6 @@
     <ClInclude Include="enums.h" />
     <ClInclude Include="gameMath.h" />
     <ClInclude Include="graphicsManager.h" />
-    <ClInclude Include="imageloader.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="level.h" />
     <ClInclude Include="menuScreen.h" />

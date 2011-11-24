@@ -975,29 +975,28 @@ void editLevel::setWater(string shaderName)
 }
 bool editLevel::init(string BMP, Vec3f size, float seaLevel)
 {
-	Image* image = loadBMP(BMP.c_str());
+	auto image = fileManager.loadBmpFile(BMP);
+//	Image* image = loadBMP(BMP.c_str());
 
-	if(image == NULL)
+	if(!image->valid() || image->height == 0 || image->width==0)
 		return false;
 
 	float* t = new float[image->width * image->height];
 
 	for(int y = 0; y < image->height; y++) {
 		for(int x = 0; x < image->width; x++) {
-			t[y * image->width + x] = (float)((unsigned char)image->pixels[3 * (y * image->width + x)])/255.0*size.y - seaLevel;
+			t[y * image->width + x] = (float)((unsigned char)image->contents[image->channels * (y * image->width + x)])/255.0*size.y - seaLevel;
 		}
 	}
 
-	if(image->height != 0 && image->width != 0)
-	{
-		mGround = new heightmapGL(Vec2u(image->height,image->width),t);
-		mGround->setSize(Vec2f(size.x,size.z));
-		mGround->init();
 
-		mGround->setMinMaxHeights();
-	}
+	mGround = new heightmapGL(Vec2u(image->height,image->width),t);
+	mGround->setSize(Vec2f(size.x,size.z));
+	mGround->init();
+
+	mGround->setMinMaxHeights();
+
 	delete[] t;
-	delete image;
 
 	return true;
 }

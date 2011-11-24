@@ -569,25 +569,27 @@ void levelEditor::fromFile(string filename)
 	string ext = fileManager.extension(filename);
 	if(ext == ".bmp")
 	{
-		Image* image = loadBMP(filename.c_str());
-		float* t = new float[image->width * image->height];
-		for(int y = 0; y < image->height; y++) {
-			for(int x = 0; x < image->width; x++) {
-				t[y * image->width + x] = (unsigned char)image->pixels[3 * (y * image->width + x)] * 10.0;
+		auto image = fileManager.loadBmpFile(filename);
+		if(image->valid() && image->width > 0 && image->height > 0)
+		{
+			float* t = new float[image->width * image->height];
+			for(int y = 0; y < image->height; y++) {
+				for(int x = 0; x < image->width; x++) {
+					t[y * image->width + x] = (unsigned char)image->contents[image->channels * (y * image->width + x)] * 10.0;
+				}
 			}
+			//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL");
+			level->newGround(image->height,image->width,t);
+			level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
+			delete[] t;
+
+
+			level->ground()->setMinMaxHeights();
+			maxHeight=level->ground()->getMaxHeight();
+			minHeight=level->ground()->getMinHeight();
+			sliders["sea level"]->setValue(0.333);
+			resetView();
 		}
-		//assert(image->height == image->width || "MAP WIDTH AND HEIGHT MUST BE EQUAL");
-		level->newGround(image->height,image->width,t);
-		level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
-		delete[] t;
-		delete image;
-
-
-		level->ground()->setMinMaxHeights();
-		maxHeight=level->ground()->getMaxHeight();
-		minHeight=level->ground()->getMinHeight();
-		sliders["sea level"]->setValue(0.333);
-		resetView();
 	}
 	else if(ext == ".bil")
 	{

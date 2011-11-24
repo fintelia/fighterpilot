@@ -446,8 +446,8 @@ void openFile::render()
 	{
 		if(row >= 0)
 		{
-			graphics->drawPartialOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),Rect::XYWH(0,0,0.5,0.5),"thumbnails");
-			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.05*row),"font small");
+			graphics->drawPartialOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size),Rect::XYWH(0,0,0.5,0.5),"thumbnails");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
 		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
@@ -455,8 +455,8 @@ void openFile::render()
 	{
 		if(row >= 0)
 		{
-			graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size),"button");
-			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.05*row),"font small");
+			graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size),"button");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
 		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
@@ -515,7 +515,7 @@ bool openFile::getThumbnail(Vec2f v, vector<thumbnail>::iterator& itt)
 	float size = 0.0625;
 	for(auto i=folders.begin(); i != folders.end(); i++)
 	{
-		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size).inRect(v))
+		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size).inRect(v))
 		{
 			itt = i;
 			return true;
@@ -528,7 +528,7 @@ bool openFile::getThumbnail(Vec2f v, vector<thumbnail>::iterator& itt)
 	}
 	for(auto i=files.begin(); i != files.end(); i++)
 	{
-		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.05*row, size,size).inRect(v))
+		if(row >= 0 && Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size).inRect(v))
 		{
 			itt = i;
 			return true;
