@@ -21,7 +21,6 @@ void nPlane::updateSimulation(double time, double ms)
 {
 	//control->update();
 	//controlState controller=control->getControlState();
-
 	lastPosition = position;
 	lastRotation = rotation;
 
@@ -370,6 +369,7 @@ void nPlane::updateSimulation(double time, double ms)
 }
 void nPlane::updateFrame(float interpolation) const
 {
+	Profiler.setOutput("interpolation:", interpolation);
 	Vec3f pos = lerp(lastPosition, position, interpolation);
 	Quat4f rot = slerp(lastRotation, rotation, interpolation);
 
@@ -378,10 +378,10 @@ void nPlane::updateFrame(float interpolation) const
 	meshInstance->update(pos, rot, visible);
 	int n=0;
 	for(auto i = bombs.ammoRounds.begin(); i != bombs.ammoRounds.end(); i++, n++)
-		i->meshInstance->update(pos + rotation * i->offset, rot, bombs.roundsMax - bombs.roundsLeft <= n && visible);
+		i->meshInstance->update(pos + rot * i->offset, rot, bombs.roundsMax - bombs.roundsLeft <= n && visible);
 	n=0;
 	for(auto i = rockets.ammoRounds.begin(); i != rockets.ammoRounds.end(); i++, n++)
-		i->meshInstance->update(pos + rotation * i->offset, rot, rockets.max - rockets.left <= n && visible);
+		i->meshInstance->update(pos + rot * i->offset, rot, rockets.max - rockets.left <= n && visible);
 
 	if(firstPerson)
 	{
@@ -391,9 +391,9 @@ void nPlane::updateFrame(float interpolation) const
 	}
 	if(thirdPerson)
 	{
-		thirdPerson->center	= lerp(observer.currentFrame.center, observer.lastFrame.center, interpolation);
-		thirdPerson->eye	= lerp(observer.currentFrame.eye, observer.lastFrame.eye, interpolation);
-		thirdPerson->up		= lerp(observer.currentFrame.up, observer.lastFrame.up, interpolation);
+		thirdPerson->center	= lerp(observer.lastFrame.center, observer.currentFrame.center, interpolation);
+		thirdPerson->eye	= lerp(observer.lastFrame.eye, observer.currentFrame.eye, interpolation);
+		thirdPerson->up		= lerp(observer.lastFrame.up, observer.currentFrame.up, interpolation);
 	}
 }
 void nPlane::smoothCamera()
@@ -777,6 +777,8 @@ void nPlane::spawn()
 
 	respawning=false;
 	shotsFired = 0;
+
+	smoothCamera(); //set up the camera
 
 //	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(7,0,-5)));
 //	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(-7,0,-5)));

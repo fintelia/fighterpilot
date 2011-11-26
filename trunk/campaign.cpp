@@ -137,10 +137,10 @@ void campaign::render()
 }
 void campaign::render3D(unsigned int view)
 {
-	//static int n = 0;	n++;
-	//if(n <= 1) return;
-
-//	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	drawScene(0);
+	if(players[view]->firstPersonView && !((nPlane*)players[view]->getObject())->controled && !players[view]->getObject()->dead)
+		sceneManager.renderScene(players[view]->getObject()->meshInstance);
+	else
+		sceneManager.renderScene();
 }
 }

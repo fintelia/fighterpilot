@@ -201,3 +201,12 @@ T (min)(const T& a, const U& b)
 {
 	return (a < b) ? a : b;
 }
+
+template <class T>
+inline void setBit(T& data, const T& bit, bool value)
+{
+	if(value)
+		data |= bit;
+	else
+		data &= ~bit;
+}
