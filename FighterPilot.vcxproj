@@ -109,7 +109,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="aaGun.cpp" />
-    <ClCompile Include="Angle.cpp" />
+    <ClCompile Include="angle.cpp" />
     <ClCompile Include="blackSmoke.cpp" />
     <ClCompile Include="bomb.cpp" />
     <ClCompile Include="bullet.cpp" />
@@ -126,7 +126,7 @@
     <ClCompile Include="explosionSmoke.cpp" />
     <ClCompile Include="fileManager.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="GameMath.cpp" />
+    <ClCompile Include="gameMath.cpp" />
     <ClCompile Include="GLee.c">
       <FloatingPointExceptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </FloatingPointExceptions>
@@ -141,7 +141,7 @@
     <ClCompile Include="dogFight.cpp" />
     <ClCompile Include="object.cpp" />
     <ClCompile Include="objectList.cpp" />
-    <ClCompile Include="OpenGLgraphics.cpp" />
+    <ClCompile Include="openGLgraphics.cpp" />
     <ClCompile Include="particleExplosion.cpp" />
     <ClCompile Include="particleManager.cpp" />
     <ClCompile Include="path.cpp" />
@@ -161,7 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aaGun.h" />
-    <ClInclude Include="Angle.h" />
+    <ClInclude Include="angle.h" />
     <ClInclude Include="bomb.h" />
     <ClInclude Include="bullet.h" />
     <ClInclude Include="collide.h" />

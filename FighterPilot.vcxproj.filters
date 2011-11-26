@@ -165,13 +165,7 @@
     <ClCompile Include="GLee.c">
       <Filter>glee</Filter>
     </ClCompile>
-    <ClCompile Include="Angle.cpp">
-      <Filter>Source Files\ENGINE\math\angle</Filter>
-    </ClCompile>
     <ClCompile Include="collide.cpp">
-      <Filter>Source Files\ENGINE\math</Filter>
-    </ClCompile>
-    <ClCompile Include="GameMath.cpp">
       <Filter>Source Files\ENGINE\math</Filter>
     </ClCompile>
     <ClCompile Include="graphicsManager.cpp">
@@ -194,9 +188,6 @@
     </ClCompile>
     <ClCompile Include="enums.cpp">
       <Filter>Source Files\OTHER\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="OpenGLgraphics.cpp">
-      <Filter>Source Files\ENGINE\graphicsManager</Filter>
     </ClCompile>
     <ClCompile Include="menuScreen.cpp">
       <Filter>Source Files\ENGINE\menu</Filter>
@@ -303,6 +294,15 @@
     <ClCompile Include="controlManager.cpp">
       <Filter>Source Files\ENGINE\controlManager</Filter>
     </ClCompile>
+    <ClCompile Include="openGLgraphics.cpp">
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
+    </ClCompile>
+    <ClCompile Include="gameMath.cpp">
+      <Filter>Source Files\ENGINE\math</Filter>
+    </ClCompile>
+    <ClCompile Include="angle.cpp">
+      <Filter>Source Files\ENGINE\math\angle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -310,9 +310,6 @@
     </ClInclude>
     <ClInclude Include="vector.h">
       <Filter>Source Files\ENGINE\math\vector</Filter>
-    </ClInclude>
-    <ClInclude Include="Angle.h">
-      <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClInclude>
     <ClInclude Include="collide.h">
       <Filter>Source Files\ENGINE\math</Filter>
@@ -422,6 +419,9 @@
     </ClInclude>
     <ClInclude Include="controlManager.h">
       <Filter>Source Files\ENGINE\controlManager</Filter>
+    </ClInclude>
+    <ClInclude Include="angle.h">
+      <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

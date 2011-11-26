@@ -45,7 +45,7 @@ void SceneManager::resetMeshInstances()
 {
 	meshInstances.clear();
 }
-void SceneManager::renderScene()
+void SceneManager::renderScene(meshInstancePtr firstPersonObject)
 {
 	for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
 	{
@@ -89,6 +89,9 @@ void SceneManager::renderScene()
 				{
 					for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
 					{
+						if((*instance) == firstPersonObject)
+							continue;
+
 						if((*instance)->renderFlag() && graphics->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));

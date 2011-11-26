@@ -4,6 +4,12 @@
 #ifdef XINPUT
 #include <Xinput.h>
 #endif
+
+const unsigned char KEYSTATE_CURRENT	= 0x01;
+const unsigned char KEYSTATE_LAST		= 0x02; 
+const unsigned char KEYSTATE_VIRTUAL	= 0x04;
+
+
 InputManager::xboxControllerState::xboxControllerState():
 #ifdef XINPUT
                     state(new XINPUT_STATE),
@@ -58,7 +64,6 @@ void InputManager::sendCallbacks(callBack* c)
 }
 InputManager::InputManager(): tPresses(0)
 {
-
 	for(int i=0; i<256; i++)
 	{
 		keys[i]=false;
@@ -78,24 +83,22 @@ void InputManager::down(int k)
 {
 	if(k>=256 || k<0) return;
 	inputMutex.lock();
-	keys[k]=true;
+	keys[k] |= KEYSTATE_VIRTUAL;
 	tPresses++;
 	lastKey=k;
 	inputMutex.unlock();
-
-
 }
 void InputManager::up(int k)
 {
 	if(k>=256 || k<0) return;
 	inputMutex.lock();
-	keys[k]=false;
+	keys[k] &= ~KEYSTATE_VIRTUAL;
 	inputMutex.unlock();
 }
 bool InputManager::getKey(int key)
 {
 	if(key>=256 || key<0) return false;
-	return keys[key];
+	return (keys[key] & KEYSTATE_VIRTUAL) != 0;
 }
 const InputManager::xboxControllerState& InputManager::getXboxController(unsigned char controllerNum)
 {
@@ -108,7 +111,7 @@ void InputManager::update()
 	GetCursorPos(&cursorPos);
 
 
-	char newKeyStates[256];
+	static char newKeyStates[256];
 	GetKeyboardState((PBYTE)newKeyStates);
 
 
@@ -127,13 +130,19 @@ void InputManager::update()
 		}
 	}
 #endif
+////////////////////////////////////////////////////mutex lock////////////////////////////////////////////////////
 	inputMutex.lock();
 
 	mousePos.set(((float)cursorPos.x) / sh, ((float)cursorPos.y) / sh);
 
 	for(int i = 0; i<256; i++)
 	{
-		keys[i] = newKeyStates[i] & 0x80;
+		setBit(keys[i], KEYSTATE_LAST, keys[i] & KEYSTATE_CURRENT);
+		setBit(keys[i], KEYSTATE_CURRENT, (newKeyStates[i] & 0x80) != 0);
+		if(!(keys[i] & KEYSTATE_LAST) && (keys[i] & KEYSTATE_CURRENT)) //if key was just pressed
+			setBit(keys[i], KEYSTATE_VIRTUAL, true);
+		else if((keys[i] & KEYSTATE_LAST) && !(keys[i] & KEYSTATE_CURRENT)) //if key was just released
+			setBit(keys[i], KEYSTATE_VIRTUAL, false);
 	}
 
 #ifdef USING_XINPUT
@@ -148,7 +157,8 @@ void InputManager::update()
 #endif
 
 	inputMutex.unlock();
-}
+}/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const InputManager::mouseButtonState& InputManager::getMouseState(mouseButton m)
 {
 	if(m == LEFT_BUTTON)		return leftMouse;
@@ -167,14 +177,14 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			else
 			{
-				down(wParam);
+			//	down(wParam);
 				sendCallbacks(new keyStroke(false, wParam));
 			}
 		}
 	}
 	else if(uMsg == WM_KEYUP)
 	{
-		up(wParam);
+	//	up(wParam);
 		sendCallbacks(new keyStroke(true, wParam));
 	}
 	else if(uMsg == WM_LBUTTONDOWN)

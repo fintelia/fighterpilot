@@ -818,7 +818,7 @@ void FileManager::parseTgaFile(shared_ptr<textureFile> f, fileContents data)
 		f->contents = new unsigned char[f->width*f->height*f->channels];
 		memcpy(f->contents, data.contents + 18, f->width*f->height*f->channels);
 
-		for(int cswap = 0; cswap < (int)f->width*f->height*f->channels; cswap += f->channels)
+		for(int cswap = 0; cswap < (int)(f->width*f->height*f->channels); cswap += f->channels)
 		{
 			swap(f->contents[cswap], f->contents[cswap+2]);
 		}

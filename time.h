@@ -191,7 +191,7 @@ public:
 	}
 	double interpolate()
 	{
-		return ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH < 1.0) ? ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH) : 1.0;
+		return 1.0 - (((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH < 1.0) ? ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH) : 1.0);
 	}
 	double getSpeed()
 	{

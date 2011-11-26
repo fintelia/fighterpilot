@@ -433,7 +433,6 @@ void OpenGLgraphics::render()
 			glMatrixMode(GL_MODELVIEW);		glLoadIdentity();
 
 			menuManager.render3D(currentView);
-			sceneManager.renderScene();
 		}
 	}
 ///////////////////////////////////START PARTICLES///////////////////////

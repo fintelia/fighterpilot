@@ -54,7 +54,7 @@ protected:
 		xboxControllerState();
 		~xboxControllerState();
 	} xboxControllers[4];
-	bool keys[256];
+	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
 	mutex  inputMutex;
 public:
