@@ -104,7 +104,7 @@ protected:
 class checkBox:public element
 {
 public:
-	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,graphics->textSize(t).x + 30,graphics->textSize(t).y,t,c),checked(startChecked),clicking(false){}
+	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,graphics->getTextSize(t).x + 30,graphics->getTextSize(t).y,t,c),checked(startChecked),clicking(false){}
 	virtual ~checkBox(){}
 
 	void render();

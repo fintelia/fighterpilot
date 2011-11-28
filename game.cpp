@@ -92,12 +92,9 @@ void Game::update()
 		particleManager.update();
 
 
-	}
-	menuManager.update();
+	}	
+
+	world.time.nextFrame();	
 	world.frameUpdate();
-
-	world.time.nextFrame();
-
-//	input.update();		//takes 2-11 ms
-//	menuManager.update();	//takes almost no time
+	menuManager.update();
 }

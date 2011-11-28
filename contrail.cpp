@@ -18,10 +18,9 @@ namespace particle
 		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
 		p.size = 3.0;
-
-		p.r = 0.7;
-		p.g = 0.7;
-		p.b = 0.7;
+		p.r = 0.0;
+		p.g = 0.0;
+		p.b = 0.0;
 		p.a = 0.0;
 
 		p.ang = random<double>(0.0,2.0*PI);
@@ -48,5 +47,6 @@ namespace particle
 			p.a = 0.25 - 0.25*t;
 			p.size = (1.0-t) * 9.0 + t * 15.0;
 		}
+		p.r = p.g = p.b = 1.0;
 	}
 }

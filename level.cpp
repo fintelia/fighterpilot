@@ -600,7 +600,7 @@ void Level::heightmapGL::render() const
 		dataManager.bind("rock",2);
 		dataManager.bind("LCnoise",3);
 		dataManager.bindTex(groundTex,4);
-		glError();
+
 		dataManager.setUniform1f("maxHeight",	maxHeight);
 		dataManager.setUniform1f("minHeight",	0);
 		dataManager.setUniform1f("XZscale",		1);

@@ -1,4 +1,6 @@
 
+#include "debugBreak.h"
+
 #include <memory>
 #include <fstream>
 #include <string>
@@ -428,6 +430,12 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 		parsePngFile(f, data);
 		return f;
 	}
+	else if(ext == ".raw")
+	{
+		shared_ptr<binaryFile> f(new binaryFile(filename));
+		parseBinaryFile(f, data);
+		return f;
+	}
 	else
 	{
 		shared_ptr<binaryFile> f(new binaryFile(filename));
@@ -763,33 +771,6 @@ void FileManager::parseBmpFile(shared_ptr<textureFile> f, fileContents data)
 }
 void FileManager::parseTgaFile(shared_ptr<textureFile> f, fileContents data)
 {
-/////////////structs///////////////
-	//struct TGA
-	//{
-	//	GLubyte header[6];			// Holds The First 6 Useful Bytes Of The File
-	//	GLuint bytesPerPixel;		// Number Of BYTES Per Pixel (3 Or 4)
-	//	GLuint imageSize;			// Amount Of Memory Needed To Hold The Image
-	//	GLuint type;				// The Type Of Image, GL_RGB Or GL_RGBA
-	//	GLuint Height;				// Height Of Image
-	//	GLuint Width;				// Width Of Image
-	//	GLuint Bpp;					// Number Of BITS Per Pixel (24 Or 32)
-	//};
-	//struct Header
-	//{
-	//	short width;				// image width in pixels
-	//	short height;				// image height in pixels
-	//	unsigned char bpp;			// image bits per pixel 8,16,24,32
-	//};
-
-
-		//unsigned char* imageData;	// Hold All The Color Values For The Image.
-		//unsigned int bpp; 			// Hold The Number Of Bits Per Pixel.
-		//unsigned int width;			// The Width Of The Entire Image.
-		//unsigned int height;		// The Height Of The Entire Image.
-		//unsigned int texID;			// Texture ID For Use With glBindTexture.
-		//unsigned int type;			// Data Stored In * ImageData (GL_RGB Or GL_RGBA)
-
-
 	if(data.contents != nullptr)
 	{
 		f->width = readAs<short>(data.contents + 9);
@@ -797,17 +778,6 @@ void FileManager::parseTgaFile(shared_ptr<textureFile> f, fileContents data)
 		char bpp = readAs<char>(data.contents + 13) / 8;
 
 		f->channels = bpp / 8;
-
-
-		//ifstream fin(filename, ios::binary);
-		//fin.read((char *)(&tgaheader), sizeof(tgaheader));
-		//fin.read((char *)(&tga.header), sizeof(tga.header));
-		//texture.width  = tga.header[1] * 256 + tga.header[0];					// Determine The TGA Width	(highbyte*256+lowbyte)
-		//texture.height = tga.header[3] * 256 + tga.header[2];					// Determine The TGA Height	(highbyte*256+lowbyte)
-		//texture.bpp	= tga.header[4];											// Determine the bits per pixel
-		//tga.Width		= texture.width;										// Copy width into local structure
-		//tga.Height		= texture.height;										// Copy height into local structure
-		//tga.Bpp			= texture.bpp;											// Copy BPP into local structure
 
 		if((f->width <= 0) || (f->height <= 0) || ((bpp != 24) && (bpp !=32)))
 		{
@@ -1050,4 +1020,229 @@ void FileManager::workerThread()
 			sleep(15);
 		}
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//																																						 //
+//																Write Files																				 //
+//																																						 //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool FileManager::writeFileContents(string filename, fileContents contents)
+{
+	unique_ptr<unsigned char[]> p(contents.contents); //makes sure that memory get deleted
+
+	try{
+		ofstream fout(filename,ios::out|ios::binary|ios::trunc);
+		if(fout.is_open())
+		{
+			fout.write((const char*)contents.contents, contents.size);
+			fout.close();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}catch(...)
+	{
+		return false;
+	}
+}
+bool FileManager::writeBinaryFile(shared_ptr<binaryFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeBinaryFile(f));
+}
+bool FileManager::writeTextFile(shared_ptr<textFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeTextFile(f));
+}
+bool FileManager::writeIniFile(shared_ptr<iniFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeIniFile(f));
+}
+bool FileManager::writeZipFile(shared_ptr<zipFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeZipFile(f));
+}
+bool FileManager::writeBmpFile(shared_ptr<textureFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeBmpFile(f));
+}
+bool FileManager::writeTgaFile(shared_ptr<textureFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializeTgaFile(f));
+}
+bool FileManager::writePngFile(shared_ptr<textureFile> f, bool asinc)
+{
+	return writeFileContents(f->filename, serializePngFile(f));
+}
+
+FileManager::fileContents FileManager::serializeBinaryFile(shared_ptr<binaryFile> f)
+{
+	fileContents c;
+	c.contents = f->contents;
+	c.size = f->size;
+	return c;
+}
+FileManager::fileContents FileManager::serializeTextFile(shared_ptr<textFile> f)
+{
+	fileContents c;
+	c.size = f->contents.size();
+	c.contents = new unsigned char[c.size];
+	memcpy(c.contents, f->contents.c_str(), c.size);
+	return c;
+}
+FileManager::fileContents FileManager::serializeIniFile(shared_ptr<iniFile> f)
+{
+	string s;
+	for(auto section = f->bindings.begin(); section != f->bindings.end(); section++)
+	{
+		s = s + "[" + section->first + "]\n";
+		for(auto binding = section->second.begin(); binding != section->second.end(); binding++)
+		{
+			s += binding->first + "=" + binding->second + "\n";
+		}
+	}
+	fileContents c;
+	c.size = s.size();
+	c.contents = new unsigned char[c.size];
+	memcpy(c.contents, s.c_str(), c.size);
+	return c;
+}
+FileManager::fileContents FileManager::serializeZipFile(shared_ptr<zipFile> f)
+{
+	__debugbreak();// code for FileManager::serializeZipFile not yet written
+	return fileContents();
+}
+FileManager::fileContents FileManager::serializeBmpFile(shared_ptr<textureFile> f)
+{
+	unsigned int width = f->width * f->channels;
+	unsigned int pWidth = width + 3 - ((width - 1) % 4);//padded width
+
+	fileContents c;
+	c.size = 54 + pWidth * f->height;
+	c.contents = new unsigned char[c.size];
+	memset(c.contents, 0, c.size);
+
+	writeAs<unsigned short>(	c.contents + 0,  0x4D42);				//type
+	writeAs<unsigned long>(		c.contents + 2,  c.size);				//size
+	writeAs<unsigned short>(	c.contents + 6,  0);					//reserved1
+	writeAs<unsigned short>(	c.contents + 8,  0);					//reserved2
+	writeAs<unsigned long>(		c.contents + 10, 54);					//offBits
+	writeAs<unsigned long>(		c.contents + 14, 40);					//size of infoHeader
+	writeAs<long>(				c.contents + 18, f->width);				//width
+	writeAs<long>(				c.contents + 22, f->height);			//height
+	writeAs<unsigned short>(	c.contents + 26, 1);					//planes
+	writeAs<unsigned short>(	c.contents + 28, f->channels * 8);		//bit count
+	writeAs<unsigned long>(		c.contents + 30, 0);					//compression
+	writeAs<unsigned long>(		c.contents + 34, pWidth * f->height);	//size of image data
+	writeAs<long>(				c.contents + 38, 3000);					//x pixels per meter
+	writeAs<long>(				c.contents + 42, 3000);					//y pixels per meter
+	writeAs<unsigned long>(		c.contents + 46, 0);					//colors used (or zero)
+	writeAs<unsigned long>(		c.contents + 50, 0);					//important colors used (or zero)
+
+	for(unsigned int y = 0; y < f->height; y++)
+	{
+		for(unsigned int x = 0; x < f->width; x++)
+		{
+			c.contents[54 + pWidth * y + x * f->channels + 0] = f->contents[width * y + x * f->channels + 2];
+			c.contents[54 + pWidth * y + x * f->channels + 1] = f->contents[width * y + x * f->channels + 1];
+			c.contents[54 + pWidth * y + x * f->channels + 2] = f->contents[width * y + x * f->channels + 0];
+		}
+	}
+
+
+	return c;
+}
+FileManager::fileContents FileManager::serializeTgaFile(shared_ptr<textureFile> f)
+{
+	fileContents c;
+	c.size = 18 + f->width * f->height * f->channels;
+	c.contents = new unsigned char[c.size];
+	memset(c.contents, 0, c.size);
+
+	writeAs<unsigned char>(		c.contents + 0,  0);					//size of id field
+	writeAs<unsigned char>(		c.contents + 1,  0);					//type of color map
+	writeAs<unsigned char>(		c.contents + 2,  2);					//type of image
+	writeAs<unsigned short>(	c.contents + 3,  0);					//first color in palette
+	writeAs<unsigned short>(	c.contents + 5,  0);					//number of colors in palette
+	writeAs<unsigned char>(		c.contents + 7,  0);					//number of bits per entry
+	writeAs<unsigned short>(	c.contents + 8,  0);					//x origin
+	writeAs<unsigned short>(	c.contents + 10, 0);					//y origin
+	writeAs<unsigned short>(	c.contents + 12, f->width);				//width
+	writeAs<unsigned short>(	c.contents + 14, f->height);			//height
+	writeAs<unsigned char>(		c.contents + 16, f->channels * 8);		//bits per pixel
+	writeAs<unsigned char>(		c.contents + 17, 0);					//descriptor
+
+	for(unsigned int y = 0; y < f->height; y++)
+	{   
+		for(unsigned int x = 0; x < f->width; x++)
+		{
+			c.contents[18 + f->width * f->channels * y + x * f->channels + 0] = f->contents[f->width * f->channels * y + x * f->channels + 2];
+			c.contents[18 + f->width * f->channels * y + x * f->channels + 1] = f->contents[f->width * f->channels * y + x * f->channels + 1];
+			c.contents[18 + f->width * f->channels * y + x * f->channels + 2] = f->contents[f->width * f->channels * y + x * f->channels + 0];
+		}
+	}
+	return c;
+}
+void pngStreamWrite(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+	vector<unsigned char>& vec = *(vector<unsigned char>*)png_get_io_ptr(png_ptr);
+
+	vec.reserve(vec.size() + length);
+	vec.insert(vec.end(), (unsigned char*)data, (unsigned char*)data + length);
+};
+void pngStreamFlush(png_structp png_ptr){}
+FileManager::fileContents FileManager::serializePngFile(shared_ptr<textureFile> f)
+{
+	vector<unsigned char> data; 
+
+	int colorType;
+	if(f->channels == 1)
+		colorType = PNG_COLOR_TYPE_GRAY;
+	else if(f->channels == 3)
+		colorType = PNG_COLOR_TYPE_RGB;
+	else if(f->channels == 4)
+		colorType = PNG_COLOR_TYPE_RGB_ALPHA;
+	else
+	{
+		debugBreak();
+		return fileContents();
+	}
+
+	png_bytepp rows = new unsigned char*[f->height];
+	for(int i=0;i<f->height;i++) rows[i] = f->contents + f->width * f->channels * (f->height - i - 1);
+
+	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
+	if (!png_ptr)
+	{
+		delete[] rows;
+		return fileContents();
+	}
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
+	{
+		png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+		delete[] rows;
+		return fileContents();
+	}
+
+	png_set_write_fn(png_ptr, (void*)&data, pngStreamWrite, pngStreamFlush);
+
+	png_set_IHDR(png_ptr, info_ptr, f->width, f->height, 8, colorType , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+	png_set_rows(png_ptr,info_ptr,rows);
+
+	png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+	if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+
+	delete[] rows;
+
+	fileContents c;
+	c.size = data.size();
+	c.contents = new unsigned char[c.size];
+	memcpy(c.contents, &data[0], c.size);
+	return c;
 }

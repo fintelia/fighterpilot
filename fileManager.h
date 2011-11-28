@@ -98,6 +98,14 @@ public:
 	shared_ptr<textureFile> loadTgaFile(string filename, bool asinc = false);
 	shared_ptr<textureFile> loadPngFile(string filename, bool asinc = false);
 
+	bool writeBinaryFile(shared_ptr<binaryFile> f, bool asinc = false);
+	bool writeTextFile(shared_ptr<textFile> f, bool asinc = false);
+	bool writeIniFile(shared_ptr<iniFile> f, bool asinc = false);
+	bool writeZipFile(shared_ptr<zipFile> f, bool asinc = false);
+	bool writeBmpFile(shared_ptr<textureFile> f, bool asinc = false);
+	bool writeTgaFile(shared_ptr<textureFile> f, bool asinc = false);
+	bool writePngFile(shared_ptr<textureFile> f, bool asinc = false);
+
 	string filename(string filename);
 	string extension(string filename);
 	string directory(string filename);
@@ -117,6 +125,10 @@ private:
 	{
 		return *((T*)c);
 	}
+	template<class T>void writeAs(void* c, const T& value)
+	{
+		memcpy(c, &value, sizeof(T));
+	}
 
 	void workerThread();
 	static void startWorkerThread(void* pThis)
@@ -125,8 +137,10 @@ private:
 	}
 
 	fileContents loadFileContents(string filename);
+	bool writeFileContents(string filename, fileContents contents); //deletes contents after writing!!!
 
 	shared_ptr<file> parseFile(string filename, fileContents data);
+
 	void parseBinaryFile(shared_ptr<binaryFile> f, fileContents data);
 	void parseTextFile(shared_ptr<textFile> f, fileContents data);
 	void parseIniFile(shared_ptr<iniFile> f, fileContents data);
@@ -134,6 +148,14 @@ private:
 	void parseBmpFile(shared_ptr<textureFile> f, fileContents data);
 	void parseTgaFile(shared_ptr<textureFile> f, fileContents data);
 	void parsePngFile(shared_ptr<textureFile> f, fileContents data);
+
+	fileContents serializeBinaryFile(shared_ptr<binaryFile> f);
+	fileContents serializeTextFile(shared_ptr<textFile> f);
+	fileContents serializeIniFile(shared_ptr<iniFile> f);
+	fileContents serializeZipFile(shared_ptr<zipFile> f);
+	fileContents serializeBmpFile(shared_ptr<textureFile> f);
+	fileContents serializeTgaFile(shared_ptr<textureFile> f);
+	fileContents serializePngFile(shared_ptr<textureFile> f);
 
 	FileManager();
 	~FileManager(){}

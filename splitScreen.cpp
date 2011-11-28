@@ -13,9 +13,19 @@ splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 }
 int splitScreen::update()
 {
-//	if(input.getKey(VK_F1))	{	players[0].toggleFirstPerson(); input.up(VK_F1);}
-//	if(input.getKey(VK_F2))	{	players[1].toggleFirstPerson(); input.up(VK_F2);}
+	//set camera position
+	for(int i=0; i<2; i++)
+	{
+		nPlane* p=(nPlane*)players[i]->getObject();
+		auto camera = players[i]->getCamera(p->controled || p->dead);
+		graphics->lookAt(camera.eye, camera.center, camera.up, i);
+	}
 
+	//check whether to toggle first person views
+	if(input.getKey(VK_F1))	{	players[0]->toggleFirstPerson(); input.up(VK_F1);}
+	if(input.getKey(VK_F2))	{	players[1]->toggleFirstPerson(); input.up(VK_F2);}
+
+	//check whether to bring up the in-game menu
 	if(input.getKey(VK_ESCAPE))
 	{
 		menuManager.setPopup(new gui::inGame);
@@ -23,6 +33,7 @@ int splitScreen::update()
 	}
 
 #ifdef _DEBUG
+	//slow down the game speed to 10%
 	if(input.getKey(0x54))
 	{
 		input.up(0x54);

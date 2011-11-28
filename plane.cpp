@@ -369,7 +369,6 @@ void nPlane::updateSimulation(double time, double ms)
 }
 void nPlane::updateFrame(float interpolation) const
 {
-	Profiler.setOutput("interpolation:", interpolation);
 	Vec3f pos = lerp(lastPosition, position, interpolation);
 	Quat4f rot = slerp(lastRotation, rotation, interpolation);
 

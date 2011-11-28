@@ -10,19 +10,28 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 }
 int campaign::update()
 {
+	//set camera position
+	nPlane* p=(nPlane*)players[0]->getObject();
+	auto camera = players[0]->getCamera(p->controled || p->dead);
+	graphics->lookAt(camera.eye, camera.center, camera.up);
+
+	//check whether to toggle first person view
 	if(input.getKey(VK_F1))
 	{
 		players[0]->toggleFirstPerson();
 		input.up(VK_F1);
 	}
+	//check whether to bring up the in-game menu
 	if(input.getKey(VK_ESCAPE))
 	{
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);
 	}
+	//check for collisions between objects
 	checkCollisions();
 
 #ifdef _DEBUG
+	//slow down game speed to 10%
 	if(input.getKey(0x54))
 	{
 		input.up(0x54);
@@ -35,12 +44,13 @@ int campaign::update()
 			world.time.changeSpeed(1.0, 5.0);
 		}
 	}
+	//test death animation
 	if(input.getKey(0x4c))
 	{
 		((nPlane*)players[0]->getObject())->loseHealth(world.time.length()/10.0);
 	}
 #endif
-
+	
 	if(levelup)
 	{
 		countdown-=world.time.length();
@@ -86,6 +96,8 @@ int campaign::update()
 			countdown=3000;
 		}
 	}
+
+
 
 	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	
