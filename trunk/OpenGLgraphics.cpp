@@ -31,7 +31,7 @@ void OpenGLgraphics::minimizeWindow()
 {
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 }
-OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(SCREEN)
+OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(SCREEN), colorMask(true), depthMask(true)
 {
 	FBOs[0]					= FBOs[1]				= 0;
 	renderTextures[0]		= renderTextures[1]		= 0;
@@ -136,6 +136,30 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
+void OpenGLgraphics::setGamma(float gamma)
+{
+	currentGamma = gamma;
+}
+void OpenGLgraphics::setColor(float r, float g, float b, float a)
+{
+	glColor4f(r,g,b,a);
+}
+void OpenGLgraphics::setColorMask(bool mask)
+{
+	if(mask != colorMask) //this code interferes with stereo rendering...
+	{
+		colorMask = mask;
+		glColorMask(colorMask, colorMask, colorMask, colorMask);
+	}
+}
+void OpenGLgraphics::setDepthMask(bool mask)
+{
+	if(mask != depthMask)
+	{
+		depthMask = mask;
+		glDepthMask(depthMask);
+	}
+}
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
 	auto f = dataManager.getFont(font);
@@ -236,7 +260,7 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 		dataManager.unbind(f->texName);
 	}
 }
-Vec2f OpenGLgraphics::textSize(string text, string font)
+Vec2f OpenGLgraphics::getTextSize(string text, string font)
 {
 	auto f = dataManager.getFont(font);
 	if(f == nullptr)
@@ -381,18 +405,20 @@ void OpenGLgraphics::resize(int w, int h)
 void OpenGLgraphics::render()
 {
 /////////////////////////////////////START TIMING/////////////////////////////////////
-	static double frameTimes[20]={20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20};//in milliseconds
-	static int curentFrame=0;
+	static vector<double> frameTimes;//in milliseconds
 	double time=GetTime();
 	static double lastTime=time;
-	frameTimes[curentFrame++]=time-lastTime;
-	lastTime=time;
-	if(curentFrame>20)curentFrame=0;
 
-	double spf=0.0;
-	for(int i=0;i<20;i++)
-		spf+=(frameTimes[i]*0.001)/20;
-	fps=1.0/spf;
+	frameTimes.push_back(time-lastTime);
+	if(frameTimes.size() > 20)
+		frameTimes.erase(frameTimes.begin());
+
+	lastTime=time;
+
+	double totalTime=0.0; //total recorded time for all the frame times (in seconds)
+	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
+		totalTime+=((*i)*0.001);
+	fps= ((double)frameTimes.size()) /  totalTime;
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
 	bindRenderTarget(FBO_0);
 
@@ -403,34 +429,31 @@ void OpenGLgraphics::render()
 	glLoadIdentity();
 	glEnable(GL_DEPTH_TEST);
 
-	//dataManager.unbindShader();
-
-
-	//glUseProgram(0);
 /////////////////////////////////////START 3D////////////////////////////////////
-	if(stereo) // only the first view is drawn with stereo rendering
-	{
-		glViewport(0, 0, sw, sh);
 
+	/*if(stereo)
+	{
+		glViewport(0, 0, sw, sh);				// stereo disabled for now
+	
 		leftEye = true;
 		glColorMask(true,false,false,true);
-		menuManager.render3D(0);
-
+		menuManager.render3D(0); // only the first view is drawn with stereo rendering
+	
 		glClear(GL_DEPTH_BUFFER_BIT);
-
+	
 		leftEye = false;
 		glColorMask(false,true,true,true);
 		menuManager.render3D(0);
-
+	
 		glColorMask(true,true,true,true);
 	}
-	else
+	else*/
 	{
 		for(currentView=0; currentView<views.size(); currentView++)
 		{
 			glViewport(views[currentView].viewport.x * sh, views[currentView].viewport.y * sh, views[currentView].viewport.width * sh, views[currentView].viewport.height * sh);
 			glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMat.ptr());
-			glMatrixMode(GL_MODELVIEW);		glLoadIdentity();
+			glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMat.ptr());
 
 			menuManager.render3D(currentView);
 		}
@@ -446,7 +469,6 @@ void OpenGLgraphics::render()
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, FBOs[0]);
 
 	glDisable(GL_DEPTH_TEST);
-	//glDepthMask(false);
 	dataManager.bindTex(depthTextures[1],1);
 
 	for(currentView=0; currentView<views.size(); currentView++)
@@ -459,11 +481,10 @@ void OpenGLgraphics::render()
 	}
 
 	dataManager.unbindTextures();
-	//glDepthMask(true);
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
-	glDisable(GL_DEPTH_TEST);
+	//depth testing was already disabled for particles
 
 	dataManager.bind("ortho");
 	dataManager.setUniform4f("color",white);
@@ -472,7 +493,7 @@ void OpenGLgraphics::render()
 	#ifdef _DEBUG
 		if(fps<59.0)dataManager.setUniform4f("color",red);
 		else dataManager.setUniform4f("color",black);
- 		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->textSize(lexical_cast<string>(floor(fps))).x,0.02));
+ 		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
 		dataManager.setUniform4f("color",white);
 		Profiler.draw();
 	#endif
@@ -500,9 +521,8 @@ void OpenGLgraphics::render()
 	renderFBO(multisampling ? FBO_1 : FBO_0);
 	dataManager.unbindShader();
 ////////////////////////////////////START RESET///////////////////////////////////////
-	//reset();
 
-	glError();
+	checkErrors();
 }
 //void OpenGLgraphics::viewport(int x,int y,int width,int height)
 //{
@@ -523,28 +543,28 @@ void OpenGLgraphics::render()
 //	glLoadIdentity();
 //	glOrtho(left, right, bottom, top, zNear, zFar);
 //}
-void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
-{
-	if(stereo)
-	{
-		Vec3f f = (center - eye).normalize();
-		Vec3f r = (up.normalize()).cross(f);
-		if(leftEye)
-		{
-			eye += r * interOcularDistance * 0.5;
-			center += r * interOcularDistance * 0.5;
-		}
-		else
-		{
-			eye -= r * interOcularDistance * 0.5;
-			center -= r * interOcularDistance * 0.5;
-		}
-	}
-	GraphicsManager::lookAt(eye, center, up);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
-}
+//void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
+//{
+//	if(stereo)
+//	{
+//		Vec3f f = (center - eye).normalize();
+//		Vec3f r = (up.normalize()).cross(f);
+//		if(leftEye)
+//		{
+//			eye += r * interOcularDistance * 0.5;
+//			center += r * interOcularDistance * 0.5;
+//		}
+//		else
+//		{
+//			eye -= r * interOcularDistance * 0.5;
+//			center -= r * interOcularDistance * 0.5;
+//		}
+//	}
+//	GraphicsManager::lookAt(eye, center, up);
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
+//	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
+//}
 void OpenGLgraphics::destroyWindow()
 {
 	destroyFBOs();
@@ -585,29 +605,6 @@ void OpenGLgraphics::destroyWindow()
 		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		context->hInstance=NULL;									// Set hInstance To NULL
 	}
-}
-void OpenGLgraphics::setGamma(float gamma)
-{
-	currentGamma = gamma;
-	/*if(hDC == NULL)
-		return;
-
-	WORD gammaRamp[3][256];
-	for(int i=0;i<256;i++)
-	{
-		int value = i*((int)((gamma*0.5f+0.5f)*255)+128);
-		value = min(value,65535);
-		gammaRamp[0][i] =
-		gammaRamp[1][i] =
-		gammaRamp[2][i] = value;
-	}
-
-	if (SetDeviceGammaRamp(hDC, gammaRamp))
-	{
-		currentGamma = gamma; // Store gama setting
-	}
-	else
-		assert(false);*/
 }
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
@@ -705,30 +702,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	}
 
 
-
-	//static	PIXELFORMATDESCRIPTOR pfd2=				// pfd Tells Windows How We Want Things To Be
-	//{
-	//	sizeof(PIXELFORMATDESCRIPTOR),				// Size Of This Pixel Format Descriptor
-	//	1,											// Version Number
-	//	PFD_DRAW_TO_WINDOW |						// Format Must Support Window
-	//	PFD_SUPPORT_OPENGL |						// Format Must Support OpenGL
-	//	PFD_SUPPORT_COMPOSITION |					// needed for vista
-	//	PFD_DOUBLEBUFFER,							// Must Support Double Buffering
-	//	PFD_TYPE_RGBA,								// Request An RGBA Format
-	//	32,											// Select Our Color Depth
-	//	0, 0, 0, 0, 0, 0,							// Color Bits Ignored
-	//	0,											// Alpha Buffer
-	//	0,											// Shift Bit Ignored
-	//	0,											// No Accumulation Buffer
-	//	0,0,0,0,									// Accumulation Bits Ignored
-	//	24,											// 24Bit Z-Buffer (Depth Buffer)
-	//	0,											// No Stencil Buffer
-	//	0,											// No Auxiliary Buffer
-	//	PFD_MAIN_PLANE,								// Main Drawing Layer
-	//	0,											// Reserved
-	//	0, 0, 0										// Layer Masks Ignored
-	//};
-
 	PIXELFORMATDESCRIPTOR pfd;
 	pfd.nSize = sizeof( pfd );
 	pfd.nVersion = 1;
@@ -799,7 +772,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
 	SetForegroundWindow(context->hWnd);				// Slightly Higher Priority
 	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
-	graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
+	//graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_COLOR_MATERIAL);
@@ -831,7 +804,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	return true;									// Success
 }
-bool OpenGLgraphics::changeResolution(Vec2f resolution, unsigned int maxSamples)
+bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples)
 {
 	DEVMODE dmScreenSettings;										// Device Mode
 	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
@@ -847,6 +820,7 @@ bool OpenGLgraphics::changeResolution(Vec2f resolution, unsigned int maxSamples)
 		resize(resolution.x,resolution.y);
 		destroyFBOs();
 		initFBOs(maxSamples);
+		resize(resolution.x, resolution.y);
 		return true;
 	}
 	return false;
@@ -857,59 +831,32 @@ void OpenGLgraphics::swapBuffers()
 }
 void OpenGLgraphics::takeScreenshot()
 {
+#ifdef WINDOWS
 	SYSTEMTIME sTime;
 	GetLocalTime(&sTime);
 
 	string filename = "screen shots\\FighterPilot ";
-	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" + lexical_cast<string>(sTime.wDay) + " " +
-				lexical_cast<string>(sTime.wHour+1) + "-" + lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" + lexical_cast<string>(sTime.wMilliseconds) + ".png";
+	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" + 
+				lexical_cast<string>(sTime.wDay) + " " + lexical_cast<string>(sTime.wHour+1) + "-" + 
+				lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" + 
+				lexical_cast<string>(sTime.wMilliseconds) + ".png";
+#elif
+	string filename = "screen shots\\FighterPilot.png";
+#endif
 
-	//if(!filesystem::is_directory("screen shots"))
-	//	filesystem::create_directory("screen shots");
+	fileManager.createDirectory("screen shots");
 
-	fileManager.createDirectory("screen shots");//(windows only) if it already exists then nothing happens
+	shared_ptr<FileManager::textureFile> file(new FileManager::pngFile(filename));
 
+	file->channels = 3;
+	file->width = sw;
+	file->height = sh;
+	file->contents = new unsigned char[3*sw*sh];
 
-	int size = (3*sw+sw%4)*sh + 3*sw*sh%4;
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, file->contents);
 
-	//see: http://zarb.org/~gc/html/libpng.html
-	FILE *fp;
-	if((fp=fopen(filename.c_str(), "wb")) != nullptr && fp)
-	{
-		unsigned char* colors = new unsigned char[size];
-		memset(colors,0,size);
-		glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, colors);
-		png_bytepp rows = new unsigned char*[sh];
-		for(int i=0;i<sh;i++) rows[i] = colors +  (3*sw+sw%4) * (sh-i);
-
-		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
-		if (!png_ptr)
-		{
-			fclose(fp);
-			delete[] colors;
-			return;
-		}
-		png_infop info_ptr = png_create_info_struct(png_ptr);
-		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
-		{
-			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-			fclose(fp);
-			delete[] colors;
-			return;
-		}
-		png_init_io(png_ptr, fp);
-		png_set_IHDR(png_ptr, info_ptr, sw, sh, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-		png_set_rows(png_ptr,info_ptr,rows);
-
-		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
-
-		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-
-		fclose(fp);
-		delete[] rows;
-		delete[] colors;
-	}
+	fileManager.writePngFile(file);
 }
 void OpenGLgraphics::drawSphere(Vec3f position, float radius)
 {
@@ -1084,4 +1031,14 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 
 	dataManager.unbindTextures();
 	glColor3f(1,1,1);
+}
+void OpenGLgraphics::checkErrors()
+{
+#ifdef _DEBUG
+	const char* errorString = (const char*)gluErrorString(glGetError());
+	if(strcmp(errorString, "no error") != 0)
+	{
+		debugBreak();
+	}
+#endif
 }

@@ -1,7 +1,5 @@
 
 #include "engine.h"
-#include "GL/glee.h"
-#include <GL/glu.h>
 #ifdef WINDOWS
 #include <Shlobj.h>
 #endif
@@ -351,20 +349,20 @@ void openFile::refreshView()
 
 	for(auto i=folders.begin(); i!=folders.end(); i++)
 	{
-		if(graphics->textSize(i->displayName,"font small").x > 0.0625)
+		if(graphics->getTextSize(i->displayName,"font small").x > 0.0625)
 		{
 			string folder = i->displayName;
-			while(graphics->textSize(folder + "...","font small").x > 0.06 && folder != "")
+			while(graphics->getTextSize(folder + "...","font small").x > 0.06 && folder != "")
 				folder = folder.substr(0,folder.size()-1);
 			i->displayName = folder + "...";
 		}
 	}
 	for(auto i=files.begin(); i!=files.end(); i++)
 	{
-		if(graphics->textSize(i->displayName,"font small").x > 0.0625)
+		if(graphics->getTextSize(i->displayName,"font small").x > 0.0625)
 		{
 			string file = i->displayName;
-			while(graphics->textSize(file + "...","font small").x > 0.06 && file != "")
+			while(graphics->getTextSize(file + "...","font small").x > 0.06 && file != "")
 				file = file.substr(0,file.size()-1);
 			i->displayName = file + "...";
 		}
@@ -438,7 +436,7 @@ void openFile::render()
 {
 	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.505),"file viewer");
 	graphics->drawOverlay(Rect::XYXY(0.5*sAspect-0.176,0.5+0.18,0.5*sAspect+0.186,0.5+0.224),"entry bar");
-	graphics->drawText(file,Vec2f(0.5*sAspect-0.166,0.5+0.202-graphics->textSize(file).y/2));
+	graphics->drawText(file,Vec2f(0.5*sAspect-0.166,0.5+0.202-graphics->getTextSize(file).y/2));
 
 	float row=scroll; int column=0;
 	float size = 0.0625;
@@ -447,7 +445,7 @@ void openFile::render()
 		if(row >= 0)
 		{
 			graphics->drawPartialOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size),Rect::XYWH(0,0,0.5,0.5),"thumbnails");
-			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->getTextSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
 		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
@@ -456,7 +454,7 @@ void openFile::render()
 		if(row >= 0)
 		{
 			graphics->drawOverlay(Rect::CWH(sAspect/2-0.126 + size*1.19*column, 0.310 + size*1.15*row, size,size),"button");
-			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->textSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
+			graphics->drawText(i->displayName,Vec2f(floor((sAspect/2-0.126 + size*1.19*column-graphics->getTextSize(i->displayName,"font small").x/2)*sh)/sh, 0.328 + size*1.15*row),"font small");
 		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
@@ -628,7 +626,7 @@ bool messageBox_c::init(string t, vector<string> names)
 {
 	if(names.empty()) return init(t);//watch out for infinite loop!!
 
-	Vec2f tSize = graphics->textSize(t);
+	Vec2f tSize = graphics->getTextSize(t);
 	width = clamp(tSize.x+0.039,0.700,sAspect-0.01);
 	height = 0.288 + max(tSize.y-0.166,0.0);
 	x = 0.5 - width/2;
@@ -644,8 +642,8 @@ bool messageBox_c::init(string t, vector<string> names)
 	{
 		options.push_back(new label(
 
-									((float)(x + (0.021*width)+(0.5+slotNum)*slotWidth-graphics->textSize(*i).x/2)),
-									((float)(y + (0.797*height)-graphics->textSize(*i).y/2)),
+									((float)(x + (0.021*width)+(0.5+slotNum)*slotWidth-graphics->getTextSize(*i).x/2)),
+									((float)(y + (0.797*height)-graphics->getTextSize(*i).y/2)),
 
 									*i, white));
 	}
@@ -660,9 +658,9 @@ void messageBox_c::render()
 	else
 	{
 		dataManager.bind("noTexture");
-		glColor3f(0.3,0.3,0.3);
+		graphics->setColor(0.3,0.3,0.3);
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-		glColor3f(1,1,1);
+		graphics->setColor(1,1,1);
 	}
 
 	float slotWidth = ((float)(685.0*width/715) / options.size());
@@ -677,8 +675,8 @@ void messageBox_c::render()
 	{
 		if(dataManager.assetLoaded("glow") && cursorPos.x > startX+slotWidth*slotNum && cursorPos.x < startX+slotWidth*(1+slotNum) && cursorPos.y > startY && cursorPos.y+slotHeight*slotNum < startY+slotHeight*(slotNum+1))
 		{
-			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-graphics->textSize((*i)->getText()).x*0.75-0.03,		startY+slotHeight*0.5+0.034,
-												startX+slotWidth*(0.5+slotNum)+graphics->textSize((*i)->getText()).x*0.75+0.03,		startY+slotHeight*0.5-0.034),
+			graphics->drawOverlay(Rect::XYXY(	startX+slotWidth*(0.5+slotNum)-graphics->getTextSize((*i)->getText()).x*0.75-0.03,		startY+slotHeight*0.5+0.034,
+												startX+slotWidth*(0.5+slotNum)+graphics->getTextSize((*i)->getText()).x*0.75+0.03,		startY+slotHeight*0.5-0.034),
 												"glow");
 		}
 		(*i)->render();
@@ -724,17 +722,17 @@ void button::setElementText(string t)
 {
 	text=t;
 	clampedText=t;
-	if(graphics->textSize(clampedText).x < shape.w-6)
+	if(graphics->getTextSize(clampedText).x < shape.w-6)
 	{
 		return;
 	}
-	else if(graphics->textSize("...").x > shape.w-6)
+	else if(graphics->getTextSize("...").x > shape.w-6)
 	{
 		clampedText="";
 	}
 	else
 	{
-		while(graphics->textSize(clampedText + "...").x > shape.w-6)
+		while(graphics->getTextSize(clampedText + "...").x > shape.w-6)
 			clampedText.erase(clampedText.size()-1);
 		int l=clampedText.find_last_not_of(" \t\f\v\n\r")+1;
 		clampedText=clampedText.substr(0,l);
@@ -754,7 +752,7 @@ void button::setElementSize(Vec2f size)
 }
 void button::render()
 {
-	glColor4f(color.r,color.g,color.b,color.a);
+	graphics->setColor(color.r,color.g,color.b,color.a);
 	Vec2f tPos,tSize;
 	Vec2f rPos,rSize;
 	for(int ix=0;ix<3;ix++)
@@ -807,9 +805,9 @@ void button::render()
 		}
 	}
 	//graphics->drawOverlay(shape,"button");
-	glColor4f(textColor.r,textColor.g,textColor.b,textColor.a);
-	graphics->drawText(clampedText,Vec2f(shape.x+(shape.w-graphics->textSize(clampedText).x)/2,shape.y+(shape.h-graphics->textSize(clampedText).y)/2));
-	glColor3f(1,1,1);
+	graphics->setColor(textColor.r,textColor.g,textColor.b,textColor.a);
+	graphics->drawText(clampedText,Vec2f(shape.x+(shape.w-graphics->getTextSize(clampedText).x)/2,shape.y+(shape.h-graphics->getTextSize(clampedText).y)/2));
+	graphics->setColor(1,1,1);
 }
 bool button::mouseDownL(float X, float Y)
 {
@@ -837,9 +835,9 @@ void checkBox::render()
 	if(checked)
 		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check");
 
-	glColor4f(color.r,color.g,color.b,color.a);
+	graphics->setColor(color.r,color.g,color.b,color.a);
 	graphics->drawText(text,Vec2f(shape.x+30,shape.y));
-	glColor3f(1,1,1);
+	graphics->setColor(1,1,1);
 }
 bool checkBox::mouseDownL(float X, float Y)
 {
@@ -891,18 +889,18 @@ bool textBox::mouseUpL(float X, float Y)
 }
 void textBox::render()
 {
-	if(focus)	glColor3f(0,0,0);
-	else	glColor3f(0.3,0.3,0.3);
+	if(focus)	graphics->setColor(0,0,0);
+	else	graphics->setColor(0.3,0.3,0.3);
 	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,shape.h+2),"white");
 
-	if(focus)	glColor3f(0.6,0.6,0.6);
-	else	glColor3f(0.8,0.8,0.8);
+	if(focus)	graphics->setColor(0.6,0.6,0.6);
+	else	graphics->setColor(0.8,0.8,0.8);
 	graphics->drawOverlay(shape,"white");
 
-	glColor3f(color.r,color.g,color.b);
+	graphics->setColor(color.r,color.g,color.b);
 	if(focus)
 	{
-		Vec2f tSize = graphics->textSize(text.substr(0,cursorPos));
+		Vec2f tSize = graphics->getTextSize(text.substr(0,cursorPos));
 
 		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 		if(int(floor(world.time()/500)) % 2 == 1)
@@ -915,7 +913,7 @@ void textBox::render()
 		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 	}
 
-	glColor3f(1,1,1);
+	graphics->setColor(1,1,1);
 }
 void textBox::addChar(char c)
 {
@@ -1066,32 +1064,32 @@ bool listBox::mouseUpL(float X, float Y)
 }
 void listBox::render()
 {
-	glColor3f(0.3,0.3,0.3);
+	graphics->setColor(0.3,0.3,0.3);
 	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,30+2),"white");
 
 	if(focus)
 	{
-		glColor3f(0,0,0);
+		graphics->setColor(0,0,0);
 		graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y+30+2,shape.w+2,shape.h-30+2),"white");
 	}
 
-	if(focus)	glColor3f(0.8,0.8,0.8);
-	else	glColor3f(0.9,0.9,0.9);
+	if(focus)	graphics->setColor(0.8,0.8,0.8);
+	else	graphics->setColor(0.9,0.9,0.9);
 	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,shape.w,30),"white");
 
 	if(focus)
 	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30+3,shape.w,30*options.size()),"white");
 
 
-	if(focus)	glColor3f(0.3,0.3,0.3);
-	else	glColor3f(0.5,0.5,0.5);
+	if(focus)	graphics->setColor(0.3,0.3,0.3);
+	else	graphics->setColor(0.5,0.5,0.5);
 	graphics->drawOverlay(Rect::XYXY(shape.x+shape.w-30,shape.y,shape.x+shape.w,shape.y+30),"white");
 
-	glColor3f(0,0,0);
+	graphics->setColor(0,0,0);
 	graphics->drawTriangle(	Vec3f(shape.x+shape.w-30.0 * 0.666,	shape.y + 30.0 * 0.333,	0),
 							Vec3f(shape.x+shape.w-30.0 * 0.333,	shape.y + 30.0 * 0.333,	0),
 							Vec3f(shape.x+shape.w-30.0 * 0.5,	shape.y + 30.0 * 0.666,	0));
-	glColor3f(color.r,color.g,color.b);
+	graphics->setColor(color.r,color.g,color.b);
 
 	graphics->drawText(text,Vec2f(shape.x+2,shape.y));
 	if(focus)
@@ -1106,18 +1104,18 @@ void listBox::render()
 
 	if(focus && optionNum != -1)
 	{
-		glColor4f(0.3,0.3,0.3,0.3);
+		graphics->setColor(0.3,0.3,0.3,0.3);
 		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30*(optionNum+1)+3,shape.w,30+1),"white");
 	}
 
-	glColor3f(1,1,1);
+	graphics->setColor(1,1,1);
 }
 void label::render()
 {
-	glColor4f(color.r,color.g,color.b,color.a);
+	graphics->setColor(color.r,color.g,color.b,color.a);
 	graphics->drawText(text, shape.origin());
 	//textManager->renderText(text,shape.x,shape.y);
-	glColor3f(1,1,1);
+	graphics->setColor(1,1,1);
 }
 toggle::toggle(vector<button*> b, Color clickedC, Color unclickedC, label* l, int startValue): element(TOGGLE,0,0), Label(l), value(startValue)
 {

@@ -103,33 +103,50 @@ void GraphicsManager::ortho(float left, float right, float bottom, float top, fl
 									0.0,				0.0,				2.0/(zNear-zFar),	(zNear+zFar)/(zNear-zFar),
 									0.0,				0.0,				0.0,				1.0);
 }
-void GraphicsManager::lookAt(Vec3f eye, Vec3f center, Vec3f up)
+void GraphicsManager::lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view)
 {
+	//if(stereo)			//stereo disabled for now
+	//{
+	//	Vec3f f = (center - eye).normalize();
+	//	Vec3f r = (up.normalize()).cross(f);
+	//	if(leftEye)
+	//	{
+	//		eye += r * interOcularDistance * 0.5;
+	//		center += r * interOcularDistance * 0.5;
+	//	}
+	//	else
+	//	{
+	//		eye -= r * interOcularDistance * 0.5;
+	//		center -= r * interOcularDistance * 0.5;
+	//	}
+	//}
+
+
 	up = up.normalize();
 
 	Vec3f f = (center-eye).normalize();
 	Vec3f s = (f.cross(up)).normalize();
 	Vec3f u = s.cross(f);
 
-	views[currentView].modelViewMat.set(	s.x,	s.y,	s.z,	s.dot(-eye),
+	views[view].modelViewMat.set(	s.x,	s.y,	s.z,	s.dot(-eye),
 											u.x,	u.y,	u.z,	u.dot(-eye),
 											-f.x,	-f.y,	-f.z,	(-f).dot(-eye),
 											0.0,	0.0,	0.0,	1.0);
 
-	views[currentView].camera.eye = eye;
+	views[view].camera.eye = eye;
 
-	views[currentView].camera.fwd = f;
-	views[currentView].camera.up = u;
-	views[currentView].camera.right = f.cross(u);
+	views[view].camera.fwd = f;
+	views[view].camera.up = u;
+	views[view].camera.right = f.cross(u);
 
-	Mat4f mvp = views[currentView].projectionMat * views[currentView].modelViewMat;
+	Mat4f mvp = views[view].projectionMat * views[view].modelViewMat;
 
-	views[currentView].clipPlanes[0] = Plane<float>( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );	// Right clipping plane
-	views[currentView].clipPlanes[1] = Plane<float>( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );	// Left clipping plane
-	views[currentView].clipPlanes[2] = Plane<float>( mvp[3]+mvp[1], mvp[7]+mvp[5], mvp[11]+mvp[9], mvp[15]+mvp[13] );	// Bottom clipping plane
-	views[currentView].clipPlanes[3] = Plane<float>( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );	// Top clipping plane
-	views[currentView].clipPlanes[4] = Plane<float>( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );	// Far clipping plane
-	views[currentView].clipPlanes[5] = Plane<float>( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );	// Near clipping plane
+	views[view].clipPlanes[0] = Plane<float>( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );	// Right clipping plane
+	views[view].clipPlanes[1] = Plane<float>( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );	// Left clipping plane
+	views[view].clipPlanes[2] = Plane<float>( mvp[3]+mvp[1], mvp[7]+mvp[5], mvp[11]+mvp[9], mvp[15]+mvp[13] );	// Bottom clipping plane
+	views[view].clipPlanes[3] = Plane<float>( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );	// Top clipping plane
+	views[view].clipPlanes[4] = Plane<float>( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );	// Far clipping plane
+	views[view].clipPlanes[5] = Plane<float>( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );	// Near clipping plane
 }
 bool GraphicsManager::sphereInFrustum(Sphere<float> s)
 {

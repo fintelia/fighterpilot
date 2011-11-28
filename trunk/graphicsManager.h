@@ -75,9 +75,7 @@ protected:
 	vector<View> views;
 	unsigned int currentView;
 
-
-
-	float		currentGamma;
+	float currentGamma;
 
 	bool stereo;
 	bool leftEye;
@@ -92,18 +90,18 @@ public:
 
 	virtual void drawText(string text, Vec2f pos, string font)=0;
 	virtual void drawText(string text, Rect rect, string font)=0;
-	virtual Vec2f textSize(string text, string font)=0;
+	virtual Vec2f getTextSize(string text, string font)=0;
 
 	virtual void drawText(string text, Vec2f pos){drawText(text, pos, "default font");}
 	virtual void drawText(string text, Rect rect){drawText(text, rect, "default font");}
-	virtual Vec2f textSize(string text){return textSize(text, "default font");}
+	virtual Vec2f getTextSize(string text){return getTextSize(text, "default font");}
 
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
 	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)=0;
-	virtual bool changeResolution(Vec2f resolution, unsigned int maxSamples)=0;
+	virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
 	virtual void bindRenderTarget(RenderTarget t)=0;
@@ -122,7 +120,13 @@ public:
 	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
 	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
-	virtual void lookAt(Vec3f eye, Vec3f center, Vec3f up);
+	virtual void setColor(float r, float g, float b, float a)=0;
+	virtual void setColorMask(bool mask)=0;
+	virtual void setDepthMask(bool mask)=0;
+
+	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
+
+	
 
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
@@ -138,11 +142,14 @@ public:
 	void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
 	void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
 	void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
+	void lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view=0);
 
 	bool sphereInFrustum(Sphere<float> s);
 
 	virtual void flashTaskBar(int times, int length=0)=0;
 	virtual void minimizeWindow()=0;
+
+	virtual void checkErrors()=0;
 };
 
 #ifdef OPENGL2
@@ -155,45 +162,45 @@ public:
 		return pInstance;
 	}
 protected:
+	struct Context;
+
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
-
 	unsigned int renderTextures[2];//only second is used with multisampling
 	unsigned int depthTextures[2];//only second is used with multisampling
 	unsigned int colorRenderBuffers;//only used with multisampling
 	unsigned int depthRenderBuffers;//only used with multisampling
 	unsigned int FBOs[2];
-
 	bool multisampling;
 	int samples;
-
 	RenderTarget renderTarget;
-
-	struct Context;
 	Context* context;
+	bool colorMask;
+	bool depthMask;
+
+
 
 	OpenGLgraphics();
 	~OpenGLgraphics();
 
 	bool initFBOs(unsigned int maxSamples);
 	void destroyFBOs();
+
+	void bindRenderTarget(RenderTarget t);
+	void renderFBO(RenderTarget src);
+
 public:
+
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
-	bool changeResolution(Vec2f resolution, unsigned int maxSamples);
-
-
+	bool changeResolution(Vec2i resolution, unsigned int maxSamples);
+	void destroyWindow();
 
 	void resize(int w, int h);
-	void setGamma(float gamma);
-
-	void destroyWindow();
 
 	void render();
 
 	void swapBuffers();
 	void takeScreenshot();
-	void bindRenderTarget(RenderTarget t);
-	void renderFBO(RenderTarget src);
 
 	void drawLine(Vec3f start, Vec3f end);
 	void drawSphere(Vec3f position, float radius);
@@ -207,18 +214,19 @@ public:
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
 	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
+	void setGamma(float gamma);
+	void setColor(float r, float g, float b, float a);
+	void setColorMask(bool mask);
+	void setDepthMask(bool mask);
+
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);
-	Vec2f textSize(string text, string font);
-
-
-	//void viewport(int x,int y,int width,int height);
-	//void perspective(float fovy, float aspect, float near, float far);
-	//void ortho(float left, float right, float bottom, float top, float near, float far);
-	void lookAt(Vec3f eye, Vec3f center, Vec3f up);
+	Vec2f getTextSize(string text, string font);
 
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
+
+	void checkErrors();
 };
 #endif
 

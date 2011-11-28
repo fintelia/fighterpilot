@@ -269,9 +269,11 @@ void emitter::update()
 	double ms = world.time.length();
 	double time = world.time();
 
+	lastPosition = position;
+
 	if(parentObject != 0)
 	{
-		if(world[parentObject] == NULL || world[parentObject]->awaitingDelete)
+		if(world[parentObject] == nullptr || world[parentObject]->awaitingDelete)
 		{
 			parentObject = 0;
 			particlesPerSecond = 0;
@@ -313,7 +315,6 @@ void emitter::update()
 			updateParticle(particles[i]);
 		}
 	}
-	lastPosition = position;
 }
 void emitter::prepareRender(Vec3f up, Vec3f right)
 {

@@ -1,7 +1,7 @@
 
 #include "game.h"
-#include "GL/glee.h"
-#include <GL/glu.h>
+//#include "GL/glee.h"
+//#include <GL/glu.h>
 
 namespace gui{
 dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl)
@@ -22,7 +22,7 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 {
 	if(!firstPerson)
 	{
-		glColor3f(1,1,1);
+		graphics->setColor(1,1,1);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
 
@@ -71,7 +71,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.bind("radar plane shader");
 		dataManager.setUniform2f("center",nC.x,nC.y);
 		dataManager.setUniform1f("radius",radius);
-		glColor3f(0.19,0.58,0.87);
+		graphics->setColor(0.19,0.58,0.87);
 
 		Vec3f n;
 		Vec3f cent, u, v;
@@ -93,7 +93,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 		}
 
-		glColor3f(1,1,1);
+		graphics->setColor(1,1,1);
 		dataManager.bind("ortho");
 	}
 	else
@@ -134,7 +134,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.setUniform2f("center",nC.x,nC.y);
 		dataManager.setUniform1f("radius",radius);
 		dataManager.setUniform1f("sAspect",sAspect);
-		glColor3f(0.05,0.79,0.04);
+		graphics->setColor(0.05,0.79,0.04);
 
 		Vec3f n;
 		Vec3f cent, u, v;
@@ -156,7 +156,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 		}
 
-		glColor3f(1,1,1);
+		graphics->setColor(1,1,1);
 		dataManager.bind("ortho");
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
@@ -175,70 +175,22 @@ void dogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float v
 				double distSquared = i->second->position.distanceSquared(p->position);
 				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
 				{
-					if(i->second->team==p->team)		glColor3f(0,1,0);
-					else if(distSquared > 2000*2000)	glColor3f(0.6,0.5,0.5);
-					else								glColor3f(0.5,0,0);
+					if(i->second->team==p->team)		graphics->setColor(0,1,0);
+					else if(distSquared > 2000*2000)	graphics->setColor(0.6,0.5,0.5);
+					else								graphics->setColor(0.5,0,0);
 
 					graphics->drawOverlay(Rect::XYXY(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth),"target ring");
 				}
 			}
 		}
-		glColor3f(1,1,1);
+		graphics->setColor(1,1,1);
 	}
 }
 void dogFight::targeter(float x, float y, float apothem, Angle tilt)
 {
-	//float width = apothem*0.00125*sw;
-	//float height = apothem*0.00167*sh;
-	//x *=	0.00125*sw;
-	//y *=	0.00167*sh;
-	//dataManager.bind("ortho");
 	graphics->drawRotatedOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),tilt,"tilt");
 	graphics->drawOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),"targeter");
-	//dataManager.unbindShader();
 }
-//void dogFight::drawPlanes(int acplayer,bool showBehind,bool showDead)
-//{
-//	return;
-//	nPlane* p=(nPlane*)world[players[acplayer].objectNum()].get();
-//	auto planes = world(PLANE);
-//	nPlane* cPlane;
-//
-//	//Vec3f axis;
-//	Angle roll;
-//	for(auto i = planes.begin(); i != planes.end();i++)
-//	{
-//		cPlane=(nPlane*)((*i).second.get());
-//		Vec3f a=(*i).second->position;
-//		if((cPlane->id!=players[acplayer].objectNum() || !players[acplayer].firstPerson() ||  p->controled) && (showDead || !cPlane->dead) && cPlane->death != nPlane::DEATH_EXPLOSION)
-//		{
-//			//graphics->drawLine(a,a+(*i).second->rotation * Vec3f(0,0,100));
-//			glPushMatrix();
-//				glTranslatef(a.x,a.y,a.z);
-//
-//				Angle ang = acosA(cPlane->rotation.w);
-//				glRotatef((ang*2.0).degrees(), cPlane->rotation.x/sin(ang),cPlane->rotation.y/sin(ang),cPlane->rotation.z/sin(ang));
-//
-//				graphics->drawModel(cPlane->type, (*i).second->position, Quat4f());
-//
-//				for(int m = cPlane->rockets.max - cPlane->rockets.left; m < cPlane->rockets.max; m++)
-//				{
-//					glPushMatrix();
-//					glTranslatef(cPlane->rockets.ammoRounds[m].offset.x,cPlane->rockets.ammoRounds[m].offset.y,cPlane->rockets.ammoRounds[m].offset.z);
-//					graphics->drawModel(cPlane->rockets.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->rockets.ammoRounds[m].offset, Quat4f());
-//					glPopMatrix();
-//				}
-//				for(int m = cPlane->bombs.roundsMax - cPlane->bombs.roundsLeft; m < cPlane->bombs.roundsMax; m++)
-//				{
-//					glPushMatrix();
-//					glTranslatef(cPlane->bombs.ammoRounds[m].offset.x,cPlane->bombs.ammoRounds[m].offset.y,cPlane->bombs.ammoRounds[m].offset.z);
-//					graphics->drawModel(cPlane->bombs.ammoRounds[m].type, (*i).second->position + cPlane->rotation * cPlane->bombs.ammoRounds[m].offset, Quat4f());
-//					glPopMatrix();
-//				}
-//			glPopMatrix();
-//		}
-//	}
-//}
 void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
 {
 	dataManager.bind("hex grid shader");
@@ -248,14 +200,7 @@ void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c
 	dataManager.setUniform1f("radius",radius);
 	dataManager.setUniform4f("color",c.r,c.g,c.b,c.a);
 
-	glPushMatrix();
-
-	glTranslatef(center.x,center.y,center.z);
-	glScalef(radius,height,radius);
-
 	graphics->drawModelCustomShader("cylinder", Vec3f(center), Quat4f(),Vec3f(radius,height,radius));
-
-	glPopMatrix();
 
 	dataManager.unbindShader();
 }
@@ -273,14 +218,12 @@ void dogFight::drawScene(int acplayer)
 
 	auto camera = players[acplayer]->getCamera(p->controled || p->dead);
 	Vec3f e = camera.eye;
-	graphics->lookAt(camera.eye, camera.center, camera.up);
+	//graphics->lookAt(camera.eye, camera.center, camera.up);
 
 
 	world.renderTerrain(e);
 
-	glError();
-
-	glDepthMask(false);
+	graphics->setDepthMask(false);
 
 	((bulletCloud*)world[bullets].get())->draw();
 
@@ -288,11 +231,11 @@ void dogFight::drawScene(int acplayer)
 	double cRadius = world.bounds().radius;
 
 	drawHexCylinder(cCenter,cRadius,20000, white);
-	glDepthMask(true);
+	graphics->setDepthMask(true);
 
 	lastDraw[acplayer] = time;
 
-	glError();
+	graphics->checkErrors(); //calls debugBreak() if openGL has previously encountered an error (can be place after any line to pinpoint the error)
 }
 void dogFight::checkCollisions()
 {

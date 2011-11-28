@@ -64,7 +64,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 
 	glGenTextures(1,&texture);
 
-	GLfloat* heightMap = new float[width*height*3];
+	float* heightMap = new float[width*height*3];
 	for(int x = 0; x < width; x++)
 	{
 		for(int y=0; y < height; y++)
@@ -76,7 +76,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 	}
 
 	indexBuffer.numVertices = patchResolution*patchResolution * 6;
-	GLuint* indices = new unsigned int[indexBuffer.numVertices];
+	unsigned int* indices = new unsigned int[indexBuffer.numVertices];
 	int i=0;
 	for(int x = 0; x < patchResolution; x++)
 	{
@@ -332,7 +332,8 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,0,patchResolution,position,scale));
 	terrainPages.push_back(p);
 	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z));
-	glError();
+
+	graphics->checkErrors();
 }
 void Terrain::renderTerrain(Vec3f eye) const
 {
@@ -340,7 +341,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 
-	glDepthMask(false);
+	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
 	graphics->drawModel("sky dome",Vec3f(eye.x,0,eye.y),Quat4f());
 	glEnable(GL_DEPTH_TEST);
@@ -366,7 +367,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
 	}
-	glDepthMask(true);
+	graphics->setDepthMask(true);
 
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
@@ -374,9 +375,9 @@ void Terrain::renderTerrain(Vec3f eye) const
 	}
 	if(waterPlane)
 	{
-		glColorMask(false,false,false,false);//this code interferes with stereo rendering...
+		graphics->setColorMask(false);
 		graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
-		glColorMask(true,true,true,true);
+		graphics->setColorMask(true);
 	}
 }
 std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const

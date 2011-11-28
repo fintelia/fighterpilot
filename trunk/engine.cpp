@@ -7,7 +7,6 @@
 bool active=true;					// Window Active Flag																						//	//
 																																				//	//
 extern const double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;										//	//
-char* errorString;																																//	//
 int sh=1024;																																	//	//
 int sw=1280;																																	//	//
 float sAspect=((float)sw)/sh;																													//	//
@@ -159,10 +158,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	{
 		return 1;
 	}
-
-
-	//auto f = fileManager.loadPngFile("media/key.png");
-	
 
 	float nextUpdate=0;
 	float swapTime=0.0;
