@@ -31,14 +31,8 @@ void OpenGLgraphics::minimizeWindow()
 {
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 }
-OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(SCREEN), colorMask(true), depthMask(true)
+OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true)
 {
-	FBOs[0]					= FBOs[1]				= 0;
-	renderTextures[0]		= renderTextures[1]		= 0;
-	depthTextures[0]		= depthTextures[1]		= 0;
-	colorRenderBuffers	= 0;
-	depthRenderBuffers	= 0;
-
 	context = new Context;
 
 	//useAnagricStereo(true);
@@ -146,18 +140,48 @@ void OpenGLgraphics::setColor(float r, float g, float b, float a)
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
-	if(mask != colorMask) //this code interferes with stereo rendering...
+	if(renderTarget == RT_SCREEN && mask != colorMask)
 	{
 		colorMask = mask;
-		glColorMask(colorMask, colorMask, colorMask, colorMask);
+		glColorMask(mask, mask, mask, mask);
+	}
+	else if(renderTarget == RT_FBO_0 && mask != FBOs[0].colorBound)
+	{
+		FBOs[0].colorBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[0].color : 0, 0);
+	}
+	else if(renderTarget == RT_FBO_1 && mask != FBOs[1].colorBound)
+	{
+		FBOs[1].colorBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[1].color : 0, 0);		
+	}
+	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.colorBound)
+	{
+		multisampleFBO.colorBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? multisampleFBO.color : 0, 0);
 	}
 }
 void OpenGLgraphics::setDepthMask(bool mask)
 {
-	if(mask != depthMask)
+	if(renderTarget == RT_SCREEN && mask != depthMask)
 	{
 		depthMask = mask;
 		glDepthMask(depthMask);
+	}
+	else if(renderTarget == RT_FBO_0 && mask != FBOs[0].depthBound)
+	{
+		FBOs[0].depthBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[0].depth : 0, 0);
+	}
+	else if(renderTarget == RT_FBO_1 && mask != FBOs[1].depthBound)
+	{
+		FBOs[1].depthBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[1].depth : 0, 0);		
+	}
+	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.depthBound)
+	{
+		multisampleFBO.depthBound = mask;
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? multisampleFBO.depth : 0, 0);
 	}
 }
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
@@ -286,112 +310,118 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
-	if(t == SCREEN)
+	if(t == RT_FBO_0)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
+	}
+	else if(t == RT_FBO_1)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
+	}
+	else if(t == RT_MULTISAMPLE_FBO)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+	}
+	else if(t == RT_SCREEN)
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	}
-	else if(t == FBO_0 || t == FBO_1)
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[t]);
-	}
 }
-void OpenGLgraphics::renderFBO(RenderTarget src)
+void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
 {
-	if(src != FBO_0 && src != FBO_1)
-		return;
+	if(src == RT_FBO_0)			dataManager.bindTex(FBOs[0].fboID);
+	else if(src == RT_FBO_1)	dataManager.bindTex(FBOs[1].fboID);
+	else return;
 
 	glViewport(0,0,sw,sh);
-
-	dataManager.bindTex(renderTextures[src]);
 	drawOverlay(Rect::XYXY(-1,-1,1,1));
 	dataManager.bindTex(0);
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
-
-	//FRAME BUFFER OBJECTS
-
-	glGenFramebuffersEXT(2, FBOs);
-
+	//////////////////////////////////////////////////////////////////////////////////////
+	auto checkForErrors = []()-> bool
+	{
+		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+		if(status == GL_FRAMEBUFFER_COMPLETE_EXT)							return true;
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+		else 																MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+		return false;
+	};
+	/////////////////////////////////////////////////////////////////////////////////////
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
 	samples = samples >= maxSamples ? maxSamples : samples;
 	multisampling = GLEE_EXT_framebuffer_multisample && samples > 1;
-	for(int i=0;i<2;i++)
+	//////////////////////////////////////////////////////////////////////////////////////
+	for(int i = 0; i < 2; i++)
 	{
-		if(multisampling && i == 0 )
-		{
-			glGenRenderbuffersEXT(1, &colorRenderBuffers);
-			glGenRenderbuffersEXT(1, &depthRenderBuffers);
+		glGenTextures(1, &FBOs[i].color);
+		glBindTexture(GL_TEXTURE_2D, FBOs[i].color);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, colorRenderBuffers);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
-
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthRenderBuffers);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT , sw, sh);
-
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, colorRenderBuffers);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, depthRenderBuffers);
-		}
-		else
-		{
-			glGenTextures(1, renderTextures+i);
-			glBindTexture(GL_TEXTURE_2D, renderTextures[i]);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-
-			glGenTextures(1, depthTextures+i);
-			glBindTexture(GL_TEXTURE_2D, depthTextures[i]);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-
+		glGenTextures(1, &FBOs[i].depth);
+		glBindTexture(GL_TEXTURE_2D, FBOs[i].depth);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i]);
+		glGenFramebuffersEXT(1, &FBOs[i].fboID);
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i].fboID);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
 
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTextures[i], 0);
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextures[i], 0);
-		}
-		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-		string errorMsg;
-		if(status == GL_FRAMEBUFFER_COMPLETE_EXT)							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT)			errorMsg = "Framebuffer incomplete: Attachment is NOT complete.";
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT)	errorMsg = "Framebuffer incomplete: No image is attached to FBO.";
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)			errorMsg = "Framebuffer incomplete: Attached images have different dimensions.";
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)			errorMsg = "Framebuffer incomplete: Color attached images have different internal formats.";
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT)		errorMsg = "Framebuffer incomplete: Draw buffer.";
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT)		errorMsg = "Framebuffer incomplete: Read buffer.";
-		else if(status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)					errorMsg = "Unsupported by FBO implementation.";
-		else 																errorMsg = "Unknow frame buffer error.";
-
-		if(errorMsg != "")
-		{
-			MessageBoxA(NULL, errorMsg.c_str(),"ERROR",MB_OK);
+		if(!checkForErrors())
 			return false;
-		}
 	}
+	//////////////////////////////////////////////////////////////////////////////////////
+	if(multisampling)
+	{
+		glGenRenderbuffersEXT(1, &multisampleFBO.color);
+		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
+		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
 
+		glGenRenderbuffersEXT(1, &multisampleFBO.depth);
+		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT, sw, sh);
+
+		glGenFramebuffersEXT(1, &multisampleFBO.fboID);
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+		if(!checkForErrors())
+			return false;
+	}
+	//////////////////////////////////////////////////////////////////////////////////////
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	return true;
 }
 void OpenGLgraphics::destroyFBOs()
 {
-	if(renderTextures[0] != 0)		glDeleteTextures(1, renderTextures);
-	if(renderTextures[1] != 0)		glDeleteTextures(1, renderTextures+1);
+	if(FBOs[0].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[0].fboID);
+	if(FBOs[0].color != 0)		glDeleteTextures(1, &FBOs[0].color);
+	if(FBOs[0].depth != 0)		glDeleteTextures(1, &FBOs[0].depth);
 
-	if(depthTextures[0] != 0)		glDeleteTextures(1, depthTextures);
-	if(depthTextures[1] != 0)		glDeleteTextures(1, depthTextures+1);
+	if(FBOs[1].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[1].fboID);
+	if(FBOs[1].color != 0)		glDeleteTextures(1, &FBOs[1].color);
+	if(FBOs[1].depth != 0)		glDeleteTextures(1, &FBOs[1].depth);
 
-	if(colorRenderBuffers != 0)		glDeleteRenderbuffers(1, &colorRenderBuffers);
-	if(depthRenderBuffers != 0)		glDeleteRenderbuffers(1, &depthRenderBuffers);
+	if(multisampleFBO.fboID != 0)	glDeleteFramebuffersEXT(1, &multisampleFBO.fboID);
+	if(multisampleFBO.color != 0)	glDeleteRenderbuffers(1, &multisampleFBO.color);
+	if(multisampleFBO.depth != 0)	glDeleteRenderbuffers(1, &multisampleFBO.depth);
 
-	if(FBOs[0] != 0)				glDeleteFramebuffersEXT(1, FBOs);
-	if(FBOs[1] != 0)				glDeleteFramebuffersEXT(1, FBOs+1);
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -420,7 +450,7 @@ void OpenGLgraphics::render()
 		totalTime+=((*i)*0.001);
 	fps= ((double)frameTimes.size()) /  totalTime;
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	bindRenderTarget(FBO_0);
+	bindRenderTarget(multisampling ? RT_MULTISAMPLE_FBO : RT_FBO_0);
 
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
@@ -460,16 +490,22 @@ void OpenGLgraphics::render()
 	}
 ///////////////////////////////////START PARTICLES///////////////////////
 
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
-	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
-	glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST );
-	glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
-	glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
-	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, FBOs[0]);
-
+	if(multisampling)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+	}
+	else
+	{
+		setDepthMask(false);
+	}
 	glDisable(GL_DEPTH_TEST);
-	dataManager.bindTex(depthTextures[1],1);
+	dataManager.bindTex(FBOs[0].depth,1);
 
 	for(currentView=0; currentView<views.size(); currentView++)
 	{
@@ -482,6 +518,10 @@ void OpenGLgraphics::render()
 
 	dataManager.unbindTextures();
 
+	if(!multisampling)
+	{
+		setDepthMask(true);
+	}
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
 	//depth testing was already disabled for particles
@@ -502,25 +542,25 @@ void OpenGLgraphics::render()
 
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
-    if(multisampling)
-    {
-        glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-        glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, FBOs[0] );
-        glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, FBOs[1] );
-        glBlitFramebufferEXT( 0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST );
-        glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
-        glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
-    }
+	if(multisampling)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+	}
 
-	bindRenderTarget(SCREEN);
+	bindRenderTarget(RT_SCREEN);
 	glClearColor(0.0,0.0,0.0,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	dataManager.bind("gamma shader");
 	dataManager.setUniform1f("gamma",currentGamma);
 	dataManager.setUniform1i("tex",0);
-	renderFBO(multisampling ? FBO_1 : FBO_0);
+	renderFBO(RT_FBO_0);
 	dataManager.unbindShader();
-////////////////////////////////////START RESET///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 	checkErrors();
 }
