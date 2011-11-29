@@ -25,7 +25,7 @@ class GraphicsManager
 {
 public:
 	typedef unsigned long gID;
-	enum RenderTarget{FBO_0=0,FBO_1=1,SCREEN};
+	enum RenderTarget{RT_FBO_0,RT_FBO_1,RT_MULTISAMPLE_FBO,RT_SCREEN};
 
 private:
 	gID currentId;
@@ -166,12 +166,20 @@ protected:
 
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
-	unsigned int renderTextures[2];//only second is used with multisampling
-	unsigned int depthTextures[2];//only second is used with multisampling
-	unsigned int colorRenderBuffers;//only used with multisampling
-	unsigned int depthRenderBuffers;//only used with multisampling
-	unsigned int FBOs[2];
+	
+	struct FBO{
+		unsigned int color;
+		unsigned int depth;
+		unsigned int fboID;
+		bool colorBound;
+		bool depthBound;
+
+		FBO():color(0), depth(0), fboID(0),colorBound(true),depthBound(true){}
+	}FBOs[2], multisampleFBO;	//first FBO is a multisample FBO if multisampling == true
+
+
 	bool multisampling;
+
 	int samples;
 	RenderTarget renderTarget;
 	Context* context;

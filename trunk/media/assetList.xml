@@ -86,7 +86,7 @@
   </shaders>
   
   <models>
-    <model name="sky dome"   file="media/skyDome.obj" />
+    <model name="sky dome"   file="media/dome.obj" />
     <model name="cylinder"   file="media/cylinder.obj" />
     <model name="disk"       file="media/disk.obj" />
     <model name="f16"        file="media/f16.obj" />

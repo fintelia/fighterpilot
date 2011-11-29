@@ -343,9 +343,12 @@ void Terrain::renderTerrain(Vec3f eye) const
 
 	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
-	graphics->drawModel("sky dome",Vec3f(eye.x,0,eye.y),Quat4f());
+	dataManager.bind("sky shader");
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
+	dataManager.unbindShader();
 	glEnable(GL_DEPTH_TEST);
-	
+
+
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthMask(true);
 	//graphics->drawModel("terrain",Vec3f(0,0,0),Quat4f());

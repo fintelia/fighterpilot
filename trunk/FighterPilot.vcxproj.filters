@@ -512,12 +512,6 @@
     <None Include="media\gamma.vert">
       <Filter>shaders\gamma correction</Filter>
     </None>
-    <None Include="media\sky.vert">
-      <Filter>shaders\sky</Filter>
-    </None>
-    <None Include="media\sky.frag">
-      <Filter>shaders\sky</Filter>
-    </None>
     <None Include="media\radar.frag">
       <Filter>shaders\radar\3rd person</Filter>
     </None>
@@ -554,6 +548,12 @@
       <Filter>shaders\radar</Filter>
     </None>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\sky.frag">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\sky.vert">
+      <Filter>shaders\sky</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">
