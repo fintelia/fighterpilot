@@ -9,6 +9,8 @@
 #include <map>
 #include <queue>
 
+#include <boost/crc.hpp>
+
 #ifdef _WIN32
 	#include <Windows.h>
 	#include <process.h>
@@ -408,8 +410,16 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 	}
 	else if(ext == ".zip")
 	{
+		static int recursionLevel=0;
+		if(recursionLevel >= 8)
+		{
+			return shared_ptr<zipFile>(new zipFile(filename));
+		}
+
+		recursionLevel++;
 		shared_ptr<zipFile> f(new zipFile(filename));
 		parseZipFile(f, data);
+		recursionLevel--;
 		return f;
 	}
 	else if(ext == ".bmp")
@@ -443,6 +453,42 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 		return f;
 	}
 
+}
+FileManager::fileContents FileManager::serializeFile(shared_ptr<file> f)
+{
+	if(f->type == file::TEXT)
+	{
+		return serializeTextFile(dynamic_pointer_cast<textFile>(f));
+	}
+	else if(f->type == file::INI)
+	{
+		return serializeIniFile(dynamic_pointer_cast<iniFile>(f));
+	}
+	else if(f->type == file::ZIP)
+	{
+		return serializeZipFile(dynamic_pointer_cast<zipFile>(f));
+	}
+	else if(f->type == file::TEXTURE && f->format == file::BMP)
+	{
+		return serializeBmpFile(dynamic_pointer_cast<textureFile>(f));
+	}
+	else if(f->type == file::TEXTURE && f->format == file::TGA)
+	{
+		return serializeTgaFile(dynamic_pointer_cast<textureFile>(f));
+	}
+	else if(f->type == file::TEXTURE && f->format == file::PNG)
+	{
+		return serializePngFile(dynamic_pointer_cast<textureFile>(f));
+	}
+	else if(f->type == file::BINARY)
+	{
+		return serializeBinaryFile(dynamic_pointer_cast<binaryFile>(f));
+	}
+	else
+	{
+		debugBreak();
+		return fileContents();
+	}
 }
 void FileManager::parseBinaryFile(std::shared_ptr<binaryFile> f, fileContents data)
 {
@@ -1110,10 +1156,113 @@ FileManager::fileContents FileManager::serializeIniFile(shared_ptr<iniFile> f)
 	memcpy(c.contents, s.c_str(), c.size);
 	return c;
 }
-FileManager::fileContents FileManager::serializeZipFile(shared_ptr<zipFile> f)
+FileManager::fileContents FileManager::serializeZipFile(shared_ptr<zipFile> f)	//see: http://www.pkware.com/documents/casestudies/APPNOTE.TXT
 {
-	__debugbreak();// code for FileManager::serializeZipFile not yet written
-	return fileContents();
+	vector<unsigned char> data;
+	auto write = [&data](const void* d, unsigned int l)
+	{
+		data.insert(data.end(), (unsigned char*)d, (unsigned char*)d + l);
+	};
+
+	struct centralFileHeader
+	{
+		unsigned short modTime;
+		unsigned short modDate;
+		unsigned int CRC32;
+		unsigned int compressedSize;
+		unsigned int size;
+		unsigned int localHeaderOffset;
+		bool isText;
+		string filename;
+	};
+	vector<centralFileHeader> centralFileHeaders;
+
+
+	fileContents fContents;
+	centralFileHeader cFileHeader;
+	
+
+	for(auto file = f->files.begin(); file != f->files.end(); file++)
+	{
+		fContents = serializeFile(file->second);
+
+		boost::crc_32_type crc;
+		crc.process_block(fContents.contents, fContents.contents + fContents.size);
+
+		cFileHeader.modTime = 0;
+		cFileHeader.modDate = 0;
+		cFileHeader.CRC32 = crc.checksum();
+		cFileHeader.compressedSize = fContents.size;
+		cFileHeader.size = fContents.size;
+		cFileHeader.filename = file->second->filename;
+		cFileHeader.localHeaderOffset = data.size();
+		cFileHeader.isText = file->second->type == file::TEXT || file->second->type == file::INI;
+		centralFileHeaders.push_back(cFileHeader);
+
+		writeAs<unsigned int>		(data, 0x04034b50);							//local file header signature
+		writeAs<unsigned short>		(data, 20);									//version needed to extract
+		writeAs<unsigned short>		(data, 0);									//general purpose bit flag
+		writeAs<unsigned short>		(data, 0);									//compression method
+		writeAs<unsigned short>		(data, 0);									//last mod file time
+		writeAs<unsigned short>		(data, 0);									//last mod file date
+		writeAs<unsigned int>		(data, cFileHeader.CRC32);					//crc-32
+		writeAs<unsigned int>		(data, fContents.size);						//compressed size
+		writeAs<unsigned int>		(data, fContents.size);						//uncompressed size
+		writeAs<unsigned short>		(data, file->second->filename.size());		//file name length
+		writeAs<unsigned short>		(data, 0);									//extra field length
+
+		write(file->second->filename.c_str(), file->second->filename.size());
+		write(fContents.contents, fContents.size);
+	}
+
+	int cDirectoryStart = data.size();
+
+	for(auto header = centralFileHeaders.begin(); header != centralFileHeaders.end(); header++)
+	{
+		writeAs<unsigned int>		(data, 0x02014b50);					//central file header signature
+		writeAs<unsigned short>		(data, 20);							//version made by
+		writeAs<unsigned short>		(data, 20);							//version needed to extract
+		writeAs<unsigned short>		(data, 0);							//general purpose bit flag
+		writeAs<unsigned short>		(data, 0);							//compression method
+		writeAs<unsigned short>		(data, 0);							//last mod file time
+		writeAs<unsigned short>		(data, 0);							//last mod file date
+		writeAs<unsigned int>		(data, header->CRC32);				//crc-32
+		writeAs<unsigned int>		(data, header->compressedSize);		//compressed size
+		writeAs<unsigned int>		(data, header->size);				//uncompressed size
+		writeAs<unsigned short>		(data, header->filename.size());	//file name length
+		writeAs<unsigned short>		(data, 0);							//extra field length
+		writeAs<unsigned short>		(data, 0);							//file comment length
+		writeAs<unsigned short>		(data, 0);							//disk number start
+		writeAs<unsigned short>		(data, header->isText ? 0x1 : 0x0);	//internal file attributes
+		writeAs<unsigned int>		(data, 0x00000020);					//external file attributes
+		writeAs<unsigned int>		(data, header->localHeaderOffset);	//relative offset of local header
+
+		write(header->filename.c_str(), header->filename.size());
+	}
+
+	int cDirectoryEnd = data.size();
+
+	writeAs<unsigned int>		(data, 0x06054b50);							//end of central dir signature
+	writeAs<unsigned short>		(data, 0); 									//number of this disk
+	writeAs<unsigned short>		(data, 0); 									//number of the disk with the start of the central directory
+	writeAs<unsigned short>		(data, (short)centralFileHeaders.size());	//total number of entries in the central directory on this disk
+	writeAs<unsigned short>		(data, (short)centralFileHeaders.size()); 	//total number of entries in the central directory
+	writeAs<unsigned int>		(data, cDirectoryEnd - cDirectoryStart);	//size of the central directory
+	writeAs<unsigned int>		(data, cDirectoryStart); 					//offset of start of central directory with respect to the starting disk number
+	writeAs<unsigned short>		(data, 0); 									//ZIP file comment length
+
+	if(data.size() > 0)
+	{
+		fileContents contents;
+		contents.size = data.size();
+		contents.contents = new unsigned char[contents.size];
+		memcpy(contents.contents, &data[0], contents.size);
+		return contents;
+	}
+	else
+	{
+		return fileContents();
+	}
 }
 FileManager::fileContents FileManager::serializeBmpFile(shared_ptr<textureFile> f)
 {

@@ -159,6 +159,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		return 1;
 	}
 
+	auto f = fileManager.loadZipFile("r.zip");
+	f->filename = "document2.zip";
+	fileManager.writeZipFile(f);
+
 	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;

@@ -27,6 +27,8 @@ struct LevelFile
 		unsigned short	numObjects;
 		unsigned short	numRegions;
 		string			nextLevel;
+		float			minHeight;
+		float			maxHeight;
 		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0), numObjects(0), numRegions(0){}
 	}*info;
 
@@ -80,6 +82,9 @@ struct LevelFile
 	//bool save(string filename);
 	bool savePNG(string filename);
 	bool loadPNG(string filename);
+
+	bool saveZIP(string filename);
+	bool loadZIP(string filename);
 
 	void initializeWorld();//creates objects stored in level file
 

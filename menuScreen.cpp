@@ -474,7 +474,7 @@ void openFile::fileSelected()
 	{
 		file += *extFilters.begin();
 	}
-	if(!fileManager.fileExists(directory + file))
+	if(!fileManager.fileExists(directory + "/" + file))
 		file = "";
 
 	done = true;
