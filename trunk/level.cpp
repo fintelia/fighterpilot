@@ -361,6 +361,127 @@ bool LevelFile::loadPNG(string filename)
 	delete[] row_pointers;
 	return true;
 }
+bool LevelFile::saveZIP(string filename)
+{
+	//check that basic level data is valid
+	if(heights == nullptr || info->mapResolution.x == 0 || info->mapResolution.y == 0)
+		return 0;
+
+	//create several FileManager::file to hold various aspects of our level
+	shared_ptr<FileManager::zipFile>		lvlFile(new FileManager::zipFile(filename));
+	shared_ptr<FileManager::binaryFile>		rawFile(new FileManager::binaryFile("heightmap.raw"));
+	shared_ptr<FileManager::iniFile>		attributesFile(new FileManager::iniFile("attributes.ini"));
+	shared_ptr<FileManager::textFile>		objectsFile(new FileManager::textFile("objects.txt"));
+
+	//initialize local variables
+	unsigned int width	= info->mapResolution.x;
+	unsigned int height = info->mapResolution.y;
+	float maxHeight		= heights[0]+0.001;
+	float minHeight		= heights[0];
+
+	//find minimum and maximum heights
+	for(int x=0;x<width;x++)
+	{
+		for(int z=0;z<height;z++)
+		{
+			if(heights[x+z*width]>maxHeight) maxHeight = heights[x+z*width];
+			if(heights[x+z*width]<minHeight) minHeight = heights[x+z*width];
+		}
+	}
+
+	//store heightmap data in our "heightmap.raw" file 
+	rawFile->size = 2 * width * height;
+	rawFile->contents = new unsigned char[rawFile->size];
+	memset(rawFile->contents,0,rawFile->size);
+	for(int x=0; x<width; x++)
+	{
+		for(int z=0; z<height; z++)
+		{
+
+			*((unsigned short*)rawFile->contents + (x + z*width)) = USHRT_MAX * (heights[x + z*width] - minHeight) / (maxHeight - minHeight);
+		}
+	}
+
+	//place information about our level in attributes.ini
+	attributesFile->bindings["heightmap"]["resolutionX"] = lexical_cast<string>(width);
+	attributesFile->bindings["heightmap"]["resolutionY"] = lexical_cast<string>(height);
+	attributesFile->bindings["heightmap"]["minHeight"] = lexical_cast<string>(minHeight);
+	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(maxHeight);
+	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info->mapSize.x);
+	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info->mapSize.y);
+
+	attributesFile->bindings["level"]["nextLevel"] = info->nextLevel;
+
+	if(info->shaderType == SHADER_ISLAND)		attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
+	else if(info->shaderType == SHADER_GRASS)	attributesFile->bindings["shaders"]["shaderType"] = "GRASS";
+	else if(info->shaderType == SHADER_SNOW)	attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
+	else if(info->shaderType == SHADER_OCEAN)	attributesFile->bindings["shaders"]["shaderType"] = "OCEAN";
+	else										attributesFile->bindings["shaders"]["shaderType"] = "NONE";
+
+	for(int i = 0; i < info->numObjects; i++)
+	{
+		objectsFile->contents += "object\n{\n";
+		objectsFile->contents += string("\ttype=") + objectTypeString(objects[i].type) + "\n";
+		objectsFile->contents += string("\tteam=") + lexical_cast<string>(objects[i].team) + "\n";
+		objectsFile->contents += string("\tspawnPos=(") + lexical_cast<string>(objects[i].startloc.x) + "," + lexical_cast<string>(objects[i].startloc.y) + "," + lexical_cast<string>(objects[i].startloc.z) + ")\n";
+		objectsFile->contents += "}\n";
+	}
+	//make all these file part of the lvl (zip) file
+	lvlFile->files["heightmap.raw"] = rawFile;
+	lvlFile->files["attributes.ini"] = attributesFile;
+	lvlFile->files["objects.txt"] = objectsFile;
+	//attempt to write the lvl file and return whether we were successful 
+	return fileManager.writeZipFile(lvlFile);
+}
+bool LevelFile::loadZIP(string filename)
+{
+	auto f = fileManager.loadZipFile(filename);
+
+	auto rFile = f->files.find("heightmap.raw");
+	auto aFile = f->files.find("attributes.ini");
+
+	if(rFile == f->files.end() || aFile == f->files.end())
+		return false;
+
+	shared_ptr<FileManager::binaryFile>	rawFile(dynamic_pointer_cast<FileManager::binaryFile>(rFile->second));
+	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
+	
+	delete info;		info = nullptr;
+	delete[] objects;	objects = nullptr;
+	delete[] regions;	regions = nullptr;
+	delete[] heights;	heights = nullptr;
+
+	info = new Info;
+	attributesFile->readValue("heightmap", "resolutionX", info->mapResolution.x);
+	attributesFile->readValue("heightmap", "resolutionY", info->mapResolution.y);
+	attributesFile->readValue("heightmap", "minHeight", info->minHeight);
+	attributesFile->readValue("heightmap", "maxHeight", info->maxHeight);
+	attributesFile->readValue("heightmap", "sizeX", info->mapSize.x);
+	attributesFile->readValue("heightmap", "sizeZ", info->mapSize.y);
+	attributesFile->readValue("level", "nextLevel", info->nextLevel);
+
+	string sType;
+	attributesFile->readValue("shaders", "shaderType", sType);
+	if(sType == "ISLAND")		info->shaderType = SHADER_ISLAND;
+	else if(sType == "GRASS")	info->shaderType = SHADER_GRASS;
+	else if(sType == "SNOW")	info->shaderType = SHADER_SNOW;
+	else if(sType == "OCEAN")	info->shaderType = SHADER_OCEAN;
+	else						info->shaderType = SHADER_GRASS; //grass is default
+
+	if(info->mapResolution.x == 0 || info->mapResolution.y == 0)
+	{
+		delete info;
+		info = nullptr;
+		return false;
+	}
+	heights = new float[info->mapResolution.x * info->mapResolution.y];
+	memset(heights, 0, info->mapResolution.x * info->mapResolution.y * sizeof(float));
+	for(int i = 0; i < info->mapResolution.x * info->mapResolution.y && i * 2 < rawFile->size; i++)
+	{
+		heights[i] = info->minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info->maxHeight - info->minHeight) / USHRT_MAX ;
+	}
+	return true;
+}
 void LevelFile::initializeWorld()
 {
 	players.resetPlayers();
@@ -785,7 +906,7 @@ Level::~Level()
 bool Level::init(string filename)
 {
 	LevelFile file;
-	if(!file.loadPNG(filename))
+	if(!file.loadZIP(filename))
 		return false;
 
 	if(	(file.info == NULL) ||
@@ -1017,7 +1138,7 @@ void editLevel::save(string filename)
 		f.objects = new LevelFile::Object[mObjects.size()];
 		memcpy(f.objects, &(*mObjects.begin()),mObjects.size()*sizeof(LevelFile::Object));
 	}
-	f.savePNG(filename);
+	f.saveZIP(filename);
 }
 void editLevel::save(string filename, float seaLevelOffset)
 {
@@ -1045,7 +1166,7 @@ void editLevel::save(string filename, float seaLevelOffset)
 			f.heights[x+z*mGround->resolutionX()] -= seaLevelOffset;
 		}
 	}
-	f.savePNG(filename);
+	f.saveZIP(filename);
 }
 
 

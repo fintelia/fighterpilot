@@ -59,6 +59,12 @@ public:
 
 //		iniFile(): file("",INI){}
 		iniFile(string fName): file(fName,INI){}
+		template<class T> void readValue (string section, string name, T& val, T defaultVal = T())
+		{
+			auto sec = bindings.find(section);			if(sec == bindings.end()) {val = defaultVal; return;}
+			auto itt = sec->second.find(name);			if(itt == sec->second.end()) {val = defaultVal; return;}
+			val = lexical_cast<T>(itt->second);
+		}
 	};	
 	struct zipFile: public file
 	{
@@ -129,7 +135,11 @@ private:
 	{
 		memcpy(c, &value, sizeof(T));
 	}
-
+	template<class T>void writeAs(vector<unsigned char>& vec, const T& value)
+	{
+		vec.reserve(vec.size() + sizeof(T));
+		vec.insert(vec.end(), (unsigned char*)&value, (unsigned char*)&value + sizeof(T));
+	}
 	void workerThread();
 	static void startWorkerThread(void* pThis)
 	{
@@ -140,6 +150,7 @@ private:
 	bool writeFileContents(string filename, fileContents contents); //deletes contents after writing!!!
 
 	shared_ptr<file> parseFile(string filename, fileContents data);
+	fileContents serializeFile(shared_ptr<file> f);
 
 	void parseBinaryFile(shared_ptr<binaryFile> f, fileContents data);
 	void parseTextFile(shared_ptr<textFile> f, fileContents data);
