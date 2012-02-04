@@ -4,32 +4,32 @@ namespace particle
 class explosion: public emitter
 {
 public:
-	explosion(Vec3f pos, float radius);
-	explosion(int parent, Vec3f offset = Vec3f(0,0,0));
+	explosion();
+	void init();
 
 	void updateParticle(particle& p);
 };
 class explosionFlash: public emitter
 {
 public:
-	explosionFlash(Vec3f pos);
-	explosionFlash(int parent, Vec3f offset = Vec3f(0,0,0));
+	explosionFlash();
+	void init();
 
 	void updateParticle(particle& p);
 };
 class explosionSmoke: public emitter
 {
 public:
-	explosionSmoke(Vec3f pos, float radius);
-	explosionSmoke(int parent, Vec3f offset = Vec3f(0,0,0));
+	explosionSmoke();
+	void init();
 
 	void updateParticle(particle& p);
 };
 class blackSmoke: public emitter
 {
 public:
-	blackSmoke(Vec3f pos);
-	blackSmoke(int parent, Vec3f offset = Vec3f(0,0,0));
+	blackSmoke();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
@@ -39,8 +39,8 @@ class splash: public emitter
 private:
 	unsigned int totalCreated;
 public:
-	splash(Vec3f pos);
-	splash(int parent, Vec3f offset = Vec3f(0,0,0));
+	splash();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
@@ -48,7 +48,8 @@ public:
 class contrail: public emitter
 {
 public:
-	contrail(int parent, Vec3f offset = Vec3f(0,0,0));
+	contrail();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
@@ -56,7 +57,8 @@ public:
 class contrailSmall: public emitter
 {
 public:
-	contrailSmall(int parent, Vec3f offset = Vec3f(0,0,0));
+	contrailSmall();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
@@ -64,7 +66,8 @@ public:
 class planeContrail: public emitter
 {
 public:
-	planeContrail(int parent, Vec3f offset = Vec3f(0,0,0));
+	planeContrail();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
@@ -72,7 +75,8 @@ public:
 class smokeTrail: public emitter
 {
 public:
-	smokeTrail(int parent, Vec3f offset = Vec3f(0,0,0));
+	smokeTrail();
+	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);

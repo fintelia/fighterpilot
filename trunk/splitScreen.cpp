@@ -10,6 +10,13 @@ splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 	graphics->viewport(0,0.0, sAspect,0.5,	1);
 	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	0);
 	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	1);
+	graphics->setLightPosition(Vec3f(-500.0, 800.0, 100.0));
+}
+bool splitScreen::init()
+{
+	world.create();
+	level->initializeWorld(2);
+	return true;
 }
 int splitScreen::update()
 {

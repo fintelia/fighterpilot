@@ -6,7 +6,12 @@ struct particle
 {
 	Vec3f pos;
 	Vec3f vel;
+	Vec3f dir;
+	Vec3f startPos;
 	Angle ang;
+	float initialSpeed;
+	float angularSpeed;
+	float totalDistance;
 	float friction;
 	float size;
 	float r, g, b, a;
@@ -17,9 +22,10 @@ struct particle
 struct vertex
 {
 	Vec3f position;
-	float energy;
-	float r, g, b, a;
 	float s, t;
+	float r, g, b, a;
+	float energy;
+	float padding[6];
 };
 
 class emitter
@@ -91,14 +97,18 @@ protected:
 	Vec3f minXYZ;
 	Vec3f maxXYZ;
 
-	unsigned int VBO;
+	//unsigned int VBO;
+	GraphicsManager::vertexBuffer* VBO;
 	bool additiveBlending;
 
 public:
 	friend class manager;
 
-	emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
-	emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
+	emitter(Type t, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
+	virtual void init(){}
+	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
+	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;ParentOffset=ParentOffset;}
+
 	virtual ~emitter();
 	void addParticle(particle& p);
 	//virtual void setDefaults(...)=0;
@@ -127,11 +137,11 @@ public:
 		return *instance;
 	}
 	void init();
-	void addEmitter(emitter* e);
+	void addEmitter(emitter* e, Vec3f position, float radius=1.0);
+	void addEmitter(emitter* e, int parent, Vec3f offset=Vec3f());
 	void update();
 	void render();
 	void shutdown();
-
 };
 
 }

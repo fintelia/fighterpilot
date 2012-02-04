@@ -204,7 +204,7 @@ bool chooseMode::keyDown(int vkey)
 		input.up(VK_RETURN);
 
 		std::shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadPNG("media/map file.lvl"))
+		if(l->loadZIP("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::campaign(l));
 	//		modeManager.setMode(new modeCampaign(l));
@@ -216,7 +216,7 @@ bool chooseMode::keyDown(int vkey)
 		input.up(VK_RETURN);
 
 		std::shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadPNG("media/map file.lvl"))
+		if(l->loadZIP("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
 		//	modeManager.setMode(new modeSplitScreen(l));
@@ -247,7 +247,7 @@ void chooseMode::operator() (popup* p)
 
 
 			std::shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadPNG(((openFile*)p)->getFile()))
+			if(l->loadZIP(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::campaign(l));
 			}
@@ -259,7 +259,7 @@ void chooseMode::operator() (popup* p)
 			input.up(VK_RETURN);
 
 			std::shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadPNG(((openFile*)p)->getFile()))
+			if(l->loadZIP(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::splitScreen(l));
 			}

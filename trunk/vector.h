@@ -202,3 +202,70 @@ template <class T> Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T
 	if (t >= (T)1.0)	return v2;
 	return (v1 * ((T)1.0 - t) + v2 * t);
 };
+
+template<class T>
+std::ostream& operator<<(std::ostream& s, const Vector3<T>& v)
+{
+    return s << "(" << v.x << "," << v.y << "," << v.z << ")";
+}
+
+template<class T>
+std::istream& operator>>(std::istream& s, Vector3<T>& v)
+{
+	char c[64];
+	s.width(64);
+	s >> c;
+
+	v.x=0;
+	v.y=0;
+	v.z=0;
+
+	double p=0.1;
+	double sign = 1.0;
+	bool decimalPoint = false;
+	bool started = false;
+
+	T* val = &v.x;
+	int componentNum=0;
+	int n=0;
+
+	while(n < 64 && c[n] != 0)
+	{
+		if(!started && c[n] == '-')
+		{
+			sign = -1.0;
+		}
+		else if(c[n] >= '0' && c[n] <= '9')
+		{
+			if(started && decimalPoint)
+			{
+				*val += sign * p * (c[n] - '0');	//add the current digit to the proper decimal place
+				p *= 0.1;							//move one place to the right
+			}
+			else
+			{
+				started = true;								//started may or may not already have been set to true
+				*val = (*val) * 10.0 + sign * (c[n] - '0');	//shift the contents of the current value one place to the left and add the current digit
+			}
+		}
+		else if(started && !decimalPoint && c[n] == '.')
+		{
+			decimalPoint = true;	//if we have not hit a decimal point yet, start the decimal part (otherwise move on to the next component)
+		}
+		else if(started)
+		{
+			val++;					//move on to the next component
+			p=0.1;					//reset p
+			sign = 1.0;				//reset sign
+			started = false;		//reset started
+			decimalPoint = false;	//reset decimalPoint
+			if(++componentNum > 2)	//make sure that we have not finished writing yet
+			{
+				break;
+			}
+		}
+		n++;
+	}
+    return s;
+}
+

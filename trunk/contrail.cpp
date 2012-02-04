@@ -3,7 +3,11 @@
 
 namespace particle
 {
-	contrail::contrail(int parent, Vec3f offset): emitter(CONTRAIL_LARGE, parent, offset, "smoke", 1.0, 160.0, 48)
+	contrail::contrail(): emitter(CONTRAIL_LARGE, "contrail", 1.0, 160.0, 48)
+	{
+
+	}
+	void contrail::init()
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
 		//spread =	fuzzyAttribute(0.0);

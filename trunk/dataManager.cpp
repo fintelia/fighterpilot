@@ -8,10 +8,10 @@ DataManager::~DataManager()
 {
 	shutdown();
 }
-bool DataManager::registerFont(string name, shared_ptr<FileManager::textFile> f) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
+DataManager::asset* DataManager::registerFont(shared_ptr<FileManager::textFile> f) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
 	if(f->invalid())
-		return false;
+		return nullptr;
 
 	struct info_t
 	{
@@ -74,11 +74,14 @@ bool DataManager::registerFont(string name, shared_ptr<FileManager::textFile> f)
 	}
 	if(i < numChars) numChars = i;
 
-	string texName = name+"_TEXTURE";
-	if(registerTexture(texName, fileManager.loadTextureFile(texPath)))
+	string texName = f->filename + "_TEXTURE";
+	auto ptr = registerTexture(fileManager.loadTextureFile(texPath));
+	if(ptr != nullptr)
 	{
+		assets[texName] = ptr;
+
 		fontAsset* f = new fontAsset;
-		f->id = assets[texName]->id;
+		f->id = ((textureAsset*)ptr)->id;
 		f->texName = texName;
 		f->type = asset::FONT;
 		f->height = (float)info.lineHeight;
@@ -98,15 +101,13 @@ bool DataManager::registerFont(string name, shared_ptr<FileManager::textFile> f)
 			f->characters[fontChars[i].id] = tmpChar;
 		}
 
-		assets[name] = f;
-
 		delete [] fontChars;
-		return true;
+		return f;
 	}
 	else
 	{
 		delete [] fontChars;
-		return false;
+		return nullptr;
 	}
 }
 //bool DataManager::registerTGA(string name, string filename, bool tileable)
@@ -219,10 +220,10 @@ bool DataManager::registerFont(string name, shared_ptr<FileManager::textFile> f)
 //	assets[name] = a;
 //	return true;
 //}
-bool DataManager::registerTexture(string name, shared_ptr<FileManager::textureFile> f, bool tileable)
+DataManager::asset* DataManager::registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable)
 {
 	if(!f->valid())
-		return false;
+		return nullptr;
 
 	int format;
 	if(f->channels == 1)		format = GL_LUMINANCE;
@@ -231,7 +232,7 @@ bool DataManager::registerTexture(string name, shared_ptr<FileManager::textureFi
 	else if(f->channels == 4)	format = GL_RGBA;
 	else{
 		debugBreak();
-		return false;
+		return nullptr;
 	}
 
 	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((f->width & (f->width-1)) || (f->height & (f->height-1)));
@@ -269,9 +270,7 @@ bool DataManager::registerTexture(string name, shared_ptr<FileManager::textureFi
 	a->height = f->height;
 	a->bpp = f->channels * 8;
 	a->data = NULL;
-	assets[name] = a;
-
-	return true;
+	return a;
 }
 //bool DataManager::registerTexture(string name, string filename, bool tileable)
 //{
@@ -284,19 +283,91 @@ bool DataManager::registerTexture(string name, shared_ptr<FileManager::textureFi
 //	//}
 //	//else return false;
 //}
-bool DataManager::registerShader(string name, string vert, string frag, bool use_sAspect)
+//bool DataManager::registerShader(string name, string vert, string frag, bool use_sAspect)
+//{
+//	bool errorFlag = false;
+//	GLuint v=0,f=0,p;
+//	v = glCreateShader(GL_VERTEX_SHADER);
+//	f = glCreateShader(GL_FRAGMENT_SHADER);
+//
+//	auto ff = fileManager.loadTextFile(frag);
+//	auto vv = fileManager.loadTextFile(vert);
+//	if(ff->invalid()  || vv->invalid()) return false;
+//
+//	const char* ptr = vv->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
+//	ptr = ff->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
+//
+//	glCompileShader(v);
+//	glCompileShader(f);
+//
+//	string vertErrors;
+//	string fragErrors;
+//	string linkErrors;
+//
+//	int i;//used whenever a pointer to int is required
+//	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+//	if(i == GL_FALSE)
+//	{
+//		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+//		char* cv=new char[i]; memset(cv,0,i);
+//		glGetShaderInfoLog(v,i,&i,cv);
+//		messageBox(vert + ": " + cv);
+//		errorFlag = true;
+//		delete[] cv;
+//	}
+//	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+//	if(i == GL_FALSE && !errorFlag)
+//	{
+//		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+//		char* cf=new char[i]; memset(cf,0,i);
+//		glGetShaderInfoLog(f,i,&i,cf);
+//		messageBox(frag + ": " + cf);
+//		errorFlag = true;
+//		delete[] cf;
+//	}
+//
+//
+//	p = glCreateProgram();
+//	glAttachShader(p,f);
+//	glAttachShader(p,v);
+//
+//	glLinkProgram(p);
+//
+//	glGetProgramiv(p,GL_LINK_STATUS,&i);
+//	if(i == GL_FALSE && !errorFlag)
+//	{
+//		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+//		char* cl=new char[i]; memset(cl,0,i);
+//		glGetProgramInfoLog(p,i,&i,cl);
+//		messageBox(frag + "(link): " + cl);
+//		errorFlag = true;
+//		delete[] cl;
+//	}
+//	glUseProgram(0);
+//
+//	if(!errorFlag)
+//	{
+//		shaderAsset* a = new shaderAsset;
+//		a->id = p;
+//		a->type = asset::SHADER;
+//		a->use_sAspect = use_sAspect;
+//		assets[name] = a;
+//	}
+//	return !errorFlag;
+//}
+DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect)
 {
 	bool errorFlag = false;
 	GLuint v=0,f=0,p;
 	v = glCreateShader(GL_VERTEX_SHADER);
 	f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	auto ff = fileManager.loadTextFile(frag);
-	auto vv = fileManager.loadTextFile(vert);
-	if(ff->invalid()  || vv->invalid()) return false;
+	//auto ff = fileManager.loadTextFile(frag);
+	//auto vv = fileManager.loadTextFile(vert);
+	if(frag->invalid()  || vert->invalid()) return false;
 
-	const char* ptr = vv->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
-	ptr = ff->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
+	const char* ptr = vert->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
+	ptr = frag->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
 
 	glCompileShader(v);
 	glCompileShader(f);
@@ -312,7 +383,7 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
 		char* cv=new char[i]; memset(cv,0,i);
 		glGetShaderInfoLog(v,i,&i,cv);
-		messageBox(vert + ": " + cv);
+		messageBox(vert->filename + ": " + cv);
 		errorFlag = true;
 		delete[] cv;
 	}
@@ -322,7 +393,7 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
 		char* cf=new char[i]; memset(cf,0,i);
 		glGetShaderInfoLog(f,i,&i,cf);
-		messageBox(frag + ": " + cf);
+		messageBox(frag->filename + ": " + cf);
 		errorFlag = true;
 		delete[] cf;
 	}
@@ -340,7 +411,7 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
 		char* cl=new char[i]; memset(cl,0,i);
 		glGetProgramInfoLog(p,i,&i,cl);
-		messageBox(frag + "(link): " + cl);
+		messageBox(frag->filename + "(link): " + cl);
 		errorFlag = true;
 		delete[] cl;
 	}
@@ -352,97 +423,97 @@ bool DataManager::registerShader(string name, string vert, string frag, bool use
 		a->id = p;
 		a->type = asset::SHADER;
 		a->use_sAspect = use_sAspect;
-		assets[name] = a;
+		return a;
 	}
-	return !errorFlag;
+	return nullptr;
 }
-bool DataManager::registerTerrainShader(string name, string frag)
-{
-	bool errorFlag = false;
-	static GLuint v=0;
-	const char* ptr;
-
-	if(v==0)
-	{
-		v = glCreateShader(GL_VERTEX_SHADER);
-		
-		auto vv = fileManager.loadTextFile("media/terrain.vert");
-		if(vv->invalid()) return false;
-		ptr = vv->contents.c_str();
-		glShaderSource(v, 1, (const char **)&ptr, NULL);
-		glCompileShader(v);
-
-		int i;//used whenever a pointer to int is required
-		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
-		if(i == GL_FALSE)
-		{
-			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-			char* cv=new char[i]; memset(cv,0,i);
-			glGetShaderInfoLog(v,i,&i,cv);
-			messageBox(string("terrain.vert: ") + cv);
-			errorFlag = true;
-			delete[] cv;
-		}
-	}
-
-	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
-			p = 0;
-	
-	auto	ff = fileManager.loadTextFile(frag);
-	int		lf=0;
-
-	if(ff->valid())
-	{
-		char* cf=new char[512];
-		ptr = ff->contents.c_str();
-		glShaderSource(f, 1, (const char **)&ptr, NULL);
-		glCompileShader(f);
-		memset(cf,0,512);
-		glGetShaderInfoLog(f,512,&lf,cf);
-		delete[] cf;
-
-		int i;
-		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
-		if(i == GL_FALSE && !errorFlag)
-		{
-			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-			char* cf=new char[i]; memset(cf,0,i);
-			glGetShaderInfoLog(f,i,&i,cf);
-			messageBox(frag + ": " + cf);
-			errorFlag = true;
-			delete[] cf;
-		}
-
-		p = glCreateProgram();
-		glAttachShader(p,f);
-		glAttachShader(p,v);
-		glLinkProgram(p);
-
-		glGetProgramiv(p,GL_LINK_STATUS,&i);
-		if(i == GL_FALSE && !errorFlag)
-		{
-			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-			char* cl=new char[i]; memset(cl,0,i);
-			glGetProgramInfoLog(p,i,&i,cl);
-			messageBox(frag + "(link): " + cl);
-			errorFlag = true;
-			delete[] cl;
-		}
-
-	}
-	glUseProgram(0);
-
-	if(!errorFlag)
-	{
-		shaderAsset* a = new shaderAsset;
-		a->id = p;
-		a->type = asset::SHADER;
-		a->use_sAspect = false;
-		assets[name] = a;
-	}
-	return !errorFlag;
-}
-bool DataManager::registerOBJ(string name, string filename)
+//bool DataManager::registerTerrainShader(string name, string frag)
+//{
+//	bool errorFlag = false;
+//	static GLuint v=0;
+//	const char* ptr;
+//
+//	if(v==0)
+//	{
+//		v = glCreateShader(GL_VERTEX_SHADER);
+//		
+//		auto vv = fileManager.loadTextFile("media/terrain.vert");
+//		if(vv->invalid()) return false;
+//		ptr = vv->contents.c_str();
+//		glShaderSource(v, 1, (const char **)&ptr, NULL);
+//		glCompileShader(v);
+//
+//		int i;//used whenever a pointer to int is required
+//		glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+//		if(i == GL_FALSE)
+//		{
+//			glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+//			char* cv=new char[i]; memset(cv,0,i);
+//			glGetShaderInfoLog(v,i,&i,cv);
+//			messageBox(string("terrain.vert: ") + cv);
+//			errorFlag = true;
+//			delete[] cv;
+//		}
+//	}
+//
+//	GLuint	f = glCreateShader(GL_FRAGMENT_SHADER),
+//			p = 0;
+//	
+//	auto	ff = fileManager.loadTextFile(frag);
+//	int		lf=0;
+//
+//	if(ff->valid())
+//	{
+//		char* cf=new char[512];
+//		ptr = ff->contents.c_str();
+//		glShaderSource(f, 1, (const char **)&ptr, NULL);
+//		glCompileShader(f);
+//		memset(cf,0,512);
+//		glGetShaderInfoLog(f,512,&lf,cf);
+//		delete[] cf;
+//
+//		int i;
+//		glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+//		if(i == GL_FALSE && !errorFlag)
+//		{
+//			glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+//			char* cf=new char[i]; memset(cf,0,i);
+//			glGetShaderInfoLog(f,i,&i,cf);
+//			messageBox(frag + ": " + cf);
+//			errorFlag = true;
+//			delete[] cf;
+//		}
+//
+//		p = glCreateProgram();
+//		glAttachShader(p,f);
+//		glAttachShader(p,v);
+//		glLinkProgram(p);
+//
+//		glGetProgramiv(p,GL_LINK_STATUS,&i);
+//		if(i == GL_FALSE && !errorFlag)
+//		{
+//			glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+//			char* cl=new char[i]; memset(cl,0,i);
+//			glGetProgramInfoLog(p,i,&i,cl);
+//			messageBox(frag + "(link): " + cl);
+//			errorFlag = true;
+//			delete[] cl;
+//		}
+//
+//	}
+//	glUseProgram(0);
+//
+//	if(!errorFlag)
+//	{
+//		shaderAsset* a = new shaderAsset;
+//		a->id = p;
+//		a->type = asset::SHADER;
+//		a->use_sAspect = false;
+//		assets[name] = a;
+//	}
+//	return !errorFlag;
+//}
+DataManager::asset* DataManager::registerOBJ(string filename)
 {
 	///////////////////////types////////////////////////////
 //	struct color{float r,g,b;color(float red, float green, float blue): r(red), g(green), b(blue){}};
@@ -476,7 +547,7 @@ bool DataManager::registerOBJ(string name, string filename)
 
 	FILE *fp;
 	if((fp=fopen(filename.c_str(), "r")) == nullptr)
-		return false;
+		return nullptr;
 
 	char buffer[200];
 	char *token;
@@ -525,7 +596,7 @@ bool DataManager::registerOBJ(string name, string filename)
 			if(!fin.is_open())
 			{
 				messageBox(mtlFile + " could not be loaded");
-				return false;
+				return nullptr;
 			}
 			while (!fin.eof())
 			{
@@ -575,8 +646,15 @@ bool DataManager::registerOBJ(string name, string filename)
 					if(mstring == "") continue;
 
 					mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-					if(!registerTexture(mMtl.tex, fileManager.loadTextureFile(mMtl.tex), true))
+					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
+					if(texPtr)
+					{
+						assets[mMtl.tex] = texPtr;
+					}
+					else
+					{
 						mMtl.tex = "";
+					}
 				}
 				else if(s[0].compare(0,2,"Kd")==0)
 				{
@@ -617,7 +695,7 @@ bool DataManager::registerOBJ(string name, string filename)
 	catch(...)
 	{
 		fclose(fp);
-		return false;
+		return nullptr;
 	}
 	//fopen_s(&fp,filename, "r");
 
@@ -771,15 +849,20 @@ bool DataManager::registerOBJ(string name, string filename)
 		a->materials.push_back(mat);
 		lNum=vNum;
 	}
+	a->VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC, false);
+	a->VBO->addPositionData(3,	0);
+	a->VBO->addNormalData(3,	3*sizeof(float));
+	a->VBO->addTexCoordData(2,	6*sizeof(float));
+	a->VBO->setTotalVertexSize(sizeof(texturedLitVertex3D));
+	a->VBO->bindBuffer();
+	a->VBO->setVertexData(sizeof(texturedLitVertex3D)*vNum, VBOverts);
 
-	glGenBuffers(1,(GLuint*)&a->id);
-	glBindBuffer(GL_ARRAY_BUFFER, a->id);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texturedLitVertex3D)*vNum, VBOverts, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glGenBuffers(1,(GLuint*)&a->id);
+	//glBindBuffer(GL_ARRAY_BUFFER, a->id);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(texturedLitVertex3D)*vNum, VBOverts, GL_STATIC_DRAW);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	assets[name] = a;
-
 	delete[] fs;
 	delete[] vertices;
 	delete[] texCoords;
@@ -787,7 +870,7 @@ bool DataManager::registerOBJ(string name, string filename)
 	delete[] normals;
 	delete[] mtls;
 
-	return true;
+	return a;
 }
 
 void DataManager::bind(string name, int textureUnit)
@@ -798,7 +881,7 @@ void DataManager::bind(string name, int textureUnit)
 	{
 		if(boundTextures[textureUnit] == name)
 			return;
-		else if(boundTextureIds[textureUnit] == assets[name]->id)
+		else if(boundTextureIds[textureUnit] == ((textureAsset*)assets[name])->id)
 		{
 			boundTextures[textureUnit] = name;
 			return;
@@ -810,22 +893,22 @@ void DataManager::bind(string name, int textureUnit)
 			activeTextureUnit = textureUnit;
 		}
 
-		glBindTexture(GL_TEXTURE_2D,assets[name]->id);
-		boundTextureIds[textureUnit] = assets[name]->id;
+		glBindTexture(GL_TEXTURE_2D,((textureAsset*)assets[name])->id);
+		boundTextureIds[textureUnit] = ((textureAsset*)assets[name])->id;
 		boundTextures[textureUnit] = name;
 	}
 	else if(assets[name]->type==asset::SHADER)
 	{
 		if(boundShader == name)
 			return;
-		else if(boundShaderId == assets[name]->id)
+		else if(boundShaderId == ((shaderAsset*)assets[name])->id)
 		{
 			boundShader = name;
 			return;
 		}
 
-		glUseProgram(assets[name]->id);
-		boundShaderId = assets[name]->id;
+		glUseProgram(((shaderAsset*)assets[name])->id);
+		boundShaderId = ((shaderAsset*)assets[name])->id;
 		boundShader = name;
 	}
 }
@@ -924,26 +1007,26 @@ bool DataManager::loadAssetList()
 	}
 
 	const char* c;
-	TiXmlNode* node					= NULL;
-	TiXmlNode* assetsNode			= NULL;
+	TiXmlNode* node					= nullptr;
+	TiXmlNode* assetsNode			= nullptr;
 
 	assetsNode = doc.FirstChild("assets");
-	if(assetsNode == NULL) return false;
+	if(assetsNode == nullptr) return false;
 
 ////////////////////////////////////////textures//////////////////////////////////////////
 	node = assetsNode->FirstChild("textures");
-	if(node != NULL)
+	if(node != nullptr)
 	{
-		TiXmlElement* texturesElement	= NULL;
-		TiXmlElement* textureElement	= NULL;
+		TiXmlElement* texturesElement	= nullptr;
+		TiXmlElement* textureElement	= nullptr;
 
 		texturesElement = node->ToElement();
-		if(texturesElement != NULL)
+		if(texturesElement != nullptr)
 		{
 			node = texturesElement->FirstChildElement();
-			if(node != NULL) textureElement = node->ToElement();
+			if(node != nullptr) textureElement = node->ToElement();
 
-			while(textureElement != NULL)
+			while(textureElement != nullptr)
 			{
 				assetFile tmpAssetFile;
 				tmpAssetFile.type = asset::TEXTURE;
@@ -952,20 +1035,20 @@ bool DataManager::loadAssetList()
 				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
 
 				const char* tileable = textureElement->Attribute("tileable");
-				if(tileable != NULL && string(tileable) == "true")
+				if(tileable != nullptr && string(tileable) == "true")
 					tmpAssetFile.options.insert("tileable");
 
 				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
 				{
 					const char* preload = textureElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
+					if(preload == nullptr || string(preload) != "true")
 					{
-						tmpAssetFile.file = fileManager.loadTextureFile(tmpAssetFile.filename[0],true);
+						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
 						assetFiles.push(tmpAssetFile);
 					}
 					else
 					{
-						tmpAssetFile.file = fileManager.loadTextureFile(tmpAssetFile.filename[0],false);
+						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],false));
 						assetFilesPreload.push(tmpAssetFile);
 					}
 				}
@@ -977,38 +1060,46 @@ bool DataManager::loadAssetList()
 	}
 ////////////////////////////////////////shaders///////////////////////////////////////////
 	node = assetsNode->FirstChild("shaders");
-	if(node != NULL)
+	if(node != nullptr)
 	{
-		TiXmlElement* shadersElement	= NULL;
-		TiXmlElement* shaderElement		= NULL;
+		TiXmlElement* shadersElement	= nullptr;
+		TiXmlElement* shaderElement		= nullptr;
 
 		shadersElement = node->ToElement();
-		if(shadersElement != NULL)
+		if(shadersElement != nullptr)
 		{
 			node = shadersElement->FirstChildElement();
-			if(node != NULL) shaderElement = node->ToElement();
+			if(node != nullptr) shaderElement = node->ToElement();
 
 
-			while(shaderElement != NULL)
+			while(shaderElement != nullptr)
 			{
 				assetFile tmpAssetFile;
 				tmpAssetFile.type = asset::SHADER;
 
-				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=NULL ? c : "";
-				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=NULL ? c : "";
-				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=NULL ? c : "";
+				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=nullptr ? c : "";
+				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=nullptr ? c : "";
+				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=nullptr ? c : "";
 
 				const char* use_sAspect = shaderElement->Attribute("sAspect");
-				if(use_sAspect != NULL && string(use_sAspect) == "true")
+				if(use_sAspect != nullptr && string(use_sAspect) == "true")
 					tmpAssetFile.options.insert("use_sAspect");
 
 				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
 				{
 					const char* preload = shaderElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
+					if(preload == nullptr || string(preload) != "true")
+					{
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],true));
 						assetFiles.push(tmpAssetFile);
+					}
 					else
+					{
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],false));
 						assetFilesPreload.push(tmpAssetFile);
+					}
 				}
 				else debugBreak();
 				shaderElement = shaderElement->NextSiblingElement();
@@ -1017,24 +1108,24 @@ bool DataManager::loadAssetList()
 	}
 ////////////////////////////////////////models///////////////////////////////////////////
 	node = assetsNode->FirstChild("models");
-	if(node != NULL)
+	if(node != nullptr)
 	{
-		TiXmlElement* modelsElement		= NULL;
-		TiXmlElement* modelElement		= NULL;
+		TiXmlElement* modelsElement		= nullptr;
+		TiXmlElement* modelElement		= nullptr;
 
 		modelsElement = node->ToElement();
-		if(modelsElement != NULL)
+		if(modelsElement != nullptr)
 		{
 			node = modelsElement->FirstChildElement();
-			if(node != NULL) modelElement = node->ToElement();
+			if(node != nullptr) modelElement = node->ToElement();
 
-			while(modelElement != NULL)
+			while(modelElement != nullptr)
 			{
 				assetFile tmpAssetFile;
 				tmpAssetFile.type = asset::MODEL;
 
-				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
+				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
 
 				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
 					assetFiles.push(tmpAssetFile);
@@ -1047,37 +1138,37 @@ bool DataManager::loadAssetList()
 	}
 ///////////////////////////////////////font//////////////////////////////////////////////
 	node = assetsNode->FirstChild("fonts");
-	if(node != NULL)
+	if(node != nullptr)
 	{
-		TiXmlElement* assetsElement		= NULL;
-		TiXmlElement* assetElement		= NULL;
+		TiXmlElement* assetsElement		= nullptr;
+		TiXmlElement* assetElement		= nullptr;
 
 		assetsElement = node->ToElement();
-		if(assetsElement != NULL)
+		if(assetsElement != nullptr)
 		{
 			node = assetsElement->FirstChildElement();
-			if(node != NULL) assetElement = node->ToElement();
+			if(node != nullptr) assetElement = node->ToElement();
 
 
-			while(assetElement != NULL)
+			while(assetElement != nullptr)
 			{	
 				assetFile tmpAssetFile;
 				tmpAssetFile.type = asset::FONT;
 
-				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
+				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
 
 				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
 				{
 					const char* preload = assetElement->Attribute("preload");
-					if(preload == NULL || string(preload) != "true")
+					if(preload == nullptr || string(preload) != "true")
 					{
-						tmpAssetFile.file = fileManager.loadTextFile(tmpAssetFile.filename[0],true);
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
 						assetFiles.push(tmpAssetFile);
 					}
 					else
 					{
-						tmpAssetFile.file = fileManager.loadTextFile(tmpAssetFile.filename[0],false);
+						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
 						assetFilesPreload.push(tmpAssetFile);
 					}
 				}
@@ -1112,40 +1203,51 @@ int DataManager::loadAsset()
 		////////////////////////////////////////////////////
 		if(file.type == asset::TEXTURE)
 		{
-			if(file.file == nullptr) file.file = fileManager.loadTextureFile(file.filename[0]);
-			if(!file.file->complete()) break;
+			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+			if(!file.files.front()->complete()) break;
 
 			bool t = file.options.count("tileable") != 0;
 			//registerTexture(file.name, file.filename[0], t);
-			registerTexture(file.name, dynamic_pointer_cast<FileManager::textureFile>(file.file), t);
+			auto texPtr = registerTexture(dynamic_pointer_cast<FileManager::textureFile>(file.files.front()), t);
+			if(texPtr) assets[file.name] = texPtr;
 			pop(preload);
 		}
 		else if(file.type == asset::SHADER)
 		{
-			if(registerShader(file.name, file.filename[0], file.filename[1]) && file.options.count("use_sAspect") != 0)
+			if(file.files.size() == 0) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+			if(file.files.size() == 1) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+			if(!file.files[0]->complete() || !file.files[1]->complete()) break;
+			auto shaderPtr = registerShader(dynamic_pointer_cast<FileManager::textFile>(file.files[0]), dynamic_pointer_cast<FileManager::textFile>(file.files[1]));
+			if(shaderPtr)
 			{
-				auto s = assets.find(file.name);
-				((shaderAsset*)(s->second))->use_sAspect = true;
+				assets[file.name] = shaderPtr;
+				if(shaderPtr && file.options.count("use_sAspect") != 0)
+				{
+					auto s = assets.find(file.name);
+					((shaderAsset*)(s->second))->use_sAspect = true;
 
-				bind(file.name);
-				setUniform1f("sAspect",sAspect);
-				unbind(file.name);
+					bind(file.name);
+					setUniform1f("sAspect",sAspect);
+					unbind(file.name);
+				}
 			}
 			pop(preload);
-			break;
+			//break;
 		}
 		else if(file.type == asset::MODEL)
 		{
-			registerOBJ(file.name, file.filename[0]);
+			auto modelPtr = registerOBJ(file.filename[0]);
+			if(modelPtr) assets[file.name] = modelPtr;
 			pop(preload);
 			break;
 		}
 		else if(file.type == asset::FONT)
 		{
-			if(file.file == nullptr) file.file = fileManager.loadTextFile(file.filename[0]);
-			if(!file.file->complete()) break;
+			if(file.files.empty()) file.files.push_back(fileManager.loadTextFile(file.filename[0]));
+			if(!file.files.front()->complete()) break;
 
-			registerFont(file.name, dynamic_pointer_cast<FileManager::textFile>(file.file));
+			auto fontPtr = registerFont(dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
+			if(fontPtr) assets[file.name] = fontPtr;
 			pop(preload);
 			break;
 		}
@@ -1158,7 +1260,11 @@ int DataManager::getId(string name)
 {
 	auto a = assets.find(name);
 	if(a != assets.end())
-		return a->second->id;
+	{
+		if(a->second->type == asset::TEXTURE)		return ((textureAsset*)a->second)->id;
+		else if(a->second->type == asset::SHADER)	return ((shaderAsset*)a->second)->id;
+		else if(a->second->type == asset::FONT)		return ((fontAsset*)a->second)->id;
+	}
 	return 0;
 }
 int DataManager::getId(objectType t)
@@ -1293,9 +1399,9 @@ void DataManager::shutdown()
 	boundTextures.clear();
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
-		if(i->second->type == asset::SHADER)			glDeleteProgram(i->second->id);
-		else if(i->second->type == asset::MODEL)		glDeleteBuffers(1,(const GLuint*)&i->second->id);
-		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&i->second->id);
+		if(i->second->type == asset::SHADER)			glDeleteProgram(((shaderAsset*)i->second)->id);
+		//else if(i->second->type == asset::MODEL)		glDeleteBuffers(1,(const GLuint*)&i->second->id);
+		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
 	}
 	assets.clear();
 }

@@ -1,0 +1,18 @@
+An incomplete list of how resources were obtained:
+
+grass2.png
+	"Just Add Bison" Genetica viewer
+	scale = -1.0
+	resolution = 2048x2048 (scaled to 1024x1024)
+	blurred with radius = 4.0
+	color balance -> magenta = +20
+	
+grass2_normals.png
+	grass2.png (pre blur) -> SSbump Generator
+	Height Scale = 3.0
+	mixed with blurred copy (radius = 3.0, 50% transparency)
+	
+grass_normals.png
+	grass.png -> SSbump Generator
+	Height Scale = 15.0
+	

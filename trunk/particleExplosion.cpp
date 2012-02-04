@@ -4,58 +4,64 @@
 
 namespace particle
 {
-	explosion::explosion(Vec3f pos, float Radius): emitter(EXPLOSION, pos, "fire", 0.1, 0.0, 32,true)
+	//explosion::explosion(Vec3f pos, float Radius): emitter(EXPLOSION, pos, "fire", 0.1, 0.0, 32,true)
+	//{
+	//	radius = Radius;
+	//	velocity =	fuzzyAttribute(4.0*radius, 0.0);
+	//	spread =	fuzzyAttribute(radius, radius);
+	//	life =		fuzzyAttribute(600.0);
+	//	color =		fuzzyColor(1.0,0.5,0.4);
+
+	//	particle p;
+	//	for(int i = 0; i < 32; i++)
+	//	{
+	//		p.startTime = world.time();
+	//		p.endTime = world.time() + life();
+	//	
+	//		Vec3f dir = random3<float>();
+	//		p.vel = dir * velocity();
+	//		p.pos = pos + dir * spread() + p.vel * extraTime/1000.0;
+
+	//		p.size = 0.0;
+
+	//		p.r = 1.0;
+	//		p.g = 0.5;
+	//		p.b = 0.1;
+	//		p.a = 0;
+
+	//		addParticle(p);
+	//	}
+	//}
+	explosion::explosion(): emitter(EXPLOSION, "fire", 0.2, 0.0, 64,true)
 	{
-		radius = Radius;
-		velocity =	fuzzyAttribute(4.0*radius, 0.0);
-		spread =	fuzzyAttribute(radius, radius);
-		life =		fuzzyAttribute(600.0);
-		color =		fuzzyColor(1.0,0.3,0.1);
 
-		particle p;
-		for(int i = 0; i < 32; i++)
-		{
-			p.startTime = world.time();
-			p.endTime = world.time() + life();
-		
-			Vec3f dir = random3<float>();
-			p.vel = dir * velocity();
-			p.pos = pos + dir * spread() + p.vel * extraTime/1000.0;
-
-			p.size = 0.0;
-
-			p.r = 1.0;
-			p.g = 0.5;
-			p.b = 0.1;
-			p.a = 0;
-
-			addParticle(p);
-		}
 	}
-	explosion::explosion(int parent, Vec3f offset): emitter(EXPLOSION, parent, offset, "fire", 0.1, 0.0, 32,true)
+	void explosion::init()
 	{
-		radius = dataManager.getModel(world[parent]->type)->boundingSphere.radius / 2;
-
-		velocity =	fuzzyAttribute(30.0, 0.0);
-		spread =	fuzzyAttribute(radius, radius);
-		life =		fuzzyAttribute(600.0);
-		color =		fuzzyColor(1.0,0.3,0.1);
+		velocity =	fuzzyAttribute(1.0, 0.0);
+		spread =	fuzzyAttribute(radius/8, radius/8);
+		life =		fuzzyAttribute(1000.0,100.0);
+		//color =		fuzzyColor(1.0,0.5,0.4);
 
 		particle p;
-		for(int i = 0; i < 32; i++)
+		for(int i = 0; i < 64; i++)
 		{
 			p.startTime = world.time();
 			p.endTime = world.time() + life();
 		
-			Vec3f dir = random3<float>();
-			p.vel = dir * velocity();
-			p.pos = world[parent]->position + dir * spread() + p.vel * extraTime/1000.0;
-
+			p.dir = random3<float>();
+			p.initialSpeed = velocity();
+			p.vel = p.dir * p.initialSpeed;
+			p.startPos = position + p.dir * spread();
+			p.pos = p.startPos + p.vel * extraTime/1000.0;
 			p.size = 0.0;
+			p.totalDistance = radius;
+
+			p.ang = random<float>(2.0*PI);
 
 			p.r = 1.0;
-			p.g = 0.5;
-			p.b = 0.1;
+			p.g = 0.48;
+			p.b = 0.17;
 			p.a = 0;
 
 			addParticle(p);
@@ -63,9 +69,18 @@ namespace particle
 	}
 	void explosion::updateParticle(particle& p)
 	{
-		p.vel *= pow(friction, (float)world.time.length()/1000.0f);	
-		p.pos += p.vel * world.time.length()/1000.0;
+		//float velMag = p.vel.magnitude();
+
+		//p.vel = p.dir * p.initialSpeed * pow(2.718,-friction*(world.time() - p.startTime)/1000);
+		//p.vel *= (velMag - pow(friction, (float)world.time.length()/1000.0f)) / velMag;	
+		//p.pos += p.vel * world.time.length()/1000.0;
+
+		//p.pos = p.startPos + p.dir * p.initialSpeed * (1.0-pow(2.718,-friction*(world.time() - p.startTime)/1000));
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
+		float a = 1.0;//(2.0 - p.initialSpeed);
+		//Profiler.setOutput("x",   (a*t*t*t - (2.0*a+1.0)*t*t + (2.0+a)*t)  );
+		p.pos = p.startPos + p.dir * p.totalDistance * (a*t*t*t - (2.0*a+1.0)*t*t + (2.0+a)*t);
+
 
 		float e = world.elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
@@ -73,18 +88,21 @@ namespace particle
 
 		if(t<0.05)
 		{
-			p.a = t * 20.0;
-			p.size = (t / 0.05) * radius;
-
+			p.a = t * 20.0 * 0.75;
+			p.size = (t / 0.05 + 1.0) * 0.5 * 0.3 * radius;
+		}
+		else if(t<0.75)
+		{
+			t = (t-0.05)/0.7;
+			p.a = 0.75;
+			p.size = (1.0-t) * 0.3 * radius + t * radius*0.7;		
 		}
 		else
 		{
-			t = (t-0.05)/0.95;
-			//p.r = 1.0-0.6*t;
-			//p.g = 0.3+0.1*t;
-			//p.b = 0.1+0.3*t;
-			p.a = 1.0 - t;
-			p.size = (1.0-t) * radius + t * radius*4.0;
+			t = (t-0.7)/0.3;
+			p.a = (1.0 - sqrt(t)) * 0.75;
+
+			p.size = radius*0.7;
 		//	p.pos.y += world.time.length()/100;
 		}
 	}

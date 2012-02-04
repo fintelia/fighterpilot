@@ -1,8 +1,8 @@
 
 
 #include "engine.h"
-#include "GL/glee.h"
-#include <GL/glu.h>
+//#include "GL/glee.h"
+//#include <GL/glu.h>
 
 particle::manager& particleManager = particle::manager::getInstance();
 
@@ -200,7 +200,7 @@ namespace particle{
 //
 //}
 
-emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(0),parentOffset(0,0,0),position(pos),lastPosition(position),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(Type t, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(0),parentOffset(0,0,0),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -210,28 +210,38 @@ emitter::emitter(Type t, Vec3f pos, string tex, float Friction, float ParticlesP
 		memset(particles,0,compacity*sizeof(particle));
 		memset(vertices,0,compacity*sizeof(vertex)*4);
 	}
-	glGenBuffers(1,&VBO);
-}
-emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(parent),parentOffset(offset),position(world[parent]->position + world[parent]->rotation * offset),lastPosition(position),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
-{
-	if(compacity != 0)
-	{
-		particles = new particle[compacity];
-		vertices = new vertex[compacity*4];
+	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
 
-		memset(particles,0,compacity*sizeof(particle));
-		memset(vertices,0,compacity*sizeof(vertex)*4);
-	}
-	glGenBuffers(1,&VBO);
+	VBO->addPositionData(	3,	0*sizeof(float));
+	VBO->addTexCoordData(	2,	3*sizeof(float));
+	VBO->addColorData(		4,	5*sizeof(float));
+
+	VBO->setTotalVertexSize(sizeof(vertex));
 }
+//emitter::emitter(Type t, int parent, Vec3f offset, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(parent),parentOffset(offset),position(world[parent]->position + world[parent]->rotation * offset),lastPosition(position),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+//{
+//	if(compacity != 0)
+//	{
+//		particles = new particle[compacity];
+//		vertices = new vertex[compacity*4];
+//
+//		memset(particles,0,compacity*sizeof(particle));
+//		memset(vertices,0,compacity*sizeof(vertex)*4);
+//	}
+//	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
+//
+//	VBO->addPositionData(	3,	0*sizeof(float));
+//	VBO->addTexCoordData(	2,	3*sizeof(float));
+//	VBO->addColorData(		4,	5*sizeof(float));
+//
+//	VBO->setTotalVertexSize(sizeof(vertex));
+//}
 emitter::~emitter()
 {
-	if(particles != NULL)	delete[] particles;
-	if(vertices != NULL)	delete[] vertices;
-	particles = NULL;
-	vertices = NULL;
+	delete VBO;
+	delete[] particles;
+	delete[] vertices;
 
-	glDeleteBuffers(1,&VBO);
 }
 void emitter::addParticle(particle& p)
 {
@@ -354,33 +364,47 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 		}
 	}
 
+	
 
+	VBO->bindBuffer();
+	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*vNum*4, vertices, GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*vNum*4, vertices, GL_DYNAMIC_DRAW);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }
 void emitter::render()
 {
-	dataManager.bind(texture);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
-	glColorPointer(4, GL_FLOAT, sizeof(vertex), (void*)(sizeof(float)*4));
-	glTexCoordPointer(2,GL_FLOAT,sizeof(vertex), (void*)(sizeof(float)*8));
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_COLOR_ARRAY);
+	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glDrawArrays(GL_QUADS, 0, vNum*4);
+	//glVertexPointer(3, GL_FLOAT, sizeof(vertex), 0);
+	//glColorPointer(4, GL_FLOAT, sizeof(vertex), (void*)(sizeof(float)*4));
+	//glTexCoordPointer(2,GL_FLOAT,sizeof(vertex), (void*)(sizeof(float)*8));
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	dataManager.bindTex(0);
+	//glDrawArrays(GL_QUADS, 0, vNum*4);
+
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_COLOR_ARRAY);
+	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	if(vNum != 0)
+	{
+		dataManager.bind(texture);
+
+		VBO->bindBuffer();
+		VBO->drawBuffer(GraphicsManager::QUADS, 0, vNum*4);
+
+		dataManager.bindTex(0);
+	}
+
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
 }
 //void emitter::render(Vec3f up, Vec3f right)
 //{
@@ -401,9 +425,18 @@ void manager::init()
 {
 
 }
-void manager::addEmitter(emitter* e)
+void manager::addEmitter(emitter* e, Vec3f position, float radius)
 {
 	emitters.push_back(e);
+	e->setPositionAndRadius(position, radius);
+	e->init();
+}
+void manager::addEmitter(emitter* e, int parent, Vec3f offset)
+{
+	emitters.push_back(e);
+	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, dataManager.getModel(world[parent]->type)->boundingSphere.radius);
+	e->setParent(parent, offset);
+	e->init();
 }
 void manager::update()
 {
@@ -436,13 +469,13 @@ void manager::render()
 	{
 		(*i)->prepareRender(up,right);
 	}
-	glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);//glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if((*i)->additiveBlending)	(*i)->render();
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	graphics->setBlendMode(GraphicsManager::ADDITIVE);//glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if((*i)->additiveBlending)	(*i)->render();
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if(!(*i)->additiveBlending)	(*i)->render();
 

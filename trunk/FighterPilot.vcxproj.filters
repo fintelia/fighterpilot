@@ -61,15 +61,6 @@
     <Filter Include="shaders\particle">
       <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\OTHER">
-      <UniqueIdentifier>{22d685ca-e04f-4f1d-87af-1a609a505f6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\OTHER\control">
-      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\OTHER\enums">
-      <UniqueIdentifier>{0e4edaf6-aa1b-49ee-9f5c-d9ddb1baff67}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\GAME">
       <UniqueIdentifier>{441ec224-63b5-4ada-b572-fe5fc8605e5a}</UniqueIdentifier>
     </Filter>
@@ -160,6 +151,24 @@
     <Filter Include="Source Files\ENGINE\controlManager">
       <UniqueIdentifier>{273b9718-dd01-462a-847b-5bb7a354d35f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\GAME\control">
+      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\path">
+      <UniqueIdentifier>{d60aebef-58c8-4b6a-841d-c1e3e9cadd2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\settings">
+      <UniqueIdentifier>{f106588d-e9b4-422c-9a0a-5a4855e1d6a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\level">
+      <UniqueIdentifier>{956f438b-9b9e-49da-9ce4-287ffb10e1ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\definitions">
+      <UniqueIdentifier>{5eeb6097-aed2-49e5-8833-e7fa55a81c19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objectInfo">
+      <UniqueIdentifier>{0817ebb0-d9d0-4ca7-97e1-d9d2712fa775}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -178,16 +187,13 @@
       <Filter>Source Files\GAME\objects\bullet</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
-      <Filter>Source Files\OTHER\control</Filter>
+      <Filter>Source Files\GAME\control</Filter>
     </ClCompile>
     <ClCompile Include="plane.cpp">
       <Filter>Source Files\GAME\objects\plane</Filter>
     </ClCompile>
     <ClCompile Include="objectList.cpp">
       <Filter>Source Files\ENGINE\objects</Filter>
-    </ClCompile>
-    <ClCompile Include="enums.cpp">
-      <Filter>Source Files\OTHER\enums</Filter>
     </ClCompile>
     <ClCompile Include="menuScreen.cpp">
       <Filter>Source Files\ENGINE\menu</Filter>
@@ -246,15 +252,6 @@
     <ClCompile Include="random.cpp">
       <Filter>Source Files\ENGINE\random</Filter>
     </ClCompile>
-    <ClCompile Include="level.cpp">
-      <Filter>Source Files\OTHER</Filter>
-    </ClCompile>
-    <ClCompile Include="path.cpp">
-      <Filter>Source Files\OTHER</Filter>
-    </ClCompile>
-    <ClCompile Include="settings.cpp">
-      <Filter>Source Files\OTHER</Filter>
-    </ClCompile>
     <ClCompile Include="time.cpp">
       <Filter>Source Files\ENGINE\time</Filter>
     </ClCompile>
@@ -303,6 +300,21 @@
     <ClCompile Include="angle.cpp">
       <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClCompile>
+    <ClCompile Include="path.cpp">
+      <Filter>Source Files\GAME\path</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp">
+      <Filter>Source Files\GAME\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="level.cpp">
+      <Filter>Source Files\GAME\level</Filter>
+    </ClCompile>
+    <ClCompile Include="definitions.cpp">
+      <Filter>Source Files\ENGINE\definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="objectInfo.cpp">
+      <Filter>Source Files\GAME\objectInfo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -327,16 +339,13 @@
       <Filter>Source Files\GAME\objects\bullet</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
-      <Filter>Source Files\OTHER\control</Filter>
+      <Filter>Source Files\GAME\control</Filter>
     </ClInclude>
     <ClInclude Include="plane.h">
       <Filter>Source Files\GAME\objects\plane</Filter>
     </ClInclude>
     <ClInclude Include="objectList.h">
       <Filter>Source Files\ENGINE\objects</Filter>
-    </ClInclude>
-    <ClInclude Include="enums.h">
-      <Filter>Source Files\OTHER\enums</Filter>
     </ClInclude>
     <ClInclude Include="matrix.h">
       <Filter>Source Files\ENGINE\math\matrix</Filter>
@@ -374,15 +383,6 @@
     </ClInclude>
     <ClInclude Include="profiler.h">
       <Filter>Source Files\ENGINE</Filter>
-    </ClInclude>
-    <ClInclude Include="level.h">
-      <Filter>Source Files\OTHER</Filter>
-    </ClInclude>
-    <ClInclude Include="path.h">
-      <Filter>Source Files\OTHER</Filter>
-    </ClInclude>
-    <ClInclude Include="settings.h">
-      <Filter>Source Files\OTHER</Filter>
     </ClInclude>
     <ClInclude Include="GL\GLee.h">
       <Filter>glee</Filter>
@@ -422,6 +422,21 @@
     </ClInclude>
     <ClInclude Include="angle.h">
       <Filter>Source Files\ENGINE\math\angle</Filter>
+    </ClInclude>
+    <ClInclude Include="path.h">
+      <Filter>Source Files\GAME\path</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>Source Files\GAME\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Source Files\GAME\level</Filter>
+    </ClInclude>
+    <ClInclude Include="definitions.h">
+      <Filter>Source Files\ENGINE\definitions</Filter>
+    </ClInclude>
+    <ClInclude Include="objectInfo.h">
+      <Filter>Source Files\GAME\objectInfo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

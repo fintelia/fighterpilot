@@ -21,9 +21,8 @@ CollisionChecker& collisionCheck = CollisionChecker::getInstance();													
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																						//	//
 FileManager& fileManager = FileManager::getInstance();																							//  //
 SceneManager& sceneManager = SceneManager::getInstance();																						//  //
-SettingsManager& settings = SettingsManager::getInstance();																						//  //
-//ControlManager& controlManager = ControlManager::getInstance();
-PlayerManager& players = PlayerManager::getInstance();
+//SettingsManager& settings = SettingsManager::getInstance();																						//  //
+//PlayerManager& players = PlayerManager::getInstance();
 bool done=false;//exits program																													//	//
 																																				//	//
 bool lowQuality;																																//	//
@@ -32,7 +31,7 @@ bool lowQuality;																																//	//
 																																				//	//
 int frame=0,Time,timebase=0;																													//	//
 float fps;																																		//	//
-planeType defaultPlane;																															//	//
+//planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //																																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,10 +157,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	{
 		return 1;
 	}
-
-	auto f = fileManager.loadZipFile("r.zip");
-	f->filename = "document2.zip";
-	fileManager.writeZipFile(f);
 
 	float nextUpdate=0;
 	float swapTime=0.0;

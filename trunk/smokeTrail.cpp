@@ -4,7 +4,11 @@
 
 namespace particle
 {
-	smokeTrail::smokeTrail(int parent, Vec3f offset): emitter(SMOKE, parent, offset, "smoke", 1.0, 20.0, 19)
+	smokeTrail::smokeTrail(): emitter(SMOKE, "smoke", 1.0, 20.0, 19)
+	{
+
+	}
+	void smokeTrail::init()
 	{
 		velocity =	fuzzyAttribute(0.0);
 		spread =	fuzzyAttribute(10.0, 3.0);

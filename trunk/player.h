@@ -60,6 +60,12 @@
 //	float operator[](int index);
 //};
 
+
+const int PLAYER_NONE		= 0x001;
+const int PLAYER_HUMAN		= 0x002;
+const int PLAYER_COMPUTER	= 0x004;
+typedef int playerType;
+
 class player
 {
 protected:
@@ -114,17 +120,22 @@ public:
 	int playerNum()	const		{return mPlayerNum;}
 	bool active() const			{return mObjectNum!=0;}
 	void toggleFirstPerson()	{firstPersonView = !firstPersonView;}
-
+	void setObject(int objectId);
 	void update();
 	const camera& getCamera(bool forceThirdPerson=false) const;
 };
 
 class AIplayer: public player
 {
-private:
-	int	target;
 public:
-	AIplayer(int oNum): player(PLAYER_COMPUTER,oNum){}
+	int	target;
+	Vec3f destination;
+	enum State{STATE_NONE, STATE_PATROL, STATE_HUNTING}state;
+//////
+	void startPatrol();
+	void flyTowardsPoint(nPlane* p, Vec3f dest);
+
+	AIplayer(int oNum);
 	void update();
 };
 
@@ -145,6 +156,10 @@ public:
 	void resetPlayers();
 
 	void update();
+
+#ifdef _DEBUG
+	void debugDraw();
+#endif
 
 	shared_ptr<humanPlayer> operator[] (unsigned int p);
 

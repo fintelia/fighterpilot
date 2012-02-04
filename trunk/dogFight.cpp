@@ -8,12 +8,6 @@ dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl)
 {
 
 }
-bool dogFight::init()
-{
-	world.create();
-	level->initializeWorld();
-	return true;
-}
 dogFight::~dogFight()
 {
 	world.destroy();
@@ -82,9 +76,9 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 			if(p->id != i->second->id && !i->second->dead /*&& n.magnitudeSquared() < 1.0*/)
 			{
 				float mag = n.magnitude();
-				Angle ang = atan2A(-n.x,n.z) + p->direction + 18.0 * PI/180;
+				Angle ang = atan2A(n.x,n.z) - p->direction - 18.0 * PI/180 + PI;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = p->direction + ((nPlane*)i->second.get())->direction + 18.0 * PI/180;
+				ang = -p->direction + ((nPlane*)i->second.get())->direction - 18.0 * PI/180 + PI;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
@@ -134,8 +128,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.setUniform2f("center",nC.x,nC.y);
 		dataManager.setUniform1f("radius",radius);
 		dataManager.setUniform1f("sAspect",sAspect);
-		graphics->setColor(0.05,0.79,0.04);
-
+		graphics->setColor(0.05,0.69,0.04);
 		Vec3f n;
 		Vec3f cent, u, v;
 		auto planes = world(PLANE);
@@ -153,7 +146,6 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 				graphics->drawTriangle(cent - u * 0.004, cent + u * 0.004 + v * 0.003, cent + u * 0.004 - v * 0.003);
 			}
-
 		}
 
 		graphics->setColor(1,1,1);
@@ -220,7 +212,6 @@ void dogFight::drawScene(int acplayer)
 	Vec3f e = camera.eye;
 	//graphics->lookAt(camera.eye, camera.center, camera.up);
 
-
 	world.renderTerrain(e);
 
 	graphics->setDepthMask(false);
@@ -231,11 +222,16 @@ void dogFight::drawScene(int acplayer)
 	double cRadius = world.bounds().radius;
 
 	drawHexCylinder(cCenter,cRadius,20000, white);
+
+#ifdef _DEBUG
+	players.debugDraw();
+#endif
+
 	graphics->setDepthMask(true);
 
 	lastDraw[acplayer] = time;
 
-	graphics->checkErrors(); //calls debugBreak() if openGL has previously encountered an error (can be place after any line to pinpoint the error)
+	graphics->checkErrors(); //calls debugBreak() if openGL has previously encountered an error (can be placed after any line to pinpoint the error)
 }
 void dogFight::checkCollisions()
 {

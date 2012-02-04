@@ -51,316 +51,320 @@
 //	fout.close();
 //	return true;
 //}
-bool LevelFile::savePNG(string filename)
+LevelFile::Object::Object():type(F22), team(NEUTRAL), controlType(PLAYER_HUMAN), startloc(), startRot()
 {
-	int tWidth = 32;
-	int tHeight = 32;
-	int size = (3*tWidth+tWidth%4)*sh + 3*tWidth*tHeight%4;
 
-	FILE *fp;
-	if((fp = fopen((filename).c_str(), "wb")) != nullptr)
-	{
-		unsigned char* colors = new unsigned char[size];
-		memset(colors,255,size);
-		png_bytepp rows = new unsigned char*[tHeight];
-		for(int i=0;i<tHeight;i++) rows[i] = colors +  (3*tWidth+tWidth%4) * (tHeight-i);
-
-		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
-		if (!png_ptr)
-		{
-			fclose(fp);
-			delete[] colors;
-			return false;
-		}
-		png_infop info_ptr = png_create_info_struct(png_ptr);
-		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
-		{
-			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-			fclose(fp);
-			delete[] colors;
-			return false;
-		}
-		png_init_io(png_ptr, fp);
-		png_set_IHDR(png_ptr, info_ptr, tWidth, tHeight, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-		png_set_rows(png_ptr,info_ptr,rows);
-
-		//////////////////////////////////////////WRITE SPECIAL CHUNKS/////////////////////////////////////////////
-		png_unknown_chunk chunks[2];
-		float minHeight = 0.0;
-		float maxHeight = 1.0;
-		unsigned short* sHeights = NULL;
-
-		auto pngUnknownChunk = [](png_unknown_chunk &chunk, string name, void* data, unsigned int size)
-		{
-			if(name.size() < 4)
-				return;
-
-			chunk.name[0] = name[0];
-			chunk.name[1] = name[1];
-			chunk.name[2] = name[2];
-			chunk.name[3] = name[3];
-			chunk.name[4] = 0;
-
-			chunk.data = (png_byte*)data;
-			chunk.size = size;
-
-			chunk.location = 0;//unused
-		};
-
-		if(info->mapResolution.x != 0 && info->mapResolution.y != 0)
-		{
-			sHeights = new unsigned short[info->mapResolution.x*info->mapResolution.y];
-			minHeight = maxHeight = heights[0];
-			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
-			{
-				if(minHeight > heights[i]) minHeight = heights[i];
-				if(maxHeight < heights[i]) maxHeight = heights[i];
-			}
-			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
-			{
-				sHeights[i] = (heights[i] - minHeight) / (maxHeight - minHeight) * UCHAR_MAX;
-			}
-			pngUnknownChunk(chunks[0], "mhTs", sHeights, info->mapResolution.x*info->mapResolution.y*sizeof(unsigned short));
-		}
-		pngUnknownChunk(chunks[1], "obJs", objects, info->numObjects*sizeof(Object));
-
-		png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS, NULL, 0);
-		png_set_unknown_chunks(png_ptr,info_ptr,chunks,2);
-		png_set_unknown_chunk_location(png_ptr, info_ptr, 0, 0x02);
-		png_set_unknown_chunk_location(png_ptr, info_ptr, 1, 0x02);
-
-
-
-		png_text textFields[9];
-		string	title = "untitled",
-				nextLevel = "",
-				shaderType,
-				resX = lexical_cast<string>(info->mapResolution.x),
-				resY =lexical_cast<string>(info->mapResolution.y),
-				sizeX = lexical_cast<string>(info->mapSize.x),
-				sizeY = lexical_cast<string>(info->mapSize.y),
-				minH = lexical_cast<string>(minHeight),
-				maxH = lexical_cast<string>(maxHeight);
-
-		if(info->shaderType == SHADER_ISLAND) shaderType = "island";
-		if(info->shaderType == SHADER_GRASS) shaderType = "grass";
-		if(info->shaderType == SHADER_SNOW) shaderType = "snow";
-		if(info->shaderType == SHADER_OCEAN) shaderType = "ocean";
-
-		auto pngTextField = [] (png_text* textField, const char* key, const char* text)
-		{
-			textField->compression = PNG_TEXT_COMPRESSION_NONE;
-			textField->key = (png_charp)key;
-			textField->text_length = strlen(text);
-			textField->text = (png_charp)text;
-
-			textField->itxt_length = 0;
-			textField->lang = 0;
-			textField->lang_key = 0;
-		};
-
-		pngTextField(&textFields[0],"Title",title.c_str());
-		pngTextField(&textFields[1],"Next Level",nextLevel.c_str());
-		pngTextField(&textFields[2],"Shader Type",shaderType.c_str());
-		pngTextField(&textFields[3],"Map X Resolution",resX.c_str());
-		pngTextField(&textFields[4],"Map Y Resolution",resY.c_str());
-		pngTextField(&textFields[5],"Map X Size",sizeX.c_str());
-		pngTextField(&textFields[6],"Map Y Size",sizeY.c_str());
-		pngTextField(&textFields[7],"Minimum Height",minH.c_str());
-		pngTextField(&textFields[8],"Maximum Height",maxH.c_str());
-		png_set_text(png_ptr,info_ptr,textFields,9);
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////
-		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
-
-		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-
-		fclose(fp);
-		delete[] rows;
-		delete[] colors;
-		if(sHeights != NULL)
-			delete[] sHeights;
-	}
-	return true;
 }
-bool LevelFile::loadPNG(string filename)
-{
-	png_uint_32		i,
-					width,
-					height,
-					rowbytes;
-	int				bit_depth,
-					color_type;
-	unsigned char*	image_data;
-	png_bytep*		row_pointers;
-
-	/* Open the PNG file. */
-	FILE *infile;
-	infile = fopen(filename.c_str(), "rb");
-
-	if (!infile) {
-		return false;
-	}
-
-	unsigned char sig[8];
-	/* Check for the 8-byte signature */
-	fread(sig, 1, 8, infile);
-	if (!png_check_sig((unsigned char *) sig, 8)) {
-		fclose(infile);
-		return false;
-	}
-	/*
-	 * Set up the PNG structs
-	 */
-	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (!png_ptr) {
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	png_infop info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr) {
-		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	png_infop end_ptr = png_create_info_struct(png_ptr);
-	if (!end_ptr) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
-		fclose(infile);
-		return false; /* out of memory */
-	}
-
-	/*
-	 * block to handle libpng errors,
-	 * then check whether the PNG file had a bKGD chunk
-	 */
-	if (setjmp(png_jmpbuf(png_ptr))) {
-		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
-		fclose(infile);
-		return false;
-	}
-
-	/*
-	 * takes our file stream pointer (infile) and
-	 * stores it in the png_ptr struct for later use.
-	 */
-	png_init_io(png_ptr, infile);
-
-	/*
-	 * lets libpng know that we already checked the 8
-	 * signature bytes, so it should not expect to find
-	 * them at the current file pointer location
-	 */
-	png_set_sig_bytes(png_ptr, 8);
-
-	png_set_keep_unknown_chunks(png_ptr,3,NULL,0);
-
-	png_read_info(png_ptr, info_ptr);
-	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-
-
-	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
-	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
-	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
-	if (bit_depth == 16)																png_set_strip_16(png_ptr);
-	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
-
-	/* snipped out the color type code, see source pngLoad.c */
-	/* Update the png info struct.*/
-	png_read_update_info(png_ptr, info_ptr);
-
-	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-	//colorChannels = (int)png_get_channels(png_ptr, info_ptr);
-
-	image_data = new unsigned char[rowbytes*height];
-	row_pointers = new png_bytep[height];
-
-	for (i = 0;  i < height;  i++)
-		row_pointers[i] = image_data + i*rowbytes;
-
-	png_read_image(png_ptr, row_pointers);
-	png_read_end(png_ptr, NULL);
-
-	//////////////////////////////////
-	if(info != NULL) delete info;
-	info = new Info();
-
-	string title, nextLevel, shaderType;
-	float minHeight = 0;
-	float maxHeight = 1.0;
-	png_text* text_ptr;
-	int num_text;
-	png_get_text(png_ptr, info_ptr, &text_ptr, &num_text);
-	for(int i=0;i<num_text;i++)
-	{
-		try{
-			if(strcmp(text_ptr[i].key,"Title") == 0)			title = text_ptr[i].text;
-			if(strcmp(text_ptr[i].key,"Next Level") == 0)		info->nextLevel = text_ptr[i].text;
-			if(strcmp(text_ptr[i].key,"Shader Type") == 0)		shaderType = text_ptr[i].text;
-			if(strcmp(text_ptr[i].key,"Map X Resolution") == 0)	info->mapResolution.x = lexical_cast<int>(text_ptr[i].text);
-			if(strcmp(text_ptr[i].key,"Map Y Resolution") == 0)	info->mapResolution.y = lexical_cast<int>(text_ptr[i].text);
-			if(strcmp(text_ptr[i].key,"Map X Size") == 0)		info->mapSize.x = lexical_cast<float>(text_ptr[i].text);
-			if(strcmp(text_ptr[i].key,"Map Y Size") == 0)		info->mapSize.y = lexical_cast<float>(text_ptr[i].text);
-			if(strcmp(text_ptr[i].key,"Minimum Height") == 0)	minHeight = lexical_cast<float>(text_ptr[i].text);
-			if(strcmp(text_ptr[i].key,"Maximum Height") == 0)	maxHeight = lexical_cast<float>(text_ptr[i].text);
-		}catch(...)
-		{
-			debugBreak();
-		}
-	}
-	if(shaderType == "island")		info->shaderType = SHADER_ISLAND;
-	else if(shaderType == "grass")	info->shaderType = SHADER_GRASS;
-	else if(shaderType == "snow")	info->shaderType = SHADER_SNOW;
-	else if(shaderType == "ocean")	info->shaderType = SHADER_OCEAN;
-
-	png_unknown_chunk* unknowns;
-	int num_unknowns = png_get_unknown_chunks(png_ptr, info_ptr, &unknowns);
-
-	for(int i=0; i<num_unknowns; i++)
-	{
-		if(strcmp((const char*)unknowns[i].name,"mhTs") == 0)
-		{
-			unsigned int nSize = min((int)(unknowns[i].size/sizeof(unsigned short)), info->mapResolution.x*info->mapResolution.y);
-			unsigned short* sHeights = new unsigned short[nSize];
-			memcpy(sHeights, unknowns[i].data, nSize*sizeof(unsigned short));
-
-			if(heights != NULL) delete heights;
-			heights = new float[nSize];
-
-			for(int i=0; i<nSize;i++)
-			{
-				heights[i] = minHeight + (maxHeight - minHeight) * sHeights[i] / (float)UCHAR_MAX;
-			}
-
-			delete[] sHeights;
-		}
-		else if(strcmp((const char*)unknowns[i].name,"obJs") == 0)
-		{
-			if(objects != NULL) delete objects;
-			info->numObjects = unknowns[i].size / sizeof(Object);
-			objects = new Object[info->numObjects];
-			memcpy(objects, unknowns[i].data, info->numObjects*sizeof(Object));
-		}
-		else if(strcmp((const char*)unknowns[i].name,"reGn") == 0)
-		{
-			if(regions != NULL) delete regions;
-			info->numRegions = unknowns[i].size / sizeof(Region);
-			regions = new Region[info->numRegions];
-			memcpy(regions, unknowns[i].data, info->numRegions*sizeof(Region));
-		}
-	}
-
-	/////////////////////////////////
-
-	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-	fclose(infile);
-
-	delete[] image_data;
-	delete[] row_pointers;
-	return true;
-}
+//bool LevelFile::savePNG(string filename)
+//{
+//	int tWidth = 32;
+//	int tHeight = 32;
+//	int size = (3*tWidth+tWidth%4)*sh + 3*tWidth*tHeight%4;
+//
+//	FILE *fp;
+//	if((fp = fopen((filename).c_str(), "wb")) != nullptr)
+//	{
+//		unsigned char* colors = new unsigned char[size];
+//		memset(colors,255,size);
+//		png_bytepp rows = new unsigned char*[tHeight];
+//		for(int i=0;i<tHeight;i++) rows[i] = colors +  (3*tWidth+tWidth%4) * (tHeight-i);
+//
+//		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
+//		if (!png_ptr)
+//		{
+//			fclose(fp);
+//			delete[] colors;
+//			return false;
+//		}
+//		png_infop info_ptr = png_create_info_struct(png_ptr);
+//		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
+//		{
+//			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+//			fclose(fp);
+//			delete[] colors;
+//			return false;
+//		}
+//		png_init_io(png_ptr, fp);
+//		png_set_IHDR(png_ptr, info_ptr, tWidth, tHeight, 8, PNG_COLOR_TYPE_RGB , PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+//		png_set_rows(png_ptr,info_ptr,rows);
+//
+//		//////////////////////////////////////////WRITE SPECIAL CHUNKS/////////////////////////////////////////////
+//		png_unknown_chunk chunks[2];
+//		float minHeight = 0.0;
+//		float maxHeight = 1.0;
+//		unsigned short* sHeights = NULL;
+//
+//		auto pngUnknownChunk = [](png_unknown_chunk &chunk, string name, void* data, unsigned int size)
+//		{
+//			if(name.size() < 4)
+//				return;
+//
+//			chunk.name[0] = name[0];
+//			chunk.name[1] = name[1];
+//			chunk.name[2] = name[2];
+//			chunk.name[3] = name[3];
+//			chunk.name[4] = 0;
+//
+//			chunk.data = (png_byte*)data;
+//			chunk.size = size;
+//
+//			chunk.location = 0;//unused
+//		};
+//
+//		if(info->mapResolution.x != 0 && info->mapResolution.y != 0)
+//		{
+//			sHeights = new unsigned short[info->mapResolution.x*info->mapResolution.y];
+//			minHeight = maxHeight = heights[0];
+//			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
+//			{
+//				if(minHeight > heights[i]) minHeight = heights[i];
+//				if(maxHeight < heights[i]) maxHeight = heights[i];
+//			}
+//			for(int i=0; i<info->mapResolution.x*info->mapResolution.y;i++)
+//			{
+//				sHeights[i] = (heights[i] - minHeight) / (maxHeight - minHeight) * UCHAR_MAX;
+//			}
+//			pngUnknownChunk(chunks[0], "mhTs", sHeights, info->mapResolution.x*info->mapResolution.y*sizeof(unsigned short));
+//		}
+//		pngUnknownChunk(chunks[1], "obJs", objects, info->numObjects*sizeof(Object));
+//
+//		png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS, NULL, 0);
+//		png_set_unknown_chunks(png_ptr,info_ptr,chunks,2);
+//		png_set_unknown_chunk_location(png_ptr, info_ptr, 0, 0x02);
+//		png_set_unknown_chunk_location(png_ptr, info_ptr, 1, 0x02);
+//
+//
+//
+//		png_text textFields[9];
+//		string	title = "untitled",
+//				nextLevel = "",
+//				shaderType,
+//				resX = lexical_cast<string>(info->mapResolution.x),
+//				resY =lexical_cast<string>(info->mapResolution.y),
+//				sizeX = lexical_cast<string>(info->mapSize.x),
+//				sizeY = lexical_cast<string>(info->mapSize.y),
+//				minH = lexical_cast<string>(minHeight),
+//				maxH = lexical_cast<string>(maxHeight);
+//
+//		if(info->shaderType == SHADER_ISLAND) shaderType = "island";
+//		if(info->shaderType == SHADER_GRASS) shaderType = "grass";
+//		if(info->shaderType == SHADER_SNOW) shaderType = "snow";
+//		if(info->shaderType == SHADER_OCEAN) shaderType = "ocean";
+//
+//		auto pngTextField = [] (png_text* textField, const char* key, const char* text)
+//		{
+//			textField->compression = PNG_TEXT_COMPRESSION_NONE;
+//			textField->key = (png_charp)key;
+//			textField->text_length = strlen(text);
+//			textField->text = (png_charp)text;
+//
+//			textField->itxt_length = 0;
+//			textField->lang = 0;
+//			textField->lang_key = 0;
+//		};
+//
+//		pngTextField(&textFields[0],"Title",title.c_str());
+//		pngTextField(&textFields[1],"Next Level",nextLevel.c_str());
+//		pngTextField(&textFields[2],"Shader Type",shaderType.c_str());
+//		pngTextField(&textFields[3],"Map X Resolution",resX.c_str());
+//		pngTextField(&textFields[4],"Map Y Resolution",resY.c_str());
+//		pngTextField(&textFields[5],"Map X Size",sizeX.c_str());
+//		pngTextField(&textFields[6],"Map Y Size",sizeY.c_str());
+//		pngTextField(&textFields[7],"Minimum Height",minH.c_str());
+//		pngTextField(&textFields[8],"Maximum Height",maxH.c_str());
+//		png_set_text(png_ptr,info_ptr,textFields,9);
+//		///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+//
+//		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
+//		png_destroy_write_struct(&png_ptr, &info_ptr);
+//
+//		fclose(fp);
+//		delete[] rows;
+//		delete[] colors;
+//		if(sHeights != NULL)
+//			delete[] sHeights;
+//	}
+//	return true;
+//}
+//bool LevelFile::loadPNG(string filename)
+//{
+//	png_uint_32		i,
+//					width,
+//					height,
+//					rowbytes;
+//	int				bit_depth,
+//					color_type;
+//	unsigned char*	image_data;
+//	png_bytep*		row_pointers;
+//
+//	/* Open the PNG file. */
+//	FILE *infile;
+//	infile = fopen(filename.c_str(), "rb");
+//
+//	if (!infile) {
+//		return false;
+//	}
+//
+//	unsigned char sig[8];
+//	/* Check for the 8-byte signature */
+//	fread(sig, 1, 8, infile);
+//	if (!png_check_sig((unsigned char *) sig, 8)) {
+//		fclose(infile);
+//		return false;
+//	}
+//	/*
+//	 * Set up the PNG structs
+//	 */
+//	png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+//	if (!png_ptr) {
+//		fclose(infile);
+//		return false; /* out of memory */
+//	}
+//
+//	png_infop info_ptr = png_create_info_struct(png_ptr);
+//	if (!info_ptr) {
+//		png_destroy_read_struct(&png_ptr, (png_infopp) NULL, (png_infopp) NULL);
+//		fclose(infile);
+//		return false; /* out of memory */
+//	}
+//
+//	png_infop end_ptr = png_create_info_struct(png_ptr);
+//	if (!end_ptr) {
+//		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+//		fclose(infile);
+//		return false; /* out of memory */
+//	}
+//
+//	/*
+//	 * block to handle libpng errors,
+//	 * then check whether the PNG file had a bKGD chunk
+//	 */
+//	if (setjmp(png_jmpbuf(png_ptr))) {
+//		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
+//		fclose(infile);
+//		return false;
+//	}
+//
+//	/*
+//	 * takes our file stream pointer (infile) and
+//	 * stores it in the png_ptr struct for later use.
+//	 */
+//	png_init_io(png_ptr, infile);
+//
+//	/*
+//	 * lets libpng know that we already checked the 8
+//	 * signature bytes, so it should not expect to find
+//	 * them at the current file pointer location
+//	 */
+//	png_set_sig_bytes(png_ptr, 8);
+//
+//	png_set_keep_unknown_chunks(png_ptr,3,NULL,0);
+//
+//	png_read_info(png_ptr, info_ptr);
+//	png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+//
+//
+//	if (color_type == PNG_COLOR_TYPE_PALETTE)											png_set_expand(png_ptr);
+//	if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)								png_set_expand(png_ptr);
+//	if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))								png_set_expand(png_ptr);
+//	if (bit_depth == 16)																png_set_strip_16(png_ptr);
+//	if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)	png_set_gray_to_rgb(png_ptr);
+//
+//	/* snipped out the color type code, see source pngLoad.c */
+//	/* Update the png info struct.*/
+//	png_read_update_info(png_ptr, info_ptr);
+//
+//	rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+//	//colorChannels = (int)png_get_channels(png_ptr, info_ptr);
+//
+//	image_data = new unsigned char[rowbytes*height];
+//	row_pointers = new png_bytep[height];
+//
+//	for (i = 0;  i < height;  i++)
+//		row_pointers[i] = image_data + i*rowbytes;
+//
+//	png_read_image(png_ptr, row_pointers);
+//	png_read_end(png_ptr, NULL);
+//
+//	//////////////////////////////////
+//	if(info != NULL) delete info;
+//	info = new Info();
+//
+//	string title, nextLevel, shaderType;
+//	float minHeight = 0;
+//	float maxHeight = 1.0;
+//	png_text* text_ptr;
+//	int num_text;
+//	png_get_text(png_ptr, info_ptr, &text_ptr, &num_text);
+//	for(int i=0;i<num_text;i++)
+//	{
+//		try{
+//			if(strcmp(text_ptr[i].key,"Title") == 0)			title = text_ptr[i].text;
+//			if(strcmp(text_ptr[i].key,"Next Level") == 0)		info->nextLevel = text_ptr[i].text;
+//			if(strcmp(text_ptr[i].key,"Shader Type") == 0)		shaderType = text_ptr[i].text;
+//			if(strcmp(text_ptr[i].key,"Map X Resolution") == 0)	info->mapResolution.x = lexical_cast<int>(text_ptr[i].text);
+//			if(strcmp(text_ptr[i].key,"Map Y Resolution") == 0)	info->mapResolution.y = lexical_cast<int>(text_ptr[i].text);
+//			if(strcmp(text_ptr[i].key,"Map X Size") == 0)		info->mapSize.x = lexical_cast<float>(text_ptr[i].text);
+//			if(strcmp(text_ptr[i].key,"Map Y Size") == 0)		info->mapSize.y = lexical_cast<float>(text_ptr[i].text);
+//			if(strcmp(text_ptr[i].key,"Minimum Height") == 0)	minHeight = lexical_cast<float>(text_ptr[i].text);
+//			if(strcmp(text_ptr[i].key,"Maximum Height") == 0)	maxHeight = lexical_cast<float>(text_ptr[i].text);
+//		}catch(...)
+//		{
+//			debugBreak();
+//		}
+//	}
+//	if(shaderType == "island")		info->shaderType = SHADER_ISLAND;
+//	else if(shaderType == "grass")	info->shaderType = SHADER_GRASS;
+//	else if(shaderType == "snow")	info->shaderType = SHADER_SNOW;
+//	else if(shaderType == "ocean")	info->shaderType = SHADER_OCEAN;
+//
+//	png_unknown_chunk* unknowns;
+//	int num_unknowns = png_get_unknown_chunks(png_ptr, info_ptr, &unknowns);
+//
+//	for(int i=0; i<num_unknowns; i++)
+//	{
+//		if(strcmp((const char*)unknowns[i].name,"mhTs") == 0)
+//		{
+//			unsigned int nSize = min((int)(unknowns[i].size/sizeof(unsigned short)), info->mapResolution.x*info->mapResolution.y);
+//			unsigned short* sHeights = new unsigned short[nSize];
+//			memcpy(sHeights, unknowns[i].data, nSize*sizeof(unsigned short));
+//
+//			if(heights != NULL) delete heights;
+//			heights = new float[nSize];
+//
+//			for(int i=0; i<nSize;i++)
+//			{
+//				heights[i] = minHeight + (maxHeight - minHeight) * sHeights[i] / (float)UCHAR_MAX;
+//			}
+//
+//			delete[] sHeights;
+//		}
+//		else if(strcmp((const char*)unknowns[i].name,"obJs") == 0)
+//		{
+//			if(objects != NULL) delete objects;
+//			info->numObjects = unknowns[i].size / sizeof(Object);
+//			objects = new Object[info->numObjects];
+//			memcpy(objects, unknowns[i].data, info->numObjects*sizeof(Object));
+//		}
+//		else if(strcmp((const char*)unknowns[i].name,"reGn") == 0)
+//		{
+//			if(regions != NULL) delete regions;
+//			info->numRegions = unknowns[i].size / sizeof(Region);
+//			regions = new Region[info->numRegions];
+//			memcpy(regions, unknowns[i].data, info->numRegions*sizeof(Region));
+//		}
+//	}
+//
+//	/////////////////////////////////
+//
+//	png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+//	fclose(infile);
+//
+//	delete[] image_data;
+//	delete[] row_pointers;
+//	return true;
+//}
 bool LevelFile::saveZIP(string filename)
 {
 	//check that basic level data is valid
@@ -397,6 +401,8 @@ bool LevelFile::saveZIP(string filename)
 	{
 		for(int z=0; z<height; z++)
 		{
+			if(heights[x + z*width] > maxHeight) debugBreak();
+			if(heights[x + z*width] < minHeight) debugBreak();
 
 			*((unsigned short*)rawFile->contents + (x + z*width)) = USHRT_MAX * (heights[x + z*width] - minHeight) / (maxHeight - minHeight);
 		}
@@ -439,13 +445,15 @@ bool LevelFile::loadZIP(string filename)
 
 	auto rFile = f->files.find("heightmap.raw");
 	auto aFile = f->files.find("attributes.ini");
+	auto oFile = f->files.find("objects.txt");
 
-	if(rFile == f->files.end() || aFile == f->files.end())
+	if(rFile == f->files.end() || aFile == f->files.end() || oFile == f->files.end())
 		return false;
 
 	shared_ptr<FileManager::binaryFile>	rawFile(dynamic_pointer_cast<FileManager::binaryFile>(rFile->second));
 	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
-	
+	shared_ptr<FileManager::textFile> objectsFile(dynamic_pointer_cast<FileManager::textFile>(oFile->second));
+
 	delete info;		info = nullptr;
 	delete[] objects;	objects = nullptr;
 	delete[] regions;	regions = nullptr;
@@ -480,9 +488,127 @@ bool LevelFile::loadZIP(string filename)
 	{
 		heights[i] = info->minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info->maxHeight - info->minHeight) / USHRT_MAX ;
 	}
+
+	parseObjectFile(objectsFile);
+
 	return true;
 }
-void LevelFile::initializeWorld()
+bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
+{
+	if(!f)
+	{
+		return false;
+	}
+
+	string& str = f->contents;
+	info->numObjects=0;
+	int pos=0;
+	unsigned int objectNum=0;
+
+	auto readSubString = [str, &pos](char* c)->bool
+	{
+		int p=0;
+		while(p+pos < str.size())
+		{
+			if(*(c+p) == 0)
+			{
+				pos += p;
+				return true;
+			}
+			else if(*(c+p) != str[pos+p])
+			{
+				return false;
+			}
+			else
+			{
+				p++;
+			}
+
+		}
+		return true;
+	};
+	auto readLine = [str, &pos]()->string
+	{
+		int p=0;
+		while(p+pos < str.size() && str[p+pos] != '\n')
+		{
+			p++;
+		}
+
+		pos += p+1;
+		return str.substr(pos-p-1,p);
+	};
+
+	while(pos < str.size())
+	{
+		if(readSubString("object"))
+		{
+			++info->numObjects;
+			while(str[pos] != '\n' && pos < str.size())
+				++pos;
+		}
+		else
+		{
+			while(str[pos] != '\n' && pos < str.size())
+				++pos;			
+		}
+		++pos;
+	}
+
+	//try
+	{
+		pos = 0;
+		objects = new Object[info->numObjects];
+		enum {SEARHING,PARSING_OBJECT}state = SEARHING;
+		while(pos < str.size())
+		{
+			if(state == SEARHING)
+			{
+				if(readSubString("object\n{\n"))
+				{
+					state = PARSING_OBJECT;
+				}
+				else
+				{
+					while(str[pos] != '\n' && pos < str.size())
+						++pos;
+					pos++;
+				}
+			}
+			else if(state == PARSING_OBJECT)
+			{
+				if(readSubString("\ttype="))
+				{
+					string s = readLine();
+					objects[objectNum].type = objectTypeFromString(s);
+				}
+				else if(readSubString("\tteam="))
+				{
+					string s = readLine();
+					objects[objectNum].team = lexical_cast<int>(s);
+				}
+				else if(readSubString("\tspawnPos="))
+				{
+					string s = readLine();
+					objects[objectNum].startloc = lexical_cast<Vec3f>(s);
+					int i=0;
+				}
+				else if(readSubString("}\n"))
+				{
+					state = SEARHING;
+					objectNum++;
+				}
+			}
+		}
+		return true;
+	}
+	//catch(...)
+	//{
+	//	debugBreak();
+	//	return false;
+	//}
+}
+void LevelFile::initializeWorld(unsigned int humanPlayers)
 {
 	players.resetPlayers();
 
@@ -490,7 +616,7 @@ void LevelFile::initializeWorld()
 	{
 		if(objects[i].type & PLANE)
 		{
-			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < 2)
+			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < humanPlayers)
 			{	
 				auto id = world.newObject(new nPlane(objects[i].team, objects[i].startloc, objects[i].startRot, objects[i].type));
 				players.addHumanPlayer(id);
@@ -1310,11 +1436,9 @@ void editLevel::renderObjectsPreview()
 	{
 		if(i->type & PLANE)
 		{
-			glPushMatrix();
-			glTranslatef(i->startloc.x,i->startloc.y,i->startloc.z);
-			glScalef(10,10,10);
-			graphics->drawModel(i->type,Vec3f(),Quat4f());
-			glPopMatrix();
+			//auto b = dataManager.getModel(i->type)->boundingSphere;
+			//graphics->drawSphere(i->startloc + i->startRot * b.center, b.radius * 10.0);
+			graphics->drawModel(i->type,i->startloc,i->startRot,10.0);
 		}
 	}
 }

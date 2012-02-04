@@ -4,15 +4,16 @@ class DataManager
 private:
 	struct asset{
 		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
-		int id;
 	};
 	struct textureAsset: public asset{
+		unsigned int id;
 		int width;
 		int height;
 		char bpp;				//bit per pixel
 		unsigned char* data;	//currently just set to nullptr
 	};
 	struct shaderAsset: public asset{
+		unsigned int id;
 		bool use_sAspect;
 		map<string,int> uniforms;
 	};
@@ -21,7 +22,7 @@ private:
 		//int numVertices;
 		//std::shared_ptr<texturedLitVertex3D> vertices;
 //		unsigned int VBO_id;
-
+		GraphicsManager::vertexBuffer* VBO;
 		int numMaterials;
 		struct material{
 			string tex;
@@ -36,7 +37,7 @@ private:
 		std::shared_ptr<CollisionChecker::triangleList> trl;
 	};
 	struct fontAsset: public asset{
-		//int id       --stores the texture id for the font
+		unsigned int id;       //stores the texture id for the font
 		string texName;
 		float height;//in px
 		struct character
@@ -48,18 +49,19 @@ private:
 		};
 		map<unsigned char,character> characters;
 	};
-
 	struct assetFile{
 		string name;
 		string filename[2];		//extra for shaders
 		set<string> options;
 		asset::assetType type;
-		shared_ptr<FileManager::file> file; //for textures
+		vector<shared_ptr<FileManager::file>> files; //for textures
 	};
 	queue<assetFile> assetFiles;
 	queue<assetFile> assetFilesPreload;
 
 	map<string,asset*>	assets;
+	map<int, asset*>	unnamedAssets;
+	int					currentAssetIndex;
 
 	int					activeTextureUnit;
 
@@ -110,23 +112,24 @@ public:
 	bool loadAssetList();
 	int loadAsset(); //also does preload if not already done
 
-	string getBoundShader() const{return boundShader;}
 
+	string getBoundShader() const{return boundShader;}
+	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
 	void shutdown();
 private:
 
 	//bool registerTGA(string name, string filename, bool tileable=false);
 	//bool registerPNG(string name, string filename, bool tileable=false);
-	bool registerOBJ(string name, string filename);
-	bool registerShader(string name, string vert, string frag, bool use_sAspect=false);
-	bool registerTerrainShader(string name, string frag);
-	bool registerTexture(string name, shared_ptr<FileManager::textureFile> f, bool tileable=false);
-	bool registerFont(string name, shared_ptr<FileManager::textFile> f);
+	asset* registerOBJ(string filename);
+	asset* registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect=false);
+	//bool registerTerrainShader(string name, string frag);
+	asset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false);
+	asset* registerFont(shared_ptr<FileManager::textFile> f);
 
 	int getId(string name);
 	int getId(objectType t);
 
-	DataManager():activeTextureUnit(0),boundShaderId(0){}
+	DataManager():activeTextureUnit(0),boundShaderId(0),currentAssetIndex(0){}
 	~DataManager();
 };
 
