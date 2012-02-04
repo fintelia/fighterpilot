@@ -7,6 +7,13 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 	graphics->resetViews(1);
 	graphics->viewport(0,0, sAspect,1.0);
 	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
+}
+bool campaign::init()
+{
+	world.create();
+	level->initializeWorld(1);
+	return true;
 }
 int campaign::update()
 {
@@ -60,10 +67,9 @@ int campaign::update()
 			if(nLevel == "") nLevel="media/map file.lvl";
 
 			std::shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadPNG(nLevel))
+			if(l->loadZIP(nLevel))
 			{
 				menuManager.setMenu(new gui::campaign(l));
-		//		modeManager.setMode(new modeCampaign(l));
 			}
 		}
 	}
@@ -147,6 +153,7 @@ void campaign::render()
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, sAspect*v, v), "next level");
 	}
 }
+
 void campaign::render3D(unsigned int view)
 {
 	drawScene(0);
@@ -154,5 +161,6 @@ void campaign::render3D(unsigned int view)
 		sceneManager.renderScene(players[view]->getObject()->meshInstance);
 	else
 		sceneManager.renderScene();
+
 }
 }

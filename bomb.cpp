@@ -15,7 +15,7 @@ void bomb::updateSimulation(double time, double ms)
 	float alt = world.altitude(position);
 	if(alt < 0.0)
 	{
-		particleManager.addEmitter(new particle::explosion(position-Vec3f(0,alt,0),4.0));
+		particleManager.addEmitter(new particle::explosion(),position-Vec3f(0,alt,0),4.0);
 		awaitingDelete = true;
 		meshInstance->setDeleteFlag(true);
 		meshInstance = nullptr;

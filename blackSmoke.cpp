@@ -3,13 +3,17 @@
 
 namespace particle
 {
-	blackSmoke::blackSmoke(Vec3f pos): emitter(SMOKE, pos, "smoke", 1.0, 3.0, 19)
+	//blackSmoke::blackSmoke(Vec3f pos): emitter(SMOKE, pos, "smoke", 1.0, 3.0, 19)
+	//{
+	//	velocity =	fuzzyAttribute(3.0, 1.0);
+	//	spread =	fuzzyAttribute(1.0, 0.5);
+	//	life =		fuzzyAttribute(6000.0, 100.0);
+	//}
+	blackSmoke::blackSmoke(): emitter(SMOKE, "smoke", 1.0, 3.0, 19)
 	{
-		velocity =	fuzzyAttribute(3.0, 1.0);
-		spread =	fuzzyAttribute(1.0, 0.5);
-		life =		fuzzyAttribute(6000.0, 100.0);
+
 	}
-	blackSmoke::blackSmoke(int parent, Vec3f offset): emitter(SMOKE, parent, offset, "smoke", 1.0, 3.0, 19)
+	void blackSmoke::init()
 	{
 		velocity =	fuzzyAttribute(3.0, 1.0);
 		spread =	fuzzyAttribute(1.0, 0.5);

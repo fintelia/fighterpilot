@@ -98,12 +98,12 @@ extern float sAspect;
 extern int frame,Time,timebase;
 extern float fps;
 
-#include "enums.h"
+//#include "enums.h"
+#include "definitions.h"
 
 #include "time.h"
 #include "gameMath.h"
 #include "random.h"
-#include "settings.h"
 #include "fileManager.h"
 #include "controlManager.h"
 #include "graphicsManager.h"
@@ -111,12 +111,9 @@ extern float fps;
 #include "sceneManager.h"
 #include "particleManager.h"
 #include "input.h"
-#include "path.h"
 #include "script.h"
 #include "profiler.h"
 #include "object.h"
-#include "player.h"
-#include "level.h"
 #include "terrain.h"
 #include "objectList.h"
 #include "menuScreen.h"

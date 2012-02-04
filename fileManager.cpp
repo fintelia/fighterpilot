@@ -14,6 +14,9 @@
 #ifdef _WIN32
 	#include <Windows.h>
 	#include <process.h>
+	#include <shlwapi.h>
+	#include <ShlObj.h>
+	#pragma comment(lib,"shlwapi.lib")
 	#define WINDOWS
 #else
 	#error operating system not currently supported by fileManager
@@ -24,7 +27,7 @@
 
 using namespace std;
 
-#include "enums.h"
+#include "definitions.h"
 #include "fileManager.h"
 /////////////////////////////////THREADING///////////////////////////////////////////////////
 //template<class T>
@@ -106,6 +109,24 @@ string FileManager::changeExtension(string filename, string newExtension)
 		return filename.substr(0,nDot) + newExtension;
 }
 #ifdef WINDOWS
+	string FileManager::getAppDataDirectory()
+	{
+		char szPath[MAX_PATH];
+		if (SHGetFolderPathA( NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szPath) == S_OK)
+		{
+			string dir(szPath);
+			dir += "/FighterPilot/";
+
+			createDirectory(dir); // checks to see if file exists and creates it if it does not
+			return dir;
+		}
+		else
+		{
+			debugBreak();
+			return ""; //use the current directory instead
+		}
+	}
+
 	bool FileManager::fileExists(string filename)
 	{
 		DWORD d = GetFileAttributesA(filename.c_str());
@@ -119,9 +140,12 @@ string FileManager::changeExtension(string filename, string newExtension)
 	bool FileManager::createDirectory(string directory)
 	{
 		DWORD d = GetFileAttributesA(directory.c_str());
-
-		if(!(d & FILE_ATTRIBUTE_DIRECTORY))
-			return CreateDirectoryA(directory.c_str(), NULL) != 0;
+		if(!(d & FILE_ATTRIBUTE_DIRECTORY) || d == INVALID_FILE_ATTRIBUTES)
+		{
+			bool b = CreateDirectoryA(directory.c_str(), NULL) != 0;
+			DWORD lError = GetLastError();
+			return b;
+		}
 		else
 			return true;
 	}
@@ -456,31 +480,31 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 }
 FileManager::fileContents FileManager::serializeFile(shared_ptr<file> f)
 {
-	if(f->type == file::TEXT)
+	if(f->type == TEXT_FILE)
 	{
 		return serializeTextFile(dynamic_pointer_cast<textFile>(f));
 	}
-	else if(f->type == file::INI)
+	else if(f->type == INI_FILE)
 	{
 		return serializeIniFile(dynamic_pointer_cast<iniFile>(f));
 	}
-	else if(f->type == file::ZIP)
+	else if(f->type == ZIP_FILE)
 	{
 		return serializeZipFile(dynamic_pointer_cast<zipFile>(f));
 	}
-	else if(f->type == file::TEXTURE && f->format == file::BMP)
+	else if(f->type == TEXTURE_FILE && f->format == BMP)
 	{
 		return serializeBmpFile(dynamic_pointer_cast<textureFile>(f));
 	}
-	else if(f->type == file::TEXTURE && f->format == file::TGA)
+	else if(f->type == TEXTURE_FILE && f->format == TGA)
 	{
 		return serializeTgaFile(dynamic_pointer_cast<textureFile>(f));
 	}
-	else if(f->type == file::TEXTURE && f->format == file::PNG)
+	else if(f->type == TEXTURE_FILE && f->format == PNG)
 	{
 		return serializePngFile(dynamic_pointer_cast<textureFile>(f));
 	}
-	else if(f->type == file::BINARY)
+	else if(f->type == BINARY_FILE)
 	{
 		return serializeBinaryFile(dynamic_pointer_cast<binaryFile>(f));
 	}
@@ -1028,11 +1052,12 @@ FileManager::fileContents FileManager::loadFileContents(string filename)
 void FileManager::workerThread()
 {
 	bool empty;
+	bool writeEmpty;
 	while(true)
 	{
 		fileQueueMutex.lock();
 		empty = fileQueue.empty();
-
+		writeEmpty = fileWriteQueue.empty();
 		if(!empty)
 		{
 			shared_ptr<file> f = fileQueue.front();
@@ -1041,7 +1066,7 @@ void FileManager::workerThread()
 
 			fileContents data = loadFileContents(f->filename);
 
- 			if(f->type == file::BINARY)
+ 			if(f->type == BINARY_FILE)
 			{
 				//parseBinaryFile(dynamic_pointer_cast<binaryFile>(f),data);     //no need to 'parse' a binary file
 				dynamic_pointer_cast<binaryFile>(f)->contents = data.contents;
@@ -1049,16 +1074,24 @@ void FileManager::workerThread()
 				f->completeLoad(true);
 				continue;
 			}
-			else if(f->type == file::TEXT)	parseTextFile(dynamic_pointer_cast<textFile>(f),data);
-			else if(f->type == file::INI)	parseIniFile(dynamic_pointer_cast<iniFile>(f),data);
-			else if(f->type == file::ZIP)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
-			else if(f->type == file::TEXTURE && f->format == file::BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
-			else if(f->type == file::TEXTURE && f->format == file::TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
-			else if(f->type == file::TEXTURE && f->format == file::PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);
-#ifdef _DEBUG
-			else __debugbreak();
-#endif
+			else if(f->type == TEXT_FILE)	parseTextFile(dynamic_pointer_cast<textFile>(f),data);
+			else if(f->type == INI_FILE)	parseIniFile(dynamic_pointer_cast<iniFile>(f),data);
+			else if(f->type == ZIP_FILE)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
+			else if(f->type == TEXTURE_FILE && f->format == BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
+			else if(f->type == TEXTURE_FILE && f->format == TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
+			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);
+			#ifdef _DEBUG
+				else __debugbreak();
+			#endif
 			delete[] data.contents;
+		}
+		else if(!writeEmpty)
+		{
+			shared_ptr<file> f = fileWriteQueue.front();
+			fileWriteQueue.pop();
+			fileQueueMutex.unlock();
+
+			writeFileContents(f->filename, serializeFile(f));
 		}
 		else
 		{
@@ -1073,7 +1106,6 @@ void FileManager::workerThread()
 //																Write Files																				 //
 //																																						 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 bool FileManager::writeFileContents(string filename, fileContents contents)
 {
 	unique_ptr<unsigned char[]> p(contents.contents); //makes sure that memory get deleted
@@ -1095,33 +1127,48 @@ bool FileManager::writeFileContents(string filename, fileContents contents)
 		return false;
 	}
 }
+bool FileManager::writeFileContents(string filename, shared_ptr<file> f, bool async)
+{
+	if(async)
+	{
+		f->filename = filename;
+		fileQueueMutex.lock();
+		fileWriteQueue.push(f);
+		fileQueueMutex.unlock();
+		return true;
+	}
+	else
+	{
+		return writeFileContents(filename, serializeFile(f));
+	}
+}
 bool FileManager::writeBinaryFile(shared_ptr<binaryFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeBinaryFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeTextFile(shared_ptr<textFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeTextFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeIniFile(shared_ptr<iniFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeIniFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeZipFile(shared_ptr<zipFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeZipFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeBmpFile(shared_ptr<textureFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeBmpFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeTgaFile(shared_ptr<textureFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializeTgaFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writePngFile(shared_ptr<textureFile> f, bool asinc)
 {
-	return writeFileContents(f->filename, serializePngFile(f));
+	return writeFileContents(f->filename, f, asinc);
 }
 
 FileManager::fileContents FileManager::serializeBinaryFile(shared_ptr<binaryFile> f)
@@ -1196,7 +1243,7 @@ FileManager::fileContents FileManager::serializeZipFile(shared_ptr<zipFile> f)	/
 		cFileHeader.size = fContents.size;
 		cFileHeader.filename = file->second->filename;
 		cFileHeader.localHeaderOffset = data.size();
-		cFileHeader.isText = file->second->type == file::TEXT || file->second->type == file::INI;
+		cFileHeader.isText = file->second->type == TEXT_FILE || file->second->type == INI_FILE;
 		centralFileHeaders.push_back(cFileHeader);
 
 		writeAs<unsigned int>		(data, 0x04034b50);							//local file header signature

@@ -7,7 +7,7 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):object(sPos, sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
+nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):object(sPos, sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),controlType(CONTROL_TYPE_SIMPLE)
 {
 	team = Team;
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
@@ -63,97 +63,85 @@ void nPlane::updateSimulation(double time, double ms)
 		}
 		else
 		{
-		//	const float maxSpeed = 537.1;
-		//	const float minSpeed = 200.0;
-
-
-
-			//float acceleration = 60.0f*controller.accelerate - 100.0f*controller.brake;
-			//if(speed > maxSpeed && acceleration < 0.0)
-			//	speed += acceleration*(ms/1000);
-			//else
-			//	speed = clamp(speed + acceleration*(ms/1000),minSpeed,maxSpeed);
-
 			float Thrust = 64000.0 + 144000.0f*controls.accelerate - 36000.0*controls.brake;
 			float Drag = 0.70743 * speed*speed;
 			float Lift = 14.1585 * speed*speed;
 			float mass = 29300;
 
-
-		//	speed += ((Thrust - Drag) / (mass*0.1) + 9.8*sin(climb)) * (ms/1000);
-
 			float acceleration = (Thrust - Drag) / (mass*0.1) + 9.8*sin(climb);
 			float jerk = -2.0f * (Drag/(speed*speed)) / (mass*0.1) * speed * acceleration;
 			speed = taylor<float>(ms/1000, speed, acceleration, jerk);
 
-
-			//float maxSpeed = sqrt(T / (D/(speed*speed)));
-			//if(maxSpeed < 1.0)
-			//	speed = maxSpeed * tanh( math::atanh(speed / maxSpeed) + ms/1000 * 0.01);
-			//else
-			//	speed = maxSpeed + 1.0 / (1/(speed - maxSpeed) + ms/1000 * 0.01);
-
-
-
-
-		//	if(roll.inRange(PI/2,PI))	roll = PI/2;
-		//	if(roll.inRange(PI,PI*3/2))	roll = PI*3/2;
-
-
-
-			float deltaRoll = 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
-			float rollAng = roll.getAngle();
-			if(rollAng > PI) rollAng -= PI*2;
-
-			if(roll.inRange(-0.001,0.001) || (rollAng < 0.0 && rollAng + deltaRoll > 0.0) || (rollAng > 0.0 && rollAng + deltaRoll < 0.0))
+			if(controlType == CONTROL_TYPE_SIMPLE)
 			{
-				lockRollRange = true;
-			}
-			else if(!roll.inRange(-PI/2,PI/2) && lockRollRange)//if roll is not in range but should be
-			{
-				if(roll.getAngle() < PI)
-					roll = PI/2;
-				else
-					roll = -PI/2;
-			}
+				float deltaRoll = 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
+				float rollAng = roll.getAngle();
+				if(rollAng > PI) rollAng -= PI*2;
 
-			if(lockRollRange)
-			{
-				if(lockRollRange && deltaRoll > 0.0 && deltaRoll+rollAng > PI/2.0)
+				if(roll.inRange(-0.001,0.001) || (rollAng < 0.0 && rollAng + deltaRoll > 0.0) || (rollAng > 0.0 && rollAng + deltaRoll < 0.0))
 				{
-					deltaRoll -= PI/2 - rollAng;
-					roll = PI/2;
-				//	direction -= deltaRoll * 0.5;
+					lockRollRange = true;
 				}
-				else if(lockRollRange && deltaRoll < 0.0 && deltaRoll+rollAng < -PI/2.0)
+				else if(!roll.inRange(-PI/2,PI/2) && lockRollRange)//if roll is not in range but should be
 				{
-					deltaRoll -= -PI/2 - rollAng;
-					roll = -PI/2;
-				//	direction -= deltaRoll * 0.5;
+					if(roll.getAngle() < PI)
+						roll = PI/2;
+					else
+						roll = -PI/2;
+				}
+
+				if(lockRollRange)
+				{
+					if(lockRollRange && deltaRoll > 0.0 && deltaRoll+rollAng > PI/2.0)
+					{
+						deltaRoll -= PI/2 - rollAng;
+						roll = PI/2;
+						//direction -= deltaRoll * 0.5;
+					}
+					else if(lockRollRange && deltaRoll < 0.0 && deltaRoll+rollAng < -PI/2.0)
+					{
+						deltaRoll -= -PI/2 - rollAng;
+						roll = -PI/2;
+						//direction -= deltaRoll * 0.5;
+					}
+					else
+					{
+						roll += deltaRoll;
+						rollAng += deltaRoll;
+					}
+
+					if(roll.inRange(0.0,PI,false) && (controls.right-controls.left > 0) || roll.inRange(PI,2.0*PI,false) && (controls.right-controls.left < 0))
+					{
+						direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
+					}
+					else
+					{
+						direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000) * 0.2;
+					}
 				}
 				else
 				{
 					roll += deltaRoll;
-					rollAng += deltaRoll;
 				}
-				direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
-				//direction -= rollAng * (ms/1000) * 0.3;
+
+				if(abs(deltaRoll/(ms/1000)) < 0.1)
+				{
+					if(roll.inRange(0, PI/2 + 0.001))
+						roll = max(0.0,roll.getAngle() - (ms/1000));
+					else if(roll.inRange(-PI/2 - 0.001,0))
+						roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
+				}
+
+
+				climb += (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000)) * cos(roll);
+
 			}
-			else
+			else if(controlType == CONTROL_TYPE_ADVANCED)
 			{
-				roll += deltaRoll;
+				roll += 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
+				//direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (controls.climb - controls.dive) * (ms/1000);
+				climb += (controls.climb - controls.dive) * (ms/1000) * cos(roll);
 			}
-
-			if(abs(deltaRoll/(ms/1000)) < 0.1)
-			{
-				if(roll.inRange(0, PI/2 + 0.001))
-					roll = max(0.0,roll.getAngle() - (ms/1000));
-				else if(roll.inRange(-PI/2 - 0.001,0))
-					roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
-			}
-
-
-			climb = climb + (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000)) * cos(roll);
 			//climb -= (L * cos(roll) / (m*speed) - 9.8*cos(climb)/speed) * (ms/1000) -
 			//			(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
 
@@ -265,12 +253,12 @@ void nPlane::updateSimulation(double time, double ms)
 					//particleManager.addEmitter(new particle::blackSmoke(id));
 
 					death = DEATH_EXPLOSION;
-					particleManager.addEmitter(new particle::explosion(id));
+					particleManager.addEmitter(new particle::explosion(),id);
 				}
 				else if(death == DEATH_HIT_WATER)
 				{
 					Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-					particleManager.addEmitter(new particle::splash(splashPos));
+					particleManager.addEmitter(new particle::splash(),splashPos);
 
 
 					Vec3f vel2D = rotation * Vec3f(0,0,1);
@@ -313,7 +301,12 @@ void nPlane::updateSimulation(double time, double ms)
 		}
 		else if(death == DEATH_EXPLOSION)
 		{
+			//rotation = Quat4f(0,0,0,1);
+			//rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
+			//rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+			//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
+			//position += rotation * Vec3f(0,0,1) * speed * (ms/1000) * 0.1;
 		}
 		else
 		{
@@ -348,12 +341,12 @@ void nPlane::updateSimulation(double time, double ms)
 			if(death == DEATH_HIT_GROUND)
 			{
 				position.y -= altitude;
-				particleManager.addEmitter(new particle::blackSmoke(id));
+				particleManager.addEmitter(new particle::blackSmoke(),id);
 			}
 			else if(death == DEATH_HIT_WATER)
 			{
 				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-				particleManager.addEmitter(new particle::splash(splashPos));
+				particleManager.addEmitter(new particle::splash(),splashPos);
 
 
 				Vec3f vel2D = rotation * Vec3f(0,0,1);
@@ -619,9 +612,9 @@ void nPlane::die()
 	if(death == DEATH_NONE)
 	{
 		death = DEATH_EXPLOSION;
-		particleManager.addEmitter(new particle::explosion(id));
-		particleManager.addEmitter(new particle::explosionSmoke(id));
-		//particleManager.addEmitter(new particle::explosionFlash(id));
+		particleManager.addEmitter(new particle::explosion(),id);
+		particleManager.addEmitter(new particle::explosionSmoke(),id);
+		particleManager.addEmitter(new particle::explosionFlash(),id);
 	}
 }
 void nPlane::findTargetVector()

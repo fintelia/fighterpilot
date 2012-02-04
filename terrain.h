@@ -82,13 +82,17 @@ protected:
 	Circle<float> mBounds;
 	bool waterPlane;
 
+	unsigned int skyTextureId; //id for the sky cube-map
+
 	vector<std::shared_ptr<TerrainPage>> terrainPages;
 
 	std::shared_ptr<TerrainPage> getPage(Vec2f position) const;
 	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
-public:
-	Terrain():waterPlane(true){}
 
+	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
+public:
+	Terrain():waterPlane(true), skyTextureId(0){}
+	~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true);
 	void renderTerrain(Vec3f eye) const;
 
@@ -100,4 +104,5 @@ public:
 	float altitude(float x, float y, float z) const;
 	bool isLand(Vec2f v) const;
 	bool isLand(float x, float z) const;
+
 };

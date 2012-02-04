@@ -1,7 +1,9 @@
 
 class FileManager
 {
-public:
+public:	
+	enum FileType{NO_FILE_TYPE, BINARY_FILE,TEXT_FILE,INI_FILE,ZIP_FILE,TEXTURE_FILE};
+	enum FileFormat{NO_FILE_FORMAT, BIN, TXT, INI, ZIP, BMP, PNG, TGA};
 	static FileManager& getInstance()
 	{
 		static FileManager* pInstance = new FileManager();
@@ -13,19 +15,25 @@ public:
 		unsigned long size;
 		fileContents():contents(nullptr), size(0){}
 	};
+	struct writeFile
+	{
+		string filename;
+		fileContents contents;
+	};
+
 	class file
 	{
 	private:
 		bool mComplete;
 		bool mValid;
-
+		bool writeFile;
 		void completeLoad(bool s){mValid = s;mComplete=true;}
 		friend class FileManager;
 
 	public:
 		string filename;
-		enum Type{BINARY,TEXT,INI,ZIP,TEXTURE} type;
-		enum Format{NO_FORMAT, BMP, PNG, TGA} format;
+		FileType type;
+		FileFormat format;
 
 		bool valid(){return mComplete && mValid;}
 		bool invalid(){return mComplete && !mValid;}
@@ -35,7 +43,7 @@ public:
 
 //		file(Type t):mComplete(false),mValid(false), type(t){}
 //		file(Type t,string fName):mComplete(false),mValid(false), filename(fName),type(t){}
-		file(string fName,Type t, Format f=NO_FORMAT):mComplete(false),mValid(false), filename(fName),type(t),format(f){}
+		file(string fName,FileType t, FileFormat f=NO_FILE_FORMAT):mComplete(false),mValid(false),writeFile(false), filename(fName),type(t),format(f){}
 	};
 	struct binaryFile: public file
 	{
@@ -43,7 +51,7 @@ public:
 		unsigned char* contents;
 
 //		binaryFile():file("",BINARY),size(0),contents(nullptr){}
-		binaryFile(string fName):file(fName,BINARY),size(0),contents(nullptr){}
+		binaryFile(string fName):file(fName,BINARY_FILE),size(0),contents(nullptr){}
 		~binaryFile(){delete[] contents;}
 	};
 	struct textFile: public file
@@ -51,14 +59,14 @@ public:
 		string contents;
 
 //		textFile():file("",TEXT){}
-		textFile(string fName):file(fName,TEXT){}
+		textFile(string fName):file(fName,TEXT_FILE){}
 	};
 	struct iniFile: public file
 	{
 		map<string,map<string, string> > bindings;
 
 //		iniFile(): file("",INI){}
-		iniFile(string fName): file(fName,INI){}
+		iniFile(string fName): file(fName,INI_FILE){}
 		template<class T> void readValue (string section, string name, T& val, T defaultVal = T())
 		{
 			auto sec = bindings.find(section);			if(sec == bindings.end()) {val = defaultVal; return;}
@@ -70,7 +78,7 @@ public:
 	{
 		map<string,shared_ptr<file>> files;
 
-		zipFile(string fName): file(fName,ZIP){}
+		zipFile(string fName): file(fName,ZIP_FILE){}
 	};
 	struct textureFile: public file
 	{
@@ -79,7 +87,7 @@ public:
 		unsigned int height;
 		unsigned char* contents;
 
-		textureFile(string fName, Format fmt):file(fName, TEXTURE, fmt),channels(0),width(0),height(0),contents(nullptr){}
+		textureFile(string fName, FileFormat fmt):file(fName, TEXTURE_FILE, fmt),channels(0),width(0),height(0),contents(nullptr){}
 		~textureFile(){delete[] contents;}
 	};
 	struct bmpFile: public textureFile
@@ -116,6 +124,7 @@ public:
 	string extension(string filename);
 	string directory(string filename);
 	string changeExtension(string filename, string newExtension);
+	string getAppDataDirectory();
 
 	vector<string> getAllFiles(string directory);
 	vector<string> getAllFiles(string directory,string ext);
@@ -148,6 +157,7 @@ private:
 
 	fileContents loadFileContents(string filename);
 	bool writeFileContents(string filename, fileContents contents); //deletes contents after writing!!!
+	bool writeFileContents(string filename, shared_ptr<file> f, bool async);
 
 	shared_ptr<file> parseFile(string filename, fileContents data);
 	fileContents serializeFile(shared_ptr<file> f);
@@ -172,6 +182,7 @@ private:
 	~FileManager(){}
 
 	queue<std::shared_ptr<file>> fileQueue;
+	queue<std::shared_ptr<file>> fileWriteQueue;
 	mutex fileQueueMutex;
 };
 

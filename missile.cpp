@@ -18,14 +18,14 @@
 //		}
 //	}
 //}
-missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):object(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(MISSILE_SPEED/3.0), owner(Owner)
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner, int Target):object(sPos, sRot, Type), life(15.0), target(Target), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
 void missile::init()
 {
-	particleManager.addEmitter(new particle::contrail(id));
-	particleManager.addEmitter(new particle::contrailSmall(id));
+	particleManager.addEmitter(new particle::contrail(),id);
+	particleManager.addEmitter(new particle::contrailSmall(),id);
 }
 void missile::updateSimulation(double time, double ms)
 {
@@ -53,12 +53,12 @@ void missile::updateSimulation(double time, double ms)
 	}
 	else if(enemy != NULL && enemy->dead)
 	{
-		particleManager.addEmitter(new particle::explosionSmoke(position,2.0));
+		particleManager.addEmitter(new particle::explosionSmoke(),position,2.0);
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
 	speed+=acceleration*(ms/1000);
-	if(speed > MISSILE_SPEED) speed = MISSILE_SPEED;
+	if(speed > 1180.0) speed = 1180.0;
 		position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;

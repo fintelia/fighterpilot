@@ -91,6 +91,7 @@ public:
 		bool shoot3;
 		ControlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(false), shoot2(false), shoot3(false) {}
 	}controls;
+	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_ADVANCED}controlType;
 ////////////methods////////////////
 	void findTargetVector();
 	void shootMissile();
@@ -107,7 +108,6 @@ public:
 	void updateSimulation(double time, double ms);
 	void updateFrame(float interpolation) const;
 
-//	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
 
 private:

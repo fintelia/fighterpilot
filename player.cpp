@@ -217,6 +217,11 @@ humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, o
 		for(int i=0;i<9;i++)
 			controls[i] = controlMapping();
 	}
+	setObject(objectId);
+}
+void humanPlayer::setObject(int objectId)
+{
+	mObjectNum = objectId;
 	object* o = getObject();
 	o->firstPerson = &firstPerson;
 	o->thirdPerson = &thirdPerson;
@@ -232,6 +237,8 @@ humanPlayer::~humanPlayer()
 }
 void humanPlayer::update()
 {
+	//setObject(3);
+
 	object* o = getObject();
 	if(o != nullptr && o->type & PLANE)
 	{
@@ -252,23 +259,125 @@ const camera& humanPlayer::getCamera(bool forceThirdPerson) const
 {
 	return (firstPersonView && !forceThirdPerson) ? firstPerson : thirdPerson;
 }
-void AIplayer::update()
+AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),target(0),destination(0,0,0), state(STATE_NONE)
 {
 	object* o = getObject();
-
 	if(o != nullptr && o->type & PLANE)
 	{
 		nPlane* p = (nPlane*)o;
+		p->controlType = nPlane::CONTROL_TYPE_ADVANCED;
+	}
+}
+void AIplayer::startPatrol()
+{
+	Vec2f p = random2<float>() * random<float>(world.bounds().radius) + world.bounds().center;
+	float alt = random<float>(50.0,1000.0);
+	destination = Vec3f(p.x,alt,p.y);
+	state = STATE_PATROL;
+}
+void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
+{
+	Vec3f velocity = p->rotation * Vec3f(0,0,1);
+	Vec3f destVector = dest - p->position;
+	Vec3f destDirection = destVector.normalize();
 
-		p->controls.accelerate	= 0.0;
-		p->controls.brake		= 0.0;
-		p->controls.climb		= 0.0;
-		p->controls.dive		= 0.0;
-		p->controls.left		= 0.0;
-		p->controls.right		= 0.0;
-		p->controls.shoot1		= false;
-		p->controls.shoot2		= false;
-		p->controls.shoot3		= false;
+	float diffAng = Angle(atan2(destDirection.x, destDirection.z) - p->direction).radians_plusMinusPI();
+	float diffClimb = Angle(atan2(destVector.y, sqrt(destVector.x*destVector.x+destVector.z*destVector.z)) - p->climb).radians_plusMinusPI();
+
+	p->direction += clamp(diffAng,1.0,-1.0) * world.time.length()/1000.0;
+	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0;
+
+	float rollError = (diffAng*0.5 + p->roll.radians_plusMinusPI()) / (PI/2);
+
+	p->controls.climb		= 0.0;
+	p->controls.dive		= 0.0;
+	p->controls.left		= clamp(rollError,0.0,1.0);
+	p->controls.right		= clamp(-rollError,0.0,1.0);
+}
+void AIplayer::update()
+{
+	object* o = getObject();
+	if(o == nullptr || !(o->type & PLANE))
+	{
+		debugBreak();
+		return;
+	}
+	nPlane* p = (nPlane*)o;
+
+	if(state == STATE_NONE)
+	{
+		startPatrol();
+	}
+	else if(state == STATE_PATROL)
+	{
+		graphics->drawLine(o->position, destination);
+		//Profiler.setOutput(lexical_cast<string>(o->id) + " distance", sqrt((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z)));
+		if((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z) < 1000.0 * 1000.0)
+		{
+			startPatrol();
+		}
+		else
+		{
+			flyTowardsPoint(p, destination);
+			p->controls.shoot1 = false;
+			p->controls.shoot2 = false;
+			p->controls.shoot3 = false;
+		}
+
+
+		Vec3f focus1 = p->position;
+		Vec3f focus2 = p->position + p->rotation * Vec3f(0,0,2000.0);
+
+		auto& planes = world(PLANE);
+		for(auto i=planes.begin(); i!=planes.end(); i++)
+		{
+			if(i->second->team != p->team)
+			{
+				//Profiler.setOutput(lexical_cast<string>(p->id)+"dist", focus1.distance(i->second->position) + focus2.distance(i->second->position));
+				if(focus1.distance(i->second->position) + focus2.distance(i->second->position) < 4000.0)
+				{
+					
+					target = i->second->id;
+					state = STATE_HUNTING;
+					break;
+				}
+			}
+		}
+	}
+	else if(state == STATE_HUNTING)
+	{
+		auto t = world[target];
+		if(!t || t->dead || !(t->type & PLANE))
+		{
+			target = 0;
+			startPatrol();
+		}		
+
+		
+		Vec3f direction = t->position-p->position;
+		Vec3f velocity = p->rotation * Vec3f(0,0,1);
+		Angle ang = acosA(velocity.dot(direction.normalize()));
+		float distance = direction.magnitude();
+		flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<nPlane>(t)->speed));
+
+		if(distance > 2000.0)
+		{
+			p->controls.accelerate = 1.0;
+		}
+
+		if(distance < 3000.0 && ang < PI/6)
+		{
+			p->controls.shoot1 = true;
+			p->controls.shoot2 = false;
+			p->controls.shoot3 = false;
+		}
+		else
+		{
+			p->controls.shoot1 = false;
+			p->controls.shoot2 = false;
+			p->controls.shoot3 = false;
+		}
+
 	}
 }
 PlayerManager& PlayerManager::getInstance()
@@ -304,7 +413,15 @@ void PlayerManager::update()
 		(*i)->update();
 	}
 }
-
+#ifdef _DEBUG
+	void PlayerManager::debugDraw()
+	{
+		for(auto i = aiPlayers.begin(); i!= aiPlayers.end(); i++)
+		{
+			//graphics->drawLine((*i)->getObject()->position, (*i)->destination);
+		}
+	}
+#endif
 shared_ptr<humanPlayer> PlayerManager::operator[] (unsigned int p)
 {
 	if(p < humanPlayers.size())

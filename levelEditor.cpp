@@ -323,7 +323,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			Rect view = orthoView();
 
 			p.x = (p.x*view.w/sAspect + view.x) - orthoCenter.x;
-			p.y = (p.y*view.h + view.y) + orthoCenter.z;
+			p.y = (p.y*view.h + view.y) - orthoCenter.z;
 			if(down)
 			{
 				newRegionRadius = true;
@@ -388,23 +388,27 @@ void levelEditor::updateObjectCircles()
 	int n=0;
 	for(auto i = level->objects().begin(); i!= level->objects().end(); i++, n++)
 	{
-		Vec2f s = graphics->project(i->startloc);
+		Vec2f s;
 		float r;
 
 		auto model = dataManager.getModel(i->type);
 		if(model==NULL)
 		{
 			r = 0.006;
+			s = graphics->project(i->startloc);
 		}
 		else
 		{
-			Sphere<float> sphere= model->boundingSphere;
+			Sphere<float> sphere = model->boundingSphere;
+			s = graphics->project(i->startloc + i->startRot * sphere.center*10);
 			Vec2f t = graphics->project(i->startloc + sphere.center + graphics->getView().camera.up*sphere.radius*10);
 			r = max(0.004f,s.distance(t));
+
+			
 		}
 		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
 		{
-			objectCircles[n] = Circle<float>(Vec2f(s.x,1.0-s.y),r);
+			objectCircles[n] = Circle<float>(Vec2f(s.x,s.y),r);
 		}
 	}
 }
@@ -754,16 +758,15 @@ void levelEditor::render3D(unsigned int view)
 
 		if(getTab() == REGIONS)
 		{
-			dataManager.bind("ortho");
+			dataManager.bind("circle shader");
 			glDisable(GL_DEPTH_TEST);
-			glColor3f(0,1,0);
 
 			auto v = level->regions();
 			for(auto i = v.begin(); i != v.end(); i++)
 			{
-				Vec2f c((i->centerXYZ[0] - view.x + orthoCenter.x)/view.w*sAspect, (i->centerXYZ[2] - view.y - orthoCenter.z)/view.h);
+				Vec2f c((i->centerXYZ[0] - view.x + orthoCenter.x)/view.w*sAspect, (i->centerXYZ[2] - view.y + orthoCenter.z)/view.h);
 				Vec2f s(i->radius/view.w*sAspect*2.0, i->radius/view.h*2.0);
-				graphics->drawOverlay(Rect::CWH(c,s), "target ring");
+				graphics->drawOverlay(Rect::CWH(c,s));
 			}
 
 			dataManager.unbindShader();
@@ -805,8 +808,7 @@ void levelEditor::render3D(unsigned int view)
 		}
 		graphics->lookAt(e,c,u);
 
-		GLfloat lightPos0[] = {-0.3f, 0.7f, -0.4f, 0.0f};
-		glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+		graphics->setLightPosition(Vec3f(30, 70, 40));
 
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
@@ -821,6 +823,9 @@ void levelEditor::render3D(unsigned int view)
  		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
 		glPopMatrix();
 	}
+
+	
+
 	if(getTab() == OBJECTS)
 	{
 		level->renderObjectsPreview();
@@ -835,36 +840,31 @@ void levelEditor::render3D(unsigned int view)
 
 			if(abs(dir.y) < 0.001) return;
 			Vec3d val = P1 + dir*(maxHeight+objPlacementAlt-P1.y)/dir.y;
-			glPushMatrix();
-			glTranslatef(val.x,val.y,val.z);
-			glScalef(10,10,10);
 			graphics->drawModel(newObjectType, Vec3f(val), Quat4f(),10.0);
-			glPopMatrix();
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
-			glDepthMask(false);
-			glColor4f(0.1,0.3,1.0,0.3);
+			//glDepthMask(false);
+			//glColor4f(0.1,0.3,1.0,0.3);
 
-			graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
+			//graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
+			//					Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
+			//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
+			//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
 
-								Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
-								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
-								Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
-
-			glColor4f(0.3,0.5,1.0,0.2);
-			for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
-			{
-				graphics->drawLine(Vec3f(f,maxHeight+10,0), Vec3f(f,maxHeight+10,level->ground()->sizeZ()));
-				//glVertex3f(f,maxHeight+10,0);
-				//glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
-			}
-			for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
-			{
-				graphics->drawLine(Vec3f(0,maxHeight+10,f), Vec3f(level->ground()->sizeX(),maxHeight+10,f));
-				//glVertex3f(0,maxHeight+10,f);
-				//glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
-			}
-			glColor3f(1,1,1);
-			glDepthMask(true);
+			//glColor4f(0.3,0.5,1.0,0.2);
+			//for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
+			//{
+			//	graphics->drawLine(Vec3f(f,maxHeight+10,0), Vec3f(f,maxHeight+10,level->ground()->sizeZ()));
+			//	//glVertex3f(f,maxHeight+10,0);
+			//	//glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
+			//}
+			//for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
+			//{
+			//	graphics->drawLine(Vec3f(0,maxHeight+10,f), Vec3f(level->ground()->sizeX(),maxHeight+10,f));
+			//	//glVertex3f(0,maxHeight+10,f);
+			//	//glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
+			//}
+			//glColor3f(1,1,1);
+			//glDepthMask(true);
 			////////////////////////////////end grid///////////////////////////////////
 		}
 
@@ -879,15 +879,16 @@ void levelEditor::render3D(unsigned int view)
 		//glLoadIdentity();
 
 
+		
+		//dataManager.bind("ortho");
+		dataManager.bind("circle shader");
 
-		dataManager.bind("ortho");
-
-		glColor3f(0,1,0);
+	//	glColor3f(0,1,0);
 
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
-			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2),"target ring");
+			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
 		}
 		dataManager.unbindShader();
 

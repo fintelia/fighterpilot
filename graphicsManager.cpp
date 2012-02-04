@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 
-GraphicsManager::GraphicsManager(): currentId(0), currentView(0), stereo(false), leftEye(true), interOcularDistance(0.0)
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereo(false), leftEye(true), interOcularDistance(0.0)
 {
 	resetViews(1);
 }
@@ -37,6 +37,8 @@ Vec3f GraphicsManager::unProject(Vec3f p, unsigned int view)// from x=0 to sAspe
 		debugBreak();
 		return Vec3f();
 	}
+
+	p.y = 1.0-p.y; //we have to cheat since the 2D and 3D coordinate systems used are reversed
 
 	Mat4d A = views[view].projectionMat * views[view].modelViewMat;
 	Mat4d inv;

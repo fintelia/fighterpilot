@@ -298,17 +298,39 @@ void TerrainPage::render(Vec3f eye) const
 	dataManager.bind("rock",2);
 	dataManager.bind("LCnoise",3);
 	dataManager.bindTex(texture,4);
+	dataManager.bind("grass normals",5);
 
 	dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
 	dataManager.setUniform1f("minHeight",	minXYZ.y);
 	dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
 	dataManager.setUniform1f("time",		world.time());
 
+	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
+
 	dataManager.setUniform1i("sand",		0);
 	dataManager.setUniform1i("grass",		1);
 	dataManager.setUniform1i("rock",		2);
 	dataManager.setUniform1i("LCnoise",		3);
 	dataManager.setUniform1i("groundTex",	4);
+	dataManager.setUniform1i("grass_normals", 5);
+
+	//dataManager.bind("snow terrain");
+	//dataManager.bind("snow",0);
+	//dataManager.bind("LCnoise",1);
+	//dataManager.bindTex(texture,2);
+	//dataManager.bind("snow normals",3);
+
+	//dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
+	//dataManager.setUniform1f("minHeight",	minXYZ.y);
+	//dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
+	//dataManager.setUniform1f("time",		world.time());
+
+	//dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
+
+	//dataManager.setUniform1i("snow",			0);
+	//dataManager.setUniform1i("LCnoise",			1);
+	//dataManager.setUniform1i("groundTex",		2);
+	//dataManager.setUniform1i("snow_normals",	3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -321,10 +343,161 @@ void TerrainPage::render(Vec3f eye) const
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	dataManager.unbindShader();
 	dataManager.unbindTextures();
+}
+void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1
+{
+	float e = 2.718281828;
+
+	unsigned int l = 256; //length of sides of square for each face in cube map
+	float m = 0.5 * l - 0.5;
+	float* cubeMap = new float[l*l * 6 * 3];
+	unsigned char* cubeMapTex = new unsigned char[l*l * 6 * 3];
+
+	Vec3f sunDirection(cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta));
+	sunDirection = sunDirection.normalize();
+
+
+
+	//xyY color space stored as:				x						  Y						  y			
+	float constants[5][3] =	{{-0.0193*L - 0.2592,		 0.1787*L - 1.4630,		-0.0167*L - 0.2608},
+							 {-0.0665*L + 0.0008,		-0.3554*L + 0.4275,		-0.0950*L + 0.0092},
+							 {-0.0004*L + 0.2125,		-0.0227*L + 5.3251,		-0.0079*L + 0.2102},
+							 {-0.0641*L - 0.8989,		 0.1206*L - 2.5771,		-0.0441*L - 1.6537},
+							 {-0.0033*L + 0.0452,		-0.0670*L + 0.3703,		-0.0109*L + 0.0529}};
+
+
+
+	//float zenithOverSun[3] = {0.186220 / ((1.0 + constants[0][0] * pow(e, constants[1][0] / (float)cos(theta))) * (2.0 + constants[4][0])),
+	//						  0.13 / ((1.0 + constants[0][1] * pow(e, constants[1][1] / (float)cos(theta))) * (2.0 + constants[4][1])),
+	//						  0.130598 / ((1.0 + constants[0][2] * pow(e, constants[1][2] / (float)cos(theta))) * (2.0 + constants[4][2]))};
+
+	float zenithOverSun[3] = {1.0/0.186220,
+							  1.0/0.13,
+							  1.0/0.130598};
+
+
+	Vec3f direction;
+	unsigned int i = 0;
+	for(int face=0; face<6; face++)
+	{
+		for(int x=0;x<l;x++)
+		{
+			for(int y=0;y<l;y++)
+			{
+				if(face == 0)		direction.set(-m + y, m, -m + x); //top
+				else if(face == 1)	direction.set(-m + y, -m, m - x); //bottom
+				else if(face == 2)	direction.set(-m + y, m - x, m); //back
+				else if(face == 3)	direction.set(m - y, m - x, -m); //front
+				else if(face == 4)	direction.set(m, m - x, m - y); //right
+				else if(face == 5)	direction.set(-m, m - x, -m + y); //left
+				direction = direction.normalize();
+
+				float cos_sunAngle = direction.dot(sunDirection);
+				float sunAngle = acos(cos_sunAngle);
+				float cos_upAngle = max(direction.y,0.1);//cos_upAng should really be just direction.y but this prevents the horizon from having artifacts
+
+				cubeMap[i + 0] = (1.0 + constants[0][0] * pow(e, constants[1][0]/cos_upAngle)) * (1.0 + pow(constants[2][0], constants[3][0] * sunAngle) + constants[4][0]*cos_sunAngle*cos_sunAngle) * zenithOverSun[0];
+				cubeMap[i + 1] = (1.0 + constants[0][1] * pow(e, constants[1][1]/cos_upAngle)) * (1.0 + pow(constants[2][1], constants[3][1] * sunAngle) + constants[4][1]*cos_sunAngle*cos_sunAngle) * zenithOverSun[1];
+				cubeMap[i + 2] = (1.0 + constants[0][2] * pow(e, constants[1][2]/cos_upAngle)) * (1.0 + pow(constants[2][2], constants[3][2] * sunAngle) + constants[4][2]*cos_sunAngle*cos_sunAngle) * zenithOverSun[2];
+			
+				i +=3;
+			}
+		}
+	}
+	
+	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
+	{
+		float x = cubeMap[i + 0];
+		float y = cubeMap[i + 2];
+
+
+		cubeMap[i + 1] = cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
+		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
+
+		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
+		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
+	}
+
+	float R, G, B, f;
+	const float invGamma = 1.0/1.8;
+	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
+	{
+		R = cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853;
+		G = cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556;
+		B = cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311;
+
+		f = max(max(R,G),max(G,1.0)); //find the max component or 1.0, whichever is bigger
+		cubeMapTex[i + 0] = pow(clamp(R/f, 0.0, 1.0),invGamma) * 255.0;
+		cubeMapTex[i + 1] = pow(clamp(G/f, 0.0, 1.0),invGamma) * 255.0;
+		cubeMapTex[i + 2] = pow(clamp(B/f, 0.0, 1.0),invGamma) * 255.0;
+
+		float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
+		cubeMapTex[i + 0] = ((brightness) * 1.0 + (1.0-brightness) * 0.2) * 255.0;
+		cubeMapTex[i + 1] = ((brightness) * 1.0 + (1.0-brightness) * 0.2) * 255.0;
+		cubeMapTex[i + 2] = ((brightness) * 1.0 + (1.0-brightness) * 1.0) * 255.0;
+
+
+		//cubeMapTex[i + 0] = ((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853) + minC) / (maxC-minC) * 255.0;
+		//cubeMapTex[i + 1] = ((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556) + minC) / (maxC-minC) * 255.0;
+		//cubeMapTex[i + 2] = ((cubeMap[ i+ 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311) + minC) / (maxC-minC) * 255.0;
+
+		//cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853),0.0,1.0) * 255.0;
+		//cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
+		//cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
+
+		//cubeMapTex[i + 0] = clamp(abs(cubeMap[i + 0] *  1.4628067		+		cubeMap[i + 1] * -0.1840623		+		cubeMap[i + 2] * -0.2743606),0.0,1.0) * 255.0;
+		//cubeMapTex[i + 1] = clamp(abs(cubeMap[i + 0] * -0.5217933		+		cubeMap[i + 1] *  1.4472381		+		cubeMap[i + 2] *  0.0677227),0.0,1.0) * 255.0;
+		//cubeMapTex[i + 2] = clamp(abs(cubeMap[i + 0] *  0.0349342		+		cubeMap[i + 1] * -0.0968930		+		cubeMap[i + 2] *  1.2884099),0.0,1.0) * 255.0;
+
+		//cubeMapTex[i + 0] = cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853;
+		//cubeMapTex[i + 1] = cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556;
+		//cubeMapTex[i + 2] = cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311;
+
+		//cubeMapTex[i + 0] = clamp(cubeMap[i + 0],0.0,1.0) * 255;
+		//cubeMapTex[i + 1] = clamp(cubeMap[i + 1],0.0,1.0) * 255;
+		//cubeMapTex[i + 2] = clamp(1.0-cubeMap[i + 2],0.0,1.0) * 255;
+	}
+
+	glGenTextures(1, &skyTextureId);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
+	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
+
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
+	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	delete[] cubeMap;
+	delete[] cubeMapTex;
+}
+Terrain::~Terrain()
+{
+	if(skyTextureId != 0)
+	{
+		glDeleteTextures(1, &skyTextureId);
+	}
 }
 void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water)
 {
@@ -333,37 +506,44 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	terrainPages.push_back(p);
 	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z));
 
+	generateSky(3.0*PI/8, 0.0, 20); //should actually make the sun be at the position of the light source...
+
 	graphics->checkErrors();
 }
 void Terrain::renderTerrain(Vec3f eye) const
 {
-
+	glEnableClientState(GL_VERTEX_ARRAY);
 	Vec3d center(eye.x,0,eye.z);
 	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
 
 	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
 	dataManager.bind("sky shader");
+
+	dataManager.setUniform1i("tex", 0);
+	dataManager.setUniform1i("clouds", 1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
+	dataManager.bind("clouds",1);
 	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
+	dataManager.bind("clouds",1);
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
+	dataManager.bindTex(0,1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	dataManager.bindTex(0,0);
 	dataManager.unbindShader();
 	glEnable(GL_DEPTH_TEST);
-
-
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthMask(true);
-	//graphics->drawModel("terrain",Vec3f(0,0,0),Quat4f());
-	//return;
 
 	if(waterPlane)
 	{
 		dataManager.bind("horizon2");
-
 		dataManager.setUniform1i("bumpMap",	0);
 		dataManager.setUniform1f("time",	world.time());
 		dataManager.setUniform1f("seaLevel",0);
 		dataManager.setUniform2f("center",	center.x,center.z);
 		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 		dataManager.setUniform1f("scale", radius);
+		
+		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 

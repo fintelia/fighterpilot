@@ -38,6 +38,7 @@ struct LevelFile
 		int				controlType;	//how this object is being controlled
 		Vec3f			startloc;		//the location where the object will spawn
 		Quat4f			startRot;		//what direction the object will face when it spawns
+		Object();
 	}*objects;
 
 	struct Region{
@@ -80,13 +81,15 @@ struct LevelFile
 
 	//bool load(string filename);
 	//bool save(string filename);
-	bool savePNG(string filename);
-	bool loadPNG(string filename);
+	//bool savePNG(string filename);
+	//bool loadPNG(string filename);
 
 	bool saveZIP(string filename);
 	bool loadZIP(string filename);
 
-	void initializeWorld();//creates objects stored in level file
+	bool parseObjectFile(shared_ptr<FileManager::textFile> f);
+
+	void initializeWorld(unsigned int humanPlayers);//creates objects stored in level file
 
 	LevelFile();
 };

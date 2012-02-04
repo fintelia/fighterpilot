@@ -1,7 +1,11 @@
 
 
 #include "engine.h"
+#include "objectInfo.h"
+#include "level.h"
+#include "settings.h"
 
+#include "path.h"
 #include "particleEffects.h"
 
 
@@ -11,7 +15,7 @@
 #include "plane.h"
 #include "aaGun.h"
 
-//extern humanControl players[NumPlayers];
+#include "player.h"
 
 #include "menus.h"
 

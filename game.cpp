@@ -1,9 +1,14 @@
 
 #include "game.h"
 #include <Windows.h>
-//ObjectStats settings;
+PlayerManager& players = PlayerManager::getInstance();
+SettingsManager& settings = SettingsManager::getInstance();
+
+
 Game* game = new Game;
+
 objId bullets;
+planeType defaultPlane;
 
 bool Game::init()
 {
@@ -21,8 +26,20 @@ bool Game::init()
 		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 		return false;
 	}
+	string appData = fileManager.getAppDataDirectory();
+	if(!fileManager.fileExists(appData + "settings.ini"))
+	{
+		shared_ptr<FileManager::iniFile> settingsFile(new FileManager::iniFile(appData + "settings.ini"));
+		settingsFile->bindings["graphics"]["maxFrameRate"] = "60.0";
+		settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(GetSystemMetrics(SM_CXSCREEN));
+		settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(GetSystemMetrics(SM_CYSCREEN));
+		settingsFile->bindings["graphics"]["samples"] = "8";
+		settingsFile->bindings["graphics"]["gamma"] = "1.0";
+		if(!fileManager.writeIniFile(settingsFile))
+			debugBreak();
+	}
 
-	auto s = fileManager.loadIniFile("media/settings.ini");
+	auto s = fileManager.loadIniFile(appData + "settings.ini");
 	settings.load(s->bindings);
 
 

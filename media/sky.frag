@@ -1,14 +1,14 @@
 
-varying vec2 texCoord;
-//varying vec3 normal;
-//varying vec4 color;
-//varying vec3 lightPosition;
-//varying vec4 position;
+varying vec4 texCoord;
+varying vec4 position;
 
-uniform sampler2D tex;
+uniform samplerCube tex;
+uniform sampler2D clouds;
+varying vec4 color;
 
 void main()
 {
-	vec4 Color = vec4(texture2D(tex,texCoord).rgb,1.0);
-	gl_FragColor = Color;
+	//vec4 Color = vec4(texture2D(tex,texCoord).rgb,1.0);
+	vec4 c = texture2D(clouds,texCoord.xy);
+	gl_FragColor = vec4(mix(textureCube(tex,position.xyz).rgb,vec3(1.0,1.0,1.0),c.a*0.7),1.0);
 }

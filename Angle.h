@@ -32,7 +32,14 @@ public:
 	{
 		return ang*180.0/PI;
 	}
-
+	double degrees_plusMinus180()
+	{
+		return ang < PI ? ang*180.0/PI : ang*180.0/PI - 360;
+	}
+	double radians_plusMinusPI()
+	{
+		return ang < PI ? ang : ang - 2.0*PI;
+	}
 	bool inRange(Angle low,Angle high, bool inclusive = true)
 	{
 		if(inclusive)

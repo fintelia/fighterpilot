@@ -15,18 +15,51 @@ struct texturedVertex3D
 	Vec2f UV;
 	float padding[3];
 };
+struct litVertex3D
+{
+	Vec3f position;
+	Vec3f normal;
+	float padding[2];
+};
 struct texturedLitVertex3D
 {
 	Vec3f position;
 	Vec3f normal;
 	Vec2f UV;
 };
+//enum graphicsPrimitives
+//{
+//	POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON
+//};
+//struct vertexBuffer
+//{
+//private:
+//	unsigned int id;
+//	unsigned int numIndices;
+//	
+//	bool texCoords;
+//	bool normals;
+//	bool bound;
+//
+//	vertexBuffer(unsigned int Id, bool TexCoords, bool Normals):id(Id), texCoords(TexCoords), normals(Normals), bound(false){}
+//
+//public:
+//	void bind();
+//	void unbind();
+//	void render(Mat4f transform);
+//	void render(unsigned int offset, unsigned int number, Mat4f transform);
+//};
+//struct texture
+//{
+//
+//};
 class GraphicsManager
 {
 public:
 	typedef unsigned long gID;
 	enum RenderTarget{RT_FBO_0,RT_FBO_1,RT_MULTISAMPLE_FBO,RT_SCREEN};
-
+	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
+	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE};
 private:
 	gID currentId;
 
@@ -81,9 +114,54 @@ protected:
 	bool leftEye;
 	float interOcularDistance;
 
+	Vec3f lightPosition;
+
 	GraphicsManager();
 	virtual ~GraphicsManager(){}
 public:
+	class vertexBuffer
+	{
+	public:
+		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
+	protected:
+		unsigned int numVertices;
+		unsigned int numIndices;
+
+		unsigned int positionDataSize;		
+		unsigned int positionDataOffset;
+
+		unsigned int texCoordDataSize;
+		unsigned int texCoordDataOffset;
+
+		unsigned int normalDataSize;		
+		unsigned int normalDataOffset;
+
+		unsigned int colorDataSize;
+		unsigned int colorDataOffset;
+
+		unsigned int extraDataSize;
+		unsigned int extraDataOffset;
+
+		unsigned int totalVertexSize;
+
+		UsageFrequency usageFrequency;
+		bool indexArray;
+	public:
+		vertexBuffer(UsageFrequency u, bool IndexArray): numVertices(0), numIndices(0), usageFrequency(u), indexArray(IndexArray), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), extraDataSize(0), extraDataOffset(0), totalVertexSize(0){}
+		virtual ~vertexBuffer(){}
+		virtual void addPositionData(unsigned int size, unsigned int offset)	{positionDataSize = size; positionDataOffset = offset;}
+		virtual void addTexCoordData(unsigned int size, unsigned int offset)	{texCoordDataSize = size; texCoordDataOffset = offset;}
+		virtual void addNormalData(unsigned int size, unsigned int offset)		{normalDataSize = size;	normalDataOffset = offset;}
+		virtual void addColorData(unsigned int size, unsigned int offset)		{colorDataSize = size;	colorDataOffset = offset;}
+		virtual void addExtraData(unsigned int size, unsigned int offset)		{extraDataSize = size;	extraDataOffset = offset;}
+
+		virtual void setTotalVertexSize(unsigned int totalSize){totalVertexSize = totalSize;}
+
+		virtual void setVertexData(unsigned int size, void* data)=0;
+		virtual void setIndexData(unsigned int size, void* data)=0;
+		virtual void bindBuffer()=0;
+		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
+	};
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
 	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
@@ -120,13 +198,23 @@ public:
 	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
 	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
+	//virtual void drawVertexArray(vertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
+	//virtual void drawVertexArray(texturedVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
+	//virtual void drawVertexArray(texturedLitVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
+
+	virtual void bindVertexBuffer(unsigned int id, bool texCoords, bool normals)=0;
+	virtual void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count)=0;
+	virtual vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
+	
 	virtual void setColor(float r, float g, float b, float a)=0;
 	virtual void setColorMask(bool mask)=0;
 	virtual void setDepthMask(bool mask)=0;
-
+	virtual void setBlendMode(BlendMode blend)=0;
 	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
-
+	void setLightPosition(Vec3f position){lightPosition = position;}
 	
+
+	Vec3f getLightPosition(){return lightPosition;}
 
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
@@ -186,7 +274,9 @@ protected:
 	bool colorMask;
 	bool depthMask;
 
-
+	bool texCoord_clientState;
+	bool normal_clientState;
+	bool color_clientState;
 
 	OpenGLgraphics();
 	~OpenGLgraphics();
@@ -198,6 +288,19 @@ protected:
 	void renderFBO(RenderTarget src);
 
 public:
+	class vertexBufferGL: public GraphicsManager::vertexBuffer
+	{
+	private:
+		unsigned int vBufferID;
+		unsigned int iBufferID;
+	public:
+		vertexBufferGL(UsageFrequency u, bool IndexArray);
+		~vertexBufferGL();
+		void setVertexData(unsigned int size, void* data);
+		void setIndexData(unsigned int size, void* data);
+		void bindBuffer();
+		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+	};
 
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
 	bool changeResolution(Vec2i resolution, unsigned int maxSamples);
@@ -222,10 +325,17 @@ public:
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
 	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
+	void bindVertexBuffer(unsigned int id, bool texCoords, bool normals);
+	void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count);
+	vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray);
+
 	void setGamma(float gamma);
 	void setColor(float r, float g, float b, float a);
 	void setColorMask(bool mask);
 	void setDepthMask(bool mask);
+	void setBlendMode(BlendMode blend);
+
+	void setClientStates(bool texCoord, bool normal, bool color);
 
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);

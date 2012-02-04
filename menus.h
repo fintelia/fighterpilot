@@ -152,7 +152,7 @@ public:
 	dogFight(std::shared_ptr<LevelFile> lvl);
 	virtual ~dogFight();
 
-	virtual bool init();
+	virtual bool init()=0;
 
 	void healthBar(float x, float y, float width, float height, float health, bool firstPerson);
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
@@ -169,6 +169,7 @@ class splitScreen: public dogFight
 {
 public:
 	splitScreen(std::shared_ptr<LevelFile> lvl);
+	bool init();
 	int update();
 	void render();
 	void render3D(unsigned int view);
@@ -181,6 +182,7 @@ protected:
 	bool levelup;
 public:
 	campaign(std::shared_ptr<LevelFile> lvl);
+	bool init();
 	int update();
 	void render();
 	void render3D(unsigned int view);

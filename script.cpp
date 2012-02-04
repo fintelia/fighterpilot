@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <map>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -10,7 +11,6 @@ using namespace std;
 using namespace boost;
 
 #include "debugBreak.h"
-#include "enums.h"
 #include "script.h"
 
 map<string,scriptVar> loadScript(string filename)

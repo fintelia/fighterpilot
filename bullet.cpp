@@ -4,16 +4,19 @@
 #include "GL/glee.h"
 #include <GL/glu.h>
 
-bullet::bullet(Vec3f pos,Vec3f vel,int Owner, double StartTime): life(1000), startTime(StartTime), startPos(pos), velocity(vel.normalize()*BULLET_SPEED), owner(Owner)
+bullet::bullet(Vec3f pos,Vec3f vel,int Owner, double StartTime): life(1000), startTime(StartTime), startPos(pos), velocity(vel.normalize()*1000), owner(Owner)
 {
 
 }
-bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time()), startPos(pos), velocity(vel.normalize()*BULLET_SPEED), owner(Owner)
+bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time()), startPos(pos), velocity(vel.normalize()*1000), owner(Owner)
 {
 
 }
 
-
+bulletCloud::bulletCloud(): object(Vec3f(), Quat4f(), BULLET_CLOUD), vertices(NULL), totalVertices(0), VBO(nullptr)
+{
+	
+}
 void bulletCloud::init()
 {
 	if(vertices)
@@ -21,8 +24,11 @@ void bulletCloud::init()
 
 	totalVertices = 1024;
 	vertices = new texturedVertex3D[totalVertices];
-
-	glGenBuffers(1, &VBO);
+	
+	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
+	VBO->addPositionData(3, 0);
+	VBO->addTexCoordData(2, 3*sizeof(float));
+	VBO->setTotalVertexSize(sizeof(texturedVertex3D));
 }
 
 void bulletCloud::draw()
@@ -69,21 +75,24 @@ void bulletCloud::draw()
 	
 
 	dataManager.bind("bullet");
+	VBO->bindBuffer();
+	VBO->setVertexData(sizeof(texturedVertex3D)*bullets.size()*4, vertices);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texturedVertex3D)*bullets.size()*4, vertices, GL_STREAM_DRAW);
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(texturedVertex3D)*bullets.size()*4, vertices, GL_STREAM_DRAW);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glVertexPointer(3,	GL_FLOAT,	sizeof(texturedVertex3D), (void*)0);
-	glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedVertex3D), (void*)(3*sizeof(float)));
+	//glVertexPointer(3,	GL_FLOAT,	sizeof(texturedVertex3D), (void*)0);
+	//glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedVertex3D), (void*)(3*sizeof(float)));
 
-	glDrawArrays(GL_QUADS,0, bullets.size()*4);
+	VBO->drawBuffer(GraphicsManager::QUADS, 0, bullets.size()*4);
+	//glDrawArrays(GL_QUADS,0, bullets.size()*4);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	dataManager.unbind("bullet");
 }

@@ -4,7 +4,11 @@
 
 namespace particle
 {
-	planeContrail::planeContrail(int parent, Vec3f offset): emitter(SMOKE, parent, offset, "smoke", 1.0, 1600.0, 401)
+	planeContrail::planeContrail(): emitter(SMOKE, "smoke", 1.0, 1600.0, 401)
+	{
+
+	}
+	void planeContrail::init()
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
 		//spread =	fuzzyAttribute(0.0);

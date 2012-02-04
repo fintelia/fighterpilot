@@ -14,12 +14,14 @@
     <ProjectGuid>{3C7F9616-0B43-4C38-9FDB-6FE40996FC45}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FighterPilot</RootNamespace>
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -39,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_46_1;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files %28x86%29\boost\boost_1_47\;$(IncludePath)</IncludePath>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -120,8 +122,8 @@
     <ClCompile Include="controlManager.cpp" />
     <ClCompile Include="dataManager.cpp" />
     <ClCompile Include="debugBreak.cpp" />
+    <ClCompile Include="definitions.cpp" />
     <ClCompile Include="engine.cpp" />
-    <ClCompile Include="enums.cpp" />
     <ClCompile Include="explosionFlash.cpp" />
     <ClCompile Include="explosionSmoke.cpp" />
     <ClCompile Include="fileManager.cpp" />
@@ -140,6 +142,7 @@
     <ClCompile Include="missile.cpp" />
     <ClCompile Include="dogFight.cpp" />
     <ClCompile Include="object.cpp" />
+    <ClCompile Include="objectInfo.cpp" />
     <ClCompile Include="objectList.cpp" />
     <ClCompile Include="openGLgraphics.cpp" />
     <ClCompile Include="particleExplosion.cpp" />
@@ -167,6 +170,7 @@
     <ClInclude Include="collide.h" />
     <ClInclude Include="dataManager.h" />
     <ClInclude Include="debugBreak.h" />
+    <ClInclude Include="definitions.h" />
     <ClInclude Include="engine.h" />
     <ClInclude Include="fileManager.h" />
     <ClInclude Include="game.h" />
@@ -175,13 +179,13 @@
     <ClInclude Include="matrix.h" />
     <ClInclude Include="menus.h" />
     <ClInclude Include="object.h" />
-    <ClInclude Include="enums.h" />
     <ClInclude Include="gameMath.h" />
     <ClInclude Include="graphicsManager.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="level.h" />
     <ClInclude Include="menuScreen.h" />
     <ClInclude Include="missile.h" />
+    <ClInclude Include="objectInfo.h" />
     <ClInclude Include="objectList.h" />
     <ClInclude Include="particleEffects.h" />
     <ClInclude Include="particleManager.h" />
