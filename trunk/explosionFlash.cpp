@@ -32,7 +32,7 @@ namespace particle
 	//		addParticle(p);
 	//	}
 	//}	
-	explosionFlash::explosionFlash(): emitter(EXPLOSION, "flash", 0.1, 0.0, 1,true)
+	explosionFlash::explosionFlash(): emitter("flash", 1, 0.0, true)
 	{
 
 	}

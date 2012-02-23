@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	smokeTrail::smokeTrail(): emitter(SMOKE, "smoke", 1.0, 20.0, 19)
+	smokeTrail::smokeTrail(): emitter("smoke", 19, 20.0)
 	{
 
 	}

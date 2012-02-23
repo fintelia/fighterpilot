@@ -154,7 +154,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
-void dogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight) //must get 'eye' location instead of plane location to work in 3rd person
+void dogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v) //must get 'eye' location instead of plane location to work in 3rd person
 {
 	if(!p->dead)
 	{
@@ -163,7 +163,7 @@ void dogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float v
 		{
 			if(p->id!=i->second->id && !i->second->dead)
 			{
-				Vec2f s = graphics->project(i->second->position);
+				Vec2f s = v->project(i->second->position);
 				double distSquared = i->second->position.distanceSquared(p->position);
 				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
 				{

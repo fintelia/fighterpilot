@@ -3,7 +3,7 @@
 
 namespace particle
 {
-	contrail::contrail(): emitter(CONTRAIL_LARGE, "contrail", 1.0, 160.0, 48)
+	contrail::contrail(): emitter("contrail", 48, 250.0)
 	{
 
 	}

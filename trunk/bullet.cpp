@@ -33,68 +33,57 @@ void bulletCloud::init()
 
 void bulletCloud::draw()
 {
-	double time = world.time();
-	double lTime = time - 20.0;//world.time.getLastTime();
-	Vec3f start, end, end2;
+	//double time = world.time();
+	//double lTime = time - 20.0;//world.time.getLastTime();
+	//Vec3f start, end, end2;
 
-	auto v = graphics->getView().camera;
+	//auto v = graphics->getView().camera;
 
-	if(totalVertices < bullets.size())
-	{
-		if(vertices)
-			delete vertices;
+	//if(totalVertices < bullets.size())
+	//{
+	//	if(vertices)
+	//		delete vertices;
 
-		totalVertices = totalVertices !=0 ? totalVertices*2 : 1024;
-		vertices = new texturedVertex3D[totalVertices];
-	}
+	//	totalVertices = totalVertices !=0 ? totalVertices*2 : 1024;
+	//	vertices = new texturedVertex3D[totalVertices];
+	//}
 
-	for(int n=0;n < bullets.size(); n++)
-	{
-		auto i = bullets[n];
+	//for(int n=0;n < bullets.size(); n++)
+	//{
+	//	auto i = bullets[n];
 
-		start=i.startPos+i.velocity*(time-i.startTime)/1000;
-		end=i.startPos+i.velocity*(time-i.startTime)/1000-i.velocity.normalize()*2;
-		end2=i.startPos+i.velocity*max(lTime-i.startTime,0.0)/1000;
+	//	start=i.startPos+i.velocity*(time-i.startTime)/1000;
+	//	end=i.startPos+i.velocity*(time-i.startTime)/1000-i.velocity.normalize()*2;
+	//	end2=i.startPos+i.velocity*max(lTime-i.startTime,0.0)/1000;
 
-		Vec3f dir = i.velocity.normalize();
-		float a1 = dir.dot(v.up);
-		float a2 = dir.dot(v.right);
-		float len = 0.3/sqrt(a1*a1+a2*a2);
+	//	Vec3f dir = i.velocity.normalize();
+	//	float a1 = dir.dot(v.up);
+	//	float a2 = dir.dot(v.right);
+	//	float len = 0.3/sqrt(a1*a1+a2*a2);
 
-		vertices[n*4 + 0].position = start + (v.right*a1 - v.up*a2)*len;
-		vertices[n*4 + 1].position = start - (v.right*a1 - v.up*a2)*len;
-		vertices[n*4 + 2].position = end2 - (v.right*a1 - v.up*a2)*len;
-		vertices[n*4 + 3].position = end2 + (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 0].position = start + (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 1].position = start - (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 2].position = end2 - (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 3].position = end2 + (v.right*a1 - v.up*a2)*len;
 
-		vertices[n*4 + 0].UV = Vec2f(1,1);
-		vertices[n*4 + 1].UV = Vec2f(1,0);
-		vertices[n*4 + 2].UV = Vec2f(0,0);
-		vertices[n*4 + 3].UV = Vec2f(0,1);
-	}
+	//	vertices[n*4 + 0].UV = Vec2f(1,1);
+	//	vertices[n*4 + 1].UV = Vec2f(1,0);
+	//	vertices[n*4 + 2].UV = Vec2f(0,0);
+	//	vertices[n*4 + 3].UV = Vec2f(0,1);
+	//}
 
-	
+	//
 
-	dataManager.bind("bullet");
-	VBO->bindBuffer();
-	VBO->setVertexData(sizeof(texturedVertex3D)*bullets.size()*4, vertices);
+	//VBO->bindBuffer();
+	//VBO->setVertexData(sizeof(texturedVertex3D)*bullets.size()*4, vertices);
 
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(texturedVertex3D)*bullets.size()*4, vertices, GL_STREAM_DRAW);
+	////glEnableClientState(GL_VERTEX_ARRAY);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	//dataManager.bind("bullet");
 
-	//glVertexPointer(3,	GL_FLOAT,	sizeof(texturedVertex3D), (void*)0);
-	//glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedVertex3D), (void*)(3*sizeof(float)));
+	//VBO->drawBuffer(GraphicsManager::QUADS, 0, bullets.size()*4); // will not work if other texturing modes are enabled (GL_TEXTURE_CUBE_MAP)
 
-	VBO->drawBuffer(GraphicsManager::QUADS, 0, bullets.size()*4);
-	//glDrawArrays(GL_QUADS,0, bullets.size()*4);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	dataManager.unbind("bullet");
+	//dataManager.unbind("bullet");
 }
 
 void bulletCloud::addBullet(Vec3f pos,Vec3f vel,int Owner, double StartTime)

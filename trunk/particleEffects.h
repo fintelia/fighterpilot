@@ -81,4 +81,34 @@ public:
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
 };
+class bulletEffect: public sparkEmitter
+{
+public:
+	bulletEffect();
+	void init();
+
+	void update();
+	void prepareRender(Vec3f up, Vec3f right);
+};
+
+//class explosionEffect: public particleEffect
+//{
+//protected:
+//	shared_ptr<particleType> particleTypePtr;
+//	
+//	void newParticle(Vec3f pos, double time);
+//public:
+//	void init();
+//};
+//class explosionFireParticle: public pointSprite
+//{
+//protected:
+//	virtual void updateParticle(particle& p);
+//public:
+//	explosionFireParticle()
+//	{
+//		additiveBlending =  true;
+//	}
+//	void render();
+//};
 }

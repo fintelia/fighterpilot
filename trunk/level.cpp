@@ -428,7 +428,7 @@ bool LevelFile::saveZIP(string filename)
 	{
 		objectsFile->contents += "object\n{\n";
 		objectsFile->contents += string("\ttype=") + objectTypeString(objects[i].type) + "\n";
-		objectsFile->contents += string("\tteam=") + lexical_cast<string>(objects[i].team) + "\n";
+		objectsFile->contents += string("\tteam=") + lexical_cast<string>(objects[i].team+1) + "\n";
 		objectsFile->contents += string("\tspawnPos=(") + lexical_cast<string>(objects[i].startloc.x) + "," + lexical_cast<string>(objects[i].startloc.y) + "," + lexical_cast<string>(objects[i].startloc.z) + ")\n";
 		objectsFile->contents += "}\n";
 	}
@@ -585,7 +585,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				else if(readSubString("\tteam="))
 				{
 					string s = readLine();
-					objects[objectNum].team = lexical_cast<int>(s);
+					objects[objectNum].team = lexical_cast<int>(s)-1;
 				}
 				else if(readSubString("\tspawnPos="))
 				{
@@ -627,13 +627,22 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 				players.addAIplayer(id);
 			}
 		}
-		else if(objects[i].type & AA_GUN)// can't be player controlled
+		else if(objects[i].type == AA_GUN)	
 		{
-			world.newObject(new aaGun(objects[i].startloc,objects[i].startRot,objects[i].type));
+			world.newObject(new AAgun(objects[i].startloc,objects[i].startRot,objects[i].type));
+		}
+		else if(objects[i].type == SAM_BATTERY)	
+		{
+			world.newObject(new SAMbattery(objects[i].startloc,objects[i].startRot,objects[i].type));
+		}
+		else if(objects[i].type == FLAK_CANNON)	
+		{
+			world.newObject(new flakCannon(objects[i].startloc,objects[i].startRot,objects[i].type));
 		}
 	}
 
 	bullets = world.newObject(new bulletCloud);
+	particleManager.addEmitter(new particle::bulletEffect, bullets);
 
 	int w = min(info->mapResolution.x, info->mapResolution.y);
 	if(w != 0 && heights != nullptr)
@@ -1076,11 +1085,13 @@ void Level::initializeWorld()
 		}
 		else if(i->type & AA_GUN)// can't be player controlled
 		{
-			world.newObject(new aaGun(i->startloc,i->startRot,i->type));
+			world.newObject(new AAgun(i->startloc,i->startRot,i->type));
 		}
 	}
 
 	bullets = world.newObject(new bulletCloud);
+	particleManager.addEmitter(new particle::bulletEffect, bullets);
+
 
 	int w = min(mGround->resolutionX(), mGround->resolutionZ());
 	float minHeight = mGround->getMinHeight();

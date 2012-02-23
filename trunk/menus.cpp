@@ -14,21 +14,21 @@ bool objectProperties::init(LevelFile::Object* obj)
 	object = obj;
 
 
-	buttons["Ok"]		= new button(sw/2+275, sh/2+185, 100, 40, "Ok",lightGray);
-	buttons["Cancel"]	= new button(sw/2+150, sh/2+185, 100, 40, "Cancel",lightGray);
+	buttons["Ok"]		= new button(0.5*sAspect+0.244, 0.681, 0.098, 0.039, "Ok",lightGray);
+	buttons["Cancel"]	= new button(0.5*sAspect+0.146, 0.681, 0.098, 0.039, "Cancel",lightGray);
 
-	labels["x location"]	= new label(sw/2-210,sh/2-15,"X location:");
-	labels["z location"]	= new label(sw/2-210,sh/2+25,"Y location:");
-	labels["y location"]	= new label(sw/2-210,sh/2+65,"Z location:");
+	labels["x location"]	= new label(0.5*sAspect-0.205,0.5-0.015,"X location:");
+	labels["z location"]	= new label(0.5*sAspect-0.205,0.5+0.024,"Y location:");
+	labels["y location"]	= new label(0.5*sAspect-0.205,0.5+0.063,"Z location:");
 
-	textBoxes["x location"]	= new numericTextBox(sw/2-100,sh/2-15,100,floor(object->startloc.x+0.5),black);
-	textBoxes["y location"]	= new numericTextBox(sw/2-100,sh/2+25,100,floor(object->startloc.y+0.5),black);
-	textBoxes["z location"]	= new numericTextBox(sw/2-100,sh/2+65,100,floor(object->startloc.z+0.5),black);
+	textBoxes["x location"]	= new numericTextBox(0.5*sAspect-0.098,0.5-0.015,0.098,floor(object->startloc.x+0.5),black);
+	textBoxes["y location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.024,0.098,floor(object->startloc.y+0.5),black);
+	textBoxes["z location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.063,0.098,floor(object->startloc.z+0.5),black);
 
-	checkBoxes["control"]	= new checkBox(sw/2+100,sh/2+50,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
-	checkBoxes["respawn"]	= new checkBox(sw/2+100,sh/2+80,"respawn when destroyed\n(comming soon)",false,black);
+	checkBoxes["control"]	= new checkBox(0.5*sAspect+0.098,0.5+0.049,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
+	checkBoxes["respawn"]	= new checkBox(0.5*sAspect+0.098,0.5+0.078,"respawn when destroyed\n(comming soon)",false,black);
 
-	listBox* l = new listBox(sw/2+100,sh/2-15,100,"team " + lexical_cast<string>(object->team+1),black);
+	listBox* l = new listBox(0.5*sAspect + 0.098,0.5-0.015,0.098,"team " + lexical_cast<string>(object->team+1),black);
 	l->addOption("team 1");
 	l->addOption("team 2");
 	l->addOption("team 3");
@@ -42,7 +42,7 @@ bool objectProperties::init(LevelFile::Object* obj)
 	if(object->type == UAV)	ptype = "UAV";
 	if(object->type == B2)	ptype = "B2";
 
-	l = new listBox(sw/2+250,sh/2-15,100,ptype,black);
+	l = new listBox(0.5*sAspect+0.244,0.5-0.015,0.098,ptype,black);
 	l->addOption("F16");
 	l->addOption("F18");
 	l->addOption("F22");
@@ -89,7 +89,7 @@ int objectProperties::update()
 }
 void objectProperties::render()
 {
-	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.5),"white");
+	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
 }
 // ______________________________________________________________________________________________________________________________
 // | 																															|

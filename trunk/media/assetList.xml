@@ -6,6 +6,7 @@
     <texture name="progress front"            file="media/progress front.png"         preload="true" />
 
     <texture name="dialog box"                file="media/dialog box.png" />
+    <texture name="dialog back"               file="media/dialogBack.png" />
     <texture name="white"                     file="media/white.png" tileable="true"/>
   	<texture name="grass"                     file="media/grass2.png" tileable="true" />
     <texture name="rock"                      file="media/rock.png" tileable="true" />
@@ -38,7 +39,7 @@
     <texture name="fire"                      file="media/fire2.png" />
     <texture name="flash"                     file="media/flash.png" />
     <texture name="hex grid"                  file="media/hexGrid.png" tileable="true" />
-    <texture name="bullet"                    file="media/bullet.png" />
+    <texture name="bullet"                    file="media/bullet2.png" />
     <texture name="glow"                      file="media/glow.png" />
     <texture name="cursor"                    file="media/cursor.png" />
     <texture name="layers"                    file="media/layers.png" tileable="true"/>
@@ -92,19 +93,23 @@
   </shaders>
   
   <models>
-    <model name="sky dome"   file="media/dome.obj" />
-    <model name="cylinder"   file="media/cylinder.obj" />
-    <model name="disk"       file="media/disk.obj" />
-    <model name="f16"        file="media/f16.obj" />
-    <model name="f18"        file="media/f18hornet.obj" />
-    <model name="f22"        file="media/f22.obj" />
-    <model name="UAV"        file="media/UAV.obj" />
-    <model name="B2"         file="media/B2.obj" />
-    <model name="AA gun"     file="media/AAgun.obj" />
-    <model name="missile1"   file="media/m1(center).obj" />
-    <model name="missile2"   file="media/m2(center).obj" />
-    <model name="missile3"   file="media/m3(center).obj" />
-    <model name="missile4"   file="media/m4(center).obj" />
+    <model name="sky dome"     file="media/dome.obj" />
+    <model name="cylinder"     file="media/cylinder.obj" />
+    <model name="disk"         file="media/disk.obj" />
+    <model name="f16"          file="media/f16.obj" />
+    <model name="f18"          file="media/f18hornet.obj" />
+    <model name="f22"          file="media/f22.obj" />
+    <model name="UAV"          file="media/UAV.obj" />
+    <model name="B2"           file="media/B2.obj" />
+    <model name="AA gun"       file="media/AAgun.obj" />
+    <model name="SAM battery"  file="media/AAgun.obj" />
+    <model name="flak cannon"  file="media/AAgun.obj" />
+    <model name="missile1"     file="media/m1(center).obj" />
+    <model name="missile2"     file="media/m2(center).obj" />
+    <model name="missile3"     file="media/m3(center).obj" />
+    <model name="missile4"     file="media/m4(center).obj" />
+    <model name="SAM missile"  file="media/m3(center).obj" />
+    <model name="flak missile" file="media/m3(center).obj" />
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>

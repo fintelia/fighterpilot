@@ -117,15 +117,17 @@ int manager::update()
 {
 	if(!popups.empty())
 	{
-		popups.back()->update();
-		if(popups.back()->isDone())
+		auto p = popups.back();
+		p->update();
+		if(p->isDone())
 		{
-			if(popups.back()->callback != NULL)
-				(*popups.back()->callback)(popups.back().get());
-			popups.erase(popups.end()-1);
+			popups.erase(popups.end()-1); //remove the popup from the vector
+
+			if(p->callback != nullptr)//see if we need to issue a callback (using the pointer we have)
+				(*p->callback)(p.get());
 		}
 	}
-	else if(menu != NULL)
+	else if(menu != nullptr)
 	{
 		menu->update();
 	}
@@ -464,7 +466,7 @@ void openFile::render()
 	//for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
 	//for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
 	//glPopMatrix();
-	//menuManager.drawCursor();
+	menuManager.drawCursor();
 	//glColor3f(1,1,1);
 }
 void openFile::fileSelected()
@@ -831,12 +833,12 @@ bool button::mouseUpL(float X, float Y)
 }
 void checkBox::render()
 {
-	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check box");
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,0.025,0.025),"check box");
 	if(checked)
-		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,26,26),"check");
+		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,0.025,0.025),"check");
 
 	graphics->setColor(color.r,color.g,color.b,color.a);
-	graphics->drawText(text,Vec2f(shape.x+30,shape.y));
+	graphics->drawText(text,Vec2f(shape.x+0.029,shape.y));
 	graphics->setColor(1,1,1);
 }
 bool checkBox::mouseDownL(float X, float Y)
@@ -891,7 +893,7 @@ void textBox::render()
 {
 	if(focus)	graphics->setColor(0,0,0);
 	else	graphics->setColor(0.3,0.3,0.3);
-	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,shape.h+2),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x-1.0/1280,shape.y-1.0/1024,shape.w+2.0/1024,shape.h+2.0/1024),"white");
 
 	if(focus)	graphics->setColor(0.6,0.6,0.6);
 	else	graphics->setColor(0.8,0.8,0.8);
@@ -902,15 +904,15 @@ void textBox::render()
 	{
 		Vec2f tSize = graphics->getTextSize(text.substr(0,cursorPos));
 
-		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
+		graphics->drawText(text,Vec2f(shape.x+2.0/1280,shape.y));
 		if(int(floor(world.time()/500)) % 2 == 1)
 		{
-			graphics->drawLine(Vec3f(shape.x+tSize.x,shape.y+2,0),Vec3f(shape.x+tSize.x,shape.y+tSize.y,0));
+			graphics->drawLine(Vec3f(shape.x+tSize.x,shape.y+2.0/1024,0),Vec3f(shape.x+tSize.x,shape.y+tSize.y,0));
 		}
 	}
 	else
 	{
-		graphics->drawText(text,Vec2f(shape.x+2,shape.y));
+		graphics->drawText(text,Vec2f(shape.x+2.0/1280,shape.y));
 	}
 
 	graphics->setColor(1,1,1);
@@ -1031,16 +1033,16 @@ void listBox::addOption(string option)
 void listBox::gainFocus()
 {
 	focus = true;
-	shape.h = 30*(1 + options.size());
+	shape.h = 30.0/1024*(1 + options.size());
 }
 void listBox::looseFocus()
 {
-	shape.h = 30;
+	shape.h = 30.0/1024;
 	focus = false;
 }
 bool listBox::mouseDownL(float X, float Y)
 {
-	choosing = shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30;
+	choosing = shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30.0/1024;
 	return true;
 }
 bool listBox::mouseUpL(float X, float Y)
@@ -1048,9 +1050,9 @@ bool listBox::mouseUpL(float X, float Y)
 	if(choosing)
 	{
 		choosing = false;
-		if(shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30)
+		if(shape.inRect(Vec2f(X,Y)) && Y >= shape.y + 30.0/1024)
 		{
-			int n = (Y-(shape.y+30)) / 30;
+			int n = (Y-(shape.y+30.0/1024)) / (30.0/1024);
 			text = options[n];
 			optionNum = n;
 			return true;
@@ -1065,47 +1067,48 @@ bool listBox::mouseUpL(float X, float Y)
 void listBox::render()
 {
 	graphics->setColor(0.3,0.3,0.3);
-	graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y-1,shape.w+2,30+2),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x-1.0/1280,shape.y-1.0/1024,shape.w+2.0/1280,0.0313),"white");
 
 	if(focus)
 	{
 		graphics->setColor(0,0,0);
-		graphics->drawOverlay(Rect::XYWH(shape.x-1,shape.y+30+2,shape.w+2,shape.h-30+2),"white");
+		graphics->drawOverlay(Rect::XYWH(shape.x-1.0/1280,shape.y+0.0313,shape.w+2.0/1280,shape.h-0.0313),"white");
 	}
 
 	if(focus)	graphics->setColor(0.8,0.8,0.8);
 	else	graphics->setColor(0.9,0.9,0.9);
-	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,shape.w,30),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y,shape.w,0.0293),"white");
 
 	if(focus)
-	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30+3,shape.w,30*options.size()),"white");
+	graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+0.032,shape.w,0.0293*options.size()),"white");
 
 
 	if(focus)	graphics->setColor(0.3,0.3,0.3);
 	else	graphics->setColor(0.5,0.5,0.5);
-	graphics->drawOverlay(Rect::XYXY(shape.x+shape.w-30,shape.y,shape.x+shape.w,shape.y+30),"white");
+	graphics->drawOverlay(Rect::XYXY(shape.x+shape.w-0.0293,shape.y,shape.x+shape.w,shape.y+0.0293),"white");
 
 	graphics->setColor(0,0,0);
-	graphics->drawTriangle(	Vec3f(shape.x+shape.w-30.0 * 0.666,	shape.y + 30.0 * 0.333,	0),
-							Vec3f(shape.x+shape.w-30.0 * 0.333,	shape.y + 30.0 * 0.333,	0),
-							Vec3f(shape.x+shape.w-30.0 * 0.5,	shape.y + 30.0 * 0.666,	0));
+	graphics->drawTriangle(	Vec3f(shape.x+shape.w-0.0293 * 0.666,	shape.y + 0.0293 * 0.333,	0),
+							Vec3f(shape.x+shape.w-0.0293 * 0.333,	shape.y + 0.0293 * 0.333,	0),
+							Vec3f(shape.x+shape.w-0.0293 * 0.5,		shape.y + 0.0293 * 0.666,	0));
+
 	graphics->setColor(color.r,color.g,color.b);
 
-	graphics->drawText(text,Vec2f(shape.x+2,shape.y));
+	graphics->drawText(text,Vec2f(shape.x+2.0/1280,shape.y));
 	if(focus)
 	{
-		float h = shape.y + 30 + 1;
+		float h = shape.y + 0.0293 + 1.0/1024;
 		for(auto i = options.begin(); i!= options.end(); i++)
 		{
-			graphics->drawText(*i,Vec2f(shape.x+2,h));
-			h += 30;
+			graphics->drawText(*i,Vec2f(shape.x+2.0/1280,h));
+			h += 0.0293;
 		}
 	}
 
 	if(focus && optionNum != -1)
 	{
 		graphics->setColor(0.3,0.3,0.3,0.3);
-		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+30*(optionNum+1)+3,shape.w,30+1),"white");
+		graphics->drawOverlay(Rect::XYWH(shape.x,shape.y+0.0293*(optionNum+1)+0.0029,shape.w,0.030),"white");
 	}
 
 	graphics->setColor(1,1,1);

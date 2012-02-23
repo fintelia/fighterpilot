@@ -200,7 +200,7 @@ namespace particle{
 //
 //}
 
-emitter::emitter(Type t, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending):type(t),parentObject(0),parentOffset(0,0,0),texture(tex),friction(Friction),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
 {
 	if(compacity != 0)
 	{
@@ -406,6 +406,85 @@ void emitter::render()
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 }
+
+
+
+
+	//double time = world.time();
+	//double lTime = time - 20.0;//world.time.getLastTime();
+	//Vec3f start, end, end2;
+
+	//for(int n=0;n < bullets.size(); n++)
+	//{
+	//	auto i = bullets[n];
+
+	//	start=i.startPos+i.velocity*(time-i.startTime)/1000;
+	//	end=i.startPos+i.velocity*(time-i.startTime)/1000-i.velocity.normalize()*2;
+	//	end2=i.startPos+i.velocity*max(lTime-i.startTime,0.0)/1000;
+
+	//	Vec3f dir = i.velocity.normalize();
+	//	float a1 = dir.dot(v.up);
+	//	float a2 = dir.dot(v.right);
+	//	float len = 0.3/sqrt(a1*a1+a2*a2);
+
+	//	vertices[n*4 + 0].position = start + (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 1].position = start - (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 2].position = end2 - (v.right*a1 - v.up*a2)*len;
+	//	vertices[n*4 + 3].position = end2 + (v.right*a1 - v.up*a2)*len;
+
+	//}
+
+
+
+void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
+{
+	int pNum,n;
+	Vec3f start, end, dir;
+	float a1, a2, len;
+
+	for(pNum = 0, vNum=0; pNum < total; pNum++)
+	{
+		if(particles[pNum].endTime > world.time())
+		{
+			for(n = 0; n<4; n++)
+			{
+				vertices[vNum*4 + n].r = particles[pNum].r;
+				vertices[vNum*4 + n].g = particles[pNum].g;
+				vertices[vNum*4 + n].b = particles[pNum].b;
+				vertices[vNum*4 + n].a = particles[pNum].a;
+
+				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
+			}
+
+			start = particles[pNum].pos;
+			end = particles[pNum].pos - particles[pNum].dir*particles[pNum].size;
+
+			dir = end - start;
+			a1 = dir.dot(up);
+			a2 = dir.dot(right);
+			len = 0.3/sqrt(a1*a1+a2*a2);
+
+			vertices[vNum*4 + 0].position = start + (right*a1 - up*a2)*len;
+			vertices[vNum*4 + 1].position = start - (right*a1 - up*a2)*len;
+			vertices[vNum*4 + 2].position = end - (right*a1 - up*a2)*len;
+			vertices[vNum*4 + 3].position = end + (right*a1 - up*a2)*len;
+
+
+			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
+
+			vNum++;
+		}
+	}
+
+	
+
+	VBO->bindBuffer();
+	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+
+}
 //void emitter::render(Vec3f up, Vec3f right)
 //{
 //		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
@@ -419,7 +498,157 @@ void emitter::render()
 //		glDrawArrays(GL_QUADS, 0, vNum*4);
 //	}
 //}
-
+//particleType::particleType(unsigned int initialCompacity): particles(nullptr), vertices(nullptr), compacity(initialCompacity), total(0), vNum(0), VBO(nullptr), additiveBlending(false)
+//{
+//	particles = new particle[initialCompacity];
+//	vertices = new vertex[initialCompacity*4];
+//
+//	memset(particles,0,initialCompacity*sizeof(particle));
+//	memset(vertices,0,initialCompacity*sizeof(vertex)*4);
+//
+//	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
+//
+//	VBO->addPositionData(	3,	0*sizeof(float));
+//	VBO->addTexCoordData(	2,	3*sizeof(float));
+//	VBO->addColorData(		4,	5*sizeof(float));
+//
+//	VBO->setTotalVertexSize(sizeof(vertex));
+//}
+//particleType::~particleType()
+//{
+//	delete VBO;
+//	delete[] particles;
+//	delete[] vertices;
+//}
+//void particleType::update()
+//{
+//	double time = world.time();
+//	for(int i=0; i < total; i++)
+//	{
+//		if(particles[i].endTime > time)
+//		{
+//			updateParticle(particles[i]);
+//		}
+//	}
+//}
+//particle& particleType::newParticle()
+//{
+//	for(int i = 0; i < total; i++)
+//	{
+//		if(particles[i].endTime <= world.time())
+//		{
+//			return particles[i];
+//		}
+//	}
+//
+//	if(total == compacity)
+//	{
+//		unsigned int tmpCompacity = (compacity != 0) ? compacity * 2 : 64;
+//		particle* tmpParticles = new particle[tmpCompacity];
+//		vertex *tmpVertices = new vertex[tmpCompacity*4];
+//
+//		memset(tmpParticles,0,tmpCompacity*sizeof(particle));
+//		memset(tmpVertices,0,tmpCompacity*sizeof(vertex)*4);
+//
+//		memcpy(tmpParticles,particles,compacity*sizeof(particle));
+//		memcpy(tmpVertices,vertices,compacity*sizeof(vertex)*4);
+//		delete [] particles; particles = NULL;
+//		delete[] vertices; vertices = NULL;
+//		particles = tmpParticles;
+//		vertices = tmpVertices;
+//		compacity = tmpCompacity;
+//	}
+//	return particles[total++];
+//}
+//void pointSprite::prepareRender(Vec3f up, Vec3f right)
+//{
+//	int pNum,n;
+//	float sAng, cAng;
+//	Vec3f r, u;
+//	for(pNum = 0, vNum=0; pNum < total; pNum++)
+//	{
+//		if(particles[pNum].endTime > world.time())
+//		{
+//			for(n = 0; n<4; n++)
+//			{
+//				vertices[vNum*4 + n].r = particles[pNum].r;
+//				vertices[vNum*4 + n].g = particles[pNum].g;
+//				vertices[vNum*4 + n].b = particles[pNum].b;
+//				vertices[vNum*4 + n].a = particles[pNum].a;
+//
+//				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
+//			}
+//			sAng = sin(particles[pNum].ang);
+//			cAng = cos(particles[pNum].ang);
+//			u = -right * sAng + up * cAng;
+//			r = right * cAng + up * sAng;
+//
+//
+//			vertices[vNum*4 + 0].position = particles[pNum].pos + u * particles[pNum].size + r * particles[pNum].size;
+//			vertices[vNum*4 + 1].position = particles[pNum].pos + u * particles[pNum].size - r * particles[pNum].size;
+//			vertices[vNum*4 + 2].position = particles[pNum].pos - u * particles[pNum].size - r * particles[pNum].size;
+//			vertices[vNum*4 + 3].position = particles[pNum].pos - u * particles[pNum].size + r * particles[pNum].size;
+//
+//			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+//			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+//			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+//			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
+//
+//			vNum++;
+//		}
+//	}
+//
+//	
+//
+//	VBO->bindBuffer();
+//	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+//}
+//void pointSprite::render()
+//{
+//	if(vNum != 0)
+//	{
+//		VBO->bindBuffer();
+//		VBO->drawBuffer(GraphicsManager::QUADS, 0, vNum*4);
+//	}
+//}
+//particleEffect::particleEffect(): position(), lastPosition(), parentObject(0), parentOffset(), radius(0), startTime(world.time()), particlesPerSecond(0), extraTime(0)
+//{
+//
+//}
+//bool particleEffect::update()
+//{
+//	double ms = world.time.length();
+//	double time = world.time();
+//
+//	lastPosition = position;
+//
+//	if(parentObject != 0)
+//	{
+//		if(world[parentObject] == nullptr || world[parentObject]->awaitingDelete)
+//		{
+//			parentObject = 0;
+//			particlesPerSecond = 0;
+//		}
+//		else
+//		{
+//			position = world[parentObject]->position + world[parentObject]->rotation * parentOffset;
+//		}
+//	}
+//
+//
+//	particle p;
+//	extraTime += ms;
+//	while(particlesPerSecond > 0.0 && extraTime > (1000.0 / particlesPerSecond))
+//	{
+//		extraTime -= 1000.0 / particlesPerSecond;
+//
+//		particle p;
+//		float t = (ms-extraTime)/ms;
+//		newParticle(position*(1.0-t) + lastPosition*t, time - extraTime);
+//	}
+//
+//	return particlesPerSecond > 0.0;
+//}
 
 void manager::init()
 {
@@ -427,29 +656,65 @@ void manager::init()
 }
 void manager::addEmitter(emitter* e, Vec3f position, float radius)
 {
-	emitters.push_back(e);
+	emitters.push_back(shared_ptr<emitter>(e));
 	e->setPositionAndRadius(position, radius);
 	e->init();
 }
 void manager::addEmitter(emitter* e, int parent, Vec3f offset)
 {
-	emitters.push_back(e);
-	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, dataManager.getModel(world[parent]->type)->boundingSphere.radius);
+	emitters.push_back(shared_ptr<emitter>(e));
+	auto model = dataManager.getModel(world[parent]->type);
+	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, model!=nullptr ? model->boundingSphere.radius : 0.0);
 	e->setParent(parent, offset);
 	e->init();
 }
+//void manager::addParticleEffect(particleEffect* p, Vec3f position, float radius)
+//{
+//	particleEffects.push_back(shared_ptr<particleEffect>(p));
+//	p->setPositionAndRadius(position, radius);
+//	p->init();
+//}
+//void manager::addParticleEffect(particleEffect* p, int parent, Vec3f offset)
+//{
+//	particleEffects.push_back(shared_ptr<particleEffect>(p));
+//	p->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, dataManager.getModel(world[parent]->type)->boundingSphere.radius);
+//	p->setParent(parent, offset);
+//	p->init();
+//}
+//void manager::addParticleType(string type, shared_ptr<particleType> particleTypePtr)
+//{
+//	if(particleTypes.find(type)==particleTypes.end())
+//		particleTypes[type] = particleTypePtr;
+//}
+//shared_ptr<particleType> manager::getParticleType(string type)
+//{
+//	auto i = particleTypes.find(type);
+//	if(i==particleTypes.end())
+//		return shared_ptr<particleType>();
+//	return i->second;
+//}
 void manager::update()
 {
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
 		(*i)->update();
 	}
+
+	//for(auto i = particleEffects.begin(); i!=particleEffects.end(); i++)
+	//{
+	//	(*i)->update();
+	//}
+
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//{
+	//	(*i).second->update();
+	//}
 }
-void manager::render()
+void manager::render(shared_ptr<GraphicsManager::View> view)
 {
 	Vec3f up, right;
 
-	Mat4f modelview = graphics->getView().modelViewMat;
+	const Mat4f& modelview = view->modelViewMatrix();
 	right.x = modelview[0];
 	right.y = modelview[4];
 	right.z = modelview[8];
@@ -469,22 +734,35 @@ void manager::render()
 	{
 		(*i)->prepareRender(up,right);
 	}
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//{
+	//	(*i).second->prepareRender(up,right);
+	//}
 	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);//glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if((*i)->additiveBlending)	(*i)->render();
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//	if((*i).second->additiveBlending)	(*i).second->render();
+
 	graphics->setBlendMode(GraphicsManager::ADDITIVE);//glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if((*i)->additiveBlending)	(*i)->render();
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//	if((*i).second->additiveBlending)	(*i).second->render();
+
 	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 		if(!(*i)->additiveBlending)	(*i)->render();
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//	if(!(*i).second->additiveBlending)	(*i).second->render();
 
 	dataManager.unbindShader();
 }
 void manager::shutdown()
 {
-	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-		delete (*i);
 	emitters.clear();
+
+	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
+	//	i->second->reset();
 }
 }

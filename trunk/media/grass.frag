@@ -64,9 +64,9 @@ void main()
 	//if(position.y > 0.0)
 	//{
 	//	float z = gl_FragCoord.z / gl_FragCoord.w;
-	//	float d=0.00001;
+	//	float d=0.0001;
 	//	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695 ), 0.0, 1.0);
-	//	color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
+	//	color.a=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
 	//}
 	//////////////////
 	

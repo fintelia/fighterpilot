@@ -16,3 +16,6 @@ grass_normals.png
 	grass.png -> SSbump Generator
 	Height Scale = 15.0
 	
+dialogBack.png
+	difference clouds (XY size: 3, level: 5, tileable: true)
+	transparency 85% to blend with white background

@@ -43,7 +43,7 @@ void main()
 
 	//color.a = clamp(1.0/fwidth(r) * (0.99-r), 0.0, 1.0);	//0.99 might be too large since the water plane is a regular polygon, not a true circle.
 
-	color = mix(vec4(0.5,0.5,0.5,0.0), color, clamp((2.0 - 5.0*r)*(2.0 - 3.0*r)*(2.0 - 3.0*r), 0.0, 1.0)); 
+	color = mix(vec4(0.5,0.5,0.5,0.0), color, clamp((1.7 - 1.7*r)*(1.7 - 1.7*r)*(1.7 - 1.7*r), 0.0, 1.0)); 
 
 	gl_FragColor = color;
 }

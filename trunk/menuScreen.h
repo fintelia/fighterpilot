@@ -104,7 +104,7 @@ protected:
 class checkBox:public element
 {
 public:
-	checkBox(int X, int Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,graphics->getTextSize(t).x + 30,graphics->getTextSize(t).y,t,c),checked(startChecked),clicking(false){}
+	checkBox(float X, float Y, string t, bool startChecked=false, Color c = Color(0,1,0)): element(CHECKBOX,X,Y,graphics->getTextSize(t).x + 0.29,graphics->getTextSize(t).y,t,c),checked(startChecked),clicking(false){}
 	virtual ~checkBox(){}
 
 	void render();
@@ -124,7 +124,7 @@ protected:
 class textBox: public element
 {
 public:
-	textBox(int X, int Y, int Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,30,str,textColor),clicking(false),cursorPos(0){}
+	textBox(float X, float Y, float Width, string str, Color textColor): element(TEXTBOX,X,Y,Width,0.029,str,textColor),clicking(false),cursorPos(0){}
 
 	bool mouseDownL(float X, float Y);
 	bool mouseUpL(float X, float Y);
@@ -141,7 +141,7 @@ protected:
 class numericTextBox: public textBox
 {
 public:
-	numericTextBox(int X, int Y, int Width, float val, Color textColor): textBox(X, Y, Width, lexical_cast<string>(val), textColor), useMinMaxStep(false),mAllowDecimal(false){}
+	numericTextBox(float X, float Y, float Width, float val, Color textColor): textBox(X, Y, Width, lexical_cast<string>(val), textColor), useMinMaxStep(false),mAllowDecimal(false){}
 	void allowDecimal(bool b){mAllowDecimal = b;}
 	void setMinMaxStep(float Min,float Max,float Step){useMinMaxStep=true;minVal=Min;maxVal=Max;stepVal=Step;}
 protected:
@@ -159,7 +159,7 @@ protected:
 class listBox: public element
 {
 public:
-	listBox(int X, int Y, int Width, string str, Color textColor): element(LISTBOX,X,Y,Width,30,str,textColor),clicking(false),choosing(false),optionNum(-1){}
+	listBox(float X, float Y, float Width, string str, Color textColor): element(LISTBOX,X,Y,Width,0.029,str,textColor),clicking(false),choosing(false),optionNum(-1){}
 
 	void addOption(string option);
 

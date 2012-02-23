@@ -60,20 +60,18 @@ public:
 	enum RenderTarget{RT_FBO_0,RT_FBO_1,RT_MULTISAMPLE_FBO,RT_SCREEN};
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
 	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE};
-private:
-	gID currentId;
 
-protected:
-	gID idGen(){return ++currentId;}
-
-	struct View
+	class View
 	{
+	private:
+		friend class GraphicsManager;
+
 		struct Viewport{
 			float x;
 			float y;
 			float width;
 			float height;
-		}viewport;
+		}mViewport;
 
 		struct Projection{
 			enum Type{PERSPECTIVE,ORTHOGRAPHIC}type;
@@ -90,7 +88,7 @@ protected:
 			float right;
 			float top;
 			float bottom;
-		}projection;
+		}mProjection;
 
 		struct Camera{
 			Vec3f eye;
@@ -98,27 +96,44 @@ protected:
 			Vec3f up;		//normalized
 			Vec3f fwd;		//normalized
 			Vec3f right;	//normalized
-		}camera;
+		}mCamera;
 
-		Mat4f projectionMat;
-		Mat4f modelViewMat;
+		Mat4f mProjectionMat;
+		Mat4f mModelViewMat;
 
-		Plane<float> clipPlanes[6];
+		Plane<float> mClipPlanes[6];
+
+		bool mRenderParticles;
+
+		int mRenderFuncParam;
+		function<void(int)> mRenderFunc;
+
+	public:
+		View();
+		Vec2f project(Vec3f p);
+		Vec3f unProject(Vec3f p);
+		void viewport(float x,float y,float width,float height);
+		void perspective(float fovy, float aspect, float near, float far);
+		void ortho(float left, float right, float bottom, float top, float near, float far);
+		void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
+		void lookAt(Vec3f eye, Vec3f center, Vec3f up);
+
+		const Viewport& viewport(){return mViewport;}
+		const Projection& projection(){return mProjection;}
+		const Camera& camera(){return mCamera;}
+
+		const Mat4f& projectionMatrix(){return mProjectionMat;}
+		const Mat4f& modelViewMatrix(){return mModelViewMat;}
+
+		void setRenderFunc(function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
+
+		bool sphereInFrustum(Sphere<float> s);
+
+		void render(){if(mRenderFunc)mRenderFunc(mRenderFuncParam);}
+
+		bool renderParticles(){return mRenderParticles;}
+		void renderParticles(bool b){mRenderParticles=b;}
 	};
-	vector<View> views;
-	unsigned int currentView;
-
-	float currentGamma;
-
-	bool stereo;
-	bool leftEye;
-	float interOcularDistance;
-
-	Vec3f lightPosition;
-
-	GraphicsManager();
-	virtual ~GraphicsManager(){}
-public:
 	class vertexBuffer
 	{
 	public:
@@ -162,6 +177,30 @@ public:
 		virtual void bindBuffer()=0;
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 	};
+
+private:
+	gID currentId;
+
+protected:
+	gID idGen(){return ++currentId;}
+
+	vector<weak_ptr<View>> views_new;
+	shared_ptr<View> currentView;
+
+	//vector<View> views;
+	//unsigned int currentView;
+
+	float currentGamma;
+
+	bool stereo;
+	bool leftEye;
+	float interOcularDistance;
+
+	Vec3f lightPosition;
+
+	GraphicsManager();
+	virtual ~GraphicsManager(){}
+public:
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
 	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
 	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
@@ -206,6 +245,8 @@ public:
 	virtual void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count)=0;
 	virtual vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
 	
+	virtual shared_ptr<View> genView();
+
 	virtual void setColor(float r, float g, float b, float a)=0;
 	virtual void setColorMask(bool mask)=0;
 	virtual void setDepthMask(bool mask)=0;
@@ -219,20 +260,20 @@ public:
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
 
-	virtual Vec2f project(Vec3f p, unsigned int view=0);
-	virtual Vec3f unProject(Vec3f p, unsigned int view=0);
+	//virtual Vec2f project(Vec3f p, unsigned int view=0);
+	//virtual Vec3f unProject(Vec3f p, unsigned int view=0);
 
-	const View& getView(unsigned int view){return views[view < views.size() ? view : 0];}
-	const View& getView(){return views[currentView];}
+	//const View& getView(unsigned int view){return views[view < views.size() ? view : 0];}
+	//const View& getView(){return views[currentView];}
 
-	void resetViews(unsigned int numViews=1);
-	void viewport(float x,float y,float width,float height, unsigned int view=0);
-	void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
-	void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
-	void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
-	void lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view=0);
+	//void resetViews(unsigned int numViews=1);
+	//void viewport(float x,float y,float width,float height, unsigned int view=0);
+	//void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
+	//void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
+	//void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
+	//void lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view=0);
 
-	bool sphereInFrustum(Sphere<float> s);
+	//bool sphereInFrustum(Sphere<float> s);
 
 	virtual void flashTaskBar(int times, int length=0)=0;
 	virtual void minimizeWindow()=0;

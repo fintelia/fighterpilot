@@ -63,8 +63,6 @@ private:
 	map<int, asset*>	unnamedAssets;
 	int					currentAssetIndex;
 
-	int					activeTextureUnit;
-
 	map<int,string>		boundTextures;
 	map<int,int>		boundTextureIds;
 
@@ -129,7 +127,7 @@ private:
 	int getId(string name);
 	int getId(objectType t);
 
-	DataManager():activeTextureUnit(0),boundShaderId(0),currentAssetIndex(0){}
+	DataManager():boundShaderId(0),currentAssetIndex(0){}
 	~DataManager();
 };
 

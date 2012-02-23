@@ -887,13 +887,9 @@ void DataManager::bind(string name, int textureUnit)
 			return;
 		}
 
-		if(activeTextureUnit != textureUnit)
-		{
-			glActiveTexture(GL_TEXTURE0+textureUnit);
-			activeTextureUnit = textureUnit;
-		}
-
+		glActiveTexture(GL_TEXTURE0+textureUnit);
 		glBindTexture(GL_TEXTURE_2D,((textureAsset*)assets[name])->id);
+
 		boundTextureIds[textureUnit] = ((textureAsset*)assets[name])->id;
 		boundTextures[textureUnit] = name;
 	}
@@ -917,12 +913,7 @@ void DataManager::bindTex(int id, int textureUnit)
 	if(boundTextureIds[textureUnit] == id)
 		return;
 
-	if(activeTextureUnit != textureUnit)
-	{
-		glActiveTexture(GL_TEXTURE0+textureUnit);
-		activeTextureUnit = textureUnit;
-	}
-
+	glActiveTexture(GL_TEXTURE0+textureUnit);
 	glBindTexture(GL_TEXTURE_2D,id);
 
 	boundTextureIds[textureUnit] = id;
@@ -954,12 +945,10 @@ void DataManager::unbind(string name)
 		{
 			if(i->second == name)
 			{
-				if(activeTextureUnit != i->first)
-				{
-					glActiveTexture(GL_TEXTURE0+i->first);
-					activeTextureUnit = i->first;
-				}
+
+				glActiveTexture(GL_TEXTURE0+i->first);
 				glBindTexture(GL_TEXTURE_2D,0);
+
 				boundTextureIds[i->first] = 0;
 				boundTextures[i->first] = "noTexture";
 				return;
@@ -969,23 +958,13 @@ void DataManager::unbind(string name)
 }
 void DataManager::unbindTextures()
 {
-	if(boundTextureIds[activeTextureUnit] != 0)
-	{
-		glBindTexture(GL_TEXTURE_2D,0);
-		boundTextureIds[activeTextureUnit] = 0;
-		boundTextures[activeTextureUnit] = "noTexture";
-	}
-
 	for(unsigned int i = 0; i < boundTextureIds.size(); i++)
 	{
 		if(boundTextureIds[i] != 0)
 		{
-			if(activeTextureUnit != i)
-			{
-				glActiveTexture(GL_TEXTURE0+i);
-				activeTextureUnit = i;
-			}
+			glActiveTexture(GL_TEXTURE0+i);
 			glBindTexture(GL_TEXTURE_2D,0);
+
 			boundTextures[i] = "noTexture";
 			boundTextureIds[i] = 0;
 		}

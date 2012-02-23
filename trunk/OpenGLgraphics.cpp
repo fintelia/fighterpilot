@@ -266,7 +266,11 @@ void OpenGLgraphics::setGamma(float gamma)
 }
 void OpenGLgraphics::setColor(float r, float g, float b, float a)
 {
-	glColor4f(r,g,b,a);
+	string boundShader = dataManager.getBoundShader();
+	if(boundShader == "ortho")
+		dataManager.setUniform4f("color", r, g, b, a);
+	else
+		glColor4f(r,g,b,a);
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
@@ -632,14 +636,34 @@ void OpenGLgraphics::render()
 	}
 	else*/
 	{
-		for(currentView=0; currentView<views.size(); currentView++)
+		for(auto i = views_new.begin(); i != views_new.end();)
 		{
-			glViewport(views[currentView].viewport.x * sh, views[currentView].viewport.y * sh, views[currentView].viewport.width * sh, views[currentView].viewport.height * sh);
-			glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMat.ptr());
-			glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMat.ptr());
+			if(i->expired()) //if the view no longer exists
+			{
+				i = views_new.erase(i);
+			}
+			else
+			{
+				currentView = shared_ptr<View>(*i);
+				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+				glMatrixMode(GL_PROJECTION);	glLoadMatrixf(currentView->projectionMatrix().ptr());
+				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());				
 
-			menuManager.render3D(currentView);
+				currentView->render();
+
+				i++;
+			}
 		}
+		currentView.reset();
+
+		//for(currentView=0; currentView<views.size(); currentView++)
+		//{
+		//	glViewport(views[currentView].viewport().x * sh, views[currentView].viewport().y * sh, views[currentView].viewport().width * sh, views[currentView].viewport().height * sh);
+		//	glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMatrix().ptr());
+		//	glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMatrix().ptr());
+		//
+		//	menuManager.render3D(currentView);
+		//}
 	}
 ///////////////////////////////////START PARTICLES///////////////////////
 
@@ -659,15 +683,28 @@ void OpenGLgraphics::render()
 	}
 	glDisable(GL_DEPTH_TEST);
 	dataManager.bindTex(FBOs[0].depth,1);
-
-	for(currentView=0; currentView<views.size(); currentView++)
+	
+	for(auto i = views_new.begin(); i != views_new.end();)
 	{
-		glViewport(views[currentView].viewport.x * sh, views[currentView].viewport.y * sh, views[currentView].viewport.width * sh, views[currentView].viewport.height * sh);
-		glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMat.ptr());
-		glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMat.ptr());
+		if(i->expired()) //check if the view no longer exists (just to be safe)
+		{
+			i = views_new.erase(i);
+		}
+		else
+		{
+			currentView = shared_ptr<View>(*i);
+			if(currentView->renderParticles())
+			{
+				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+				glMatrixMode(GL_PROJECTION);	glLoadMatrixf(currentView->projectionMatrix().ptr());
+				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());				
 
-		particleManager.render();
+				particleManager.render(currentView);
+			}
+			i++;
+		}
 	}
+	currentView.reset();
 
 	dataManager.unbindTextures();
 
@@ -981,8 +1018,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
-	
-	glEnable(GL_TEXTURE_CUBE_MAP);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -1104,6 +1139,9 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 }
 void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
+	if(!currentView)
+		return;
+
 	auto m = dataManager.getModel(model);
 
 	float s;
@@ -1114,7 +1152,7 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	else
 		s = scale.z;
 
-	if(m == nullptr || !sphereInFrustum(m->boundingSphere * s + position))
+	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
 		return;
 
 	dataManager.bind("white");
@@ -1128,7 +1166,7 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	//Mat4f matV2;	glGetFloatv(GL_MODELVIEW_MATRIX,matV2.ptr());
 	//Mat4f matP2;	glGetFloatv(GL_PROJECTION_MATRIX,matP2.ptr());
 	//dataManager.setUniformMatrix("modelviewProjection",mat);
-	Mat4f cameraProjectionMat = getView().projectionMat * getView().modelViewMat;
+	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
@@ -1178,8 +1216,10 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 }
 void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
-	auto m = dataManager.getModel(model);
+	if(!currentView)
+		return;
 
+	auto m = dataManager.getModel(model);
 	float s;
 	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
 		s = scale.x;
@@ -1187,15 +1227,12 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 		s = scale.y;
 	else
 		s = scale.z;
-
-	if(m == nullptr || !sphereInFrustum(m->boundingSphere * s + position))
+	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
 		return;
-
-	Mat4f cameraProjectionMat = getView().projectionMat * getView().modelViewMat;
+	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-
 	m->VBO->bindBuffer();
 	//glBindBuffer(GL_ARRAY_BUFFER, m->id);
 	//glEnableClientState(GL_VERTEX_ARRAY);
@@ -1209,14 +1246,12 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 	bool dMask = true;
 
 	bool changeTextures = !dataManager.textureBound();
-
 	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
 	{
 		if(changeTextures)
 		{
 			dataManager.bind(i->tex == "" ? "white" : i->tex);
 		}
-
 		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
 
 		if(i->color.a > 0.999 && !dMask)
@@ -1229,10 +1264,9 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 			dMask = false;
 			glDepthMask(false);
 		}
-		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);
+		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);checkErrors();
 		//glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
 	}
-
 	if(!dMask)	glDepthMask(true);
 
 	//glDisableClientState(GL_VERTEX_ARRAY);

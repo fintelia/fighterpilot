@@ -275,6 +275,12 @@ void AIplayer::startPatrol()
 	destination = Vec3f(p.x,alt,p.y);
 	state = STATE_PATROL;
 }
+void AIplayer::startHunt(int targetID)
+{
+	target = targetID;
+	huntEndTime = world.time() + random<double>(1000,3000);
+	state = STATE_HUNTING;
+}
 void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
 {
 	Vec3f velocity = p->rotation * Vec3f(0,0,1);
@@ -284,7 +290,7 @@ void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
 	float diffAng = Angle(atan2(destDirection.x, destDirection.z) - p->direction).radians_plusMinusPI();
 	float diffClimb = Angle(atan2(destVector.y, sqrt(destVector.x*destVector.x+destVector.z*destVector.z)) - p->climb).radians_plusMinusPI();
 
-	p->direction += clamp(diffAng,1.0,-1.0) * world.time.length()/1000.0;
+	p->direction += clamp(diffAng,0.8,-0.8) * world.time.length()/1000.0;
 	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0;
 
 	float rollError = (diffAng*0.5 + p->roll.radians_plusMinusPI()) / (PI/2);
@@ -334,11 +340,9 @@ void AIplayer::update()
 			if(i->second->team != p->team)
 			{
 				//Profiler.setOutput(lexical_cast<string>(p->id)+"dist", focus1.distance(i->second->position) + focus2.distance(i->second->position));
-				if(focus1.distance(i->second->position) + focus2.distance(i->second->position) < 4000.0)
+				if(focus1.distance(i->second->position) + focus2.distance(i->second->position) < 3500.0)
 				{
-					
-					target = i->second->id;
-					state = STATE_HUNTING;
+					startHunt(i->second->id);
 					break;
 				}
 			}
@@ -347,7 +351,7 @@ void AIplayer::update()
 	else if(state == STATE_HUNTING)
 	{
 		auto t = world[target];
-		if(!t || t->dead || !(t->type & PLANE))
+		if(huntEndTime <= world.time() || !t || t->dead || !(t->type & PLANE))
 		{
 			target = 0;
 			startPatrol();
@@ -396,6 +400,17 @@ void PlayerManager::addAIplayer(int objectId)
 	shared_ptr<AIplayer> p(new AIplayer(objectId));
 	aiPlayers.push_back(p);
 }
+void PlayerManager::removeAIplayer(int objectId)
+{
+	for(auto i = aiPlayers.begin(); i != aiPlayers.end(); i++)
+	{
+		if((*i)->objectNum() == objectId)
+		{
+			aiPlayers.erase(i);
+			return;
+		}
+	}
+}
 void PlayerManager::resetPlayers()
 {
 	humanPlayers.clear();
@@ -404,13 +419,21 @@ void PlayerManager::resetPlayers()
 
 void PlayerManager::update()
 {
-	for(auto i = humanPlayers.begin(); i != humanPlayers.end(); i++)
+	for(auto i = humanPlayers.begin(); i != humanPlayers.end(); i++) //updates human players
 	{
 		(*i)->update();
 	}
-	for(auto i = aiPlayers.begin(); i != aiPlayers.end(); i++)
+	for(auto i = aiPlayers.begin(); i != aiPlayers.end();) //updates AI players and deletes them if their object is gone
 	{
-		(*i)->update();
+		if((*i)->getObject() == nullptr)
+		{
+			i = aiPlayers.erase(i);
+		}
+		else
+		{
+			(*i)->update();
+			i++;
+		}
 	}
 }
 #ifdef _DEBUG
