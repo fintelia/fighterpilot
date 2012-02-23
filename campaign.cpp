@@ -4,9 +4,10 @@
 namespace gui{
 campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
 {
-	graphics->resetViews(1);
-	graphics->viewport(0,0, sAspect,1.0);
-	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view = graphics->genView();
+	view->viewport(0,0, sAspect,1.0);
+	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view->setRenderFunc(bind(&campaign::render3D, this, placeholders::_1));
 	graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
 }
 bool campaign::init()
@@ -20,7 +21,7 @@ int campaign::update()
 	//set camera position
 	nPlane* p=(nPlane*)players[0]->getObject();
 	auto camera = players[0]->getCamera(p->controled || p->dead);
-	graphics->lookAt(camera.eye, camera.center, camera.up);
+	view->lookAt(camera.eye, camera.center, camera.up);
 
 	//check whether to toggle first person view
 	if(input.getKey(VK_F1))
@@ -154,13 +155,13 @@ void campaign::render()
 	}
 }
 
-void campaign::render3D(unsigned int view)
+void campaign::render3D(unsigned int v)
 {
 	drawScene(0);
-	if(players[view]->firstPersonView && !((nPlane*)players[view]->getObject())->controled && !players[view]->getObject()->dead)
-		sceneManager.renderScene(players[view]->getObject()->meshInstance);
+	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+		sceneManager.renderScene(view, players[v]->getObject()->meshInstance);
 	else
-		sceneManager.renderScene();
+		sceneManager.renderScene(view);
 
 }
 }

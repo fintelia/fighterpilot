@@ -115,6 +115,7 @@
     <ClCompile Include="blackSmoke.cpp" />
     <ClCompile Include="bomb.cpp" />
     <ClCompile Include="bullet.cpp" />
+    <ClCompile Include="bulletEffect.cpp" />
     <ClCompile Include="campaign.cpp" />
     <ClCompile Include="collide.cpp" />
     <ClCompile Include="contrail.cpp" />

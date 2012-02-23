@@ -7,9 +7,10 @@ namespace gui{
 
 bool levelEditor::init()
 {
-	graphics->resetViews(1);
-	graphics->viewport(0,0, sAspect,1.0);
-	graphics->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view = graphics->genView();
+	view->viewport(0,0, sAspect,1.0);
+	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view->setRenderFunc(bind(&levelEditor::render3D, this, placeholders::_1));
 
 	//terrain
 	buttons["dSquare"]		= new button(sAspect-0.1,0.005,0.1,0.030,"d-square",lightGreen,white);
@@ -32,6 +33,8 @@ bool levelEditor::init()
 	//objects
 	buttons["addPlane"]		= new button(0.005,0.005,0.195,0.030,"new plane",lightGreen,white);
 	buttons["addAAgun"]		= new button(0.005,0.040,0.195,0.030,"new AA gun",lightGreen,white);
+	buttons["addSAMbattery"]= new button(0.005,0.075,0.195,0.030,"new SAM Battery",lightGreen,white);
+	buttons["addFlakCannon"]= new button(0.005,0.110,0.195,0.030,"new Flak Cannon",lightGreen,white);
 
 	//settings
 	//v.clear();
@@ -211,6 +214,20 @@ int levelEditor::update()
 		{
 			awaitingNewObject=true;
 			popup* p = new newObject(AA_GUN);
+			p->callback = (functor<void,popup*>*)this;
+			menuManager.setPopup(p);
+		}
+		else if(buttons["addSAMbattery"]->checkChanged())
+		{
+			awaitingNewObject=true;
+			popup* p = new newObject(SAM_BATTERY);
+			p->callback = (functor<void,popup*>*)this;
+			menuManager.setPopup(p);
+		}
+		else if(buttons["addFlakCannon"]->checkChanged())
+		{
+			awaitingNewObject=true;
+			popup* p = new newObject(FLAK_CANNON);
 			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
@@ -395,13 +412,13 @@ void levelEditor::updateObjectCircles()
 		if(model==NULL)
 		{
 			r = 0.006;
-			s = graphics->project(i->startloc);
+			s = view->project(i->startloc);
 		}
 		else
 		{
 			Sphere<float> sphere = model->boundingSphere;
-			s = graphics->project(i->startloc + i->startRot * sphere.center*10);
-			Vec2f t = graphics->project(i->startloc + sphere.center + graphics->getView().camera.up*sphere.radius*10);
+			s = view->project(i->startloc + i->startRot * sphere.center*10);
+			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*10);
 			r = max(0.004f,s.distance(t));
 
 			
@@ -720,8 +737,8 @@ void levelEditor::smooth(int a)
 void levelEditor::addObject(int type, int team, int controlType, float x, float y)//in screen coordinates
 {
 	Vec2f cursorPos = input.getMousePos();
-	Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
-	Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+	Vec3d P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+	Vec3d P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 	Vec3d dir = P0-P1;
 
 	if(abs(dir.y) < 0.001) return;
@@ -735,15 +752,15 @@ Rect levelEditor::orthoView()
 
 	return Rect::CWH(Vec2f(0,0),gSize);
 }
-void levelEditor::render3D(unsigned int view)
+void levelEditor::render3D(unsigned int v)
 {
 	bool orthoTerrain = (getTab() == REGIONS);
 
 	if(orthoTerrain)
 	{
-		Rect view = orthoView();
-		graphics->ortho(view.x,view.x+view.w,view.y,view.y+view.h,-10000,10000);
-		graphics->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
+		Rect viewRect = orthoView();
+		view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000);
+		view->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
 
 		if(getShader() != -1)
 			((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
@@ -764,8 +781,8 @@ void levelEditor::render3D(unsigned int view)
 			auto v = level->regions();
 			for(auto i = v.begin(); i != v.end(); i++)
 			{
-				Vec2f c((i->centerXYZ[0] - view.x + orthoCenter.x)/view.w*sAspect, (i->centerXYZ[2] - view.y + orthoCenter.z)/view.h);
-				Vec2f s(i->radius/view.w*sAspect*2.0, i->radius/view.h*2.0);
+				Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
+				Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
 				graphics->drawOverlay(Rect::CWH(c,s));
 			}
 
@@ -775,7 +792,7 @@ void levelEditor::render3D(unsigned int view)
 	}
 	else
 	{
-		graphics->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+		view->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
 		//static FrustumG frustum;
 		//frustum.setCamInternals(80.0, (double)sw / ((double)sh),10.0, 500000.0);
 
@@ -806,7 +823,7 @@ void levelEditor::render3D(unsigned int view)
 			e = c + rot * Vec3f(0,0.75,0) * max(level->ground()->sizeX(),level->ground()->sizeZ()) * pow(1.1f,-scrollVal);
 			u = rot * Vec3f(0,0,-1);
 		}
-		graphics->lookAt(e,c,u);
+		view->lookAt(e,c,u);
 
 		graphics->setLightPosition(Vec3f(30, 70, 40));
 
@@ -834,8 +851,8 @@ void levelEditor::render3D(unsigned int view)
 			////////////////////////////////draw object//////////////////////////////////
 
 			Vec2f cursorPos = input.getMousePos();
-			Vec3d P0 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
-			Vec3d P1 = graphics->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+			Vec3d P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+			Vec3d P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
 			Vec3d dir = P0-P1;
 
 			if(abs(dir.y) < 0.001) return;

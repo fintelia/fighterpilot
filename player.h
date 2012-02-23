@@ -130,9 +130,13 @@ class AIplayer: public player
 public:
 	int	target;
 	Vec3f destination;
+
+	double huntEndTime;
 	enum State{STATE_NONE, STATE_PATROL, STATE_HUNTING}state;
 //////
 	void startPatrol();
+	void startHunt(int targetID);
+
 	void flyTowardsPoint(nPlane* p, Vec3f dest);
 
 	AIplayer(int oNum);
@@ -152,6 +156,8 @@ public:
 
 	void addHumanPlayer(int objectId);
 	void addAIplayer(int objectId);
+
+	void removeAIplayer(int objectId);
 
 	void resetPlayers();
 

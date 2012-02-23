@@ -43,7 +43,7 @@ void SceneManager::resetMeshInstances()
 {
 	meshInstances.clear();
 }
-void SceneManager::renderScene(meshInstancePtr firstPersonObject)
+void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInstancePtr firstPersonObject)
 {
 	for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
 	{
@@ -56,7 +56,7 @@ void SceneManager::renderScene(meshInstancePtr firstPersonObject)
 
 	Angle ang;
 
-	Mat4f cameraProjectionMat = graphics->getView().projectionMat * graphics->getView().modelViewMat;
+	Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 	for(int pass = 0; pass <= 1; pass++)
 	{
@@ -83,7 +83,7 @@ void SceneManager::renderScene(meshInstancePtr firstPersonObject)
 						if((*instance) == firstPersonObject)
 							continue;
 
-						if((*instance)->renderFlag() && graphics->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
+						if((*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
 							graphics->drawVertexBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);

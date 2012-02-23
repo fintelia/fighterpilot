@@ -57,7 +57,7 @@ public:
 		float alpha() {return a + ta * random<float>(-1.0,1.0);}
 	};
 
-	const enum Type{NONE=0,EXPLOSION,EXPLOSION_FLASH,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
+	//const enum Type{NONE=0,EXPLOSION,EXPLOSION_FLASH,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
 
 
 
@@ -80,7 +80,7 @@ protected:
     //int dfactor;
 	//shape shapes;
 
-	float friction;
+	//float friction;
 
 	particle* particles;
 	vertex* vertices;
@@ -104,7 +104,7 @@ protected:
 public:
 	friend class manager;
 
-	emitter(Type t, string tex, float Friction, float ParticlesPerSecond, unsigned int initalCompacity,bool AdditiveBlending=false);
+	emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false);
 	virtual void init(){}
 	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
 	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;ParentOffset=ParentOffset;}
@@ -118,17 +118,97 @@ public:
 	virtual bool createParticle(particle& p, Vec3f currentPosition){return false;}
 	virtual void updateParticle(particle& p){}
 
-	void update();
-	void prepareRender(Vec3f up, Vec3f right);
-	void render();
+	virtual void update();
+	virtual void prepareRender(Vec3f up, Vec3f right);
+	virtual void render();
 };
+class sparkEmitter: public emitter
+{
+public:
+	sparkEmitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false): emitter(tex, initalCompacity, ParticlesPerSecond, AdditiveBlending){}
+	virtual void prepareRender(Vec3f up, Vec3f right);
+};
+//class particleType
+//{
+//protected:
+//	particle* particles;
+//	unsigned int compacity;
+//	unsigned int total;
+//
+//	vertex* vertices;
+//	unsigned int vNum;
+//
+//	GraphicsManager::vertexBuffer* VBO;
+//	bool additiveBlending;
+//	friend class manager;
+//
+//	virtual void updateParticle(particle& p){}
+//public:
+//	particleType(unsigned int initialCompacity = 64);
+//	~particleType();
+//
+//	virtual void prepareRender(Vec3f up, Vec3f right)=0;
+//	virtual void render()=0;
+//
+//	void reset(){total = 0;}
+//
+//	virtual void update();
+//
+//	virtual particle& newParticle();
+//};
+//
+//class pointSprite: public particleType
+//{
+//protected:
+//
+//public:
+//	virtual void prepareRender(Vec3f up, Vec3f right);
+//	virtual void render();
+//};
+//
+//class spark: public particleType
+//{
+//protected:
+//
+//public:
+//};
+//
+//class particleEffect
+//{
+//protected:
+//	Vec3f position;
+//	Vec3f lastPosition;
+//
+//	int parentObject;
+//	Vec3f parentOffset;
+//
+//	float radius;
+//
+//	double startTime;
+//	
+//	double particlesPerSecond;
+//	double extraTime;
+//
+//	
+//	virtual void newParticle(Vec3f p, double time){}
+//public:
+//	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
+//	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;ParentOffset=ParentOffset;}
+//	virtual void init(){}
+//
+//	particleEffect();
+//	virtual bool update();
+//};
 
 class manager
 {
 private:
-	vector<emitter*> emitters;
+	vector<shared_ptr<emitter>> emitters;
 	
+	//map<string, shared_ptr<particleType>> particleTypes;
+	//vector<shared_ptr<particleEffect>> particleEffects;
 	manager(){}
+
 
 public:
 	static manager& getInstance()
@@ -140,8 +220,15 @@ public:
 	void addEmitter(emitter* e, Vec3f position, float radius=1.0);
 	void addEmitter(emitter* e, int parent, Vec3f offset=Vec3f());
 	void update();
-	void render();
+	void render(shared_ptr<GraphicsManager::View> view);
 	void shutdown();
+
+	//void addParticleEffect(particleEffect* p, Vec3f positoin, float radius=1.0);
+	//void addParticleEffect(particleEffect* p, int parent, Vec3f offset=Vec3f());
+
+	//void addParticleType(string type, shared_ptr<particleType> particleTypePtr);
+	//shared_ptr<particleType> getParticleType(string type);
+
 };
 
 }

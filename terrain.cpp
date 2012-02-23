@@ -348,11 +348,12 @@ void TerrainPage::render(Vec3f eye) const
 	dataManager.unbindShader();
 	dataManager.unbindTextures();
 }
-void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1
+void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1 (could be optimized a ton)
 {
+	double t = GetTime();
 	float e = 2.718281828;
 
-	unsigned int l = 256; //length of sides of square for each face in cube map
+	unsigned int l = 64; //length of sides of square for each face in cube map
 	float m = 0.5 * l - 0.5;
 	float* cubeMap = new float[l*l * 6 * 3];
 	unsigned char* cubeMapTex = new unsigned char[l*l * 6 * 3];
@@ -409,6 +410,9 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		}
 	}
 	
+	t = GetTime() - t;
+	t = GetTime();
+
 	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
 	{
 		float x = cubeMap[i + 0];
@@ -422,18 +426,21 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
 	}
 
+	t = GetTime() - t;
+	t = GetTime();
+
 	float R, G, B, f;
 	const float invGamma = 1.0/1.8;
 	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
 	{
-		R = cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853;
-		G = cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556;
-		B = cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311;
+	//	R = cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853;
+	//	G = cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556;
+	//	B = cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311;
 
-		f = max(max(R,G),max(G,1.0)); //find the max component or 1.0, whichever is bigger
-		cubeMapTex[i + 0] = pow(clamp(R/f, 0.0, 1.0),invGamma) * 255.0;
-		cubeMapTex[i + 1] = pow(clamp(G/f, 0.0, 1.0),invGamma) * 255.0;
-		cubeMapTex[i + 2] = pow(clamp(B/f, 0.0, 1.0),invGamma) * 255.0;
+	//	f = max(max(R,G),max(G,1.0)); //find the max component or 1.0, whichever is bigger
+	//	cubeMapTex[i + 0] = pow(clamp(R/f, 0.0, 1.0),invGamma) * 255.0;
+	//	cubeMapTex[i + 1] = pow(clamp(G/f, 0.0, 1.0),invGamma) * 255.0;
+	//	cubeMapTex[i + 2] = pow(clamp(B/f, 0.0, 1.0),invGamma) * 255.0;
 
 		float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
 		cubeMapTex[i + 0] = ((brightness) * 1.0 + (1.0-brightness) * 0.2) * 255.0;
@@ -461,6 +468,9 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		//cubeMapTex[i + 1] = clamp(cubeMap[i + 1],0.0,1.0) * 255;
 		//cubeMapTex[i + 2] = clamp(1.0-cubeMap[i + 2],0.0,1.0) * 255;
 	}
+
+	t = GetTime() - t;
+	t = GetTime();
 
 	glGenTextures(1, &skyTextureId);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
@@ -491,6 +501,9 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 
 	delete[] cubeMap;
 	delete[] cubeMapTex;
+
+	t = GetTime() - t;
+	t = GetTime();
 }
 Terrain::~Terrain()
 {
@@ -514,7 +527,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 {
 	glEnableClientState(GL_VERTEX_ARRAY);
 	Vec3d center(eye.x,0,eye.z);
-	double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
+	double radius = max((eye.y)*tan(asin(6000000/(6000000+eye.y))), 2.0*max(terrainScale.x,terrainScale.z));
 
 	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
@@ -523,15 +536,14 @@ void Terrain::renderTerrain(Vec3f eye) const
 	dataManager.setUniform1i("tex", 0);
 	dataManager.setUniform1i("clouds", 1);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
-	dataManager.bind("clouds",1);
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
-	dataManager.bind("clouds",1);
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
+	dataManager.bind("clouds",1);	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
+	dataManager.bind("clouds",1);	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
 	dataManager.bindTex(0,1);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	dataManager.bindTex(0,0);
+	glActiveTexture(GL_TEXTURE1);
 	dataManager.unbindShader();
-	glEnable(GL_DEPTH_TEST);
+
 
 	if(waterPlane)
 	{
@@ -542,16 +554,15 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.setUniform2f("center",	center.x,center.z);
 		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 		dataManager.setUniform1f("scale", radius);
-		
-		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 
+		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
 	}
 	graphics->setDepthMask(true);
-
+	glEnable(GL_DEPTH_TEST);
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(eye);
@@ -562,6 +573,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 		graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
 		graphics->setColorMask(true);
 	}
+
 }
 std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {

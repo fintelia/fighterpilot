@@ -57,7 +57,7 @@ public:
 	int getShader();
 	void operator() (popup* p);
 protected:
-
+	shared_ptr<GraphicsManager::View> view;
 
 	float randomDisplacement(float h1, float h2, float d);
 	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
@@ -158,7 +158,7 @@ public:
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
 	void radar(float x, float y, float width, float height,bool firstPerson, nPlane* p);
 	void targeter(float x, float y, float apothem, Angle tilt);
-	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight);
+	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v);
 
 	void drawHexCylinder(Vec3f center, float radius, float height, Color c);
 	void drawScene(int acplayer);
@@ -167,12 +167,15 @@ public:
 };
 class splitScreen: public dogFight
 {
+protected:
+	shared_ptr<GraphicsManager::View> views[2];
+
 public:
 	splitScreen(std::shared_ptr<LevelFile> lvl);
 	bool init();
 	int update();
 	void render();
-	void render3D(unsigned int view);
+	void render3D(unsigned int v);
 };
 class campaign: public dogFight
 {
@@ -180,11 +183,13 @@ protected:
 	float countdown;
 	bool restart;
 	bool levelup;
+
+	shared_ptr<GraphicsManager::View> view;
 public:
 	campaign(std::shared_ptr<LevelFile> lvl);
 	bool init();
 	int update();
 	void render();
-	void render3D(unsigned int view);
+	void render3D(unsigned int v);
 };
 }

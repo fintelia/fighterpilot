@@ -9,7 +9,7 @@ namespace particle
 	//	spread =	fuzzyAttribute(1.0, 0.5);
 	//	life =		fuzzyAttribute(6000.0, 100.0);
 	//}
-	blackSmoke::blackSmoke(): emitter(SMOKE, "smoke", 1.0, 3.0, 19)
+	blackSmoke::blackSmoke(): emitter("smoke", 19, 3.0)
 	{
 
 	}

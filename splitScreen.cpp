@@ -5,11 +5,16 @@
 namespace gui{
 splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 {
-	graphics->resetViews(2);
-	graphics->viewport(0,0.5, sAspect,0.5,	0);
-	graphics->viewport(0,0.0, sAspect,0.5,	1);
-	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	0);
-	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0,	1);
+	views[0] = graphics->genView();
+	views[0]->viewport(0,0.5, sAspect,0.5);
+	views[0]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	views[0]->setRenderFunc(bind(&splitScreen::render3D, this, placeholders::_1), 0);
+
+	views[1] = graphics->genView();
+	views[1]->viewport(0,0.0, sAspect,0.5);
+	views[1]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	views[1]->setRenderFunc(bind(&splitScreen::render3D, this, placeholders::_1), 1);
+
 	graphics->setLightPosition(Vec3f(-500.0, 800.0, 100.0));
 }
 bool splitScreen::init()
@@ -25,7 +30,7 @@ int splitScreen::update()
 	{
 		nPlane* p=(nPlane*)players[i]->getObject();
 		auto camera = players[i]->getCamera(p->controled || p->dead);
-		graphics->lookAt(camera.eye, camera.center, camera.up, i);
+		views[i]->lookAt(camera.eye, camera.center, camera.up);
 	}
 
 	//check whether to toggle first person views
@@ -80,16 +85,16 @@ void splitScreen::render()
 		}
 	}
 }
-void splitScreen::render3D(unsigned int view)
+void splitScreen::render3D(unsigned int v)
 {
 //	glClearColor(0.5f,0.8f,0.9f,1.0f);
 //	glViewport(0, sh/2, sw, sh/2);
 //	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
-	drawScene(view);
-	if(players[view]->firstPersonView && !((nPlane*)players[view]->getObject())->controled && !players[view]->getObject()->dead)
-		sceneManager.renderScene(players[view]->getObject()->meshInstance);
+	drawScene(v);
+	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+		sceneManager.renderScene(views[v], players[v]->getObject()->meshInstance);
 	else
-		sceneManager.renderScene();
+		sceneManager.renderScene(views[v]);
 //	glViewport(0, 0, sw, sh/2);
 //	drawScene(1);
 }

@@ -1,28 +1,32 @@
  
-class aaGun: public object
+class antiAircraftArtilleryBase: public object
 {
-private:
+protected:
 	double lastUpdateTime;
 	double extraShootTime;//time since it last shot;
 	unsigned long shotsFired;
 public:
 //////////////functions////////////
-	void findTargetVector();
 	void die();
 	void loseHealth(float healthLoss);
-	void spawn();
-	void initArmaments();
-	aaGun(Vec3f sPos, Quat4f sRot, objectType Type);
-	void updateSimulation(double time, double ms);
+	virtual void spawn();
+	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type);
 	void updateFrame(float interpolation) const;
-//////////////structs//////////////
-	struct wayPoint
-	{
-		double time;
-		Quat4f rotation;
-		wayPoint(double Time,Vec3f pos,Quat4f rot): time(Time), rotation(rot){}
-		wayPoint(){}
-	};
+///////////orientation/////////////
+	Vec3f targeter;
+	int target;
+////////////life///////////////////
+	//bool dead; (from entity)
+	float health;
+	float maxHealth;
+///////////camera view/////////////
+	Vec3f camera;
+	Vec3f center;
+};
+
+class AAgun: public antiAircraftArtilleryBase
+{
+public:
 	struct armament
 	{
 		bool firing;
@@ -30,22 +34,23 @@ public:
 		unsigned int roundsMax, roundsLeft;//number fired before recharge must take place
 		float rechargeTime, rechargeLeft;//all in milliseconds
 		float coolDown, coolDownLeft;
-	};
-///////////orientation/////////////
-	//Angle angle;
-	//Angle elevation;
-	Vec3f targeter;
-	int target;
-/////////////weapons///////////////
-	armament machineGun;
-////////////life///////////////////
-	//bool dead; (from entity)
-	//int respawn;
-	float health;
-	float maxHealth;
-////////////auto-pilot/////////////
-	objectPath planePath;
-///////////camera view/////////////
-	Vec3f camera;
-	Vec3f center;
+	}machineGun;
+	void spawn();
+	void initArmaments();
+	void updateSimulation(double time, double ms);
+	AAgun(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){initArmaments();}
+};
+
+class SAMbattery: public antiAircraftArtilleryBase
+{
+public:
+	void updateSimulation(double time, double ms);
+	SAMbattery(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){}
+};
+
+class flakCannon: public antiAircraftArtilleryBase
+{
+public:
+	void updateSimulation(double time, double ms);
+	flakCannon(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){}
 };

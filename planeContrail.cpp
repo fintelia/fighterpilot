@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	planeContrail::planeContrail(): emitter(SMOKE, "smoke", 1.0, 1600.0, 401)
+	planeContrail::planeContrail(): emitter("smoke", 401, 1600.0)
 	{
 
 	}

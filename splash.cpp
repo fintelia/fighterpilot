@@ -19,7 +19,7 @@ namespace particle
 	//	//	addParticle(p);
 	//	//}
 	//}
-	splash::splash(): emitter(SMOKE, "splash", 1.0, 100.0, 50), totalCreated(0)
+	splash::splash(): emitter("splash", 50, 100.0), totalCreated(0)
 	{
 
 	}

@@ -315,6 +315,9 @@
     <ClCompile Include="objectInfo.cpp">
       <Filter>Source Files\GAME\objectInfo</Filter>
     </ClCompile>
+    <ClCompile Include="bulletEffect.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">

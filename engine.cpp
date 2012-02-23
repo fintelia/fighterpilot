@@ -153,6 +153,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	set_new_handler(outOfMemory);
 
+	randomGen.seed(time(nullptr));
+
 	if(!game->init())
 	{
 		return 1;
