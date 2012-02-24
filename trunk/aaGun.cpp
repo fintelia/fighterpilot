@@ -34,7 +34,7 @@ void antiAircraftArtilleryBase::spawn()
 	shotsFired = 0;
 	extraShootTime=0.0;
 }
-antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type):object(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
+antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 	spawn();
@@ -164,7 +164,6 @@ void SAMbattery::updateSimulation(double time, double ms)
 	}
 	///////////////////END CONTROL////////////////////
 
-	static float missileCoolDown = 7000;
 	missileCoolDown -= ms;
 	if(missileCoolDown <= 0.0 && target != 0)
 	{
@@ -195,7 +194,7 @@ void flakCannon::updateSimulation(double time, double ms)
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target == 0 || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && nDistSquared < 5000 * 5000 && (target == 0 || nDistSquared < lDistSquared))
 		{
 			target = n->second->id;
 			lDistSquared = nDistSquared;
@@ -216,12 +215,16 @@ void flakCannon::updateSimulation(double time, double ms)
 	}
 	///////////////////END CONTROL////////////////////
 
-	static float missileCoolDown = 7000;
 	missileCoolDown -= ms;
 	if(missileCoolDown <= 0.0 && target != 0)
 	{
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
-		missileCoolDown = 7000;
-		world.newObject(new missile(FLAK_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2), 0, id, target));
+		missileCoolDown = random<float>(1900, 2200);
+		Vec3f t = random3<float>();
+		t.x *= 500.0;
+		t.z *= 500.0;
+		t.y *= 100.0;
+		//world.newObject(new flakMissile(FLAK_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2), 0, id, world[target]->position + t));
+		particleManager.addEmitter(new particle::flakExplosionSmoke(),world[target]->position + t,20.0);
 	}
 }

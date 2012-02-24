@@ -108,7 +108,7 @@ public:
 	void updateSimulation(double time, double ms);
 	void updateFrame(float interpolation) const;
 
-	nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type);
+	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
 
 private:
 	void smoothCamera();

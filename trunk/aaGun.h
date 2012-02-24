@@ -10,7 +10,7 @@ public:
 	void die();
 	void loseHealth(float healthLoss);
 	virtual void spawn();
-	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type);
+	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
 	void updateFrame(float interpolation) const;
 ///////////orientation/////////////
 	Vec3f targeter;
@@ -38,19 +38,23 @@ public:
 	void spawn();
 	void initArmaments();
 	void updateSimulation(double time, double ms);
-	AAgun(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){initArmaments();}
+	AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team){initArmaments();}
 };
 
 class SAMbattery: public antiAircraftArtilleryBase
 {
+private:
+	float missileCoolDown;
 public:
 	void updateSimulation(double time, double ms);
-	SAMbattery(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){}
+	SAMbattery(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team), missileCoolDown(random<float>(7000.0)){}
 };
 
 class flakCannon: public antiAircraftArtilleryBase
 {
+private:
+	float missileCoolDown;
 public:
 	void updateSimulation(double time, double ms);
-	flakCannon(Vec3f sPos, Quat4f sRot, objectType Type):antiAircraftArtilleryBase(sPos, sRot, Type){}
+	flakCannon(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team), missileCoolDown(random<float>(2000.0)){}
 };

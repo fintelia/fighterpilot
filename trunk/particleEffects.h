@@ -25,6 +25,14 @@ public:
 
 	void updateParticle(particle& p);
 };
+class flakExplosionSmoke: public emitter
+{
+public:
+	flakExplosionSmoke();
+	void init();
+
+	void updateParticle(particle& p);
+};
 class blackSmoke: public emitter
 {
 public:
