@@ -32,7 +32,7 @@ namespace particle
 	//		addParticle(p);
 	//	}
 	//}
-	explosion::explosion(): emitter("fire", 64, 0.0, true)
+	explosion::explosion(): emitter("smoke", 64, 0.0, true)
 	{
 
 	}

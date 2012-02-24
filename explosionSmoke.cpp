@@ -32,17 +32,17 @@ namespace particle
 	//		addParticle(p);
 	//	}
 	//}
-	explosionSmoke::explosionSmoke(): emitter("smoke", 32, 0.0, false)
+	explosionSmoke::explosionSmoke(): emitter("smoke", 64, 0.0, false)
 	{
 	
 	}
 	void explosionSmoke::init()
 	{
 		particle p;
-		for(int i = 0; i < 32; i++)
+		for(int i = 0; i < 48; i++)
 		{
 			p.startTime = world.time();
-			p.endTime = p.startTime + 10000;
+			p.endTime = p.startTime + 5000;
 
 			Vec3f dir = random3<float>();
 			p.vel = dir * radius;
@@ -77,7 +77,7 @@ namespace particle
 		{
 			if(t < 1000)
 			{
-				p.a = 0.3 * ((t-500)/750);
+				p.a = 0.3 * ((t-500)/500);
 				p.size = (1.0 + t/1000) * 0.75 * radius;
 			}
 			else if(t < 2500)
@@ -87,10 +87,78 @@ namespace particle
 			}
 			else
 			{
-				p.a = 0.3 - 0.33 * ((t-2000)/3000);
+				p.a = 0.3 - 0.33 * ((t-2500)/3000);
 			}
 
 			p.pos.y += world.time.length()/300;
 		}
+	}
+
+
+	flakExplosionSmoke::flakExplosionSmoke(): emitter("smoke", 64, 0.0, false)
+	{
+	
+	}
+	void flakExplosionSmoke::init()
+	{
+		particle p;
+		for(int i = 0; i < 64; i++)
+		{
+			p.startTime = world.time();
+			p.endTime = p.startTime + 5000;
+
+			Vec3f dir = random3<float>();
+			float r = random<float>();
+			p.vel = dir * r*r*radius*20.0;//dir * radius;
+			p.pos = position + /*dir * r*r*radius*2.0 + */ p.vel * extraTime/1000.0;
+
+			p.size = radius*1.5;
+
+			
+			p.ang = random<float>(2.0*PI);
+			p.angularSpeed = random<float>(-0.1*PI,0.1*PI);
+
+			float g = random<float>(0.05)+0.3;
+
+			p.r = g;
+			p.g = g;
+			p.b = g;
+			p.a = 0;
+
+			addParticle(p);
+		}
+	}
+	void flakExplosionSmoke::updateParticle(particle& p)
+	{
+		//p.vel *= pow(0.2, world.time.length()/1000.0f);	
+		//p.pos += p.vel * world.time.length()/1000.0;
+		float t = world.time() - p.startTime;
+
+		if(t < 100)
+		{
+			p.pos += p.vel * world.time.length()/1000.0;
+		}
+		else
+		{
+			p.pos += p.vel * 0.01 * world.time.length()/1000.0;
+		}
+		p.ang += p.angularSpeed * world.time.length() / 1000.0;
+
+		if(t < 150)
+		{
+			p.a = 0.8 * (t/150);
+			p.size = (t/150) * 1.0 * radius;
+		}
+		else if(t < 2000)
+		{
+			p.a = 0.8;
+			p.size = 1.0 * radius;
+		}
+		else
+		{
+			p.a = 0.8 - 1.0 * ((t-2000)/3000);
+		}
+
+		p.pos.y += world.time.length()/200;
 	}
 }

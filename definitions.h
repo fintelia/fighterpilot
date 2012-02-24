@@ -15,14 +15,13 @@ const int MINOR_OBJECT_TYPE = 0x00ff;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 const int NEUTRAL			= 0x00;
-const int TEAM0				= 0x01;
-const int TEAM1				= 0x02;
-const int TEAM2				= 0x04;
-const int TEAM3				= 0x08;
-const int TEAM4				= 0x10;
-const int TEAM5				= 0x20;
-const int TEAM6				= 0x40;
-const int TEAM7				= 0x80;
+const int TEAM1				= 0x01;
+const int TEAM2				= 0x02;
+const int TEAM3				= 0x03;
+const int TEAM4				= 0x04;
+const int TEAM5				= 0x05;
+const int TEAM6				= 0x06;
+const int TEAM7				= 0x07;
 
 const int INPUT_CALLBACK	= 0x100;
 const int KEY_STROKE		= 0x101;

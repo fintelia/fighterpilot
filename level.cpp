@@ -428,7 +428,7 @@ bool LevelFile::saveZIP(string filename)
 	{
 		objectsFile->contents += "object\n{\n";
 		objectsFile->contents += string("\ttype=") + objectTypeString(objects[i].type) + "\n";
-		objectsFile->contents += string("\tteam=") + lexical_cast<string>(objects[i].team+1) + "\n";
+		objectsFile->contents += string("\tteam=") + lexical_cast<string>(objects[i].team) + "\n";
 		objectsFile->contents += string("\tspawnPos=(") + lexical_cast<string>(objects[i].startloc.x) + "," + lexical_cast<string>(objects[i].startloc.y) + "," + lexical_cast<string>(objects[i].startloc.z) + ")\n";
 		objectsFile->contents += "}\n";
 	}
@@ -585,7 +585,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				else if(readSubString("\tteam="))
 				{
 					string s = readLine();
-					objects[objectNum].team = lexical_cast<int>(s)-1;
+					objects[objectNum].team = lexical_cast<int>(s);
 				}
 				else if(readSubString("\tspawnPos="))
 				{
@@ -618,26 +618,26 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < humanPlayers)
 			{	
-				auto id = world.newObject(new nPlane(objects[i].team, objects[i].startloc, objects[i].startRot, objects[i].type));
+				auto id = world.newObject(new nPlane(objects[i].startloc, objects[i].startRot, objects[i].type,objects[i].team));
 				players.addHumanPlayer(id);
 			}
 			else
 			{
-				auto id = world.newObject(new nPlane(objects[i].team,objects[i].startloc,objects[i].startRot,objects[i].type));
+				auto id = world.newObject(new nPlane(objects[i].startloc,objects[i].startRot,objects[i].type,objects[i].team));
 				players.addAIplayer(id);
 			}
 		}
 		else if(objects[i].type == AA_GUN)	
 		{
-			world.newObject(new AAgun(objects[i].startloc,objects[i].startRot,objects[i].type));
+			world.newObject(new AAgun(objects[i].startloc,objects[i].startRot,objects[i].type, objects[i].team));
 		}
 		else if(objects[i].type == SAM_BATTERY)	
 		{
-			world.newObject(new SAMbattery(objects[i].startloc,objects[i].startRot,objects[i].type));
+			world.newObject(new SAMbattery(objects[i].startloc,objects[i].startRot,objects[i].type, objects[i].team));
 		}
 		else if(objects[i].type == FLAK_CANNON)	
 		{
-			world.newObject(new flakCannon(objects[i].startloc,objects[i].startRot,objects[i].type));
+			world.newObject(new flakCannon(objects[i].startloc,objects[i].startRot,objects[i].type, objects[i].team));
 		}
 	}
 
@@ -1074,18 +1074,18 @@ void Level::initializeWorld()
 		{
 			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < 2)
 			{	
-				auto id = world.newObject(new nPlane(i->team, i->startloc, i->startRot, i->type));
+				auto id = world.newObject(new nPlane(i->startloc, i->startRot, i->type,i->team));
 				players.addHumanPlayer(id);
 			}
 			else
 			{
-				auto id = world.newObject(new nPlane(i->team, i->startloc, i->startRot, i->type));
+				auto id = world.newObject(new nPlane(i->startloc, i->startRot, i->type,i->team));
 				players.addAIplayer(id);
 			}
 		}
-		else if(i->type & AA_GUN)// can't be player controlled
+		else if(i->type == AA_GUN)// can't be player controlled
 		{
-			world.newObject(new AAgun(i->startloc,i->startRot,i->type));
+			world.newObject(new AAgun(i->startloc,i->startRot,i->type, i->type));
 		}
 	}
 

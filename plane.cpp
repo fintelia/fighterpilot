@@ -7,9 +7,8 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type):object(sPos, sRot, Type), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),controlType(CONTROL_TYPE_SIMPLE)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),controlType(CONTROL_TYPE_SIMPLE)
 {
-	team = Team;
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
 

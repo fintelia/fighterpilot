@@ -32,7 +32,7 @@ public:
 	meshInstancePtr		meshInstance;
 	cameraPtr			firstPerson;
 	cameraPtr			thirdPerson;
-	object(Vec3f sPos, Quat4f sRot, objectType Type): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(NEUTRAL), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}
+	object(Vec3f sPos, Quat4f sRot, objectType Type, int Team=NEUTRAL): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(Team), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}
 	virtual void init(){}
 	virtual ~object(){if(meshInstance)meshInstance->setDeleteFlag(true);}
 	virtual void draw();

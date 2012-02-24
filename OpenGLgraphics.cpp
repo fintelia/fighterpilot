@@ -521,7 +521,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA/*GL_RGBA16F*/, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
 		glGenTextures(1, &FBOs[i].depth);
 		glBindTexture(GL_TEXTURE_2D, FBOs[i].depth);
@@ -545,7 +545,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	{
 		glGenRenderbuffersEXT(1, &multisampleFBO.color);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
-		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
+		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA/*GL_RGBA16F*/, sw, sh);
 
 		glGenRenderbuffersEXT(1, &multisampleFBO.depth);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);

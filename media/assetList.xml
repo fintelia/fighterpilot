@@ -33,7 +33,7 @@
     <texture name="file viewer"               file="media/file viewer.png" />
     <texture name="entry bar"                 file="media/entry bar.png" />
     <texture name="target ring"               file="media/target ring.png" />
-    <texture name="smoke"                     file="media/smoke2.png" />
+    <texture name="smoke"                     file="media/SmokeShape.png" />
     <texture name="contrail"                  file="media/smoke.png" />
     <texture name="splash"                    file="media/splash.png" />
     <texture name="fire"                      file="media/fire2.png" />
