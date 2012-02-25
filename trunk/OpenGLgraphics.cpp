@@ -1011,6 +1011,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glEnable(GL_BLEND);
 	glEnable(GL_MULTISAMPLE);
 
+	glDisable(GL_CULL_FACE);
+
 	glShadeModel(GL_SMOOTH);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);

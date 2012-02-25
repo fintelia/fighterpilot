@@ -31,26 +31,31 @@ namespace particle
 
 		return true;
 	}
+	void contrail::update()
+	{
+		emitter::update();
+		position += random3<float>() * 0.5;
+	}
 	void contrail::updateParticle(particle& p)
 	{
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
 		if(t<0.10)
 		{
-			p.a = t * 10.0;
+			p.a = min(t*20.0,1.0) * 0.3;
 			p.size = 3.0;
 		}
 		else if(t < 0.75)
 		{
 			t = (t-0.10)/0.65;
-			p.a = 1.0 - 0.75*t;
+			p.a = (1.0 - 0.75*t) * 0.3;
 			p.size = (1.0-t) * 3.0 + t * 9.0;
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
-			p.a = 0.25 - 0.25*t;
+			p.a = (0.25 - 0.25*t) * 0.3;
 			p.size = (1.0-t) * 9.0 + t * 15.0;
 		}
-		p.r = p.g = p.b = 1.0;
+		p.r = p.g = p.b = 0.6;
 	}
 }

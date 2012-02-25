@@ -33,8 +33,10 @@ bool levelEditor::init()
 	//objects
 	buttons["addPlane"]		= new button(0.005,0.005,0.195,0.030,"new plane",lightGreen,white);
 	buttons["addAAgun"]		= new button(0.005,0.040,0.195,0.030,"new AA gun",lightGreen,white);
+#ifdef _DEBUG
 	buttons["addSAMbattery"]= new button(0.005,0.075,0.195,0.030,"new SAM Battery",lightGreen,white);
 	buttons["addFlakCannon"]= new button(0.005,0.110,0.195,0.030,"new Flak Cannon",lightGreen,white);
+#endif
 
 	//settings
 	//v.clear();
@@ -217,6 +219,7 @@ int levelEditor::update()
 			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
+#ifdef _DEBUG
 		else if(buttons["addSAMbattery"]->checkChanged())
 		{
 			awaitingNewObject=true;
@@ -231,6 +234,7 @@ int levelEditor::update()
 			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
+#endif
 	}
 	else if(getTab() == REGIONS)
 	{
@@ -255,6 +259,10 @@ int levelEditor::update()
 		{
 			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
 			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
+#ifdef _DEBUG
+			buttons["addSAMbattery"]->setVisibility(newTab==OBJECTS);
+			buttons["addFlakCannon"]->setVisibility(newTab==OBJECTS);
+#endif
 		}
 		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{

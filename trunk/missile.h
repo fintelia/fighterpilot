@@ -30,19 +30,24 @@ public:
 	//float acceleration;
 
 	//int owner;
+	double launchTime;
 
-	missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target){}
+	bool engineStarted;
+	bool contrailStarted;
+	bool smallContrailStarted;
 
-	void init();
+	missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target);
 	void updateSimulation(double time, double ms);
 	//void updateFrame(float interpolation) const;
 };
 
-class flakMissile: public missileBase
+class SAMmissile: public missileBase
 {
 public:
-	Vec3f target;
+	int target;
 
-	flakMissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, Vec3f Target): missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target){}
+	SAMmissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target): missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target){}
+	
+	void init();
 	void updateSimulation(double time, double ms);
 };

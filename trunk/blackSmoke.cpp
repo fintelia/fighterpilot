@@ -9,7 +9,7 @@ namespace particle
 	//	spread =	fuzzyAttribute(1.0, 0.5);
 	//	life =		fuzzyAttribute(6000.0, 100.0);
 	//}
-	blackSmoke::blackSmoke(): emitter("smoke", 19, 3.0)
+	blackSmoke::blackSmoke(): emitter("smoke", 36, 5.0)
 	{
 
 	}
@@ -17,7 +17,7 @@ namespace particle
 	{
 		velocity =	fuzzyAttribute(3.0, 1.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
-		life =		fuzzyAttribute(6000.0, 100.0);
+		life =		fuzzyAttribute(7000.0);
 	}
 	bool blackSmoke::createParticle(particle& p, Vec3f currentPosition)
 	{
@@ -33,6 +33,8 @@ namespace particle
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
+		p.ang = random<float>(2.0*PI);
+		p.angularSpeed = random<float>(1.0);
 		p.r = 0;
 		p.g = 0;
 		p.b = 0;
@@ -42,18 +44,18 @@ namespace particle
 	void blackSmoke::updateParticle(particle& p)
 	{
 		p.pos += p.vel * world.time.length()/1000.0;
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.05)
+		p.ang += p.angularSpeed * world.time.length()/1000.0;
+		float t = (world.time() - p.startTime);
+		if(t < 100.0)
 		{
-			p.a = t * 20.0;
-			p.size = 5.0;
+			p.a = t / 100.0;
+			p.size = 25.0;
 		}
 		else
 		{
-			t = (t-0.05)/0.99;
-			p.a = 1.0 - t;
-			p.size = (1.0-t) * 5.0 + t * 30.0;
-			p.pos.y += world.time.length()/100;
+			p.a = 1.0 - (t-100.0) / 6900;
+			p.size = 25.0 + 60.0 * (t-100.0) / 6900;
+			p.pos.y += world.time.length()/20;
 		}
 	}
 }

@@ -653,13 +653,23 @@ void nPlane::shootMissile()
 			pId = i->second->id;
 		}
 	}
+	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+	for(auto i = AAA.begin(); i != AAA.end();i++)
+	{
+		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+		if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
+		{
+			minAng = ang;
+			pId = i->second->id;
+		}
+	}
 	//if(pId == 0)
 	//	return;
 
 	missileType t = rockets.ammoRounds[rockets.max - rockets.left].type;
 	Vec3f o = rockets.ammoRounds[rockets.max - rockets.left].offset;
 
-	world.newObject(new missile(t, team, position+right*o.x+up*o.y+fwd*o.z, rotation, speed, id, pId));
+	world.newObject(new missile(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id, pId)); //lastPosition is used since the missile will update this frame and move to under the plane
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }

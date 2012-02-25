@@ -58,6 +58,7 @@ class contrail: public emitter
 public:
 	contrail();
 	void init();
+	void update();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);

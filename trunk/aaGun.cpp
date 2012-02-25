@@ -3,12 +3,14 @@
 void antiAircraftArtilleryBase::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !dead);
+	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation)/*, !dead*/);
 }
-
 void antiAircraftArtilleryBase::die()
 {
 	dead = true;
+	particleManager.addEmitter(new particle::explosion(),id);
+	particleManager.addEmitter(new particle::explosionFlash(),id);
+	particleManager.addEmitter(new particle::blackSmoke(),id);
 }
 void antiAircraftArtilleryBase::loseHealth(float healthLoss)
 {
@@ -62,7 +64,8 @@ void AAgun::updateSimulation(double time, double ms)
 	lastRotation = rotation;
 	//control->update();
 	//controlState controller=control->getControlState();
-
+	if(dead)
+		return;
 	/////update machine gun/////////////////
 	if(machineGun.roundsLeft==0)
 		machineGun.rechargeLeft-=ms;
@@ -130,6 +133,9 @@ void SAMbattery::updateSimulation(double time, double ms)
 {
 	lastPosition = position;
 	lastRotation = rotation;
+
+	if(dead)
+		return;
 	//control->update();
 	//controlState controller=control->getControlState();
 
@@ -169,7 +175,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	{
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
 		missileCoolDown = 7000;
-		world.newObject(new missile(SAM_MISSILE, team, position, Quat4f(Vec3f(0,1,0))/*rotation*Quat4f(Vec3f(-1,0,0),PI/2)*/,1000, id, target));
+		world.newObject(new SAMmissile(SAM_MISSILE, team, position, Quat4f(Vec3f(0,1,0))/*rotation*Quat4f(Vec3f(-1,0,0),PI/2)*/,1000, id, target));
 	}
 }
 
@@ -183,7 +189,8 @@ void flakCannon::updateSimulation(double time, double ms)
 	lastRotation = rotation;
 	//control->update();
 	//controlState controller=control->getControlState();
-
+	if(dead)
+		return;
 	/////////////////////CONTROL//////////////////////
 	bool shoot;
 

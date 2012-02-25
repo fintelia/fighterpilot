@@ -107,7 +107,7 @@ public:
 	emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false);
 	virtual void init(){}
 	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
-	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;ParentOffset=ParentOffset;}
+	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;parentOffset=ParentOffset;}
 
 	virtual ~emitter();
 	void addParticle(particle& p);
