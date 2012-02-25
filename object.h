@@ -39,6 +39,8 @@ public:
 
 	virtual void updateSimulation(double time, double ms) {}
 	virtual void updateFrame(float interpolation) const {}
+
+	virtual void loseHealth(float healthLoss){}
 }; 
 
 //class controlledObject: public object

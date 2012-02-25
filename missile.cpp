@@ -29,15 +29,26 @@ void missileBase::updateFrame(float interpolation) const
 	{
 		meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !awaitingDelete);
 	}
-}
-
-void missile::init()
+}	bool engineStarted;
+	double engineStartTime;
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target), launchTime(world.time()), engineStarted(false), smallContrailStarted(false), contrailStarted(false)
 {
-	particleManager.addEmitter(new particle::contrail(),id);
-	particleManager.addEmitter(new particle::contrailSmall(),id);
+
 }
 void missile::updateSimulation(double time, double ms)
 {
+	if(!contrailStarted && time - launchTime >= 200.0)
+	{
+		contrailStarted = true;
+		particleManager.addEmitter(new particle::contrail(),id);
+	}
+	if(!smallContrailStarted && time - launchTime >= 300.0)
+	{
+		smallContrailStarted = true;
+		particleManager.addEmitter(new particle::contrailSmall(),id,Vec3f(0,0,-5.0));
+	}
+	lastPosition = position;
+	lastRotation = rotation;
 	/////////////////follow target////////////////////
 	nPlane* enemy = (nPlane*)world[target].get();
 	Vec3f destVec=rotation*Vec3f(0,0,1);
@@ -56,7 +67,7 @@ void missile::updateSimulation(double time, double ms)
 		}
 		else if(angle > 0.01)// we don't want to (or need to) divide by zero
 		{
-			rotation = slerp(rotation,targetRot,(float)((PI * 1.5 * ms/1000)/angle));
+			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
 		}
 
 	}
@@ -66,9 +77,22 @@ void missile::updateSimulation(double time, double ms)
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
-	speed+=acceleration*(ms/1000);
-	if(speed > 1180.0) speed = 1180.0;
+	if(!engineStarted && time - launchTime >= 150.0)
+		engineStarted = true;
+	
+	if(engineStarted)
+	{
+		speed = min(speed + acceleration*(ms/1000), 1180.0);
 		position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
+	}
+	else
+	{
+		double lTime = (time-launchTime - ms)/1000.0;
+		double cTime = (time-launchTime)/1000.0;
+
+		position.y += 84.9 * (lTime*lTime - cTime*cTime);
+		position += (rotation*Vec3f(0,0,1)) * speed * (ms/1000);
+	}
 
 	life-=ms/1000;
 	if(life < 0.0 || world.altitude(position) < 0.0)
@@ -79,24 +103,45 @@ void missile::updateSimulation(double time, double ms)
 	}
 
 }
-void flakMissile::updateSimulation(double time, double ms)
+void SAMmissile::init()
 {
-	if(position.distanceSquared(target) < 50.0*50.0)
-	{
-		awaitingDelete = true;
-		meshInstance->setDeleteFlag(true);
-		meshInstance = nullptr;
-
-	//	particleManager.addEmitter(new particle::explosion(), position, 20.0);
-		particleManager.addEmitter(new particle::flakExplosionSmoke(),position,20.0);
-	}
+	particleManager.addEmitter(new particle::contrail(),id);
+	particleManager.addEmitter(new particle::contrailSmall(),id,Vec3f(0,0,-5.0));
+}
+void SAMmissile::updateSimulation(double time, double ms)
+{
+	lastPosition = position;
+	lastRotation = rotation;
 	/////////////////follow target////////////////////
-	rotation = Quat4f(target - position);
+	nPlane* enemy = (nPlane*)world[target].get();
+	Vec3f destVec=rotation*Vec3f(0,0,1);
+	if(enemy != NULL && !enemy->dead)
+	{
+		destVec = (enemy->position - position).normalize();
+		Vec3f fwd = rotation * Vec3f(0,0,1);
 
+		Angle angle = acosA(destVec.dot(fwd));
+
+		Quat4f targetRot(destVec);
+
+		if( angle > PI*3/4)
+		{
+			target = 0;
+		}
+		else if(angle > 0.01)// we don't want to (or need to) divide by zero
+		{
+			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
+		}
+
+	}
+	else if(enemy != NULL && enemy->dead)
+	{
+		particleManager.addEmitter(new particle::explosionSmoke(),position,2.0);
+		life = 0.0;
+	}
 	//////////////////Movement//////////////
-	speed += 800.0*(ms/1000);
-	if(speed > 3000.0) speed = 3000.0;
-	position += (rotation*Vec3f(0,0,1)) * speed * (ms/1000);
+	speed = min(speed + acceleration*(ms/1000), 1180.0);
+	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;
 	if(life < 0.0 || world.altitude(position) < 0.0)
@@ -105,5 +150,4 @@ void flakMissile::updateSimulation(double time, double ms)
 		meshInstance->setDeleteFlag(true);
 		meshInstance = nullptr;
 	}
-
 }

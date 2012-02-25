@@ -174,7 +174,7 @@ Vec3f TerrainPage::rasterNormal(Vec2u loc) const
 }
 float TerrainPage::rasterHeight(Vec2u loc) const
 {
-	return minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[min(loc.x,width) + min(loc.y,height) * width] / USHRT_MAX;
+	return minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[min(loc.x,width-1) + min(loc.y,height-1) * width] / USHRT_MAX;
 }
 Vec3f TerrainPage::interpolatedNormal(Vec2f loc) const
 {
