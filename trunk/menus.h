@@ -184,6 +184,10 @@ protected:
 	bool restart;
 	bool levelup;
 
+#ifdef _DEBUG
+	bool slow;
+#endif
+
 	shared_ptr<GraphicsManager::View> view;
 public:
 	campaign(std::shared_ptr<LevelFile> lvl);

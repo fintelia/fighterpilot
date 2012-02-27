@@ -271,11 +271,15 @@ void dogFight::checkCollisions()
 				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first &&
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
 					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
 					//collisionCheck(i->second,l->second))
 				{
-					i->second->loseHealth(105);
+					if(l->second->type == SAM_MISSILE)
+						i->second->loseHealth(27);
+					else
+						i->second->loseHealth(105);
+
 					if((*i).second->dead)
 					{
 						if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
@@ -295,7 +299,7 @@ void dogFight::checkCollisions()
 				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first &&
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
 					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
 					//collisionCheck(i->second,l->second))
 				{

@@ -3,6 +3,9 @@
 
 namespace gui{
 campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
+#ifdef _DEBUG
+	,slow(false)
+#endif
 {
 	view = graphics->genView();
 	view->viewport(0,0, sAspect,1.0);
@@ -43,13 +46,15 @@ int campaign::update()
 	if(input.getKey(0x54))
 	{
 		input.up(0x54);
-		if(world.time.getSpeed() > 0.5)
+		if(!slow)
 		{
 			world.time.changeSpeed(0.1, 5.0);
+			slow = true;
 		}
 		else
 		{
 			world.time.changeSpeed(1.0, 5.0);
+			slow = false;
 		}
 	}
 	//test death animation

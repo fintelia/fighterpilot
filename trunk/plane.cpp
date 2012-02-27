@@ -111,11 +111,11 @@ void nPlane::updateSimulation(double time, double ms)
 
 					if(roll.inRange(0.0,PI,false) && (controls.right-controls.left > 0) || roll.inRange(PI,2.0*PI,false) && (controls.right-controls.left < 0))
 					{
-						direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000);
+						direction -= Lift / (mass*0.2*speed) * sin(roll)/*cos(climb)*/ * (ms/1000);
 					}
 					else
 					{
-						direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (ms/1000) * 0.2;
+						direction -= Lift / (mass*0.2*speed) * sin(roll)/*cos(climb)*/ * (ms/1000) * 0.2;
 					}
 				}
 				else
@@ -685,7 +685,7 @@ void nPlane::dropBomb()
 	bombType t = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].type;
 	Vec3f o = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].offset;
 
-	world.newObject(new bomb(t, team, position+right*o.x+up*o.y+fwd*o.z, rotation, speed, id));
+	world.newObject(new bomb(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id)); //lastPosition is used since the bomb will update this frame and move to under the plane
 	bombs.coolDownLeft += bombs.coolDown;
 	bombs.roundsLeft--;
 }

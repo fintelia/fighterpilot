@@ -94,6 +94,8 @@
   
   <models> 
     <model name="f22"          file="media/f22.obj" />
+    <model name="SAM battery"  file="media/SAM/SAM.obj" />
+
 	
     <model name="sky dome"     file="media/dome.obj" />
     <model name="cylinder"     file="media/cylinder.obj" />
@@ -103,7 +105,7 @@
     <model name="UAV"          file="media/UAV.obj" />
     <model name="B2"           file="media/B2.obj" />
     <model name="AA gun"       file="media/AAgun.obj" />
-    <model name="SAM battery"  file="media/AAgun.obj" />
+
     <model name="flak cannon"  file="media/AAgun.obj" />
     <model name="missile1"     file="media/m1(center).obj" />
     <model name="missile2"     file="media/m2(center).obj" />

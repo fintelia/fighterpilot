@@ -11,7 +11,7 @@ public:
 	void loseHealth(float healthLoss);
 	virtual void spawn();
 	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
-	void updateFrame(float interpolation) const;
+	virtual void updateFrame(float interpolation) const;
 ///////////orientation/////////////
 	Vec3f targeter;
 	int target;
@@ -48,6 +48,7 @@ private:
 public:
 	void updateSimulation(double time, double ms);
 	SAMbattery(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team), missileCoolDown(random<float>(7000.0)){}
+	void updateFrame(float interpolation) const;
 };
 
 class flakCannon: public antiAircraftArtilleryBase

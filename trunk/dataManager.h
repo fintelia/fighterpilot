@@ -23,7 +23,7 @@ private:
 		//std::shared_ptr<texturedLitVertex3D> vertices;
 //		unsigned int VBO_id;
 		GraphicsManager::vertexBuffer* VBO;
-		int numMaterials;
+//		int numMaterials;
 		struct material{
 			string tex;
 			Color color;

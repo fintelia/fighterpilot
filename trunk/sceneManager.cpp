@@ -80,22 +80,13 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 				{
 					for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
 					{
-						if((*instance) == firstPersonObject)
-							continue;
-
-						if((*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
+						if((*instance) != firstPersonObject && (*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
 							graphics->drawVertexBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);
 						}
-						(*instance)->setRenderFlag(false);
-						if((*instance)->temperaryFlag())
-						{
-							(*instance)->setDeleteFlag(true);
-						}
 					}
 				}
-
 			}
 		}
 		if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
@@ -105,4 +96,18 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	dataManager.unbind("model");
 	dataManager.unbindTextures();
 	graphics->setColor(1,1,1);
+}
+void SceneManager::endRender()
+{
+	for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
+	{
+		for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
+		{
+			(*instance)->setRenderFlag(false);
+			if((*instance)->temperaryFlag())
+			{
+				(*instance)->setDeleteFlag(true);
+			}
+		}
+	}
 }

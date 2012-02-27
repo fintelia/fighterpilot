@@ -24,3 +24,6 @@ smokeShape.png
 	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
 	made the color more white in gimp
 	
+SAM.obj (and related files)
+	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
+	adjusted in scale and changed texture format

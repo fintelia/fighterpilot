@@ -52,7 +52,7 @@ void missile::updateSimulation(double time, double ms)
 	/////////////////follow target////////////////////
 	nPlane* enemy = (nPlane*)world[target].get();
 	Vec3f destVec=rotation*Vec3f(0,0,1);
-	if(enemy != NULL && !enemy->dead)
+	if(enemy != NULL && !enemy->dead && engineStarted)
 	{
 		destVec = (enemy->position - position).normalize();
 		Vec3f fwd = rotation * Vec3f(0,0,1);
@@ -67,7 +67,8 @@ void missile::updateSimulation(double time, double ms)
 		}
 		else if(angle > 0.01)// we don't want to (or need to) divide by zero
 		{
-			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
+			float turnRate = PI * 2.5 * ms/1000 * (speed/1180.0);
+			rotation = slerp(rotation,targetRot,(float)turnRate/angle);
 		}
 
 	}
