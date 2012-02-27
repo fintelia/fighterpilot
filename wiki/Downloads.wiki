@@ -20,3 +20,5 @@ Simply unzip the file and run `FighterPilot.exe`. Then choose high graphics sett
 || Cannon || Numpad 0|| Space Key ||
 || Fire Missiles || Numpad 9 || B Key ||
 || Toggle First Person || F1 || F2 ||
+
+*Note:* If an Xbox 360 controller is present, it will be used instead of keyboard controls for the active player.
