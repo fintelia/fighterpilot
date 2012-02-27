@@ -125,22 +125,26 @@ public:
 			debugBreak();
 			return;
 		}
+		//else if(abs(speed - timeSpeed) < 0.001 || changingSpeed)
+		//{
+		//	return;
+		//}
 
-		if(changeRate == 0.0)
-		{
+		//if(changeRate == 0.0)
+		//{
 			timeSpeed = speed;
-		}
-		else
-		{
-			sReal = cReal;
-			sGame = cGame;
-			sSpeed = timeSpeed;
+		//}
+		//else
+		//{
+		//	sReal = cReal;
+		//	sGame = cGame;
+		//	sSpeed = timeSpeed;
 
-			eSpeed = speed;
-			double d = (eSpeed - sSpeed)*ticksPerSecond;
-			eReal = sReal + (__int64)abs(d/changeRate);
-			changingSpeed = true;
-		}
+		//	eSpeed = speed;
+		//	double d = (eSpeed - sSpeed)*ticksPerSecond;
+		//	eReal = sReal + (__int64)abs(d/changeRate);
+		//	changingSpeed = true;
+		//}
 	}
 	void pause()
 	{

@@ -40,6 +40,7 @@ public:
 	void newTemperaryMesh(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 	void resetMeshInstances();
 	void renderScene(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);
+	void endRender();
 };
 
 typedef shared_ptr<SceneManager::meshInstance> meshInstancePtr;

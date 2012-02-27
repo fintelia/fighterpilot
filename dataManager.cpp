@@ -747,18 +747,18 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 				token = strtok(NULL, " \t");
 				sscanf(token, "%d/%d/%d", &v, &t, &n);
 
-				faces[numFaces].n[i] = n - 1;
-				faces[numFaces].t[i] = t - 1;
-				faces[numFaces].v[i] = v - 1;
+				faces[numFaces].n[i] = n;
+				faces[numFaces].t[i] = t;
+				faces[numFaces].v[i] = v;
 			}
 
-			Vec3f a, b;
+			//Vec3f a, b;
 
-			for(i = 0; i<3; i++)
-			{
-				a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
-				b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
-			}
+			//for(i = 0; i<3; i++)
+			//{
+			//	a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
+			//	b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
+			//}
 			faces[numFaces].material=cMtl;
 			//normals[numNormals]=a.normalize().cross(b.normalize()).normalize();
 			//numNormals++;
@@ -815,9 +815,9 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	unsigned int* fs = new unsigned int[totalFaces*3];
 	for(int itt = 0;itt<totalFaces;itt++)
 	{
-		fs[itt*3+0] = faces[itt].v[0];
-		fs[itt*3+1] = faces[itt].v[1];
-		fs[itt*3+2] = faces[itt].v[2];
+		fs[itt*3+0] = faces[itt].v[0]-1;
+		fs[itt*3+1] = faces[itt].v[1]-1;
+		fs[itt*3+2] = faces[itt].v[2]-1;
 	}
 	modelAsset* a = new modelAsset;
 	a->type = asset::MODEL;
@@ -827,18 +827,30 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	texturedLitVertex3D* VBOverts = new texturedLitVertex3D[totalFaces*3];
 	unsigned int lNum=0, vNum = 0;
+	Vec3f faceNormal;
 	for(int m=0; m<numMtls; m++)
 	{
 		for(int i=0; i < totalFaces; i++)
 		{
-			if(faces[m].material == m)
+			if(faces[i].material == m)
 			{
-				for(int vi=0; vi < 3; vi++, vNum++)
-				{
-					VBOverts[vNum].position	= vertices[faces[i].v[vi]];
-					VBOverts[vNum].normal	= normals[faces[i].n[vi]];
-					VBOverts[vNum].UV		= Vec2f(texCoords[faces[i].t[vi]].u,texCoords[faces[i].t[vi]].v);
-				}
+				if(faces[i].v[0] == 0 || faces[i].v[1] == 0 || faces[i].v[2] == 0) continue;
+				VBOverts[vNum+0].position = vertices[faces[i].v[0]-1];
+				VBOverts[vNum+1].position = vertices[faces[i].v[1]-1];
+				VBOverts[vNum+2].position = vertices[faces[i].v[2]-1];
+
+				if(faces[i].n[0] == 0 || faces[i].n[1] == 0 || faces[i].n[2] == 0) //so we only have to generate the face normal once
+					faceNormal = (VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+3].position-VBOverts[vNum+0].position);
+				VBOverts[vNum+0].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[0]-1] : faceNormal;
+				VBOverts[vNum+1].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[1]-1] : faceNormal;
+				VBOverts[vNum+2].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[2]-1] : faceNormal;
+
+
+				if(faces[i].t[0] != 0)	VBOverts[vNum+0].UV = Vec2f(texCoords[faces[i].t[0]-1].u,	texCoords[faces[i].t[0]-1].v);
+				if(faces[i].t[1] != 0)	VBOverts[vNum+1].UV = Vec2f(texCoords[faces[i].t[1]-1].u,	texCoords[faces[i].t[1]-1].v);
+				if(faces[i].t[2] != 0)	VBOverts[vNum+2].UV = Vec2f(texCoords[faces[i].t[2]-1].u,	texCoords[faces[i].t[2]-1].v);
+
+				vNum+=3;
 			}
 		}
 		modelAsset::material mat;

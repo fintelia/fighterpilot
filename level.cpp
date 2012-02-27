@@ -1445,7 +1445,7 @@ void editLevel::renderObjectsPreview()
 {
 	for(auto i=mObjects.begin();i!=mObjects.end();i++)
 	{
-		if(i->type & PLANE)
+		//if(i->type & PLANE)
 		{
 			//auto b = dataManager.getModel(i->type)->boundingSphere;
 			//graphics->drawSphere(i->startloc + i->startRot * b.center, b.radius * 10.0);

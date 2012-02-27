@@ -201,12 +201,12 @@ humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, o
 	}
 	else if(mPlayerNum == 1)
 	{
-		controls[CON_CLIMB]		= controlMapping(0x57);  //U
-		controls[CON_DIVE]		= controlMapping(0x53);  //J
+		controls[CON_CLIMB]		= controlMapping(0x53);  //S
+		controls[CON_DIVE]		= controlMapping(0x57);  //W
 		controls[CON_LEFT]		= controlMapping(0x41);  //A
 		controls[CON_RIGHT]		= controlMapping(0x44);  //D
-		controls[CON_ACCEL]		= controlMapping(0x55);  //W
-		controls[CON_BRAKE]		= controlMapping(0x4A);  //S
+		controls[CON_ACCEL]		= controlMapping(0x55);  //U
+		controls[CON_BRAKE]		= controlMapping(0x4A);  //J
 		controls[CON_SHOOT]		= controlMapping(0x20);  //SPACE
 		controls[CON_MISSILE]	= controlMapping(0x42);  //B
 		controls[CON_BOMB]		= controlMapping(0x56);  //V

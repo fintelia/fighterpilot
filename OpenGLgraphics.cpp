@@ -706,6 +706,8 @@ void OpenGLgraphics::render()
 	}
 	currentView.reset();
 
+	sceneManager.endRender();
+
 	dataManager.unbindTextures();
 
 	if(!multisampling)

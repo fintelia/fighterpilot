@@ -73,15 +73,15 @@ void splitScreen::render()
 		nPlane* p=(nPlane*)players[acplayer]->getObject();
 		if(players[acplayer]->firstPersonView && !p->controled)
 		{
-			graphics->drawOverlay(Rect::XYXY(0,sh/2*acplayer,sw,sh/2*(acplayer+1)),"cockpit");
-			targeter(400,150+300*acplayer,50,p->roll);
-			radar(-0.56, 0.13-acplayer, 0.16, 0.2133, true, p);
-			healthBar(-0.65, 0.2-acplayer, 0.5, 0.666, p->health/p->maxHealth,true);
+			graphics->drawOverlay(Rect::XYXY(0,0.5*acplayer,sAspect,0.5*(acplayer+1)),"cockpit");
+			targeter(sAspect*0.5,0.25+0.5*acplayer,0.049,-p->roll);
+			radar(0.222 * sAspect, 0.437+0.5*acplayer, 0.1, -0.1, true, p);
+			healthBar(0.175*sAspect, 0.6-0.5*acplayer, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
 		}
 		else if(!p->dead)
 		{
-			radar(730, 230+300*acplayer, 64, 64, false, p);	
-			healthBar(614, 25+300*acplayer, 150, 25, p->health/p->maxHealth,false);
+			radar(sAspect-0.11, 0.389+0.5*acplayer, 0.094, 0.094, false, p);	
+			healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
 		}
 	}
 }
