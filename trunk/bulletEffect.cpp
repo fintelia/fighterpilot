@@ -23,7 +23,7 @@ namespace particle
 		double time = world.time();
 		double lTime = time - 20.0;
 
-		int pNum,n;
+		int n;
 		Vec3f start, end, dir;
 		float a1, a2, len;
 

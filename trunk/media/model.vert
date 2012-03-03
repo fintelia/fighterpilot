@@ -13,7 +13,7 @@ uniform vec3 lightPosition;
 void main()
 {
 	texCoord = gl_MultiTexCoord0.xy;
-	normal = modelTransform * vec4(gl_Normal,0.0);
+	normal = (modelTransform * vec4(gl_Normal.xyz,0.0)).xyz;
 	color = gl_Color;
 
 	position = modelTransform * gl_Vertex;

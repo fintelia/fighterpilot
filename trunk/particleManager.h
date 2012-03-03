@@ -5,6 +5,7 @@ namespace particle
 struct particle
 {
 	Vec3f pos;
+	Vec3f lastPos;
 	Vec3f vel;
 	Vec3f dir;
 	Vec3f startPos;
@@ -17,6 +18,7 @@ struct particle
 	float r, g, b, a;
 	float startTime;
 	double endTime;
+	bool fadeIn;
 };
 
 struct vertex
@@ -121,6 +123,12 @@ public:
 	virtual void update();
 	virtual void prepareRender(Vec3f up, Vec3f right);
 	virtual void render();
+};
+class relativeEmitter: public emitter
+{
+public:
+	relativeEmitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false):emitter(tex, initalCompacity, ParticlesPerSecond, AdditiveBlending){}
+	virtual void prepareRender(Vec3f up, Vec3f right);
 };
 class sparkEmitter: public emitter
 {

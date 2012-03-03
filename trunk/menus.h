@@ -131,7 +131,15 @@ protected:
 	vector<string> mapChoices;
 	int currentChoice;
 };
+class options: public screen
+{
+public:
+	bool init();
+	int update();
+	void render();
+private:
 
+};
 class loading:public screen
 {
 public:

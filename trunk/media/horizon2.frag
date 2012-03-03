@@ -7,6 +7,7 @@ varying vec2 texCoord;
 uniform vec3 eyePos;
 
 uniform sampler2D bumpMap;
+//uniform samplerCube sky;
 uniform float time, seaLevel;
 void main()
 {
@@ -30,6 +31,11 @@ void main()
 
 	float r = length(position);
 	color = mix(color,mix(vec4(0.0707403, 0.217638, 0.893289,1.0),vec4(0.172611, 0.531049, 0.893289,1.0),r),min(r+0.25,1.0));
+	
+	//vec3 refl = reflect(eyePos, n);
+	//color = mix(color, vec4(textureCube(sky,refl.xyz).rgb,1.0), 0.2);
+	
+	
 	
 //	if(gl_TexCoord[0].s<1.0 && gl_TexCoord[0].s>0.0 && gl_TexCoord[0].t<1.0 && gl_TexCoord[0].t>0.0)
 //	{

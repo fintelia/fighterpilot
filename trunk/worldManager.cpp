@@ -11,6 +11,7 @@ void WorldManager::create()
 }
 void WorldManager::destroy()
 {
+	resetTerrain();
 	clearObjects();
 	particleManager.shutdown();
 }

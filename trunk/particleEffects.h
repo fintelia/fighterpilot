@@ -81,6 +81,15 @@ public:
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
 };
+class planeEngines:public relativeEmitter
+{
+public:
+	planeEngines();
+	void init();
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
 class smokeTrail: public emitter
 {
 public:
@@ -99,7 +108,6 @@ public:
 	void update();
 	void prepareRender(Vec3f up, Vec3f right);
 };
-
 //class explosionEffect: public particleEffect
 //{
 //protected:

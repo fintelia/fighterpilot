@@ -318,6 +318,9 @@
     <ClCompile Include="bulletEffect.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
+    <ClCompile Include="planeEngines.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">

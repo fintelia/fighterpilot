@@ -104,11 +104,8 @@ void Game::update()
 
 		input.update();
 		players.update();
-
 		world.simulationUpdate();
 		particleManager.update();
-
-
 	}	
 
 	world.time.nextFrame();	
