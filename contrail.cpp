@@ -11,7 +11,7 @@ namespace particle
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
 		//spread =	fuzzyAttribute(0.0);
-		life =		fuzzyAttribute(8000.0, 500.0);
+		life =		fuzzyAttribute(8000.0, 1500.0);
 	}
 	bool contrail::createParticle(particle& p, Vec3f currentPosition)
 	{

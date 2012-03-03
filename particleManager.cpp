@@ -293,7 +293,11 @@ void emitter::update()
 			position = world[parentObject]->position + world[parentObject]->rotation * parentOffset;
 		}
 	}
-
+	for(int i=0; i < total; i++)
+	{
+		if(particles[i].endTime > time)
+			particles[i].fadeIn = false;
+	}
 
 	particle p;
 	extraTime += ms;
@@ -303,8 +307,9 @@ void emitter::update()
 
 		particle p;
 		float t = (ms-extraTime)/ms;
-		if(createParticle(p,position*(1.0-t) + lastPosition*t))
+		if(createParticle(p,position*t + lastPosition*(1.0-t)))
 		{
+			p.fadeIn = true;
 			addParticle(p);
 		}
 	}
@@ -322,6 +327,7 @@ void emitter::update()
 	{
 		if(particles[i].endTime > time)
 		{
+			particles[i].lastPos = particles[i].pos;
 			updateParticle(particles[i]);
 		}
 	}
@@ -330,7 +336,10 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 {
 	int pNum,n;
 	float sAng, cAng;
-	Vec3f r, u;
+	Vec3f r, u, pos;
+
+	float interpolate = world.time.interpolate();
+
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
 		if(particles[pNum].endTime > world.time())
@@ -340,7 +349,7 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 				vertices[vNum*4 + n].r = particles[pNum].r;
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = particles[pNum].a;
+				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
 
 				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
 			}
@@ -349,11 +358,12 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 			u = -right * sAng + up * cAng;
 			r = right * cAng + up * sAng;
 
+			pos = particles[pNum].pos * interpolate + particles[pNum].lastPos * (1.0 - interpolate);
 
-			vertices[vNum*4 + 0].position = particles[pNum].pos + u * particles[pNum].size + r * particles[pNum].size;
-			vertices[vNum*4 + 1].position = particles[pNum].pos + u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 2].position = particles[pNum].pos - u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 3].position = particles[pNum].pos - u * particles[pNum].size + r * particles[pNum].size;
+			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
+			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
 
 			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
 			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
@@ -406,34 +416,55 @@ void emitter::render()
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
 }
+void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
+{
+	int pNum,n;
+	float sAng, cAng;
+	Vec3f r, u, pos;
 
+	float interpolate = world.time.interpolate();
+	Vec3f interpolatedPos = lerp(lastPosition, position, interpolate);
+	Quat4f rotation = slerp(world[parentObject]->lastRotation, world[parentObject]->rotation, interpolate);
 
+	for(pNum = 0, vNum=0; pNum < total; pNum++)
+	{
+		if(particles[pNum].endTime > world.time())
+		{
+			for(n = 0; n<4; n++)
+			{
+				vertices[vNum*4 + n].r = particles[pNum].r;
+				vertices[vNum*4 + n].g = particles[pNum].g;
+				vertices[vNum*4 + n].b = particles[pNum].b;
+				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
 
+				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
+			}
+			sAng = sin(particles[pNum].ang);
+			cAng = cos(particles[pNum].ang);
+			u = -right * sAng + up * cAng;
+			r = right * cAng + up * sAng;
 
-	//double time = world.time();
-	//double lTime = time - 20.0;//world.time.getLastTime();
-	//Vec3f start, end, end2;
+			pos = interpolatedPos + rotation * (parentOffset + lerp(particles[pNum].lastPos, particles[pNum].pos, interpolate));
 
-	//for(int n=0;n < bullets.size(); n++)
-	//{
-	//	auto i = bullets[n];
+			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
+			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
+			vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
 
-	//	start=i.startPos+i.velocity*(time-i.startTime)/1000;
-	//	end=i.startPos+i.velocity*(time-i.startTime)/1000-i.velocity.normalize()*2;
-	//	end2=i.startPos+i.velocity*max(lTime-i.startTime,0.0)/1000;
+			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
 
-	//	Vec3f dir = i.velocity.normalize();
-	//	float a1 = dir.dot(v.up);
-	//	float a2 = dir.dot(v.right);
-	//	float len = 0.3/sqrt(a1*a1+a2*a2);
+			vNum++;
+		}
+	}
 
-	//	vertices[n*4 + 0].position = start + (v.right*a1 - v.up*a2)*len;
-	//	vertices[n*4 + 1].position = start - (v.right*a1 - v.up*a2)*len;
-	//	vertices[n*4 + 2].position = end2 - (v.right*a1 - v.up*a2)*len;
-	//	vertices[n*4 + 3].position = end2 + (v.right*a1 - v.up*a2)*len;
+	
 
-	//}
-
+	VBO->bindBuffer();
+	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+};
 
 
 void sparkEmitter::prepareRender(Vec3f up, Vec3f right)

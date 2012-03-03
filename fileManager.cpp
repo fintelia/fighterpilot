@@ -1408,7 +1408,7 @@ FileManager::fileContents FileManager::serializePngFile(shared_ptr<textureFile> 
 	}
 
 	png_bytepp rows = new unsigned char*[f->height];
-	for(int i=0;i<f->height;i++) rows[i] = f->contents + f->width * f->channels * (f->height - i - 1);
+	for(unsigned int i=0;i<f->height;i++) rows[i] = f->contents + f->width * f->channels * (f->height - i - 1);
 
 	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
 	if (!png_ptr)

@@ -13,22 +13,22 @@ bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time(
 
 }
 
-bulletCloud::bulletCloud(): object(Vec3f(), Quat4f(), BULLET_CLOUD), vertices(NULL), totalVertices(0), VBO(nullptr)
+bulletCloud::bulletCloud(): object(Vec3f(), Quat4f(), BULLET_CLOUD)
 {
 	
 }
 void bulletCloud::init()
 {
-	if(vertices)
-		delete vertices;
+	//if(vertices)
+	//	delete vertices;
 
-	totalVertices = 1024;
-	vertices = new texturedVertex3D[totalVertices];
+	//totalVertices = 1024;
+	//vertices = new texturedVertex3D[totalVertices];
 	
-	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
-	VBO->addPositionData(3, 0);
-	VBO->addTexCoordData(2, 3*sizeof(float));
-	VBO->setTotalVertexSize(sizeof(texturedVertex3D));
+	//VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
+	//VBO->addPositionData(3, 0);
+	//VBO->addTexCoordData(2, 3*sizeof(float));
+	//VBO->setTotalVertexSize(sizeof(texturedVertex3D));
 }
 
 void bulletCloud::draw()

@@ -76,7 +76,6 @@
     <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />
     
     <shader name="ocean"                vertex="media/ocean.vert"       fragment="media/ocean.frag" />
-    <shader name="partical shader"      vertex="media/smoke.vert"       fragment="media/smoke.frag" />
     <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
     <shader name="hex grid shader"      vertex="media/hex grid.vert"    fragment="media/hex grid.frag" />
     <shader name="sky shader"           vertex="media/sky.vert"         fragment="media/sky.frag" />

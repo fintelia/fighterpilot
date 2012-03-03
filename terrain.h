@@ -3,8 +3,6 @@ class TerrainPatch
 {
 public:
 
-
-
 	TerrainPatch* parent;
 	TerrainPatch* children[4];		//top left, top right, bottom left, bottom right
 	TerrainPatch* neighbors[4];		//left, right, top, bottom
@@ -56,11 +54,7 @@ public:
 	mutable vector<TerrainPatch*> renderQueue;
 
 	TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsigned short patchResolution, Vec3f position, Vec3f scale);
-	~TerrainPage()
-	{
-		delete[] heights;
-		delete[] trunk;
-	}
+	~TerrainPage();
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y) const;
 
 	void render(Vec3f eye) const;
@@ -90,6 +84,7 @@ protected:
 	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
 
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
+	void resetTerrain();
 public:
 	Terrain():waterPlane(true), skyTextureId(0){}
 	~Terrain();

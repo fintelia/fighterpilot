@@ -359,12 +359,15 @@ DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile
 {
 	bool errorFlag = false;
 	GLuint v=0,f=0,p;
-	v = glCreateShader(GL_VERTEX_SHADER);
-	f = glCreateShader(GL_FRAGMENT_SHADER);
+
 
 	//auto ff = fileManager.loadTextFile(frag);
 	//auto vv = fileManager.loadTextFile(vert);
-	if(frag->invalid()  || vert->invalid()) return false;
+	if(frag->invalid()  || vert->invalid())
+		return nullptr;
+
+	v = glCreateShader(GL_VERTEX_SHADER);
+	f = glCreateShader(GL_FRAGMENT_SHADER);
 
 	const char* ptr = vert->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
 	ptr = frag->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
@@ -417,6 +420,9 @@ DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile
 	}
 	glUseProgram(0);
 
+	glDeleteShader(f); // we no longer need these shaders individually, although they
+	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+
 	if(!errorFlag)
 	{
 		shaderAsset* a = new shaderAsset;
@@ -425,7 +431,10 @@ DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile
 		a->use_sAspect = use_sAspect;
 		return a;
 	}
-	return nullptr;
+	else
+	{
+		return nullptr;
+	}
 }
 //bool DataManager::registerTerrainShader(string name, string frag)
 //{
@@ -1391,7 +1400,7 @@ void DataManager::shutdown()
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
 		if(i->second->type == asset::SHADER)			glDeleteProgram(((shaderAsset*)i->second)->id);
-		//else if(i->second->type == asset::MODEL)		glDeleteBuffers(1,(const GLuint*)&i->second->id);
+		else if(i->second->type == asset::MODEL)		delete ((modelAsset*)i->second)->VBO;
 		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
 	}
 	assets.clear();

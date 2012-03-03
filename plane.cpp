@@ -14,6 +14,8 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, 
 
 void nPlane::init()
 {
+	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(-0.4, 0, -3.3));
+	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
 	spawn();
 }
 void nPlane::updateSimulation(double time, double ms)

@@ -15,10 +15,10 @@ public:
 class bulletCloud: public object
 {
 private:
-	texturedVertex3D* vertices;
-	unsigned int totalVertices; // total number of vertices allocated
+//	texturedVertex3D* vertices;
+//	unsigned int totalVertices; // total number of vertices allocated
 
-	GraphicsManager::vertexBuffer* VBO;
+//	GraphicsManager::vertexBuffer* VBO;
 
 public:
 	vector<bullet> bullets;
@@ -26,7 +26,6 @@ public:
 	friend class Game;
 
 	bulletCloud();
-	~bulletCloud(){if(vertices) delete[] vertices;}
 
 	void init();
 	void draw();
