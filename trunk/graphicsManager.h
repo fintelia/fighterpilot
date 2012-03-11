@@ -257,6 +257,8 @@ public:
 
 	Vec3f getLightPosition(){return lightPosition;}
 
+	float getGamma(){return currentGamma;}
+
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
 
@@ -274,6 +276,8 @@ public:
 	//void lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view=0);
 
 	//bool sphereInFrustum(Sphere<float> s);
+
+	virtual set<Vec2u> getSupportedResolutions()=0;
 
 	virtual void flashTaskBar(int times, int length=0)=0;
 	virtual void minimizeWindow()=0;
@@ -381,6 +385,8 @@ public:
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);
 	Vec2f getTextSize(string text, string font);
+
+	set<Vec2u> getSupportedResolutions();
 
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();

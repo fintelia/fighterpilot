@@ -158,10 +158,21 @@ protected:
 };
 class listBox: public element
 {
+protected:
+	vector<string> options;
+
+	bool clicking;
+	bool choosing;
+
+	int optionNum;
+
 public:
 	listBox(float X, float Y, float Width, string str, Color textColor): element(LISTBOX,X,Y,Width,0.029,str,textColor),clicking(false),choosing(false),optionNum(-1){}
 
 	void addOption(string option);
+	void setOption(unsigned int oNum){optionNum = clamp(oNum,0,options.size()-1);}
+
+	int getNumOptions(){return options.size();}
 
 	bool mouseDownL(float X, float Y);
 	bool mouseUpL(float X, float Y);
@@ -172,14 +183,6 @@ public:
 	void render();
 
 	int getOptionNumber(){return optionNum;}
-protected:
-
-	vector<string> options;
-
-	bool clicking;
-	bool choosing;
-
-	int optionNum;
 };
 
 class toggle: public element
@@ -209,7 +212,7 @@ protected:
 class slider:public element
 {
 public:
-	slider(int X, int Y, int Width, int Height, float uValue, float lValue = 0, Color c = Color(0,1,0)): element(SLIDER,X,Y,Width,Height,"",c),minValue(lValue),maxValue(uValue),value(lValue),clicking(false),mouseOffset(0.0f){}
+	slider(float X, float Y, float Width, float Height, float uValue, float lValue = 0, Color c = Color(0,1,0)): element(SLIDER,X,Y,Width,Height,"",c),minValue(lValue),maxValue(uValue),value(lValue),clicking(false),mouseOffset(0.0f){}
 	virtual ~slider(){}
 
 	void render();

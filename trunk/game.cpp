@@ -39,6 +39,11 @@ bool Game::init()
 			debugBreak();
 	}
 
+	shared_ptr<FileManager::textFile> shortcut(new FileManager::textFile("media/settings.ini.url"));
+	shortcut->contents = string("[InternetShortcut]\r\nURL=") + appData + "settings.ini\r\nIconIndex=0\r\nIconFile=" + appData + "settings.ini\r\n";
+	fileManager.writeTextFile(shortcut);
+
+
 	auto s = fileManager.loadIniFile(appData + "settings.ini");
 	settings.load(s->bindings);
 

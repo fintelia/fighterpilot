@@ -230,6 +230,10 @@ bool chooseMode::keyDown(int vkey)
 
 		//modeManager.setMode(new modeMapBuilder);
 	}
+	else if(vkey==VK_F3)
+	{
+		menuManager.setMenu(new gui::options);
+	}
 	else
 	{
 		return false;
@@ -313,17 +317,78 @@ bool chooseMap::keyDown(int vkey)
 //
 bool options::init()
 {
+	auto resolutions = graphics->getSupportedResolutions();
+
+	string appData = fileManager.getAppDataDirectory();
+	settingsFile = fileManager.loadIniFile(appData + "settings.ini");
+	
+	initialGamma = graphics->getGamma();
+	initialResolutionChoice = -1;
+
+	listBoxes["resolution"] = new listBox(0.4*sAspect,0.3,0.150,lexical_cast<string>(sw) + "x" + lexical_cast<string>(sh),black);
+	for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
+	{
+		if(i->x >= 800 && i->y >= 600)
+		{
+			listBoxes["resolution"]->addOption(lexical_cast<string>(i->x) + "x" + lexical_cast<string>(i->y));
+		
+			resolutionChoices.push_back(*i);
+			if(i->x == sw && i->y == sh)
+			{
+				initialResolutionChoice = resolutionChoices.size()-1;
+			}
+		}
+	}
+
+	labels["gamma"] = new label(0.3*sAspect, 0.7, "brightness:");
+	sliders["gamma"] = new slider(0.4*sAspect, 0.7, 0.100, 0.03,3.0,1.0); 
+	sliders["gamma"]->setValue(initialGamma);
+
+	buttons["save"] = new button(0.9*sAspect-0.11, 0.71, 0.100, 0.030, "Save", lightGray);
+	buttons["cancel"] = new button(0.9*sAspect-0.22, 0.71, 0.100, 0.030, "Cancel", lightGray);
+
+
 	return true;
 }
 int options::update()
 {
+	graphics->setGamma(sliders["gamma"]->getValue());
+
+	if(buttons["save"]->checkChanged())
+	{
+		bool needRestart = false;
+
+		if(initialResolutionChoice != listBoxes["resolution"]->getOptionNumber())
+		{
+			settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(resolutionChoices[listBoxes["resolution"]->getOptionNumber()].x);
+			settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(resolutionChoices[listBoxes["resolution"]->getOptionNumber()].y);
+			needRestart = true;
+		}
+
+		settingsFile->bindings["graphics"]["gamma"] = lexical_cast<string>(sliders["gamma"]->getValue());
+		fileManager.writeIniFile(settingsFile);
+
+		menuManager.setMenu(new chooseMode);
+		if(needRestart)
+		{
+			messageBox("some changes will not take effect until you restart FighterPilot");
+		}
+	}
+	else if(buttons["cancel"]->checkChanged())
+	{
+		graphics->setGamma(initialGamma);
+		menuManager.setMenu(new chooseMode);
+	}
+
+	
+
 	return true;
 }
 void options::render()
 {
 	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
-	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
-
+	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
+	menuManager.drawCursor();
 }
 // ______________________________________________________________________________________________________________________________
 // | 																															|

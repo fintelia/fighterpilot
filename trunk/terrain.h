@@ -77,6 +77,7 @@ protected:
 	bool waterPlane;
 
 	unsigned int skyTextureId; //id for the sky cube-map
+	unsigned int oceanTextureId; //id for the ocean normals cube map
 
 	vector<std::shared_ptr<TerrainPage>> terrainPages;
 
@@ -84,6 +85,7 @@ protected:
 	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
 
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
+	void generateOceanTexture();
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true), skyTextureId(0){}

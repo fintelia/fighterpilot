@@ -133,6 +133,12 @@ protected:
 };
 class options: public screen
 {
+private:
+	float initialGamma;
+	int initialResolutionChoice;
+
+	vector<Vec2u> resolutionChoices;
+	shared_ptr<FileManager::iniFile> settingsFile;
 public:
 	bool init();
 	int update();

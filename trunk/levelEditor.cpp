@@ -20,9 +20,9 @@ bool levelEditor::init()
 	sliders["sea level"]	= new slider(sAspect-0.1,0.145,0.1,0.030,1.0,0.0);
 	sliders["height scale"] = new slider(sAspect-0.1,0.180,0.1,0.030,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
 
-	buttons["load"]			= new button(0.938,0.965,0.1,0.030,"Load",Color(0.8,0.8,0.8),white);
-	buttons["save"]			= new button(1.040,0.965,0.1,0.030,"Save",Color(0.8,0.8,0.8),white);
-	buttons["exit"]			= new button(1.143,0.965,0.1,0.030,"Exit",Color(0.8,0.8,0.8),white);
+	buttons["load"]			= new button(sAspect-0.312,0.965,0.1,0.030,"Load",Color(0.8,0.8,0.8),white);
+	buttons["save"]			= new button(sAspect-0.210,0.965,0.1,0.030,"Save",Color(0.8,0.8,0.8),white);
+	buttons["exit"]			= new button(sAspect-0.107,0.965,0.1,0.030,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
 

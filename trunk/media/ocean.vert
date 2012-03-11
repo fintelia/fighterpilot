@@ -1,18 +1,21 @@
 
-#version 120
-
-varying vec3 position, lightDir, halfVector;
+varying vec3 lightDir;
+varying vec2 position;
 varying vec2 texCoord;
+varying float depth;
 
-uniform float XZscale;
+uniform vec2 center;
+uniform float scale;
+
+uniform mat4 cameraProjection;
+uniform mat4 modelTransform;
+uniform vec3 lightPosition;
 
 void main()
 {
-	position.y = 0.0;
-	position.xz = gl_Vertex.xz/XZscale;
-
-	lightDir = normalize(gl_LightSource[0].position.xyz);
-	halfVector = normalize(gl_LightSource[0].halfVector.xyz);
-
-	gl_Position = ftransform();
-}
+	lightDir = normalize(lightPosition - gl_Vertex.xyz);
+	texCoord = (gl_Vertex.xz*scale + center) * 0.00005;
+	position = gl_Vertex.xz;
+	gl_Position = cameraProjection * modelTransform * gl_Vertex;
+	depth = gl_Position.w;
+} 

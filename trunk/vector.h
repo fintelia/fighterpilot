@@ -79,6 +79,14 @@ public:
 	{
 		return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
 	}
+	template<class U> bool operator<(Vector2<U> v) const //less than and greater than operators are just for sorting in containers
+	{
+		return (x != v.x) ? x < v.x : y < v.y;
+	}
+	template<class U> bool operator>(Vector2<U> v) const
+	{
+		return (x != v.x) ? x > v.x : y > v.y;
+	}
 };
 typedef Vector2<float>			Vec2f;
 typedef Vector2<double>			Vec2d;
