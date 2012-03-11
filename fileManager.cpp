@@ -115,7 +115,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 		if (SHGetFolderPathA( NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szPath) == S_OK)
 		{
 			string dir(szPath);
-			dir += "/FighterPilot/";
+			dir += "\\FighterPilot\\";
 
 			createDirectory(dir); // checks to see if file exists and creates it if it does not
 			return dir;

@@ -237,7 +237,7 @@ DataManager::asset* DataManager::registerTexture(shared_ptr<FileManager::texture
 
 	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((f->width & (f->width-1)) || (f->height & (f->height-1)));
 
-	GLuint texV;
+	GLuint texV = 0;
 	glGenTextures(1,&texV);
 	glBindTexture(GL_TEXTURE_2D, texV);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -255,6 +255,7 @@ DataManager::asset* DataManager::registerTexture(shared_ptr<FileManager::texture
 	if(NPOT)
 	{
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//any OpenGL call here can cause a "hardware does not meet minimum specifications" driver error, if multisampling is set to 16x
 		glTexImage2D(GL_TEXTURE_2D, 0, f->channels, f->width, f->height,0, format, GL_UNSIGNED_BYTE, f->contents);
 	}
 	else

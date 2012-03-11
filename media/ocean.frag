@@ -1,57 +1,52 @@
 
-#version 120
+varying vec3 lightDir, eyeVec;
+//varying float rad;
+varying vec2 position;
+varying vec2 texCoord;
+varying float depth;
 
-varying vec3 position, lightDir, halfVector;
+uniform vec3 eyePos;
 
-uniform sampler2D bumpMap;
-uniform sampler2D groundTex;
-uniform sampler2D rock;
-uniform sampler2D sand;
-uniform float time;
-uniform float seaLevel;
+uniform sampler3D oceanNormals;
+uniform samplerCube sky;
+uniform float time, seaLevel;
 void main()
 {
-	vec4 waves,seaFloor;
-
-	vec3 n = normalize(	texture2D(bumpMap,position.xz*4.0	+ vec2(-time*0.50*0.00004	,time*0.87*0.00004) ).rgb*0.1+
-						texture2D(bumpMap,position.xz*1.0	+ vec2(time*0.70*0.00001	,time*0.71*0.00001)).rgb*0.2+
-						texture2D(bumpMap,position.xz*0.25	+ vec2(-time*0.3*0.0000025	,-time*0.95*0.0000025)).rgb*0.3);
-
-						
-	float NdotL = -dot(n,lightDir);
+	vec3 n;
+	float NdotL;
+	vec4 color;
 	
-	if (NdotL > 0.0) 
-		waves = vec4(0.1,0.2,0.3,1.0) + 0.8 * NdotL + vec4(300000000000.0,300000000000.0,300000000000.0,0.0) * pow(max(dot(n,normalize(halfVector)),0.0),100.0);
-		//waves = vec4(0.1 + 0.2*NdotL, 0.2 + 0.3*NdotL, 0.3 + 0.5*NdotL, 1.0);
+	//float alphaMult = dot(normalize(eyePos-pos),vec3(0.0,1.0,0.0));
+
+	n = texture3D(oceanNormals,vec3(texCoord.xy*8.0,0.00015*time)).xyz + texture3D(oceanNormals,vec3(texCoord.xy * 64.0,0.0003*time)).xyz * 0.75;
+	n.x = n.x * 2.0 - 1.0;
+	n.z = n.z * 2.0 - 1.0;
+	n = normalize(n);
+
+	NdotL = dot(n,lightDir);
+	
+	if (NdotL > 0.0)
+		color = vec4(0, 0.1, 0.35, 1.0) + 0.10 * NdotL; // + vec4(10,10,10,0) * pow(max(dot(n,normalize(halfVector)),0.0),60.0);
 	else
-		waves = vec4(0.1,0.2,0.3,1.0);
+		color = vec4(0, 0.1, 0.35, 1.0);
 
-	if(position.x>1.0 || position.x<0.0 || position.z>1.0 || position.z<0.0)
-	{
-		gl_FragColor = waves;
-	}
-	else
-	{
-		float depth = clamp((seaLevel-texture2D(groundTex,position.xz).a)*5.5,0.0,1.0);
-		////depth = max(depth,0.0);
-		//
-		//vec3 normal = texture2D(groundTex,position.xz).xyz;
-		//normal.x = normal.x * 2.0 - 1.0;
-		//normal.z = normal.z * 2.0 - 1.0;
-		//normal = normalize(normal);
-		//float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
-		//float r=0.0;
-		//float s1=1.10;//1.53
-		//float s2=0.80;//1.48
-		//if(slope>s1 		) 	r=1.0;
-		//else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
-		//
-		//seaFloor = texture2D(rock,position.xz*4.0,depth*2.0) * (r)  + texture2D(sand,position.xz*4.0,depth*2.0) * (1.0-r);
-		//gl_FragColor = mix(seaFloor,    waves,    depth );//vec4(mix(      mix(texture2D(sand,position.xz*4.0,depth*2.0).rgb, texture2D(rock,position.xz*4.0,depth*2.0).rgb, r),    color.rgb,    depth ),1.0);
-		////	gl_FragColor = vec4(depth,depth,depth,1.0);
-
-
-
-		gl_FragColor = vec4(waves.rgb,depth);
-	}
+		
+	
+	float facing = (1.0 - NdotL);			
+	float fresnel = max(0.2 + (1.0-0.2)*pow(facing, 5.0), 0.0); //0.2 = bias; 5.0 = power
+	// Use distance to lerp between refraction and deep water color
+//	float fDistScale = clamp(10.0/depth, 0.0, 1.0);
+//	vec3 WaterDeepColor = vec3(0, 0.25, 0.35) * fDistScale + (1 - fDistScale) * color.rgb; //vec3(0, 0.1, 0.125));  
+	// Lerp between water color and deep water color
+	vec3 waterColor = (vec3(0, 0.1, 0.15) * facing + color.rgb * (1.0 - facing));
+	vec3 cReflect = fresnel * textureCube(sky, reflect(eyePos,n));
+	color = vec4(cReflect + waterColor, 1.0);
+	
+	
+	
+	float r = length(position);
+	//color = mix(color,mix(vec4(0.0707403, 0.217638, 0.893289,1.0),vec4(0.172611, 0.531049, 0.893289,1.0),r),min(r+0.25,1.0));	
+	color = mix(vec4(0.5,0.5,0.5,0.0), color, clamp((1.7 - 1.7*r)*(1.7 - 1.7*r)*(1.7 - 1.7*r), 0.0, 1.0)); 
+	
+	gl_FragColor = color;
 }

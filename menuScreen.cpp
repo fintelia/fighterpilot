@@ -631,7 +631,7 @@ bool messageBox_c::init(string t, vector<string> names)
 	Vec2f tSize = graphics->getTextSize(t);
 	width = clamp(tSize.x+0.039,0.700,sAspect-0.01);
 	height = 0.288 + max(tSize.y-0.166,0.0);
-	x = 0.5 - width/2;
+	x = sAspect*0.5 - width/2;
 	y = 0.5 - height/2;
 	if(x < 0.005) x = 0.005;
 	if(y < 0.005) y = 0.005;
@@ -1239,14 +1239,14 @@ void slider::render()
 		Vec2f cursorPos = input.getMousePos();
 		value = clamp((maxValue - minValue) * (cursorPos.x - shape.x) / shape.w + minValue + mouseOffset, minValue, maxValue);
 	}
-	graphics->drawOverlay(Rect::XYXY(shape.x,0.5*shape.h+shape.y-11,shape.x+shape.w,0.5*shape.h+shape.y+11),"slider bar");
+	graphics->drawOverlay(Rect::XYXY(shape.x,0.5*shape.h+shape.y-0.010,shape.x+shape.w,0.5*shape.h+shape.y+0.010),"slider bar");
 
 	float xv = (value-minValue)*shape.w/(maxValue-minValue)+shape.x;
-	graphics->drawOverlay(Rect::XYXY(xv-22,shape.y,xv+22,shape.y+shape.h),"slider");
+	graphics->drawOverlay(Rect::XYXY(xv-0.021,shape.y,xv+0.021,shape.y+shape.h),"slider");
 }
 bool slider::mouseDownL(float X, float Y)
 {
-	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 22 && Y > shape.y && Y < shape.y + shape.h)
+	if(view && active && abs(value*shape.w/(maxValue - minValue) + shape.x  - X) < 0.021 && Y > shape.y && Y < shape.y + shape.h)
 	{
 		clicking = true;
 		mouseOffset = value - ((maxValue - minValue) * (X - shape.x) / shape.w + minValue);

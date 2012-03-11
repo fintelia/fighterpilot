@@ -165,10 +165,10 @@ TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned 
 }
 Vec3f TerrainPage::rasterNormal(Vec2u loc) const
 {
-	float Cy = (loc.y < height-1)	? ((float)heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float By = (loc.y < height-1)	? ((float)heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Ay = (loc.x < width-1)	? ((float)heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
-	float By = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float Cy = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 
 	return Vec3f(Cy - Ay, 30.0, Dy - By).normalize();
 }
@@ -299,6 +299,8 @@ void TerrainPage::render(Vec3f eye) const
 	dataManager.bind("LCnoise",3);
 	dataManager.bindTex(texture,4);
 	dataManager.bind("grass normals",5);
+	dataManager.bind("noise",6);
+
 
 	dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
 	dataManager.setUniform1f("minHeight",	minXYZ.y);
@@ -313,6 +315,7 @@ void TerrainPage::render(Vec3f eye) const
 	dataManager.setUniform1i("LCnoise",		3);
 	dataManager.setUniform1i("groundTex",	4);
 	dataManager.setUniform1i("grass_normals", 5);
+	dataManager.setUniform1i("noiseTex",	6);			// make sure uniform exists
 
 	//dataManager.bind("snow terrain");
 	//dataManager.bind("snow",0);
@@ -500,6 +503,115 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	t = GetTime() - t;
 	t = GetTime();
 }
+float cosineInterpolation(float v1, float v2, float interp)
+{
+	return  lerp(v1, v2, (1.0 - cos(interp * PI)) * 0.5);
+}
+void Terrain::generateOceanTexture()
+{
+	double t = GetTime();
+
+	unsigned int X = random<unsigned int>(UINT_MAX); // for random numbers;
+
+	const unsigned int resolution = 128;
+	const unsigned int depth = 4;
+	const unsigned int numOctaves = 5;
+
+	float* heights = new float[resolution * resolution * depth];
+	float* layer = new float[resolution * resolution];
+	unsigned char* textureData = new unsigned char[resolution * resolution * depth * 4];
+
+	for(unsigned int i=0; i<resolution * resolution * depth; i++)
+		heights[i] = 0.0f;
+
+
+	float h11, h21, h22, h12, x1, x2;
+	for(unsigned int octave = 0; (octave < numOctaves) && (resolution >> (octave + 3) > 0); octave++)
+	{
+		unsigned int octaveStep = resolution >> (octave + 3);
+
+		for(unsigned int z = 0; z < depth; z += 1)
+		{
+			for(unsigned int x = 0; x < resolution; x += octaveStep)
+			{
+				for(unsigned int y = 0; y < resolution; y += octaveStep)
+				{
+					X = (1664525 * X + 1013904223)/* % 0x100000000*/;
+
+					layer[x + y*resolution] = float(X) / UINT_MAX * pow(0.5f,(int)octave+1); //random<float>(pow(0.5f,(int)octave+1));
+				}
+			}
+			for(unsigned int x = 0; x < resolution; x ++)
+			{
+				for(unsigned int y = 0; y < resolution; y ++)
+				{
+					if(x % octaveStep != 0 || y % octaveStep != 0)
+					{
+						h11 = layer[(x - (x%octaveStep))							+ (y - (y%octaveStep)) * resolution];
+						h21 = layer[(x - (x%octaveStep) + octaveStep)%resolution	+ (y - (y%octaveStep)) * resolution];
+						h22 = layer[(x - (x%octaveStep) + octaveStep)%resolution	+ ((y - (y%octaveStep) + octaveStep)%resolution) * resolution];
+						h12 = layer[(x - (x%octaveStep))							+ ((y - (y%octaveStep) + octaveStep)%resolution) * resolution];
+
+						x1 = cosineInterpolation(h11, h12, static_cast<float>(y%octaveStep)/octaveStep);
+						x2 = cosineInterpolation(h21, h22, static_cast<float>(y%octaveStep)/octaveStep);
+
+						heights[x + y*resolution + z * resolution * resolution] += cosineInterpolation(x1, x2, static_cast<float>(x%octaveStep)/octaveStep);
+					}
+					else
+					{
+						heights[x + y*resolution + z * resolution * resolution] += layer[x + y*resolution];
+					}
+				}
+			}
+		}
+	}
+
+	t = GetTime() - t;
+	t = GetTime();
+
+	Vec3f n;
+	float Ay, By, Cy, Dy;
+	for(unsigned int z = 0; z < depth; z++)
+	{
+		for(unsigned int x = 0; x < resolution; x++)
+		{
+			for(unsigned int y = 0; y < resolution; y++)
+			{
+				By = heights[x				+ ((y+1)%resolution)*resolution + z * resolution * resolution] - heights[x + y*resolution + z * resolution * resolution];
+				Ay = heights[(x+1)%resolution	+ y*resolution					+ z * resolution * resolution] - heights[x + y*resolution + z * resolution * resolution];
+				Dy = heights[x				+ ((y-1)%resolution)*resolution + z * resolution * resolution] - heights[x + y*resolution + z * resolution * resolution];
+				Cy = heights[(x-1)%resolution	+ y*resolution					+ z * resolution * resolution] - heights[x + y*resolution + z * resolution * resolution];
+
+				n = Vec3f(Cy - Ay, 0.1, Dy - By).normalize();
+
+				textureData[(x + y*resolution + z * resolution * resolution)*4 + 0] = (n.x + 1.0) * 0.5 * 255.0;
+				textureData[(x + y*resolution + z * resolution * resolution)*4 + 1] = n.y * 255.0;
+				textureData[(x + y*resolution + z * resolution * resolution)*4 + 2] = (n.z + 1.0) * 0.5 * 255.0;
+				textureData[(x + y*resolution + z * resolution * resolution)*4 + 3] = heights[x + y*resolution + z * resolution * resolution] * 255.0;
+			}
+		}
+	}
+		t = GetTime() - t;
+	t = GetTime();
+	glGenTextures(1,&oceanTextureId);
+	glBindTexture(GL_TEXTURE_3D, oceanTextureId);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP, TRUE);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, resolution, resolution, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+		t = GetTime() - t;
+	t = GetTime();
+
+	glBindTexture(GL_TEXTURE_3D, 0);
+
+	delete[] heights;
+	delete[] layer;
+	delete[] textureData;
+}
 void Terrain::resetTerrain()
 {
 	terrainPages.clear();
@@ -522,7 +634,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
 	generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8); //should actually make the sun be at the position of the light source...
-
+	generateOceanTexture();
 	graphics->checkErrors();
 }
 void Terrain::renderTerrain(Vec3f eye) const
@@ -535,22 +647,25 @@ void Terrain::renderTerrain(Vec3f eye) const
 	glDisable(GL_DEPTH_TEST);
 	dataManager.bind("sky shader");
 
-	dataManager.setUniform1i("tex", 1);
+	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
-	/*dataManager.bind("clouds",0);*/	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
-	/*dataManager.bind("clouds",0);*/	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
 	glActiveTexture(GL_TEXTURE0);
-	//dataManager.bindTex(0,0);
-	dataManager.unbindShader();
+	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
 
+	
 
 	if(waterPlane)
 	{
-		dataManager.bind("horizon2");
-		dataManager.setUniform1i("bumpMap",	0);
-		//dataManager.setUniform1i("sky",	1);
+		dataManager.bind("ocean");
+
+		//dataManager.bind("ocean normals");
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_3D, oceanTextureId);
+
+		dataManager.setUniform1i("sky",	0);
+		dataManager.setUniform1i("oceanNormals",	1);
 		dataManager.setUniform1f("time",	world.time());
 		dataManager.setUniform1f("seaLevel",0);
 		dataManager.setUniform2f("center",	center.x,center.z);
@@ -560,21 +675,23 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 
-		dataManager.unbindTextures();
+		glBindTexture(GL_TEXTURE_3D, 0);
 		dataManager.unbindShader();
 	}
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
 	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
+	dataManager.unbindShader();
 
 
 
 	graphics->setDepthMask(true);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(eye);
 	}
+	glDisable(GL_CULL_FACE);
 	if(waterPlane)
 	{
 		graphics->setColorMask(false);

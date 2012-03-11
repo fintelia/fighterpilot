@@ -552,13 +552,21 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT, sw, sh);
 
 		glGenFramebuffersEXT(1, &multisampleFBO.fboID);
+
+
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+		//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+		checkErrors();
 		if(!checkForErrors())
+		{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 			return false;
+		}
 	}
-	//////////////////////////////////////////////////////////////////////////////////////
+
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	return true;
 }
@@ -1057,6 +1065,22 @@ bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples)
 	}
 	return false;
 }
+set<Vec2u> OpenGLgraphics::getSupportedResolutions()
+{
+	int i=0;
+	DEVMODE d;
+	set<Vec2u> s;
+
+	d.dmSize = sizeof(DEVMODE);
+	d.dmDriverExtra = 0;
+
+	while(EnumDisplaySettings(nullptr, i, &d))
+	{
+		s.insert(Vec2u(d.dmPelsWidth, d.dmPelsHeight));
+		i++;
+	}
+	return s;
+}
 void OpenGLgraphics::swapBuffers()
 {
 	SwapBuffers(context->hDC);
@@ -1249,13 +1273,8 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 
 	bool dMask = true;
 
-	bool changeTextures = !dataManager.textureBound();
 	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
 	{
-		if(changeTextures)
-		{
-			dataManager.bind(i->tex == "" ? "white" : i->tex);
-		}
 		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
 
 		if(i->color.a > 0.999 && !dMask)
@@ -1277,10 +1296,6 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 	//glDisableClientState(GL_NORMAL_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	if(changeTextures)
-	{
-		dataManager.unbindTextures();
-	}
 	glColor3f(1,1,1);
 }
 void OpenGLgraphics::checkErrors()

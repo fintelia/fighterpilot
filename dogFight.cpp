@@ -186,6 +186,8 @@ void dogFight::targeter(float x, float y, float apothem, Angle tilt)
 void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
 {
 	dataManager.bind("hex grid shader");
+	dataManager.bind("hex grid");
+
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1f("minHeight",center.y);
 	dataManager.setUniform1f("maxHeight",center.y+height);
@@ -194,6 +196,7 @@ void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c
 
 	graphics->drawModelCustomShader("cylinder", Vec3f(center), Quat4f(),Vec3f(radius,height,radius));
 
+	dataManager.unbindTextures();
 	dataManager.unbindShader();
 }
 void dogFight::drawScene(int acplayer)

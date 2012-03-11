@@ -12,6 +12,8 @@
     <texture name="rock"                      file="media/rock.png" tileable="true" />
     <texture name="sand"                      file="media/sand.png" tileable="true" />
     <texture name="snow"                      file="media/snow.png" tileable="true" />
+    <texture name="noise"                     file="media/noise.png" tileable="true" />
+    <texture name="ocean normals"             file="media/noiseDOT3.png" tileable="true" />
     <texture name="LCnoise"                   file="media/LCnoise.png" tileable="true" />
     <texture name="grass normals"             file="media/grass2_normals.png" tileable="true" />
     <texture name="snow normals"              file="media/snow_normals.png" tileable="true" />
@@ -55,6 +57,7 @@
     <texture name="menu in game select"       file="media/menu/in game select.png" />
     <texture name="thumbnails"                file="media/thumbnails.png" />
     <texture name="clouds"                    file="media/clouds.png" />
+    <texture name="hex grid"                  file="media/hexGrid.png" />
   </textures>
 
   <shaders>

@@ -138,7 +138,7 @@ void campaign::render()
 		graphics->drawOverlay(Rect::XYXY(0,0.0,sAspect,1.0),"cockpit square");
 	//	dataManager.unbindShader();
 
-		targeter(0.5*sAspect, 0.5, 0.08, p->roll);
+		targeter(0.5*sAspect, 0.5, 0.08, -p->roll);
 		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
 		
 		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
