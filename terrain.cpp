@@ -62,7 +62,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 	glGenBuffers(1,&VBO);
 	glGenBuffers(1,&indexBuffer.id);
 
-	glGenTextures(1,&texture);
+	texture = graphics->genTexture2D();
 
 	float* heightMap = new float[width*height*3];
 	for(int x = 0; x < width; x++)
@@ -119,10 +119,11 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 			groundValues[(x + z * xPOT)*4 + 3] = (unsigned char)(255.0*(interpolatedHeight(Vec2f(float(x*width)/xPOT,float(z*height)/zPOT))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
 		}
 	}
-	glBindTexture(GL_TEXTURE_2D, texture);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, xPOT, zPOT, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xPOT, zPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	texture->setData(xPOT, zPOT, GraphicsManager::texture::RGBA, groundValues);
+	//glBindTexture(GL_TEXTURE_2D, texture);
+	//gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, xPOT, zPOT, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	////glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xPOT, zPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	delete[] groundValues;
 	/////////////////
@@ -170,7 +171,7 @@ Vec3f TerrainPage::rasterNormal(Vec2u loc) const
 	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Cy = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 
-	return Vec3f(Cy - Ay, 30.0, Dy - By).normalize();
+	return Vec3f(Cy - Ay, 2.0 * (maxXYZ.x-minXYZ.x) / width, Dy - By).normalize();
 }
 float TerrainPage::rasterHeight(Vec2u loc) const
 {
@@ -212,9 +213,9 @@ float TerrainPage::interpolatedHeight(Vec2f loc) const
 }
 Vec3f TerrainPage::getNormal(Vec2f loc) const
 {
-	loc -= Vec2f(minXYZ.x, minXYZ.z);
-	loc.x *= (maxXYZ.x - minXYZ.x) / width;
-	loc.y *= (maxXYZ.z - minXYZ.z) / height;
+	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
+	loc.x *= width / (maxXYZ.x - minXYZ.x);
+	loc.y *= height / (maxXYZ.z - minXYZ.z);
 
 	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
 	{
@@ -297,7 +298,7 @@ void TerrainPage::render(Vec3f eye) const
 	dataManager.bind("grass",1);
 	dataManager.bind("rock",2);
 	dataManager.bind("LCnoise",3);
-	dataManager.bindTex(texture,4);
+	texture->bind(4);
 	dataManager.bind("grass normals",5);
 	dataManager.bind("noise",6);
 
@@ -358,9 +359,6 @@ TerrainPage::~TerrainPage()
 
 	delete[] heights;
 	delete[] trunk;
-
-	if(texture != 0)
-		glDeleteTextures(1,&texture);
 }
 void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1 and http://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
 {//theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)
@@ -406,12 +404,13 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		{
 			for(int y=0;y<l;y++)
 			{
-				if(face == 0)		direction.set(-m + y, m, -m + x); //top
-				else if(face == 1)	direction.set(-m + y, -m, m - x); //bottom
-				else if(face == 2)	direction.set(-m + y, m - x, m); //back
-				else if(face == 3)	direction.set(m - y, m - x, -m); //front
-				else if(face == 4)	direction.set(m, m - x, m - y); //right
-				else if(face == 5)	direction.set(-m, m - x, -m + y); //left
+				if(face == 0)		direction.set(m, m - x, m - y); //right
+				else if(face == 1)	direction.set(-m, m - x, -m + y); //left
+				else if(face == 2)	direction.set(-m + y, m, -m + x); //top
+				else if(face == 3)	direction.set(-m + y, -m, m - x); //bottom
+				else if(face == 4)	direction.set(-m + y, m - x, m); //back
+				else if(face == 5)	direction.set(m - y, m - x, -m); //front
+
 				direction = direction.normalize();
 
 				float cos_sunAngle = direction.dot(sunDirection);
@@ -470,32 +469,36 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	t = GetTime() - t;
 	t = GetTime();
 
-	glGenTextures(1, &skyTextureId);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
+	skyTexture = graphics->genTextureCube();
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	skyTexture->setData(l, l, GraphicsManager::texture::RGB, cubeMapTex);
 
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	//glGenTextures(1, &skyTextureId);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
 
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
-	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
-	//gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
+	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
+
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
+	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	delete[] cubeMap;
 	delete[] cubeMapTex;
@@ -593,20 +596,24 @@ void Terrain::generateOceanTexture()
 	}
 		t = GetTime() - t;
 	t = GetTime();
-	glGenTextures(1,&oceanTextureId);
-	glBindTexture(GL_TEXTURE_3D, oceanTextureId);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP, TRUE);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, resolution, resolution, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-		t = GetTime() - t;
-	t = GetTime();
+	oceanTexture = graphics->genTexture3D();
+	oceanTexture->setData(resolution, resolution, depth, GraphicsManager::texture::RGBA, textureData, true);
 
-	glBindTexture(GL_TEXTURE_3D, 0);
+	//glGenTextures(1,&oceanTextureId);
+	//glBindTexture(GL_TEXTURE_3D, oceanTextureId);
+
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP, TRUE);
+	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, resolution, resolution, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+	//	t = GetTime() - t;
+	//t = GetTime();
+
+	//glBindTexture(GL_TEXTURE_3D, 0);
 
 	delete[] heights;
 	delete[] layer;
@@ -614,11 +621,9 @@ void Terrain::generateOceanTexture()
 }
 void Terrain::resetTerrain()
 {
+	//skyTexture.reset();	//no reason to get rid of these if we don't have to
+	//oceanTexture.reset();
 	terrainPages.clear();
-	if(skyTextureId != 0)
-	{
-		glDeleteTextures(1, &skyTextureId);
-	}
 }
 Terrain::~Terrain()
 {
@@ -649,8 +654,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 
 	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
+	skyTexture->bind();
 	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
 	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
 
@@ -661,8 +665,9 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.bind("ocean");
 
 		//dataManager.bind("ocean normals");
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_3D, oceanTextureId);
+		oceanTexture->bind(1);
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_3D, oceanTextureId);
 
 		dataManager.setUniform1i("sky",	0);
 		dataManager.setUniform1i("oceanNormals",	1);
@@ -675,11 +680,11 @@ void Terrain::renderTerrain(Vec3f eye) const
 		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 
-		glBindTexture(GL_TEXTURE_3D, 0);
+		//glBindTexture(GL_TEXTURE_3D, 0);
 		dataManager.unbindShader();
 	}
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
 	dataManager.unbindShader();
 
 
@@ -747,6 +752,20 @@ float Terrain::altitude(Vec3f v) const
 float Terrain::altitude(float x, float y, float z) const
 {
 	return altitude(Vec3f(x,y,z));
+}
+Vec3f Terrain::terrainNormal(Vec2f v) const
+{
+	auto ptr = getPage(v);
+	if(ptr && ptr->getHeight(v) > 0.0f)
+	{
+		return (ptr->getNormal(v)).normalize();
+	}
+	
+	return Vec3f(0,1,0);
+}
+Vec3f Terrain::terrainNormal(float x, float z) const
+{
+	return terrainNormal(Vec2f(x,z));
 }
 bool Terrain::isLand(Vec2f v) const
 {

@@ -18,7 +18,7 @@ void main()
 	
 	//float alphaMult = dot(normalize(eyePos-pos),vec3(0.0,1.0,0.0));
 
-	n = texture3D(oceanNormals,vec3(texCoord.xy*8.0,0.00015*time)).xyz + texture3D(oceanNormals,vec3(texCoord.xy * 64.0,0.0003*time)).xyz * 0.75;
+	n = texture3D(oceanNormals,vec3(texCoord.xy*10.234,0.0002*time)).xyz + texture3D(oceanNormals,vec3(texCoord.xy * 64.0,0.0004*time)).xyz * 0.75;
 	n.x = n.x * 2.0 - 1.0;
 	n.z = n.z * 2.0 - 1.0;
 	n = normalize(n);

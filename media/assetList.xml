@@ -79,6 +79,7 @@
     <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />
     
     <shader name="ocean"                vertex="media/ocean.vert"       fragment="media/ocean.frag" />
+    <shader name="ocean preview"        vertex="media/ocean preview.vert"fragment="media/ocean preview.frag" />
     <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
     <shader name="hex grid shader"      vertex="media/hex grid.vert"    fragment="media/hex grid.frag" />
     <shader name="sky shader"           vertex="media/sky.vert"         fragment="media/sky.frag" />
@@ -106,9 +107,9 @@
     <model name="f18"          file="media/f18hornet.obj" />
     <model name="UAV"          file="media/UAV.obj" />
     <model name="B2"           file="media/B2.obj" />
-    <model name="AA gun"       file="media/AAgun.obj" />
+<!--    <model name="AA gun"       file="media/AAgun.obj" /> -->
 
-    <model name="flak cannon"  file="media/AAgun.obj" />
+    <model name="flak cannon"  file="media/SAM/SAM.obj" />
     <model name="missile1"     file="media/m1(center).obj" />
     <model name="missile2"     file="media/m2(center).obj" />
     <model name="missile3"     file="media/m3(center).obj" />

@@ -10,7 +10,7 @@ _CRTIMP2_PURE void __CLRCALL_PURE_OR_CDECL std::_Debug_message(const wchar_t *,
 
 void errorMsg(const wchar_t *a, const wchar_t *b, unsigned int c)
 {
-	minimizeWindow();
+	minimizeActiveWindow();
 	std::_Debug_message(a, b, c);
 }
 #endif

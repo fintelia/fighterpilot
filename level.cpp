@@ -585,7 +585,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				else if(readSubString("\tteam="))
 				{
 					string s = readLine();
-					objects[objectNum].team = lexical_cast<int>(s);
+					objects[objectNum].team = lexical_cast<int>(s) - 1;
 				}
 				else if(readSubString("\tspawnPos="))
 				{
@@ -611,6 +611,28 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 void LevelFile::initializeWorld(unsigned int humanPlayers)
 {
 	players.resetPlayers();
+
+	int w = min(info->mapResolution.x, info->mapResolution.y);
+	if(w != 0 && heights != nullptr)
+	{
+		float maxHeight=heights[0]+0.001;
+		float minHeight=heights[0];
+		for(int x=0;x<info->mapResolution.x;x++)
+		{
+			for(int z=0;z<info->mapResolution.y;z++)
+			{
+				if(heights[x+z*info->mapResolution.x]>maxHeight) maxHeight=heights[x+z*info->mapResolution.x];
+				if(heights[x+z*info->mapResolution.x]<minHeight) minHeight=heights[x+z*info->mapResolution.x];
+			}
+		}
+
+		unsigned short* h = new unsigned short[w*w];
+		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info->mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
+		world.initTerrain(h, w-1,Vec3f(0,minHeight,0),Vec3f(info->mapSize.x,maxHeight - minHeight,info->mapSize.y));
+	}
+
+	bullets = world.newObject(new bulletCloud);
+	particleManager.addEmitter(new particle::bulletEffect, bullets);
 
 	for(int i=0; i<info->numObjects; i++)
 	{
@@ -639,28 +661,6 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			world.newObject(new flakCannon(objects[i].startloc,objects[i].startRot,objects[i].type, objects[i].team));
 		}
-	}
-
-	bullets = world.newObject(new bulletCloud);
-	particleManager.addEmitter(new particle::bulletEffect, bullets);
-
-	int w = min(info->mapResolution.x, info->mapResolution.y);
-	if(w != 0 && heights != nullptr)
-	{
-		float maxHeight=heights[0]+0.001;
-		float minHeight=heights[0];
-		for(int x=0;x<info->mapResolution.x;x++)
-		{
-			for(int z=0;z<info->mapResolution.y;z++)
-			{
-				if(heights[x+z*info->mapResolution.x]>maxHeight) maxHeight=heights[x+z*info->mapResolution.x];
-				if(heights[x+z*info->mapResolution.x]<minHeight) minHeight=heights[x+z*info->mapResolution.x];
-			}
-		}
-
-		unsigned short* h = new unsigned short[w*w];
-		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info->mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w-1,Vec3f(0,minHeight,0),Vec3f(info->mapSize.x,maxHeight - minHeight,info->mapSize.y));
 	}
 }
 LevelFile::LevelFile(): info(NULL), objects(NULL), regions(NULL), heights(NULL)
@@ -759,15 +759,16 @@ Level::heightmapBase::heightmapBase(Vec2u Resolution, float* hts): mPosition(0,0
 void Level::heightmapGL::init()
 {
 	setMinMaxHeights();
-	glGenTextures(1,(GLuint*)&groundTex);
+	groundTex = graphics->genTexture2D();
 	groundValues = new unsigned char[uPowerOfTwo(mResolution.x) * uPowerOfTwo(mResolution.y) * 4];
 	memset(groundValues,0,uPowerOfTwo(mResolution.x)*uPowerOfTwo(mResolution.y)*sizeof(unsigned char)*4);
-	glBindTexture(GL_TEXTURE_2D, groundTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	groundTex->setData(uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), GraphicsManager::texture::RGBA, groundValues, true);
+	//glBindTexture(GL_TEXTURE_2D, groundTex);
+	//glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//setTex();
 	//if(!dynamic)
 	//{
@@ -778,7 +779,6 @@ void Level::heightmapGL::init()
 Level::heightmapGL::~heightmapGL()
 {
 	glDeleteLists(dispList,1);
-	glDeleteTextures(1,(const GLuint*)&groundTex);
 	if(groundValues)
 		delete[] groundValues;
 }
@@ -812,9 +812,10 @@ void Level::heightmapGL::setTex() const
 			groundValues[(x+z*uPowerOfTwo(mResolution.x))*4+3] = (unsigned char)(255.0*(interpolatedHeight(bSize.x*x,bSize.y*z)-minHeight)/(maxHeight-minHeight));//(255.0*(getHeight(bSize.x*x,bSize.y*z)/size.y-minHeight)/(maxHeight-minHeight));
 		}
 	}
-	glBindTexture(GL_TEXTURE_2D, groundTex);
-	//glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	groundTex->setData(uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), GraphicsManager::texture::RGBA, groundValues, true);
+	//glBindTexture(GL_TEXTURE_2D, groundTex);
+	////glTexImage2D(GL_TEXTURE_2D, 0, 4 , uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), 0 ,GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
+	//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, uPowerOfTwo(mResolution.x), uPowerOfTwo(mResolution.y), GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
 }
 void Level::heightmapGL::createList() const
 {
@@ -855,7 +856,7 @@ void Level::heightmapGL::render() const
 		dataManager.bind("grass",1);
 		dataManager.bind("rock",2);
 		dataManager.bind("LCnoise",3);
-		dataManager.bindTex(groundTex,4);
+		groundTex->bind(4);
 
 		dataManager.setUniform1f("maxHeight",	maxHeight);
 		dataManager.setUniform1f("minHeight",	0);
@@ -874,7 +875,7 @@ void Level::heightmapGL::render() const
 
 		dataManager.bind("snow",0);
 		dataManager.bind("LCnoise",1);
-		dataManager.bindTex(groundTex,2);
+		groundTex->bind(2);
 
 		dataManager.setUniform1f("maxHeight",	maxHeight);
 		dataManager.setUniform1f("minHeight",	0);
@@ -954,7 +955,7 @@ void Level::heightmapGL::renderPreview(float scale, float seaLevelOffset) const
 		dataManager.bind("grass",1);
 		dataManager.bind("rock",2);
 		dataManager.bind("LCnoise",3);
-		dataManager.bindTex(groundTex,4);
+		groundTex->bind(4);
 
 		dataManager.setUniform1f("heightScale",	scale);
 
@@ -974,7 +975,7 @@ void Level::heightmapGL::renderPreview(float scale, float seaLevelOffset) const
 
 		dataManager.bind("snow",0);
 		dataManager.bind("LCnoise",1);
-		dataManager.bindTex(groundTex,2);
+		groundTex->bind(2);
 
 		dataManager.setUniform1f("heightScale",	scale);
 
@@ -1360,11 +1361,11 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 
 	if(seaLevelOffset != 0.0 && (mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS))
 	{
-		dataManager.bind("ocean");
+		dataManager.bind("ocean preview");
 
 		dataManager.bind("hardNoise",0);
 		if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
-		else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+		else										((heightmapGL*)mGround)->groundTex->bind(1);
 		dataManager.bind("rock",2);
 		dataManager.bind("sand",3);
 

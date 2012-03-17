@@ -21,6 +21,8 @@ bool campaign::init()
 }
 int campaign::update()
 {
+	auto& controller = input.getXboxController(0);
+
 	//set camera position
 	nPlane* p=(nPlane*)players[0]->getObject();
 	auto camera = players[0]->getCamera(p->controled || p->dead);
@@ -33,7 +35,7 @@ int campaign::update()
 		input.up(VK_F1);
 	}
 	//check whether to bring up the in-game menu
-	if(input.getKey(VK_ESCAPE))
+	if(input.getKey(VK_ESCAPE) || input.getXboxController(0).getButton(XINPUT_START))
 	{
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);

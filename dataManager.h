@@ -6,7 +6,8 @@ private:
 		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
 	};
 	struct textureAsset: public asset{
-		unsigned int id;
+		shared_ptr<GraphicsManager::texture2D> texture;
+		//unsigned int id;
 		int width;
 		int height;
 		char bpp;				//bit per pixel
@@ -37,7 +38,8 @@ private:
 		std::shared_ptr<CollisionChecker::triangleList> trl;
 	};
 	struct fontAsset: public asset{
-		unsigned int id;       //stores the texture id for the font
+		shared_ptr<GraphicsManager::texture2D> texture;
+		//unsigned int id;       //stores the texture id for the font
 		string texName;
 		float height;//in px
 		struct character
@@ -59,12 +61,11 @@ private:
 	queue<assetFile> assetFiles;
 	queue<assetFile> assetFilesPreload;
 
-	map<string,asset*>	assets;
-	map<int, asset*>	unnamedAssets;
+	map<string,shared_ptr<asset>>	assets;
+	map<int, shared_ptr<asset>>	unnamedAssets;
 	int					currentAssetIndex;
 
 	map<int,string>		boundTextures;
-	map<int,int>		boundTextureIds;
 
 	string				boundShader;
 	int					boundShaderId;
@@ -84,9 +85,9 @@ public:
 	void unbindTextures();
 	void unbindShader();
 
-	const fontAsset* getFont(string name);
-	const modelAsset* getModel(string name);
-	const modelAsset* getModel(objectType t){return getModel(objectTypeString(t));}
+	shared_ptr<const fontAsset> getFont(string name);
+	shared_ptr<const modelAsset> getModel(string name);
+	shared_ptr<const modelAsset> getModel(objectType t){return getModel(objectTypeString(t));}
 
 	bool assetLoaded(string name);
 
@@ -112,7 +113,7 @@ public:
 
 
 	string getBoundShader() const{return boundShader;}
-	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
+//	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
 	void shutdown();
 private:
 

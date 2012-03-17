@@ -470,9 +470,6 @@
     <None Include="media\terrain.vert">
       <Filter>shaders\terrain</Filter>
     </None>
-    <None Include="media\ocean.vert">
-      <Filter>shaders\terrain</Filter>
-    </None>
     <None Include="media\radar2.frag">
       <Filter>shaders\radar</Filter>
     </None>
@@ -480,9 +477,6 @@
       <Filter>shaders\radar</Filter>
     </None>
     <None Include="media\snow.frag">
-      <Filter>shaders\terrain</Filter>
-    </None>
-    <None Include="media\ocean.frag">
       <Filter>shaders\terrain</Filter>
     </None>
     <None Include="media\horizon2.frag">
@@ -574,6 +568,18 @@
     </None>
     <None Include="media\sky.vert">
       <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\ocean.frag">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean.vert">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean preview.frag">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean preview.vert">
+      <Filter>shaders\water</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

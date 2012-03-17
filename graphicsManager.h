@@ -161,8 +161,10 @@ public:
 
 		UsageFrequency usageFrequency;
 		bool indexArray;
-	public:
+
 		vertexBuffer(UsageFrequency u, bool IndexArray): numVertices(0), numIndices(0), usageFrequency(u), indexArray(IndexArray), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), extraDataSize(0), extraDataOffset(0), totalVertexSize(0){}
+
+	public:
 		virtual ~vertexBuffer(){}
 		virtual void addPositionData(unsigned int size, unsigned int offset)	{positionDataSize = size; positionDataOffset = offset;}
 		virtual void addTexCoordData(unsigned int size, unsigned int offset)	{texCoordDataSize = size; texCoordDataOffset = offset;}
@@ -177,7 +179,46 @@ public:
 		virtual void bindBuffer()=0;
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 	};
-
+	class texture
+	{
+	public:
+		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, RGB=3, RGBA=4};
+	protected:
+		Format format;
+	public:
+		texture():format(NONE){}
+		virtual void bind(unsigned int textureUnit=0)=0;
+	};
+	class texture2D: public texture
+	{
+	protected:
+		unsigned int width;
+		unsigned int height;
+		texture2D():width(0),height(0){}
+	public:
+		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)=0;
+		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false);}
+	};
+	class texture3D: public texture
+	{
+	protected:
+		unsigned int width;
+		unsigned int height;
+		unsigned int depth;
+		texture3D():width(0),height(0){}
+	public:
+		virtual void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)=0;
+		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data){setData(Width, Height, Depth, f,  data, false);}
+	};
+	class textureCube: public texture
+	{
+	protected:
+		unsigned int width;
+		unsigned int height;
+		textureCube():width(0),height(0){}
+	public:
+		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)=0;
+	};
 private:
 	gID currentId;
 
@@ -244,7 +285,11 @@ public:
 	virtual void bindVertexBuffer(unsigned int id, bool texCoords, bool normals)=0;
 	virtual void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count)=0;
 	virtual vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
-	
+
+	virtual shared_ptr<texture2D> genTexture2D()=0;
+	virtual shared_ptr<texture3D> genTexture3D()=0;
+	virtual shared_ptr<textureCube> genTextureCube()=0;
+
 	virtual shared_ptr<View> genView();
 
 	virtual void setColor(float r, float g, float b, float a)=0;
@@ -346,6 +391,36 @@ public:
 		void bindBuffer();
 		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
 	};
+	class texture2DGL: public GraphicsManager::texture2D
+	{
+	private:
+		unsigned int textureID;
+	public:
+		texture2DGL();
+		~texture2DGL();
+		void bind(unsigned int textureUnit);
+		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable);
+	};
+	class texture3DGL: public GraphicsManager::texture3D
+	{
+	private:
+		unsigned int textureID;
+	public:
+		texture3DGL();
+		~texture3DGL();
+		void bind(unsigned int textureUnit);
+		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
+	};
+	class textureCubeGL: public GraphicsManager::textureCube
+	{
+	private:
+		unsigned int textureID;
+	public:
+		textureCubeGL();
+		~textureCubeGL();
+		void bind(unsigned int textureUnit);
+		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
+	};
 
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
 	bool changeResolution(Vec2i resolution, unsigned int maxSamples);
@@ -373,6 +448,10 @@ public:
 	void bindVertexBuffer(unsigned int id, bool texCoords, bool normals);
 	void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count);
 	vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray);
+
+	shared_ptr<texture2D> genTexture2D();
+	shared_ptr<texture3D> genTexture3D();
+	shared_ptr<textureCube> genTextureCube();
 
 	void setGamma(float gamma);
 	void setColor(float r, float g, float b, float a);

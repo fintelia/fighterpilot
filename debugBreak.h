@@ -1,7 +1,7 @@
 
 #pragma once
 
-extern void minimizeWindow();
+extern void minimizeActiveWindow();
 
 #ifdef _DEBUG
 #include <xutility>
@@ -23,7 +23,7 @@ extern void minimizeWindow();
 
 #ifdef _DEBUG
 	#define debugBreak(){			\
-		minimizeWindow();			\
+		minimizeActiveWindow();			\
 		__debugbreak();				\
 	}
 #else
@@ -34,7 +34,7 @@ extern void minimizeWindow();
 	#define debugAssert(a){			\
 		if(!(a))					\
 		{							\
-			minimizeWindow();		\
+			minimizeActiveWindow();		\
 			__debugbreak();			\
 		}							\
 	}
