@@ -30,7 +30,7 @@ InputManager::xboxControllerState::~xboxControllerState()
 bool InputManager::xboxControllerState::getButton(int b) const
 {
 #ifdef XINPUT
-	return (state->Gamepad.wButtons & b) != 0;
+	return connected && ((state->Gamepad.wButtons & b) != 0);
 #else
 	return false;
 #endif
@@ -38,6 +38,9 @@ bool InputManager::xboxControllerState::getButton(int b) const
 float InputManager::xboxControllerState::getAxis(int a) const
 {
 #ifdef XINPUT
+	if(!connected)
+		return 0.0f;
+
 	float f = 0.0;
 	if(a == XINPUT_LEFT_TRIGGER)		f = 1.0/255 * state->Gamepad.bLeftTrigger;
 	if(a == XINPUT_RIGHT_TRIGGER)		f = 1.0/255 * state->Gamepad.bRightTrigger;

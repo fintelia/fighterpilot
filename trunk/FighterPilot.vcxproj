@@ -233,6 +233,8 @@
     <None Include="media\modelData.txt" />
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
+    <None Include="media\ocean preview.frag" />
+    <None Include="media\ocean preview.vert" />
     <None Include="media\ortho.frag" />
     <None Include="media\ortho.vert" />
     <None Include="media\particle.frag" />

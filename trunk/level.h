@@ -167,7 +167,7 @@ public:
 		mutable bool valid;
 		mutable int dispList;
 		//int shader;
-		int	groundTex;
+		shared_ptr<GraphicsManager::texture2D>	groundTex;
 		mutable unsigned char *groundValues;
 
 		void init();

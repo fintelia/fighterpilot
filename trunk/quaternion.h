@@ -42,17 +42,23 @@ public:
 	}
 	Quaternion(Vector3<T> v)
 	{
-		v = v.normalize();
-		Vec3f axis = (Vector3<T>(0,0,1).cross(v)).normalize();
-		Angle theta = acosA(v.z); //same as Angle theta = acosA(Vector3<T>(0,0,1).dot(v));
-		T sTheta2 = sin(theta/2);
+		v.z += 1.0;
+		v = v.normalize(); // same as: v = (Vec3f(0,0,1) + v).normalize();
+		w = v.z;
+		x = -v.y;
+		y = v.x;
+		z = 0.0;
 
-		w = cos(theta/2);
-		x = axis.x * sTheta2;
-		y = axis.y * sTheta2;
-		z = axis.z * sTheta2;
 	}
+	Quaternion(Vector3<T> initial, Vector3<T> final)
+	{
+		Vector3<T> H = (initial + final).normalize();
 
+		w = initial.dot(H);
+		x = initial.y*H.z - initial.z*H.y;
+		y = initial.z*H.x - initial.x*H.z;
+		z = initial.x*H.y - initial.y*H.x;
+	}
 	Quaternion normalize()
 	{
 		// Don't normalize if we don't have to

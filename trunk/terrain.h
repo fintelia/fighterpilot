@@ -43,7 +43,7 @@ public:
 	TerrainPatch* trunk;
 
 	unsigned int VBO;
-	unsigned int texture;
+	shared_ptr<GraphicsManager::texture2D> texture;
 
 	struct IndexBuffer
 	{
@@ -76,8 +76,10 @@ protected:
 	Circle<float> mBounds;
 	bool waterPlane;
 
-	unsigned int skyTextureId; //id for the sky cube-map
-	unsigned int oceanTextureId; //id for the ocean normals cube map
+	shared_ptr<GraphicsManager::textureCube> skyTexture;
+	shared_ptr<GraphicsManager::texture3D> oceanTexture;
+	//unsigned int skyTextureId; //id for the sky cube-map
+	//unsigned int oceanTextureId; //id for the ocean normals cube map
 
 	vector<std::shared_ptr<TerrainPage>> terrainPages;
 
@@ -88,7 +90,7 @@ protected:
 	void generateOceanTexture();
 	void resetTerrain();
 public:
-	Terrain():waterPlane(true), skyTextureId(0){}
+	Terrain():waterPlane(true){}
 	~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true);
 	void renderTerrain(Vec3f eye) const;
@@ -99,6 +101,8 @@ public:
 	float elevation(float x, float z) const;
 	float altitude(Vec3f v) const;
 	float altitude(float x, float y, float z) const;
+	Vec3f terrainNormal(Vec2f) const;
+	Vec3f terrainNormal(float x, float z) const;
 	bool isLand(Vec2f v) const;
 	bool isLand(float x, float z) const;
 

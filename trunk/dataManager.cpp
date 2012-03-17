@@ -78,16 +78,17 @@ DataManager::asset* DataManager::registerFont(shared_ptr<FileManager::textFile> 
 	auto ptr = registerTexture(fileManager.loadTextureFile(texPath));
 	if(ptr != nullptr)
 	{
-		assets[texName] = ptr;
+		assets[texName] = shared_ptr<asset>(ptr);
 
 		fontAsset* f = new fontAsset;
-		f->id = ((textureAsset*)ptr)->id;
+		f->texture = ((textureAsset*)ptr)->texture;
+		//f->id = ((textureAsset*)ptr)->id;
 		f->texName = texName;
 		f->type = asset::FONT;
 		f->height = (float)info.lineHeight;
 
-		float invW = 1.0 / ((textureAsset*)assets[texName])->width;
-		float invH = 1.0 / ((textureAsset*)assets[texName])->height;
+		float invW = 1.0 / static_pointer_cast<textureAsset>(assets[texName])->width;
+		float invH = 1.0 / static_pointer_cast<textureAsset>(assets[texName])->height;
 
 		fontAsset::character tmpChar;
 		for(auto i = 0; i < numChars; i++)
@@ -225,47 +226,51 @@ DataManager::asset* DataManager::registerTexture(shared_ptr<FileManager::texture
 	if(!f->valid())
 		return nullptr;
 
-	int format;
-	if(f->channels == 1)		format = GL_LUMINANCE;
-	else if(f->channels == 2)	format = GL_LUMINANCE_ALPHA;
-	else if(f->channels == 3)	format = GL_RGB;
-	else if(f->channels == 4)	format = GL_RGBA;
+	GraphicsManager::texture::Format format;
+	if(f->channels == 1)		format = GraphicsManager::texture::LUMINANCE;
+	else if(f->channels == 2)	format = GraphicsManager::texture::LUMINANCE_ALPHA;
+	else if(f->channels == 3)	format = GraphicsManager::texture::RGB;
+	else if(f->channels == 4)	format = GraphicsManager::texture::RGBA;
 	else{
 		debugBreak();
 		return nullptr;
 	}
 
-	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((f->width & (f->width-1)) || (f->height & (f->height-1)));
 
-	GLuint texV = 0;
-	glGenTextures(1,&texV);
-	glBindTexture(GL_TEXTURE_2D, texV);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	if(tileable)
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	}
-	else
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	}
-	if(NPOT)
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//any OpenGL call here can cause a "hardware does not meet minimum specifications" driver error, if multisampling is set to 16x
-		glTexImage2D(GL_TEXTURE_2D, 0, f->channels, f->width, f->height,0, format, GL_UNSIGNED_BYTE, f->contents);
-	}
-	else
-	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		gluBuild2DMipmaps(GL_TEXTURE_2D, f->channels, f->width, f->height, format, GL_UNSIGNED_BYTE, f->contents);
-	}
+
+
+	//bool NPOT = GLEE_ARB_texture_non_power_of_two && ((f->width & (f->width-1)) || (f->height & (f->height-1)));
+
+	//GLuint texV = 0;
+	//glGenTextures(1,&texV);
+	//glBindTexture(GL_TEXTURE_2D, texV);
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//if(tileable)
+	//{
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//}
+	//else
+	//{
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//}
+	//if(NPOT)
+	//{
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//	//any OpenGL call here can cause a "hardware does not meet minimum specifications" driver error, if multisampling is set to 16x
+	//	glTexImage2D(GL_TEXTURE_2D, 0, f->channels, f->width, f->height,0, format, GL_UNSIGNED_BYTE, f->contents);
+	//}
+	//else
+	//{
+	//	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//	gluBuild2DMipmaps(GL_TEXTURE_2D, f->channels, f->width, f->height, format, GL_UNSIGNED_BYTE, f->contents);
+	//}
 
 	textureAsset* a = new textureAsset;
-	a->id = texV;
+	a->texture = graphics->genTexture2D();
+	a->texture->setData(f->width, f->height, format, f->contents, tileable);
 	a->type = asset::TEXTURE;
 	a->width = f->width;
 	a->height = f->height;
@@ -659,7 +664,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
 					if(texPtr)
 					{
-						assets[mMtl.tex] = texPtr;
+						assets[mMtl.tex] = shared_ptr<asset>(texPtr);
 					}
 					else
 					{
@@ -901,46 +906,35 @@ void DataManager::bind(string name, int textureUnit)
 		return;
 	else if(assets[name]->type==asset::TEXTURE)
 	{
-		if(boundTextures[textureUnit] == name)
-			return;
-		else if(boundTextureIds[textureUnit] == ((textureAsset*)assets[name])->id)
-		{
-			boundTextures[textureUnit] = name;
-			return;
-		}
-
-		glActiveTexture(GL_TEXTURE0+textureUnit);
-		glBindTexture(GL_TEXTURE_2D,((textureAsset*)assets[name])->id);
-
-		boundTextureIds[textureUnit] = ((textureAsset*)assets[name])->id;
+		static_pointer_cast<textureAsset>(assets[name])->texture->bind(textureUnit);
 		boundTextures[textureUnit] = name;
 	}
 	else if(assets[name]->type==asset::SHADER)
 	{
 		if(boundShader == name)
 			return;
-		else if(boundShaderId == ((shaderAsset*)assets[name])->id)
+		else if(boundShaderId == static_pointer_cast<shaderAsset>(assets[name])->id)
 		{
 			boundShader = name;
 			return;
 		}
 
-		glUseProgram(((shaderAsset*)assets[name])->id);
-		boundShaderId = ((shaderAsset*)assets[name])->id;
+		glUseProgram(static_pointer_cast<shaderAsset>(assets[name])->id);
+		boundShaderId = static_pointer_cast<shaderAsset>(assets[name])->id;
 		boundShader = name;
 	}
 }
 void DataManager::bindTex(int id, int textureUnit)
 {
-	if(boundTextureIds[textureUnit] == id)
-		return;
+	//if(boundTextureIds[textureUnit] == id)
+	//	return;
 
 	glActiveTexture(GL_TEXTURE0+textureUnit);
 	glBindTexture(GL_TEXTURE_2D,id);
 
-	boundTextureIds[textureUnit] = id;
+	//boundTextureIds[textureUnit] = id;
 	if(id == 0)		boundTextures[textureUnit] = "noTexture";
-	else			boundTextures[textureUnit] = "";
+	else			boundTextures[textureUnit] = "<unkown texture>";
 }
 void DataManager::bindShader(int id)
 {
@@ -961,36 +955,36 @@ void DataManager::unbind(string name)
 		boundShaderId = 0;
 		boundShader = "noShader";
 	}
-	else
-	{
-		for(auto i = boundTextures.begin();i!=boundTextures.end();i++)
-		{
-			if(i->second == name)
-			{
+	//else
+	//{
+	//	for(auto i = boundTextures.begin();i!=boundTextures.end();i++)
+	//	{
+	//		if(i->second == name)
+	//		{
 
-				glActiveTexture(GL_TEXTURE0+i->first);
-				glBindTexture(GL_TEXTURE_2D,0);
+	//			glActiveTexture(GL_TEXTURE0+i->first);
+	//			glBindTexture(GL_TEXTURE_2D,0);
 
-				boundTextureIds[i->first] = 0;
-				boundTextures[i->first] = "noTexture";
-				return;
-			}
-		}
-	}
+	//			//boundTextureIds[i->first] = 0;
+	//			boundTextures[i->first] = "noTexture";
+	//			return;
+	//		}
+	//	}
+	//}
 }
 void DataManager::unbindTextures()
 {
-	for(unsigned int i = 0; i < boundTextureIds.size(); i++)
-	{
-		if(boundTextureIds[i] != 0)
-		{
-			glActiveTexture(GL_TEXTURE0+i);
-			glBindTexture(GL_TEXTURE_2D,0);
+	//for(unsigned int i = 0; i < boundTextureIds.size(); i++)
+	//{
+	//	if(boundTextureIds[i] != 0)
+	//	{
+	//		glActiveTexture(GL_TEXTURE0+i);
+	//		glBindTexture(GL_TEXTURE_2D,0);
 
-			boundTextures[i] = "noTexture";
-			boundTextureIds[i] = 0;
-		}
-	}
+	//		boundTextures[i] = "noTexture";
+	//		boundTextureIds[i] = 0;
+	//	}
+	//}
 }
 void DataManager::unbindShader()
 {
@@ -1210,7 +1204,7 @@ int DataManager::loadAsset()
 			bool t = file.options.count("tileable") != 0;
 			//registerTexture(file.name, file.filename[0], t);
 			auto texPtr = registerTexture(dynamic_pointer_cast<FileManager::textureFile>(file.files.front()), t);
-			if(texPtr) assets[file.name] = texPtr;
+			if(texPtr) assets[file.name] = shared_ptr<asset>(texPtr);
 			pop(preload);
 		}
 		else if(file.type == asset::SHADER)
@@ -1221,11 +1215,11 @@ int DataManager::loadAsset()
 			auto shaderPtr = registerShader(dynamic_pointer_cast<FileManager::textFile>(file.files[0]), dynamic_pointer_cast<FileManager::textFile>(file.files[1]));
 			if(shaderPtr)
 			{
-				assets[file.name] = shaderPtr;
+				assets[file.name] = shared_ptr<asset>(shaderPtr);
 				if(shaderPtr && file.options.count("use_sAspect") != 0)
 				{
 					auto s = assets.find(file.name);
-					((shaderAsset*)(s->second))->use_sAspect = true;
+					static_pointer_cast<shaderAsset>(s->second)->use_sAspect = true;
 
 					bind(file.name);
 					setUniform1f("sAspect",sAspect);
@@ -1238,7 +1232,7 @@ int DataManager::loadAsset()
 		else if(file.type == asset::MODEL)
 		{
 			auto modelPtr = registerOBJ(file.filename[0]);
-			if(modelPtr) assets[file.name] = modelPtr;
+			if(modelPtr) assets[file.name] = shared_ptr<asset>(modelPtr);
 			pop(preload);
 			break;
 		}
@@ -1248,7 +1242,7 @@ int DataManager::loadAsset()
 			if(!file.files.front()->complete()) break;
 
 			auto fontPtr = registerFont(dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
-			if(fontPtr) assets[file.name] = fontPtr;
+			if(fontPtr) assets[file.name] = shared_ptr<asset>(fontPtr);
 			pop(preload);
 			break;
 		}
@@ -1262,9 +1256,7 @@ int DataManager::getId(string name)
 	auto a = assets.find(name);
 	if(a != assets.end())
 	{
-		if(a->second->type == asset::TEXTURE)		return ((textureAsset*)a->second)->id;
-		else if(a->second->type == asset::SHADER)	return ((shaderAsset*)a->second)->id;
-		else if(a->second->type == asset::FONT)		return ((fontAsset*)a->second)->id;
+		if(a->second->type == asset::SHADER)	return static_pointer_cast<shaderAsset>(a->second)->id;
 	}
 	return 0;
 }
@@ -1272,21 +1264,21 @@ int DataManager::getId(objectType t)
 {
 	return getId(objectTypeString(t));
 }
-const DataManager::fontAsset* DataManager::getFont(string name)
+shared_ptr<const DataManager::fontAsset> DataManager::getFont(string name)
 {
 	auto i = assets.find(name);
 	if(i == assets.end() || i->second->type != asset::FONT)
 		return nullptr;
 
-	return (const fontAsset*)i->second;
+	return static_pointer_cast<const fontAsset>(i->second);
 }
-const DataManager::modelAsset* DataManager::getModel(string name)
+shared_ptr<const DataManager::modelAsset> DataManager::getModel(string name)
 {
 	auto i = assets.find(name);
 	if(i == assets.end() || i->second->type != asset::MODEL)
 		return nullptr;
 
-	return (const modelAsset*)i->second;
+	return static_pointer_cast<const modelAsset>(i->second);
 }
 bool DataManager::assetLoaded(string name)
 {
@@ -1297,100 +1289,100 @@ void DataManager::setUniform1f(string name, float v0)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform1f(((shaderAsset*)assets[boundShader])->uniforms[name],v0);
+		glUniform1f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
 	}
 }
 void DataManager::setUniform2f(string name, float v0, float v1)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform2f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1);
+		glUniform2f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
 	}
 }
 void DataManager::setUniform3f(string name, float v0, float v1, float v2)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform3f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2);
+		glUniform3f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
 	}
 }
 void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform4f(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+		glUniform4f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
 	}
 }
 void DataManager::setUniform1i(string name, int v0)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform1i(((shaderAsset*)assets[boundShader])->uniforms[name],v0);
+		glUniform1i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
 	}
 }
 void DataManager::setUniform2i(string name, int v0, int v1)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform2i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1);
+		glUniform2i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
 	}
 }
 void DataManager::setUniform3i(string name, int v0, int v1, int v2)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform3i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2);
+		glUniform3i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
 	}
 }
 void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform4i(((shaderAsset*)assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+		glUniform4i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
 	}
 }
 void DataManager::setUniformMatrix(string name, const Mat3f& m)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniformMatrix3fv(((shaderAsset*)assets[boundShader])->uniforms[name],1,false,m.ptr());
+		glUniformMatrix3fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
 	}
 }
 void DataManager::setUniformMatrix(string name, const Mat4f& m)
 {
 	if(boundShaderId != 0 && boundShader != "noShader")
 	{
-		if(((shaderAsset*)assets[boundShader])->uniforms.find(name) == ((shaderAsset*)assets[boundShader])->uniforms.end())
-			((shaderAsset*)assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniformMatrix4fv(((shaderAsset*)assets[boundShader])->uniforms[name],1,false,m.ptr());
+		glUniformMatrix4fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
 	}
 }
 
@@ -1400,9 +1392,9 @@ void DataManager::shutdown()
 	boundTextures.clear();
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
-		if(i->second->type == asset::SHADER)			glDeleteProgram(((shaderAsset*)i->second)->id);
-		else if(i->second->type == asset::MODEL)		delete ((modelAsset*)i->second)->VBO;
-		else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
+		if(i->second->type == asset::SHADER)			glDeleteProgram(static_pointer_cast<shaderAsset>(i->second)->id);
+		else if(i->second->type == asset::MODEL)		delete static_pointer_cast<modelAsset>(i->second)->VBO;
+		//else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
 	}
 	assets.clear();
 }

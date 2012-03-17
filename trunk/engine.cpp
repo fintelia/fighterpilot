@@ -44,7 +44,7 @@ void ShowHideTaskBar(bool bHide)
 	if(bHide)	ShowWindow(pWnd,SW_HIDE);
 	else		ShowWindow(pWnd,SW_SHOW);
 }
-void minimizeWindow()
+void minimizeActiveWindow()
 {
 	graphics->minimizeWindow();
 }

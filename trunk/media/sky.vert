@@ -17,7 +17,7 @@ void main()
 	texCoord = gl_MultiTexCoord0.xy;
 
 	gl_Position = cameraProjection * position;
-	gl_Position.z = clamp(gl_Position.z,-0.5,0.5);
+	gl_Position.z = clamp(gl_Position.z,-0.999,0.999);
 
 	//color = vec4(textureCube(tex,position.xyz).rgb,1.0);
 }

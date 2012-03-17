@@ -145,10 +145,10 @@ void SAMmissile::updateSimulation(double time, double ms)
 	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;
-	if(life < 0.0 || world.altitude(position) < 0.0)
-	{
-		awaitingDelete = true;
-		meshInstance->setDeleteFlag(true);
-		meshInstance = nullptr;
-	}
+//	if(life < 0.0 || world.altitude(position) < 0.0)
+//	{
+//		awaitingDelete = true;
+//		meshInstance->setDeleteFlag(true);
+//		meshInstance = nullptr;
+//	}
 }

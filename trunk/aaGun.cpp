@@ -30,8 +30,9 @@ void antiAircraftArtilleryBase::spawn()
 	health=maxHealth;
 
 
-	position = Vec3f(position.x,world.elevation(position.x,position.z)+5.0,position.z);
+	position = Vec3f(position.x,world.elevation(position.x,position.z),position.z);
 
+	rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
 	target = 0;
 	shotsFired = 0;
 	extraShootTime=0.0;
@@ -62,8 +63,7 @@ void AAgun::updateSimulation(double time, double ms)
 {
 	lastPosition = position;
 	lastRotation = rotation;
-	//control->update();
-	//controlState controller=control->getControlState();
+
 	if(dead)
 		return;
 	/////update machine gun/////////////////
@@ -131,7 +131,7 @@ void AAgun::updateSimulation(double time, double ms)
 void SAMbattery::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-	meshInstance->update(lerp(lastPosition,position,interpolation),Quat4f());
+		meshInstance->update(lerp(lastPosition,position,interpolation),slerp(lastRotation,rotation, interpolation));
 }
 void SAMbattery::updateSimulation(double time, double ms)
 {
@@ -140,8 +140,6 @@ void SAMbattery::updateSimulation(double time, double ms)
 
 	if(dead)
 		return;
-	//control->update();
-	//controlState controller=control->getControlState();
 
 	/////////////////////CONTROL//////////////////////
 	bool shoot;
@@ -163,13 +161,13 @@ void SAMbattery::updateSimulation(double time, double ms)
 	if(target != 0)
 	{
 		targeter = (world[target]->position - position).normalize();
-		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
+//		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
 		shoot = true;
 	}
 	else
 	{
 		targeter = Vec3f();
-		rotation = Quat4f(targeter);
+//		rotation = Quat4f(targeter);
 		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
@@ -179,7 +177,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	{
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
 		missileCoolDown = 7000;
-		world.newObject(new SAMmissile(SAM_MISSILE, team, position, Quat4f(Vec3f(0,1,0))/*rotation*Quat4f(Vec3f(-1,0,0),PI/2)*/,1000, id, target));
+		world.newObject(new SAMmissile(SAM_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target));
 	}
 }
 
@@ -191,8 +189,7 @@ void flakCannon::updateSimulation(double time, double ms)
 {
 	lastPosition = position;
 	lastRotation = rotation;
-	//control->update();
-	//controlState controller=control->getControlState();
+
 	if(dead)
 		return;
 	/////////////////////CONTROL//////////////////////

@@ -371,7 +371,7 @@ int options::update()
 		menuManager.setMenu(new chooseMode);
 		if(needRestart)
 		{
-			messageBox("some changes will not take effect until you restart FighterPilot");
+			messageBox("Some changes will not take effect until you restart FighterPilot.");
 		}
 	}
 	else if(buttons["cancel"]->checkChanged())
