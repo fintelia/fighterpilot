@@ -34,8 +34,9 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 		unsigned int cLevelOffset = levelOffset(levelsDeep);
 		unsigned int childLevelOffset = levelOffset(levelsDeep+1);
 
-		unsigned int row = (this - trunk - cLevelOffset) >> levelsDeep;
-		unsigned int col = (this - trunk - cLevelOffset) % (1 << levelsDeep);
+		row = (this - trunk - cLevelOffset) >> levelsDeep;
+		col = (this - trunk - cLevelOffset) % (1 << levelsDeep);
+
 
 		children[0] = trunk + childLevelOffset + col * 2 + row * 2 * (1 << (levelsDeep+1));
 		children[1] = children[0] + 1;
@@ -54,13 +55,69 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 	else
 	{
 		//flags = flags & (~CAN_SUBDIVIDE);
+
+		unsigned int cLevelOffset = levelOffset(levelsDeep);
+		row = (this - trunk - cLevelOffset) >> levelsDeep;
+		col = (this - trunk - cLevelOffset) % (1 << levelsDeep);
 	}
 }
-TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsigned short patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), height((1 << LevelsDeep) * patchResolution + 1), width((1 << LevelsDeep) * patchResolution + 1), levelsDeep(LevelsDeep), heights(Heights), trunk(nullptr), texture(0)
+void TerrainPatch::subdivide(const Vec3f& eye, float error) const
 {
+	float e = maxError / eye.distance(center);
+	if(children[0] && children[1] && children[2] && children[3] && ((e > error) || (minXYZ.x < eye.x && minXYZ.z < eye.z && maxXYZ.x > eye.x && maxXYZ.z > eye.z)))
+	{
+		flags = SUBDIVIDED;
+
+		children[0]->subdivide(eye, error);
+		children[1]->subdivide(eye, error);
+		children[2]->subdivide(eye, error);
+		children[3]->subdivide(eye, error);
+	}
+	else
+	{
+		flags = LEVEL_USED;
+	}
+}
+TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), heights(Heights), trunk(nullptr), indexBuffer(nullptr)
+{
+	unsigned short* nHeights = nullptr;
+	if(!isPowerOfTwo(patchResolution-1))
+	{
+		unsigned int nPatchResolution = uPowerOfTwo(patchResolution-1) + 1;
+		nHeights = new unsigned short[nPatchResolution*nPatchResolution];
+
+		scale.x *= static_cast<float>(nPatchResolution) / patchResolution;
+		scale.z *= static_cast<float>(nPatchResolution) / patchResolution;
+		maxXYZ = position+scale;
+
+		for(unsigned int x = 0; x < nPatchResolution; x++)
+		{
+			for(unsigned int y = 0; y < nPatchResolution; y++)
+			{
+				if(x < patchResolution && y < patchResolution)
+				{
+					nHeights[x + y*nPatchResolution] = heights[x + y*patchResolution];
+				}
+				else
+				{
+					nHeights[x + y*nPatchResolution] = 0;
+				}
+			}
+		}
+		swap(nHeights, heights);
+		patchResolution = nPatchResolution;
+	}
+
+	height = patchResolution;
+	width = patchResolution;
+
+	unsigned int v = (patchResolution-1) >> 4;
+	levelsDeep = 0;
+	while(v >>= 1) ++levelsDeep;
+
 //////////////////////////////////////////////////////VBO and texture//////////////////////////////////////////////////////
 	glGenBuffers(1,&VBO);
-	glGenBuffers(1,&indexBuffer.id);
+	
 
 	texture = graphics->genTexture2D();
 
@@ -75,51 +132,62 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 		}
 	}
 
-	indexBuffer.numVertices = patchResolution*patchResolution * 6;
-	unsigned int* indices = new unsigned int[indexBuffer.numVertices];
-	int i=0;
-	for(int x = 0; x < patchResolution; x++)
-	{
-		for(int y=0; y < patchResolution; y++)
-		{
-			indices[i++] = x +			y*width;
-			indices[i++] = x +		(y+1)*width;
-			indices[i++] = (x+1) +		y*width;
-
-			indices[i++] = (x+1) +		y*width;
-			indices[i++] = x +		(y+1)*width;
-			indices[i++] = (x+1) +	(y+1)*width;
-		}
-	}
-
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*width*height*3, heightMap, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.id);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indexBuffer.numVertices, indices, GL_STATIC_DRAW);
+	indexBuffer = new IndexBuffer[levelsDeep+1];
+	for(unsigned int d = 0; d <= levelsDeep; d++)
+	{
+		indexBuffer[d].numVertices = 16*16 * 6;
+		unsigned int* indices = new unsigned int[indexBuffer[d].numVertices];
+		int i=0;
+		unsigned int spacing = 1 << (levelsDeep-d);	
+		for(int y=0; y < 16; y++)
+		{
+			for(int x = 0; x < 16; x++)
+			{
+
+				indices[i++] = (x*spacing)			+	(y*spacing)*width;
+				indices[i++] = (x*spacing)			+	((y+1)*spacing)*width;
+				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*width;
+
+				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*width;
+				indices[i++] = (x*spacing)			+	((y+1)*spacing)*width;
+				indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*width;
+			}
+		}
+
+		glGenBuffers(1,&indexBuffer[d].id);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[d].id);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indexBuffer[d].numVertices, indices, GL_STATIC_DRAW);	
+		delete[] indices;
+	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
 
 	//////////////////
 	Vec3f n;
+	//int xPOT = uPowerOfTwo(width);
+	//int zPOT = uPowerOfTwo(height);
 	unsigned char* groundValues = new unsigned char[width*height*4];
-	int xPOT = uPowerOfTwo(width);
-	int zPOT = uPowerOfTwo(height);
-	for(unsigned int x=0; x < xPOT; x++)
+	for(unsigned int x=0; x < width; x++)
 	{
-		for(unsigned int z=0; z < zPOT; z++)
+		for(unsigned int z=0; z < height; z++)
 		{
-			n = interpolatedNormal(Vec2f(float(x*width)/xPOT,float(z*height)/zPOT));
+			n = interpolatedNormal(Vec2f(x,z));
 			if(n.magnitudeSquared() < 0.001)
 				n = Vec3f(0.0,1.0,0.0);
 
-			groundValues[(x + z * xPOT)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
-			groundValues[(x + z * xPOT)*4 + 1] = (unsigned char)(n.y*255.0);
-			groundValues[(x + z * xPOT)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
-			groundValues[(x + z * xPOT)*4 + 3] = (unsigned char)(255.0*(interpolatedHeight(Vec2f(float(x*width)/xPOT,float(z*height)/zPOT))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
+			groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
+			groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
+			groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
+			groundValues[(x + z * width)*4 + 3] = (unsigned char)(255.0*(interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
 		}
 	}
-	texture->setData(xPOT, zPOT, GraphicsManager::texture::RGBA, groundValues);
+	texture->setData(width, height, GraphicsManager::texture::RGBA, groundValues);
 	//glBindTexture(GL_TEXTURE_2D, texture);
 	//gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, xPOT, zPOT, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
 	////glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xPOT, zPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
@@ -129,19 +197,23 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 	/////////////////
 
 	delete[] heightMap;
-	delete[] indices;
+	delete[] nHeights;
+
 ///////////////////////////////////////////////////QUAD TREE///////////////////////////////////////////////////
 	unsigned int nPatches = 0;
-	for(int i=0; i<=LevelsDeep; i++)
+	for(int i=0; i<=levelsDeep; i++)
 	{
 		nPatches += 1 << (2*i);
 	}
 
 	trunk = new TerrainPatch[nPatches];
 	trunk->parent = nullptr;
-	trunk->init(trunk, 0, LevelsDeep);
+	trunk->init(trunk, 0, levelsDeep);
 
 	TerrainPatch* p;
+	float e;
+	unsigned int spacing;
+	float errorScale = scale.y / USHRT_MAX / 2.0;
 	for(int l=0; l<=levelsDeep; l++)
 	{
 		for(unsigned int x=0; x < (1<<l); x++)
@@ -155,10 +227,30 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsig
 				if(y > 0)			p->neighbors[2] = getPatch(l,x,y-1);
 				if(y < (1<<l)-1)	p->neighbors[3] = getPatch(l,x,y+1);
 
+				p->minXYZ = minXYZ + Vec3f(scale.x * y / (1<<l), 0, scale.z * x / (1<<l));
+				p->maxXYZ = minXYZ + Vec3f(scale.x * (y+1) / (1<<l), scale.y, scale.z * (x+1) / (1<<l));
+				p->center = (p->minXYZ + p->maxXYZ) / 2.0;
+
+				p->maxError = 0.0f;
+
+				if(l < levelsDeep)
+				{
+					spacing = 1 << (levelsDeep-l);
+					for(unsigned int h = x*16*spacing; h < (x*16+15)*spacing; h += spacing)
+					{
+						for(unsigned int k = y*16*spacing; k < (y*16+15)*spacing; k += spacing)
+						{
+							e = errorScale * abs(heights[h + k*width] + heights[(h+spacing) + k*width] - 2*heights[(h+spacing/2) + k*width]);
+							if(e > p->maxError) p->maxError = e;
+
+							e = errorScale * abs(heights[h + k*width] + heights[h + (k+spacing)*width] - 2*heights[h + (k+spacing/2)*width]);
+							if(e > p->maxError) p->maxError = e;
+						}
+					}
+				}
 			}
 		}
 	}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned int y) const
 {
@@ -260,15 +352,15 @@ void TerrainPage::render(Vec3f eye) const
 	TerrainPatch* p;
 	for(int l=0; l<=levelsDeep; l++)
 	{
-		for(unsigned int x=0; x < (1<<l); x++)
+		for(unsigned int x=0; x < (0x1<<l); x++)
 		{
-			for(unsigned int y=0; y < (1<<l); y++)
+			for(unsigned int y=0; y < (0x1<<l); y++)
 			{
 				getPatch(l,x,y)->flags = COMBINED;
 			}
 		}
 	}
-
+	//trunk->subdivide(eye, 0.1);
 	//for(int l=0; l<=levelsDeep; l++)
 	//{
 	//	for(unsigned int x=0; x < (1<<l); x++)
@@ -276,23 +368,23 @@ void TerrainPage::render(Vec3f eye) const
 	//		for(unsigned int y=0; y < (1<<l); y++)
 	//		{
 	//			p = getPatch(l,x,y);
-	//			if(l != 0 && p->parent->flags == SUBDIVIDED)
+	//			if(p->flags & LEVEL_USED)
 	//			{
-	//				//todo: write code to decide whether to subdivide patch or just render it
-	//				//if patch is to be rendered then it should be pushed back in renderQueue
+	//				renderQueue.push_back(p);
 	//			}
 	//		}
 	//	}
 	//}
 
-	for(unsigned int x=0; x < (1<<levelsDeep); x++) //for now just render the highest level of detail
+	for(unsigned int x=0; x < (1<<(levelsDeep)); x++) //for now just render the highest level of detail
 	{
-		for(unsigned int y=0; y < (1<<levelsDeep); y++)
+		for(unsigned int y=0; y < (1<<(levelsDeep)); y++)
 		{
 			p = getPatch(levelsDeep,x,y);
 			renderQueue.push_back(p);
 		}
 	}
+
 	dataManager.bind("island new terrain");
 	dataManager.bind("sand",0);
 	dataManager.bind("grass",1);
@@ -339,16 +431,24 @@ void TerrainPage::render(Vec3f eye) const
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableClientState(GL_VERTEX_ARRAY);
 
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	glDisable(GL_CULL_FACE);
+
+	unsigned int bufferOffset;
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
 	{
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer.id);
-		glDrawElements(GL_TRIANGLES,indexBuffer.numVertices, GL_UNSIGNED_INT,0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
+
+
+		glVertexPointer(3, GL_FLOAT, 0, (void*)bufferOffset);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[(*i)->level].id);
+		glDrawElements(GL_TRIANGLES,indexBuffer[(*i)->level].numVertices, GL_UNSIGNED_INT,0);
 	}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	dataManager.unbindShader();
 	dataManager.unbindTextures();
 }
@@ -357,6 +457,7 @@ TerrainPage::~TerrainPage()
 	if(VBO != 0)
 		glDeleteBuffers(1, &VBO);
 
+	delete[] indexBuffer;
 	delete[] heights;
 	delete[] trunk;
 }
@@ -632,7 +733,7 @@ Terrain::~Terrain()
 void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water)
 {
 	waterPlane = water;
-	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,0,patchResolution,position,scale));
+	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,patchResolution,position,scale));
 	terrainPages.push_back(p);
 	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z));
 
