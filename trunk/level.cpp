@@ -628,7 +628,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 
 		unsigned short* h = new unsigned short[w*w];
 		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info->mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w-1,Vec3f(0,minHeight,0),Vec3f(info->mapSize.x,maxHeight - minHeight,info->mapSize.y));
+		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info->mapSize.x,maxHeight - minHeight,info->mapSize.y));
 	}
 
 	bullets = world.newObject(new bulletCloud);

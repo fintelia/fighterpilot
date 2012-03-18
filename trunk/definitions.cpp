@@ -95,7 +95,6 @@ __int64 uPowerOfTwo(__int64 i)
 	i |= i >> 32;
     return ++i;
 }
-
 //objectType objectTypeFromString(string s)
 //{
 //	if(s=="f12")			return F12;

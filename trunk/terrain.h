@@ -7,12 +7,15 @@ public:
 	TerrainPatch* children[4];		//top left, top right, bottom left, bottom right
 	TerrainPatch* neighbors[4];		//left, right, top, bottom
 	unsigned int level;
-	unsigned char flags;
+	mutable unsigned char flags;
+
+	unsigned int row, col;
 
 	float maxError;
 
 
 	Vec3f minXYZ, maxXYZ;		//bounding box (for later)
+	Vec3f center;
 
 	TerrainPatch();
 	void init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned int totalLevels);
@@ -26,6 +29,7 @@ public:
 		}
 		return offset;
 	}
+	void subdivide(const Vec3f& eye, float error) const;
 };
 class TerrainPage
 {
@@ -49,11 +53,11 @@ public:
 	{
 		unsigned int numVertices;
 		unsigned int id;
-	}indexBuffer;
+	}*indexBuffer;
 
 	mutable vector<TerrainPatch*> renderQueue;
 
-	TerrainPage(unsigned short* Heights, unsigned int LevelsDeep, unsigned short patchResolution, Vec3f position, Vec3f scale);
+	TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale);
 	~TerrainPage();
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y) const;
 
