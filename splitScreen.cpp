@@ -90,7 +90,7 @@ void splitScreen::render3D(unsigned int v)
 //	glClearColor(0.5f,0.8f,0.9f,1.0f);
 //	glViewport(0, sh/2, sw, sh/2);
 //	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
-	drawScene(v);
+	drawScene(views[v], v);
 	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
 		sceneManager.renderScene(views[v], players[v]->getObject()->meshInstance);
 	else

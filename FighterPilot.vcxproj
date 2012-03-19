@@ -176,7 +176,6 @@
     <ClInclude Include="engine.h" />
     <ClInclude Include="fileManager.h" />
     <ClInclude Include="game.h" />
-    <ClInclude Include="geoPlane.h" />
     <ClInclude Include="GL\GLee.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="menus.h" />

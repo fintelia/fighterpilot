@@ -175,7 +175,7 @@ public:
 	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v);
 
 	void drawHexCylinder(Vec3f center, float radius, float height, Color c);
-	void drawScene(int acplayer);
+	void drawScene(shared_ptr<GraphicsManager::View> view, int acplayer);
 
 	void checkCollisions();
 };

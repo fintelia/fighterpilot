@@ -199,7 +199,7 @@ void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c
 	dataManager.unbindTextures();
 	dataManager.unbindShader();
 }
-void dogFight::drawScene(int acplayer)
+void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 {
 	static map<int,double> lastDraw;
 	double time=world.time();
@@ -211,11 +211,11 @@ void dogFight::drawScene(int acplayer)
 		return;
 	}
 
-	auto camera = players[acplayer]->getCamera(p->controled || p->dead);
-	Vec3f e = camera.eye;
+//	auto camera = players[acplayer]->getCamera(p->controled || p->dead);
+//	Vec3f e = camera.eye;
 	//graphics->lookAt(camera.eye, camera.center, camera.up);
 
-	world.renderTerrain(e);
+	world.renderTerrain(view);
 
 	graphics->setDepthMask(false);
 

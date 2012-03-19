@@ -137,6 +137,23 @@ bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 	return true;
 }
 
+bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
+{
+	for(int p = 0; p < 6; ++p) 
+	{
+		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
+		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
+
+		return false;
+	}
+	return true;
+}
 //
 //Vec2f GraphicsManager::project(Vec3f p, unsigned int view)
 //{

@@ -128,6 +128,7 @@ public:
 		void setRenderFunc(function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
 
 		bool sphereInFrustum(Sphere<float> s);
+		bool boundingBoxInFrustum(BoundingBox<float> b);
 
 		void render(){if(mRenderFunc)mRenderFunc(mRenderFuncParam);}
 

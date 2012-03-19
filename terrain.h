@@ -14,7 +14,7 @@ public:
 	float maxError;
 
 
-	Vec3f minXYZ, maxXYZ;		//bounding box (for later)
+	BoundingBox<float> bounds;
 	Vec3f center;
 
 	TerrainPatch();
@@ -61,7 +61,7 @@ public:
 	~TerrainPage();
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y) const;
 
-	void render(Vec3f eye) const;
+	void render(shared_ptr<GraphicsManager::View> view) const;
 
 	Vec3f getNormal(Vec2f loc) const;
 	float getHeight(Vec2f loc) const;
@@ -97,7 +97,7 @@ public:
 	Terrain():waterPlane(true){}
 	~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true);
-	void renderTerrain(Vec3f eye) const;
+	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 
 	const Circle<float>& bounds() const{return mBounds;}
 
