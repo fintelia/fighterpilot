@@ -139,9 +139,6 @@
     <Filter Include="Source Files\ENGINE\terrain">
       <UniqueIdentifier>{1efa1c63-ecd3-4816-ad75-0d6539730654}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ENGINE\math\plane">
-      <UniqueIdentifier>{5681ad1f-1a72-42dd-9f56-7787b12bfa1b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ENGINE\fileManager">
       <UniqueIdentifier>{5c76260d-0f5b-4e4d-acd5-7ec168a2b030}</UniqueIdentifier>
     </Filter>
@@ -410,9 +407,6 @@
     </ClInclude>
     <ClInclude Include="terrain.h">
       <Filter>Source Files\ENGINE\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="geoPlane.h">
-      <Filter>Source Files\ENGINE\math\plane</Filter>
     </ClInclude>
     <ClInclude Include="fileManager.h">
       <Filter>Source Files\ENGINE\fileManager</Filter>

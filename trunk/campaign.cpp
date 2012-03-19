@@ -164,7 +164,7 @@ void campaign::render()
 
 void campaign::render3D(unsigned int v)
 {
-	drawScene(0);
+	drawScene(view, 0);
 	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
 		sceneManager.renderScene(view, players[v]->getObject()->meshInstance);
 	else

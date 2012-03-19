@@ -64,7 +64,7 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 void TerrainPatch::subdivide(const Vec3f& eye, float error) const
 {
 	float e = maxError / eye.distance(center);
-	if(children[0] && children[1] && children[2] && children[3] && ((e > error) || (minXYZ.x < eye.x && minXYZ.z < eye.z && maxXYZ.x > eye.x && maxXYZ.z > eye.z)))
+	if(children[0] && children[1] && children[2] && children[3] && ((e > error) || (bounds.minXYZ.x < eye.x && bounds.minXYZ.z < eye.z && bounds.maxXYZ.x > eye.x && bounds.maxXYZ.z > eye.z)))
 	{
 		flags = SUBDIVIDED;
 
@@ -227,9 +227,9 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 				if(y > 0)			p->neighbors[2] = getPatch(l,x,y-1);
 				if(y < (1<<l)-1)	p->neighbors[3] = getPatch(l,x,y+1);
 
-				p->minXYZ = minXYZ + Vec3f(scale.x * y / (1<<l), 0, scale.z * x / (1<<l));
-				p->maxXYZ = minXYZ + Vec3f(scale.x * (y+1) / (1<<l), scale.y, scale.z * (x+1) / (1<<l));
-				p->center = (p->minXYZ + p->maxXYZ) / 2.0;
+				p->bounds.minXYZ = minXYZ + Vec3f(scale.x * y / (1<<l), 0, scale.z * x / (1<<l));
+				p->bounds.maxXYZ = minXYZ + Vec3f(scale.x * (y+1) / (1<<l), scale.y, scale.z * (x+1) / (1<<l));
+				p->center = (p->bounds.minXYZ + p->bounds.maxXYZ) / 2.0;
 
 				p->maxError = 0.0f;
 
@@ -345,7 +345,7 @@ float TerrainPage::getHeight(Vec2f loc) const
 		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
 	}
 }
-void TerrainPage::render(Vec3f eye) const
+void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 {
 	renderQueue.clear();
 
@@ -381,7 +381,8 @@ void TerrainPage::render(Vec3f eye) const
 		for(unsigned int y=0; y < (1<<(levelsDeep)); y++)
 		{
 			p = getPatch(levelsDeep,x,y);
-			renderQueue.push_back(p);
+			if(view->boundingBoxInFrustum(p->bounds))
+				renderQueue.push_back(p);
 		}
 	}
 
@@ -743,8 +744,9 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	generateOceanTexture();
 	graphics->checkErrors();
 }
-void Terrain::renderTerrain(Vec3f eye) const
+void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 {
+	Vec3f eye = view->camera().eye;
 	glEnableClientState(GL_VERTEX_ARRAY);
 	Vec3d center(eye.x,0,eye.z);
 	double radius = max((eye.y)*tan(asin(6000000/(6000000+eye.y))), 2.0*max(terrainScale.x,terrainScale.z));
@@ -795,7 +797,7 @@ void Terrain::renderTerrain(Vec3f eye) const
 	glEnable(GL_CULL_FACE);
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
-		(*i)->render(eye);
+		(*i)->render(view);
 	}
 	glDisable(GL_CULL_FACE);
 	if(waterPlane)
