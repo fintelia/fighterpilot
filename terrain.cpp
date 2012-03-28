@@ -8,13 +8,16 @@ const unsigned char LEFT		= 0x01; //patch to the left is one level above this pa
 const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
 const unsigned char TOP			= 0x04; //patch to the top is one level above this patch
 const unsigned char BOTTOM		= 0x08; //patch to the bottom is one level above this patch
+//
+//const unsigned char SUBDIVIDED	= 0x10;	//patch is divided for rendering
+//const unsigned char LEVEL_USED	= 0x20; //patch is rendered at this level
+//const unsigned char COMBINED	= 0x40; //patch is not subdivided this far
 
-const unsigned char SUBDIVIDED	= 0x10;	//patch is divided for rendering
-const unsigned char LEVEL_USED	= 0x20; //patch is rendered at this level
-const unsigned char COMBINED	= 0x40; //patch is not subdivided this far
-
-TerrainPatch::TerrainPatch(): parent(nullptr), flags(0)
+TerrainPatch::TerrainPatch(): parent(nullptr)
 {
+	divisionLevel = COMBINED;
+	edgeFlags = 0;
+
 	children[0] = nullptr;
 	children[1] = nullptr;
 	children[2] = nullptr;
@@ -63,10 +66,10 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 }
 void TerrainPatch::subdivide(const Vec3f& eye, float error) const
 {
-	float e = maxError / eye.distance(center);
-	if(children[0] && children[1] && children[2] && children[3] && ((e > error) || (bounds.minXYZ.x < eye.x && bounds.minXYZ.z < eye.z && bounds.maxXYZ.x > eye.x && bounds.maxXYZ.z > eye.z)))
+	float d = eye.distanceSquared(center);
+	if(children[0] && children[1] && children[2] && children[3] && d < minDistanceSquared)// || (bounds.minXYZ.x < eye.x && bounds.minXYZ.z < eye.z && bounds.maxXYZ.x > eye.x && bounds.maxXYZ.z > eye.z)
 	{
-		flags = SUBDIVIDED;
+		divisionLevel = SUBDIVIDED;
 
 		children[0]->subdivide(eye, error);
 		children[1]->subdivide(eye, error);
@@ -75,7 +78,21 @@ void TerrainPatch::subdivide(const Vec3f& eye, float error) const
 	}
 	else
 	{
-		flags = LEVEL_USED;
+		divisionLevel = LEVEL_USED;
+	}
+}
+void TerrainPatch::patchEdges() const
+{
+	if(divisionLevel == SUBDIVIDED)
+	{
+		children[0]->patchEdges();
+		children[1]->patchEdges();
+		children[2]->patchEdges();
+		children[3]->patchEdges();
+	}
+	else
+	{
+		//write code to find out whether we need neighbors are further subdivided
 	}
 }
 TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), heights(Heights), trunk(nullptr), indexBuffer(nullptr)
@@ -212,8 +229,12 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 
 	TerrainPatch* p;
 	float e;
+	float r = sqrt(scale.x*scale.x + scale.z*scale.z) / 2;
 	unsigned int spacing;
-	float errorScale = scale.y / USHRT_MAX / 2.0;
+	float errorScale = (maxXYZ.y - minXYZ.y) / USHRT_MAX / 2.0;
+
+	float C = 16.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
+
 	for(int l=0; l<=levelsDeep; l++)
 	{
 		for(unsigned int x=0; x < (1<<l); x++)
@@ -232,6 +253,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 				p->center = (p->bounds.minXYZ + p->bounds.maxXYZ) / 2.0;
 
 				p->maxError = 0.0f;
+				p->minDistanceSquared = 0.0f;
 
 				if(l < levelsDeep)
 				{
@@ -247,6 +269,8 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 							if(e > p->maxError) p->maxError = e;
 						}
 					}
+					//p->minDistanceSquared = (p->maxError * C) * (p->maxError * C);
+					p->minDistanceSquared = (p->maxError * C + r/(1<<l)) * (p->maxError * C + r/(1<<l));
 				}
 			}
 		}
@@ -356,11 +380,13 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 		{
 			for(unsigned int y=0; y < (0x1<<l); y++)
 			{
-				getPatch(l,x,y)->flags = COMBINED;
+				getPatch(l,x,y)->divisionLevel = TerrainPatch::COMBINED;
 			}
 		}
 	}
-	//trunk->subdivide(eye, 0.1);
+
+	//trunk->subdivide(view->camera().eye, 0.1);
+	//trunk->patchEdges();
 	//for(int l=0; l<=levelsDeep; l++)
 	//{
 	//	for(unsigned int x=0; x < (1<<l); x++)
@@ -368,7 +394,7 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	//		for(unsigned int y=0; y < (1<<l); y++)
 	//		{
 	//			p = getPatch(l,x,y);
-	//			if(p->flags & LEVEL_USED)
+	//			if(p->divisionLevel == TerrainPatch::LEVEL_USED)
 	//			{
 	//				renderQueue.push_back(p);
 	//			}
@@ -432,7 +458,7 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	glDisable(GL_CULL_FACE);
 
@@ -449,7 +475,7 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	dataManager.unbindShader();
 	dataManager.unbindTextures();
 }
@@ -758,8 +784,8 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
 	skyTexture->bind();
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,200000,600000));
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-200000,600000));
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,100000,600000));
+	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-100000,600000));
 
 	
 

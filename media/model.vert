@@ -8,6 +8,7 @@ varying vec4 position;
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;
 
+
 uniform vec3 lightPosition;
 
 void main()

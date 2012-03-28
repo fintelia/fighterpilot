@@ -220,6 +220,31 @@ public:
 	public:
 		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)=0;
 	};
+	class shader
+	{
+	public:
+		virtual void init(const char* vert, const char* frag, const char* geometry)=0;
+		void init(const char* vert, const char* frag){init(vert, frag, nullptr);}
+
+		virtual void bind()=0;
+		virtual void unbind()=0;
+
+		virtual void setUniform1f(string name, float v0)=0;
+		virtual void setUniform2f(string name, float v0, float v1)=0;
+		virtual void setUniform3f(string name, float v0, float v1, float v2)=0;
+		virtual void setUniform4f(string name, float v0, float v1, float v2, float v3)=0;
+		void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
+		void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
+		void setUniform3f(string name, Color c){setUniform3f(name,c.r,c.r,c.b);}
+		void setUniform4f(string name, Color c, float a = 1.0){setUniform4f(name,c.r,c.r,c.b,a);}
+		virtual void setUniform1i(string name, int v0)=0;
+		virtual void setUniform2i(string name, int v0, int v1)=0;
+		virtual void setUniform3i(string name, int v0, int v1, int v2)=0;
+		virtual void setUniform4i(string name, int v0, int v1, int v2, int v3)=0;
+
+		virtual void setUniformMatrix(string name, const Mat3f& m)=0;
+		virtual void setUniformMatrix(string name, const Mat4f& m)=0;
+	};
 private:
 	gID currentId;
 
@@ -290,6 +315,7 @@ public:
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
 	virtual shared_ptr<textureCube> genTextureCube()=0;
+	virtual shared_ptr<shader> genShader()=0;
 
 	virtual shared_ptr<View> genView();
 
@@ -422,7 +448,33 @@ public:
 		void bind(unsigned int textureUnit);
 		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
 	};
+	class shaderGL: public GraphicsManager::shader
+	{
+	private:
+		unsigned int shaderId;
+		map<string, int> uniforms;
+		int getUniformLocation(string uniform);
+	public:
+		shaderGL(): shaderId(0){}
+		~shaderGL();
 
+		void bind();
+		void unbind();
+
+		void init(const char* vert, const char* frag, const char* geometry);
+
+		void setUniform1f(string name, float v0);
+		void setUniform2f(string name, float v0, float v1);
+		void setUniform3f(string name, float v0, float v1, float v2);
+		void setUniform4f(string name, float v0, float v1, float v2, float v3);
+		void setUniform1i(string name, int v0);
+		void setUniform2i(string name, int v0, int v1);
+		void setUniform3i(string name, int v0, int v1, int v2);
+		void setUniform4i(string name, int v0, int v1, int v2, int v3);
+
+		void setUniformMatrix(string name, const Mat3f& m);
+		void setUniformMatrix(string name, const Mat4f& m);
+	};
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
 	bool changeResolution(Vec2i resolution, unsigned int maxSamples);
 	void destroyWindow();
@@ -453,6 +505,7 @@ public:
 	shared_ptr<texture2D> genTexture2D();
 	shared_ptr<texture3D> genTexture3D();
 	shared_ptr<textureCube> genTextureCube();
+	shared_ptr<shader> genShader();
 
 	void setGamma(float gamma);
 	void setColor(float r, float g, float b, float a);

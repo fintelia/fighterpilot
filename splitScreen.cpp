@@ -6,16 +6,16 @@ namespace gui{
 splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 {
 	views[0] = graphics->genView();
-	views[0]->viewport(0,0.5, sAspect,0.5);
-	views[0]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	views[0]->viewport(0, 0.5, sAspect, 0.5);
+	views[0]->perspective(80.0, (double)sw / ((double)sh/2), 1.0, 500000.0);
 	views[0]->setRenderFunc(bind(&splitScreen::render3D, this, placeholders::_1), 0);
 
 	views[1] = graphics->genView();
 	views[1]->viewport(0,0.0, sAspect,0.5);
-	views[1]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
+	views[1]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 500000.0);
 	views[1]->setRenderFunc(bind(&splitScreen::render3D, this, placeholders::_1), 1);
 
-	graphics->setLightPosition(Vec3f(-500.0, 800.0, 100.0));
+	graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
 }
 bool splitScreen::init()
 {

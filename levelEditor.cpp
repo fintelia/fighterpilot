@@ -1,7 +1,7 @@
 
 #include "game.h"
-#include "GL/glee.h"
-#include <GL/glu.h>
+//#include "GL/glee.h"
+//#include <GL/glu.h>
 
 namespace gui{
 
@@ -13,29 +13,29 @@ bool levelEditor::init()
 	view->setRenderFunc(bind(&levelEditor::render3D, this, placeholders::_1));
 
 	//terrain
-	buttons["dSquare"]		= new button(sAspect-0.1,0.005,0.1,0.030,"d-square",lightGreen,white);
-	buttons["faultLine"]	= new button(sAspect-0.1,0.040,0.1,0.030,"fault line",lightGreen,white);
-	buttons["fromFile"]		= new button(sAspect-0.1,0.075,0.1,0.030,"from file",lightGreen,white);
-	buttons["exportBMP"]	= new button(sAspect-0.1,0.110,0.1,0.030,"export",lightGreen,white);
-	sliders["sea level"]	= new slider(sAspect-0.1,0.145,0.1,0.030,1.0,0.0);
-	sliders["height scale"] = new slider(sAspect-0.1,0.180,0.1,0.030,1.0,-1.0);	sliders["height scale"]->setValue(0.0);
+	buttons["dSquare"]		= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
+	buttons["faultLine"]	= new button(sAspect-0.16,0.040,0.15,0.030,"fault line",lightGreen,white);
+	buttons["fromFile"]		= new button(sAspect-0.16,0.075,0.15,0.030,"from file",lightGreen,white);
+	buttons["exportBMP"]	= new button(sAspect-0.16,0.110,0.15,0.030,"export",lightGreen,white);
+	sliders["sea level"]	= new slider(sAspect-0.16,0.145,0.15,0.030,1.0,0.0);
+	sliders["height scale"] = new slider(sAspect-0.16,0.180,0.15,0.030,1.0,-1.0);sliders["height scale"]->setValue(0.0);
 
-	buttons["load"]			= new button(sAspect-0.312,0.965,0.1,0.030,"Load",Color(0.8,0.8,0.8),white);
-	buttons["save"]			= new button(sAspect-0.210,0.965,0.1,0.030,"Save",Color(0.8,0.8,0.8),white);
-	buttons["exit"]			= new button(sAspect-0.107,0.965,0.1,0.030,"Exit",Color(0.8,0.8,0.8),white);
+	buttons["load"]			= new button(sAspect-0.462,0.965,0.15,0.030,"Load",Color(0.8,0.8,0.8),white);
+	buttons["save"]			= new button(sAspect-0.310,0.965,0.15,0.030,"Save",Color(0.8,0.8,0.8),white);
+	buttons["exit"]			= new button(sAspect-0.157,0.965,0.15,0.030,"Exit",Color(0.8,0.8,0.8),white);
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
 
-	toggles["shaders"]->addButton(new button(0.005,0.005,0.195,0.030,"grass",black,white));
-	toggles["shaders"]->addButton(new button(0.005,0.040,0.195,0.030,"snow",black,white));
-	toggles["shaders"]->addButton(new button(0.005,0.075,0.195,0.030,"ocean",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.005,0.15,0.030,"grass",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.040,0.15,0.030,"snow",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"ocean",black,white));
 
 	//objects
-	buttons["addPlane"]		= new button(0.005,0.005,0.195,0.030,"new plane",lightGreen,white);
-	buttons["addAAgun"]		= new button(0.005,0.040,0.195,0.030,"new AA gun",lightGreen,white);
+	buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
+	buttons["addAAgun"]		= new button(0.005,0.040,0.25,0.030,"new AA gun",lightGreen,white);
 #ifdef _DEBUG
-	buttons["addSAMbattery"]= new button(0.005,0.075,0.195,0.030,"new SAM Battery",lightGreen,white);
-	buttons["addFlakCannon"]= new button(0.005,0.110,0.195,0.030,"new Flak Cannon",lightGreen,white);
+	buttons["addSAMbattery"]= new button(0.005,0.075,0.25,0.030,"new SAM Battery",lightGreen,white);
+	buttons["addFlakCannon"]= new button(0.005,0.110,0.25,0.030,"new Flak Cannon",lightGreen,white);
 #endif
 
 	//settings
@@ -68,9 +68,9 @@ bool levelEditor::init()
 	//toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
 
 	toggles["tabs"]	= new toggle(vector<button*>(),Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
-	toggles["tabs"]->addButton(new button(0.005,0.965,0.1,0.030,"Terrain",black,white));
-	toggles["tabs"]->addButton(new button(0.107,0.965,0.1,0.030,"Objects",black,white));
-	toggles["tabs"]->addButton(new button(0.210,0.965,0.1,0.030,"Regions",black,white));
+	toggles["tabs"]->addButton(new button(0.005,0.965,0.15,0.030,"Terrain",black,white));
+	toggles["tabs"]->addButton(new button(0.157,0.965,0.15,0.030,"Objects",black,white));
+	toggles["tabs"]->addButton(new button(0.310,0.965,0.15,0.030,"Regions",black,white));
 
 	if(level != NULL) delete level;
 	level = new editLevel;
@@ -278,28 +278,23 @@ int levelEditor::update()
 
 	//if(input.getKey(0x52) && !popupActive())//r key
 	//	rot+=value/1000;
-	POINT p;
-	GetCursorPos(&p);
-	if(getTab() == REGIONS && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
+	Vec2f p = input.getMousePos();
+	if(getTab() == REGIONS && (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
-		if(p.x < 2)		orthoCenter += Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
-		if(p.x > sw-2)	orthoCenter -= Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
-		if(p.y < 2)		orthoCenter += Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
-		if(p.y > sh-2)	orthoCenter -= Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
+		if(p.x < 2.0/sh)			orthoCenter += Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
+		if(p.x > sAspect-2.0/sh)	orthoCenter -= Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000;
+		if(p.y < 2.0/sh)			orthoCenter += Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
+		if(p.y > 1.0-2.0/sh)		orthoCenter -= Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000;
 	}
-	else if(!input.getMouseState(MIDDLE_BUTTON).down && (p.x < 2 || p.x > sw-2 || p.y < 2 || p.y > sh-2))
+	else if(!input.getMouseState(MIDDLE_BUTTON).down && (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
-		if(p.x < 2)		center -= rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.x > sw-2)	center += rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.y < 2)		center -= rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.y > sh-2)	center += rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * level->ground()->sizeX() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		if(p.y < 2.0/sh)			center -= rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		if(p.y > 1.0-2.0/sh)		center += rot * Vec3f(0,0,0.25) * level->ground()->sizeZ() * world.time.length() / 1000 * pow(1.1f,-scrollVal);
 	}
 
 	return 7;
-}
-void levelEditor::render()
-{
-	menuManager.drawCursor();
 }
 bool levelEditor::mouse(mouseButton button, bool down)
 {
@@ -775,28 +770,29 @@ void levelEditor::render3D(unsigned int v)
 		bool w = getShader() != 1;
 		float sl = sliders["sea level"]->getValue();
 
-		glPushMatrix();
+	//	glPushMatrix();
 	//	glScalef(0.01*pow(10.0f,orthoScale),1,0.01*pow(10.0f,orthoScale));
 		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
  		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-		glPopMatrix();
+	//	glPopMatrix();
 
-		if(getTab() == REGIONS)
-		{
-			dataManager.bind("circle shader");
-			glDisable(GL_DEPTH_TEST);
-
-			auto v = level->regions();
-			for(auto i = v.begin(); i != v.end(); i++)
-			{
-				Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
-				Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
-				graphics->drawOverlay(Rect::CWH(c,s));
-			}
-
-			dataManager.unbindShader();
-			glEnable(GL_DEPTH_TEST);
-		}
+		//if(getTab() == REGIONS)
+		//{
+		//	dataManager.bind("circle shader");
+		//	glDisable(GL_DEPTH_TEST);
+		//	graphics->setDepthMask(false);
+		//
+		//	auto v = level->regions();
+		//	for(auto i = v.begin(); i != v.end(); i++)
+		//	{
+		//		Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
+		//		Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
+		//		graphics->drawOverlay(Rect::CWH(c,s));
+		//	}
+		//
+		//	dataManager.unbindShader();
+		//	glEnable(GL_DEPTH_TEST);
+		//}
 	}
 	else
 	{
@@ -835,18 +831,18 @@ void levelEditor::render3D(unsigned int v)
 
 		graphics->setLightPosition(Vec3f(30, 70, 40));
 
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
+		//glDisable(GL_CULL_FACE);
+		//glEnable(GL_DEPTH_TEST);
 
 		if(getShader() != -1)
 			((Level::heightmapGL*)level->ground())->setShader(toggles["shaders"]->getValue() + 2);
 		bool w = getShader() != 1;
 		float sl = sliders["sea level"]->getValue();
 
-		glPushMatrix();
+		//glPushMatrix();
 		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
  		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-		glPopMatrix();
+		//glPopMatrix();
 	}
 
 	
@@ -893,7 +889,7 @@ void levelEditor::render3D(unsigned int v)
 			////////////////////////////////end grid///////////////////////////////////
 		}
 
-		glDisable(GL_DEPTH_TEST);
+		//glDisable(GL_DEPTH_TEST);
 
 		//glBindTexture(GL_TEXTURE_2D,0);
 		//glMatrixMode(GL_PROJECTION);
@@ -906,16 +902,16 @@ void levelEditor::render3D(unsigned int v)
 
 		
 		//dataManager.bind("ortho");
-		dataManager.bind("circle shader");
+		//dataManager.bind("circle shader");
 
 	//	glColor3f(0,1,0);
 
-		updateObjectCircles();
-		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
-		{
-			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
-		}
-		dataManager.unbindShader();
+		//updateObjectCircles();
+		//for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
+		//{
+		//	graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
+		//}
+		//dataManager.unbindShader();
 
 		//for(auto i = level->objects().begin(); i!= level->objects().end(); i++)
 		//{
@@ -941,7 +937,39 @@ void levelEditor::render3D(unsigned int v)
 	//	glMatrixMode( GL_PROJECTION );			// Select Projection
 	//	glPopMatrix();							// Pop The Matrix
 	//	glMatrixMode( GL_MODELVIEW );			// Select Modelview
-		glEnable(GL_DEPTH_TEST);
+	//	glEnable(GL_DEPTH_TEST);
+	}
+}
+void levelEditor::render()
+{
+	menuManager.drawCursor();
+
+	if(getTab() == OBJECTS)
+	{
+		dataManager.bind("circle shader");
+		updateObjectCircles();
+		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
+		{
+			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
+		}
+		dataManager.bind("ortho");
+	}
+	
+	if(getTab() == REGIONS)
+	{
+		Rect viewRect = orthoView();
+
+		dataManager.bind("circle shader");
+		
+		auto v = level->regions();
+		for(auto i = v.begin(); i != v.end(); i++)
+		{
+			Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
+			Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
+			graphics->drawOverlay(Rect::CWH(c,s));
+		}
+		
+		dataManager.bind("ortho");
 	}
 }
 }

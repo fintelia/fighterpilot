@@ -89,6 +89,7 @@ public:
 
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
+	void render();
 };
 class smokeTrail: public emitter
 {

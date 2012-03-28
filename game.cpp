@@ -21,7 +21,7 @@ bool Game::init()
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 		return false;
 	}
-	else if(!dataManager.loadAssetList())
+	else if(!assetLoader.loadAssetList())
 	{
 		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 		return false;

@@ -388,6 +388,29 @@ void options::render()
 {
 	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
+
+	graphics->setColor(0.00,0.00,0.00);	graphics->drawOverlay(Rect::XYXY(0.200*sAspect,0.47,0.225*sAspect,0.53),"white");
+	graphics->setColor(0.05,0.05,0.05);	graphics->drawOverlay(Rect::XYXY(0.225*sAspect,0.47,0.250*sAspect,0.53),"white");
+	graphics->setColor(0.10,0.10,0.10);	graphics->drawOverlay(Rect::XYXY(0.250*sAspect,0.47,0.275*sAspect,0.53),"white");
+	graphics->setColor(0.15,0.15,0.15);	graphics->drawOverlay(Rect::XYXY(0.275*sAspect,0.47,0.300*sAspect,0.53),"white");
+	graphics->setColor(0.20,0.20,0.20);	graphics->drawOverlay(Rect::XYXY(0.300*sAspect,0.47,0.325*sAspect,0.53),"white");
+	graphics->setColor(0.25,0.25,0.25);	graphics->drawOverlay(Rect::XYXY(0.325*sAspect,0.47,0.350*sAspect,0.53),"white");
+	graphics->setColor(0.30,0.30,0.30);	graphics->drawOverlay(Rect::XYXY(0.350*sAspect,0.47,0.375*sAspect,0.53),"white");
+	graphics->setColor(0.35,0.35,0.35);	graphics->drawOverlay(Rect::XYXY(0.375*sAspect,0.47,0.400*sAspect,0.53),"white");
+	graphics->setColor(0.40,0.40,0.40);	graphics->drawOverlay(Rect::XYXY(0.400*sAspect,0.47,0.425*sAspect,0.53),"white");
+	graphics->setColor(0.45,0.45,0.45);	graphics->drawOverlay(Rect::XYXY(0.425*sAspect,0.47,0.450*sAspect,0.53),"white");
+	graphics->setColor(0.50,0.50,0.50);	graphics->drawOverlay(Rect::XYXY(0.450*sAspect,0.47,0.475*sAspect,0.53),"white");
+	graphics->setColor(0.55,0.55,0.55);	graphics->drawOverlay(Rect::XYXY(0.475*sAspect,0.47,0.500*sAspect,0.53),"white");
+	graphics->setColor(0.60,0.60,0.60);	graphics->drawOverlay(Rect::XYXY(0.500*sAspect,0.47,0.525*sAspect,0.53),"white");
+	graphics->setColor(0.65,0.65,0.65);	graphics->drawOverlay(Rect::XYXY(0.525*sAspect,0.47,0.550*sAspect,0.53),"white");
+	graphics->setColor(0.70,0.70,0.70);	graphics->drawOverlay(Rect::XYXY(0.550*sAspect,0.47,0.575*sAspect,0.53),"white");
+	graphics->setColor(0.75,0.75,0.75);	graphics->drawOverlay(Rect::XYXY(0.575*sAspect,0.47,0.600*sAspect,0.53),"white");
+	graphics->setColor(0.80,0.80,0.80);	graphics->drawOverlay(Rect::XYXY(0.600*sAspect,0.47,0.625*sAspect,0.53),"white");
+	graphics->setColor(0.85,0.85,0.85);	graphics->drawOverlay(Rect::XYXY(0.625*sAspect,0.47,0.650*sAspect,0.53),"white");
+	graphics->setColor(0.90,0.90,0.90);	graphics->drawOverlay(Rect::XYXY(0.650*sAspect,0.47,0.675*sAspect,0.53),"white");
+	graphics->setColor(0.95,0.95,0.95);	graphics->drawOverlay(Rect::XYXY(0.675*sAspect,0.47,0.700*sAspect,0.53),"white");
+	graphics->setColor(1.00,1.00,1.00);	graphics->drawOverlay(Rect::XYXY(0.700*sAspect,0.47,0.725*sAspect,0.53),"white");
+
 	menuManager.drawCursor();
 }
 // ______________________________________________________________________________________________________________________________
@@ -405,7 +428,7 @@ int loading::update()
 	static bool toLoad = true;
 	if(toLoad)
 	{
-		dataManager.loadAsset(); // does preload if this is the first time it is called
+		assetLoader.loadAsset(); // does preload if this is the first time it is called
 
 		settings.load("media/modelData.txt");
 
@@ -423,7 +446,7 @@ int loading::update()
 
 	static vector<double> times;
 
-	int assetsLeft = dataManager.loadAsset();
+	int assetsLeft = assetLoader.loadAsset();
 
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 

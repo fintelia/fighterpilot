@@ -16,13 +16,12 @@ profiler Profiler;																																//	//
 InputManager& input=InputManager::getInstance();																								//	//
 gui::manager& menuManager = gui::manager::getInstance();																						//	//
 DataManager& dataManager = DataManager::getInstance();																							//	//
+AssetLoader& assetLoader = AssetLoader::getInstance();																							//  //
 WorldManager& world = WorldManager::getInstance();																								//	//
 CollisionChecker& collisionCheck = CollisionChecker::getInstance();																				//	//
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																						//	//
 FileManager& fileManager = FileManager::getInstance();																							//  //
 SceneManager& sceneManager = SceneManager::getInstance();																						//  //
-//SettingsManager& settings = SettingsManager::getInstance();																						//  //
-//PlayerManager& players = PlayerManager::getInstance();
 bool done=false;//exits program																													//	//
 																																				//	//
 bool lowQuality;																																//	//
@@ -31,7 +30,6 @@ bool lowQuality;																																//	//
 																																				//	//
 int frame=0,Time,timebase=0;																													//	//
 float fps;																																		//	//
-//planeType defaultPlane;																															//	//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //																																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

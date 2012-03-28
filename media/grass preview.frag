@@ -56,8 +56,8 @@ void main()
 	color = ( texture2D(rock,position.xz*4.0		)*TexValues[0]
 			+ texture2D(sand,position.xz*4.0		)*TexValues[1]
 			+ texture2D(grass,position.xz*4.0*2.0	)*TexValues[2]);
-	color.rgb *= (1.0+0.5*TexValues[0]-texture2D(LCnoise,position.xz*4.0*4.0).r*0.8*TexValues[0]);
-	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
+//	color.rgb *= (1.0+0.5*TexValues[0]-texture2D(LCnoise,position.xz*4.0*4.0).r*0.8*TexValues[0]);
+//	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
 	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
 
 

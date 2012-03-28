@@ -7,12 +7,14 @@ public:
 	TerrainPatch* children[4];		//top left, top right, bottom left, bottom right
 	TerrainPatch* neighbors[4];		//left, right, top, bottom
 	unsigned int level;
-	mutable unsigned char flags;
+
+	mutable enum DivisionLevel{SUBDIVIDED, LEVEL_USED, COMBINED} divisionLevel;
+	mutable unsigned char edgeFlags;
 
 	unsigned int row, col;
 
 	float maxError;
-
+	float minDistanceSquared; //square of the minimum distance to camera for which this level is allowed to be used
 
 	BoundingBox<float> bounds;
 	Vec3f center;
@@ -30,6 +32,7 @@ public:
 		return offset;
 	}
 	void subdivide(const Vec3f& eye, float error) const;
+	void patchEdges() const;
 };
 class TerrainPage
 {
