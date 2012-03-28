@@ -142,7 +142,7 @@ public:
 		heightmapBase(Vec2u Resolution);
 		heightmapBase(Vec2u Resolution, float* heights);
 		~heightmapBase(){delete[] heights;}
-		virtual void render() const=0;
+		//virtual void render() const=0;
 		virtual void renderPreview(float scale=1.0, float seaLevelOffset=0.0) const=0;
 		virtual void init()=0;
 
@@ -179,7 +179,7 @@ public:
 		void increaseHeight(unsigned int x, float height, unsigned int z){heights[clamp(x,0,resolutionX()-1) + clamp(z,0,resolutionZ()-1)*resolutionX()] += height; valid=false;}		
 		void increaseHeights(float amount);
 		void renderPreview(float scale=1.0, float seaLevelOffset=0.0) const;
-		void render() const;
+		//void render() const;
 
 		heightmapGL(Vec2u Resolution):heightmapBase(Resolution),valid(false),dispList(0){init();}
 		heightmapGL(Vec2u Resolution, float* heights):heightmapBase(Resolution,heights),valid(false),dispList(0){init();}
@@ -206,7 +206,7 @@ public:
 
 	void initializeWorld();//creates objects stored in level file
 
-	void render(Vec3f eye);
+	//void render(Vec3f eye);
 
 	heightmapBase* const ground() const{return mGround;}
 	const vector<LevelFile::Object>& objects() const {return mObjects;}

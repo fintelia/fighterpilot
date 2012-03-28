@@ -48,5 +48,12 @@ namespace particle
 		p.a = 1.0 - t;
 		p.size = (1.0 - 0.25*t) * 0.8;
 	}
+	void planeEngines::render()
+	{
+		if(world[parentObject] != nullptr && !world[parentObject]->dead)
+		{
+			emitter::render();
+		}
+	}
 }
-
+ 

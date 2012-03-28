@@ -836,103 +836,103 @@ void Level::heightmapGL::createList() const
 	glEndList();
 
 }
-void Level::heightmapGL::render() const
-{
-	if(!valid)
-	{
-		glDeleteLists(dispList,1);
-		createList();
-		setMinMaxHeights();
-		setTex();
-		valid=true;
-	}
-
-	if(shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_NONE)
-	{
-		if(shaderType == SHADER_ISLAND)	dataManager.bind("island new terrain");
-		else							dataManager.bind("grass new terrain");
-
-		dataManager.bind("sand",0);
-		dataManager.bind("grass",1);
-		dataManager.bind("rock",2);
-		dataManager.bind("LCnoise",3);
-		groundTex->bind(4);
-
-		dataManager.setUniform1f("maxHeight",	maxHeight);
-		dataManager.setUniform1f("minHeight",	0);
-		dataManager.setUniform1f("XZscale",		1);
-		dataManager.setUniform1f("time",		world.time());
-
-		dataManager.setUniform1i("sand",		0);
-		dataManager.setUniform1i("grass",		1);
-		dataManager.setUniform1i("rock",		2);
-		dataManager.setUniform1i("LCnoise",		3);
-		dataManager.setUniform1i("groundTex",	4);
-	}
-	else if(shaderType == SHADER_SNOW)
-	{
-		dataManager.bind("snow terrain");
-
-		dataManager.bind("snow",0);
-		dataManager.bind("LCnoise",1);
-		groundTex->bind(2);
-
-		dataManager.setUniform1f("maxHeight",	maxHeight);
-		dataManager.setUniform1f("minHeight",	0);
-		dataManager.setUniform1f("XZscale",		1);
-		dataManager.setUniform1f("time",		world.time());
-		dataManager.setUniform1i("snow",		0);
-		dataManager.setUniform1i("LCnoise",		1);
-		dataManager.setUniform1i("groundTex",	2);
-	}
-
- 	if(shaderType == SHADER_NONE || shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_SNOW)
-	{
-		glPushMatrix();
-			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
-			glScalef(mSize.x,1,mSize.y);
-			glCallList(dispList);
-		glPopMatrix();
-
-
-		dataManager.unbindTextures();
-		dataManager.unbindShader();
-	}
-	//glPushMatrix();
-	//glColor4f(0.1,0.3,1.0,0.6);
-	//glTranslatef(position.x,position.y,position.z);
-	//glScalef(size.x,size.y,size.z);
-	//for(unsigned int z=0;z<resolution.y-1;z++)
-	//{
-	//	glBegin(GL_TRIANGLE_STRIP);
-	//	for(unsigned int x=0;x<resolution.x;x++)
-	//	{
-	//		glVertex3f(x,heights[x+z*resolution.x],z);
-	//		glVertex3f(x,heights[x+(z+1)*resolution.x],z+1);
-	//	}
-	//	glEnd();
-	//}
-	//glColor4f(0.3,0.5,1.0,0.8);
-	//glBegin(GL_LINES);
-	//for(int x=0;x<resolution.x; x+=4)
-	//{
-	//	for(int y=0;y<resolution.y-1; y+=1)
-	//	{
-	//		glVertex3f(x,rasterHeight(x,y),y);
-	//		glVertex3f(x,rasterHeight(x,y+1),y+1);
-	//	}
-	//}
-	//for(int y=0;y<resolution.y; y+=4)
-	//{
-	//	for(int x=0;x<resolution.x-1; x+=1)
-	//	{
-	//		glVertex3f(x,rasterHeight(x,y),y);
-	//		glVertex3f(x+1,rasterHeight(x+1,y),y);
-	//	}
-	//}
-	//glEnd();
-	//glPopMatrix();
-}
+//void Level::heightmapGL::render() const
+//{
+//	if(!valid)
+//	{
+//		glDeleteLists(dispList,1);
+//		createList();
+//		setMinMaxHeights();
+//		setTex();
+//		valid=true;
+//	}
+//
+//	if(shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_NONE)
+//	{
+//		if(shaderType == SHADER_ISLAND)	dataManager.bind("island new terrain");
+//		else							dataManager.bind("grass new terrain");
+//
+//		dataManager.bind("sand",0);
+//		dataManager.bind("grass",1);
+//		dataManager.bind("rock",2);
+//		dataManager.bind("LCnoise",3);
+//		groundTex->bind(4);
+//
+//		dataManager.setUniform1f("maxHeight",	maxHeight);
+//		dataManager.setUniform1f("minHeight",	0);
+//		dataManager.setUniform1f("XZscale",		1);
+//		dataManager.setUniform1f("time",		world.time());
+//
+//		dataManager.setUniform1i("sand",		0);
+//		dataManager.setUniform1i("grass",		1);
+//		dataManager.setUniform1i("rock",		2);
+//		dataManager.setUniform1i("LCnoise",		3);
+//		dataManager.setUniform1i("groundTex",	4);
+//	}
+//	else if(shaderType == SHADER_SNOW)
+//	{
+//		dataManager.bind("snow terrain");
+//
+//		dataManager.bind("snow",0);
+//		dataManager.bind("LCnoise",1);
+//		groundTex->bind(2);
+//
+//		dataManager.setUniform1f("maxHeight",	maxHeight);
+//		dataManager.setUniform1f("minHeight",	0);
+//		dataManager.setUniform1f("XZscale",		1);
+//		dataManager.setUniform1f("time",		world.time());
+//		dataManager.setUniform1i("snow",		0);
+//		dataManager.setUniform1i("LCnoise",		1);
+//		dataManager.setUniform1i("groundTex",	2);
+//	}
+//
+// 	if(shaderType == SHADER_NONE || shaderType == SHADER_ISLAND || shaderType == SHADER_GRASS || shaderType == SHADER_SNOW)
+//	{
+//		glPushMatrix();
+//			glTranslatef(mPosition.x,mPosition.y,mPosition.z);
+//			glScalef(mSize.x,1,mSize.y);
+//			glCallList(dispList);
+//		glPopMatrix();
+//
+//
+//		dataManager.unbindTextures();
+//		dataManager.unbindShader();
+//	}
+//	//glPushMatrix();
+//	//glColor4f(0.1,0.3,1.0,0.6);
+//	//glTranslatef(position.x,position.y,position.z);
+//	//glScalef(size.x,size.y,size.z);
+//	//for(unsigned int z=0;z<resolution.y-1;z++)
+//	//{
+//	//	glBegin(GL_TRIANGLE_STRIP);
+//	//	for(unsigned int x=0;x<resolution.x;x++)
+//	//	{
+//	//		glVertex3f(x,heights[x+z*resolution.x],z);
+//	//		glVertex3f(x,heights[x+(z+1)*resolution.x],z+1);
+//	//	}
+//	//	glEnd();
+//	//}
+//	//glColor4f(0.3,0.5,1.0,0.8);
+//	//glBegin(GL_LINES);
+//	//for(int x=0;x<resolution.x; x+=4)
+//	//{
+//	//	for(int y=0;y<resolution.y-1; y+=1)
+//	//	{
+//	//		glVertex3f(x,rasterHeight(x,y),y);
+//	//		glVertex3f(x,rasterHeight(x,y+1),y+1);
+//	//	}
+//	//}
+//	//for(int y=0;y<resolution.y; y+=4)
+//	//{
+//	//	for(int x=0;x<resolution.x-1; x+=1)
+//	//	{
+//	//		glVertex3f(x,rasterHeight(x,y),y);
+//	//		glVertex3f(x+1,rasterHeight(x+1,y),y);
+//	//	}
+//	//}
+//	//glEnd();
+//	//glPopMatrix();
+//}
 void Level::heightmapGL::renderPreview(float scale, float seaLevelOffset) const
 {
 	//if(seaLevelOffset >= maxHeight)
@@ -999,6 +999,7 @@ void Level::heightmapGL::renderPreview(float scale, float seaLevelOffset) const
 		dataManager.unbindTextures();
 		dataManager.unbindShader();
 	}
+	dataManager.bind("model");
 }
 void Level::heightmapBase::setMinMaxHeights() const
 {
@@ -1101,82 +1102,82 @@ void Level::initializeWorld()
 	for(int i=0;i<w*w;i++) h[i] = ((mGround->rasterHeight(i%w,i/w)-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;//(unsigned short)((mGround->rasterHeight(i%w,i/w)-minHeight)/maxHeight * ((unsigned short)USHRT_MAX));
 	world.initTerrain(h, w-1,Vec3f(0,mGround->getMinHeight(),0),Vec3f(mGround->sizeX(),mGround->getMaxHeight() - mGround->getMinHeight(),mGround->sizeZ()));
 }
-void Level::render(Vec3f eye)
-{
-	//glDisable(GL_CULL_FACE);
-	glPushMatrix();
-
-	mGround->render();
-
-//	glDepthMask(false);
-
-	if(mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS)
-	{
-		Vec3d center(eye.x,0,eye.z);
-		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
-		float cAng,sAng;
-
-		dataManager.bind("horizon2");
-		dataManager.bind("hardNoise",0);
-
-		dataManager.setUniform1i("bumpMap",	0);
-		dataManager.setUniform1f("time",	world.time());
-		dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
-		dataManager.setUniform2f("center",	center.x,center.z);
-		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
-
-		glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
-			glVertex3f(center.x,center.y,center.z);
-
-			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
-			{
-				cAng=cos(ang);
-				sAng=sin(ang);
-				glTexCoord2f((center.x-cAng*radius)/mGround->sizeX(),(center.z-sAng*radius)/mGround->sizeZ());
-				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
-			}
-		glEnd();
-
-		dataManager.unbindTextures();
-		dataManager.unbindShader();
-
-		glDepthMask(true);
-	}
-	//else if(mGround->shaderType == SHADER_GRASS)
-	//{
-	//	glDepthMask(false);
-	//	dataManager.bind("ocean");
-
-	//	dataManager.bind("hardNoise",0);
-	//	if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
-	//	else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
-	//	dataManager.bind("rock",2);
-	//	dataManager.bind("sand",3);
-
-	//	dataManager.setUniform1i("bumpMap", 0);
-	//	dataManager.setUniform1i("groundTex", 1);
-	//	dataManager.setUniform1i("rock", 2);
-	//	dataManager.setUniform1i("sand", 3);
-	//	dataManager.setUniform1f("time", world.time());
-	//	dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
-	//	dataManager.setUniform1f("XZscale", mGround->mSize.x);
-
-	//	//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
-
-	//	glBegin(GL_QUADS);
-	//		glVertex3f(0,0,0);
-	//		glVertex3f(0,0,mGround->mSize.y);
-	//		glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
-	//		glVertex3f(mGround->mSize.x,0,0);
-	//	glEnd();
-
-	//	dataManager.unbindTextures();
-	//	dataManager.unbindShader();
-	//	glDepthMask(true);
-	//}
-	glPopMatrix();
-}
+//void Level::render(Vec3f eye)
+//{
+//	//glDisable(GL_CULL_FACE);
+//	glPushMatrix();
+//
+//	mGround->render();
+//
+////	glDepthMask(false);
+//
+//	if(mGround->shaderType == SHADER_ISLAND || mGround->shaderType == SHADER_OCEAN || mGround->shaderType == SHADER_GRASS)
+//	{
+//		Vec3d center(eye.x,0,eye.z);
+//		double radius = (eye.y)*tan(asin(6000000/(6000000+eye.y)));
+//		float cAng,sAng;
+//
+//		dataManager.bind("horizon2");
+//		dataManager.bind("hardNoise",0);
+//
+//		dataManager.setUniform1i("bumpMap",	0);
+//		dataManager.setUniform1f("time",	world.time());
+//		dataManager.setUniform1f("seaLevel",mGround->minHeight/(mGround->maxHeight-mGround->minHeight));
+//		dataManager.setUniform2f("center",	center.x,center.z);
+//		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
+//
+//		glBegin(GL_TRIANGLE_FAN);
+//			glTexCoord2f(center.x/mGround->sizeX(),center.z/mGround->sizeZ());
+//			glVertex3f(center.x,center.y,center.z);
+//
+//			for(float ang = 0; ang < PI*2.0+0.01; ang +=PI/8.0)
+//			{
+//				cAng=cos(ang);
+//				sAng=sin(ang);
+//				glTexCoord2f((center.x-cAng*radius)/mGround->sizeX(),(center.z-sAng*radius)/mGround->sizeZ());
+//				glVertex3f(center.x-cAng*radius,center.y,center.z-sAng*radius);
+//			}
+//		glEnd();
+//
+//		dataManager.unbindTextures();
+//		dataManager.unbindShader();
+//
+//		glDepthMask(true);
+//	}
+//	//else if(mGround->shaderType == SHADER_GRASS)
+//	//{
+//	//	glDepthMask(false);
+//	//	dataManager.bind("ocean");
+//
+//	//	dataManager.bind("hardNoise",0);
+//	//	if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
+//	//	else										dataManager.bindTex(((heightmapGL*)mGround)->groundTex,1);
+//	//	dataManager.bind("rock",2);
+//	//	dataManager.bind("sand",3);
+//
+//	//	dataManager.setUniform1i("bumpMap", 0);
+//	//	dataManager.setUniform1i("groundTex", 1);
+//	//	dataManager.setUniform1i("rock", 2);
+//	//	dataManager.setUniform1i("sand", 3);
+//	//	dataManager.setUniform1f("time", world.time());
+//	//	dataManager.setUniform1f("seaLevel", -(mGround->minHeight)/(mGround->maxHeight-mGround->minHeight));
+//	//	dataManager.setUniform1f("XZscale", mGround->mSize.x);
+//
+//	//	//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
+//
+//	//	glBegin(GL_QUADS);
+//	//		glVertex3f(0,0,0);
+//	//		glVertex3f(0,0,mGround->mSize.y);
+//	//		glVertex3f(mGround->mSize.x,0,mGround->mSize.y);
+//	//		glVertex3f(mGround->mSize.x,0,0);
+//	//	glEnd();
+//
+//	//	dataManager.unbindTextures();
+//	//	dataManager.unbindShader();
+//	//	glDepthMask(true);
+//	//}
+//	glPopMatrix();
+//}
 //________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________//
 Level::heightmapBase* editLevel::ground()
 {
@@ -1363,7 +1364,7 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 	{
 		dataManager.bind("ocean preview");
 
-		dataManager.bind("hardNoise",0);
+		dataManager.bind("ocean normals",0);
 		if(mGround->shaderType == SHADER_OCEAN)		dataManager.bindTex(0,1);
 		else										((heightmapGL*)mGround)->groundTex->bind(1);
 		dataManager.bind("rock",2);
@@ -1387,28 +1388,34 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 		dataManager.bindTex(0,2);
 		dataManager.bindTex(0,1);
 		dataManager.bindTex(0,0);
-		dataManager.bindShader(0);
+		dataManager.bind("model");
 	}
+
 
 
 	if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
 	{
-		glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
+		//glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
+		dataManager.bind("model");
+		dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(), Vec3f(), Vec3f(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1))));
+		dataManager.setUniform1i("tex", 0);
+
 		float h = mGround->minHeight*scale-20.0;
 		//float h = max(mGround->minHeight-20.0,seaLevelOffset);//needs to be adjusted for sea level
 		dataManager.bind("layers");
 		float t=0.0;
 
 		glBegin(GL_TRIANGLE_STRIP);
+		glNormal3f(0,1,0);
 		for(int i = 0; i < mGround->resolutionX()-1; i++)
 		{
-			glTexCoord2f(t,(mGround->rasterHeight(i,0)-h)/256);		glVertex3f(i,h,0);
+			glTexCoord2f(t,(mGround->rasterHeight(i,0)-mGround->minHeight+20)/256);		glVertex3f(i,h,0);
 			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0)*scale,h) ,0);
 			t+=0.2;
 		}
 		for(int i = 0; i < mGround->resolutionZ()-1; i++)
 		{
-			glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-h)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
+			glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-mGround->minHeight+20)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
 			glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i)*scale,h),i);
 			t+=0.2;
 		}
@@ -1416,21 +1423,20 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 		for(int i = mGround->resolutionX()-1; i > 0; i--)
 		{
 			t-=0.2;
-			glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-h)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
+			glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-mGround->minHeight+20)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
 			glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1)*scale,h),mGround->resolutionZ()-1);
 		}
 		for(int i = mGround->resolutionZ()-1; i >= 0; i--)
 		{
 			t-=0.2;
-			glTexCoord2f(t,(mGround->rasterHeight(0,i)-h)/256);		glVertex3f(0,h,i);
+			glTexCoord2f(t,(mGround->rasterHeight(0,i)-mGround->minHeight+20)/256);		glVertex3f(0,h,i);
 			glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i)*scale,h),i);
 		}
 		glEnd();
-		dataManager.bindTex(0);
-	//}
 
-	//if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
-	//{
+		//dataManager.bindTex(0);
+		dataManager.bind("white");
+
 		glColor3f(0.73,0.6,0.47);
 		glBegin(GL_QUADS);
 			glVertex3f(0,h,0);
@@ -1439,6 +1445,8 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 			glVertex3f(mGround->resolutionX()-1,h,0);
 		glEnd();
 		glColor3f(1,1,1);
+
+		dataManager.setUniformMatrix("modelTransform", Mat4f());
 	}
 	glPopMatrix();
 }
@@ -1447,10 +1455,10 @@ void editLevel::renderObjectsPreview()
 	for(auto i=mObjects.begin();i!=mObjects.end();i++)
 	{
 		//if(i->type & PLANE)
-		{
+		//{
 			//auto b = dataManager.getModel(i->type)->boundingSphere;
 			//graphics->drawSphere(i->startloc + i->startRot * b.center, b.radius * 10.0);
 			graphics->drawModel(i->type,i->startloc,i->startRot,10.0);
-		}
+		//}
 	}
 }

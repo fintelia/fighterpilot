@@ -363,84 +363,91 @@ DataManager::asset* DataManager::registerTexture(shared_ptr<FileManager::texture
 //}
 DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect)
 {
-	bool errorFlag = false;
-	GLuint v=0,f=0,p;
+	shaderAsset* a = new shaderAsset;
+	a->shader = graphics->genShader();
+	a->shader->init(vert->contents.c_str(), frag->contents.c_str());
+	a->type = asset::SHADER;
+	a->use_sAspect = use_sAspect;
+	return a;
+
+	//bool errorFlag = false;
+	//GLuint v=0,f=0,p;
 
 
-	//auto ff = fileManager.loadTextFile(frag);
-	//auto vv = fileManager.loadTextFile(vert);
-	if(frag->invalid()  || vert->invalid())
-		return nullptr;
+	////auto ff = fileManager.loadTextFile(frag);
+	////auto vv = fileManager.loadTextFile(vert);
+	//if(frag->invalid()  || vert->invalid())
+	//	return nullptr;
 
-	v = glCreateShader(GL_VERTEX_SHADER);
-	f = glCreateShader(GL_FRAGMENT_SHADER);
+	//v = glCreateShader(GL_VERTEX_SHADER);
+	//f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	const char* ptr = vert->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
-	ptr = frag->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
+	//const char* ptr = vert->contents.c_str();	glShaderSource(v, 1, (const char **)&ptr, NULL);
+	//ptr = frag->contents.c_str();				glShaderSource(f, 1, (const char **)&ptr, NULL);
 
-	glCompileShader(v);
-	glCompileShader(f);
+	//glCompileShader(v);
+	//glCompileShader(f);
 
-	string vertErrors;
-	string fragErrors;
-	string linkErrors;
+	//string vertErrors;
+	//string fragErrors;
+	//string linkErrors;
 
-	int i;//used whenever a pointer to int is required
-	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE)
-	{
-		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-		char* cv=new char[i]; memset(cv,0,i);
-		glGetShaderInfoLog(v,i,&i,cv);
-		messageBox(vert->filename + ": " + cv);
-		errorFlag = true;
-		delete[] cv;
-	}
-	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE && !errorFlag)
-	{
-		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-		char* cf=new char[i]; memset(cf,0,i);
-		glGetShaderInfoLog(f,i,&i,cf);
-		messageBox(frag->filename + ": " + cf);
-		errorFlag = true;
-		delete[] cf;
-	}
+	//int i;//used whenever a pointer to int is required
+	//glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+	//if(i == GL_FALSE)
+	//{
+	//	glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+	//	char* cv=new char[i]; memset(cv,0,i);
+	//	glGetShaderInfoLog(v,i,&i,cv);
+	//	messageBox(vert->filename + ": " + cv);
+	//	errorFlag = true;
+	//	delete[] cv;
+	//}
+	//glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+	//if(i == GL_FALSE && !errorFlag)
+	//{
+	//	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+	//	char* cf=new char[i]; memset(cf,0,i);
+	//	glGetShaderInfoLog(f,i,&i,cf);
+	//	messageBox(frag->filename + ": " + cf);
+	//	errorFlag = true;
+	//	delete[] cf;
+	//}
 
 
-	p = glCreateProgram();
-	glAttachShader(p,f);
-	glAttachShader(p,v);
+	//p = glCreateProgram();
+	//glAttachShader(p,f);
+	//glAttachShader(p,v);
 
-	glLinkProgram(p);
+	//glLinkProgram(p);
 
-	glGetProgramiv(p,GL_LINK_STATUS,&i);
-	if(i == GL_FALSE && !errorFlag)
-	{
-		glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
-		char* cl=new char[i]; memset(cl,0,i);
-		glGetProgramInfoLog(p,i,&i,cl);
-		messageBox(frag->filename + "(link): " + cl);
-		errorFlag = true;
-		delete[] cl;
-	}
-	glUseProgram(0);
+	//glGetProgramiv(p,GL_LINK_STATUS,&i);
+	//if(i == GL_FALSE && !errorFlag)
+	//{
+	//	glGetProgramiv(p,GL_INFO_LOG_LENGTH,&i);
+	//	char* cl=new char[i]; memset(cl,0,i);
+	//	glGetProgramInfoLog(p,i,&i,cl);
+	//	messageBox(frag->filename + "(link): " + cl);
+	//	errorFlag = true;
+	//	delete[] cl;
+	//}
+	//glUseProgram(0);
 
-	glDeleteShader(f); // we no longer need these shaders individually, although they
-	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+	//glDeleteShader(f); // we no longer need these shaders individually, although they
+	//glDeleteShader(v); // will not actually be deleted until the shader program is deleted
 
-	if(!errorFlag)
-	{
-		shaderAsset* a = new shaderAsset;
-		a->id = p;
-		a->type = asset::SHADER;
-		a->use_sAspect = use_sAspect;
-		return a;
-	}
-	else
-	{
-		return nullptr;
-	}
+	//if(!errorFlag)
+	//{
+	//	shaderAsset* a = new shaderAsset;
+	//	a->id = p;
+	//	a->type = asset::SHADER;
+	//	a->use_sAspect = use_sAspect;
+	//	return a;
+	//}
+	//else
+	//{
+	//	return nullptr;
+	//}
 }
 //bool DataManager::registerTerrainShader(string name, string frag)
 //{
@@ -528,6 +535,43 @@ DataManager::asset* DataManager::registerShader(shared_ptr<FileManager::textFile
 //	}
 //	return !errorFlag;
 //}
+void DataManager::addTexture(string name, shared_ptr<GraphicsManager::texture2D> tex)
+{
+	if(tex)
+	{
+		textureAsset* a = new textureAsset;
+		a->texture = tex;
+		a->type = asset::TEXTURE;
+		a->width = 0;//tex->width;
+		a->height = 0;//f->height;
+		a->bpp = 0;//f->channels * 8;
+		a->data = NULL;
+
+		assets[name] = shared_ptr<asset>(a);
+	}
+}
+void DataManager::addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
+{
+	if(shader)
+	{
+		shaderAsset* a = new shaderAsset;
+		a->shader = shader;
+		a->type = asset::SHADER;
+		a->use_sAspect = use_sAspect;
+
+		assets[name] = shared_ptr<asset>(a);
+	}
+}
+void DataManager::addModel(string name, string OBJfile)
+{
+	auto modelPtr = registerOBJ(OBJfile);
+	if(modelPtr) assets[name] = shared_ptr<asset>(modelPtr);
+}
+void DataManager::addFont(string name, shared_ptr<FileManager::textFile> f)
+{
+	auto fontPtr = registerFont(f);
+	if(fontPtr) assets[name] = shared_ptr<asset>(fontPtr);
+}
 DataManager::asset* DataManager::registerOBJ(string filename)
 {
 	///////////////////////types////////////////////////////
@@ -913,14 +957,15 @@ void DataManager::bind(string name, int textureUnit)
 	{
 		if(boundShader == name)
 			return;
-		else if(boundShaderId == static_pointer_cast<shaderAsset>(assets[name])->id)
-		{
-			boundShader = name;
-			return;
-		}
+		//else if(boundShaderId == static_pointer_cast<shaderAsset>(assets[name])->id)
+		//{
+		//	boundShader = name;
+		//	return;
+		//}
 
-		glUseProgram(static_pointer_cast<shaderAsset>(assets[name])->id);
-		boundShaderId = static_pointer_cast<shaderAsset>(assets[name])->id;
+		static_pointer_cast<shaderAsset>(assets[name])->shader->bind();
+		//glUseProgram(static_pointer_cast<shaderAsset>(assets[name])->id);
+		//boundShaderId = static_pointer_cast<shaderAsset>(assets[name])->id;
 		boundShader = name;
 	}
 }
@@ -938,21 +983,21 @@ void DataManager::bindTex(int id, int textureUnit)
 }
 void DataManager::bindShader(int id)
 {
-	if(boundShaderId == id)
-		return;
+//	if(boundShaderId == id)
+//		return;
 
 	glUseProgram(id);
 
-	boundShaderId = id;
+//	boundShaderId = id;
 	if(id == 0)		boundShader = "noShader";
-	else			boundShader = "";
+	else			boundShader = "???";
 }
 void DataManager::unbind(string name)
 {
 	if(boundShader == name)
 	{
 		glUseProgram(0);
-		boundShaderId = 0;
+		//boundShaderId = 0;
 		boundShader = "noShader";
 	}
 	//else
@@ -989,281 +1034,281 @@ void DataManager::unbindTextures()
 void DataManager::unbindShader()
 {
 	glUseProgram(0);
-	boundShaderId = 0;
+	//boundShaderId = 0;
 	boundShader = "";
 }
 
-bool DataManager::loadAssetList()
-{
-	TiXmlDocument doc("media/assetList.xml");
-	if(!doc.LoadFile())
-	{
-		return false;
-	}
+//bool DataManager::loadAssetList()
+//{
+//	TiXmlDocument doc("media/assetList.xml");
+//	if(!doc.LoadFile())
+//	{
+//		return false;
+//	}
+//
+//	const char* c;
+//	TiXmlNode* node					= nullptr;
+//	TiXmlNode* assetsNode			= nullptr;
+//
+//	assetsNode = doc.FirstChild("assets");
+//	if(assetsNode == nullptr) return false;
+//
+//////////////////////////////////////////textures//////////////////////////////////////////
+//	node = assetsNode->FirstChild("textures");
+//	if(node != nullptr)
+//	{
+//		TiXmlElement* texturesElement	= nullptr;
+//		TiXmlElement* textureElement	= nullptr;
+//
+//		texturesElement = node->ToElement();
+//		if(texturesElement != nullptr)
+//		{
+//			node = texturesElement->FirstChildElement();
+//			if(node != nullptr) textureElement = node->ToElement();
+//
+//			while(textureElement != nullptr)
+//			{
+//				assetFile tmpAssetFile;
+//				tmpAssetFile.type = asset::TEXTURE;
+//
+//				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
+//				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+//
+//				const char* tileable = textureElement->Attribute("tileable");
+//				if(tileable != nullptr && string(tileable) == "true")
+//					tmpAssetFile.options.insert("tileable");
+//
+//				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
+//				{
+//					const char* preload = textureElement->Attribute("preload");
+//					if(preload == nullptr || string(preload) != "true")
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
+//						assetFiles.push(tmpAssetFile);
+//					}
+//					else
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],false));
+//						assetFilesPreload.push(tmpAssetFile);
+//					}
+//				}
+//				else debugBreak();
+//
+//				textureElement = textureElement->NextSiblingElement();
+//			}
+//		}
+//	}
+//////////////////////////////////////////shaders///////////////////////////////////////////
+//	node = assetsNode->FirstChild("shaders");
+//	if(node != nullptr)
+//	{
+//		TiXmlElement* shadersElement	= nullptr;
+//		TiXmlElement* shaderElement		= nullptr;
+//
+//		shadersElement = node->ToElement();
+//		if(shadersElement != nullptr)
+//		{
+//			node = shadersElement->FirstChildElement();
+//			if(node != nullptr) shaderElement = node->ToElement();
+//
+//
+//			while(shaderElement != nullptr)
+//			{
+//				assetFile tmpAssetFile;
+//				tmpAssetFile.type = asset::SHADER;
+//
+//				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=nullptr ? c : "";
+//				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=nullptr ? c : "";
+//				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=nullptr ? c : "";
+//
+//				const char* use_sAspect = shaderElement->Attribute("sAspect");
+//				if(use_sAspect != nullptr && string(use_sAspect) == "true")
+//					tmpAssetFile.options.insert("use_sAspect");
+//
+//				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
+//				{
+//					const char* preload = shaderElement->Attribute("preload");
+//					if(preload == nullptr || string(preload) != "true")
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],true));
+//						assetFiles.push(tmpAssetFile);
+//					}
+//					else
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],false));
+//						assetFilesPreload.push(tmpAssetFile);
+//					}
+//				}
+//				else debugBreak();
+//				shaderElement = shaderElement->NextSiblingElement();
+//			}
+//		}
+//	}
+//////////////////////////////////////////models///////////////////////////////////////////
+//	node = assetsNode->FirstChild("models");
+//	if(node != nullptr)
+//	{
+//		TiXmlElement* modelsElement		= nullptr;
+//		TiXmlElement* modelElement		= nullptr;
+//
+//		modelsElement = node->ToElement();
+//		if(modelsElement != nullptr)
+//		{
+//			node = modelsElement->FirstChildElement();
+//			if(node != nullptr) modelElement = node->ToElement();
+//
+//			while(modelElement != nullptr)
+//			{
+//				assetFile tmpAssetFile;
+//				tmpAssetFile.type = asset::MODEL;
+//
+//				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
+//				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
+//
+//				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+//					assetFiles.push(tmpAssetFile);
+//				else
+//					debugBreak();
+//
+//				modelElement = modelElement->NextSiblingElement();
+//			}
+//		}
+//	}
+/////////////////////////////////////////font//////////////////////////////////////////////
+//	node = assetsNode->FirstChild("fonts");
+//	if(node != nullptr)
+//	{
+//		TiXmlElement* assetsElement		= nullptr;
+//		TiXmlElement* assetElement		= nullptr;
+//
+//		assetsElement = node->ToElement();
+//		if(assetsElement != nullptr)
+//		{
+//			node = assetsElement->FirstChildElement();
+//			if(node != nullptr) assetElement = node->ToElement();
+//
+//
+//			while(assetElement != nullptr)
+//			{	
+//				assetFile tmpAssetFile;
+//				tmpAssetFile.type = asset::FONT;
+//
+//				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
+//				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
+//
+//				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+//				{
+//					const char* preload = assetElement->Attribute("preload");
+//					if(preload == nullptr || string(preload) != "true")
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
+//						assetFiles.push(tmpAssetFile);
+//					}
+//					else
+//					{
+//						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
+//						assetFilesPreload.push(tmpAssetFile);
+//					}
+//				}
+//				else debugBreak();
+//
+//				assetElement = assetElement->NextSiblingElement();
+//			}
+//		}
+//	}
+//
+//	return true;
+//}
+//int DataManager::loadAsset()
+//{
+//	if(assetFilesPreload.empty() && assetFiles.empty())
+//		return 0;
+//
+//	bool loadedAsset=false;
+//	assetFile file;
+//	bool preload;
+//	auto pop = [this](bool p)
+//	{
+//		if(p)
+//			assetFilesPreload.pop();
+//		else assetFiles.pop();
+//	};
+//
+//	do
+//	{
+//		////////////////////set file////////////////////////
+//		file = (preload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
+//		////////////////////////////////////////////////////
+//		if(file.type == asset::TEXTURE)
+//		{
+//			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+//			if(!file.files.front()->complete()) break;
+//
+//			bool t = file.options.count("tileable") != 0;
+//			//registerTexture(file.name, file.filename[0], t);
+//			auto texPtr = registerTexture(dynamic_pointer_cast<FileManager::textureFile>(file.files.front()), t);
+//			if(texPtr) assets[file.name] = shared_ptr<asset>(texPtr);
+//			pop(preload);
+//		}
+//		else if(file.type == asset::SHADER)
+//		{
+//			if(file.files.size() == 0) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+//			if(file.files.size() == 1) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+//			if(!file.files[0]->complete() || !file.files[1]->complete()) break;
+//			auto shaderPtr = registerShader(dynamic_pointer_cast<FileManager::textFile>(file.files[0]), dynamic_pointer_cast<FileManager::textFile>(file.files[1]));
+//			if(shaderPtr)
+//			{
+//				assets[file.name] = shared_ptr<asset>(shaderPtr);
+//				if(shaderPtr && file.options.count("use_sAspect") != 0)
+//				{
+//					auto s = assets.find(file.name);
+//					static_pointer_cast<shaderAsset>(s->second)->use_sAspect = true;
+//
+//					bind(file.name);
+//					setUniform1f("sAspect",sAspect);
+//					unbind(file.name);
+//				}
+//			}
+//			pop(preload);
+//			//break;
+//		}
+//		else if(file.type == asset::MODEL)
+//		{
+//			auto modelPtr = registerOBJ(file.filename[0]);
+//			if(modelPtr) assets[file.name] = shared_ptr<asset>(modelPtr);
+//			pop(preload);
+//			break;
+//		}
+//		else if(file.type == asset::FONT)
+//		{
+//			if(file.files.empty()) file.files.push_back(fileManager.loadTextFile(file.filename[0]));
+//			if(!file.files.front()->complete()) break;
+//
+//			auto fontPtr = registerFont(dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
+//			if(fontPtr) assets[file.name] = shared_ptr<asset>(fontPtr);
+//			pop(preload);
+//			break;
+//		}
+//	}while(!assetFilesPreload.empty() && !assetFiles.empty());
+//	
+//	return assetFiles.size();
+//}
 
-	const char* c;
-	TiXmlNode* node					= nullptr;
-	TiXmlNode* assetsNode			= nullptr;
-
-	assetsNode = doc.FirstChild("assets");
-	if(assetsNode == nullptr) return false;
-
-////////////////////////////////////////textures//////////////////////////////////////////
-	node = assetsNode->FirstChild("textures");
-	if(node != nullptr)
-	{
-		TiXmlElement* texturesElement	= nullptr;
-		TiXmlElement* textureElement	= nullptr;
-
-		texturesElement = node->ToElement();
-		if(texturesElement != nullptr)
-		{
-			node = texturesElement->FirstChildElement();
-			if(node != nullptr) textureElement = node->ToElement();
-
-			while(textureElement != nullptr)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::TEXTURE;
-
-				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
-
-				const char* tileable = textureElement->Attribute("tileable");
-				if(tileable != nullptr && string(tileable) == "true")
-					tmpAssetFile.options.insert("tileable");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
-				{
-					const char* preload = textureElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],false));
-						assetFilesPreload.push(tmpAssetFile);
-					}
-				}
-				else debugBreak();
-
-				textureElement = textureElement->NextSiblingElement();
-			}
-		}
-	}
-////////////////////////////////////////shaders///////////////////////////////////////////
-	node = assetsNode->FirstChild("shaders");
-	if(node != nullptr)
-	{
-		TiXmlElement* shadersElement	= nullptr;
-		TiXmlElement* shaderElement		= nullptr;
-
-		shadersElement = node->ToElement();
-		if(shadersElement != nullptr)
-		{
-			node = shadersElement->FirstChildElement();
-			if(node != nullptr) shaderElement = node->ToElement();
-
-
-			while(shaderElement != nullptr)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::SHADER;
-
-				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=nullptr ? c : "";
-				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=nullptr ? c : "";
-				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=nullptr ? c : "";
-
-				const char* use_sAspect = shaderElement->Attribute("sAspect");
-				if(use_sAspect != nullptr && string(use_sAspect) == "true")
-					tmpAssetFile.options.insert("use_sAspect");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
-				{
-					const char* preload = shaderElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],false));
-						assetFilesPreload.push(tmpAssetFile);
-					}
-				}
-				else debugBreak();
-				shaderElement = shaderElement->NextSiblingElement();
-			}
-		}
-	}
-////////////////////////////////////////models///////////////////////////////////////////
-	node = assetsNode->FirstChild("models");
-	if(node != nullptr)
-	{
-		TiXmlElement* modelsElement		= nullptr;
-		TiXmlElement* modelElement		= nullptr;
-
-		modelsElement = node->ToElement();
-		if(modelsElement != nullptr)
-		{
-			node = modelsElement->FirstChildElement();
-			if(node != nullptr) modelElement = node->ToElement();
-
-			while(modelElement != nullptr)
-			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::MODEL;
-
-				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
-				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
-
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
-					assetFiles.push(tmpAssetFile);
-				else
-					debugBreak();
-
-				modelElement = modelElement->NextSiblingElement();
-			}
-		}
-	}
-///////////////////////////////////////font//////////////////////////////////////////////
-	node = assetsNode->FirstChild("fonts");
-	if(node != nullptr)
-	{
-		TiXmlElement* assetsElement		= nullptr;
-		TiXmlElement* assetElement		= nullptr;
-
-		assetsElement = node->ToElement();
-		if(assetsElement != nullptr)
-		{
-			node = assetsElement->FirstChildElement();
-			if(node != nullptr) assetElement = node->ToElement();
-
-
-			while(assetElement != nullptr)
-			{	
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = asset::FONT;
-
-				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
-				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
-
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
-				{
-					const char* preload = assetElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
-						assetFilesPreload.push(tmpAssetFile);
-					}
-				}
-				else debugBreak();
-
-				assetElement = assetElement->NextSiblingElement();
-			}
-		}
-	}
-
-	return true;
-}
-int DataManager::loadAsset()
-{
-	if(assetFilesPreload.empty() && assetFiles.empty())
-		return 0;
-
-	bool loadedAsset=false;
-	assetFile file;
-	bool preload;
-	auto pop = [this](bool p)
-	{
-		if(p)
-			assetFilesPreload.pop();
-		else assetFiles.pop();
-	};
-
-	do
-	{
-		////////////////////set file////////////////////////
-		file = (preload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
-		////////////////////////////////////////////////////
-		if(file.type == asset::TEXTURE)
-		{
-			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(!file.files.front()->complete()) break;
-
-			bool t = file.options.count("tileable") != 0;
-			//registerTexture(file.name, file.filename[0], t);
-			auto texPtr = registerTexture(dynamic_pointer_cast<FileManager::textureFile>(file.files.front()), t);
-			if(texPtr) assets[file.name] = shared_ptr<asset>(texPtr);
-			pop(preload);
-		}
-		else if(file.type == asset::SHADER)
-		{
-			if(file.files.size() == 0) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(file.files.size() == 1) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(!file.files[0]->complete() || !file.files[1]->complete()) break;
-			auto shaderPtr = registerShader(dynamic_pointer_cast<FileManager::textFile>(file.files[0]), dynamic_pointer_cast<FileManager::textFile>(file.files[1]));
-			if(shaderPtr)
-			{
-				assets[file.name] = shared_ptr<asset>(shaderPtr);
-				if(shaderPtr && file.options.count("use_sAspect") != 0)
-				{
-					auto s = assets.find(file.name);
-					static_pointer_cast<shaderAsset>(s->second)->use_sAspect = true;
-
-					bind(file.name);
-					setUniform1f("sAspect",sAspect);
-					unbind(file.name);
-				}
-			}
-			pop(preload);
-			//break;
-		}
-		else if(file.type == asset::MODEL)
-		{
-			auto modelPtr = registerOBJ(file.filename[0]);
-			if(modelPtr) assets[file.name] = shared_ptr<asset>(modelPtr);
-			pop(preload);
-			break;
-		}
-		else if(file.type == asset::FONT)
-		{
-			if(file.files.empty()) file.files.push_back(fileManager.loadTextFile(file.filename[0]));
-			if(!file.files.front()->complete()) break;
-
-			auto fontPtr = registerFont(dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
-			if(fontPtr) assets[file.name] = shared_ptr<asset>(fontPtr);
-			pop(preload);
-			break;
-		}
-	}while(!assetFilesPreload.empty() && !assetFiles.empty());
-	
-	return assetFiles.size();
-}
-
-int DataManager::getId(string name)
-{
-	auto a = assets.find(name);
-	if(a != assets.end())
-	{
-		if(a->second->type == asset::SHADER)	return static_pointer_cast<shaderAsset>(a->second)->id;
-	}
-	return 0;
-}
-int DataManager::getId(objectType t)
-{
-	return getId(objectTypeString(t));
-}
+//int DataManager::getId(string name)
+//{
+//	auto a = assets.find(name);
+//	if(a != assets.end())
+//	{
+//		if(a->second->type == asset::SHADER)	return static_pointer_cast<shaderAsset>(a->second)->id;
+//	}
+//	return 0;
+//}
+//int DataManager::getId(objectType t)
+//{
+//	return getId(objectTypeString(t));
+//}
 shared_ptr<const DataManager::fontAsset> DataManager::getFont(string name)
 {
 	auto i = assets.find(name);
@@ -1287,103 +1332,113 @@ bool DataManager::assetLoaded(string name)
 
 void DataManager::setUniform1f(string name, float v0)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1f(name, v0);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform1f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
-	}
+	//	glUniform1f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
+	//}
 }
 void DataManager::setUniform2f(string name, float v0, float v1)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2f(name, v0, v1);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform2f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
-	}
+	//	glUniform2f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
+	//}
 }
 void DataManager::setUniform3f(string name, float v0, float v1, float v2)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3f(name, v0, v1, v2);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform3f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
-	}
+	//	glUniform3f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
+	//}
 }
 void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4f(name, v0, v1, v2, v3);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform4f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
-	}
+	//	glUniform4f(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+	//}
 }
 void DataManager::setUniform1i(string name, int v0)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1i(name, v0);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform1i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
-	}
+	//	glUniform1i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0);
+	//}
 }
 void DataManager::setUniform2i(string name, int v0, int v1)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2i(name, v0, v1);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform2i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
-	}
+	//	glUniform2i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1);
+	//}
 }
 void DataManager::setUniform3i(string name, int v0, int v1, int v2)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3i(name, v0, v1, v2);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform3i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
-	}
+	//	glUniform3i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2);
+	//}
 }
 void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4i(name, v0, v1, v2, v3);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniform4i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
-	}
+	//	glUniform4i(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],v0,v1,v2,v3);
+	//}
 }
 void DataManager::setUniformMatrix(string name, const Mat3f& m)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniformMatrix3fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
-	}
+	//	glUniformMatrix3fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
+	//}
 }
 void DataManager::setUniformMatrix(string name, const Mat4f& m)
 {
-	if(boundShaderId != 0 && boundShader != "noShader")
-	{
-		if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
-			static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
+	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	//if(boundShaderId != 0 && boundShader != "noShader")
+	//{
+	//	if(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.find(name) == static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms.end())
+	//		static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name] = glGetUniformLocation(boundShaderId,name.c_str());
 
-		glUniformMatrix4fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
-	}
+	//	glUniformMatrix4fv(static_pointer_cast<shaderAsset>(assets[boundShader])->uniforms[name],1,false,m.ptr());
+	//}
 }
 
 void DataManager::shutdown()
@@ -1392,8 +1447,8 @@ void DataManager::shutdown()
 	boundTextures.clear();
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
-		if(i->second->type == asset::SHADER)			glDeleteProgram(static_pointer_cast<shaderAsset>(i->second)->id);
-		else if(i->second->type == asset::MODEL)		delete static_pointer_cast<modelAsset>(i->second)->VBO;
+		//if(i->second->type == asset::SHADER)			glDeleteProgram(static_pointer_cast<shaderAsset>(i->second)->id);
+		if(i->second->type == asset::MODEL)		delete static_pointer_cast<modelAsset>(i->second)->VBO;
 		//else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
 	}
 	assets.clear();

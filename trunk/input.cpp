@@ -5,6 +5,40 @@
 #include <Xinput.h>
 #endif
 
+#ifdef DIRECT_INPUT
+#include <dinput.h>
+LPDIRECTINPUT8  directInputPtr;
+
+BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,
+                                     VOID* pContext )
+{
+    DI_ENUM_CONTEXT* pEnumContext = ( DI_ENUM_CONTEXT* )pContext;
+    HRESULT hr;
+
+    if( g_bFilterOutXinputDevices && IsXInputDevice( &pdidInstance->guidProduct ) )
+        return DIENUM_CONTINUE;
+
+    // Skip anything other than the perferred joystick device as defined by the control panel.  
+    // Instead you could store all the enumerated joysticks and let the user pick.
+    if( pEnumContext->bPreferredJoyCfgValid &&
+        !IsEqualGUID( pdidInstance->guidInstance, pEnumContext->pPreferredJoyCfg->guidInstance ) )
+        return DIENUM_CONTINUE;
+
+    // Obtain an interface to the enumerated joystick.
+    hr = g_pDI->CreateDevice( pdidInstance->guidInstance, &g_pJoystick, NULL );
+
+    // If it failed, then we can't use this joystick. (Maybe the user unplugged
+    // it while we were in the middle of enumerating it.)
+    if( FAILED( hr ) )
+        return DIENUM_CONTINUE;
+
+    // Stop enumeration. Note: we're just taking the first joystick we get. You
+    // could store all the enumerated joysticks and let the user pick.
+    return DIENUM_STOP;
+}
+
+#endif
+
 const unsigned char KEYSTATE_CURRENT	= 0x01;
 const unsigned char KEYSTATE_LAST		= 0x02; 
 const unsigned char KEYSTATE_VIRTUAL	= 0x04;
@@ -18,6 +52,17 @@ InputManager::xboxControllerState::xboxControllerState():
 #endif
                     connected(false),deadZone(0.15)
 {
+
+#ifdef DIRECT_INPUT
+	if(!FAILED(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInputPtr, NULL)))
+	{
+		directInputPtr->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, NULL, DIEDFL_ATTACHEDONLY);
+	}
+	else
+	{
+		directInputPtr = nullptr;
+	}
+#endif
 
 }
 InputManager::xboxControllerState::~xboxControllerState()
@@ -107,7 +152,10 @@ const InputManager::xboxControllerState& InputManager::getXboxController(unsigne
 {
 	return xboxControllers[clamp(controllerNum,0,3)];
 }
-
+const InputManager::joystickControllerState* InputManager::getJoystick(unsigned int joystickNum)
+{
+	return joystickNum < joysticks.size() ? &joysticks[joystickNum] : nullptr;
+}
 void InputManager::update()
 {
 	POINT cursorPos;
@@ -118,7 +166,7 @@ void InputManager::update()
 	GetKeyboardState((PBYTE)newKeyStates);
 
 
-#ifdef USING_XINPUT
+#ifdef XINPUT
 	bool xboxControllersConnected[4];
 	XINPUT_STATE newXboxControllerStates[4];
 	for(int i = 0; i < 4; i++)
@@ -148,7 +196,7 @@ void InputManager::update()
 			setBit(keys[i], KEYSTATE_VIRTUAL, false);
 	}
 
-#ifdef USING_XINPUT
+#ifdef XINPUT
 	for(int i = 0; i<4; i++)
 	{
 		xboxControllers[i].connected = xboxControllersConnected[i];

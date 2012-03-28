@@ -24,10 +24,8 @@ void main()
 	//	return;
 	//}
 
-	vec3 n = texture2D(groundTex,position.xz).xyz;
-	n.x = n.x * 2.0 - 1.0;
-	n.z = n.z * 2.0 - 1.0;
-	n = normalize(n);
+	vec3 v = texture2D(groundTex,position.xz).xyz;
+	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
 	//n = vec3(0,1,0);
 	vec3 t = normalize(cross(n, vec3(0,0,1)));
 	vec3 b = cross(n, t);

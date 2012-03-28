@@ -22,11 +22,9 @@
     #pragma comment (lib, "tinyxml.lib")
 
 	#pragma comment (lib,"xinput")
+
 	#define XINPUT
-	#define USING_XINPUT
-
-
-
+	//#define DIRECT_INPUT //still need to write most of the code for directInput
 
 #elif defined __GNUG__
 
@@ -76,9 +74,6 @@ using boost::lexical_cast;
 //#include <GL/glu.h>
 //#include "png/png.h"
 //#include "xml/tinyxml.h"
-#ifdef XINPUT
-//#include <Xinput.h>
-#endif
 
 extern bool	active;		// Window Active Flag
 extern const double PI;
@@ -108,6 +103,7 @@ extern float fps;
 #include "controlManager.h"
 #include "graphicsManager.h"
 #include "dataManager.h"
+#include "assetLoader.h"
 #include "sceneManager.h"
 #include "particleManager.h"
 #include "input.h"

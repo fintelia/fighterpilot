@@ -54,6 +54,19 @@ protected:
 		xboxControllerState();
 		~xboxControllerState();
 	} xboxControllers[4];
+	class joystickControllerState: public gamepadState
+	{
+	private:
+
+	public:
+
+		bool getButton(int b) const{return false;}
+		float getAxis(int a) const{return 0;}
+		joystickControllerState();
+		~joystickControllerState(){}
+	};
+	vector<joystickControllerState> joysticks;
+
 	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
 	mutex  inputMutex;
@@ -104,6 +117,8 @@ public:
 	virtual bool getKey(int key);
 	virtual const mouseButtonState& getMouseState(mouseButton m);
 	virtual const xboxControllerState& getXboxController(unsigned char controllerNum);
+	virtual const joystickControllerState* getJoystick(unsigned int joystickNum);
+	virtual unsigned int getNumJoysticks(){return joysticks.size();}
 	virtual float operator() (int key);
 	virtual Vec2f getMousePos(){return mousePos;}
 	virtual void checkNewHardware();//scan for new hardware

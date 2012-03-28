@@ -166,6 +166,12 @@
     <Filter Include="Source Files\GAME\objectInfo">
       <UniqueIdentifier>{0817ebb0-d9d0-4ca7-97e1-d9d2712fa775}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ENGINE\dataManager\assetLoader">
+      <UniqueIdentifier>{564f38bb-8c86-455b-8ada-aebf9fbb35f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\dataManager\textureManager">
+      <UniqueIdentifier>{099f7035-f03e-48c3-969f-6a5b2970e453}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -318,6 +324,9 @@
     <ClCompile Include="planeEngines.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
+    <ClCompile Include="assetLoader.cpp">
+      <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -437,6 +446,9 @@
     </ClInclude>
     <ClInclude Include="objectInfo.h">
       <Filter>Source Files\GAME\objectInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="assetLoader.h">
+      <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

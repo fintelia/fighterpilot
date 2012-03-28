@@ -8,10 +8,11 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 #endif
 {
 	view = graphics->genView();
-	view->viewport(0,0, sAspect,1.0);
-	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view->viewport(0, 0, sAspect, 1.0);
+	view->perspective(80.0, (double)sw / ((double)sh), 1.0, 500000.0);
 	view->setRenderFunc(bind(&campaign::render3D, this, placeholders::_1));
-	graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
+	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
+	graphics->setLightPosition(Vec3f(0.0, 16000.0, 10000.0));
 }
 bool campaign::init()
 {

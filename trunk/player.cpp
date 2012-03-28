@@ -8,7 +8,7 @@
 //
 //playerControls::playerControls(int p)//default controls for player p
 //{
-//	#ifdef USING_XINPUT
+//	#ifdef XINPUT
 //		if(input.getXboxController(p-1).connected)
 //		{
 //			c[CON_CLIMB]=nControl		(XINPUT_THUMB_LY +	XBOX_GAMEPAD_OFFSET[p-1], nControl::NEGATIVE);
@@ -71,7 +71,7 @@
 
 //humanPlayer::controlMapping::controlMapping(int playerNum)
 //{
-//#ifdef USING_XINPUT
+//#ifdef XINPUT
 //	if(input.getXboxController(playerNum).connected)
 //	{
 //		type = XBOX_CONTROLLER;
@@ -132,7 +132,7 @@ float humanPlayer::controlMapping::operator() ()
 	{
 		return input.getKey(m) ? 1.0 : 0.0;
 	}
-#ifdef USING_XINPUT
+#ifdef XINPUT
 	else if(type == BUTTON)
 	{
 		return input.getXboxController(controllerNum).getButton(m) ? 1.0 : 0.0;
@@ -170,7 +170,7 @@ object* player::getObject()
 
 humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, objectId), mPlayerNum(playerNumber), firstPersonView(false)
 {
-#ifdef USING_XINPUT
+#ifdef XINPUT
 	if(input.getXboxController(mPlayerNum).connected)
 	{
 		controls[CON_CLIMB]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_NEGATIVE,mPlayerNum);

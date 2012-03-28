@@ -14,9 +14,10 @@ private:
 		unsigned char* data;	//currently just set to nullptr
 	};
 	struct shaderAsset: public asset{
-		unsigned int id;
+		//unsigned int id;
+		shared_ptr<GraphicsManager::shader> shader;
 		bool use_sAspect;
-		map<string,int> uniforms;
+	//	map<string,int> uniforms;
 	};
 	struct modelAsset: public asset
 	{
@@ -68,7 +69,7 @@ private:
 	map<int,string>		boundTextures;
 
 	string				boundShader;
-	int					boundShaderId;
+	//int					boundShaderId;
 
 
 public:
@@ -108,13 +109,18 @@ public:
 	void setUniformMatrix(string name, const Mat4f& m);
 
 
-	bool loadAssetList();
-	int loadAsset(); //also does preload if not already done
+//	bool loadAssetList();
+//	int loadAsset(); //also does preload if not already done
 
 
 	string getBoundShader() const{return boundShader;}
 //	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
 	void shutdown();
+
+	void addTexture(string name, shared_ptr<GraphicsManager::texture2D> tex);
+	void addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
+	void addModel(string name, string OBJfile);
+	void addFont(string name, shared_ptr<FileManager::textFile> f);
 private:
 
 	//bool registerTGA(string name, string filename, bool tileable=false);
@@ -125,10 +131,10 @@ private:
 	asset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false);
 	asset* registerFont(shared_ptr<FileManager::textFile> f);
 
-	int getId(string name);
-	int getId(objectType t);
+	//int getId(string name);
+	//int getId(objectType t);
 
-	DataManager():boundShaderId(0),currentAssetIndex(0){}
+	DataManager():currentAssetIndex(0){}
 	~DataManager();
 };
 

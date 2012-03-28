@@ -283,6 +283,145 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
+int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
+{
+	auto it = uniforms.find(uniform);
+	if(it == uniforms.end())
+	{
+		it = uniforms.insert(pair<string, int>(uniform, glGetUniformLocation(shaderId, uniform.c_str()))).first;
+	}
+	return it->second;
+}
+OpenGLgraphics::shaderGL::~shaderGL()
+{
+	if(shaderId != 0)
+		glDeleteProgram(shaderId);
+}
+void OpenGLgraphics::shaderGL::bind()
+{
+	glUseProgram(shaderId);
+}
+void OpenGLgraphics::shaderGL::unbind()
+{
+	glUseProgram(0);
+}
+void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
+{
+	if(shaderId != 0)
+		glDeleteProgram(shaderId);
+
+	bool errorFlag = false;
+
+	GLuint v = glCreateShader(GL_VERTEX_SHADER);
+	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
+
+	glShaderSource(v, 1, &vert, NULL);
+	glShaderSource(f, 1, &frag, NULL);
+
+	glCompileShader(v);
+	glCompileShader(f);
+
+	string vertErrors;
+	string fragErrors;
+	string linkErrors;
+
+	int i;//used whenever a pointer to int is required
+	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE)
+	{
+		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+		char* cv=new char[i]; memset(cv,0,i);
+		glGetShaderInfoLog(v,i,&i,cv);
+//		messageBox(vert->filename + ": " + cv);
+		errorFlag = true;
+		delete[] cv;
+		return;
+	}
+	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
+	if(i == GL_FALSE && !errorFlag)
+	{
+		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+		char* cf=new char[i]; memset(cf,0,i);
+		glGetShaderInfoLog(f,i,&i,cf);
+//		messageBox(frag->filename + ": " + cf);
+		errorFlag = true;
+		delete[] cf;
+		return;
+	}
+
+
+	shaderId = glCreateProgram();
+	glAttachShader(shaderId,f);
+	glAttachShader(shaderId,v);
+
+	glLinkProgram(shaderId);
+
+	glGetProgramiv(shaderId,GL_LINK_STATUS,&i);
+	if(i == GL_FALSE && !errorFlag)
+	{
+		glGetProgramiv(shaderId,GL_INFO_LOG_LENGTH,&i);
+		char* cl=new char[i]; memset(cl,0,i);
+		glGetProgramInfoLog(shaderId,i,&i,cl);
+//		messageBox(frag->filename + "(link): " + cl);
+		errorFlag = true;
+		delete[] cl;
+	}
+	glUseProgram(0);
+
+	glDeleteShader(f); // we no longer need these shaders individually, although they
+	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+}
+void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
+{
+	glUseProgram(shaderId);
+	glUniform1f(getUniformLocation(name), v0);
+}
+void OpenGLgraphics::shaderGL::setUniform2f(string name, float v0, float v1)
+{
+	glUseProgram(shaderId);
+	glUniform2f(getUniformLocation(name), v0, v1);
+}
+void OpenGLgraphics::shaderGL::setUniform3f(string name, float v0, float v1, float v2)
+{
+	glUseProgram(shaderId);
+	glUniform3f(getUniformLocation(name), v0, v1, v2);
+}
+void OpenGLgraphics::shaderGL::setUniform4f(string name, float v0, float v1, float v2, float v3)
+{
+	glUseProgram(shaderId);
+	glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
+}
+void OpenGLgraphics::shaderGL::setUniform1i(string name, int v0)
+{
+	glUseProgram(shaderId);
+	glUniform1i(getUniformLocation(name), v0);
+}
+void OpenGLgraphics::shaderGL::setUniform2i(string name, int v0, int v1)
+{
+	glUseProgram(shaderId);
+	glUniform2i(getUniformLocation(name), v0, v1);
+}
+void OpenGLgraphics::shaderGL::setUniform3i(string name, int v0, int v1, int v2)
+{
+	glUseProgram(shaderId);
+	glUniform3i(getUniformLocation(name), v0, v1, v2);
+}
+void OpenGLgraphics::shaderGL::setUniform4i(string name, int v0, int v1, int v2, int v3)
+{
+	glUseProgram(shaderId);
+	glUniform4i(getUniformLocation(name), v0, v1, v2, v3);
+}
+void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat3f& m)
+{
+	glUseProgram(shaderId);
+	glUniformMatrix3fv(getUniformLocation(name),1,false,m.ptr());
+}
+void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat4f& m)
+{
+	glUseProgram(shaderId);
+	glUniformMatrix4fv(getUniformLocation(name),1,false,m.ptr());
+}
+
 void OpenGLgraphics::flashTaskBar(int times, int length)
 {
 #ifdef VISUAL_STUDIO
@@ -462,7 +601,10 @@ shared_ptr<GraphicsManager::textureCube> OpenGLgraphics::genTextureCube()
 {
 	return shared_ptr<textureCube>(new textureCubeGL());
 }
-
+shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
+{
+	return shared_ptr<shader>(new shaderGL());
+}
 void OpenGLgraphics::setGamma(float gamma)
 {
 	currentGamma = gamma;
@@ -697,7 +839,7 @@ void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
 	//////////////////////////////////////////////////////////////////////////////////////
-	auto checkForErrors = []()-> bool
+	auto checkForFBOErrors = []()-> bool
 	{
 		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 		if(status == GL_FRAMEBUFFER_COMPLETE_EXT)							return true;
@@ -740,7 +882,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
 
-		if(!checkForErrors())
+		if(!checkForFBOErrors())
 			return false;
 	}
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -763,7 +905,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
 		checkErrors();
-		if(!checkForErrors())
+		if(!checkForFBOErrors())
 		{
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 			return false;
@@ -786,7 +928,6 @@ void OpenGLgraphics::destroyFBOs()
 	if(multisampleFBO.fboID != 0)	glDeleteFramebuffersEXT(1, &multisampleFBO.fboID);
 	if(multisampleFBO.color != 0)	glDeleteRenderbuffers(1, &multisampleFBO.color);
 	if(multisampleFBO.depth != 0)	glDeleteRenderbuffers(1, &multisampleFBO.depth);
-
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -855,10 +996,13 @@ void OpenGLgraphics::render()
 			}
 			else
 			{
+				dataManager.bind("model");
 				currentView = shared_ptr<View>(*i);
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 				glMatrixMode(GL_PROJECTION);	glLoadMatrixf(currentView->projectionMatrix().ptr());
-				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());				
+				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());
+				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
+				dataManager.setUniformMatrix("modelTransform", Mat4f());
 
 				currentView->render();
 

@@ -766,42 +766,42 @@ void button::render()
 				tPos.x=0.0;
 				tSize.x=10.0/140;
 				rPos.x=shape.x;
-				rSize.x=min(10.0f/sh,shape.w/2);
+				rSize.x=min(5.0f/sh,shape.w/2);
 			}
 			else if(ix==1)
 			{
 				tPos.x=10.0/140;
 				tSize.x=1.0-20.0/140;
-				rPos.x=shape.x+10.0/sh;
-				rSize.x=max(shape.w-20.0/sh,0.0f);
+				rPos.x=shape.x+5.0/sh;
+				rSize.x=max(shape.w-10.0/sh,0.0f);
 			}
 			else if(ix==2)
 			{
 				tPos.x=1.0-10.0/140;
 				tSize.x=10.0/140;
-				rPos.x=shape.x+shape.w-min(10.0f/sh,shape.w/2);
-				rSize.x=min(10.0f/sh,shape.w/2);
+				rPos.x=shape.x+shape.w-min(5.0f/sh,shape.w/2);
+				rSize.x=min(5.0f/sh,shape.w/2);
 			}
 			if(iy==0)
 			{
 				tPos.y=0.0;
 				tSize.y=10.0/45;
 				rPos.y=shape.y;
-				rSize.y=min(10.0f/sh,shape.h/2);
+				rSize.y=min(5.0f/sh,shape.h/2);
 			}
 			else if(iy==1)
 			{
 				tPos.y=10.0/45;
 				tSize.y=1.0-20.0/45;
-				rPos.y=shape.y+10.0/sh;
-				rSize.y=max(shape.h-20.0/sh,0.0f);
+				rPos.y=shape.y+5.0/sh;
+				rSize.y=max(shape.h-10.0/sh,0.0f);
 			}
 			else if(iy==2)
 			{
 				tPos.y=1.0-10.0/45;
 				tSize.y=10.0/45;
-				rPos.y=shape.y+shape.h-min(10.0f/sh,shape.h/2);
-				rSize.y=min(10.0f/sh,shape.h/2);
+				rPos.y=shape.y+shape.h-min(5.0f/sh,shape.h/2);
+				rSize.y=min(5.0f/sh,shape.h/2);
 			}
 			graphics->drawPartialOverlay(Rect::XYWH(rPos,rSize),Rect::XYWH(tPos,tSize),"button");
 		}

@@ -112,6 +112,7 @@
   <ItemGroup>
     <ClCompile Include="aaGun.cpp" />
     <ClCompile Include="angle.cpp" />
+    <ClCompile Include="assetLoader.cpp" />
     <ClCompile Include="blackSmoke.cpp" />
     <ClCompile Include="bomb.cpp" />
     <ClCompile Include="bullet.cpp" />
@@ -167,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="aaGun.h" />
     <ClInclude Include="angle.h" />
+    <ClInclude Include="assetLoader.h" />
     <ClInclude Include="bomb.h" />
     <ClInclude Include="bullet.h" />
     <ClInclude Include="collide.h" />
