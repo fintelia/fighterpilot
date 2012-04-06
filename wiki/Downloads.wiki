@@ -1,4 +1,4 @@
-There is finally another version of Fighter-Pilot! It can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot%20%282.28.12%29.zip here].
+There is finally another version of Fighter-Pilot! It can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot%20%284.6.12%29.zip here].
 
 Xinput is required to play Fighter-Pilot. If you receive an error message the xinput1_3.dll is missing, you can correct the problem by downloading the redistribute package [http://code.google.com/p/fighter-pilot/downloads/detail?name=xinput%20redistribute.zip here].
 
@@ -10,7 +10,7 @@ Xinput is required to play Fighter-Pilot. If you receive an error message the xi
 
 *Instructions:*
 
-After extracting, run FighterPilot.exe. Once the loading bar finishes you will see the main menu. 
+After extracting, run _FighterPilot.exe_. Once the loading bar finishes you will see the main menu. 
 Use the arrow keys and Space/Enter to navigate the menu. To exit from the main menu, press the 
 escape key. Pressing escape while in the game will bring up the in-game menu. If you want to 
 play a map other than the default, press Ctrl + Enter in the main menu.
