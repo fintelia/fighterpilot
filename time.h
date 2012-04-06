@@ -15,7 +15,7 @@ private:
 
 
 	double timeSpeed;//time speed in    ms(gametime) / ms(realtime)
-	bool paused;//wether time is paused
+	int paused;// =0 if time is paused; >0 if time is not paused
 
 	__int64 lReal;//ticks at last frame
 	double lGame;//time in ms at last frame
@@ -148,20 +148,24 @@ public:
 	}
 	void pause()
 	{
-		paused = true;
+		paused++;
 	}
 	void unpause()
 	{
-		paused = false;
+		paused--;
+		if(paused < 0)
+			paused = 0;
 	}
 	void setPaused(bool b)
 	{
-		paused = b;
+		paused += b ? 1 : -1;
+		if(paused < 0)
+			paused = 0;
 	}
 
 	bool isPaused() const
 	{
-		return paused;
+		return paused > 0;
 	}
 
 	double length() const

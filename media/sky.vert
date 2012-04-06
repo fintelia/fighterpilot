@@ -13,10 +13,10 @@ void main()
 {
 
 
-	position = modelTransform * gl_Vertex;
+	position = gl_Vertex;
 	texCoord = gl_MultiTexCoord0.xy;
 
-	gl_Position = cameraProjection * position;
+	gl_Position = cameraProjection * modelTransform * gl_Vertex;
 	gl_Position.z = clamp(gl_Position.z,-0.999,0.999);
 
 	//color = vec4(textureCube(tex,position.xyz).rgb,1.0);

@@ -541,30 +541,46 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 }
 void levelEditor::faultLine()
 {
+	unsigned int length = level->ground()->resolutionX();
+	unsigned int width = level->ground()->resolutionZ();
 	float pd;
 	float a,b,c;
 	float disp=0.5  * 100.0;
 	float x,y;
-	for(x=0;x<level->ground()->resolutionX();x++)
+	float v;
+
+	for(x=0;x<length;x++)
 	{
-		for(y=0;y<level->ground()->resolutionZ();y++)
+		for(y=0;y<width;y++)
 		{
 			level->ground()->setHeight(x,0,y);
 		}
 	}
-	for(int i=0;i<100;i++)
+
+	int n=0;
+	for(int i=0;i<1000;i++)
 	{
-		a = random(-1.0f,1.0f);
-		b = random(-1.0f,1.0f);
-		c = random(-0.5f,0.5f) * level->ground()->resolutionX();
-		for(x=0;x<level->ground()->resolutionX();x++)
-		{
-			for(y=0;y<level->ground()->resolutionZ();y++)
+		v = random<float>(PI*100.0);
+		a = sin(v);
+		b = cos(v);
+		c = random<float>(-0.5,0.5) * sqrt((float)length * length + width * width);
+		disp = 30.0 * 500.0 / (500.0 + i) * random<float>(-1.0,1.0);
+
+		if(c>0)
+		n += 1;
+
+		for(x=0;x<length;x++)
+		{ 
+			for(y=0;y<width;y++)
 			{
-				pd = ((x-level->ground()->resolutionX()/2) * a + (y-level->ground()->resolutionZ()/2) * b + c)/(128.0/30)/2;//  ***/2500
-				if (pd > 1.57) pd = 1.57;
-				else if (pd < 0.05) pd = 0.05;
-				level->ground()->increaseHeight(x,-disp/2 + sin(pd)*disp,y);
+				//pd = ((x-level->ground()->resolutionX()/2) * a + (y-level->ground()->resolutionZ()/2) * b + c)/(128.0/30)/2;//  ***/2500
+				//if (pd > 1.57) pd = 1.57;
+				//else if (pd < 0.05) pd = 0.05;
+				//level->ground()->increaseHeight(x,-disp/2 + sin(pd)*disp,y);
+				if(a*(x-length/2) + b*(y-width/2) - c > 0)
+					level->ground()->increaseHeight(x, 10.0, y);
+				else
+					level->ground()->increaseHeight(x, -10.0, y);
 			}
 		}
 	}
@@ -579,6 +595,8 @@ void levelEditor::faultLine()
 	//		if(h<minHeight) minHeight=h;
 	//	}
 	//}
+
+ 	smooth(2);
 
 	level->ground()->setSize(Vec2f(level->ground()->resolutionX()*100,level->ground()->resolutionZ()*100));
 

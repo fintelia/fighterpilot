@@ -5,6 +5,8 @@ varying vec4 color;
 varying vec3 lightDir;
 varying vec4 position;
 
+varying vec3 halfVector;
+
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;
 
@@ -19,7 +21,8 @@ void main()
 
 	position = modelTransform * gl_Vertex;
 	gl_Position = cameraProjection * position;
-	
+
+	halfVector = lightPosition - position;
 
 	lightDir = normalize(lightPosition - position.xyz);
 }

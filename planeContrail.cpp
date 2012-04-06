@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	planeContrail::planeContrail(): emitter("smoke", 401, 1600.0)
+	planeContrail::planeContrail(): emitter("particle", 401, 1600.0)
 	{
 
 	}
@@ -16,19 +16,30 @@ namespace particle
 	}
 	bool planeContrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		p.startTime = world.time() - extraTime;
-		p.endTime = world.time() - extraTime + life();
+		auto parent = world[parentObject];
+		float w = abs(((parent->rotation.conjugate()) * parent->lastRotation).w);
+		float ang = 2.0 * acos( w );
+		if(ang > 0.001*world.time.length())	//TODO: trail needs to spawn for a set amound of time after the plane stops rotating
+		{
+			p.startTime = world.time() - extraTime;
+			p.endTime = world.time() - extraTime + life();
 		
-		p.vel = random3<float>() * velocity();
-		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
+			p.vel = random3<float>() * velocity();
+			p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
-		p.size = 0.25;
+			p.size = 0.25;
 
-		p.r = 0.5;
-		p.g = 0.5;
-		p.b = 0.5;
-		p.a = 0.0;
-		return true;
+			p.r = 0.8;
+			p.g = 0.8;
+			p.b = 0.8;
+			p.a = 0.0;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+		
 	}
 	void planeContrail::updateParticle(particle& p)
 	{

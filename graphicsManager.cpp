@@ -31,15 +31,13 @@ Vec3f GraphicsManager::View::unProject(Vec3f p)// from x=0 to sAspect && y=0 to 
 {
 	p.y = 1.0-p.y; //we have to cheat since the 2D and 3D coordinate systems used are reversed
 
-	Mat4d A = mProjectionMat * mModelViewMat;
-	Mat4d inv;
+	Mat4f A = mProjectionMat * mModelViewMat;
+	Mat4f inv;
 
 	if(!A.inverse(inv))
 		return Vec3f();//inverse could not be calculated
 
-	Vec3d r = inv * Vec3d(2.0*(p.x - mViewport.x)/mViewport.width - 1.0, 2.0 * (p.y - mViewport.y)/mViewport.height - 1.0, p.z*2.0 - 1.0);
-
-	return Vec3f(r.x,r.y,r.z);
+	return inv * Vec3f(2.0*(p.x - mViewport.x)/mViewport.width - 1.0, 2.0 * (p.y - mViewport.y)/mViewport.height - 1.0, p.z*2.0 - 1.0);
 }
 void GraphicsManager::View::viewport(float x,float y,float width,float height)
 {
@@ -58,9 +56,9 @@ void GraphicsManager::View::perspective(float fovy, float aspect, float zNear, f
 
 	float f = 1.0 / tan(fovy*PI/180 / 2.0);
 	mProjectionMat.set(	f/aspect,	0.0,		0.0,						0.0,
-									0.0,		f,			0.0,						0.0,
-									0.0,		0.0,		(zFar+zNear)/(zNear-zFar),	2*zFar*zNear/(zNear-zFar),
-									0.0,		0.0,		-1.0,						0.0);
+						0.0,		f,			0.0,						0.0,
+						0.0,		0.0,		(zFar+zNear)/(zNear-zFar),	2.0*zFar*zNear/(zNear-zFar),
+						0.0,		0.0,		-1.0,						0.0);
 
 }
 void GraphicsManager::View::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
@@ -116,13 +114,13 @@ void GraphicsManager::View::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 
 	Mat4f mvp = mProjectionMat * mModelViewMat;
 
-	mClipPlanes[0] = Plane<float>( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );	// Right clipping plane
-	mClipPlanes[1] = Plane<float>( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );	// Left clipping plane
+	mClipPlanes[0] = Plane<float>( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );	// Left clipping plane
+	mClipPlanes[1] = Plane<float>( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );	// Right clipping plane
 	mClipPlanes[2] = Plane<float>( mvp[3]+mvp[1], mvp[7]+mvp[5], mvp[11]+mvp[9], mvp[15]+mvp[13] );	// Bottom clipping plane
 	mClipPlanes[3] = Plane<float>( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );	// Top clipping plane
-	mClipPlanes[4] = Plane<float>( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );// Far clipping plane
-	mClipPlanes[5] = Plane<float>( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );// Near clipping plane
-}
+	mClipPlanes[4] = Plane<float>( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );// Near clipping plane
+	mClipPlanes[5] = Plane<float>( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );// Far clipping plane
+ }
 bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 {
 	float distance;

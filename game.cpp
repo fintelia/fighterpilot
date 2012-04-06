@@ -97,12 +97,6 @@ void Game::update()
 
 	/*                 COLLISION CHECKING GOES HERE						*/
 
-	//while(world.time.needsUpdate())
-	//{
-	//	world.time.nextUpdate();
-	//}
-
-
 	while(world.time.needsUpdate())
 	{
 		world.time.nextUpdate();

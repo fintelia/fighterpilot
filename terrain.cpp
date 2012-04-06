@@ -201,7 +201,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 			groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
 			groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
 			groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
-			groundValues[(x + z * width)*4 + 3] = (unsigned char)(255.0*(interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
+			groundValues[(x + z * width)*4 + 3] = (unsigned char)(255.0*heights[x+z*width] / (float)USHRT_MAX);//(interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
 		}
 	}
 	texture->setData(width, height, GraphicsManager::texture::RGBA, groundValues);
@@ -233,7 +233,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	unsigned int spacing;
 	float errorScale = (maxXYZ.y - minXYZ.y) / USHRT_MAX / 2.0;
 
-	float C = 16.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
+	float C = 32.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
 
 	for(int l=0; l<=levelsDeep; l++)
 	{
@@ -241,15 +241,15 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 		{
 			for(unsigned int y=0; y < (1<<l); y++)
 			{
-				p = getPatch(l,x,y);
+				p = getPatch(l,y,x);
 
 				if(x > 0)			p->neighbors[0] = getPatch(l,x-1,y);
 				if(x < (1<<l)-1)	p->neighbors[1] = getPatch(l,x+1,y);
 				if(y > 0)			p->neighbors[2] = getPatch(l,x,y-1);
 				if(y < (1<<l)-1)	p->neighbors[3] = getPatch(l,x,y+1);
 
-				p->bounds.minXYZ = minXYZ + Vec3f(scale.x * y / (1<<l), 0, scale.z * x / (1<<l));
-				p->bounds.maxXYZ = minXYZ + Vec3f(scale.x * (y+1) / (1<<l), scale.y, scale.z * (x+1) / (1<<l));
+				p->bounds.minXYZ = minXYZ + Vec3f(scale.x * x / (1<<l), 0, scale.z * y / (1<<l));
+				p->bounds.maxXYZ = minXYZ + Vec3f(scale.x * (x+1) / (1<<l), scale.y, scale.z * (y+1) / (1<<l));
 				p->center = (p->bounds.minXYZ + p->bounds.maxXYZ) / 2.0;
 
 				p->maxError = 0.0f;
@@ -371,9 +371,10 @@ float TerrainPage::getHeight(Vec2f loc) const
 }
 void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 {
+	
 	renderQueue.clear();
-
 	TerrainPatch* p;
+
 	for(int l=0; l<=levelsDeep; l++)
 	{
 		for(unsigned int x=0; x < (0x1<<l); x++)
@@ -427,8 +428,9 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
 	dataManager.setUniform1f("time",		world.time());
 
+	Vec3f eye = view->camera().eye;
 	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-
+	dataManager.setUniform3f("eyePos",		eye.x, eye.y, eye.z);
 	dataManager.setUniform1i("sand",		0);
 	dataManager.setUniform1i("grass",		1);
 	dataManager.setUniform1i("rock",		2);
@@ -773,10 +775,21 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 {
 	Vec3f eye = view->camera().eye;
-	glEnableClientState(GL_VERTEX_ARRAY);
-	Vec3d center(eye.x,0,eye.z);
-	double radius = max((eye.y)*tan(asin(6000000/(6000000+eye.y))), 2.0*max(terrainScale.x,terrainScale.z));
+	Vec3f center = Vec3f(eye.x,0,eye.z);
+	float h = eye.y;	//height off the ground
+	float r = 6367500;	//radius of the earth
 
+	
+
+
+	double radius = max(h*tan(asin(r/(r+h))), 2.0*max(terrainScale.x,terrainScale.z));
+
+
+	
+	
+	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
+
+	glEnableClientState(GL_VERTEX_ARRAY);
 	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
 	dataManager.bind("sky shader");
@@ -784,10 +797,14 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
 	skyTexture->bind();
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,100000,600000));
-	graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-100000,600000));
-
+	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,100000,600000));
+	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-100000,600000));
+	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
 	
+	if(!waterPlane)
+	{
+		graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
+	}
 
 	if(waterPlane)
 	{
@@ -805,6 +822,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		dataManager.setUniform2f("center",	center.x,center.z);
 		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
 		dataManager.setUniform1f("scale", radius);
+
+		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		dataManager.setUniformMatrix("modelTransform", Mat4f());
 
 		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));

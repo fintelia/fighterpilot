@@ -45,7 +45,7 @@ namespace particle
 			p.endTime = p.startTime + 5000;
 
 			Vec3f dir = random3<float>();
-			p.vel = dir * radius;
+			p.vel = dir * sqrt(random(radius) * random(radius));
 			p.pos = position + dir * random<float>(radius*0.5,radius*1.5) + p.vel * extraTime/1000.0;
 
 			p.size = radius*1.5;

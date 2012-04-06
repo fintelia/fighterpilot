@@ -8,6 +8,8 @@ public:
 	Vector2(): x(), y() {}
 	Vector2(T X, T Y): x(X), y(Y) {}
 
+	template<class U> Vector2(Vector2<U> u): x(u.x), y(u.y) {}
+
 	T& operator[](int index)
 	{
 		if(index==0)	return x;

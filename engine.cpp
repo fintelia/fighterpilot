@@ -141,17 +141,21 @@ void outOfMemory()
 	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION);
 	exit(EXIT_FAILURE);
 }
-
+//#pragma comment (lib, "Urlmon.lib")
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
 					int			nCmdShow)			// Window Show State
 {
-	MSG		msg;									// Windows Message Structure
 
+	MSG	msg; // Windows Message Structure
 	set_new_handler(outOfMemory);
-
 	randomGen.seed(time(nullptr));
+
+	//URLDownloadToFileA(nullptr,
+	//	"http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export/0/0/0.png?bbox=20037507%2C20037507%2C10037507%2C10037507&bboxSR=&layers=&layerdefs=&size=800%2C800&imageSR=&format=png24&transparent=false&dpi=&time=&layerTimeOptions=&f=image",
+	//	"imagery.png", 0, nullptr);
+
 
 	if(!game->init())
 	{
@@ -188,7 +192,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				if(waitTime>1.0)	sleep(waitTime-1);
 				do{
 					time = GetTime();
-				}while(time < nextUpdate - max(swapTime,0));		
+				}while(time < nextUpdate - max(swapTime,0));
 				nextUpdate = 1000.0/MAX_FPS + GetTime();
 				//end timing code
 

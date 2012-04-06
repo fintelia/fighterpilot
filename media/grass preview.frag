@@ -61,8 +61,8 @@ void main()
 	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
 
 
-	float NdotL = dot(normal,lightDir);
-	color = vec4(color.rgb*(NdotL*0.3+0.7),color.a);
+//	float NdotL = dot(normal,lightDir);
+//	color = vec4(color.rgb*(NdotL*0.3+0.7),color.a);
 	///////////////////////
 	//float z = gl_FragCoord.z / gl_FragCoord.w;
 	//float d=0.00005;

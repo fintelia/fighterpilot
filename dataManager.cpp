@@ -1448,7 +1448,11 @@ void DataManager::shutdown()
 	for(auto i = assets.begin(); i != assets.end(); i++)
 	{
 		//if(i->second->type == asset::SHADER)			glDeleteProgram(static_pointer_cast<shaderAsset>(i->second)->id);
-		if(i->second->type == asset::MODEL)		delete static_pointer_cast<modelAsset>(i->second)->VBO;
+		if(i->second->type == asset::MODEL)
+		{
+			delete static_pointer_cast<modelAsset>(i->second)->VBO;
+			static_pointer_cast<modelAsset>(i->second)->materials.clear();
+		}
 		//else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
 	}
 	assets.clear();
