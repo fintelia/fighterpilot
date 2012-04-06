@@ -185,7 +185,15 @@ public:
 
 		point = normal * d;
 	}
+	Plane(Vector3<T> n, T D): normal(n), point(), d(D)
+	{
+		T l = normal.magnitude();
 
+		normal /= l;
+		d /= l;
+
+		point = normal * d;
+	}
 	template<class U>
 	T distance(Vector3<U> p)
 	{

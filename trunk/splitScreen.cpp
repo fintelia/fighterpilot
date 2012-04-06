@@ -15,7 +15,7 @@ splitScreen::splitScreen(std::shared_ptr<LevelFile> lvl): dogFight(lvl)
 	views[1]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 500000.0);
 	views[1]->setRenderFunc(bind(&splitScreen::render3D, this, placeholders::_1), 1);
 
-	graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
+	graphics->setLightPosition(Vec3f(0.0, 16000.0, 10000.0));
 }
 bool splitScreen::init()
 {

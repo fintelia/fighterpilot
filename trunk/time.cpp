@@ -31,7 +31,7 @@ __int64 GameTime::totalTicks() const
 		ticks = (__int64)GetTickCount();
 	return ticks;
 }
-GameTime::GameTime(): sReal(0), eReal(0), sGame(0), sSpeed(0), eSpeed(0), changingSpeed(false), timeSpeed(1.0), paused(false), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), numUpdates(0)
+GameTime::GameTime(): sReal(0), eReal(0), sGame(0), sSpeed(0), eSpeed(0), changingSpeed(false), timeSpeed(1.0), paused(0), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), numUpdates(0)
 {
 	if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
 		ticksPerSecond = 1000;

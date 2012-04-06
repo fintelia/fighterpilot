@@ -5,7 +5,7 @@ template<class T> T random(T min, T max)
 {
     static uniform_real_distribution<double> dist(0.0, 1.0);
 
-	return min + dist(randomGen) * max;
+	return min + dist(randomGen) * (max - min);
 }
 ////////////////////////////////////////////////////////////////////
 template<class T> T random(T max)

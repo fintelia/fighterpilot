@@ -2,7 +2,11 @@
 varying vec3 position, lightDir, halfVector;
 varying float h;
 
+uniform float minHeight;
+uniform float maxHeight;
+
 uniform float time;
+//uniform vec3 eyePos;
 
 uniform sampler2D sand;
 uniform sampler2D grass;
@@ -24,7 +28,8 @@ void main()
 	//	return;
 	//}
 
-	vec3 v = texture2D(groundTex,position.xz).xyz;
+	vec4 goundTexVal = texture2D(groundTex,position.xz);
+	vec3 v = goundTexVal.xyz;
 	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
 	//n = vec3(0,1,0);
 	vec3 t = normalize(cross(n, vec3(0,0,1)));
@@ -63,26 +68,17 @@ void main()
 	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*256.0).r;
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 	
-
-	///////////////////////
-	//if(position.y > 0.0)
-	//{
-	//	float z = gl_FragCoord.z / gl_FragCoord.w;
-	//	float d=0.0001;
-	//	float fogFactor = clamp(exp2( -d * d * z * z * 1.442695 ), 0.0, 1.0);
-	//	color.a=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
-	//}
-	//////////////////
-	
 	vec3 normal = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), texture2D(grass_normals, position.xz*4.0*4.0).xyz*2.0 - 1.0, g*g*g));
 	
 	
 	float NdotL = dot(normal,lightDir);
 	
-	float m = 1.0 + clamp((position.y)/fwidth(position.y),-1.0,0.0)*(0.1-(position.y)*0.01);
+	float height = position.y;//minHeight + goundTexVal.a * (maxHeight-minHeight);
+	float m = 1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.01);
 	NdotL *= m;
 	color.a *= m;
-	
-	color = vec4(color.rgb*(NdotL*0.35+0.65),color.a);
+
+	//vec3 eyeDirection = eyePos - position;
+	//color = vec4(mix(color.rgb*(NdotL*0.35+0.65), vec3(0.5,0.5,0.5), clamp(0.000000002*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a); //doesn't quite work?
 	gl_FragColor = color;
 }

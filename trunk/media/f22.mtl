@@ -12,5 +12,5 @@ newmtl 04___Default
 	Kd 0.2745 0.2745 0.2745
 	Ks 0.0000 0.0000 0.0000
 	Ke 0.0000 0.0000 0.0000
-	map_Ka f22am.png
-	map_Kd f22am.png
+	map_Ka f22.png
+	map_Kd f22.png

@@ -50,7 +50,7 @@ namespace particle
 			p.endTime = world.time() + life();
 		
 			p.dir = random3<float>();
-			p.initialSpeed = velocity();
+			p.initialSpeed = sqrt(velocity() * velocity());
 			p.vel = p.dir * p.initialSpeed;
 			p.startPos = position + p.dir * spread();
 			p.pos = p.startPos + p.vel * extraTime/1000.0;

@@ -16,6 +16,8 @@ void nPlane::init()
 {
 	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(-0.4, 0, -3.3));
 	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
+//	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
+//	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
 	spawn();
 }
 void nPlane::updateSimulation(double time, double ms)
@@ -170,8 +172,6 @@ void nPlane::updateSimulation(double time, double ms)
 			rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
 			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
-
-
 
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)

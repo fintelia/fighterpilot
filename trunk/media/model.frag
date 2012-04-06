@@ -5,12 +5,14 @@ varying vec4 color;
 varying vec3 lightDir;
 varying vec4 position;
 
+varying vec3 halfVector;
+
 uniform sampler2D tex;
 
 void main()
 {
-	vec4 Color = vec4(color.rgb * texture2D(tex,texCoord).rgb * max(dot(normalize(normal), lightDir), 0.8),1.0);
-	//Color.rgb *= max(dot(normal, lightDir), 0.5);
+	vec4 Color = vec4(color.rgb * texture2D(tex,texCoord).rgb * max(dot(normalize(normal), lightDir), 0.5),1.0);
+
 	//if(position.y < 0.0)
 	//	discard;
 	//Color.a *= 1.0 + clamp(position.y/fwidth(position.y),-1.0,0.0)*(position.y*0.1);
@@ -18,5 +20,12 @@ void main()
 		//gl_FragDepth = gl_FragCoord.z;
 	//else
 		//gl_FragDepth = 1.0;
+
+
+	//specular highlights (doesn't look good on all models)
+//	float s = pow(max(dot(normal,normalize(halfVector)),0.0),40.0);
+//	Color.rgb += vec3(0.5, 0.5, 0.35) * s;
+
+
 	gl_FragColor = Color;
 }

@@ -999,7 +999,8 @@ void OpenGLgraphics::render()
 				dataManager.bind("model");
 				currentView = shared_ptr<View>(*i);
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-				glMatrixMode(GL_PROJECTION);	glLoadMatrixf(currentView->projectionMatrix().ptr());
+			
+				glMatrixMode(GL_PROJECTION);	glLoadIdentity(); glLoadMatrixf(currentView->projectionMatrix().ptr());
 				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());
 				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				dataManager.setUniformMatrix("modelTransform", Mat4f());

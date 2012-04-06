@@ -89,6 +89,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 				}
 			}
 		}
+		
 		if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
 		if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 	}
