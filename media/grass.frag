@@ -1,12 +1,11 @@
 
-varying vec3 position, lightDir, halfVector;
+varying vec3 position, eyeDirection, lightDir, halfVector;
 varying float h;
 
 uniform float minHeight;
 uniform float maxHeight;
 
 uniform float time;
-//uniform vec3 eyePos;
 
 uniform sampler2D sand;
 uniform sampler2D grass;
@@ -16,6 +15,7 @@ uniform sampler2D LCnoise;
 uniform sampler2D groundTex;
 uniform sampler2D grass_normals;
 uniform sampler2D noiseTex;
+uniform samplerCube sky;
 
 void main()
 {
@@ -78,7 +78,7 @@ void main()
 	NdotL *= m;
 	color.a *= m;
 
-	//vec3 eyeDirection = eyePos - position;
-	//color = vec4(mix(color.rgb*(NdotL*0.35+0.65), vec3(0.5,0.5,0.5), clamp(0.000000002*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a); //doesn't quite work?
+	//color = vec4(color.rgb*(NdotL*0.35+0.65),color.a * (1.0-clamp(0.000000002*dot(eyeDirection,eyeDirection),0.0,1.0)) );
+	color = vec4(mix(color.rgb*(NdotL*0.35+0.65), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
 	gl_FragColor = color;
 }

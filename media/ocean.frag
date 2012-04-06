@@ -64,6 +64,6 @@ void main()
 
 	float depth = gl_FragCoord.z / gl_FragCoord.w;
 	//float t = clamp(0.000000001*depth*depth, 0.0, 1.0);//clamp(1.0 - (2.7 - 2.7*r)*(2.7 - 2.7*r)*(2.7 - 2.7*r), 0.0, 1.0);
-	color.rgb = mix(color.rgb, textureCube(sky, vec3(position.x,0,position.y)).rgb, clamp(0.000000002*dot(eyeDirection,eyeDirection), 0.0, 1.0));
+	color.rgb = mix(color.rgb, textureCube(sky, vec3(position.x,0,position.y)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection), 0.0, 1.0));
 	gl_FragColor = color;
 }

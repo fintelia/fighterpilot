@@ -80,8 +80,8 @@ void splitScreen::render()
 		}
 		else if(!p->dead)
 		{
-			radar(sAspect-0.11, 0.389+0.5*acplayer, 0.094, 0.094, false, p);	
-			healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
+	//		radar(sAspect-0.11, 0.389+0.5*acplayer, 0.094, 0.094, false, p);	
+	//		healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
 		}
 	}
 }
