@@ -151,8 +151,8 @@ void campaign::render()
 	}
 	else if(!p->dead  && !p->controled)
 	{
-		radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
-		healthBar(0.768*sAspect, 0.042, 0.188*sAspect, 0.042, p->health/p->maxHealth,false);
+//		radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
+//		healthBar(0.768*sAspect, 0.042, 0.188*sAspect, 0.042, p->health/p->maxHealth,false);
 	}
 	
 

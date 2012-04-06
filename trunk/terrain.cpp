@@ -414,13 +414,13 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	}
 
 	dataManager.bind("island new terrain");
-	dataManager.bind("sand",0);
-	dataManager.bind("grass",1);
-	dataManager.bind("rock",2);
-	dataManager.bind("LCnoise",3);
-	texture->bind(4);
-	dataManager.bind("grass normals",5);
-	dataManager.bind("noise",6);
+	dataManager.bind("sand",1);
+	dataManager.bind("grass",2);
+	dataManager.bind("rock",3);
+	dataManager.bind("LCnoise",4);
+	texture->bind(5);
+	dataManager.bind("grass normals",6);
+	dataManager.bind("noise",7);
 
 
 	dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
@@ -431,13 +431,14 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	Vec3f eye = view->camera().eye;
 	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 	dataManager.setUniform3f("eyePos",		eye.x, eye.y, eye.z);
-	dataManager.setUniform1i("sand",		0);
-	dataManager.setUniform1i("grass",		1);
-	dataManager.setUniform1i("rock",		2);
-	dataManager.setUniform1i("LCnoise",		3);
-	dataManager.setUniform1i("groundTex",	4);
-	dataManager.setUniform1i("grass_normals", 5);
-	dataManager.setUniform1i("noiseTex",	6);			// make sure uniform exists
+	dataManager.setUniform1i("sky",			0);
+	dataManager.setUniform1i("sand",		1);
+	dataManager.setUniform1i("grass",		2);
+	dataManager.setUniform1i("rock",		3);
+	dataManager.setUniform1i("LCnoise",		4);
+	dataManager.setUniform1i("groundTex",	5);
+	dataManager.setUniform1i("grass_normals", 6);
+	dataManager.setUniform1i("noiseTex",	7);			// make sure uniform exists
 
 	//dataManager.bind("snow terrain");
 	//dataManager.bind("snow",0);

@@ -23,8 +23,7 @@ void main()
 
 
 	//specular highlights (doesn't look good on all models)
-//	float s = pow(max(dot(normal,normalize(halfVector)),0.0),40.0);
-//	Color.rgb += vec3(0.5, 0.5, 0.35) * s;
+	//Color.rgb += vec3(0.5, 0.5, 0.35) * pow(max(dot(normal,normalize(halfVector)),0.0),40.0);
 
 
 	gl_FragColor = Color;

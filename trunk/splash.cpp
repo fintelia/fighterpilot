@@ -51,7 +51,7 @@ namespace particle
 		Vec2f v = random2<float>();
 		p.vel.x = v.x * r;
 		p.vel.z = v.y * r;
-		p.vel.y = random<float>(8.0,20.0);
+		p.vel.y = random<float>(8.0,28.0);
 
 		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
