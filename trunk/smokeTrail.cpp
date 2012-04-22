@@ -4,19 +4,19 @@
 
 namespace particle
 {
-	smokeTrail::smokeTrail(): emitter("smoke", 19, 20.0)
+	smokeTrail::smokeTrail(): emitter("smoke", 30, 120.0)
 	{
 
 	}
 	void smokeTrail::init()
 	{
 		velocity =	fuzzyAttribute(0.0);
-		spread =	fuzzyAttribute(10.0, 3.0);
-		life =		fuzzyAttribute(8000.0, 1500.0);
+		spread =	fuzzyAttribute(1.0, 1.0);
+		life =		fuzzyAttribute(200.0, 20.0);
 	}
 	bool smokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		if(!world[parentObject] || !(world[parentObject]->type & PLANE) || ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE)
+		if(!world[parentObject] || !(world[parentObject]->type & PLANE) /*|| ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE*/)
 		{
 			particlesPerSecond = 0;
 			return false;
@@ -28,33 +28,39 @@ namespace particle
 		p.vel = random3<float>() * velocity();
 		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
-		p.size = 30.0;
+		p.size = 1.0;
 
 		float e = world.elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
-		p.r = 0;
-		p.g = 0;
-		p.b = 0;
-		p.a = 1;
+		p.ang = random<float>(2.0*PI);
+
+		p.r = color.r;
+		p.g = color.b;
+		p.b = color.g;
+		p.a = 0.5;
 		return true;
 	}
 	void smokeTrail::updateParticle(particle& p)
 	{
 		p.pos += p.vel * world.time.length()/1000.0;
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.01)
+		if(t<0.2)
 		{
-			p.a = t * 100.0;
-			p.size = 30.0;
+			p.a = 0.5;//(t * 5.0)*(t * 5.0);
+			p.size = 1.0 + 4.0*(t*5.0);
 		}
 		else
 		{
 			t = (t-0.01)/0.99;
-			p.a = 1.0 - t*t;
-			p.size = (1.0-t) * 30.0 + t * 100.0;
+			p.a = 0.5* (1.0 - t);
+			p.size = (1.0-t) * 5.0 + t * 10.0;
 			//p.pos.y += world.time.length()/100;
 		}
+	}
+	void smokeTrail::setColor(Color c)
+	{
+		color = c;
 	}
 }

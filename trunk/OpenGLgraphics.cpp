@@ -326,6 +326,23 @@ void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	string linkErrors;
 
 	int i;//used whenever a pointer to int is required
+
+#ifdef _DEBUG //log errors
+	glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+	char* cv=new char[i]; memset(cv,0,i);
+	glGetShaderInfoLog(v,i,&i,cv);
+	vertErrorLog = string(cv);
+	delete[] cv;
+
+	
+	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+	char* cf=new char[i]; memset(cf,0,i);
+	glGetShaderInfoLog(f,i,&i,cf);
+	fragErrorLog = string(cf);
+	delete[] cf;
+#endif
+
+
 	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
 	if(i == GL_FALSE)
 	{
@@ -334,6 +351,7 @@ void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 		glGetShaderInfoLog(v,i,&i,cv);
 //		messageBox(vert->filename + ": " + cv);
 		errorFlag = true;
+		debugBreak();
 		delete[] cv;
 		return;
 	}
@@ -345,9 +363,13 @@ void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 		glGetShaderInfoLog(f,i,&i,cf);
 //		messageBox(frag->filename + ": " + cf);
 		errorFlag = true;
+		debugBreak();
 		delete[] cf;
 		return;
 	}
+
+	glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
 
 
 	shaderId = glCreateProgram();
@@ -364,12 +386,30 @@ void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 		glGetProgramInfoLog(shaderId,i,&i,cl);
 //		messageBox(frag->filename + "(link): " + cl);
 		errorFlag = true;
+		debugBreak();
 		delete[] cl;
 	}
 	glUseProgram(0);
 
+
+
 	glDeleteShader(f); // we no longer need these shaders individually, although they
 	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+}
+string OpenGLgraphics::shaderGL::getErrorStrings()
+{
+#ifdef _DEBUG
+	if(vertErrorLog != "" || fragErrorLog != "")
+	{
+		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog;
+	}
+	else
+	{
+		return "";
+	}
+#elif
+	return "";
+#endif
 }
 void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
 {
@@ -866,7 +906,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA/*GL_RGBA16F*/, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
 		glGenTextures(1, &FBOs[i].depth);
 		glBindTexture(GL_TEXTURE_2D, FBOs[i].depth);

@@ -13,6 +13,7 @@ float sAspect=((float)sw)/sh;																													//	//
 																																				//  //
 profiler Profiler;																																//	//
 																																				//	//
+Ephemeris& ephemeris=Ephemeris::getInstance();																									//  //
 InputManager& input=InputManager::getInstance();																								//	//
 gui::manager& menuManager = gui::manager::getInstance();																						//	//
 DataManager& dataManager = DataManager::getInstance();																							//	//
@@ -147,9 +148,10 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
 					int			nCmdShow)			// Window Show State
 {
-
 	MSG	msg; // Windows Message Structure
 	set_new_handler(outOfMemory);
+
+	srand((unsigned int)time(nullptr));
 	randomGen.seed(time(nullptr));
 
 	//URLDownloadToFileA(nullptr,
@@ -157,12 +159,25 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	//	"imagery.png", 0, nullptr);
 
 
+	//char path[256];
+	//_fullpath(path,nullptr, 256); //even though we get a pointer, windows handles the memory for us
+	//string cmdLineStr(cmdLine);
+	//if(!cmdLineStr.empty())
+	//{
+	//	cmdLineStr.erase(cmdLineStr.begin());//remove the first character of the string (a quote)
+	//	cmdLineStr = cmdLineStr.substr(0,cmdLineStr.find_first_of("\""));
+	//	cmdLineStr = cmdLineStr.substr(0,cmdLineStr.find_last_of("\\/"));
+	//	SetCurrentDirectoryA(cmdLineStr.c_str());
+	//}
+
+	boost::split(game->commandLineOptions, string(lpCmdLine), boost::is_any_of(" "), boost::token_compress_on); 
+
 	if(!game->init())
 	{
 		return 1;
 	}
 
-	float nextUpdate=0;
+	float nextUpdate=0; 
 	float swapTime=0.0;
 	float time=0.0;
 	while(!done)

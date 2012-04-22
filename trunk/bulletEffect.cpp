@@ -17,7 +17,6 @@ namespace particle
 
 	void bulletEffect::prepareRender(Vec3f up, Vec3f right)
 	{
-
 		shared_ptr<bulletCloud> obj = dynamic_pointer_cast<bulletCloud>(world[parentObject]);
 
 		double time = world.time();

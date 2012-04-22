@@ -93,11 +93,32 @@ public:
 };
 class smokeTrail: public emitter
 {
+private:
+	Color color;
+
 public:
 	smokeTrail();
 	void init();
 
 	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+
+	void setColor(Color c);
+};
+class explosionFlash2: public sparkEmitter
+{
+public:
+	explosionFlash2();
+	void init();
+
+	void updateParticle(particle& p);
+};
+class explosionSparks: public sparkEmitter
+{
+public:
+	explosionSparks();
+	void init();
+
 	void updateParticle(particle& p);
 };
 class bulletEffect: public sparkEmitter
@@ -108,6 +129,7 @@ public:
 
 	void update();
 	void prepareRender(Vec3f up, Vec3f right);
+	bool toDelete(){return false;}
 };
 //class explosionEffect: public particleEffect
 //{

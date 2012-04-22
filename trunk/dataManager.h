@@ -121,6 +121,8 @@ public:
 	void addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
 	void addModel(string name, string OBJfile);
 	void addFont(string name, shared_ptr<FileManager::textFile> f);
+
+	void writeErrorLog(string filename);
 private:
 
 	//bool registerTGA(string name, string filename, bool tileable=false);

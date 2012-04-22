@@ -99,6 +99,7 @@ extern float fps;
 #include "time.h"
 #include "gameMath.h"
 #include "random.h"
+#include "ephemeris.h"
 #include "fileManager.h"
 #include "controlManager.h"
 #include "graphicsManager.h"
@@ -118,6 +119,8 @@ extern float fps;
 class Game
 {
 public:
+	vector<string> commandLineOptions;
+
 	virtual bool init();
 	virtual void update();
 };

@@ -22,13 +22,12 @@ namespace particle
 		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
 
 		p.size = 3.0;
-		p.r = 0.0;
-		p.g = 0.0;
-		p.b = 0.0;
+		p.r = 0.6;
+		p.g = 0.6;
+		p.b = 0.6;
 		p.a = 0.0;
 
 		p.ang = random<double>(0.0,2.0*PI);
-
 		return true;
 	}
 	void contrail::update()
@@ -47,15 +46,15 @@ namespace particle
 		else if(t < 0.75)
 		{
 			t = (t-0.10)/0.65;
-			p.a = (1.0 - 0.75*t) * 0.3;
-			p.size = (1.0-t) * 3.0 + t * 9.0;
+			p.a = lerp(0.3, 0.075, t);
+			p.size = lerp(3.0, 9.0, t);
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
-			p.a = (0.25 - 0.25*t) * 0.3;
-			p.size = (1.0-t) * 9.0 + t * 15.0;
+			p.a = lerp(0.075, 0.0, t);
+			p.size = lerp(9.0, 15.0, t);
 		}
-		p.r = p.g = p.b = 0.6;
+
 	}
 }

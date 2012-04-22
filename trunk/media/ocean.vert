@@ -1,10 +1,9 @@
 
-varying vec3 lightDir;
-varying vec2 position;
-varying vec2 texCoord;
-varying float depth;
 
-varying vec3 halfVector;
+varying vec3 position;
+varying vec2 texCoord;
+
+varying vec3 lightDirection;
 varying vec3 eyeDirection;
 
 uniform vec2 center;
@@ -18,13 +17,11 @@ uniform vec3 eyePos;
 
 void main()
 {
-	lightDir = normalize(lightPosition - gl_Vertex.xyz);
+	position = gl_Vertex.xyz;
 	texCoord = (gl_Vertex.xz*scale + center) * 0.00005;
-	position = gl_Vertex.xz;
-	//halfVector = lightPosition - (modelTransform * gl_Vertex).xyz;
+
+	lightDirection = normalize(lightPosition - gl_Vertex.xyz);
+	eyeDirection = eyePos - (modelTransform * gl_Vertex).xyz;
+
 	gl_Position = cameraProjection * modelTransform * gl_Vertex;
-
-	eyeDirection = eyePos - modelTransform * gl_Vertex;
-
-	depth = gl_Position.w;
-} 
+}

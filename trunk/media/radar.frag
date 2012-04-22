@@ -14,7 +14,7 @@ void main()
 	float myAng=degrees(atan(loc.y,loc.x)+3.14159)-18.0;
 	float radius=sqrt(loc.x*loc.x*4.0+loc.y*loc.y*4.0);
 
-	if(myAng < 0)
+	if(myAng < 0.0)
 		myAng += 360.0;
 
 	loc.x=radius*cos(radians(myAng))/2.0;

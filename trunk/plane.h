@@ -12,6 +12,7 @@ private:
 	double extraShootTime;//time since it last shot;
 	unsigned long shotsFired;
 
+	shared_ptr<particle::smokeTrail> smokeTrail;
 public:
 //////////////structs//////////////
 	struct wayPoint
@@ -75,6 +76,7 @@ public:
 
 ///////////camera view/////////////
 	vector<cameraState> cameraStates;
+	Quat4f cameraRotation;
 	objectCamera observer;
 
 /////////////control///////////////
@@ -91,7 +93,7 @@ public:
 		bool shoot3;
 		ControlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(false), shoot2(false), shoot3(false) {}
 	}controls;
-	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_ADVANCED}controlType;
+	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_AI}controlType;
 ////////////methods////////////////
 	void findTargetVector();
 	void shootMissile();

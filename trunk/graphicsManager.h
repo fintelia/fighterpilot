@@ -111,6 +111,7 @@ public:
 	public:
 		View();
 		Vec2f project(Vec3f p);
+		Vec3f project3(Vec3f p);
 		Vec3f unProject(Vec3f p);
 		void viewport(float x,float y,float width,float height);
 		void perspective(float fovy, float aspect, float near, float far);
@@ -244,6 +245,8 @@ public:
 
 		virtual void setUniformMatrix(string name, const Mat3f& m)=0;
 		virtual void setUniformMatrix(string name, const Mat4f& m)=0;
+
+		virtual string getErrorStrings(){return "";}
 	};
 private:
 	gID currentId;
@@ -451,6 +454,11 @@ public:
 	class shaderGL: public GraphicsManager::shader
 	{
 	private:
+#ifdef _DEBUG
+		string fragErrorLog;
+		string vertErrorLog;
+#endif
+
 		unsigned int shaderId;
 		map<string, int> uniforms;
 		int getUniformLocation(string uniform);
@@ -474,6 +482,8 @@ public:
 
 		void setUniformMatrix(string name, const Mat3f& m);
 		void setUniformMatrix(string name, const Mat4f& m);
+
+		string getErrorStrings();
 	};
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
 	bool changeResolution(Vec2i resolution, unsigned int maxSamples);

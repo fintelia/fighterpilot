@@ -156,7 +156,7 @@ namespace particle
 		}
 		else
 		{
-			p.a = 0.8 - 1.0 * ((t-2000)/3000);
+			p.a = 0.8 - 0.8 * ((t-2000)/3000);
 		}
 
 		p.pos.y += world.time.length()/200;

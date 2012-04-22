@@ -93,7 +93,6 @@ protected:
 	std::shared_ptr<TerrainPage> getPage(Vec2f position) const;
 	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
 
-	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
 	void generateOceanTexture();
 	void resetTerrain();
 public:
@@ -101,6 +100,8 @@ public:
 	~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
+
+	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
 
 	const Circle<float>& bounds() const{return mBounds;}
 
