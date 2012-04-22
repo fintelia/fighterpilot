@@ -105,10 +105,10 @@ public:
 	Angle operator+(Angle a){return Angle(ang+a.ang);}
 	Angle operator-(Angle a){return Angle(ang-a.ang);}
 
-	Angle operator*(double a){return Angle(ang*(float)a);}
-	Angle operator/(double a){return Angle(ang/(float)a);}
-	Angle operator+(double a){return Angle(ang+(float)a);}
-	Angle operator-(double a){return Angle(ang-(float)a);}
+	Angle operator*(double a){return Angle(ang*a);}
+	Angle operator/(double a){return Angle(ang/a);}
+	Angle operator+(double a){return Angle(ang+a);}
+	Angle operator-(double a){return Angle(ang-a);}
 
 	Angle operator*(float a){return Angle(ang*a);}
 	Angle operator/(float a){return Angle(ang/a);}
@@ -125,10 +125,10 @@ public:
 	Angle& operator+=(const Angle& a){ang+=a.ang; normalize(); return *this;}
 	Angle& operator-=(const Angle& a){ang-=a.ang; normalize(); return *this;}
 
-	Angle& operator*=(const double& a){ang*=(float)a; normalize(); return *this;}
-	Angle& operator/=(const double& a){ang/=(float)a; normalize(); return *this;}
-	Angle& operator+=(const double& a){ang+=(float)a; normalize(); return *this;}
-	Angle& operator-=(const double& a){ang-=(float)a; normalize(); return *this;}
+	Angle& operator*=(const double& a){ang*=a; normalize(); return *this;}
+	Angle& operator/=(const double& a){ang/=a; normalize(); return *this;}
+	Angle& operator+=(const double& a){ang+=a; normalize(); return *this;}
+	Angle& operator-=(const double& a){ang-=a; normalize(); return *this;}
 
 	Angle& operator*=(const float& a){ang*=a; normalize(); return *this;}
 	Angle& operator/=(const float& a){ang/=a; normalize(); return *this;}

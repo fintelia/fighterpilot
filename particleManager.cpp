@@ -200,7 +200,7 @@ namespace particle{
 //
 //}
 
-emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), vertices(NULL), compacity(initalCompacity), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending)
+emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true)
 {
 	if(compacity != 0)
 	{
@@ -299,18 +299,22 @@ void emitter::update()
 			particles[i].fadeIn = false;
 	}
 
-	particle p;
-	extraTime += ms;
-	while(particlesPerSecond > 0.0 && extraTime > (1000.0 / particlesPerSecond))
+	
+	if(active)
 	{
-		extraTime -= 1000.0 / particlesPerSecond;
-
 		particle p;
-		float t = (ms-extraTime)/ms;
-		if(createParticle(p,position*t + lastPosition*(1.0-t)))
+		extraTime += ms;
+		while(particlesPerSecond > 0.0 && extraTime > (1000.0 / particlesPerSecond))
 		{
-			p.fadeIn = true;
-			addParticle(p);
+			extraTime -= 1000.0 / particlesPerSecond;
+
+			particle p;
+			float t = (ms-extraTime)/ms;
+			if(createParticle(p,position*t + lastPosition*(1.0-t)))
+			{
+				p.fadeIn = true;
+				addParticle(p);
+			}
 		}
 	}
 
@@ -323,13 +327,22 @@ void emitter::update()
 		}
 	}
 
+	float n=0;
+	double t = GetTime();
 	for(int i=0; i < total; i++)
 	{
 		if(particles[i].endTime > time)
 		{
 			particles[i].lastPos = particles[i].pos;
 			updateParticle(particles[i]);
+
+			n += 1.0;
 		}
+	}
+	t = GetTime() - t;
+	if(n > 0)
+	{
+		//Profiler.setOutput("update time x 1000", (1000.0 * t) / n);
 	}
 }
 void emitter::prepareRender(Vec3f up, Vec3f right)
@@ -493,7 +506,7 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 			dir = end - start;
 			a1 = dir.dot(up);
 			a2 = dir.dot(right);
-			len = 0.3/sqrt(a1*a1+a2*a2);
+			len = 0.2/sqrt(a1*a1+a2*a2);
 
 			vertices[vNum*4 + 0].position = start + (right*a1 - up*a2)*len;
 			vertices[vNum*4 + 1].position = start - (right*a1 - up*a2)*len;
@@ -685,15 +698,15 @@ void manager::init()
 {
 
 }
-void manager::addEmitter(emitter* e, Vec3f position, float radius)
+void manager::addEmitter(shared_ptr<emitter> e, Vec3f position, float radius)
 {
-	emitters.push_back(shared_ptr<emitter>(e));
+	emitters.push_back(e);
 	e->setPositionAndRadius(position, radius);
 	e->init();
 }
-void manager::addEmitter(emitter* e, int parent, Vec3f offset)
+void manager::addEmitter(shared_ptr<emitter> e, int parent, Vec3f offset)
 {
-	emitters.push_back(shared_ptr<emitter>(e));
+	emitters.push_back(e);
 	auto model = dataManager.getModel(world[parent]->type);
 	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, model!=nullptr ? model->boundingSphere.radius : 0.0);
 	e->setParent(parent, offset);
@@ -726,11 +739,29 @@ void manager::addEmitter(emitter* e, int parent, Vec3f offset)
 //}
 void manager::update()
 {
+	//Profiler.startElement("particle update");
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
 		(*i)->update();
 	}
 
+	unsigned int totalParticles=0;
+	for(auto i = emitters.begin(); i!=emitters.end();)
+	{
+		if((*i)->toDelete())
+		{
+			i = emitters.erase(i);
+		}
+		else
+		{
+			totalParticles += (*i)->liveParticles;
+			i++;
+		}
+	}
+
+	//Profiler.setOutput("total particles:", (float)totalParticles);
+
+	// Profiler.endElement("particle update");
 	//for(auto i = particleEffects.begin(); i!=particleEffects.end(); i++)
 	//{
 	//	(*i)->update();
@@ -763,29 +794,38 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
-		(*i)->prepareRender(up,right);
+		if((*i)->visible)
+		{
+			(*i)->prepareRender(up,right);
+		}
 	}
-	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
-	//{
-	//	(*i).second->prepareRender(up,right);
-	//}
-	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);//glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
-	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-		if((*i)->additiveBlending)	(*i)->render();
-	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
-	//	if((*i).second->additiveBlending)	(*i).second->render();
 
-	graphics->setBlendMode(GraphicsManager::ADDITIVE);//glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-		if((*i)->additiveBlending)	(*i)->render();
-	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
-	//	if((*i).second->additiveBlending)	(*i).second->render();
+	{
+		if((*i)->additiveBlending && (*i)->visible)
+		{
+			(*i)->render();
+		}
+	}
 
-	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);//glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	graphics->setBlendMode(GraphicsManager::ADDITIVE);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-		if(!(*i)->additiveBlending)	(*i)->render();
-	//for(auto i = particleTypes.begin(); i!=particleTypes.end(); i++)
-	//	if(!(*i).second->additiveBlending)	(*i).second->render();
+	{
+		if((*i)->additiveBlending && (*i)->visible)
+		{
+			(*i)->render();
+		}
+	}
+
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+	for(auto i = emitters.begin(); i!=emitters.end(); i++)
+	{
+		if(!(*i)->additiveBlending && (*i)->visible)
+		{
+			(*i)->render();
+		}
+	}
 
 	dataManager.unbindShader();
 }

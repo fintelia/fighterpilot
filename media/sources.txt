@@ -27,3 +27,13 @@ smokeShape.png
 SAM.obj (and related files)
 	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
 	adjusted in scale and changed texture format
+	
+sun.png
+	Used several layered nova effects in GIMP
+	To make edges transparent, a single radial gradient (transparent -> black) was applied and then "Color to Alpha" was used to remove the black color
+	
+smokeShape2.png
+	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
+	made the color more white in gimp
+	applied clouds filter in GIMP (level=5, X_size=4, Y_size=4)
+	

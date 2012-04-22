@@ -103,6 +103,9 @@ protected:
 	GraphicsManager::vertexBuffer* VBO;
 	bool additiveBlending;
 
+	bool active;
+	bool visible;
+
 public:
 	friend class manager;
 
@@ -123,6 +126,11 @@ public:
 	virtual void update();
 	virtual void prepareRender(Vec3f up, Vec3f right);
 	virtual void render();
+
+	void setActive(bool a){active = a;}
+	void setVisible(bool v){visible = v;}
+
+	virtual bool toDelete(){return particlesPerSecond==0 && liveParticles==0;}
 };
 class relativeEmitter: public emitter
 {
@@ -225,8 +233,11 @@ public:
 		return *instance;
 	}
 	void init();
-	void addEmitter(emitter* e, Vec3f position, float radius=1.0);
-	void addEmitter(emitter* e, int parent, Vec3f offset=Vec3f());
+	void addEmitter(shared_ptr<emitter> e, Vec3f position, float radius=1.0);
+	void addEmitter(shared_ptr<emitter> e, int parent, Vec3f offset=Vec3f());
+	void addEmitter(emitter* e, Vec3f position, float radius=1.0){addEmitter(shared_ptr<emitter>(e), position, radius);}
+	void addEmitter(emitter* e, int parent, Vec3f offset=Vec3f()){addEmitter(shared_ptr<emitter>(e), parent, offset);}
+
 	void update();
 	void render(shared_ptr<GraphicsManager::View> view);
 	void shutdown();

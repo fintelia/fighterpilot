@@ -317,5 +317,36 @@ void dogFight::checkCollisions()
 			}
 		}
 	}
+
+	//Vec3f bulletPosition;				//PARTICLE EFFECTS FOR GROUND/WATER COLLISIONS
+	//for(auto i=0;i<(signed int)bulletRef.size();i++)
+	//{
+	//	bulletPosition = bulletRef[i].startPos+bulletRef[i].velocity*(world.time()-bulletRef[i].startTime)/1000;
+	//	if(world.altitude(bulletPosition) < 0.0)
+	//	{
+	//		if(!world.isLand(bulletPosition.x, bulletPosition.z))
+	//		{
+	//			particleManager.addEmitter(new particle::splash, Vec3f(bulletPosition.x, 0, bulletPosition.z), 1.0);
+	//		}
+	//		bulletRef[i].life = world.time()-bulletRef[i].startTime; //makes the bullet die at the current time
+	//	}
+	//}
+	//float altitude;
+	//for(auto i=missiles.begin();i!=missiles.end();i++)
+	//{
+	//	altitude = world.altitude(i->second->position);
+	//	if(altitude < 0.0)
+	//	{
+	//		if(world.isLand(bulletPosition.x, bulletPosition.z))
+	//		{
+	//			particleManager.addEmitter(new particle::explosion, Vec3f(i->second->position.x, i->second->position.y - altitude, i->second->position.z), 5.0);
+	//		}
+	//		else
+	//		{
+	//			particleManager.addEmitter(new particle::splash, Vec3f(i->second->position.x, 0, i->second->position.z), 5.0);
+	//		}
+	//		i->second->dead = true;
+	//	}
+	//}
 }
 }

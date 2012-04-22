@@ -20,7 +20,7 @@ uniform samplerCube sky;
 void main()
 {
 	vec4 color;
-	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
+	if(position.x < 0.0 || position.x > 1.0 || position.y < -45.0 /*|| position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
 		discard;
 	//if(!gl_FrontFacing)
 	//{
@@ -37,20 +37,23 @@ void main()
 
 	
 	
-	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
-	float slope = acos(dot(vec3(0.0,1.0,0.0),n));
-	float r=0.0;
-	float s1=1.30;//1.53;
-	float s2=0.90;//1.48;
-	if(slope>s1 		) 	r=1.0;
-	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
+	//float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
+	//float slope = acos(dot(vec3(0.0,1.0,0.0),n));
+	//float r=0.0;
+	//float s1=1.30;//1.53;
+	//float s2=0.90;//1.48;
+	//if(slope>s1 		) 	r=1.0;
+	//else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
-	vec3 TexValues;
-	if(h<0.1)		TexValues = vec3(0.0,1.0,0.0);
-	else if(h<0.2)	TexValues = vec3(0.0,1.0-(h-0.1)/0.1,(h-0.1)/0.1);
-	//else if(h<0.4)TexValues = vec3(r*(h-0.3)*10.0,0.0,1.0-r*(h-0.3)*10.0);
-	//else			TexValues = vec3(r,0.0,1.0-r);
-	else			TexValues = vec3(0.0,0.0,1.0);
+	//vec3 TexValues;
+	//if(h<0.1)		TexValues = vec3(0.0,1.0,0.0);
+	//else if(h<0.2)	TexValues = vec3(0.0,1.0-(h-0.1)/0.1,(h-0.1)/0.1);
+	////else if(h<0.4)TexValues = vec3(r*(h-0.3)*10.0,0.0,1.0-r*(h-0.3)*10.0);
+	////else			TexValues = vec3(r,0.0,1.0-r);
+	//else			TexValues = vec3(0.0,0.0,1.0);
+
+	//TexValues = mix(vec3(0.0,1.0,0.0), vec3(0.0,0.0,1.0), (h-0.1)/0.1);
+
 	//if(r<TexValues[1]) r=0.0;
 	//else r-=TexValues[1];
 
@@ -69,12 +72,12 @@ void main()
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 	
 	vec3 normal = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), texture2D(grass_normals, position.xz*4.0*4.0).xyz*2.0 - 1.0, g*g*g));
-	
+
 	
 	float NdotL = dot(normal,lightDir);
 	
 	float height = position.y;//minHeight + goundTexVal.a * (maxHeight-minHeight);
-	float m = 1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.01);
+	float m = 1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.02);
 	NdotL *= m;
 	color.a *= m;
 

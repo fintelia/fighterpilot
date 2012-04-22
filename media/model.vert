@@ -22,7 +22,7 @@ void main()
 	position = modelTransform * gl_Vertex;
 	gl_Position = cameraProjection * position;
 
-	halfVector = lightPosition - position;
+	halfVector = lightPosition - position.xyz;
 
 	lightDir = normalize(lightPosition - position.xyz);
 }

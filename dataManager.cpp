@@ -943,7 +943,25 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	return a;
 }
+void DataManager::writeErrorLog(string filename)
+{
+	shared_ptr<FileManager::textFile> file(new FileManager::textFile(filename));
 
+	string error;
+	for(auto i=assets.begin(); i!=assets.end(); i++)
+	{
+		if(i->second->type == asset::SHADER)
+		{
+			error = static_pointer_cast<shaderAsset>(i->second)->shader->getErrorStrings();
+			if(error != "")
+			{
+				file->contents += "[" + i->first + "]\n";
+				file->contents += error + "\n";
+			}
+		}
+	}
+	fileManager.writeTextFile(file, true);
+}
 void DataManager::bind(string name, int textureUnit)
 {
 	if(assets.find(name)==assets.end())

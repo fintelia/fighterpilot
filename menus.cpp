@@ -186,7 +186,7 @@ bool chooseMode::keyDown(int vkey)
 	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
-//#ifdef _DEBUG
+
 	if((vkey==VK_SPACE || vkey==VK_RETURN) && input.getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
 	{
 		openFile* p = new openFile;
@@ -195,10 +195,7 @@ bool chooseMode::keyDown(int vkey)
 		menuManager.setPopup(p);
 		choosingFile = true;
 	}
-	else
-//#endif
-
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
+	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
@@ -207,7 +204,6 @@ bool chooseMode::keyDown(int vkey)
 		if(l->loadZIP("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::campaign(l));
-	//		modeManager.setMode(new modeCampaign(l));
 		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
@@ -219,7 +215,6 @@ bool chooseMode::keyDown(int vkey)
 		if(l->loadZIP("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
-		//	modeManager.setMode(new modeSplitScreen(l));
 		}
 	}
 	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
@@ -227,8 +222,6 @@ bool chooseMode::keyDown(int vkey)
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 		menuManager.setMenu(new gui::levelEditor);
-
-		//modeManager.setMode(new modeMapBuilder);
 	}
 	else if(vkey==VK_F3)
 	{
@@ -418,6 +411,10 @@ void options::render()
 // | 													gui::loading										            		|
 // |____________________________________________________________________________________________________________________________|
 //
+loading::loading():progress(0.0f)
+{
+
+}
 bool loading::init()
 {
 	progress = 0.0f;
@@ -455,7 +452,10 @@ int loading::update()
 	progress = 1.0-(float)assetsLeft/totalAssets;
 	if(assetsLeft==0)
 	{
-		menuManager.setMenu(new gui::chooseMode);
+#ifdef _DEBUG
+		dataManager.writeErrorLog("shaderErrors.txt");
+#endif
+		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 	}
 	return 30;
 }

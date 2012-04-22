@@ -149,8 +149,7 @@ private:
 class loading:public screen
 {
 public:
-	loading():progress(0.0f){}
-	~loading(){}
+	loading();
 	bool init();
 	int update();
 	void render();

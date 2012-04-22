@@ -265,7 +265,7 @@ AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),target(0),destination
 	if(o != nullptr && o->type & PLANE)
 	{
 		nPlane* p = (nPlane*)o;
-		p->controlType = nPlane::CONTROL_TYPE_ADVANCED;
+		p->controlType = nPlane::CONTROL_TYPE_AI;
 	}
 }
 void AIplayer::startPatrol()

@@ -47,15 +47,15 @@ namespace particle
 		p.startTime = world.time() - extraTime;
 		p.endTime = world.time() - extraTime + life();
 		
-		float r = random<float>(0, 5.0);
+		float r = random<float>(0, 0.5 * radius);
 		Vec2f v = random2<float>();
 		p.vel.x = v.x * r;
 		p.vel.z = v.y * r;
-		p.vel.y = random<float>(8.0,28.0);
+		p.vel.y = random<float>(0.8,2.8) * radius;
 
-		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
+		p.pos = currentPosition + random3<float>()*random<float>(0.2,0.6)*radius + p.vel * extraTime/1000.0;
 
-		p.size = 5.0;
+		p.size = 0.5 * radius;
 
 		float e = world.elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
@@ -63,8 +63,8 @@ namespace particle
 
 		p.r = 0.7;
 		p.g = 0.7;
-		p.b = 1;
-		p.a = 0;
+		p.b = 1.0;
+		p.a = 0.0;
 
 		return true;
 	}
@@ -74,18 +74,18 @@ namespace particle
 
 		p.pos.x += p.vel.x * world.time.length()/1000.0;
 		p.pos.z += p.vel.z * world.time.length()/1000.0;
-		p.pos.y = p.vel.y * elapsedTime - 9.8 * elapsedTime * elapsedTime;
+		p.pos.y = p.vel.y * elapsedTime - 0.98 * elapsedTime * elapsedTime * radius;
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
 		if(t<0.05)
 		{
 			p.a = t * 20.0 * 0.15;
-			p.size = 5.0;
+			p.size = 0.5 * radius;
 		}
 		else
 		{
 			t = (t-0.05)/0.99;
 			p.a = (1.0 - t) * 0.15;
-			p.size = (1.0-t) * 5.0 + t * 30.0;
+			p.size = ((1.0-t) * 0.5 + t * 3.0) * radius;
 			//p.pos.y += world.time.length()/100;
 		}
 	//	if(p.size/2 > p.pos.y)

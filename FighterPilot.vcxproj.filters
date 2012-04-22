@@ -172,6 +172,9 @@
     <Filter Include="Source Files\ENGINE\dataManager\textureManager">
       <UniqueIdentifier>{099f7035-f03e-48c3-969f-6a5b2970e453}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ENGINE\ephemeris">
+      <UniqueIdentifier>{560f319f-15aa-4d48-bb1f-f6e1d5f38d3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -327,6 +330,15 @@
     <ClCompile Include="assetLoader.cpp">
       <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
     </ClCompile>
+    <ClCompile Include="explosionFlash2.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionSparks.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="ephemeris.cpp">
+      <Filter>Source Files\ENGINE\ephemeris</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -449,6 +461,9 @@
     </ClInclude>
     <ClInclude Include="assetLoader.h">
       <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="ephemeris.h">
+      <Filter>Source Files\ENGINE\ephemeris</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

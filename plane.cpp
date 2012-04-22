@@ -7,7 +7,7 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),controlType(CONTROL_TYPE_SIMPLE)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),cameraRotation(rotation), controlType(CONTROL_TYPE_SIMPLE)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
@@ -18,6 +18,12 @@ void nPlane::init()
 	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
+
+	//smokeTrail = shared_ptr<particle::smokeTrail>(new particle::smokeTrail);
+	//particleManager.addEmitter(smokeTrail, id);
+	//smokeTrail->setActive(false);
+
+
 	spawn();
 }
 void nPlane::updateSimulation(double time, double ms)
@@ -139,7 +145,7 @@ void nPlane::updateSimulation(double time, double ms)
 				climb += (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000)) * cos(roll);
 
 			}
-			else if(controlType == CONTROL_TYPE_ADVANCED)
+			else if(controlType == CONTROL_TYPE_AI)
 			{
 				roll += 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
 				//direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (controls.climb - controls.dive) * (ms/1000);
@@ -259,7 +265,7 @@ void nPlane::updateSimulation(double time, double ms)
 				else if(death == DEATH_HIT_WATER)
 				{
 					Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-					particleManager.addEmitter(new particle::splash(),splashPos);
+					particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
 
 
 					Vec3f vel2D = rotation * Vec3f(0,0,1);
@@ -448,13 +454,28 @@ void nPlane::smoothCamera()
 	}
 
 
-	observer.currentFrame.eye = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 35.0;
-	observer.currentFrame.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 35.0;
-	observer.currentFrame.up = Vec3f(0,1,0);
+	//observer.currentFrame.eye = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 35.0;
+	//observer.currentFrame.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 35.0;
+	//observer.currentFrame.up = Vec3f(0,1,0);
 
-	//center = position + dir * 15.0;
-	//camera = position + dir * 15.0 + v * 45;
-	//up = rotation * Vec3f(0,1,0);
+
+	/*cameraRotations.push_back(rotation);
+	if(cameraRotations.size() > 15)
+		cameraRotations.erase(cameraRotations.begin());
+
+	Quat4f rot;
+	for(auto i=cameraRotations.begin(); i!=cameraRotations.end(); i++)
+	{
+		rot = rot + (*i).normalize();
+	}
+	rot = rot.normalize();*/
+
+
+	cameraRotation = slerp(cameraRotation, rotation, 0.07);
+
+	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0);
+	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*30.0,cos(15.0*PI/180)*30.0);
+	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
 void nPlane::autoPilotUpdate(float value)
 {
@@ -616,7 +637,11 @@ void nPlane::die()
 		particleManager.addEmitter(new particle::explosion(),id);
 		particleManager.addEmitter(new particle::explosionSmoke(),id);
 		particleManager.addEmitter(new particle::explosionFlash(),id);
+		particleManager.addEmitter(new particle::explosionFlash2(),id);
+		//particleManager.addEmitter(new particle::explosionSparks(),id);
+		
 	}
+	//smokeTrail->setVisible(false);
 }
 void nPlane::findTargetVector()
 {
@@ -693,6 +718,10 @@ void nPlane::dropBomb()
 }
 void nPlane::loseHealth(float healthLoss)
 {
+	//smokeTrail->setActive(true);
+	//float c = max(0.5 * floor(health/maxHealth * 4.0) / 4.0, 0.0);
+	//smokeTrail->setColor(Color(c, c, c));
+
 	health-=healthLoss;
 	if(health<=0.0)
 	{

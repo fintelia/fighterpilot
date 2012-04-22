@@ -189,7 +189,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	Vec3f n;
 	//int xPOT = uPowerOfTwo(width);
 	//int zPOT = uPowerOfTwo(height);
-	unsigned char* groundValues = new unsigned char[width*height*4];
+	unsigned char* groundValues = new unsigned char[(width)*(height)*4];
 	for(unsigned int x=0; x < width; x++)
 	{
 		for(unsigned int z=0; z < height; z++)
@@ -201,7 +201,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 			groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
 			groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
 			groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
-			groundValues[(x + z * width)*4 + 3] = (unsigned char)(255.0*heights[x+z*width] / (float)USHRT_MAX);//(interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
+			groundValues[(x + z * width)*4 + 3] = (unsigned char)((interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
 		}
 	}
 	texture->setData(width, height, GraphicsManager::texture::RGBA, groundValues);
@@ -780,14 +780,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	float h = eye.y;	//height off the ground
 	float r = 6367500;	//radius of the earth
 
-	
-
-
 	double radius = max(h*tan(asin(r/(r+h))), 2.0*max(terrainScale.x,terrainScale.z));
 
 
-	
-	
 	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -801,10 +796,20 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,100000,600000));
 	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-100000,600000));
 	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
-	
+
 	if(!waterPlane)
 	{
 		graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
+	}
+
+	dataManager.bind("ortho");
+	Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
+	if(sunPos.z > 0)
+	{
+		Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
+		graphics->setBlendMode(GraphicsManager::ADDITIVE);
+		graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.25,0.25), rotateAng, "sun");
+		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 	}
 
 	if(waterPlane)
@@ -831,7 +836,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 
 		//glBindTexture(GL_TEXTURE_3D, 0);
-		dataManager.unbindShader();
 	}
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water

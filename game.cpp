@@ -82,7 +82,6 @@ bool Game::init()
 	//	wglSwapIntervalEXT(0);//turn on/off vsync (0 = off and 1 = on)
 //	ShowHideTaskBar(false);
 //////
-	srand ((unsigned int)time(NULL));
 
 	menuManager.setMenu(new gui::loading);
 
@@ -97,14 +96,23 @@ void Game::update()
 
 	/*                 COLLISION CHECKING GOES HERE						*/
 
+	int n=0;
 	while(world.time.needsUpdate())
 	{
+		n++;
+
 		world.time.nextUpdate();
 
 		input.update();
 		players.update();
 		world.simulationUpdate();
 		particleManager.update();
+
+		if(n==10)
+		{
+			//we can no-longer keep up with the simulation
+			break;
+		}
 	}	
 
 	world.time.nextFrame();	

@@ -9,10 +9,13 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 {
 	view = graphics->genView();
 	view->viewport(0, 0, sAspect, 1.0);
-	view->perspective(80.0, (double)sw / ((double)sh), 1.0, 500000.0);
+	view->perspective(50.0, (double)sw / ((double)sh), 1.0, 500000.0);
 	view->setRenderFunc(bind(&campaign::render3D, this, placeholders::_1));
 	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
-	graphics->setLightPosition(Vec3f(0.0, 16000.0, 10000.0));
+	graphics->setLightPosition(Vec3f(0.0, 160000.0, 100000.0));
+
+	//ephemeris.setTime(9.0, 1, 1, 2000.0);
+	//graphics->setLightPosition(ephemeris.getSunDirection() * 100000.0);
 }
 bool campaign::init()
 {
@@ -22,6 +25,18 @@ bool campaign::init()
 }
 int campaign::update()
 {
+	//static double timeSinceSkyUpdate = 0;
+	//ephemeris.setTime(world.time()/3000, 1, 1, 2000.0);
+	//Vec3f sun = ephemeris.getSunDirection();
+	//graphics->setLightPosition(sun* 100000.0);
+	//if(timeSinceSkyUpdate > 200.0)
+	//{
+	//	world.generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8);
+	//	timeSinceSkyUpdate -= 200.0;
+	//}
+	//timeSinceSkyUpdate +=world.time.length();
+
+
 	auto& controller = input.getXboxController(0);
 
 	//set camera position

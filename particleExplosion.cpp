@@ -32,7 +32,7 @@ namespace particle
 	//		addParticle(p);
 	//	}
 	//}
-	explosion::explosion(): emitter("smoke", 64, 0.0, true)
+	explosion::explosion(): emitter("smoke2", 64, 0.0, true)
 	{
 
 	}
@@ -112,8 +112,6 @@ namespace particle
 		//	p.pos.y += world.time.length()/100;
 		}
 	}
-
-	int nExplosions = 0;
 
 	//void explosionEffect::init()
 	//{
