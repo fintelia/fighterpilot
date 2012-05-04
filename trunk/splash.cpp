@@ -51,7 +51,7 @@ namespace particle
 		Vec2f v = random2<float>();
 		p.vel.x = v.x * r;
 		p.vel.z = v.y * r;
-		p.vel.y = random<float>(0.8,2.8) * radius;
+		p.vel.y = random<float>(1.3,3.3) * radius;
 
 		p.pos = currentPosition + random3<float>()*random<float>(0.2,0.6)*radius + p.vel * extraTime/1000.0;
 
@@ -76,7 +76,7 @@ namespace particle
 		p.pos.z += p.vel.z * world.time.length()/1000.0;
 		p.pos.y = p.vel.y * elapsedTime - 0.98 * elapsedTime * elapsedTime * radius;
 		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		if(t<0.05)
+		if(t<0.02)
 		{
 			p.a = t * 20.0 * 0.15;
 			p.size = 0.5 * radius;

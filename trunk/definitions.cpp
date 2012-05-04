@@ -4,7 +4,6 @@
 #include <Windows.h>
 #endif
 
-const double MAX_FPS		= 60.0;
 const double UPDATE_LENGTH	= 8.333;
 
 const Color white(1.0f,1.0f,1.0f);

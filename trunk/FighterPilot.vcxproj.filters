@@ -339,6 +339,15 @@
     <ClCompile Include="ephemeris.cpp">
       <Filter>Source Files\ENGINE\ephemeris</Filter>
     </ClCompile>
+    <ClCompile Include="groundExposionFlash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="splash2.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="debrisSmokeTrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">

@@ -7,7 +7,7 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),cameraRotation(rotation), controlType(CONTROL_TYPE_SIMPLE)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED)
 {
 	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 }
@@ -19,10 +19,9 @@ void nPlane::init()
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
 
-	//smokeTrail = shared_ptr<particle::smokeTrail>(new particle::smokeTrail);
-	//particleManager.addEmitter(smokeTrail, id);
-	//smokeTrail->setActive(false);
-
+	smokeTrail = shared_ptr<particle::smokeTrail>(new particle::smokeTrail);
+	particleManager.addEmitter(smokeTrail, id);
+	smokeTrail->setActive(false);
 
 	spawn();
 }
@@ -34,6 +33,8 @@ void nPlane::updateSimulation(double time, double ms)
 	lastRotation = rotation;
 
 	observer.lastFrame = observer.currentFrame;
+	cameraShake *= pow(0.1, world.time.length()/1000.0);
+
 
 	if(!dead)
 	{
@@ -60,7 +61,7 @@ void nPlane::updateSimulation(double time, double ms)
 			extraShootTime = 0.0;
 		}
 		machineGun.coolDownLeft-=ms;
-
+		////////////////////////////////////////
 		if(controled)
 		{
 			if(wayPoints.size()>0)
@@ -145,12 +146,32 @@ void nPlane::updateSimulation(double time, double ms)
 				climb += (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000)) * cos(roll);
 
 			}
+			else if(controlType == CONTROL_TYPE_ADVANCED)
+			{
+				float deltaRoll = 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
+				float deltaClimb = (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000));
+				rotation = rotation * Quat4f(Vec3f(0,0,1), deltaRoll) * Quat4f(Vec3f(-1,0,0), deltaClimb);
+
+				Vec3f fwd = rotation * Vec3f(0,0,1);
+				Vec3f up = rotation * Vec3f(0,1,0);
+
+				if(fwd.y < 0.99)
+				{
+					direction = atan2A(fwd.x, fwd.z);
+				}
+				else
+				{
+					direction = atan2A(-up.x, -up.z);
+				}
+
+			}
 			else if(controlType == CONTROL_TYPE_AI)
 			{
 				roll += 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
 				//direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (controls.climb - controls.dive) * (ms/1000);
 				climb += (controls.climb - controls.dive) * (ms/1000) * cos(roll);
 			}
+
 			//climb -= (L * cos(roll) / (m*speed) - 9.8*cos(climb)/speed) * (ms/1000) -
 			//			(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
 
@@ -167,17 +188,20 @@ void nPlane::updateSimulation(double time, double ms)
 			//direction -= turn*ms/3000.0;//needs to be adjusted to be continious
 			speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
-			if(climb > PI/2 && climb < PI*3/2)
+			if(controlType == CONTROL_TYPE_SIMPLE || controlType == CONTROL_TYPE_AI)
 			{
-				direction += PI;
-				roll += PI;
-				climb = PI - climb;
-				lockRollRange = false;
+				if(climb > PI/2 && climb < PI*3/2)
+				{
+					direction += PI;
+					roll += PI;
+					climb = PI - climb;
+					lockRollRange = false;
+				}
+				rotation = Quat4f(0,0,0,1);
+				rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
+				rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
+				rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 			}
-			rotation = Quat4f(0,0,0,1);
-			rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
-			rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
 			//////////////////////move//////////////////////////////////////
 			if(ms>0)
@@ -211,11 +235,16 @@ void nPlane::updateSimulation(double time, double ms)
 	//				world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
 				}
 			}
-			if(controls.shoot2)	shootMissile();
+			if(controls.shoot2)
+				shootMissile();
 
 			if(controls.shoot3 && roll.inRange(-PI/6,PI/6) && climb.inRange(-PI/4,PI/12))
-				bombs.firing = true;
+			{
+				//if(cameraShake < 0.1)
+				//	cameraShake = 1.0;
 
+				bombs.firing = true;
+			}
 			if(bombs.roundsLeft == 0)
 			{
 				bombs.firing = false;
@@ -261,12 +290,14 @@ void nPlane::updateSimulation(double time, double ms)
 
 					death = DEATH_EXPLOSION;
 					particleManager.addEmitter(new particle::explosion(),id);
+					particleManager.addEmitter(new particle::groundExplosionFlash(),id);
+					cameraShake = 1.0;
 				}
 				else if(death == DEATH_HIT_WATER)
 				{
 					Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
 					particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
-
+					particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
 
 					Vec3f vel2D = rotation * Vec3f(0,0,1);
 					vel2D.y=0;
@@ -281,14 +312,10 @@ void nPlane::updateSimulation(double time, double ms)
 		}
 
 		findTargetVector();
-
-
-
-
-	}
-
-	if(dead)
+	}//end if(!dead)
+	if(dead) //if we were, or are now dead
 	{
+		
 		altitude = world.altitude(position);
 		speed += 9.8 * (ms/1000) * -sin(climb); //gravity
 
@@ -314,6 +341,11 @@ void nPlane::updateSimulation(double time, double ms)
 			//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
 			//position += rotation * Vec3f(0,0,1) * speed * (ms/1000) * 0.1;
+		}
+		else if(death == DEATH_TRAILING_SMOKE)
+		{
+			rotation = slerp(rotation, Quat4f(Vec3f(0,-1,0)), 1.0-pow(0.5, world.time.length()/1000));
+			position += rotation * Vec3f(0,0,1) * 200.0 * (ms/1000);
 		}
 		else
 		{
@@ -344,26 +376,27 @@ void nPlane::updateSimulation(double time, double ms)
 
 		if(death == DEATH_TRAILING_SMOKE && altitude < 0.0)
 		{
-			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-			if(death == DEATH_HIT_GROUND)
-			{
-				position.y -= altitude;
-				particleManager.addEmitter(new particle::blackSmoke(),id);
-			}
-			else if(death == DEATH_HIT_WATER)
-			{
-				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-				particleManager.addEmitter(new particle::splash(),splashPos);
-
-
-				Vec3f vel2D = rotation * Vec3f(0,0,1);
-				vel2D.y=0;
-				vel2D = vel2D.normalize();
-
-				observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-				observer.currentFrame.center = splashPos + vel2D * 45.0;
-				observer.currentFrame.up = Vec3f(0,1,0);
-			}
+			smokeTrail->setActive(false);
+			//death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			//if(death == DEATH_HIT_GROUND)
+			//{
+			//	position.y -= altitude;
+			//	//particleManager.addEmitter(new particle::blackSmoke(),id);
+			//}
+			//else if(death == DEATH_HIT_WATER)
+			//{
+			//	Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+			//	particleManager.addEmitter(new particle::splash(),splashPos);
+			//
+			//
+			//	Vec3f vel2D = rotation * Vec3f(0,0,1);
+			//	vel2D.y=0;
+			//	vel2D = vel2D.normalize();
+			//
+			//	observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+			//	observer.currentFrame.center = splashPos + vel2D * 45.0;
+			//	observer.currentFrame.up = Vec3f(0,1,0);
+			//}
 		}
 	}
 }
@@ -470,10 +503,11 @@ void nPlane::smoothCamera()
 	}
 	rot = rot.normalize();*/
 
-
 	cameraRotation = slerp(cameraRotation, rotation, 0.07);
 
-	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0);
+	Vec3f shake = random3<float>() * cameraShake * 3.0;
+
+	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
 	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*30.0,cos(15.0*PI/180)*30.0);
 	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
@@ -627,19 +661,37 @@ void nPlane::die()
 	//	controled=true;
 	}
 
+	
+
 	if(!respawning)
 		respawnTime=world.time()+5000;
 	respawning=true;
 
+
+
 	if(death == DEATH_NONE)
 	{
-		death = DEATH_EXPLOSION;
+		if(controlType == CONTROL_TYPE_AI)
+		{
+			death = DEATH_TRAILING_SMOKE;
+
+			smokeTrail->setActive(true);
+			smokeTrail->setColor(Color(0.05,0.05,0.05));
+
+			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
+			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
+			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
+		}
+		else
+		{
+			death = DEATH_EXPLOSION;
+		}
+
 		particleManager.addEmitter(new particle::explosion(),id);
 		particleManager.addEmitter(new particle::explosionSmoke(),id);
 		particleManager.addEmitter(new particle::explosionFlash(),id);
 		particleManager.addEmitter(new particle::explosionFlash2(),id);
 		//particleManager.addEmitter(new particle::explosionSparks(),id);
-		
 	}
 	//smokeTrail->setVisible(false);
 }
@@ -726,7 +778,12 @@ void nPlane::loseHealth(float healthLoss)
 	if(health<=0.0)
 	{
 		health=0;
+		cameraShake = 1.0;
 		die();
+	}
+	else
+	{
+		cameraShake = min(healthLoss / 30.0, 1.0);
 	}
 }
 void nPlane::initArmaments()

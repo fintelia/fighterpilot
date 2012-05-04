@@ -151,7 +151,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target == 0 || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && nDistSquared < 3000 * 3000 && (target == 0 || nDistSquared < lDistSquared))
 		{
 			target = n->second->id;
 			lDistSquared = nDistSquared;

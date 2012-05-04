@@ -255,6 +255,12 @@ void humanPlayer::update()
 		p->controls.shoot3		= controls[CON_BOMB]() > 0.75;
 	}
 }
+void humanPlayer::setVibrate(float amount)
+{
+#ifdef XINPUT
+	input.setVibration(mPlayerNum, amount);
+#endif
+}
 const camera& humanPlayer::getCamera(bool forceThirdPerson) const
 {
 	return (firstPersonView && !forceThirdPerson) ? firstPerson : thirdPerson;

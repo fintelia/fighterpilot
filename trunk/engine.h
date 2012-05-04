@@ -75,10 +75,8 @@ using boost::lexical_cast;
 //#include "png/png.h"
 //#include "xml/tinyxml.h"
 
-extern bool	active;		// Window Active Flag
+//extern bool	active;		// Window Active Flag
 extern const double PI;
-extern bool lowQuality;
-extern bool done;//setting this to true will terminate the program
 
 const int NumPlayers = 2;
 
@@ -90,8 +88,8 @@ namespace gui{class levelEditor;}
 
 extern int sh, sw;
 extern float sAspect;
-extern int frame,Time,timebase;
-extern float fps;
+//extern int frame,Time,timebase;
+//extern float fps;
 
 //#include "enums.h"
 #include "definitions.h"
@@ -120,6 +118,11 @@ class Game
 {
 public:
 	vector<string> commandLineOptions;
+	bool active;
+	bool done;
+	float maxFrameRate;
+
+	Game():active(true), done(false){}
 
 	virtual bool init();
 	virtual void update();

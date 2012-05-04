@@ -14,7 +14,7 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
 	graphics->setLightPosition(Vec3f(0.0, 160000.0, 100000.0));
 
-	//ephemeris.setTime(9.0, 1, 1, 2000.0);
+	//ephemeris.setTime(0.0, 1, 1, 2000.0);
 	//graphics->setLightPosition(ephemeris.getSunDirection() * 100000.0);
 }
 bool campaign::init()
@@ -43,6 +43,8 @@ int campaign::update()
 	nPlane* p=(nPlane*)players[0]->getObject();
 	auto camera = players[0]->getCamera(p->controled || p->dead);
 	view->lookAt(camera.eye, camera.center, camera.up);
+
+	players[0]->setVibrate(p->cameraShake);
 
 	//check whether to toggle first person view
 	if(input.getKey(VK_F1))

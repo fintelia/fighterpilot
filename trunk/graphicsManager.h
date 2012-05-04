@@ -224,8 +224,8 @@ public:
 	class shader
 	{
 	public:
-		virtual void init(const char* vert, const char* frag, const char* geometry)=0;
-		void init(const char* vert, const char* frag){init(vert, frag, nullptr);}
+		virtual bool init(const char* vert, const char* frag, const char* geometry)=0;
+		bool init(const char* vert, const char* frag){return init(vert, frag, nullptr);}
 
 		virtual void bind()=0;
 		virtual void unbind()=0;
@@ -259,6 +259,8 @@ protected:
 
 	//vector<View> views;
 	//unsigned int currentView;
+
+	float fps;
 
 	float currentGamma;
 
@@ -329,6 +331,7 @@ public:
 	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
 	void setLightPosition(Vec3f position){lightPosition = position;}
 	
+	virtual void setVSync(bool enabled)=0;
 
 	Vec3f getLightPosition(){return lightPosition;}
 
@@ -454,10 +457,9 @@ public:
 	class shaderGL: public GraphicsManager::shader
 	{
 	private:
-#ifdef _DEBUG
 		string fragErrorLog;
 		string vertErrorLog;
-#endif
+		string linkErrorLog;
 
 		unsigned int shaderId;
 		map<string, int> uniforms;
@@ -469,7 +471,7 @@ public:
 		void bind();
 		void unbind();
 
-		void init(const char* vert, const char* frag, const char* geometry);
+		bool init(const char* vert, const char* frag, const char* geometry);
 
 		void setUniform1f(string name, float v0);
 		void setUniform2f(string name, float v0, float v1);
@@ -522,8 +524,9 @@ public:
 	void setColorMask(bool mask);
 	void setDepthMask(bool mask);
 	void setBlendMode(BlendMode blend);
-
 	void setClientStates(bool texCoord, bool normal, bool color);
+
+	void setVSync(bool enabled);
 
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);

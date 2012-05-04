@@ -229,7 +229,11 @@ int AssetLoader::loadAsset()
 			if(!file.files[0]->complete() || !file.files[1]->complete()) break;
 			
 			auto shader = graphics->genShader();
-			shader->init(dynamic_pointer_cast<FileManager::textFile>(file.files[0])->contents.c_str(), dynamic_pointer_cast<FileManager::textFile>(file.files[1])->contents.c_str());
+			if(!shader->init(dynamic_pointer_cast<FileManager::textFile>(file.files[0])->contents.c_str(), dynamic_pointer_cast<FileManager::textFile>(file.files[1])->contents.c_str()))
+			{
+				messageBox(string("error in shader ") + file.name + ":\n\n" + shader->getErrorStrings());
+			}
+			
 			if(file.options.count("use_sAspect") != 0)
 			{
 				shader->setUniform1f("sAspect",sAspect);
