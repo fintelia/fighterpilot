@@ -1395,7 +1395,6 @@ void editLevel::renderPreview(bool drawWater, float scale, float seaLevelOffset)
 
 	if(mGround->shaderType == SHADER_GRASS || mGround->shaderType == SHADER_SNOW)
 	{
-		//glScalef(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1));
 		dataManager.bind("model");
 		dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(), Vec3f(), Vec3f(mGround->sizeX()/(mGround->resolutionX()-1),1,mGround->sizeZ()/(mGround->resolutionZ()-1))));
 		dataManager.setUniform1i("tex", 0);

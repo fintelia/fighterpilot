@@ -105,10 +105,42 @@ public:
 
 	void setColor(Color c);
 };
+class debrisSmokeTrail: public emitter
+{
+private:
+	Color color;
+	Vec3f emitterVelocity;
+
+public:
+	debrisSmokeTrail();
+	void init();
+	void update();
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+
+	void setColor(Color c);
+};
 class explosionFlash2: public sparkEmitter
 {
 public:
 	explosionFlash2();
+	void init();
+
+	void updateParticle(particle& p);
+};
+class groundExplosionFlash: public sparkEmitter
+{
+public:
+	groundExplosionFlash();
+	void init();
+
+	void updateParticle(particle& p);
+};
+class splash2: public sparkEmitter
+{
+public:
+	splash2();
 	void init();
 
 	void updateParticle(particle& p);

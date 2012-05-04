@@ -4,7 +4,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //														DEFINITIONS																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
-bool active=true;					// Window Active Flag																						//	//
+//bool active=true;					// Window Active Flag																						//	//
 																																				//	//
 extern const double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;										//	//
 int sh=1024;																																	//	//
@@ -23,14 +23,7 @@ CollisionChecker& collisionCheck = CollisionChecker::getInstance();													
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																						//	//
 FileManager& fileManager = FileManager::getInstance();																							//  //
 SceneManager& sceneManager = SceneManager::getInstance();																						//  //
-bool done=false;//exits program																													//	//
-																																				//	//
-bool lowQuality;																																//	//
-//humanControl players[NumPlayers];																												//	//
-																																				//	//
-																																				//	//
-int frame=0,Time,timebase=0;																													//	//
-float fps;																																		//	//
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //																																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,11 +51,11 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			if (!HIWORD(wParam))					// Check Minimization State
 			{
-				active=true;						// Program Is Active
+				game->active=true;						// Program Is Active
 			}
 			else
 			{
-				active=false;						// Program Is No Longer Active
+				game->active=false;						// Program Is No Longer Active
 			}
 
 			return 0;								// Return To The Message Loop
@@ -70,13 +63,9 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 
 		case WM_SYSCOMMAND:							// Intercept System Commands
 		{
-			switch (wParam)							// Check System Calls
-			{
-				case SC_SCREENSAVE:					// Screensaver Trying To Start?
-				case SC_MONITORPOWER:				// Monitor Trying To Enter Powersave?
-					return 0;						// Prevent From Happening
-			}
-			break;									// Exit
+			if(wParam == SC_SCREENSAVE || wParam == SC_MONITORPOWER)// Screensaver Trying To Start or Monitor Trying To Enter Powersave?
+				return 0;											//Prevent From Happening
+			break;
 		}
 		//case WM_MOVE:
 		//case WM_MOVING:
@@ -94,7 +83,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 			//bool wActive = LOWORD(wParam) != 0;
 			//bool wMinimized = HIWORD(wParam) != 0;
 			world.time.setPaused(!(wParam != 0));
-			active = wParam != 0;
+			game->active = wParam != 0;
 			return 0;
 		}
 		case WM_KEYDOWN:							// Is A Key Being Held Down?
@@ -118,7 +107,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	//	case WM_SYSKEYDOWN:
 		case WM_HOTKEY:
 		{
-			if(active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
+			if(game->active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
 			{
 				graphics->takeScreenshot();
 				return 0;
@@ -180,13 +169,13 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	float nextUpdate=0; 
 	float swapTime=0.0;
 	float time=0.0;
-	while(!done)
+	while(!game->done)
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{
 			if (msg.message==WM_QUIT)
 			{
-				done=true;
+				break;
 			}
 			else
 			{
@@ -198,7 +187,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		{
 			game->update();
 
-			if(active)
+			if(game->active)
 			{
 				graphics->render();
 
@@ -208,7 +197,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 				do{
 					time = GetTime();
 				}while(time < nextUpdate - max(swapTime,0));
-				nextUpdate = 1000.0/MAX_FPS + GetTime();
+				nextUpdate = 1000.0/game->maxFrameRate + GetTime();
 				//end timing code
 
 				graphics->swapBuffers();

@@ -305,12 +305,10 @@ void OpenGLgraphics::shaderGL::unbind()
 {
 	glUseProgram(0);
 }
-void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
+bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
 {
 	if(shaderId != 0)
 		glDeleteProgram(shaderId);
-
-	bool errorFlag = false;
 
 	GLuint v = glCreateShader(GL_VERTEX_SHADER);
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
@@ -321,95 +319,86 @@ void OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	glCompileShader(v);
 	glCompileShader(f);
 
-	string vertErrors;
-	string fragErrors;
-	string linkErrors;
+	int i, length, success;//used whenever a pointer to int is required
 
-	int i;//used whenever a pointer to int is required
-
-#ifdef _DEBUG //log errors
-	glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-	char* cv=new char[i]; memset(cv,0,i);
-	glGetShaderInfoLog(v,i,&i,cv);
+	//get vertex shader errors
+	glGetShaderiv(v, GL_INFO_LOG_LENGTH, &length);
+	char* cv=new char[length];
+	glGetShaderInfoLog(v,length,&i,cv);
 	vertErrorLog = string(cv);
 	delete[] cv;
 
-	
-	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-	char* cf=new char[i]; memset(cf,0,i);
-	glGetShaderInfoLog(f,i,&i,cf);
+
+	//get fragment shader errors
+	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&length);
+	char* cf=new char[length];
+	glGetShaderInfoLog(f,length,&i,cf);
 	fragErrorLog = string(cf);
 	delete[] cf;
-#endif
 
 
-	glGetShaderiv(v,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE)
+	glGetShaderiv(v,GL_COMPILE_STATUS,&success);
+	if(!success)
 	{
-		glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-		char* cv=new char[i]; memset(cv,0,i);
-		glGetShaderInfoLog(v,i,&i,cv);
-//		messageBox(vert->filename + ": " + cv);
-		errorFlag = true;
-		debugBreak();
-		delete[] cv;
-		return;
+		return false;
 	}
-	glGetShaderiv(f,GL_COMPILE_STATUS,&i);
-	if(i == GL_FALSE && !errorFlag)
+	glGetShaderiv(f,GL_COMPILE_STATUS,&success);
+	if(!success)
 	{
-		glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
-		char* cf=new char[i]; memset(cf,0,i);
-		glGetShaderInfoLog(f,i,&i,cf);
-//		messageBox(frag->filename + ": " + cf);
-		errorFlag = true;
-		debugBreak();
-		delete[] cf;
-		return;
+		return false;
 	}
 
-	glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
-	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
+	//glGetShaderiv(v,GL_INFO_LOG_LENGTH,&i);
+	//glGetShaderiv(f,GL_INFO_LOG_LENGTH,&i);
 
 
 	shaderId = glCreateProgram();
 	glAttachShader(shaderId,f);
 	glAttachShader(shaderId,v);
-
 	glLinkProgram(shaderId);
 
-	glGetProgramiv(shaderId,GL_LINK_STATUS,&i);
-	if(i == GL_FALSE && !errorFlag)
+
+	//get shader link errors
+	glGetProgramiv(shaderId,GL_INFO_LOG_LENGTH,&length);
+	char* cl=new char[length];
+	glGetProgramInfoLog(shaderId,length,&i,cl);
+	linkErrorLog = string(cl);
+	delete[] cl;
+
+	glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+	if(!success)
 	{
-		glGetProgramiv(shaderId,GL_INFO_LOG_LENGTH,&i);
-		char* cl=new char[i]; memset(cl,0,i);
-		glGetProgramInfoLog(shaderId,i,&i,cl);
-//		messageBox(frag->filename + "(link): " + cl);
-		errorFlag = true;
-		debugBreak();
-		delete[] cl;
+		return false;
 	}
+
 	glUseProgram(0);
-
-
-
 	glDeleteShader(f); // we no longer need these shaders individually, although they
 	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+
+	return true;
 }
 string OpenGLgraphics::shaderGL::getErrorStrings()
 {
-#ifdef _DEBUG
-	if(vertErrorLog != "" || fragErrorLog != "")
+	if(vertErrorLog != "" && fragErrorLog != "")
 	{
 		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog;
+	}
+	else if(vertErrorLog != "")
+	{
+		return string("vert:") + vertErrorLog;
+	}
+	else if(fragErrorLog != "")
+	{
+		return string("frag:") + fragErrorLog;
+	}
+	else if(linkErrorLog != "")
+	{
+		return string("link:") + linkErrorLog; 
 	}
 	else
 	{
 		return "";
 	}
-#elif
-	return "";
-#endif
 }
 void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
 {
@@ -723,6 +712,11 @@ void OpenGLgraphics::setClientStates(bool texCoord, bool normal, bool color)
 	if(color_clientState && !color)  glDisableClientState(GL_COLOR_ARRAY);
 	color_clientState = color;
 }
+void OpenGLgraphics::setVSync(bool enabled)
+{
+	if(wglSwapIntervalEXT)
+		wglSwapIntervalEXT(enabled ? 1 : 0);//turn on/off vsync (0 = off and 1 = on)
+}
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
 	auto f = dataManager.getFont(font);
@@ -740,19 +734,19 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 				if(*i == '\n')
 				{
 					charPos.x = pos.x;
-					charPos.y += f->height / sh;
+					charPos.y += f->height / 1024.0;
 				}
 				else if(f->characters.count(*i) != 0)
 				{
 					auto& c = f->characters.find(*i)->second;
 
-					charRect.x = charPos.x + c.xOffset / sh;
-					charRect.y = charPos.y + c.yOffset / sh;
-					charRect.w = c.width / sh;
-					charRect.h = c.height / sh;
+					charRect.x = charPos.x + c.xOffset / 1024.0;
+					charRect.y = charPos.y + c.yOffset / 1024.0;
+					charRect.w = c.width / 1024.0;
+					charRect.h = c.height / 1024.0;
 
 					drawPartialOverlay(charRect, c.UV);
-					charPos.x += c.xAdvance  / sh;
+					charPos.x += c.xAdvance  / 1024.0;
 				}
 			}
 		//}
@@ -843,7 +837,7 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 	}
 
 	//if(dataManager.getBoundShader() == "ortho")
-		return textSize / sh;
+		return textSize / 1024.0;
 	//else
 	//	return textSize;
 }
@@ -995,6 +989,8 @@ void OpenGLgraphics::render()
 	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
 		totalTime+=((*i)*0.001);
 	fps= ((double)frameTimes.size()) /  totalTime;
+
+
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
 	bindRenderTarget(multisampling ? RT_MULTISAMPLE_FBO : RT_FBO_0);
 

@@ -123,6 +123,7 @@
     <ClCompile Include="contrailSmall.cpp" />
     <ClCompile Include="controlManager.cpp" />
     <ClCompile Include="dataManager.cpp" />
+    <ClCompile Include="debrisSmokeTrail.cpp" />
     <ClCompile Include="debugBreak.cpp" />
     <ClCompile Include="definitions.cpp" />
     <ClCompile Include="engine.cpp" />
@@ -139,6 +140,7 @@
       </FloatingPointExceptions>
     </ClCompile>
     <ClCompile Include="graphicsManager.cpp" />
+    <ClCompile Include="groundExposionFlash.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="levelEditor.cpp" />
@@ -163,6 +165,7 @@
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
+    <ClCompile Include="splash2.cpp" />
     <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="time.cpp" />

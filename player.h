@@ -122,6 +122,7 @@ public:
 	void toggleFirstPerson()	{firstPersonView = !firstPersonView;}
 	void setObject(int objectId);
 	void update();
+	void setVibrate(float amount);
 	const camera& getCamera(bool forceThirdPerson=false) const;
 };
 

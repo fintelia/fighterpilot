@@ -181,7 +181,7 @@ void chooseMode::render()
 }
 bool chooseMode::keyDown(int vkey)
 {
-	if(vkey==VK_ESCAPE)	done = true;//end the program
+	if(vkey==VK_ESCAPE)	game->done = true;//end the program
 	if(vkey==VK_LEFT)	activeChoice = choice(int(activeChoice)-1);
 	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
@@ -452,9 +452,7 @@ int loading::update()
 	progress = 1.0-(float)assetsLeft/totalAssets;
 	if(assetsLeft==0)
 	{
-#ifdef _DEBUG
-		dataManager.writeErrorLog("shaderErrors.txt");
-#endif
+		dataManager.writeErrorLog("media/shaderErrors.txt");
 		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 	}
 	return 30;

@@ -54,7 +54,7 @@ namespace particle
 			p.ang = random<float>(2.0*PI);
 			p.angularSpeed = random<float>(-0.1*PI,0.1*PI);
 
-			float g = random<float>(0.1)+0.25;
+			float g = random<float>(0.25,0.35);
 
 			p.r = g;
 			p.g = g;
@@ -118,7 +118,7 @@ namespace particle
 			p.ang = random<float>(2.0*PI);
 			p.angularSpeed = random<float>(-0.1*PI,0.1*PI);
 
-			float g = random<float>(0.05)+0.3;
+			float g = random<float>(0.0, 0.05);
 
 			p.r = g;
 			p.g = g;

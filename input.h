@@ -122,6 +122,7 @@ public:
 	virtual float operator() (int key);
 	virtual Vec2f getMousePos(){return mousePos;}
 	virtual void checkNewHardware();//scan for new hardware
+	virtual void setVibration(int controllerNum, float amount);
 
 	InputManager();
 	~InputManager();

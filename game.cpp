@@ -47,7 +47,7 @@ bool Game::init()
 	auto s = fileManager.loadIniFile(appData + "settings.ini");
 	settings.load(s->bindings);
 
-
+	maxFrameRate = settings.get<float>("graphics", "maxFrameRate");
 
 	Vec2i r, rWanted;
 	r.x = GetSystemMetrics(SM_CXSCREEN);
@@ -78,8 +78,9 @@ bool Game::init()
 	{
 		return false;
 	}
-	//if(wglSwapIntervalEXT)
-	//	wglSwapIntervalEXT(0);//turn on/off vsync (0 = off and 1 = on)
+	
+	graphics->setVSync(maxFrameRate > 75.0);
+
 //	ShowHideTaskBar(false);
 //////
 

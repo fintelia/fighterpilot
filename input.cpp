@@ -339,6 +339,14 @@ void InputManager::checkNewHardware()
 		xboxControllers[i].connected = true;
 	}
 }
+void InputManager::setVibration(int controllerNum, float amount)
+{
+#ifdef XINPUT
+	XINPUT_VIBRATION vibration;
+	vibration.wLeftMotorSpeed = vibration.wRightMotorSpeed = clamp(static_cast<int>(amount * 65535), 0, 65535);
+	XInputSetState(controllerNum, &vibration);
+#endif
+}
 //#ifdef XINPUT
 //
 //xinput_input::xinput_input(): Input(), deadZone(0.25)

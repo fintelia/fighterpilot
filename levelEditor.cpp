@@ -788,11 +788,7 @@ void levelEditor::render3D(unsigned int v)
 		bool w = getShader() != 1;
 		float sl = sliders["sea level"]->getValue();
 
-	//	glPushMatrix();
-	//	glScalef(0.01*pow(10.0f,orthoScale),1,0.01*pow(10.0f,orthoScale));
-		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
  		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-	//	glPopMatrix();
 
 		//if(getTab() == REGIONS)
 		//{
@@ -857,10 +853,7 @@ void levelEditor::render3D(unsigned int v)
 		bool w = getShader() != 1;
 		float sl = sliders["sea level"]->getValue();
 
-		//glPushMatrix();
-		//glScalef(1,pow(10.0f,sliders["height scale"]->getValue()),1);
  		level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-		//glPopMatrix();
 	}
 
 	

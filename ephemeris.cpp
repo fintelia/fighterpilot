@@ -27,7 +27,8 @@ void Ephemeris::setTime(double hours, int month, int day, int year)
 
 Vec3f Ephemeris::getSunDirection() //see: http://stjarnhimlen.se/comp/ppcomp.html
 {
-	float d = date - (longitude.degrees()/15.0)/24; //adjust for local time
+	float d = date;// - (longitude.degrees()/15.0)/24; //adjust for local time
+
 	//float N = 0.0;
 	//float i = 0.0;
 	//float w = (282.9404 + 4.70935e-5 * d) * PI/180;
@@ -57,7 +58,40 @@ Vec3f Ephemeris::getSunDirection() //see: http://stjarnhimlen.se/comp/ppcomp.htm
 	//Profiler.setOutput("RA", RA.degrees());
 	//Profiler.setOutput("Dec", Dec.degrees());
 
-	float phi = 0;//Dec - latitude;
-	float theta = (date-floor(date))*2.0*PI + PI;//RA - longitude;
-	return Vec3f(cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta)); //SHOULD BE: theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)
+//	float phi = 0;//Dec - latitude;
+//	float theta = (date-floor(date))*2.0*PI + PI;//RA - longitude;
+//	return Vec3f(cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta)); //SHOULD BE: theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)
+
+
+	//See: Practical Astronomy With Your Calculator (Third Edition) Pages 40 and 86
+	Angle epsilon = 280.4659 * PI/180;
+	Angle w = 282.940472178 * PI/180;
+	float e = 0.016709114;
+
+	Angle N = 2*PI * d/365.242191;
+	Angle M = N + epsilon - w;
+	Angle lamda = M + 2.0*e*sin(M) + w;
+	Angle beta = 0.0; 
+
+	Angle alpha = atan2(sin(lamda)*cos(23.439292*PI/180) - tan(beta)*sin(23.439292*PI/180), cos(lamda));
+	Angle delta = asin(sin(beta)*cos(23.439292*PI/180) + cos(beta)*sin(23.439292*PI/180)*sin(lamda));
+
+	float UT = (d - floor(d)) - floor(longitude.degrees()/15.0)/24; //in decimal days
+	UT = UT - floor(UT);
+	float T = (floor(d) - 0.5) / 36525.0;
+	float T0 = 6.697374558 + 2400.051335*T + 0.000025862*T*T;
+	float GST = UT * 1.002737909 + T0/24.0; //also in decimal days
+	GST = GST - floor(GST);
+
+	float LST = GST + (longitude.degrees()/15.0)/24; //still in decimal days
+	LST = LST - floor(LST);
+	float H = (LST - alpha/(2.0*PI)) * 2.0*PI;
+
+	Angle a = asin(sin(delta)*sin(latitude)+cos(delta)*cos(latitude)*cos(H)); //altitude
+	Angle A = asin(-sin(H)*cos(delta)/cos(a)); //azimuth (N = 0 degrees, E = 90 degrees,...)
+	//float A = acos((sin(delta) - sin(latitude)*sin(alpha)) / (cos(latitude)*sin(alpha)));
+
+	Profiler.setOutput("a", a.degrees());
+	Profiler.setOutput("A", A.degrees());
+	return Vec3f(cos(A)*sin(a), cos(a), sin(A)*sin(a));
 }

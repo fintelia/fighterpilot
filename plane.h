@@ -78,6 +78,7 @@ public:
 	vector<cameraState> cameraStates;
 	Quat4f cameraRotation;
 	objectCamera observer;
+	float cameraShake;
 
 /////////////control///////////////
 	struct ControlState
@@ -93,7 +94,7 @@ public:
 		bool shoot3;
 		ControlState(): climb(0), dive(0), accelerate(0), brake(0), right(0), left(0), shoot1(false), shoot2(false), shoot3(false) {}
 	}controls;
-	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_AI}controlType;
+	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_ADVANCED, CONTROL_TYPE_AI}controlType;
 ////////////methods////////////////
 	void findTargetVector();
 	void shootMissile();

@@ -250,7 +250,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 
 				p->bounds.minXYZ = minXYZ + Vec3f(scale.x * x / (1<<l), 0, scale.z * y / (1<<l));
 				p->bounds.maxXYZ = minXYZ + Vec3f(scale.x * (x+1) / (1<<l), scale.y, scale.z * (y+1) / (1<<l));
-				p->center = (p->bounds.minXYZ + p->bounds.maxXYZ) / 2.0;
+				p->center = (p->bounds.minXYZ + p->bounds.maxXYZ) * 0.5;
 
 				p->maxError = 0.0f;
 				p->minDistanceSquared = 0.0f;
@@ -807,9 +807,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	if(sunPos.z > 0)
 	{
 		Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
-		graphics->setBlendMode(GraphicsManager::ADDITIVE);
-		graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.25,0.25), rotateAng, "sun");
-		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+	//	graphics->setBlendMode(GraphicsManager::ADDITIVE);
+		graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun");
+	//	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 	}
 
 	if(waterPlane)

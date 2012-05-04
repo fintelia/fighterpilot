@@ -12,7 +12,7 @@ void SettingsManager::load(string filename)
 	bool		mirror = false;
 
 	boost::char_separator<char> sep(" ,/", "");
-		
+	
 	boost::tokenizer<boost::char_separator<char> >::iterator t;
 
 	if(fin.is_open())
