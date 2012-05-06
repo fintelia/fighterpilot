@@ -460,14 +460,7 @@ void openFile::render()
 		}
 		if(++column == 7){column=0;row+=1.0;}
 	}
-	//glColor3f(0,0,0);
-	//glPushMatrix();
-	//glTranslatef(sAspect/2-0.856,0.260,0);
-	//for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)		(*i)->render();
-	//for(vector<button*>::iterator i=fileButtons.begin();i!=fileButtons.end();i++)			(*i)->render();
-	//glPopMatrix();
 	menuManager.drawCursor();
-	//glColor3f(1,1,1);
 }
 void openFile::fileSelected()
 {

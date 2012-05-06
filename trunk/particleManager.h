@@ -100,7 +100,7 @@ protected:
 	Vec3f maxXYZ;
 
 	//unsigned int VBO;
-	GraphicsManager::vertexBuffer* VBO;
+	shared_ptr<GraphicsManager::vertexBuffer> VBO;
 	bool additiveBlending;
 
 	bool active;

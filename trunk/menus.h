@@ -42,39 +42,20 @@ protected:
 };
 class levelEditor: public screen
 {
-public:
-	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS};
-	levelEditor():lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), level(NULL), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
-	~levelEditor(){}
-	bool init();
-	int update();
-	void render();
-	void render3D(unsigned int view);
-
-	bool mouse(mouseButton button, bool down);
-	bool scroll(float rotations);
-	Tab getTab();
-	int getShader();
-	void operator() (popup* p);
-protected:
+private:
 	shared_ptr<GraphicsManager::View> view;
+	
+	LevelFile levelFile;
+	shared_ptr<GraphicsManager::vertexBuffer> terrainVBO;
+	shared_ptr<GraphicsManager::vertexBuffer> terrainSkirtVBO;
+	shared_ptr<GraphicsManager::texture2D> groundTex;
+	unsigned int numTerrainIndices;
+	unsigned int numTerrainSkirtVertices;
+	bool terrainValid;
 
-	float randomDisplacement(float h1, float h2, float d);
-	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
-	void diamondSquareFill(int x1, int x2, int y1, int y2);
-	void diamondSquare(float h, float m, int subdivide);
-	void faultLine();
-	void smooth(int a);
 
-	void resetView();
-	void fromFile(string filename);
 
-	void addObject(int type, int team, int controlType, float x, float y);
-	void updateObjectCircles();
-
-	Rect orthoView();
-
-	Tab lastTab;
+	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS} lastTab;
 
 	bool awaitingMapFile;
 	bool awaitingMapSave;
@@ -91,17 +72,53 @@ protected:
 
 	Quat4f rot;
 	Vec3f center;
-	editLevel* level;
+	//editLevel* level;
 	float maxHeight;
 	float minHeight;
 	float scrollVal;
 	float objPlacementAlt;
 
-	//bool ortho;
 	Vec3f orthoCenter;
 	float orthoScale;
 
+public:
+	
+	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
+	~levelEditor(){}
+	bool init();
+	int update();
+	void render();
+	void render3D(unsigned int view);
 
+	bool mouse(mouseButton button, bool down);
+	bool scroll(float rotations);
+	Tab getTab();
+	int getShader();
+	void operator() (popup* p);
+
+private:
+	float getHeight(unsigned int x, unsigned int z);
+	void setHeight(unsigned int x, unsigned int z, float height);
+	void increaseHeight(unsigned x, unsigned int z, float increase);
+
+	void setMinMaxHeights();
+
+	float randomDisplacement(float h1, float h2, float d);
+	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
+	void diamondSquareFill(int x1, int x2, int y1, int y2);
+	void diamondSquare(float h, float m, int subdivide);
+	void faultLine();
+	void smooth(int a);
+
+	void resetView();
+	void fromFile(string filename);
+
+	void addObject(int type, int team, int controlType, float x, float y);
+	void updateObjectCircles();
+
+	void renderTerrain(bool drawWater, float scale, float seaLevelOffset);
+
+	Rect orthoView();
 };
 class chooseMode: public screen
 {

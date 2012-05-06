@@ -7,6 +7,7 @@ const int F18						= 0x0103;
 const int F22						= 0x0104;
 const int UAV						= 0x0105;
 const int B2						= 0x0106;
+const int PLAYER_PLANE				= 0x01ff;
 
 const int ANTI_AIRCRAFT_ARTILLARY	= 0x0200;
 const int AA_GUN					= 0x0201;

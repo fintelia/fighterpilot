@@ -238,10 +238,8 @@ emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSec
 //}
 emitter::~emitter()
 {
-	delete VBO;
 	delete[] particles;
 	delete[] vertices;
-
 }
 void emitter::addParticle(particle& p)
 {
@@ -389,7 +387,6 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 
 	
 
-	VBO->bindBuffer();
 	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -420,7 +417,6 @@ void emitter::render()
 	{
 		dataManager.bind(texture);
 
-		VBO->bindBuffer();
 		VBO->drawBuffer(GraphicsManager::QUADS, 0, vNum*4);
 
 		dataManager.bindTex(0);
@@ -473,9 +469,6 @@ void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
 		}
 	}
 
-	
-
-	VBO->bindBuffer();
 	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 };
 
@@ -523,9 +516,6 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 		}
 	}
 
-	
-
-	VBO->bindBuffer();
 	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 
 }

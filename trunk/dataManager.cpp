@@ -925,7 +925,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	a->VBO->addNormalData(3,	3*sizeof(float));
 	a->VBO->addTexCoordData(2,	6*sizeof(float));
 	a->VBO->setTotalVertexSize(sizeof(texturedLitVertex3D));
-	a->VBO->bindBuffer();
 	a->VBO->setVertexData(sizeof(texturedLitVertex3D)*vNum, VBOverts);
 
 	//glGenBuffers(1,(GLuint*)&a->id);
@@ -1463,15 +1462,5 @@ void DataManager::shutdown()
 {
 	boundShader = "";
 	boundTextures.clear();
-	for(auto i = assets.begin(); i != assets.end(); i++)
-	{
-		//if(i->second->type == asset::SHADER)			glDeleteProgram(static_pointer_cast<shaderAsset>(i->second)->id);
-		if(i->second->type == asset::MODEL)
-		{
-			delete static_pointer_cast<modelAsset>(i->second)->VBO;
-			static_pointer_cast<modelAsset>(i->second)->materials.clear();
-		}
-		//else if(i->second->type == asset::TEXTURE)		glDeleteTextures(1,(const GLuint*)&((textureAsset*)i->second)->id);
-	}
 	assets.clear();
 }

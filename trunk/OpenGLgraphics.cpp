@@ -19,7 +19,6 @@ OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u, bool useIndexAr
 	glGenBuffers(1, &vBufferID);
 	if(indexArray)
 	{
-		__debugbreak();					//code for index array may be incomplete and is entirely untested
 		glGenBuffers(1, &iBufferID);
 	}
 }
@@ -38,12 +37,14 @@ OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 }
 void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data)
 {
+	bindBuffer();
 	if(usageFrequency == STATIC)		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
 }
 void OpenGLgraphics::vertexBufferGL::setIndexData(unsigned int size, void* data)
 {
+	bindBuffer();
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
@@ -82,16 +83,33 @@ void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned in
 	if(count == 0)
 		return;
 
-	if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
-	else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
-	else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
-	else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
-	else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
-	else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
-	else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
-	else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
-	else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
-	else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	bindBuffer();
+	if(indexArray)
+	{
+		if(primitive == POINTS)					glDrawElements(GL_POINTS,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == LINES)				glDrawElements(GL_LINES,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == LINE_STRIP)		glDrawElements(GL_LINE_STRIP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == LINE_LOOP)			glDrawElements(GL_LINE_LOOP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == TRIANGLES)			glDrawElements(GL_TRIANGLES,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == TRIANGLE_STRIP)	glDrawElements(GL_TRIANGLE_STRIP,	count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == TRIANGLE_FAN)		glDrawElements(GL_TRIANGLE_FAN,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == QUADS)				glDrawElements(GL_QUADS,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == QUAD_STRIP)		glDrawElements(GL_QUAD_STRIP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+		else if(primitive == POLYGON)			glDrawElements(GL_POLYGON,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
+	}
+	else
+	{
+		if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
+		else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
+		else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
+		else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
+		else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
+		else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
+		else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
+		else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
+		else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
+		else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	}
 }
 OpenGLgraphics::texture2DGL::texture2DGL()
 {
@@ -569,53 +587,9 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	if(tex != "") dataManager.unbind(tex);
 	return true;
 }
-void OpenGLgraphics::bindVertexBuffer(unsigned int id, bool texCoords, bool normals)
+shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage, bool useIndexArray)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, id);
-	glEnableClientState(GL_VERTEX_ARRAY);
-
-	if(texCoords && normals)
-	{
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_NORMAL_ARRAY);
-
-		glVertexPointer(3, GL_FLOAT, sizeof(texturedLitVertex3D),	(void*)0);
-		glNormalPointer(GL_FLOAT, sizeof(texturedLitVertex3D),		(void*)(3*sizeof(float)));
-		glTexCoordPointer(2, GL_FLOAT, sizeof(texturedLitVertex3D), (void*)(6*sizeof(float)));
-	}
-	else if(texCoords && !normals)
-	{
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(texturedVertex3D),		(void*)(0));
-		glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex3D),	(void*)(3*sizeof(float)));
-	}
-	else if(!texCoords && normals)
-	{
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(litVertex3D),	(void*)(0));
-		glNormalPointer(2, sizeof(litVertex3D),				(void*)(3*sizeof(float)));
-	}
-	else if(!texCoords && !normals)
-	{
-		glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), (void*)0);
-	}
-}
-void OpenGLgraphics::drawVertexBuffer(GraphicsManager::Primitive primitiveType, unsigned int bufferOffset, unsigned int count)
-{
-	if(primitiveType == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
-	else if(primitiveType == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
-	else if(primitiveType == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
-	else if(primitiveType == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
-	else if(primitiveType == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
-	else if(primitiveType == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
-	else if(primitiveType == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
-	else if(primitiveType == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
-	else if(primitiveType == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
-	else if(primitiveType == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
-}
-GraphicsManager::vertexBuffer* OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage, bool useIndexArray)
-{
-	return new vertexBufferGL(usage, useIndexArray);
+	return shared_ptr<vertexBuffer>(new vertexBufferGL(usage, useIndexArray));
 }
 
 shared_ptr<GraphicsManager::texture2D> OpenGLgraphics::genTexture2D()
@@ -1500,12 +1474,7 @@ void OpenGLgraphics::takeScreenshot()
 }
 void OpenGLgraphics::drawSphere(Vec3f position, float radius)
 {
-	static GLUquadric* quadric = gluNewQuadric();
-
-	glPushMatrix();
-	glTranslatef(position.x,position.y,position.z);
-	gluSphere(quadric,radius,5,5);
-	glPopMatrix();
+	drawModel("sphere", position, Quat4f(), Vec3f(radius, radius, radius));
 }
 void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 {
@@ -1514,11 +1483,8 @@ void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 
 	shapes3D[0].position = start;
 	shapes3D[1].position = end;
-
-	//glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
 	glDrawArrays(GL_LINES, 0, 2);
-	//glDisableClientState(GL_VERTEX_ARRAY);
 }
 void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 {
@@ -1529,10 +1495,8 @@ void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
 
-	//glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
-	//glDisableClientState(GL_VERTEX_ARRAY);
 }
 void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 {
@@ -1544,10 +1508,8 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 	shapes3D[2].position = p3;
 	shapes3D[3].position = p4;
 
-	//glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	//glDisableClientState(GL_VERTEX_ARRAY);
 }
 void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
@@ -1582,8 +1544,6 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-
-	m->VBO->bindBuffer();
 
 	//glBindBuffer(GL_ARRAY_BUFFER, m->id);
 	//glEnableClientState(GL_VERTEX_ARRAY);
@@ -1645,7 +1605,6 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-	m->VBO->bindBuffer();
 	//glBindBuffer(GL_ARRAY_BUFFER, m->id);
 	//glEnableClientState(GL_VERTEX_ARRAY);
 	//glEnableClientState(GL_NORMAL_ARRAY);

@@ -68,8 +68,6 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 			auto modelPtr = dataManager.getModel(meshType->first);
 			if(modelPtr == nullptr)
 				continue;
-			modelPtr->VBO->bindBuffer();
-			//graphics->bindVertexBuffer(modelPtr->id, true, true);
 			for(auto material = modelPtr->materials.begin(); material != modelPtr->materials.end(); material++)
 			{
 				dataManager.bind(material->tex == "" ? "white" : material->tex);
@@ -83,7 +81,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 						if((*instance) != firstPersonObject && (*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
-							graphics->drawVertexBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);
+							modelPtr->VBO->drawBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);
 						}
 					}
 				}

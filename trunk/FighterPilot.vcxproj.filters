@@ -151,9 +151,6 @@
     <Filter Include="Source Files\GAME\control">
       <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\GAME\path">
-      <UniqueIdentifier>{d60aebef-58c8-4b6a-841d-c1e3e9cadd2f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\GAME\settings">
       <UniqueIdentifier>{f106588d-e9b4-422c-9a0a-5a4855e1d6a5}</UniqueIdentifier>
     </Filter>
@@ -306,9 +303,6 @@
     <ClCompile Include="angle.cpp">
       <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClCompile>
-    <ClCompile Include="path.cpp">
-      <Filter>Source Files\GAME\path</Filter>
-    </ClCompile>
     <ClCompile Include="settings.cpp">
       <Filter>Source Files\GAME\settings</Filter>
     </ClCompile>
@@ -452,9 +446,6 @@
     </ClInclude>
     <ClInclude Include="angle.h">
       <Filter>Source Files\ENGINE\math\angle</Filter>
-    </ClInclude>
-    <ClInclude Include="path.h">
-      <Filter>Source Files\GAME\path</Filter>
     </ClInclude>
     <ClInclude Include="settings.h">
       <Filter>Source Files\GAME\settings</Filter>

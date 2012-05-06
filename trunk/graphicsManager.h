@@ -178,7 +178,7 @@ public:
 
 		virtual void setVertexData(unsigned int size, void* data)=0;
 		virtual void setIndexData(unsigned int size, void* data)=0;
-		virtual void bindBuffer()=0;
+
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 	};
 	class texture
@@ -313,9 +313,7 @@ public:
 	//virtual void drawVertexArray(texturedVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
 	//virtual void drawVertexArray(texturedLitVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
 
-	virtual void bindVertexBuffer(unsigned int id, bool texCoords, bool normals)=0;
-	virtual void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count)=0;
-	virtual vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
+	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
 
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
@@ -416,12 +414,16 @@ public:
 	private:
 		unsigned int vBufferID;
 		unsigned int iBufferID;
+
+	protected:
+		void bindBuffer();
+
 	public:
 		vertexBufferGL(UsageFrequency u, bool IndexArray);
 		~vertexBufferGL();
 		void setVertexData(unsigned int size, void* data);
 		void setIndexData(unsigned int size, void* data);
-		void bindBuffer();
+
 		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
 	};
 	class texture2DGL: public GraphicsManager::texture2D
@@ -510,9 +512,7 @@ public:
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
 	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
-	void bindVertexBuffer(unsigned int id, bool texCoords, bool normals);
-	void drawVertexBuffer(Primitive primitiveType, unsigned int bufferOffset, unsigned int count);
-	vertexBuffer* genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray);
+	shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray);
 
 	shared_ptr<texture2D> genTexture2D();
 	shared_ptr<texture3D> genTexture3D();
