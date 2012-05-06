@@ -264,7 +264,7 @@ void nPlane::updateSimulation(double time, double ms)
 				}
 			}
 
-			planePath.currentPoint(position,rotation);
+			//planePath.currentPoint(position,rotation);
 
 			smoothCamera();
 
@@ -862,7 +862,7 @@ void nPlane::spawn()
 	health=maxHealth;
 	//updateAll(controlState());
 
-	planePath.currentPoint(position,rotation);
+	//planePath.currentPoint(position,rotation);
 
 	respawning=false;
 	shotsFired = 0;

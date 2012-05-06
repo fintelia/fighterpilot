@@ -72,7 +72,7 @@ public:
 	int maneuver;
 	bool controled;
 	vector<wayPoint> wayPoints;
-	objectPath planePath;
+	//objectPath planePath;
 
 ///////////camera view/////////////
 	vector<cameraState> cameraStates;

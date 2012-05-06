@@ -89,7 +89,7 @@ int campaign::update()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			string nLevel = level->info->nextLevel;
+			string nLevel = level->info.nextLevel;
 			if(nLevel == "") nLevel="media/map file.lvl";
 
 			std::shared_ptr<LevelFile> l(new LevelFile);

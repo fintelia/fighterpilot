@@ -74,9 +74,6 @@ namespace particle
 			vNum++;
 		}
 
-	
-
-		VBO->bindBuffer();
 		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 	}
 }

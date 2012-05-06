@@ -119,6 +119,8 @@
     <model name="missile4"     file="media/m4(center).obj" />
     <model name="SAM missile"  file="media/m3(center).obj" />
     <model name="flak missile" file="media/m3(center).obj" />
+
+    <model name="sphere" file="media/sphere.obj" />
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>

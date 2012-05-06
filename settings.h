@@ -1,18 +1,4 @@
 
-const int RESPAWN	=0;
-const int RESTART	=1;
-const int DIE		=2;
-
-const int FFA		=0;
-const int TEAMS		=1;
-const int PLAYER_VS	=2;
-
-const int LAND		=0;
-const int WATER		=1;
-const int SNOW		=3;
-
-const int ROCK		=0;
-const int SAND		=1;
 class SettingsManager
 {
 	SettingsManager(){}
@@ -22,21 +8,6 @@ public:
 		static SettingsManager* pInstance = new SettingsManager();
 		return *pInstance;
 	}
-	//string MAP_FILE;
-	//string LEVEL_NAME;
-	//int KILL_PERCENT_NEEDED;
-	//int ENEMY_PLANES;
-	//int ON_HIT;
-	//int ON_AI_HIT;
-	//int GAME_TYPE;
-	//int MIN_X;
-	//int MIN_Y;
-	//int MAX_X;
-	//int MAX_Y;
-	//int MAP_TYPE;
-	//int SEA_FLOOR_TYPE;
-	//float HEIGHT_RANGE;
-	//float SEA_LEVEL;
 	map<string,map<string,string>> categories;
 
 	struct planeStat
@@ -53,16 +24,6 @@ public:
 		planeStat(){}
 	};
 	map<planeType,planeStat> planeStats;
-	//struct missileStat
-	//{
-	//	//int dispList;
-	//	missileType type;
-	//	missileStat(): type(MISSILE) {}
-	//};
-	//vector<missileStat> missileStats;
-
-	//void loadMap(char *filename);
-//	void loadModelData(char* filename);
 	template <class T> T get (string category, string name)
 	{
 		try{
