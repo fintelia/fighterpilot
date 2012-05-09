@@ -1,6 +1,6 @@
 
-varying vec3 position, lightDir, halfVector;
-varying float h;
+varying vec3 position;
+varying vec3 lightDir, halfVector;
 
 uniform float time;
 uniform float heightScale;
@@ -12,24 +12,18 @@ uniform sampler2D snow;
 uniform sampler2D LCnoise;
 uniform sampler2D groundTex;
 
+uniform vec3 invScale;
+
 void main()
 {
 	vec4 color;
-//	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
-//	 discard;
-	//if(!gl_FrontFacing)
-	//{
-	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-	//	return;
-	//}
 
-	vec3 normal = texture2D(groundTex,position.xz).xyz;
+	vec3 normal = texture2D(groundTex,position.xz * invScale.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
 	normal.z = normal.z * 2.0 - 1.0;
 	normal.y /= heightScale;
 	normal = normalize(normal);
 
-	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
 	float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
 	float r=0.0;
 	float s1=1.10;//1.53
@@ -47,28 +41,15 @@ void main()
 
 //	if(slope < 0.3) TexValues = vec3(0.0,1.0-(slope)/0.3*h,(slope)/0.3*h);
 //	else TexValues = vec3(0.0,0.0,1.0);
-	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
-	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
-	else			TexValues = vec3(0.0,0.0,1.0);
+	if(position.y<25.0)			TexValues = vec3(0.0,1.0,0.0);
+	else if(position.y<50.0)	TexValues = vec3(0.0,1.0-(position.y-25.0)/400.0,(position.y-25.0)/25.0);
+	else						TexValues = vec3(0.0,0.0,1.0);
 
-	TexValues *= 1.0-r;
-	TexValues += vec3(r,0.0,0.0);
-	color = ( texture2D(rock,position.xz*4.0		)*TexValues[0]
-			+ texture2D(sand,position.xz*4.0		)*TexValues[1]
-			+ texture2D(grass,position.xz*4.0*2.0	)*TexValues[2]);
-//	color.rgb *= (1.0+0.5*TexValues[0]-texture2D(LCnoise,position.xz*4.0*4.0).r*0.8*TexValues[0]);
-//	color.rgb *= (1.2-texture2D(LCnoise,position.xz*4.0*16.0).r*0.4);
-	//if(dist>80000.0) color.a*=1.0-(dist-80000.0)/10000.0;
+	/*TexValues *= 1.0-r;
+	TexValues += vec3(r,0.0,0.0);*/
+	color = ( texture2D(rock,position.xz*0.0003		)*TexValues[0]
+			+ texture2D(sand,position.xz*0.0003		)*TexValues[1]
+			+ texture2D(grass,position.xz*0.0006	)*TexValues[2]);
 
-
-//	float NdotL = dot(normal,lightDir);
-//	color = vec4(color.rgb*(NdotL*0.3+0.7),color.a);
-	///////////////////////
-	//float z = gl_FragCoord.z / gl_FragCoord.w;
-	//float d=0.00005;
-	//float fogFactor = clamp(exp2( -d * d * z * z * 1.442695), 0.3, 1.0);
-	//color=mix(vec4(0.7,0.7,0.7,1.0), color, fogFactor);
-	//////////////////
-
-	gl_FragColor = color;//* (0.9 + clamp(NdotL*0.5,0.0,0.5));
+	gl_FragColor = color;
 }

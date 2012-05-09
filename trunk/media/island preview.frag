@@ -1,5 +1,6 @@
 
-varying vec3 position, lightDir, halfVector;
+varying vec3 position;
+varying vec3 lightDir, halfVector;
 varying float h;
 
 uniform float time;

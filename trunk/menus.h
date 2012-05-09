@@ -73,8 +73,8 @@ private:
 	Quat4f rot;
 	Vec3f center;
 	//editLevel* level;
-	float maxHeight;
-	float minHeight;
+	//float maxHeight;
+	//float minHeight;
 	float scrollVal;
 	float objPlacementAlt;
 
@@ -83,7 +83,7 @@ private:
 
 public:
 	
-	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), maxHeight(0), minHeight(0), scrollVal(0.0), objPlacementAlt(10.0){}
+	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), scrollVal(0.0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
 	int update();

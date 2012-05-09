@@ -7,7 +7,7 @@
 
     <texture name="dialog box"                file="media/dialog box.png" />
     <texture name="dialog back"               file="media/dialogBack.png" />
-    <texture name="white"                     file="media/white.png" tileable="true"/>
+    <texture name="white"                     file="media/white.png" tileable="true"/>   
   	<texture name="grass"                     file="media/grass2.png" tileable="true" />
     <texture name="rock"                      file="media/rock.png" tileable="true" />
     <texture name="sand"                      file="media/sand.png" tileable="true" />
@@ -16,7 +16,7 @@
     <texture name="ocean normals"             file="media/noiseDOT3.png" tileable="true" />
     <texture name="LCnoise"                   file="media/LCnoise.png" tileable="true" />
     <texture name="grass normals"             file="media/grass2_normals.png" tileable="true" />
-    <texture name="snow normals"              file="media/snow_normals.png" tileable="true" />
+    <texture name="snow normals"              file="media/snow_normals.png" tileable="true" />  
     <texture name="radarTex"                  file="media/radar2.png" />
     <texture name="particle"                  file="media/particle4.png" />	
     <texture name="radar plane"               file="media/plane radar2.png" />
@@ -58,51 +58,47 @@
     <texture name="menu in game select"       file="media/menu/in game select.png" />
     <texture name="thumbnails"                file="media/thumbnails.png" />
     <texture name="clouds"                    file="media/clouds.png" />
-    <texture name="hex grid"                  file="media/hexGrid.png" />
     <texture name="spark"                     file="media/spark.png" />
     <texture name="sun"                       file="media/sun.png" />
   </textures>
 
   <shaders>
-    <shader name="ortho"                vertex="media/ortho.vert"       fragment="media/ortho.frag"   preload="true" sAspect="true" />
-    <shader name="gamma shader"         vertex="media/gamma.vert"       fragment="media/gamma.frag"   preload="true" />
+    <!-- loading screen -->
+    <shader name="ortho"                  vertex="media/ortho.vert"          fragment="media/ortho.frag"   preload="true" sAspect="true" />
+    <shader name="gamma shader"           vertex="media/gamma.vert"          fragment="media/gamma.frag"   preload="true" />
     
-    <shader name="radar"                vertex="media/radar.vert"       fragment="media/radar.frag" sAspect="true" />
-    <shader name="radar2"               vertex="media/radar2.vert"      fragment="media/radar2.frag" sAspect="true" />
-	<shader name="radar plane shader"   vertex="media/radarPlane.vert"  fragment="media/radarPlane.frag" sAspect="true" />
-    <shader name="radar bounds"         vertex="media/radar bounds.vert" fragment="media/radar bounds.frag" sAspect="true" />
-    <shader name="health"               vertex="media/health.vert"      fragment="media/health.frag" sAspect="true" />
-    
-    <shader name="grass terrain"        vertex="media/toon.vert"        fragment="media/toon.frag" />
-    <shader name="water"                vertex="media/water.vert"       fragment="media/water.frag" />
-    <shader name="sea floor"            vertex="media/sea floor.vert"   fragment="media/sea floor.frag" />
-	<shader name="horizon"              vertex="media/horizon.vert"     fragment="media/horizon.frag" />
-    <shader name="horizon2"             vertex="media/horizon2.vert"    fragment="media/horizon2.frag" />
-    <shader name="island terrain"       vertex="media/island.vert"      fragment="media/island.frag" />
-    <shader name="rock terrain"         vertex="media/rock.vert"        fragment="media/rock.frag" />
-    
-    <shader name="ocean"                vertex="media/ocean.vert"       fragment="media/ocean.frag" />
-    <shader name="ocean preview"        vertex="media/ocean preview.vert"fragment="media/ocean preview.frag" />
-    <shader name="model"                vertex="media/model.vert"       fragment="media/model.frag" />
-    <shader name="hex grid shader"      vertex="media/hex grid.vert"    fragment="media/hex grid.frag" />
-    <shader name="sky shader"           vertex="media/sky.vert"         fragment="media/sky.frag" />
-    <shader name="particle shader"      vertex="media/particle.vert"    fragment="media/particle.frag" />
-    
-    <shader name="island new terrain"     vertex="media/terrain.vert"   fragment="media/grass.frag" />
-    <shader name="grass new terrain"      vertex="media/terrain.vert"   fragment="media/grass2.frag" />
-    <shader name="island preview terrain" vertex="media/terrain.vert"   fragment="media/island preview.frag" />
-    <shader name="grass preview terrain"  vertex="media/terrain.vert"   fragment="media/grass preview.frag" />
-    <shader name="snow terrain"           vertex="media/terrain.vert"   fragment="media/snow.frag" />
-    <shader name="snow preview terrain"   vertex="media/terrain.vert"   fragment="media/snow preview.frag" />
+    <!-- HUD-->
+    <shader name="radar"                  vertex="media/radar.vert"          fragment="media/radar.frag"         sAspect="true" />
+    <shader name="radar2"                 vertex="media/radar2.vert"         fragment="media/radar2.frag"        sAspect="true" />
+    <shader name="radar plane shader"     vertex="media/radarPlane.vert"     fragment="media/radarPlane.frag"    sAspect="true" />
+    <shader name="radar bounds"           vertex="media/radar bounds.vert"   fragment="media/radar bounds.frag"  sAspect="true" />
+    <shader name="health"                 vertex="media/health.vert"         fragment="media/health.frag"        sAspect="true" />
+    <shader name="circle shader"          vertex="media/circle.vert"         fragment="media/circle.frag"        sAspect="true"/>
 
-    <shader name="circle shader"           vertex="media/circle.vert"   fragment="media/circle.frag" sAspect="true"/>
+    <!-- general -->
+    <shader name="particle shader"        vertex="media/particle.vert"       fragment="media/particle.frag" />
+    <shader name="model"                  vertex="media/model.vert"          fragment="media/model.frag" />
+
+    <!-- world -->
+    <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" />
+    <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" />
+    <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" />
+    
+    <!-- terrain -->
+    <shader name="grass new terrain"      vertex="media/terrain.vert"        fragment="media/grass2.frag" />
+    <shader name="island new terrain"     vertex="media/terrain.vert"        fragment="media/grass.frag" />
+    <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" />
+
+    <!-- terrain preview -->
+    <shader name="island preview terrain" vertex="media/terrain.vert"        fragment="media/island preview.frag" />
+    <shader name="grass preview terrain"  vertex="media/terrain.vert"        fragment="media/grass preview.frag" />
+    <shader name="snow preview terrain"   vertex="media/terrain.vert"        fragment="media/snow preview.frag" />
+    <shader name="ocean preview"          vertex="media/ocean preview.vert"  fragment="media/ocean preview.frag" />
   </shaders>
   
   <models> 
     <model name="f22"          file="media/f22.obj" />
     <model name="SAM battery"  file="media/SAM/SAM.obj" />
-
-	
     <model name="sky dome"     file="media/dome.obj" />
     <model name="cylinder"     file="media/cylinder.obj" />
     <model name="disk"         file="media/disk.obj" />
