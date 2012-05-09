@@ -231,7 +231,9 @@ int AssetLoader::loadAsset()
 			auto shader = graphics->genShader();
 			if(!shader->init(dynamic_pointer_cast<FileManager::textFile>(file.files[0])->contents.c_str(), dynamic_pointer_cast<FileManager::textFile>(file.files[1])->contents.c_str()))
 			{
+#ifdef _DEBUG
 				messageBox(string("error in shader ") + file.name + ":\n\n" + shader->getErrorStrings());
+#endif
 			}
 			
 			if(file.options.count("use_sAspect") != 0)

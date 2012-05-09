@@ -423,14 +423,16 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	dataManager.bind("noise",7);
 
 
-	dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
-	dataManager.setUniform1f("minHeight",	minXYZ.y);
-	dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
-	dataManager.setUniform1f("time",		world.time());
+//	dataManager.setUniform1f("maxHeight",	maxXYZ.y);
+//	dataManager.setUniform1f("minHeight",	minXYZ.y);
+//	dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
+	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	dataManager.setUniformMatrix("modelTransform",		Mat4f());
+	dataManager.setUniform1f("time",					world.time());
+	dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
+	dataManager.setUniform3f("eyePos",					view->camera().eye);
+	dataManager.setUniform3f("invScale",				1.0/(maxXYZ.x-minXYZ.x),1.0/(maxXYZ.y-minXYZ.y),1.0/(maxXYZ.z-minXYZ.z));
 
-	Vec3f eye = view->camera().eye;
-	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-	dataManager.setUniform3f("eyePos",		eye.x, eye.y, eye.z);
 	dataManager.setUniform1i("sky",			0);
 	dataManager.setUniform1i("sand",		1);
 	dataManager.setUniform1i("grass",		2);
@@ -469,7 +471,6 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
 	{
 		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
-
 
 		glVertexPointer(3, GL_FLOAT, 0, (void*)bufferOffset);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[(*i)->level].id);
