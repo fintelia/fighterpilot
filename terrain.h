@@ -49,14 +49,15 @@ public:
 	unsigned short* heights;
 	TerrainPatch* trunk;
 
-	unsigned int VBO;
+	//unsigned int VBO;
 	shared_ptr<GraphicsManager::texture2D> texture;
-
-	struct IndexBuffer
-	{
-		unsigned int numVertices;
-		unsigned int id;
-	}*indexBuffer;
+	shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
+	vector<shared_ptr<GraphicsManager::indexBuffer>> indexBuffers;
+	//struct IndexBuffer
+	//{
+	//	unsigned int numVertices;
+	//	unsigned int id;
+	//}*indexBuffer;
 
 	mutable vector<TerrainPatch*> renderQueue;
 

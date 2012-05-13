@@ -316,6 +316,7 @@ public:
 	virtual void setColor(float r, float g, float b, float a)=0;
 	virtual void setColorMask(bool mask)=0;
 	virtual void setDepthMask(bool mask)=0;
+	virtual void setDepthTest(bool enabled)=0;
 	virtual void setBlendMode(BlendMode blend)=0;
 	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
 	void setLightPosition(Vec3f position){lightPosition = position;}
@@ -531,6 +532,7 @@ public:
 	void setColor(float r, float g, float b, float a);
 	void setColorMask(bool mask);
 	void setDepthMask(bool mask);
+	void setDepthTest(bool enabled);
 	void setBlendMode(BlendMode blend);
 	void setClientStates(bool texCoord, bool normal, bool color);
 

@@ -696,6 +696,17 @@ void OpenGLgraphics::setDepthMask(bool mask)
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? multisampleFBO.depth : 0, 0);
 	}
 }
+void OpenGLgraphics::setDepthTest(bool enabled)
+{
+	if(enabled)
+	{
+		glEnable(GL_DEPTH_TEST);
+	}
+	else
+	{
+		glDisable(GL_DEPTH_TEST);
+	}
+}
 void OpenGLgraphics::setBlendMode(BlendMode blend)
 {
 	if(blend == TRANSPARENCY)		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);

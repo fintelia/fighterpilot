@@ -1,8 +1,6 @@
 
 
 #include "engine.h"
-#include "GL/glee.h"
-#include <GL/glu.h>
 
 const unsigned char LEFT		= 0x01; //patch to the left is one level above this patch
 const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
@@ -95,7 +93,7 @@ void TerrainPatch::patchEdges() const
 		//write code to find out whether we need neighbors are further subdivided
 	}
 }
-TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), heights(Heights), trunk(nullptr), indexBuffer(nullptr)
+TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), heights(Heights), trunk(nullptr)
 {
 	unsigned short* nHeights = nullptr;
 	if(!isPowerOfTwo(patchResolution-1))
@@ -133,8 +131,6 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	while(v >>= 1) ++levelsDeep;
 
 //////////////////////////////////////////////////////VBO and texture//////////////////////////////////////////////////////
-	glGenBuffers(1,&VBO);
-	
 
 	texture = graphics->genTexture2D();
 
@@ -149,15 +145,16 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 		}
 	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*width*height*3, heightMap, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	vertexBuffer->addPositionData(3, 0);
+	vertexBuffer->setTotalVertexSize(sizeof(float)*3);
+	vertexBuffer->setVertexData(sizeof(float)*width*height*3, heightMap);
 
-	indexBuffer = new IndexBuffer[levelsDeep+1];
+
+	const unsigned int numIndices = 16*16 * 6;
+	unsigned int* indices = new unsigned int[numIndices];
 	for(unsigned int d = 0; d <= levelsDeep; d++)
 	{
-		indexBuffer[d].numVertices = 16*16 * 6;
-		unsigned int* indices = new unsigned int[indexBuffer[d].numVertices];
 		int i=0;
 		unsigned int spacing = 1 << (levelsDeep-d);	
 		for(int y=0; y < 16; y++)
@@ -175,15 +172,11 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 			}
 		}
 
-		glGenBuffers(1,&indexBuffer[d].id);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[d].id);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int)*indexBuffer[d].numVertices, indices, GL_STATIC_DRAW);	
-		delete[] indices;
+		auto iBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+		iBuffer->setData(indices, numIndices);
+		indexBuffers.push_back(iBuffer);
 	}
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-
+	delete[] indices;
 
 	//////////////////
 	Vec3f n;
@@ -205,10 +198,6 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 		}
 	}
 	texture->setData(width, height, GraphicsManager::texture::RGBA, groundValues);
-	//glBindTexture(GL_TEXTURE_2D, texture);
-	//gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, xPOT, zPOT, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	////glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, xPOT, zPOT, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)groundValues);
-	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	delete[] groundValues;
 	/////////////////
@@ -460,32 +449,25 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	//dataManager.setUniform1i("groundTex",		2);
 	//dataManager.setUniform1i("snow_normals",	3);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	unsigned int bufferOffset;
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
 	{
 		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
-
-		glVertexPointer(3, GL_FLOAT, 0, (void*)bufferOffset);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[(*i)->level].id);
-		glDrawElements(GL_TRIANGLES,indexBuffer[(*i)->level].numVertices, GL_UNSIGNED_INT,0);
+		indexBuffers[(*i)->level]->drawBuffer(GraphicsManager::TRIANGLES, vertexBuffer, bufferOffset);
 	}
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 TerrainPage::~TerrainPage()
 {
-	if(VBO != 0)
-		glDeleteBuffers(1, &VBO);
-
-	delete[] indexBuffer;
 	delete[] heights;
 	delete[] trunk;
 }
@@ -784,7 +766,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
 
 	graphics->setDepthMask(false);
-	glDisable(GL_DEPTH_TEST);
+	graphics->setDepthTest(false);
 	dataManager.bind("sky shader");
 
 	dataManager.setUniform1i("tex", 0);
@@ -840,7 +822,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 
 	graphics->setDepthMask(true);
-	glEnable(GL_DEPTH_TEST);
+	graphics->setDepthTest(true);
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view);
