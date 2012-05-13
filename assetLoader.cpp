@@ -2,6 +2,12 @@
 #include "engine.h"
 #include "xml/tinyxml.h"
 
+string getAttribute(TiXmlElement* element, const char* attribute)
+{
+	const char* c = element->Attribute(attribute);
+	string s = (c != NULL) ? string(c) : string("");
+	return s;
+}
 bool AssetLoader::loadAssetList()
 {
 	TiXmlDocument doc("media/assetList.xml");
@@ -30,30 +36,42 @@ bool AssetLoader::loadAssetList()
 			node = texturesElement->FirstChildElement();
 			if(node != nullptr) textureElement = node->ToElement();
 
+
+
 			while(textureElement != nullptr)
 			{
 				assetFile tmpAssetFile;
-				tmpAssetFile.type = assetFile::TEXTURE;
+				if(strcmp(textureElement->Value(), "texture") == 0)
+				{
+					tmpAssetFile.type = assetFile::TEXTURE;
+				}
+				else if(strcmp(textureElement->Value(), "texture3D") == 0 && textureElement->QueryIntAttribute("depth", &tmpAssetFile.depth) == TIXML_SUCCESS)
+				{
+					tmpAssetFile.type = assetFile::TEXTURE_3D;
+				}
+				else
+				{
+					textureElement = textureElement->NextSiblingElement();
+					continue;
+				}
 
-				c = textureElement->Attribute("name");	tmpAssetFile.name = c!=NULL ? c : "";
-				c = textureElement->Attribute("file");	tmpAssetFile.filename[0] = c!=NULL ? c : "";
+				tmpAssetFile.name = getAttribute(textureElement, "name");
+				tmpAssetFile.filename[0] = getAttribute(textureElement, "file");
 
-				const char* tileable = textureElement->Attribute("tileable");
-				if(tileable != nullptr && string(tileable) == "true")
+				if(getAttribute(textureElement,"tileable") == "true")
 					tmpAssetFile.options.insert("tileable");
 
 				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
 				{
-					const char* preload = textureElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
+					if(getAttribute(textureElement,"preload") == "true")
 					{
 						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],false));
 						assetFilesPreload.push(tmpAssetFile);
+					}
+					else
+					{
+						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
+						assetFiles.push(tmpAssetFile);
 					}
 				}
 				else debugBreak();
@@ -211,15 +229,26 @@ int AssetLoader::loadAsset()
 			if(!file.files.front()->complete()) break;
 
 			bool t = file.options.count("tileable") != 0;
-			//registerTexture(file.name, file.filename[0], t);
 
 			shared_ptr<FileManager::textureFile> f = static_pointer_cast<FileManager::textureFile>(file.files.front());
 			auto texture = graphics->genTexture2D();
 			texture->setData(f->width, f->height, ((GraphicsManager::texture::Format)f->channels), f->contents, t);
 			dataManager.addTexture(file.name, texture);
 
-			//auto texPtr = registerTexture(dynamic_pointer_cast<FileManager::textureFile>(file.files.front()), t);
-			//if(texPtr) assets[file.name] = shared_ptr<asset>(texPtr);
+			pop(preload);
+		}
+		else if(file.type == assetFile::TEXTURE_3D)
+		{
+			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
+			if(!file.files.front()->complete()) break;
+
+			bool t = file.options.count("tileable") != 0;
+
+			shared_ptr<FileManager::textureFile> f = static_pointer_cast<FileManager::textureFile>(file.files.front());
+			auto texture = graphics->genTexture3D();
+			texture->setData(f->width, f->height/file.depth, file.depth, ((GraphicsManager::texture::Format)f->channels), f->contents, t);
+			dataManager.addTexture(file.name, texture);
+
 			pop(preload);
 		}
 		else if(file.type == assetFile::SHADER)

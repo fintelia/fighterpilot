@@ -413,7 +413,7 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 		}
 	}
 
-	dataManager.bind("island new terrain");
+	dataManager.bind("island terrain");
 	dataManager.bind("sand",1);
 	dataManager.bind("grass",2);
 	dataManager.bind("rock",3);
@@ -461,7 +461,6 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	//dataManager.setUniform1i("snow_normals",	3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glEnableClientState(GL_VERTEX_ARRAY);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -480,8 +479,6 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	dataManager.unbindShader();
-	dataManager.unbindTextures();
 }
 TerrainPage::~TerrainPage()
 {
@@ -786,7 +783,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
 
-	glEnableClientState(GL_VERTEX_ARRAY);
 	graphics->setDepthMask(false);
 	glDisable(GL_DEPTH_TEST);
 	dataManager.bind("sky shader");
@@ -817,8 +813,8 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	{
 		dataManager.bind("ocean");
 
-		//dataManager.bind("ocean normals");
-		oceanTexture->bind(1);
+		dataManager.bind("ocean normals", 1);
+		//oceanTexture->bind(1);
 		//glActiveTexture(GL_TEXTURE1);
 		//glBindTexture(GL_TEXTURE_3D, oceanTextureId);
 
@@ -835,23 +831,21 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
-
 		//glBindTexture(GL_TEXTURE_3D, 0);
 	}
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
-	dataManager.unbindShader();
+	//dataManager.unbindShader();
 
 
 
 	graphics->setDepthMask(true);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view);
 	}
-	glDisable(GL_CULL_FACE);
+	dataManager.bind("model");
 	if(waterPlane)
 	{
 		graphics->setColorMask(false);

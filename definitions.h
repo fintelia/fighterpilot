@@ -112,6 +112,18 @@ T (min)(const T& a, const U& b)
 	return (a < b) ? a : b;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+typename std::enable_if<std::is_unsigned<T>::value, T>::type abs(T t)
+{
+    return t;  
+}
+
+template <typename T>
+typename std::enable_if<!std::is_unsigned<T>::value, T>::type abs(T t)
+{
+	return (t < 0) ? -t : t;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class T>
 inline void setBit(T& data, const T& bit, bool value)
 {

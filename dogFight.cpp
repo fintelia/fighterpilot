@@ -1,7 +1,5 @@
 
 #include "game.h"
-//#include "GL/glee.h"
-//#include <GL/glu.h>
 
 namespace gui{
 dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl)
@@ -57,7 +55,6 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.setUniform1f("radarAng", radarAng);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-		dataManager.unbindTextures();
 
 		Vec3f nC((x+width/2),(y+height/2),0);
 		float radius = width/2;
@@ -100,8 +97,6 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
-		dataManager.unbindTextures();
-		//dataManager.unbindShader();
 
 #ifdef RADAR_MAP_BOUNDS
 		dataManager.bind("radar bounds");
@@ -196,8 +191,7 @@ void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c
 
 	graphics->drawModelCustomShader("cylinder", Vec3f(center), Quat4f(),Vec3f(radius,height,radius));
 
-	dataManager.unbindTextures();
-	dataManager.unbindShader();
+	dataManager.bind("model");
 }
 void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 {

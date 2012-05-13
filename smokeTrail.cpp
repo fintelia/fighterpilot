@@ -12,7 +12,7 @@ namespace particle
 	{
 		velocity =	fuzzyAttribute(0.0);
 		spread =	fuzzyAttribute(1.0, 1.0);
-		life =		fuzzyAttribute(200.0*8, 20.0);
+		life =		fuzzyAttribute(3200.0);
 	}
 	bool smokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{

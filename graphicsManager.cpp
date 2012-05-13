@@ -1,6 +1,5 @@
 
 #include "engine.h"
-#include <Windows.h>
 
 
 GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereo(false), leftEye(true), interOcularDistance(0.0)

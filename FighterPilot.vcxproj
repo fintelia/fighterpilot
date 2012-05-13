@@ -221,19 +221,13 @@
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass preview.frag" />
-    <None Include="media\grass.frag" />
     <None Include="media\grass2.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
     <None Include="media\hex grid.frag" />
     <None Include="media\hex grid.vert" />
-    <None Include="media\horizon.frag" />
-    <None Include="media\horizon.vert" />
-    <None Include="media\horizon2.frag" />
-    <None Include="media\horizon2.vert" />
     <None Include="media\icon.ico" />
     <None Include="media\island preview.frag" />
-    <None Include="media\island.vert" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
     <None Include="media\modelData.txt" />
@@ -257,12 +251,7 @@
     <None Include="media\sky.vert" />
     <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
-    <None Include="media\terrain.frag" />
     <None Include="media\terrain.vert" />
-    <None Include="media\toon.frag" />
-    <None Include="media\toon.vert" />
-    <None Include="media\water.frag" />
-    <None Include="media\water.vert" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc" />
