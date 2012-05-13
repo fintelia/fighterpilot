@@ -16,14 +16,8 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\horizon">
-      <UniqueIdentifier>{62a8ab34-7bf4-44f9-b7d4-d769313af93e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\health bar">
       <UniqueIdentifier>{ff43bfa4-6d7e-4210-8d1a-3436f6d2da16}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shaders\island">
-      <UniqueIdentifier>{bdee319b-7656-4954-9381-fcd65101115e}</UniqueIdentifier>
     </Filter>
     <Filter Include="shaders\terrain">
       <UniqueIdentifier>{f05f3885-33bc-4cdc-aaf9-6481a7caf828}</UniqueIdentifier>
@@ -31,14 +25,8 @@
     <Filter Include="shaders\radar">
       <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\horizon2">
-      <UniqueIdentifier>{3f4def0e-7e89-4d54-aa74-ba9504830540}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\water">
       <UniqueIdentifier>{2c6329f1-12c1-4185-ab55-951126b3da50}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shaders\grass">
-      <UniqueIdentifier>{b35d71a4-4ca8-4039-a032-fc3d7f7d8d3a}</UniqueIdentifier>
     </Filter>
     <Filter Include="shaders\model">
       <UniqueIdentifier>{44548fa7-2143-4966-b24f-508c90d85fd7}</UniqueIdentifier>
@@ -467,12 +455,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="media\horizon.frag">
-      <Filter>shaders\horizon</Filter>
-    </None>
-    <None Include="media\horizon.vert">
-      <Filter>shaders\horizon</Filter>
-    </None>
     <None Include="media\health.frag">
       <Filter>shaders\health bar</Filter>
     </None>
@@ -481,12 +463,6 @@
     </None>
     <None Include="media\icon.ico">
       <Filter>Resource Files</Filter>
-    </None>
-    <None Include="media\island.vert">
-      <Filter>shaders\island</Filter>
-    </None>
-    <None Include="media\terrain.frag">
-      <Filter>shaders\terrain</Filter>
     </None>
     <None Include="media\terrain.vert">
       <Filter>shaders\terrain</Filter>
@@ -500,29 +476,8 @@
     <None Include="media\snow.frag">
       <Filter>shaders\terrain</Filter>
     </None>
-    <None Include="media\horizon2.frag">
-      <Filter>shaders\horizon2</Filter>
-    </None>
-    <None Include="media\horizon2.vert">
-      <Filter>shaders\horizon2</Filter>
-    </None>
-    <None Include="media\grass.frag">
-      <Filter>shaders\terrain</Filter>
-    </None>
     <None Include="media\grass2.frag">
       <Filter>shaders\terrain</Filter>
-    </None>
-    <None Include="media\water.frag">
-      <Filter>shaders\water</Filter>
-    </None>
-    <None Include="media\water.vert">
-      <Filter>shaders\water</Filter>
-    </None>
-    <None Include="media\toon.frag">
-      <Filter>shaders\grass</Filter>
-    </None>
-    <None Include="media\toon.vert">
-      <Filter>shaders\grass</Filter>
     </None>
     <None Include="media\model.frag">
       <Filter>shaders\model</Filter>

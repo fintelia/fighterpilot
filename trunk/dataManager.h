@@ -6,7 +6,7 @@ private:
 		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
 	};
 	struct textureAsset: public asset{
-		shared_ptr<GraphicsManager::texture2D> texture;
+		shared_ptr<GraphicsManager::texture> texture;
 		//unsigned int id;
 		int width;
 		int height;
@@ -41,7 +41,6 @@ private:
 	struct fontAsset: public asset{
 		shared_ptr<GraphicsManager::texture2D> texture;
 		//unsigned int id;       //stores the texture id for the font
-		string texName;
 		float height;//in px
 		struct character
 		{
@@ -66,8 +65,6 @@ private:
 	map<int, shared_ptr<asset>>	unnamedAssets;
 	int					currentAssetIndex;
 
-	map<int,string>		boundTextures;
-
 	string				boundShader;
 	//int					boundShaderId;
 
@@ -79,12 +76,6 @@ public:
 		return *pInstance;
 	}
 	void bind(string name, int textureUnit=0);
-	void bindTex(int id, int textureUnit=0);
-	void bindShader(int id);
-
-	void unbind(string name);
-	void unbindTextures();
-	void unbindShader();
 
 	shared_ptr<const fontAsset> getFont(string name);
 	shared_ptr<const modelAsset> getModel(string name);
@@ -117,7 +108,7 @@ public:
 //	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
 	void shutdown();
 
-	void addTexture(string name, shared_ptr<GraphicsManager::texture2D> tex);
+	void addTexture(string name, shared_ptr<GraphicsManager::texture> tex);
 	void addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
 	void addModel(string name, string OBJfile);
 	void addFont(string name, shared_ptr<FileManager::textFile> f);

@@ -24,6 +24,8 @@ void main()
 	normal.y /= heightScale;
 	normal = normalize(normal);
 
+	float NdotL = dot(normal, normalize(lightDir));
+
 	float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
 	float r=0.0;
 	float s1=1.10;//1.53
@@ -42,7 +44,7 @@ void main()
 //	if(slope < 0.3) TexValues = vec3(0.0,1.0-(slope)/0.3*h,(slope)/0.3*h);
 //	else TexValues = vec3(0.0,0.0,1.0);
 	if(position.y<25.0)			TexValues = vec3(0.0,1.0,0.0);
-	else if(position.y<50.0)	TexValues = vec3(0.0,1.0-(position.y-25.0)/400.0,(position.y-25.0)/25.0);
+	else if(position.y<50.0)	TexValues = vec3(0.0,1.0-(position.y-25.0)/25.0,(position.y-25.0)/25.0);
 	else						TexValues = vec3(0.0,0.0,1.0);
 
 	/*TexValues *= 1.0-r;
@@ -51,5 +53,6 @@ void main()
 			+ texture2D(sand,position.xz*0.0003		)*TexValues[1]
 			+ texture2D(grass,position.xz*0.0006	)*TexValues[2]);
 
+	color.rgb *= 0.4 + 0.6 * NdotL;
 	gl_FragColor = color;
 }

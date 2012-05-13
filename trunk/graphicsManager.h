@@ -27,32 +27,6 @@ struct texturedLitVertex3D
 	Vec3f normal;
 	Vec2f UV;
 };
-//enum graphicsPrimitives
-//{
-//	POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON
-//};
-//struct vertexBuffer
-//{
-//private:
-//	unsigned int id;
-//	unsigned int numIndices;
-//	
-//	bool texCoords;
-//	bool normals;
-//	bool bound;
-//
-//	vertexBuffer(unsigned int Id, bool TexCoords, bool Normals):id(Id), texCoords(TexCoords), normals(Normals), bound(false){}
-//
-//public:
-//	void bind();
-//	void unbind();
-//	void render(Mat4f transform);
-//	void render(unsigned int offset, unsigned int number, Mat4f transform);
-//};
-//struct texture
-//{
-//
-//};
 class GraphicsManager
 {
 public:
@@ -136,15 +110,13 @@ public:
 		bool renderParticles(){return mRenderParticles;}
 		void renderParticles(bool b){mRenderParticles=b;}
 	};
+	class indexBuffer;
 	class vertexBuffer
 	{
 	public:
 		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
 	protected:
-		unsigned int numVertices;
-		unsigned int numIndices;
-
-		unsigned int positionDataSize;		
+		unsigned int positionDataSize;
 		unsigned int positionDataOffset;
 
 		unsigned int texCoordDataSize;
@@ -162,11 +134,14 @@ public:
 		unsigned int totalVertexSize;
 
 		UsageFrequency usageFrequency;
-		bool indexArray;
 
-		vertexBuffer(UsageFrequency u, bool IndexArray): numVertices(0), numIndices(0), usageFrequency(u), indexArray(IndexArray), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), extraDataSize(0), extraDataOffset(0), totalVertexSize(0){}
+		vertexBuffer(UsageFrequency u): usageFrequency(u), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), extraDataSize(0), extraDataOffset(0), totalVertexSize(0){}
+
+		virtual void bindBuffer(unsigned int offset){}
+		virtual void bindBuffer(){bindBuffer(0);}
 
 	public:
+		friend class GraphicsManager::indexBuffer;
 		virtual ~vertexBuffer(){}
 		virtual void addPositionData(unsigned int size, unsigned int offset)	{positionDataSize = size; positionDataOffset = offset;}
 		virtual void addTexCoordData(unsigned int size, unsigned int offset)	{texCoordDataSize = size; texCoordDataOffset = offset;}
@@ -177,9 +152,24 @@ public:
 		virtual void setTotalVertexSize(unsigned int totalSize){totalVertexSize = totalSize;}
 
 		virtual void setVertexData(unsigned int size, void* data)=0;
-		virtual void setIndexData(unsigned int size, void* data)=0;
 
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
+	};
+	class indexBuffer
+	{
+	public:
+		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
+	protected:
+		UsageFrequency usageFrequency;
+		indexBuffer(UsageFrequency u): usageFrequency(u){}
+		void bindVertexBuffer(shared_ptr<vertexBuffer> b,unsigned int offset=0){b->bindBuffer(offset);}
+	public:
+		virtual ~indexBuffer(){}
+		virtual void setData(unsigned char* data, unsigned int count)=0;
+		virtual void setData(unsigned short* data, unsigned int count)=0;
+		virtual void setData(unsigned int* data, unsigned int count)=0;
+		virtual void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset)=0;
+		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer){drawBuffer(primitive, buffer, 0);}
 	};
 	class texture
 	{
@@ -313,7 +303,8 @@ public:
 	//virtual void drawVertexArray(texturedVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
 	//virtual void drawVertexArray(texturedLitVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
 
-	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray)=0;
+	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage)=0;
+	virtual shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage)=0;
 
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
@@ -399,6 +390,10 @@ protected:
 	bool normal_clientState;
 	bool color_clientState;
 
+#ifdef _DEBUG
+	double errorGlowEndTime;
+#endif
+
 	OpenGLgraphics();
 	~OpenGLgraphics();
 
@@ -414,17 +409,30 @@ public:
 	private:
 		unsigned int vBufferID;
 		unsigned int iBufferID;
-
-	protected:
-		void bindBuffer();
+		void bindBuffer(unsigned int offset);
 
 	public:
-		vertexBufferGL(UsageFrequency u, bool IndexArray);
+		vertexBufferGL(UsageFrequency u);
 		~vertexBufferGL();
 		void setVertexData(unsigned int size, void* data);
-		void setIndexData(unsigned int size, void* data);
 
 		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+	};
+	class indexBufferGL: public GraphicsManager::indexBuffer
+	{
+	private:
+		unsigned int bufferID;
+		unsigned int dataCount;
+		enum DataType{NO_TYPE,UCHAR,USHORT,UINT}dataType;
+
+	public:
+		indexBufferGL(UsageFrequency u);
+		~indexBufferGL();
+		void setData(unsigned char* data, unsigned int count);
+		void setData(unsigned short* data, unsigned int count);
+		void setData(unsigned int* data, unsigned int count);
+
+		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset);
 	};
 	class texture2DGL: public GraphicsManager::texture2D
 	{
@@ -512,8 +520,8 @@ public:
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
 	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
 
-	shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage, bool useIndexArray);
-
+	shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage);
+	shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage);
 	shared_ptr<texture2D> genTexture2D();
 	shared_ptr<texture3D> genTexture3D();
 	shared_ptr<textureCube> genTextureCube();

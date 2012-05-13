@@ -14,13 +14,9 @@ struct OpenGLgraphics::Context
 	HINSTANCE	hInstance; // not initialized?
 	Context(): hDC(NULL),hRC(NULL),hWnd(NULL){}
 };
-OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u, bool useIndexArray): vertexBuffer(u, useIndexArray), vBufferID(0), iBufferID(0)
+OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
 {
 	glGenBuffers(1, &vBufferID);
-	if(indexArray)
-	{
-		glGenBuffers(1, &iBufferID);
-	}
 }
 OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 {
@@ -29,27 +25,15 @@ OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vBufferID);
-
-	if(indexArray)
-	{
-		glDeleteBuffers(1, &iBufferID);
-	}
 }
 void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data)
 {
-	bindBuffer();
+	vertexBuffer::bindBuffer();
 	if(usageFrequency == STATIC)		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
 }
-void OpenGLgraphics::vertexBufferGL::setIndexData(unsigned int size, void* data)
-{
-	bindBuffer();
-	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
-}
-void OpenGLgraphics::vertexBufferGL::bindBuffer()
+void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
 
@@ -57,25 +41,19 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer()
 
 	if(positionDataSize != 0)
 	{
-		glVertexPointer(positionDataSize, GL_FLOAT, totalVertexSize, (void*)positionDataOffset);
+		glVertexPointer(positionDataSize, GL_FLOAT, totalVertexSize, (void*)(positionDataOffset+offset));
 	}
 	if(texCoordDataSize != 0)
 	{
-		glTexCoordPointer(texCoordDataSize, GL_FLOAT, totalVertexSize, (void*)texCoordDataOffset);
+		glTexCoordPointer(texCoordDataSize, GL_FLOAT, totalVertexSize, (void*)(texCoordDataOffset+offset));
 	}
 	if(normalDataSize == 3)
 	{
-		glNormalPointer(GL_FLOAT, totalVertexSize, (void*)normalDataOffset);
+		glNormalPointer(GL_FLOAT, totalVertexSize, (void*)(normalDataOffset+offset));
 	}
 	if(colorDataSize != 0)
 	{
-		glColorPointer(colorDataSize, GL_FLOAT, totalVertexSize, (void*)colorDataOffset);
-	}
-
-
-	if(indexArray)
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iBufferID);
+		glColorPointer(colorDataSize, GL_FLOAT, totalVertexSize, (void*)(colorDataOffset+offset));
 	}
 }
 void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)
@@ -83,33 +61,76 @@ void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned in
 	if(count == 0)
 		return;
 
-	bindBuffer();
-	if(indexArray)
-	{
-		if(primitive == POINTS)					glDrawElements(GL_POINTS,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == LINES)				glDrawElements(GL_LINES,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == LINE_STRIP)		glDrawElements(GL_LINE_STRIP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == LINE_LOOP)			glDrawElements(GL_LINE_LOOP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == TRIANGLES)			glDrawElements(GL_TRIANGLES,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == TRIANGLE_STRIP)	glDrawElements(GL_TRIANGLE_STRIP,	count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == TRIANGLE_FAN)		glDrawElements(GL_TRIANGLE_FAN,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == QUADS)				glDrawElements(GL_QUADS,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == QUAD_STRIP)		glDrawElements(GL_QUAD_STRIP,		count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-		else if(primitive == POLYGON)			glDrawElements(GL_POLYGON,			count, GL_UNSIGNED_SHORT, (void*)(bufferOffset*2));
-	}
-	else
-	{
-		if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
-		else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
-		else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
-		else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
-		else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
-		else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
-		else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
-		else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
-		else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
-		else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
-	}
+	vertexBuffer::bindBuffer();
+	if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
+	else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
+	else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
+	else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
+	else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
+	else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
+	else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
+	else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
+	else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
+	else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+}
+OpenGLgraphics::indexBufferGL::indexBufferGL(UsageFrequency u): indexBuffer(u), bufferID(0), dataCount(0), dataType(NO_TYPE)
+{
+	glGenBuffers(1, &bufferID);
+}
+OpenGLgraphics::indexBufferGL::~indexBufferGL()
+{
+	glDeleteBuffers(1, &bufferID);
+}
+void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, unsigned int count)
+{
+	dataType = UCHAR;
+	dataCount = count;
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
+	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
+	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_DYNAMIC_DRAW);
+	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STREAM_DRAW);
+}
+void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, unsigned int count)
+{
+	dataType = USHORT;
+	dataCount = count;
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
+	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STATIC_DRAW);
+	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_DYNAMIC_DRAW);
+	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STREAM_DRAW);
+}
+void OpenGLgraphics::indexBufferGL::setData(unsigned int* data, unsigned int count)
+{
+	dataType = UINT;
+	dataCount = count;
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
+	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STATIC_DRAW);
+	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_DYNAMIC_DRAW);
+	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STREAM_DRAW);
+}
+void OpenGLgraphics::indexBufferGL::drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset)
+{
+	if(dataCount == 0 || dataType == NO_TYPE)
+		return;
+
+	GLenum type;
+	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
+	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
+	else if(dataType == UINT) type = GL_UNSIGNED_INT;
+
+	bindVertexBuffer(buffer, offset);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
+
+	if(primitive == POINTS)					glDrawElements(GL_POINTS,			dataCount, type, 0);
+	else if(primitive == LINES)				glDrawElements(GL_LINES,			dataCount, type, 0);
+	else if(primitive == LINE_STRIP)		glDrawElements(GL_LINE_STRIP,		dataCount, type, 0);
+	else if(primitive == LINE_LOOP)			glDrawElements(GL_LINE_LOOP,		dataCount, type, 0);
+	else if(primitive == TRIANGLES)			glDrawElements(GL_TRIANGLES,		dataCount, type, 0);
+	else if(primitive == TRIANGLE_STRIP)	glDrawElements(GL_TRIANGLE_STRIP,	dataCount, type, 0);
+	else if(primitive == TRIANGLE_FAN)		glDrawElements(GL_TRIANGLE_FAN,		dataCount, type, 0);
+	else if(primitive == QUADS)				glDrawElements(GL_QUADS,			dataCount, type, 0);
+	else if(primitive == QUAD_STRIP)		glDrawElements(GL_QUAD_STRIP,		dataCount, type, 0);
+	else if(primitive == POLYGON)			glDrawElements(GL_POLYGON,			dataCount, type, 0);
 }
 OpenGLgraphics::texture2DGL::texture2DGL()
 {
@@ -225,7 +246,8 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	}graphics->checkErrors();
+	}
+	glBindTexture(GL_TEXTURE_3D, 0);
 }
 OpenGLgraphics::textureCubeGL::textureCubeGL()
 {
@@ -299,6 +321,7 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
@@ -487,6 +510,10 @@ void OpenGLgraphics::minimizeWindow()
 }
 OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
+#ifdef _DEBUG
+	errorGlowEndTime = 0;
+#endif
+
 	context = new Context;
 	//useAnagricStereo(true);
 	//setInterOcularDistance(0.75);
@@ -522,7 +549,7 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 	//glDisableClientState(GL_VERTEX_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	if(tex != "") dataManager.unbind(tex);
+	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
@@ -554,7 +581,7 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 	//glDisableClientState(GL_VERTEX_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	if(tex != "") dataManager.unbind(tex);
+	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
@@ -584,14 +611,17 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	//glDisableClientState(GL_VERTEX_ARRAY);
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	if(tex != "") dataManager.unbind(tex);
+	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
-shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage, bool useIndexArray)
+shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage)
 {
-	return shared_ptr<vertexBuffer>(new vertexBufferGL(usage, useIndexArray));
+	return shared_ptr<vertexBuffer>(new vertexBufferGL(usage));
 }
-
+shared_ptr<GraphicsManager::indexBuffer> OpenGLgraphics::genIndexBuffer(indexBuffer::UsageFrequency usage)
+{
+	return shared_ptr<indexBuffer>(new indexBufferGL(usage));
+}
 shared_ptr<GraphicsManager::texture2D> OpenGLgraphics::genTexture2D()
 {
 	return shared_ptr<texture2D>(new texture2DGL());
@@ -697,7 +727,7 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 
 	if(f != NULL)
 	{
-		dataManager.bind(f->texName);
+		f->texture->bind();
 
 		Vec2f charPos = pos;
 		Rect charRect;
@@ -747,7 +777,6 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 		//		}
 		//	}
 		//}
-		dataManager.unbind(f->texName);
 	}
 }
 void OpenGLgraphics::drawText(string text, Rect rect, string font)
@@ -756,7 +785,7 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 
 	if(f == NULL)
 	{
-		dataManager.bind(f->texName);
+		f->texture->bind();
 
 		Vec2f charPos = rect.origin();
 		Rect charRect;
@@ -787,8 +816,6 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 				charPos.x += c.xAdvance;
 			}
 		}
-
-		dataManager.unbind(f->texName);
 	}
 }
 Vec2f OpenGLgraphics::getTextSize(string text, string font)
@@ -836,13 +863,13 @@ void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 }
 void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
 {
-	if(src == RT_FBO_0)			dataManager.bindTex(FBOs[0].fboID);
-	else if(src == RT_FBO_1)	dataManager.bindTex(FBOs[1].fboID);
+	glActiveTexture(GL_TEXTURE0);
+	if(src == RT_FBO_0)			glBindTexture(GL_TEXTURE_2D, FBOs[0].fboID);
+	else if(src == RT_FBO_1)	glBindTexture(GL_TEXTURE_2D, FBOs[1].fboID);
 	else return;
 
 	glViewport(0,0,sw,sh);
 	drawOverlay(Rect::XYXY(-1,-1,1,1));
-	dataManager.bindTex(0);
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
@@ -1009,9 +1036,7 @@ void OpenGLgraphics::render()
 				dataManager.bind("model");
 				currentView = shared_ptr<View>(*i);
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-			
-				glMatrixMode(GL_PROJECTION);	glLoadIdentity(); glLoadMatrixf(currentView->projectionMatrix().ptr());
-				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());
+
 				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				dataManager.setUniformMatrix("modelTransform", Mat4f());
 
@@ -1021,15 +1046,6 @@ void OpenGLgraphics::render()
 			}
 		}
 		currentView.reset();
-
-		//for(currentView=0; currentView<views.size(); currentView++)
-		//{
-		//	glViewport(views[currentView].viewport().x * sh, views[currentView].viewport().y * sh, views[currentView].viewport().width * sh, views[currentView].viewport().height * sh);
-		//	glMatrixMode(GL_PROJECTION);	glLoadMatrixf(views[currentView].projectionMatrix().ptr());
-		//	glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(views[currentView].modelViewMatrix().ptr());
-		//
-		//	menuManager.render3D(currentView);
-		//}
 	}
 ///////////////////////////////////START PARTICLES///////////////////////
 
@@ -1048,7 +1064,8 @@ void OpenGLgraphics::render()
 		setDepthMask(false);
 	}
 	glDisable(GL_DEPTH_TEST);
-	dataManager.bindTex(FBOs[0].depth,1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
 	
 	for(auto i = views_new.begin(); i != views_new.end();)
 	{
@@ -1061,20 +1078,16 @@ void OpenGLgraphics::render()
 			currentView = shared_ptr<View>(*i);
 			if(currentView->renderParticles())
 			{
-				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-				glMatrixMode(GL_PROJECTION);	glLoadMatrixf(currentView->projectionMatrix().ptr());
-				glMatrixMode(GL_MODELVIEW);		glLoadMatrixf(currentView->modelViewMatrix().ptr());				
+				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);			
 
 				particleManager.render(currentView);
 			}
 			i++;
 		}
 	}
-	currentView.reset();
+	currentView.reset(); //set the current view to null
 
-	sceneManager.endRender();
-
-	dataManager.unbindTextures();
+	sceneManager.endRender(); //do some post render cleanup
 
 	if(!multisampling)
 	{
@@ -1094,9 +1107,16 @@ void OpenGLgraphics::render()
  		graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
 		dataManager.setUniform4f("color",white);
 		Profiler.draw();
+
+		if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
+		{
+			setColor(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0));
+			drawOverlay(Rect::XYXY(0,0,sAspect,1), "errorGlow");
+			setColor(1,1,1,1);
+		}
 	#endif
 
-	dataManager.unbindShader();
+
 
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
@@ -1117,7 +1137,6 @@ void OpenGLgraphics::render()
 	dataManager.setUniform1f("gamma",currentGamma);
 	dataManager.setUniform1i("tex",0);
 	renderFBO(RT_FBO_0);
-	dataManager.unbindShader();
 ///////////////////////////////////////////////////////////////////////////////////////
 
 	checkErrors();
@@ -1381,7 +1400,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	glDisable(GL_CULL_FACE);
 
-	glShadeModel(GL_SMOOTH);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
@@ -1582,8 +1600,6 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	dataManager.unbind("model");
-	dataManager.unbindTextures();
 	glColor3f(1,1,1);
 }
 void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
@@ -1648,7 +1664,8 @@ void OpenGLgraphics::checkErrors()
 	const char* errorString = (const char*)gluErrorString(error);
 	if(strcmp(errorString, "no error") != 0)
 	{
-		debugBreak();
+		//debugBreak();
+		errorGlowEndTime = GetTime() + 1000.0;
 	}
 #endif
 }

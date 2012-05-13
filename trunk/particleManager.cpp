@@ -1,8 +1,6 @@
 
 
 #include "engine.h"
-//#include "GL/glee.h"
-//#include <GL/glu.h>
 
 particle::manager& particleManager = particle::manager::getInstance();
 
@@ -210,7 +208,7 @@ emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSec
 		memset(particles,0,compacity*sizeof(particle));
 		memset(vertices,0,compacity*sizeof(vertex)*4);
 	}
-	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM, false);
+	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 
 	VBO->addPositionData(	3,	0*sizeof(float));
 	VBO->addTexCoordData(	2,	3*sizeof(float));
@@ -418,8 +416,6 @@ void emitter::render()
 		dataManager.bind(texture);
 
 		VBO->drawBuffer(GraphicsManager::QUADS, 0, vNum*4);
-
-		dataManager.bindTex(0);
 	}
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -779,6 +775,7 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 	dataManager.bind("particle shader");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1i("depth",1);
+	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 
 	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
@@ -817,7 +814,7 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 		}
 	}
 
-	dataManager.unbindShader();
+	//dataManager.unbindShader();
 }
 void manager::shutdown()
 {

@@ -102,7 +102,6 @@ void manager::render()
 			graphics->drawTriangle(	Vec3f(cursorPos.x,cursorPos.y,0),
 									Vec3f(cursorPos.x+0.015,cursorPos.y-0.023,0),
 									Vec3f(cursorPos.x,cursorPos.y-0.028,0) );
-			dataManager.unbindTextures();
 		}
 	}
 }

@@ -23,8 +23,6 @@ void main()
 
 	float fresnel = clamp(0.2 + (1.0-0.2)*pow(1.0 - NdotL, 2.0), 0.0,1.0); //0.0 = bias; 5.0 = power <--- these change the water reflections
 	vec3 cReflect = textureCube(sky, reflect(normalize(eyeDirection),n)).rgb;
-	
-
 
 	const vec3 darkColor = vec3(0.08, 0.24, 0.26);
 	const vec3 lightColor = vec3(0.12, 0.26, 0.55);

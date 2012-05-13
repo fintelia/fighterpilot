@@ -6,8 +6,9 @@ private:
 		string name;
 		string filename[2];		//extra for shaders
 		set<string> options;
-		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
+		enum assetType{SHADER, TEXTURE, TEXTURE_3D, MODEL, FONT}type;
 		vector<shared_ptr<FileManager::file>> files; //for textures
+		int depth; //for 3d textures
 	};
 	queue<assetFile> assetFiles;
 	queue<assetFile> assetFilesPreload;

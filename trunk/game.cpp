@@ -49,24 +49,23 @@ bool Game::init()
 
 	maxFrameRate = settings.get<float>("graphics", "maxFrameRate");
 
-	Vec2i r, rWanted;
+	
+
+	Vec2u r, rWanted;
 	r.x = GetSystemMetrics(SM_CXSCREEN);
 	r.y = GetSystemMetrics(SM_CYSCREEN);
 	rWanted.x = settings.get<int>("graphics","resolutionX");
 	rWanted.y = settings.get<int>("graphics","resolutionY");
 
-	DEVMODE d;
-	d.dmSize = sizeof(d);
-	d.dmDriverExtra = 0;
-	int i=0;
-	while(EnumDisplaySettings(NULL, i++, &d) != 0 || (rWanted.x != 0 && rWanted.y != 0))
+	auto resolutions = graphics->getSupportedResolutions();
+	for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
 	{
-		if(d.dmPelsWidth == rWanted.x && d.dmPelsHeight == rWanted.y)
+		if(*i == rWanted)
 		{
 			r = rWanted;
-			break;
 		}
 	}
+
 	float gamma = settings.get<float>("graphics","gamma");
 	if(gamma > 0.5 && gamma < 5.0)
 		graphics->setGamma(gamma);

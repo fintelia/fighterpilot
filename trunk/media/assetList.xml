@@ -1,51 +1,20 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <assets>
   <textures>
+    <!-- loading screem -->
     <texture name="menu background"           file="media/menu/menu background.png"   preload="true" />
     <texture name="progress back"             file="media/progress back.png"          preload="true" />
     <texture name="progress front"            file="media/progress front.png"         preload="true" />
 
+    
+    <!-- menu system -->
     <texture name="dialog box"                file="media/dialog box.png" />
     <texture name="dialog back"               file="media/dialogBack.png" />
-    <texture name="white"                     file="media/white.png" tileable="true"/>   
-  	<texture name="grass"                     file="media/grass2.png" tileable="true" />
-    <texture name="rock"                      file="media/rock.png" tileable="true" />
-    <texture name="sand"                      file="media/sand.png" tileable="true" />
-    <texture name="snow"                      file="media/snow.png" tileable="true" />
-    <texture name="noise"                     file="media/noise.png" tileable="true" />
-    <texture name="ocean normals"             file="media/noiseDOT3.png" tileable="true" />
-    <texture name="LCnoise"                   file="media/LCnoise.png" tileable="true" />
-    <texture name="grass normals"             file="media/grass2_normals.png" tileable="true" />
-    <texture name="snow normals"              file="media/snow_normals.png" tileable="true" />  
-    <texture name="radarTex"                  file="media/radar2.png" />
-    <texture name="particle"                  file="media/particle4.png" />	
-    <texture name="radar plane"               file="media/plane radar2.png" />
-    <texture name="explosion fireball"        file="media/fireball4.png" />
-    <texture name="explosion smoke"           file="media/smoke5.png" />
-    <texture name="cockpit"                   file="media/cockpit.png" />
-    <texture name="health bar"                file="media/health bar.png" />
-    <texture name="tilt"                      file="media/tilt.png" />
-    <texture name="targeter"                  file="media/targeter.png" />
-    <texture name="missile smoke"             file="media/particle8.png" />
-    <texture name="key"                       file="media/key.png" />
-    <texture name="next level"                file="media/nextLevel.png" />
-    <texture name="radar frame"               file="media/radar_frame.png" />
-    <texture name="cockpit square"            file="media/cockpit square.png" />
     <texture name="button"                    file="media/button.png" />
     <texture name="file viewer"               file="media/file viewer.png" />
     <texture name="entry bar"                 file="media/entry bar.png" />
-    <texture name="target ring"               file="media/target ring.png" />
-    <texture name="smoke"                     file="media/smokeShape.png" />
-    <texture name="smoke2"                     file="media/smokeShape2.png" />
-    <texture name="contrail"                  file="media/smoke.png" />
-    <texture name="splash"                    file="media/splash.png" />
-    <texture name="fire"                      file="media/fire2.png" />
-    <texture name="flash"                     file="media/flash.png" />
-    <texture name="hex grid"                  file="media/hexGrid.png" tileable="true" />
-    <texture name="bullet"                    file="media/bullet.png" />
     <texture name="glow"                      file="media/glow.png" />
     <texture name="cursor"                    file="media/cursor.png" />
-    <texture name="layers"                    file="media/layers.png" tileable="true"/>
     <texture name="check"                     file="media/check.png" />
     <texture name="check box"                 file="media/check box.png" />
     <texture name="slider"                    file="media/slider.png" />
@@ -57,9 +26,55 @@
     <texture name="menu in game"              file="media/menu/in game.png" />
     <texture name="menu in game select"       file="media/menu/in game select.png" />
     <texture name="thumbnails"                file="media/thumbnails.png" />
-    <texture name="clouds"                    file="media/clouds.png" />
+
+    <!-- HUD -->
+    <texture name="radarTex"                  file="media/radar2.png" />
+    <texture name="cockpit"                   file="media/cockpit.png" />
+    <texture name="health bar"                file="media/health bar.png" />
+    <texture name="tilt"                      file="media/tilt.png" />
+    <texture name="targeter"                  file="media/targeter.png" />
+    <texture name="radar frame"               file="media/radar_frame.png" />
+    <texture name="cockpit square"            file="media/cockpit square.png" />
+    <texture name="target ring"               file="media/target ring.png" />
+    
+    <!-- effects -->
+    <texture name="particle"                  file="media/particle4.png" />	
+    <texture name="explosion fireball"        file="media/fireball4.png" />
+    <texture name="explosion smoke"           file="media/smoke5.png" />
+    <texture name="missile smoke"             file="media/particle8.png" />
+    <texture name="smoke"                     file="media/smokeShape.png" />
+    <texture name="smoke2"                     file="media/smokeShape2.png" />
+    <texture name="contrail"                  file="media/smoke.png" />    
+    <texture name="splash"                    file="media/splash.png" />
+    <texture name="fire"                      file="media/fire2.png" />
+    <texture name="flash"                     file="media/flash.png" />
     <texture name="spark"                     file="media/spark.png" />
+    
+    <!-- terrain -->
+  	<texture name="grass"                     file="media/grass2.png"                 tileable="true" />
+    <texture name="rock"                      file="media/rock.png"                   tileable="true" />
+    <texture name="sand"                      file="media/sand.png"                   tileable="true" />
+    <texture name="snow"                      file="media/snow.png"                   tileable="true" />
+    <texture name="noise"                     file="media/noise.png"                  tileable="true" />
+    <texture name="LCnoise"                   file="media/LCnoise.png"                tileable="true" />
+    <texture name="grass normals"             file="media/grass2_normals.png"         tileable="true" />
+    <texture name="snow normals"              file="media/snow_normals.png"           tileable="true" />
+    
+    <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
+    
+    <!-- world -->
+    <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
+    <texture name="layers"                    file="media/layers.png"                 tileable="true"/>    
+    <texture name="bullet"                    file="media/bullet.png" />
+    <texture name="clouds"                    file="media/clouds.png" />
     <texture name="sun"                       file="media/sun.png" />
+
+    <!-- miscellaneous -->
+    <texture name="white"                     file="media/white.png"                  tileable="true"/>
+    <texture name="next level"                file="media/nextLevel.png" />
+    <texture name="errorGlow"                 file="media/errorGlow.png" />
+    errorGlow
+
   </textures>
 
   <shaders>
@@ -85,8 +100,8 @@
     <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" />
     
     <!-- terrain -->
-    <shader name="grass new terrain"      vertex="media/terrain.vert"        fragment="media/grass2.frag" />
-    <shader name="island new terrain"     vertex="media/terrain.vert"        fragment="media/grass.frag" />
+    <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" />
+    <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" />
     <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" />
 
     <!-- terrain preview -->

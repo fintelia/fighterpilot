@@ -3,7 +3,7 @@
 #include "game.h"
 #include <Windows.h>
 #ifdef XINPUT
-#include <Xinput.h>
+//#include <Xinput.h>
 #endif
 //
 //playerControls::playerControls(int p)//default controls for player p

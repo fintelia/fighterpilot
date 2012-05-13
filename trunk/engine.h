@@ -67,13 +67,6 @@ using boost::lexical_cast;
 #ifndef UNICODE
 #define UNICODE
 #endif
-//#include <windows.h>
-//#include <Shlobj.h>
-//#include <process.h>
-//#include "GL/glee.h"
-//#include <GL/glu.h>
-//#include "png/png.h"
-//#include "xml/tinyxml.h"
 
 //extern bool	active;		// Window Active Flag
 extern const double PI;

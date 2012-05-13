@@ -92,8 +92,6 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 		if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 	}
 
-	dataManager.unbind("model");
-	dataManager.unbindTextures();
 	graphics->setColor(1,1,1);
 }
 void SceneManager::endRender()

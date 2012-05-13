@@ -4,7 +4,6 @@ uniform sampler2D depth;
 
 uniform vec2 invScreenDims;
 
-//varying float depthVal;
 varying vec2 texCoord;
 varying vec4 color;
 

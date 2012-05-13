@@ -46,7 +46,8 @@ private:
 	shared_ptr<GraphicsManager::View> view;
 	
 	LevelFile levelFile;
-	shared_ptr<GraphicsManager::vertexBuffer> terrainVBO;
+	shared_ptr<GraphicsManager::vertexBuffer> terrainVertexBuffer;
+	shared_ptr<GraphicsManager::indexBuffer> terrainIndexBuffer;
 	shared_ptr<GraphicsManager::vertexBuffer> terrainSkirtVBO;
 	shared_ptr<GraphicsManager::texture2D> groundTex;
 	unsigned int numTerrainIndices;
@@ -97,9 +98,10 @@ public:
 	void operator() (popup* p);
 
 private:
-	float getHeight(unsigned int x, unsigned int z);
-	void setHeight(unsigned int x, unsigned int z, float height);
-	void increaseHeight(unsigned x, unsigned int z, float increase);
+	float getHeight(unsigned int x, unsigned int z) const;
+	void setHeight(unsigned int x, unsigned int z, float height) const;
+	void increaseHeight(unsigned x, unsigned int z, float increase) const;
+	Vec3f getNormal(unsigned int x, unsigned int z) const;
 
 	void setMinMaxHeights();
 
