@@ -4,6 +4,7 @@ class DataManager
 private:
 	struct asset{
 		enum assetType{SHADER, TEXTURE, MODEL, FONT}type;
+		virtual ~asset(){}
 	};
 	struct textureAsset: public asset{
 		shared_ptr<GraphicsManager::texture> texture;
@@ -58,12 +59,8 @@ private:
 		asset::assetType type;
 		vector<shared_ptr<FileManager::file>> files; //for textures
 	};
-	queue<assetFile> assetFiles;
-	queue<assetFile> assetFilesPreload;
 
 	map<string,shared_ptr<asset>>	assets;
-	map<int, shared_ptr<asset>>	unnamedAssets;
-	int					currentAssetIndex;
 
 	string				boundShader;
 	//int					boundShaderId;
@@ -90,7 +87,7 @@ public:
 	void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
 	void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
 	void setUniform3f(string name, Color c){setUniform3f(name,c.r,c.r,c.b);}
-	void setUniform4f(string name, Color c, float a = 1.0){setUniform4f(name,c.r,c.r,c.b,a);}
+	void setUniform4f(string name, Color c){setUniform4f(name,c.r,c.r,c.b,c.a);}
 	void setUniform1i(string name, int v0);
 	void setUniform2i(string name, int v0, int v1);
 	void setUniform3i(string name, int v0, int v1, int v2);
@@ -127,7 +124,7 @@ private:
 	//int getId(string name);
 	//int getId(objectType t);
 
-	DataManager():currentAssetIndex(0){}
+	DataManager(){}
 	~DataManager();
 };
 

@@ -53,6 +53,8 @@ void main()
 			+ texture2D(sand,position.xz*0.0003		)*TexValues[1]
 			+ texture2D(grass,position.xz*0.0006	)*TexValues[2]);
 
-	color.rgb *= 0.4 + 0.6 * NdotL;
+	color.rgb *= 0.2 + 0.8 * NdotL;
+
+//	color.rgb *= 0.4 + 0.6 * NdotL;
 	gl_FragColor = color;
 }

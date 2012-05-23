@@ -23,7 +23,6 @@ OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
 	glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vBufferID);
 }
 void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data)
@@ -162,7 +161,6 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
@@ -230,8 +228,6 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 
 	glGenerateMipmap(GL_TEXTURE_3D);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
@@ -247,7 +243,7 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
-	glBindTexture(GL_TEXTURE_3D, 0);
+	//glBindTexture(GL_TEXTURE_3D, 0);
 }
 OpenGLgraphics::textureCubeGL::textureCubeGL()
 {
@@ -314,14 +310,13 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
@@ -516,7 +511,7 @@ OpenGLgraphics::OpenGLgraphics():multisampling(false),samples(0),renderTarget(RT
 
 	context = new Context;
 	//useAnagricStereo(true);
-	//setInterOcularDistance(0.75);
+	//setInterOcularDistance(0.25);
 }
 OpenGLgraphics::~OpenGLgraphics()
 {
@@ -538,18 +533,12 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	setClientStates(true,false,false);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
 
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
@@ -570,18 +559,11 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	setClientStates(true,false,false);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
 
 	glDrawArrays(GL_QUADS, 0, 4);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
 bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
@@ -600,18 +582,11 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	setClientStates(true,false,false);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
 	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
 
 	glDrawArrays(GL_QUADS, 0, 4);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//if(tex != "") dataManager.unbind(tex);
 	return true;
 }
 shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage)
@@ -644,11 +619,7 @@ void OpenGLgraphics::setGamma(float gamma)
 }
 void OpenGLgraphics::setColor(float r, float g, float b, float a)
 {
-	string boundShader = dataManager.getBoundShader();
-	if(boundShader == "ortho")
-		dataManager.setUniform4f("color", r, g, b, a);
-	else
-		glColor4f(r,g,b,a);
+	dataManager.setUniform4f("color", r, g, b, a);
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
@@ -670,7 +641,7 @@ void OpenGLgraphics::setColorMask(bool mask)
 	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.colorBound)
 	{
 		multisampleFBO.colorBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? multisampleFBO.color : 0, 0);
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.color : 0);
 	}
 }
 void OpenGLgraphics::setDepthMask(bool mask)
@@ -693,7 +664,7 @@ void OpenGLgraphics::setDepthMask(bool mask)
 	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.depthBound)
 	{
 		multisampleFBO.depthBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? multisampleFBO.depth : 0, 0);
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.depth : 0);
 	}
 }
 void OpenGLgraphics::setDepthTest(bool enabled)
@@ -857,27 +828,38 @@ void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
 	if(t == RT_FBO_0)
 	{
+		renderTarget = RT_FBO_0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
 	}
 	else if(t == RT_FBO_1)
 	{
+		renderTarget = RT_FBO_1;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
 	}
 	else if(t == RT_MULTISAMPLE_FBO)
 	{
+		renderTarget = RT_MULTISAMPLE_FBO;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
 	}
 	else if(t == RT_SCREEN)
 	{
+		renderTarget = RT_SCREEN;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	}
 }
 void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
 {
-	glActiveTexture(GL_TEXTURE0);
-	if(src == RT_FBO_0)			glBindTexture(GL_TEXTURE_2D, FBOs[0].fboID);
-	else if(src == RT_FBO_1)	glBindTexture(GL_TEXTURE_2D, FBOs[1].fboID);
+	int bufferNum;
+	if(src == RT_FBO_0)			bufferNum = 0;
+	else if(src == RT_FBO_1)	bufferNum = 0;
 	else return;
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].color);
+
+	//glActiveTexture(GL_TEXTURE1);
+	//glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].normals);
+	//glActiveTexture(GL_TEXTURE0);
 
 	glViewport(0,0,sw,sh);
 	drawOverlay(Rect::XYXY(-1,-1,1,1));
@@ -914,18 +896,27 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
 
+		//glGenTextures(1, &FBOs[i].normals);
+		//glBindTexture(GL_TEXTURE_2D, FBOs[i].normals);
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+
 		glGenTextures(1, &FBOs[i].depth);
 		glBindTexture(GL_TEXTURE_2D, FBOs[i].depth);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
 		glGenFramebuffersEXT(1, &FBOs[i].fboID);
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i].fboID);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
+		//glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, FBOs[i].normals, 0);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
 
 		if(!checkForFBOErrors())
@@ -936,7 +927,11 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	{
 		glGenRenderbuffersEXT(1, &multisampleFBO.color);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
-		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA/*GL_RGBA16F*/, sw, sh);
+		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA16F, sw, sh);
+
+		//glGenRenderbuffersEXT(1, &multisampleFBO.normals);
+		//glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.normals);
+		//glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA16F, sw, sh);
 
 		glGenRenderbuffersEXT(1, &multisampleFBO.depth);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
@@ -947,6 +942,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
+		//glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.normals);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
 		//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
@@ -1009,33 +1005,31 @@ void OpenGLgraphics::render()
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 	glEnable(GL_DEPTH_TEST);
 
 //////////////////////////////////SET LIGHTING///////////////////////////////////
-	float lightPos[4] = {lightPosition.x, lightPosition.y, lightPosition.z, 1.0};
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-////////////////////////////////////START 3D/////////////////////////////////////
+	//float lightPos[4] = {lightPosition.x, lightPosition.y, lightPosition.z, 1.0};
+	//glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+////////////////////////////////////3D RENDERING/////////////////////////////////////
+	Vec3f cameraOffset;
+	for(int eye=0; eye<(stereo?2:1); eye++)
+	{
+		//set up stereo
+		if(stereo && eye==0)
+		{
+			leftEye = true;
+			glColorMask(true,false,false,true);
+			cameraOffset = Vec3f(-interOcularDistance/2,0,0);
+		}
+		else if(stereo && eye==1)
+		{
+			leftEye = false;
+			glColorMask(false,true,true,true);
+			cameraOffset = Vec3f(interOcularDistance/2,0,0);
 
-	/*if(stereo)
-	{
-		glViewport(0, 0, sw, sh);				// stereo disabled for now
-	
-		leftEye = true;
-		glColorMask(true,false,false,true);
-		menuManager.render3D(0); // only the first view is drawn with stereo rendering
-	
-		glClear(GL_DEPTH_BUFFER_BIT);
-	
-		leftEye = false;
-		glColorMask(false,true,true,true);
-		menuManager.render3D(0);
-	
-		glColorMask(true,true,true,true);
-	}
-	else*/
-	{
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
+		//render scene
 		for(auto i = views_new.begin(); i != views_new.end();)
 		{
 			if(i->expired()) //if the view no longer exists
@@ -1046,67 +1040,71 @@ void OpenGLgraphics::render()
 			{
 				dataManager.bind("model");
 				currentView = shared_ptr<View>(*i);
+				auto c = currentView->camera();
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+				
+				if(stereo)
+					currentView->shiftCamera(cameraOffset);
 
 				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				dataManager.setUniformMatrix("modelTransform", Mat4f());
-
 				currentView->render();
+
+				if(stereo)
+					currentView->shiftCamera(Vec3f(0,0,0));
 
 				i++;
 			}
 		}
-		currentView.reset();
-	}
-///////////////////////////////////START PARTICLES///////////////////////
 
-	if(multisampling)
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-	}
-	else
-	{
-		setDepthMask(false);
-	}
-	glDisable(GL_DEPTH_TEST);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
-	
-	for(auto i = views_new.begin(); i != views_new.end();)
-	{
-		if(i->expired()) //check if the view no longer exists (just to be safe)
+		//capture depth buffer for reading and bind it to texture unit 1
+		if(multisampling)
 		{
-			i = views_new.erase(i);
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+			glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
 		}
 		else
 		{
-			currentView = shared_ptr<View>(*i);
-			if(currentView->renderParticles())
-			{
-				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);			
+			setDepthMask(false);
+		}
+		glDisable(GL_DEPTH_TEST);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
 
-				particleManager.render(currentView);
+		//render particles
+		for(auto i = views_new.begin(); i != views_new.end();)
+		{
+			if(i->expired()) //check if the view no longer exists (just to be safe)
+			{
+				i = views_new.erase(i);
 			}
-			i++;
+			else
+			{
+				currentView = shared_ptr<View>(*i);
+				if(currentView->renderParticles())
+				{
+					glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);			
+					
+					if(stereo)	currentView->shiftCamera(cameraOffset);
+					particleManager.render(currentView);
+					if(stereo)	currentView->shiftCamera(Vec3f(0,0,0));
+				}
+				i++;
+			}
 		}
 	}
 	currentView.reset(); //set the current view to null
+	if(stereo)
+		glColorMask(true,true,true,true);
 
 	sceneManager.endRender(); //do some post render cleanup
-
-	if(!multisampling)
-	{
-		setDepthMask(true);
-	}
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
-	//depth testing was already disabled for particles
 
 	dataManager.bind("ortho");
 	dataManager.setUniform4f("color",white);
@@ -1126,17 +1124,22 @@ void OpenGLgraphics::render()
 			setColor(1,1,1,1);
 		}
 	#endif
-
-
-
-
 ///////////////////////////////////////Post Processing//////////////////////////////////
 	if(multisampling)
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		//glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		//glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
+		//glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		//glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT);
+		//glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
 	}
@@ -1152,47 +1155,6 @@ void OpenGLgraphics::render()
 
 	checkErrors();
 }
-//void OpenGLgraphics::viewport(int x,int y,int width,int height)
-//{
-//	GraphicsManager::viewport(x,y,width,height);
-//	glViewport(x,y,width,height);
-//}
-//void OpenGLgraphics::perspective(float fovy, float aspect, float zNear, float zFar)
-//{
-//	GraphicsManager::perspective(fovy, aspect, zNear, zFar);
-//	glMatrixMode(GL_PROJECTION);
-//	glLoadIdentity();
-//	gluPerspective(fovy, aspect, zNear, zFar);
-//}
-//void OpenGLgraphics::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
-//{
-//	GraphicsManager::ortho(left, right, bottom, top, zNear, zFar);
-//	glMatrixMode(GL_PROJECTION);
-//	glLoadIdentity();
-//	glOrtho(left, right, bottom, top, zNear, zFar);
-//}
-//void OpenGLgraphics::lookAt(Vec3f eye, Vec3f center, Vec3f up)
-//{
-//	if(stereo)
-//	{
-//		Vec3f f = (center - eye).normalize();
-//		Vec3f r = (up.normalize()).cross(f);
-//		if(leftEye)
-//		{
-//			eye += r * interOcularDistance * 0.5;
-//			center += r * interOcularDistance * 0.5;
-//		}
-//		else
-//		{
-//			eye -= r * interOcularDistance * 0.5;
-//			center -= r * interOcularDistance * 0.5;
-//		}
-//	}
-//	GraphicsManager::lookAt(eye, center, up);
-//	glMatrixMode(GL_MODELVIEW);
-//	glLoadIdentity();
-//	gluLookAt(eye.x,eye.y,eye.z,center.x,center.y,center.z,up.x,up.y,up.z);
-//}
 void OpenGLgraphics::destroyWindow()
 {
 	destroyFBOs();
@@ -1403,20 +1365,15 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	//graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_COLOR_MATERIAL);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_NORMALIZE);
 	glEnable(GL_BLEND);
-	glEnable(GL_MULTISAMPLE);
-
 	glDisable(GL_CULL_FACE);
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
+	//glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
+	//glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
+	//glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
+	//glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
+	//glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -1569,8 +1526,8 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	//Mat4f matV2;	glGetFloatv(GL_MODELVIEW_MATRIX,matV2.ptr());
 	//Mat4f matP2;	glGetFloatv(GL_PROJECTION_MATRIX,matP2.ptr());
 	//dataManager.setUniformMatrix("modelviewProjection",mat);
-	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
-	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
+//	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
+//	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
 
@@ -1588,7 +1545,8 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
 	{
 		dataManager.bind(i->tex == "" ? "white" : i->tex);
-		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
+		dataManager.setUniform4f("color", i->color);
+		//glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
 
 		if(i->color.a > 0.999 && !dMask)
 		{
@@ -1601,17 +1559,11 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 			glDepthMask(false);
 		}
 		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);
-		//glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
 	}
 
 	if(!dMask)	glDepthMask(true);
 
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_NORMAL_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glColor3f(1,1,1);
+	dataManager.setUniform4f("color", 1,1,1,1);
 }
 void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {
@@ -1645,28 +1597,24 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 
 	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
 	{
-		glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
-
+		setColor(i->color.r,i->color.g,i->color.b, i->color.a);
+		
 		if(i->color.a > 0.999 && !dMask)
 		{
 			dMask = true;
-			glDepthMask(true);
+			setDepthMask(true);
 		}
 		else if(i->color.a <= 0.999 && dMask)
 		{
 			dMask = false;
-			glDepthMask(false);
+			setDepthMask(false);
 		}
 		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);checkErrors();
 		//glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
 	}
 	if(!dMask)	glDepthMask(true);
 
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	//glDisableClientState(GL_NORMAL_ARRAY);
-	//glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glColor3f(1,1,1);
+	setColor(1,1,1,1);
 }
 void OpenGLgraphics::checkErrors()
 {

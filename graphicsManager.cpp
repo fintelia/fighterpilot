@@ -70,10 +70,10 @@ void GraphicsManager::View::perspective(float fovy, float aspect, float zNear, f
 	mProjection.zFar = zFar;
 
 	float f = 1.0 / tan(fovy*PI/180 / 2.0);
-	mProjectionMat.set(	f/aspect,	0.0,		0.0,						0.0,
-						0.0,		f,			0.0,						0.0,
-						0.0,		0.0,		(zFar+zNear)/(zNear-zFar),	2.0*zFar*zNear/(zNear-zFar),
-						0.0,		0.0,		-1.0,						0.0);
+	mProjectionMat.set(	f/aspect,	0.0,	0.0,						0.0,
+						0.0,		f,		0.0,						0.0,
+						0.0,		0.0,	(zFar+zNear)/(zNear-zFar),	2.0*zFar*zNear/(zNear-zFar),
+						0.0,		0.0,	-1.0,						0.0);
 
 }
 void GraphicsManager::View::ortho(float left, float right, float bottom, float top, float zNear, float zFar)
@@ -166,6 +166,12 @@ bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 		return false;
 	}
 	return true;
+}
+void GraphicsManager::View::shiftCamera(Vec3f shift)
+{
+	Vec3f diff = Quat4f(mCamera.fwd) * (shift - cameraShift);
+	cameraShift = shift;
+	lookAt(mCamera.eye + diff, mCamera.eye + diff + mCamera.fwd, mCamera.up);
 }
 //
 //Vec2f GraphicsManager::project(Vec3f p, unsigned int view)

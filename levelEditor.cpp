@@ -75,14 +75,15 @@ bool levelEditor::init()
 
 	scrollVal=0.0;
 	//level->newGround(129,129);
-	levelFile.heights = new float[257*257];
-	levelFile.info.mapResolution.x = 257;
-	levelFile.info.mapResolution.y = 257;
+	levelFile.heights = new float[1025*1025];
+	levelFile.info.mapResolution.x = 1025;
+	levelFile.info.mapResolution.y = 1025;
+	diamondSquare(0.17,0.5,4);
 	levelFile.info.mapSize.x = 25700;
 	levelFile.info.mapSize.y = 25700;
 
-	diamondSquare(0.17,0.5,3);
-	smooth(1);
+
+	//smooth(1);
 
 	resetView();
 
@@ -183,7 +184,7 @@ int levelEditor::update()
 		}
 		else if(buttons["dSquare"]->checkChanged())
 		{
-			diamondSquare(0.17,0.5,3);
+			diamondSquare(0.17,0.5,4);
 		}
 		else if(buttons["fromFile"]->checkChanged())
 		{
@@ -522,13 +523,13 @@ void levelEditor::setMinMaxHeights()
 }
 float levelEditor::randomDisplacement(float h1, float h2, float d)
 {
-	d *= 65;
+	d *= 65.0/8;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + r) / 2.0;
  }
 float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, float d)
 {
-	d *= 65;
+	d *= 65.0/8;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + h3 + h4 + r) / 4.0;
 }
@@ -604,19 +605,25 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 		}
 	}
 	smooth(1);
+	setMinMaxHeights();
 
-	//for(x=0;x<sLen;x++)					//island
-	//{
-	//	for(y=0;y<sLen;y++)
-	//	{
-	//		level->ground()->setHeight(x,(level->ground()->height(x,y)-minHeight)*clamp(2.0-2.0*sqrt((x-sLen/2)*(x-sLen/2)+(y-sLen/2)*(y-sLen/2))/(sLen/2),1.0,0.0),y);
-	//	}
-	//}
-	//
+	float d, d_x, d_y;
+	for(x=0;x<levelFile.info.mapResolution.x;x++)					//island
+	{
+		for(y=0;y<levelFile.info.mapResolution.y;y++)
+		{
+			d_x = 2.0*x/levelFile.info.mapResolution.x - 1.0;
+			d_y = 2.0*y/levelFile.info.mapResolution.y - 1.0;
+			d = sqrt(d_x*d_x + d_y*d_y);
+
+			setHeight(x, y, (getHeight(x, y)-levelFile.info.minHeight) * clamp(2.0 - 2.0*d, 0.0, 1.0) + levelFile.info.minHeight);
+		}
+	}
+	
 
 	setMinMaxHeights();
-	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
-	sliders["sea level"]->setValue(0.333);
+	levelFile.info.mapSize = levelFile.info.mapResolution * 12.5;
+	sliders["sea level"]->setValue(0.5);
 	resetView();
 	terrainValid=false;
 }
@@ -1062,10 +1069,12 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(!terrainValid)
 		{
+			const int LOD = 8;//must be a power of 2
+
 			unsigned int width = levelFile.info.mapResolution.x;
 			unsigned int height = levelFile.info.mapResolution.y;
-			unsigned int nWidth = (width-1)/2+1;
-			unsigned int nHeight = (height-1)/2+1;
+			unsigned int nWidth = (width-1)/LOD+1;
+			unsigned int nHeight = (height-1)/LOD+1;
 
 			//if(nWidth * nHeight > 65535) //we are now using 4 byte indices so this is not a problem
 			//{
@@ -1073,14 +1082,16 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			//	return;
 			//}
 
+			
 
-			litVertex3D* vertices = new litVertex3D[nWidth * nHeight];
-			for(int x = 0; x < width; x += 2)
+			float* vertices = new float[nWidth * nHeight * 3];
+			for(int x = 0; x < width; x += LOD)
 			{
-				for(int z = 0; z < height; z += 2)
+				for(int z = 0; z < height; z += LOD)
 				{
-					vertices[x/2 + nWidth * z/2].position = Vec3f(levelFile.info.mapSize.x * static_cast<float>(x) / width,  getHeight(x, z)-levelFile.info.minHeight, levelFile.info.mapSize.y * static_cast<float>(z) / height);
-					vertices[x/2 + nWidth * z/2].normal = getNormal(x, z);
+					vertices[(x/LOD + nWidth * z/LOD)*3 + 0] = levelFile.info.mapSize.x * static_cast<float>(x) / width;
+					vertices[(x/LOD + nWidth * z/LOD)*3 + 1] = getHeight(x, z)-levelFile.info.minHeight;
+					vertices[(x/LOD + nWidth * z/LOD)*3 + 2] = levelFile.info.mapSize.y * static_cast<float>(z) / height;
 				}
 			}
 
@@ -1102,9 +1113,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			}
 
 			terrainVertexBuffer->addPositionData(3,	0);
-			terrainVertexBuffer->addNormalData(3, 3*sizeof(float));
-			terrainVertexBuffer->setTotalVertexSize(sizeof(litVertex3D));
-			terrainVertexBuffer->setVertexData(sizeof(litVertex3D)*nWidth*nHeight, vertices);
+			terrainVertexBuffer->setTotalVertexSize(sizeof(float)*3);
+			terrainVertexBuffer->setVertexData(sizeof(float)*3*nWidth*nHeight, vertices);
 
 			terrainIndexBuffer->setData(indices, numTerrainIndices);
 			//terrainVBO->setIndexData(sizeof(unsigned short)*numTerrainIndices, indices);

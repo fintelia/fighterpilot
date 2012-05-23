@@ -221,13 +221,14 @@
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass preview.frag" />
-    <None Include="media\grass2.frag" />
+    <None Include="media\grass.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
     <None Include="media\hex grid.frag" />
     <None Include="media\hex grid.vert" />
     <None Include="media\icon.ico" />
     <None Include="media\island preview.frag" />
+    <None Include="media\island.frag" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
     <None Include="media\modelData.txt" />

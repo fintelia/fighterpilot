@@ -82,6 +82,8 @@ public:
 		int mRenderFuncParam;
 		function<void(int)> mRenderFunc;
 
+		Vec3f cameraShift;
+
 	public:
 		View();
 		Vec2f project(Vec3f p);
@@ -109,6 +111,8 @@ public:
 
 		bool renderParticles(){return mRenderParticles;}
 		void renderParticles(bool b){mRenderParticles=b;}
+
+		void shiftCamera(Vec3f shift);
 	};
 	class indexBuffer;
 	class vertexBuffer
@@ -128,14 +132,12 @@ public:
 		unsigned int colorDataSize;
 		unsigned int colorDataOffset;
 
-		unsigned int extraDataSize;
-		unsigned int extraDataOffset;
 
 		unsigned int totalVertexSize;
 
 		UsageFrequency usageFrequency;
 
-		vertexBuffer(UsageFrequency u): usageFrequency(u), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), extraDataSize(0), extraDataOffset(0), totalVertexSize(0){}
+		vertexBuffer(UsageFrequency u): usageFrequency(u), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), totalVertexSize(0){}
 
 		virtual void bindBuffer(unsigned int offset){}
 		virtual void bindBuffer(){bindBuffer(0);}
@@ -147,7 +149,6 @@ public:
 		virtual void addTexCoordData(unsigned int size, unsigned int offset)	{texCoordDataSize = size; texCoordDataOffset = offset;}
 		virtual void addNormalData(unsigned int size, unsigned int offset)		{normalDataSize = size;	normalDataOffset = offset;}
 		virtual void addColorData(unsigned int size, unsigned int offset)		{colorDataSize = size;	colorDataOffset = offset;}
-		virtual void addExtraData(unsigned int size, unsigned int offset)		{extraDataSize = size;	extraDataOffset = offset;}
 
 		virtual void setTotalVertexSize(unsigned int totalSize){totalVertexSize = totalSize;}
 
@@ -370,6 +371,7 @@ protected:
 	
 	struct FBO{
 		unsigned int color;
+		//unsigned int normals;
 		unsigned int depth;
 		unsigned int fboID;
 		bool colorBound;
