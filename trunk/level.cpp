@@ -30,7 +30,7 @@ bool LevelFile::saveZIP(string filename)
 			maxHeight = max(maxHeight, heights[x+z*width]);
 			minHeight = min(minHeight, heights[x+z*width]);
 		}
-	}
+	} 
 
 	//store heightmap data in our "heightmap.raw" file 
 	rawFile->size = 2 * width * height;

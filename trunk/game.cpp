@@ -78,7 +78,7 @@ bool Game::init()
 		return false;
 	}
 	
-	graphics->setVSync(maxFrameRate > 75.0);
+	graphics->setVSync(maxFrameRate <= 75.0);
 
 //	ShowHideTaskBar(false);
 //////

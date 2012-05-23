@@ -92,17 +92,17 @@
 
     <!-- general -->
     <shader name="particle shader"        vertex="media/particle.vert"       fragment="media/particle.frag" />
-    <shader name="model"                  vertex="media/model.vert"          fragment="media/model.frag" />
+    <shader name="model"                  vertex="media/model.vert"          fragment="media/model.frag" Position="3" TexCoord="2" Normal="3"/>
 
     <!-- world -->
-    <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" />
-    <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" />
-    <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" />
+    <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" Position="3" />
+    <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" Position="3" TexCoord="2" />
+    <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" Position="3" TexCoord="2" />
     
     <!-- terrain -->
-    <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" />
-    <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" />
-    <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" />
+    <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" Position="3" />
+    <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" Position="3" />
+    <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" Position="3" />
 
     <!-- terrain preview -->
     <shader name="island preview terrain" vertex="media/terrain.vert"        fragment="media/island preview.frag" />

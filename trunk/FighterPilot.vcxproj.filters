@@ -476,9 +476,6 @@
     <None Include="media\snow.frag">
       <Filter>shaders\terrain</Filter>
     </None>
-    <None Include="media\grass2.frag">
-      <Filter>shaders\terrain</Filter>
-    </None>
     <None Include="media\model.frag">
       <Filter>shaders\model</Filter>
     </None>
@@ -556,6 +553,12 @@
     </None>
     <None Include="media\ocean preview.vert">
       <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\grass.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\island.frag">
+      <Filter>shaders\terrain</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

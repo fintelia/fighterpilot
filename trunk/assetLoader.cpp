@@ -8,6 +8,11 @@ string getAttribute(TiXmlElement* element, const char* attribute)
 	string s = (c != NULL) ? string(c) : string("");
 	return s;
 }
+int getIntAttribute(TiXmlElement* element, const char* attribute)//returns 0 on failure
+{
+	int i;
+	return element->QueryIntAttribute(attribute, &i) == TIXML_SUCCESS ? i : 0;
+}
 bool AssetLoader::loadAssetList()
 {
 	TiXmlDocument doc("media/assetList.xml");
@@ -40,41 +45,55 @@ bool AssetLoader::loadAssetList()
 
 			while(textureElement != nullptr)
 			{
-				assetFile tmpAssetFile;
 				if(strcmp(textureElement->Value(), "texture") == 0)
 				{
-					tmpAssetFile.type = assetFile::TEXTURE;
-				}
-				else if(strcmp(textureElement->Value(), "texture3D") == 0 && textureElement->QueryIntAttribute("depth", &tmpAssetFile.depth) == TIXML_SUCCESS)
-				{
-					tmpAssetFile.type = assetFile::TEXTURE_3D;
-				}
-				else
-				{
-					textureElement = textureElement->NextSiblingElement();
-					continue;
-				}
+					textureAssetFile* tmpAssetFile = new textureAssetFile;
+					tmpAssetFile->name = getAttribute(textureElement, "name");
+					string filename = getAttribute(textureElement, "file");
+					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
 
-				tmpAssetFile.name = getAttribute(textureElement, "name");
-				tmpAssetFile.filename[0] = getAttribute(textureElement, "file");
+					if(tmpAssetFile->name == "" || filename == "")
+					{
+						debugBreak();
+						continue;
+					}
 
-				if(getAttribute(textureElement,"tileable") == "true")
-					tmpAssetFile.options.insert("tileable");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "")
-				{
 					if(getAttribute(textureElement,"preload") == "true")
 					{
-						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],false));
-						assetFilesPreload.push(tmpAssetFile);
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
 					}
 					else
 					{
-						tmpAssetFile.files.push_back(fileManager.loadTextureFile(tmpAssetFile.filename[0],true));
-						assetFiles.push(tmpAssetFile);
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+					}
+
+				}
+				else if(strcmp(textureElement->Value(), "texture3D") == 0)
+				{
+					texture3AssetFile* tmpAssetFile = new texture3AssetFile;
+					tmpAssetFile->name = getAttribute(textureElement, "name");
+					string filename = getAttribute(textureElement, "file");
+					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
+
+					if(tmpAssetFile->name == "" || filename == "" || textureElement->QueryIntAttribute("depth", &tmpAssetFile->depth) != TIXML_SUCCESS)
+					{
+						debugBreak();
+						continue;
+					}
+
+					if(getAttribute(textureElement,"preload") == "true")
+					{
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+					}
+					else
+					{
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
 					}
 				}
-				else debugBreak();
 
 				textureElement = textureElement->NextSiblingElement();
 			}
@@ -96,34 +115,33 @@ bool AssetLoader::loadAssetList()
 
 			while(shaderElement != nullptr)
 			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = assetFile::SHADER;
+				shaderAssetFile* tmpAssetFile = new shaderAssetFile;
+				tmpAssetFile->name = getAttribute(shaderElement, "name");
+				tmpAssetFile->positionComponents = getIntAttribute(shaderElement, "Position");
+				tmpAssetFile->texCoordComponents = getIntAttribute(shaderElement, "TexCoord");
+				tmpAssetFile->normalComponents = getIntAttribute(shaderElement, "Normal");
+				string vertFilename = getAttribute(shaderElement, "vertex");
+				string fragFilename = getAttribute(shaderElement, "fragment");
+				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
 
-				c = shaderElement->Attribute("name");		tmpAssetFile.name = c!=nullptr ? c : "";
-				c = shaderElement->Attribute("vertex");		tmpAssetFile.filename[0] = c!=nullptr ? c : "";
-				c = shaderElement->Attribute("fragment");	tmpAssetFile.filename[1] = c!=nullptr ? c : "";
-
-				const char* use_sAspect = shaderElement->Attribute("sAspect");
-				if(use_sAspect != nullptr && string(use_sAspect) == "true")
-					tmpAssetFile.options.insert("use_sAspect");
-
-				if(tmpAssetFile.name != "" && tmpAssetFile.filename[0] != "" && tmpAssetFile.filename[1] != "")
+				if(tmpAssetFile->name == "" || vertFilename == "" || fragFilename == "")
 				{
-					const char* preload = shaderElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[1],false));
-						assetFilesPreload.push(tmpAssetFile);
-					}
+					debugBreak();
+					continue;
 				}
-				else debugBreak();
+
+				if(getAttribute(shaderElement,"preload") == "true")
+				{
+					tmpAssetFile->vertFile = fileManager.loadTextFile(vertFilename,false);
+					tmpAssetFile->fragFile = fileManager.loadTextFile(fragFilename,false);
+					assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+				}
+				else
+				{
+					tmpAssetFile->vertFile = fileManager.loadTextFile(vertFilename,true);
+					tmpAssetFile->fragFile = fileManager.loadTextFile(fragFilename,true);
+					assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+				}
 				shaderElement = shaderElement->NextSiblingElement();
 			}
 		}
@@ -143,16 +161,18 @@ bool AssetLoader::loadAssetList()
 
 			while(modelElement != nullptr)
 			{
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = assetFile::MODEL;
+				modelAssetFile* tmpAssetFile = new modelAssetFile;
 
-				c = modelElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
-				c = modelElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
+				tmpAssetFile->name = getAttribute(modelElement, "name");
+				tmpAssetFile->filename = getAttribute(modelElement, "file");
 
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
-					assetFiles.push(tmpAssetFile);
-				else
+				if(tmpAssetFile->name == "" || tmpAssetFile->filename == "")
+				{
 					debugBreak();
+					continue;
+				}
+
+				assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
 
 				modelElement = modelElement->NextSiblingElement();
 			}
@@ -174,27 +194,26 @@ bool AssetLoader::loadAssetList()
 
 			while(assetElement != nullptr)
 			{	
-				assetFile tmpAssetFile;
-				tmpAssetFile.type = assetFile::FONT;
+				fontAssetFile* tmpAssetFile = new fontAssetFile;
+				tmpAssetFile->name = getAttribute(assetElement, "name");
+				string filename = getAttribute(assetElement, "file");
 
-				c = assetElement->Attribute("name");	tmpAssetFile.name = c!=nullptr ? c : "";
-				c = assetElement->Attribute("file");	tmpAssetFile.filename[0] = c!=nullptr ? c : "";
-
-				if(tmpAssetFile.name !="" && tmpAssetFile.filename[0] != "")
+				if(tmpAssetFile->name == "" || filename == "")
 				{
-					const char* preload = assetElement->Attribute("preload");
-					if(preload == nullptr || string(preload) != "true")
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],true));
-						assetFiles.push(tmpAssetFile);
-					}
-					else
-					{
-						tmpAssetFile.files.push_back(fileManager.loadTextFile(tmpAssetFile.filename[0],false));
-						assetFilesPreload.push(tmpAssetFile);
-					}
+					debugBreak();
+					continue;
 				}
-				else debugBreak();
+
+				if(getAttribute(assetElement,"preload") == "true")
+				{
+					tmpAssetFile->file = fileManager.loadTextFile(filename,false);
+					assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+				}
+				else
+				{
+					tmpAssetFile->file = fileManager.loadTextFile(filename,true);
+					assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+				}
 
 				assetElement = assetElement->NextSiblingElement();
 			}
@@ -209,7 +228,7 @@ int AssetLoader::loadAsset()
 		return 0;
 
 	bool loadedAsset=false;
-	assetFile file;
+	shared_ptr<assetFile> file;
 	bool preload;
 	auto pop = [this](bool p)
 	{
@@ -223,92 +242,66 @@ int AssetLoader::loadAsset()
 		////////////////////set file////////////////////////
 		file = (preload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
 		////////////////////////////////////////////////////
-		if(file.type == assetFile::TEXTURE)
+		if(file->getType() == assetFile::TEXTURE)
 		{
-			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(!file.files.front()->complete()) break;
+			auto textureAsset = dynamic_pointer_cast<textureAssetFile>(file);
+			if(!textureAsset->file->complete()) break;
 
-			bool t = file.options.count("tileable") != 0;
-
-			shared_ptr<FileManager::textureFile> f = static_pointer_cast<FileManager::textureFile>(file.files.front());
 			auto texture = graphics->genTexture2D();
-			texture->setData(f->width, f->height, ((GraphicsManager::texture::Format)f->channels), f->contents, t);
-			dataManager.addTexture(file.name, texture);
+			texture->setData(textureAsset->file->width, textureAsset->file->height, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+			dataManager.addTexture(textureAsset->name, texture);
 
 			pop(preload);
 		}
-		else if(file.type == assetFile::TEXTURE_3D)
+		else if(file->getType() == assetFile::TEXTURE_3D)
 		{
-			if(file.files.empty()) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(!file.files.front()->complete()) break;
-
-			bool t = file.options.count("tileable") != 0;
-
-			shared_ptr<FileManager::textureFile> f = static_pointer_cast<FileManager::textureFile>(file.files.front());
+			auto textureAsset = dynamic_pointer_cast<texture3AssetFile>(file);
+			if(!textureAsset->file->complete()) break;
 			auto texture = graphics->genTexture3D();
-			texture->setData(f->width, f->height/file.depth, file.depth, ((GraphicsManager::texture::Format)f->channels), f->contents, t);
-			dataManager.addTexture(file.name, texture);
+			texture->setData(textureAsset->file->width, textureAsset->file->height/textureAsset->depth, textureAsset->depth, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+			dataManager.addTexture(textureAsset->name, texture);
 
 			pop(preload);
 		}
-		else if(file.type == assetFile::SHADER)
+		else if(file->getType() == assetFile::SHADER)
 		{
-			if(file.files.size() == 0) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(file.files.size() == 1) file.files.push_back(fileManager.loadTextureFile(file.filename[0]));
-			if(!file.files[0]->complete() || !file.files[1]->complete()) break;
+			auto shaderAsset = dynamic_pointer_cast<shaderAssetFile>(file);
+			if(!shaderAsset->vertFile->complete() || !shaderAsset->fragFile->complete()) break;
 			
 			auto shader = graphics->genShader();
-			if(!shader->init(dynamic_pointer_cast<FileManager::textFile>(file.files[0])->contents.c_str(), dynamic_pointer_cast<FileManager::textFile>(file.files[1])->contents.c_str()))
+			if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
 			{
 #ifdef _DEBUG
-				messageBox(string("error in shader ") + file.name + ":\n\n" + shader->getErrorStrings());
+				messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 			}
 			
-			if(file.options.count("use_sAspect") != 0)
+			if(shaderAsset->use_sAspect)
 			{
 				shader->setUniform1f("sAspect",sAspect);
-				dataManager.addShader(file.name, shader, true);
+				dataManager.addShader(shaderAsset->name, shader, true);
 			}
 			else
 			{
-				dataManager.addShader(file.name, shader, false);
+				dataManager.addShader(shaderAsset->name, shader, false);
 			}
-			//auto shaderPtr = registerShader(dynamic_pointer_cast<FileManager::textFile>(file.files[0]), dynamic_pointer_cast<FileManager::textFile>(file.files[1]));
-			//if(shaderPtr)
-			//{
-			//	assets[file.name] = shared_ptr<asset>(shaderPtr);
-			//	if(shaderPtr && file.options.count("use_sAspect") != 0)
-			//	{
-			//		auto s = assets.find(file.name);
-			//		static_pointer_cast<shaderAsset>(s->second)->use_sAspect = true;
-			//
-			//		bind(file.name);
-			//		setUniform1f("sAspect",sAspect);
-			//		unbind(file.name);
-			//	}
-			//}
 			pop(preload);
-			//break;
 		}
-		else if(file.type == assetFile::MODEL)
+		else if(file->getType() == assetFile::MODEL)
 		{
-			dataManager.addModel(file.name, file.filename[0]);
-			//auto modelPtr = registerOBJ(file.filename[0]);
-			//if(modelPtr) assets[file.name] = shared_ptr<asset>(modelPtr);
+			auto modelAsset = dynamic_pointer_cast<modelAssetFile>(file);
+			dataManager.addModel(modelAsset->name, modelAsset->filename);
 			pop(preload);
-			break;
-		}
-		else if(file.type == assetFile::FONT)
-		{
-			if(file.files.empty()) file.files.push_back(fileManager.loadTextFile(file.filename[0]));
-			if(!file.files.front()->complete()) break;
 
-			dataManager.addFont(file.name, dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
-			//auto fontPtr = registerFont(dynamic_pointer_cast<FileManager::textFile>(file.files.front()));
-			//if(fontPtr) assets[file.name] = shared_ptr<asset>(fontPtr);
-			pop(preload);
 			break;
+		}
+		else if(file->getType() == assetFile::FONT)
+		{
+			auto fontAsset = dynamic_pointer_cast<fontAssetFile>(file);
+			if(!fontAsset->file->complete()) break;
+
+			dataManager.addFont(fontAsset->name, fontAsset->file);
+			pop(preload);
 		}
 	}while(!assetFilesPreload.empty() && !assetFiles.empty());
 	

@@ -71,7 +71,6 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 			for(auto material = modelPtr->materials.begin(); material != modelPtr->materials.end(); material++)
 			{
 				dataManager.bind(material->tex == "" ? "white" : material->tex);
-				//glColor4f(material->color.r,material->color.g,material->color.b, material->color.a);
 				graphics->setColor(material->color.r,material->color.g,material->color.b, material->color.a);
 
 				if((material->color.a > 0.999 && pass == 0) || (material->color.a <= 0.999 && pass == 1))

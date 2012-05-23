@@ -1,5 +1,4 @@
 
-
 varying vec3 position;
 varying vec2 texCoord;
 

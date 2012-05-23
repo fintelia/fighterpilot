@@ -449,22 +449,12 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	//dataManager.setUniform1i("groundTex",		2);
 	//dataManager.setUniform1i("snow_normals",	3);
 
-	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	//glDisable(GL_CULL_FACE);
-
 	unsigned int bufferOffset;
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
 	{
 		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
 		indexBuffers[(*i)->level]->drawBuffer(GraphicsManager::TRIANGLES, vertexBuffer, bufferOffset);
 	}
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 TerrainPage::~TerrainPage()
 {
@@ -564,17 +554,9 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
 	{
 	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
-	//	cubeMapTex[i + 0] = ((brightness) * 1.0 + (1.0-brightness) * 0.2) * 255.0;
-	//	cubeMapTex[i + 1] = ((brightness) * 1.0 + (1.0-brightness) * 0.2) * 255.0;
-	//	cubeMapTex[i + 2] = ((brightness) * 1.0 + (1.0-brightness) * 1.0) * 255.0;
-
 		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853),0.0,1.0) * 255.0;
 		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
 		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
-
-	//	cubeMapTex[i + 0] = cubeMap[i + 0] > 1.0 ? 255 : 0;//clamp(cubeMap[i + 0],0.0,1.0) * 255;
-	//	cubeMapTex[i + 1] = cubeMap[i + 0] > 1.0 ? 255 : 0;//clamp(cubeMap[i + 1],0.0,1.0) * 255;
-	//	cubeMapTex[i + 2] = cubeMap[i + 0] > 1.0 ? 255 : 0;//clamp(cubeMap[i + 2],0.0,1.0) * 255;
 	}
 
 	t = GetTime() - t;
@@ -583,33 +565,6 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	skyTexture = graphics->genTextureCube();
 
 	skyTexture->setData(l, l, GraphicsManager::texture::RGB, cubeMapTex);
-
-	//glGenTextures(1, &skyTextureId);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, skyTextureId);
-
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
-	//glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB8, l, l, 0, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
-
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 0]);
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 1]);
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 2]);
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 3]);
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 4]);
-	////gluBuild2DMipmaps(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, GL_RGB8, 64, 64, GL_RGB, GL_UNSIGNED_BYTE, &cubeMapTex[l*l*3 * 5]);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	delete[] cubeMap;
 	delete[] cubeMapTex;
@@ -711,29 +666,14 @@ void Terrain::generateOceanTexture()
 	oceanTexture = graphics->genTexture3D();
 	oceanTexture->setData(resolution, resolution, depth, GraphicsManager::texture::RGBA, textureData, true);
 
-	//glGenTextures(1,&oceanTextureId);
-	//glBindTexture(GL_TEXTURE_3D, oceanTextureId);
-
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	//glTexParameteri(GL_TEXTURE_3D, GL_GENERATE_MIPMAP, TRUE);
-	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, resolution, resolution, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-	//	t = GetTime() - t;
-	//t = GetTime();
-
-	//glBindTexture(GL_TEXTURE_3D, 0);
-
 	delete[] heights;
 	delete[] layer;
 	delete[] textureData;
 }
 void Terrain::resetTerrain()
 {
-	//skyTexture.reset();	//no reason to get rid of these if we don't have to
-	//oceanTexture.reset();
+	skyTexture.reset();
+	oceanTexture.reset();
 	terrainPages.clear();
 }
 Terrain::~Terrain()
@@ -786,9 +726,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	if(sunPos.z > 0)
 	{
 		Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
-	//	graphics->setBlendMode(GraphicsManager::ADDITIVE);
-		graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun");
-	//	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun"); //doesn't work right in 2 player
 	}
 
 	if(waterPlane)
