@@ -18,7 +18,7 @@ class objectProperties: public popup
 {
 protected:
 	LevelFile::Object* object;
-
+	vector<int> typeOptions;
 public:
 	objectProperties():object(NULL){}
 	~objectProperties(){}

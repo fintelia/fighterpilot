@@ -7,6 +7,7 @@ const int F18						= 0x0103;
 const int F22						= 0x0104;
 const int UAV						= 0x0105;
 const int B2						= 0x0106;
+const int MIRAGE					= 0x0107;
 const int PLAYER_PLANE				= 0x01ff;
 
 const int ANTI_AIRCRAFT_ARTILLARY	= 0x0200;
@@ -21,6 +22,8 @@ const int MISSILE3					= 0x0403;
 const int MISSILE4					= 0x0404;
 const int SAM_MISSILE				= 0x0405;
 const int FLAK_MISSILE				= 0x0406;
+const int R550_MAGIC_MISSILE		= 0x0407;
+const int SUPER_530_MISSILE			= 0x0408;
 
 const int BOMB						= 0x0800;
 const int BOMB1						= 0x0801;

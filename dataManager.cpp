@@ -187,7 +187,9 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	{
 		string tex;
 		string name;
-		Color diffuse;
+		Color4 diffuse;
+		Color3 specular;
+		float hardness;
 	};
 ////////////////////variables///////////////////////////
 	unsigned int	numVertices=0,
@@ -241,6 +243,8 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 			mMtl.tex = "";
 			mMtl.name = "";
 			mMtl.diffuse = white;
+			mMtl.specular = black;
+			mMtl.hardness = 40.0;
 
 			map<string,mtl> m;
 
@@ -284,58 +288,70 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 						h=line.size();
 				}
 
-				//if(h!=string::npos)
-				//{
-				//	s[0].assign(line.substr(line.find_first_not_of("	 "),h));
-				//	s[1].assign(line.substr(h+1,line.size()-h-1));
-				//}
-				if(s[0].compare("newmtl")==0)
+				try
 				{
-					if(mstring != "")
+					if(s[0].compare("newmtl")==0)
 					{
-						m.insert(pair<string,mtl>(mstring,mMtl));
-					}
-					mMtl.tex = "";
-					mMtl.diffuse = white;
-					mMtl.name = s[1];
-					mstring=s[1];
-				}
-				else if(s[0].compare(0,6,"map_Kd")==0)
-				{
-					if(mstring == "") continue;
-
-					mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
-					if(texPtr)
-					{
-						assets[mMtl.tex] = shared_ptr<asset>(texPtr);
-					}
-					else
-					{
+						if(mstring != "")
+						{
+							m.insert(pair<string,mtl>(mstring,mMtl));
+						}
 						mMtl.tex = "";
+						mMtl.diffuse = white;
+						mMtl.name = s[1];
+						mstring=s[1];
 					}
-				}
-				else if(s[0].compare(0,2,"Kd")==0)
-				{
-					if(mstring == "") continue;
-					try{
-						float r = lexical_cast<float>(s[1]);
-						float g = lexical_cast<float>(s[2]);
-						float b = lexical_cast<float>(s[3]);
-						mMtl.diffuse=Color(r,g,b,mMtl.diffuse.a);
-					}catch(...){}
-				}
-				else if(s[0].compare(0,2,"d")==0)
-				{
-					if(mstring == "") continue;
-					mMtl.diffuse.a=atof(s[1].c_str());
+					else if(s[0].compare(0,6,"map_Kd")==0)
+					{
+						if(mstring == "") continue;
 
-				}
-				else if(s[0].compare(0,2,"Tr")==0)
-				{
-					if(mstring == "") continue;
-					mMtl.diffuse.a=1.0-atof(s[1].c_str());
-				}
+						mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
+						auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
+						if(texPtr)
+						{
+							assets[mMtl.tex] = shared_ptr<asset>(texPtr);
+						}
+						else
+						{
+							mMtl.tex = "";
+						}
+					}
+					else if(s[0].compare(0,2,"Kd")==0)
+					{
+						if(mstring == "") continue;
+						try{
+							float r = lexical_cast<float>(s[1]);
+							float g = lexical_cast<float>(s[2]);
+							float b = lexical_cast<float>(s[3]);
+							mMtl.diffuse=Color4(r,g,b,mMtl.diffuse.a);
+						}catch(...){}
+					}
+					else if(s[0].compare(0,2,"Ks")==0)
+					{
+						if(mstring == "") continue;
+						try{
+							float r = lexical_cast<float>(s[1]);
+							float g = lexical_cast<float>(s[2]);
+							float b = lexical_cast<float>(s[3]);
+							mMtl.specular=Color3(r,g,b);
+						}catch(...){}
+					}
+					else if(s[0].compare(0,2,"Ns")==0)
+					{
+						if(mstring == "") continue;
+						mMtl.hardness=atof(s[1].c_str());
+					}
+					else if(s[0].compare(0,2,"d")==0)
+					{
+						if(mstring == "") continue;
+						mMtl.diffuse.a=atof(s[1].c_str());
+					}
+					else if(s[0].compare(0,2,"Tr")==0)
+					{
+						if(mstring == "") continue;
+						mMtl.diffuse.a=1.0-atof(s[1].c_str());
+					}
+				}catch(...){}
 			}
 			m.insert(pair<string,mtl>(mstring,mMtl));
 			mtl_map = m;
@@ -343,19 +359,11 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 ///////////////////////LOAD MTL END/////////////////////////
 	}
 
-	try
-	{
-		vertices	= new Vec3f[numVertices];
-		texCoords	= new texCoord[numTexcoords];
-		faces		= new face[numFaces];
-		normals		= new Vec3f[numNormals];
-		mtls		= new mtl[mtl_map.size()];
-	}
-	catch(...)
-	{
-		fclose(fp);
-		return nullptr;
-	}
+	vertices	= new Vec3f[numVertices];
+	texCoords	= new texCoord[numTexcoords];
+	faces		= new face[numFaces];
+	normals		= new Vec3f[numNormals];
+	mtls		= new mtl[mtl_map.size()];
 
 	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
 		mtls[numMtls++]=itt->second;
@@ -377,7 +385,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].x);
 			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].y);
 			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].z);
-
 			vertices[numVertices].x = -vertices[numVertices].x;
 			numVertices++;
 		}
@@ -394,13 +401,14 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].x);
 			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].y);
 			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].z);
+			normals[numNormals] = normals[numNormals].normalize();
 			numNormals++;
 		}
 		else if(strcmp(token, "f") == 0)
 		{
 			int i, v = 0, t = 0, n = 0;
 
-			for(i = 0; i<3; i++)
+			for(i = 0; i<3; i++) //should check for faces that do not include both a vertex, normal and position
 			{
 				token = strtok(NULL, " \t");
 				sscanf(token, "%d/%d/%d", &v, &t, &n);
@@ -409,20 +417,9 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 				faces[numFaces].t[i] = t;
 				faces[numFaces].v[i] = v;
 			}
-
-			//Vec3f a, b;
-
-			//for(i = 0; i<3; i++)
-			//{
-			//	a[i] = vertices[faces[numFaces].v[0]][i]	- vertices[faces[numFaces].v[1]][i];
-			//	b[i] = vertices[faces[numFaces].v[2]][i]	- vertices[faces[numFaces].v[1]][i];
-			//}
 			faces[numFaces].material=cMtl;
-			//normals[numNormals]=a.normalize().cross(b.normalize()).normalize();
-			//numNormals++;
 			numFaces++;
 		}
-		//else if(strcmp(token, "mtllib") == 0)  already loaded
 		else if(strcmp(token, "usemtl") == 0)
 		{
 			string name=strtok(NULL, " ");
@@ -512,7 +509,9 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 			}
 		}
 		modelAsset::material mat;
-		mat.color = mtls[m].diffuse;
+		mat.diffuse = mtls[m].diffuse;
+		mat.specular = mtls[m].specular;
+		mat.hardness = mtls[m].hardness;
 		mat.tex = mtls[m].tex;
 		mat.numIndices = vNum - lNum;
 		mat.indicesOffset = lNum;
@@ -595,43 +594,73 @@ bool DataManager::assetLoaded(string name)
 
 void DataManager::setUniform1f(string name, float v0)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1f(name, v0);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1f(name, v0);
+	}
 }
 void DataManager::setUniform2f(string name, float v0, float v1)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2f(name, v0, v1);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2f(name, v0, v1);
+	}
 }
 void DataManager::setUniform3f(string name, float v0, float v1, float v2)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3f(name, v0, v1, v2);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3f(name, v0, v1, v2);
+	}
 }
 void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4f(name, v0, v1, v2, v3);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4f(name, v0, v1, v2, v3);
+	}
 }
 void DataManager::setUniform1i(string name, int v0)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1i(name, v0);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1i(name, v0);
+	}
 }
 void DataManager::setUniform2i(string name, int v0, int v1)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2i(name, v0, v1);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2i(name, v0, v1);
+	}
 }
 void DataManager::setUniform3i(string name, int v0, int v1, int v2)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3i(name, v0, v1, v2);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3i(name, v0, v1, v2);
+	}
 }
 void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4i(name, v0, v1, v2, v3);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4i(name, v0, v1, v2, v3);
+	}
 }
 void DataManager::setUniformMatrix(string name, const Mat3f& m)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	}
 }
 void DataManager::setUniformMatrix(string name, const Mat4f& m)
 {
-	static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	if(boundShader != "")
+	{
+		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+	}
 }
 
 void DataManager::shutdown()

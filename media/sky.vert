@@ -11,8 +11,6 @@ uniform mat4 modelTransform;
 
 void main()
 {
-
-
 	position = gl_Vertex;
 	texCoord = gl_MultiTexCoord0.xy;
 

@@ -27,9 +27,6 @@ public:
 
 	bulletCloud();
 
-	void init();
-	void draw();
-
 	void addBullet(Vec3f pos,Vec3f vel,int Owner, double StartTime);
 	void addBullet(Vec3f pos,Vec3f vel,int Owner);
 

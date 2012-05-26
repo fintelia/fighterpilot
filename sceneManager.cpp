@@ -53,11 +53,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	dataManager.bind("model");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-
-	Angle ang;
-
-	Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
-	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
+	dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	for(int pass = 0; pass <= 1; pass++)
 	{
 		for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
@@ -68,16 +64,19 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 			auto modelPtr = dataManager.getModel(meshType->first);
 			if(modelPtr == nullptr)
 				continue;
+
 			for(auto material = modelPtr->materials.begin(); material != modelPtr->materials.end(); material++)
 			{
-				dataManager.bind(material->tex == "" ? "white" : material->tex);
-				graphics->setColor(material->color.r,material->color.g,material->color.b, material->color.a);
-
-				if((material->color.a > 0.999 && pass == 0) || (material->color.a <= 0.999 && pass == 1))
+				if((material->diffuse.a > 0.999 && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1))
 				{
+					dataManager.bind(material->tex == "" ? "white" : material->tex);
+					dataManager.setUniform4f("diffuse", material->diffuse);
+					dataManager.setUniform3f("specular", material->specular);
+					dataManager.setUniform1f("hardness", material->hardness);
+
 					for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
 					{
-						if((*instance) != firstPersonObject && (*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
+						if((*instance) != firstPersonObject && (*instance)->renderFlag()/* && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
 							modelPtr->VBO->drawBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);
@@ -90,8 +89,6 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 		if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
 		if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 	}
-
-	graphics->setColor(1,1,1);
 }
 void SceneManager::endRender()
 {

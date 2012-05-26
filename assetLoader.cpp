@@ -21,7 +21,6 @@ bool AssetLoader::loadAssetList()
 		return false;
 	}
 
-	const char* c;
 	TiXmlNode* node					= nullptr;
 	TiXmlNode* assetsNode			= nullptr;
 

@@ -21,6 +21,7 @@ public:
 		};
 		vector<hardpoint> hardpoints;//offsets
 		vector<Vec3f> machineGuns;
+		vector<Vec3f> engines;
 		planeStat(){}
 	};
 	map<planeType,planeStat> planeStats;

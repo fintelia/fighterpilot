@@ -30,6 +30,8 @@ void main()
 	color = mix(darkColor, lightColor, fresnel)   *   (0.6 + 0.4 * NdotL);
 	color = mix(color, cReflect, fresnel * 0.3 /* *shorelineAlpha*/);
 	color = mix(color, textureCube(sky, position).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection), 0.0, 1.0));
+	color *= NdotL*0.3 + 0.7;
+
 
 	gl_FragColor = vec4(color,1.0);
 }

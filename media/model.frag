@@ -7,15 +7,20 @@ varying vec4 position;
 
 varying vec3 halfVector;
 
-uniform vec4 color;
+uniform vec4 diffuse;
+uniform vec3 specular;
+uniform float hardness;
+
 uniform sampler2D tex;
 
 void main()
 {
-	vec4 Color = vec4(color.rgb * texture2D(tex,texCoord).rgb  * max(dot(normalize(normal), lightDir), 0.5),color.a);
 
-	//specular highlights (doesn't look good on all models)
-	//Color.rgb += vec3(0.5, 0.5, 0.35) * pow(max(dot(normal,normalize(halfVector)),0.0),40.0);
+	vec3 Normal = normalize(normal);
 
-	gl_FragColor = Color;
+	vec4 Diffuse = vec4(diffuse.rgb * texture2D(tex,texCoord).rgb  * max(dot(Normal, lightDir), 0.5),diffuse.a);
+	vec4 Specular = vec4(specular,1.0) * pow(max(dot(Normal,normalize(halfVector)),0.0),hardness);
+	Specular.a = max(Specular.r ,max(Specular.g, Specular.b));
+
+	gl_FragColor = Diffuse + Specular;
 }

@@ -646,26 +646,31 @@ void OpenGLgraphics::setColorMask(bool mask)
 }
 void OpenGLgraphics::setDepthMask(bool mask)
 {
-	if(renderTarget == RT_SCREEN && mask != depthMask)
+	if(mask != depthMask)
 	{
 		depthMask = mask;
 		glDepthMask(depthMask);
 	}
-	else if(renderTarget == RT_FBO_0 && mask != FBOs[0].depthBound)
-	{
-		FBOs[0].depthBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[0].depth : 0, 0);
-	}
-	else if(renderTarget == RT_FBO_1 && mask != FBOs[1].depthBound)
-	{
-		FBOs[1].depthBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[1].depth : 0, 0);		
-	}
-	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.depthBound)
-	{
-		multisampleFBO.depthBound = mask;
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.depth : 0);
-	}
+	//if(renderTarget == RT_SCREEN && mask != depthMask)
+	//{
+	//	depthMask = mask;
+	//	glDepthMask(depthMask);
+	//}
+	//else if(renderTarget == RT_FBO_0 && mask != FBOs[0].depthBound)
+	//{
+	//	FBOs[0].depthBound = mask;
+	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[0].depth : 0, 0);
+	//}
+	//else if(renderTarget == RT_FBO_1 && mask != FBOs[1].depthBound)
+	//{
+	//	FBOs[1].depthBound = mask;
+	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[1].depth : 0, 0);		
+	//}
+	//else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.depthBound)
+	//{
+	//	multisampleFBO.depthBound = mask;
+	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.depth : 0);
+	//}
 }
 void OpenGLgraphics::setDepthTest(bool enabled)
 {
@@ -1542,23 +1547,25 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 
 	bool dMask = true;
 
-	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
+	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
 	{
-		dataManager.bind(i->tex == "" ? "white" : i->tex);
-		dataManager.setUniform4f("color", i->color);
-		//glColor4f(i->color.r,i->color.g,i->color.b, i->color.a);
+		dataManager.bind(material->tex == "" ? "white" : material->tex);
 
-		if(i->color.a > 0.999 && !dMask)
+		dataManager.setUniform4f("diffuse", material->diffuse);
+		dataManager.setUniform3f("specular", material->specular);
+		dataManager.setUniform1f("hardness", material->hardness);
+
+		if(material->diffuse.a > 0.999 && !dMask)
 		{
 			dMask = true;
 			glDepthMask(true);
 		}
-		else if(i->color.a <= 0.999 && dMask)
+		else if(material->diffuse.a <= 0.999 && dMask)
 		{
 			dMask = false;
 			glDepthMask(false);
 		}
-		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);
+		m->VBO->drawBuffer(TRIANGLES, material->indicesOffset, material->numIndices);
 	}
 
 	if(!dMask)	glDepthMask(true);
@@ -1595,26 +1602,26 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 
 	bool dMask = true;
 
-	for(auto i = m->materials.begin(); i!=m->materials.end(); i++)
+	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
 	{
-		setColor(i->color.r,i->color.g,i->color.b, i->color.a);
+		dataManager.setUniform4f("diffuse", material->diffuse);
+		dataManager.setUniform3f("specular", material->specular);
+		dataManager.setUniform1f("hardness", material->hardness);
 		
-		if(i->color.a > 0.999 && !dMask)
+		if(material->diffuse.a > 0.999 && !dMask)
 		{
 			dMask = true;
 			setDepthMask(true);
 		}
-		else if(i->color.a <= 0.999 && dMask)
+		else if(material->diffuse.a <= 0.999 && dMask)
 		{
 			dMask = false;
 			setDepthMask(false);
 		}
-		m->VBO->drawBuffer(TRIANGLES, i->indicesOffset, i->numIndices);checkErrors();
+		m->VBO->drawBuffer(TRIANGLES, material->indicesOffset, material->numIndices);checkErrors();
 		//glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
 	}
 	if(!dMask)	glDepthMask(true);
-
-	setColor(1,1,1,1);
 }
 void OpenGLgraphics::checkErrors()
 {
