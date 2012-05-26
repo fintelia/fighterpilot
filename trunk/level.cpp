@@ -277,7 +277,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < humanPlayers)
 			{	
-				auto id = world.newObject(new nPlane(i->startloc, i->startRot, i->type, i->team));
+				auto id = world.newObject(new nPlane(i->startloc, i->startRot, MIRAGE/*i->type*/, i->team));
 				players.addHumanPlayer(id);
 			}
 			else

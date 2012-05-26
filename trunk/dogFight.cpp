@@ -213,12 +213,10 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 
 	graphics->setDepthMask(false);
 
-	((bulletCloud*)world[bullets].get())->draw();
-
 	Vec3f cCenter(world.bounds().center.x,0,world.bounds().center.y);
 	double cRadius = world.bounds().radius;
 
-	drawHexCylinder(cCenter,cRadius,20000, white);
+	//drawHexCylinder(cCenter,cRadius,20000, white);
 
 #ifdef _DEBUG
 	players.debugDraw();

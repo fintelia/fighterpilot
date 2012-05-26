@@ -35,19 +35,16 @@ bool objectProperties::init(LevelFile::Object* obj)
 	l->addOption("team 4");
 	listBoxes["team"] = l;
 
-	string ptype;
-	if(object->type == F16)	ptype = "F16";
-	if(object->type == F18)	ptype = "F18";
-	if(object->type == F22)	ptype = "F22";
-	if(object->type == UAV)	ptype = "UAV";
-	if(object->type == B2)	ptype = "B2";
+	string ptype = objectTypeString(object->type);
 
 	l = new listBox(0.5*sAspect+0.244,0.5-0.015,0.098,ptype,black);
-	l->addOption("F16");
-	l->addOption("F18");
-	l->addOption("F22");
-	l->addOption("UAV");
-	l->addOption("B2");
+	l->addOption("f16");			typeOptions.push_back(F16);
+	l->addOption("f18");			typeOptions.push_back(F18);
+	l->addOption("f22");			typeOptions.push_back(F22);
+	l->addOption("UAV");			typeOptions.push_back(UAV);
+	l->addOption("b2");				typeOptions.push_back(B2);
+	l->addOption("mirage");			typeOptions.push_back(MIRAGE);
+	l->addOption("PLAYER_PLANE");	typeOptions.push_back(PLAYER_PLANE);
 	listBoxes["type"] = l;
 
 	return true;
@@ -65,11 +62,7 @@ int objectProperties::update()
 			object->team = listBoxes["team"]->getOptionNumber();
 
 			int ptype = listBoxes["type"]->getOptionNumber();
-			if(ptype == 0)	object->type = F16;
-			if(ptype == 1)	object->type = F18;
-			if(ptype == 2)	object->type = F22;
-			if(ptype == 3)	object->type = UAV;
-			if(ptype == 4)	object->type = B2;
+			object->type = typeOptions[listBoxes["type"]->getOptionNumber()];
 
 			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
 		}

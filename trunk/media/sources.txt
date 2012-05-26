@@ -37,9 +37,9 @@ smokeShape2.png
 	made the color more white in gimp
 	applied clouds filter in GIMP (level=5, X_size=4, Y_size=4)
 	
-spitfire2_2.obj (and related files)
+spitfire.obj (and related files)
 	http://www.gfx-3d-model.com/2011/08/supermarine-spitfire-3d-model/
-	Omptimize modifier in 3ds Max (to 10% for spitfire2_2.obj)
+	ProOptimize modifier in 3ds Max (to 10% for spitfire.obj)
 	
 betty.obj (and related files)
 	http://www.gfx-3d-model.com/2009/01/mitsubishi-g4m2a-betty-aircraft-model/
@@ -53,6 +53,11 @@ f16.obj (and related files)
 	http://www.gfx-3d-model.com/2008/08/f-16-falcon/#more-691
 	closed bomb bays
 	scaled by a factor of 0.0263
+
+mirage.obj (and related files)
+	http://www.colacola.se/expo_mirage.htm
+	ProOptimize modifier in 3ds Max (to 25%)
+	scaled by a factor of 2.354
 	
 M2.obj (and related files)
 	http://www.gfx-3d-model.com/2008/12/m1-abrams-tank-model/

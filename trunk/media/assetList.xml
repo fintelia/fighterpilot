@@ -73,7 +73,7 @@
     <texture name="white"                     file="media/white.png"                  tileable="true"/>
     <texture name="next level"                file="media/nextLevel.png" />
     <texture name="errorGlow"                 file="media/errorGlow.png" />
-    errorGlow
+
 
   </textures>
 
@@ -98,7 +98,7 @@
     <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" Position="3" />
     <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" Position="3" TexCoord="2" />
     <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" Position="3" TexCoord="2" />
-    
+
     <!-- terrain -->
     <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" Position="3" />
     <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" Position="3" />
@@ -111,25 +111,30 @@
     <shader name="ocean preview"          vertex="media/ocean preview.vert"  fragment="media/ocean preview.frag" />
   </shaders>
   
-  <models> 
-    <model name="f22"          file="media/f22.obj" />
-    <model name="SAM battery"  file="media/SAM/SAM.obj" />
-    <model name="sky dome"     file="media/dome.obj" />
-    <model name="cylinder"     file="media/cylinder.obj" />
-    <model name="disk"         file="media/disk.obj" />
-    <model name="f16"          file="media/f16.obj" />
-    <model name="f18"          file="media/f18hornet.obj" />
-    <model name="UAV"          file="media/UAV.obj" />
-    <model name="B2"           file="media/B2.obj" />
-    <model name="AA gun"       file="media/SAM/SAM.obj" />
+  <models>
+    <model name="f22"                   file="media/f22.obj" />
+                                        
+    <model name="SAM battery"           file="media/SAM/SAM.obj" />
+    <model name="sky dome"              file="media/dome.obj" />
+    <model name="cylinder"              file="media/cylinder.obj" />
+    <model name="disk"                  file="media/disk.obj" />
+    <model name="f16"                   file="media/f16.obj" />
+    <model name="f18"                   file="media/f18hornet.obj" />
+    <model name="UAV"                   file="media/UAV.obj" />
+    <model name="B2"                    file="media/B2.obj" />
+    <model name="AA gun"                file="media/SAM/SAM.obj" />
 
-    <model name="flak cannon"  file="media/SAM/SAM.obj" />
-    <model name="missile1"     file="media/m1(center).obj" />
-    <model name="missile2"     file="media/m2(center).obj" />
-    <model name="missile3"     file="media/m3(center).obj" />
-    <model name="missile4"     file="media/m4(center).obj" />
-    <model name="SAM missile"  file="media/m3(center).obj" />
-    <model name="flak missile" file="media/m3(center).obj" />
+    <model name="mirage"                file="media/mirage/mirage.obj" />
+    <model name="r550 magic missile"    file="media/mirage/R550 Magic missile.obj" />
+    <model name="super530 missile"      file="media/mirage/super530 missile.obj" />
+    
+    <model name="flak cannon"           file="media/SAM/SAM.obj" />
+    <model name="missile1"              file="media/m1(center).obj" />
+    <model name="missile2"              file="media/m2(center).obj" />
+    <model name="missile3"              file="media/m3(center).obj" />
+    <model name="missile4"              file="media/m4(center).obj" />
+    <model name="SAM missile"           file="media/m3(center).obj" />
+    <model name="flak missile"          file="media/m3(center).obj" />
 
     <model name="sphere" file="media/sphere.obj" />
   </models>

@@ -37,24 +37,33 @@ extern objectType objectTypeFromString(string s);
 extern string objectTypeString(objectType t);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct Color
+struct Color3
+{
+	float r,g,b;
+	Color3(float R, float G, float B): r(R), g(G), b(B){}
+	Color3(): r(0), g(0), b(0){}
+};
+struct Color4
 {
 	float r,g,b,a;
-	Color(float R, float G, float B, float A=1.0): r(R), g(G), b(B), a(A){}
-	Color(): r(0), g(0), b(0),a(0){}
+	Color4(float R, float G, float B, float A=1.0): r(R), g(G), b(B), a(A){}
+	Color4(Color3 c): r(c.r), g(c.g), b(c.b), a(1.0){}
+	Color4(): r(0), g(0), b(0),a(0){}
 };
 
-extern const Color white;
-extern const Color black;
-extern const Color red;
-extern const Color green;
-extern const Color blue;
-extern const Color darkBlue;
-extern const Color lightBlue;
-extern const Color darkGreen;
-extern const Color lightGreen;
-extern const Color darkGray;
-extern const Color lightGray;
+typedef Color4 Color;
+
+extern const Color3 white;
+extern const Color3 black;
+extern const Color3 red;
+extern const Color3 green;
+extern const Color3 blue;
+extern const Color3 darkBlue;
+extern const Color3 lightBlue;
+extern const Color3 darkGreen;
+extern const Color3 lightGreen;
+extern const Color3 darkGray;
+extern const Color3 lightGray;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class T>
 T uPowerOfTwo(T i)

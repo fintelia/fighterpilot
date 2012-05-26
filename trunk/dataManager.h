@@ -29,8 +29,15 @@ private:
 //		int numMaterials;
 		struct material{
 			string tex;
-			Color color;
+			Color4 diffuse;
+			Color3 specular;
+			float hardness;
 			//string shader;
+			//struct group{
+			//	int numIndices;		//for glDrawArrays
+			//	int indicesOffset;	//for glDrawArrays
+			//};
+			//vector<group> groups;
 			int numIndices;		//for glDrawArrays
 			int indicesOffset;	//for glDrawArrays
 		};
@@ -86,8 +93,8 @@ public:
 	void setUniform4f(string name, float v0, float v1, float v2, float v3);
 	void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
 	void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
-	void setUniform3f(string name, Color c){setUniform3f(name,c.r,c.r,c.b);}
-	void setUniform4f(string name, Color c){setUniform4f(name,c.r,c.r,c.b,c.a);}
+	void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.r,c.b);}
+	void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.r,c.b,c.a);}
 	void setUniform1i(string name, int v0);
 	void setUniform2i(string name, int v0, int v1);
 	void setUniform3i(string name, int v0, int v1, int v2);

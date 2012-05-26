@@ -402,6 +402,8 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 		}
 	}
 
+	//view->lookAt(Vec3f(12900/2,15000,12900/2),Vec3f(12900/2,0,12900/2), Vec3f(0,0,1));
+
 	dataManager.bind("island terrain");
 	dataManager.bind("sand",1);
 	dataManager.bind("grass",2);
@@ -454,6 +456,10 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 	{
 		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
 		indexBuffers[(*i)->level]->drawBuffer(GraphicsManager::TRIANGLES, vertexBuffer, bufferOffset);
+		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
+		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
+		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
+		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
 	}
 }
 TerrainPage::~TerrainPage()
@@ -540,7 +546,7 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		float y = cubeMap[i + 2];
 
 
-		cubeMap[i + 1] = cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
+		cubeMap[i + 1] = 0.75 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
 		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
 
 		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
@@ -703,6 +709,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	double radius = max(h*tan(asin(r/(r+h))), 2.0*max(terrainScale.x,terrainScale.z));
 
 
+
 	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
 
 	graphics->setDepthMask(false);
@@ -712,9 +719,45 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
 	skyTexture->bind();
-	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,100000,600000));
-	//graphics->drawModelCustomShader("sky dome",Vec3f(0,-10000,0),Quat4f(),Vec3f(600000,-100000,600000));
+
 	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
+
+
+	// based on GPU GEMS 2: Chapter 16 Accurate Atmospheric Scattering
+	/*double terrainRadius = max(terrainScale.x,terrainScale.z);
+	double planetRadius = 6367500.0;//*0.003;
+	Vec3f planetCenter(eye.x,-sqrt(planetRadius*planetRadius-terrainRadius*terrainRadius),eye.z);
+	float m_fWavelength4[3] = {0.17850623,0.10556000,0.050906640};
+	float m_fInnerRadius = planetRadius;//*0.003;
+	float m_fOuterRadius = planetRadius*1.025;
+	float m_ESun = 20.0;
+	float m_Kr = 0.0025;
+	float m_Km = 0.001;
+	float m_fRayleighScaleDepth = 0.25;
+	float m_g = -0.99;
+
+	dataManager.bind("sky2 shader");
+	dataManager.setUniform3f("v3CameraPos", eye);
+	dataManager.setUniform3f("v3LightPos", graphics->getLightPosition().normalize());
+	dataManager.setUniform3f("v3InvWavelength", 1/m_fWavelength4[0], 1/m_fWavelength4[1], 1/m_fWavelength4[2]);
+	dataManager.setUniform3f("planetCenter", planetCenter);
+	dataManager.setUniform1f("fCameraHeight", eye.y);
+	dataManager.setUniform1f("fInnerRadius", m_fInnerRadius);
+	dataManager.setUniform1f("fKrESun", m_Kr*m_ESun);
+	dataManager.setUniform1f("fKmESun", m_Km*m_ESun);
+	dataManager.setUniform1f("fKr4PI", m_Kr * 4.0*PI);
+	dataManager.setUniform1f("fKm4PI", m_Km * 4.0*PI);
+	dataManager.setUniform1f("fScale", 1.0f / (m_fOuterRadius - m_fInnerRadius));
+	dataManager.setUniform1f("fScaleDepth", m_fRayleighScaleDepth);
+	dataManager.setUniform1f("fScaleOverScaleDepth", (1.0f / (m_fOuterRadius - m_fInnerRadius)) / m_fRayleighScaleDepth);
+	dataManager.setUniform1f("g", m_g);
+	dataManager.setUniform1f("g2", m_g*m_g);
+	
+	graphics->drawModelCustomShader("sky dome",planetCenter,Quat4f(),Vec3f(planetRadius,planetRadius,planetRadius)*1.025);*/
+
+
+
+
 
 	if(!waterPlane)
 	{

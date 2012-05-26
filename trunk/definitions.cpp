@@ -6,17 +6,17 @@
 
 const double UPDATE_LENGTH	= 8.333;
 
-const Color white(1.0f,1.0f,1.0f);
-const Color black(0.0f,0.0f,0.0f);
-const Color red(1.0f,0.0f,0.0f);
-const Color green(0.0f,1.0f,0.0f);
-const Color blue(0.0f,0.0f,1.0f);
-const Color darkBlue(0.11f,0.35f,0.52f);
-const Color lightBlue(0.19f,0.58f,0.78f);
-const Color darkGreen(0.49f,0.57f,0.06f);
-const Color lightGreen(0.68f,0.76f,0.12f);
-const Color darkGray(0.3f,0.3f,0.3f);
-const Color lightGray(0.6f,0.6f,0.6f);
+const Color3 white(1.0f,1.0f,1.0f);
+const Color3 black(0.0f,0.0f,0.0f);
+const Color3 red(1.0f,0.0f,0.0f);
+const Color3 green(0.0f,1.0f,0.0f);
+const Color3 blue(0.0f,0.0f,1.0f);
+const Color3 darkBlue(0.11f,0.35f,0.52f);
+const Color3 lightBlue(0.19f,0.58f,0.78f);
+const Color3 darkGreen(0.49f,0.57f,0.06f);
+const Color3 lightGreen(0.68f,0.76f,0.12f);
+const Color3 darkGray(0.3f,0.3f,0.3f);
+const Color3 lightGray(0.6f,0.6f,0.6f);
 
 unsigned __int8 uPowerOfTwo(unsigned __int8 i)
 {

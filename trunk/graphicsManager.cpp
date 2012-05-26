@@ -135,7 +135,7 @@ void GraphicsManager::View::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 	mClipPlanes[3] = Plane<float>( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );	// Top clipping plane
 	mClipPlanes[4] = Plane<float>( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );// Near clipping plane
 	mClipPlanes[5] = Plane<float>( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );// Far clipping plane
- }
+}
 bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 {
 	float distance;

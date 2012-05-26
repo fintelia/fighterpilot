@@ -14,8 +14,12 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, 
 
 void nPlane::init()
 {
-	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(-0.4, 0, -3.3));
-	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
+	for(auto i=settings.planeStats[type].engines.begin(); i!=settings.planeStats[type].engines.end(); i++)
+	{
+		particleManager.addEmitter(new particle::planeEngines, id, *i);
+	}
+//	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(-0.4, 0, -3.3));
+//	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
 
@@ -508,7 +512,7 @@ void nPlane::smoothCamera()
 	Vec3f shake = random3<float>() * cameraShake * 3.0;
 
 	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
-	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*30.0,cos(15.0*PI/180)*30.0);
+	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*20.0,cos(15.0*PI/180)*20.0);
 	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
 void nPlane::autoPilotUpdate(float value)
