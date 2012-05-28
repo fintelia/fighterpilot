@@ -186,6 +186,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	struct mtl
 	{
 		string tex;
+		string specularMap;
 		string name;
 		Color4 diffuse;
 		Color3 specular;
@@ -206,11 +207,13 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	unsigned int	totalVerts,totalFaces;
 
+
+
 	FILE *fp;
 	if((fp=fopen(filename.c_str(), "r")) == nullptr)
 		return nullptr;
 
-	char buffer[200];
+	char buffer[256];
 	char *token;
 	///////
 	map<string,mtl>	mtl_map;
@@ -222,141 +225,233 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		file=file.substr(0,i+1);
 	string mtlFile;
 	//////
-	while(fgets(buffer, 200, fp) != NULL)
+	while(fgets(buffer, 256, fp) != NULL)
 	{
 		token = strtok(buffer, " ");
 		if(strcmp(token, "v") == 0) 	numVertices++;
 		if(strcmp(token, "vt") == 0) 	numTexcoords++;
 		if(strcmp(token, "f") == 0) 	numFaces++;
 		if(strcmp(token, "vn") == 0)	numNormals++;
-		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok(NULL, "");
+		if(strcmp(token, "mtllib") == 0)mtlFile=file + strtok(NULL, "\r\n");
 	}
 	rewind(fp);
 	//fclose(fp);
+
+	double t = GetTime();
+
 	if(mtlFile.size()!=0)
 	{
-		mtlFile=mtlFile.substr(0,mtlFile.size()-1);
 ///////////////////////LOAD MTL/////////////////////////////////
-		{
-			string mstring="";
-			mtl mMtl;
-			mMtl.tex = "";
-			mMtl.name = "";
-			mMtl.diffuse = white;
-			mMtl.specular = black;
-			mMtl.hardness = 40.0;
+		//{
+		//	string mstring="";
+		//	mtl mMtl;
+		//	mMtl.tex = "";
+		//	mMtl.name = "";
+		//	mMtl.diffuse = white;
+		//	mMtl.specular = black;
+		//	mMtl.hardness = 40.0;
 
-			map<string,mtl> m;
+		//	map<string,mtl> m;
 
-			ifstream fin;
-			fin.open(mtlFile);
-			string file;
-			int i=mtlFile.find_last_of("/");
-			if(i==string::npos)
-				file.assign("");
-			else
-				file=mtlFile.substr(0,i+1);
-			if(!fin.is_open())
-			{
-				messageBox(mtlFile + " could not be loaded");
-				return nullptr;
-			}
-			while (!fin.eof())
-			{
-				string line;
-				char l[256];
-				string s[4];
-				int i=0, h=0;
+		//	ifstream fin;
+		//	fin.open(mtlFile);
+		//	string file;
+		//	int i=mtlFile.find_last_of("/");
+		//	if(i==string::npos)
+		//		file.assign("");
+		//	else
+		//		file=mtlFile.substr(0,i+1);
+		//	if(!fin.is_open())
+		//	{
+		//		messageBox(mtlFile + " could not be loaded");
+		//		return nullptr;
+		//	}
+		//	while (!fin.eof())
+		//	{
+		//		string line;
+		//		char l[256];
+		//		string s[4];
+		//		int i=0, h=0;
 
-				fin.getline(l,256);
-				line.assign(l);
-				if(line.empty())
-					continue;
+		//		fin.getline(l,256);
+		//		line.assign(l);
+		//		if(line.empty())
+		//			continue;
 
-				if(line[0] == '\t')
-					boost::erase_head(line,1);
+		//		if(line[0] == '\t')
+		//			boost::erase_head(line,1);
 
-				h=line.find(" ");
-				for(int n=0;n<4;n++)
-				{
-					s[n].assign(line.substr(i,h-i));
-					i=h+1;
-					if(i>(signed int)line.size())
-						i=line.size();
-					h=line.find(" ",h+2);
-					if(h==string::npos)
-						h=line.size();
-				}
+		//		h=line.find(" ");
+		//		for(int n=0;n<4;n++)
+		//		{
+		//			s[n].assign(line.substr(i,h-i));
+		//			i=h+1;
+		//			if(i>(signed int)line.size())
+		//				i=line.size();
+		//			h=line.find(" ",h+2);
+		//			if(h==string::npos)
+		//				h=line.size();
+		//		}
 
-				try
-				{
-					if(s[0].compare("newmtl")==0)
-					{
-						if(mstring != "")
-						{
-							m.insert(pair<string,mtl>(mstring,mMtl));
-						}
-						mMtl.tex = "";
-						mMtl.diffuse = white;
-						mMtl.name = s[1];
-						mstring=s[1];
-					}
-					else if(s[0].compare(0,6,"map_Kd")==0)
-					{
-						if(mstring == "") continue;
+		//		try
+		//		{
+		//			if(s[0].compare("newmtl")==0)
+		//			{
+		//				if(mstring != "")
+		//				{
+		//					m.insert(pair<string,mtl>(mstring,mMtl));
+		//				}
+		//				mMtl.tex = "";
+		//				mMtl.diffuse = white;
+		//				mMtl.name = s[1];
+		//				mstring=s[1];
+		//			}
+		//			else if(s[0].compare(0,6,"map_Kd")==0)
+		//			{
+		//				if(mstring == "") continue;
 
-						mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-						auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
-						if(texPtr)
-						{
-							assets[mMtl.tex] = shared_ptr<asset>(texPtr);
-						}
-						else
-						{
-							mMtl.tex = "";
-						}
-					}
-					else if(s[0].compare(0,2,"Kd")==0)
-					{
-						if(mstring == "") continue;
-						try{
-							float r = lexical_cast<float>(s[1]);
-							float g = lexical_cast<float>(s[2]);
-							float b = lexical_cast<float>(s[3]);
-							mMtl.diffuse=Color4(r,g,b,mMtl.diffuse.a);
-						}catch(...){}
-					}
-					else if(s[0].compare(0,2,"Ks")==0)
-					{
-						if(mstring == "") continue;
-						try{
-							float r = lexical_cast<float>(s[1]);
-							float g = lexical_cast<float>(s[2]);
-							float b = lexical_cast<float>(s[3]);
-							mMtl.specular=Color3(r,g,b);
-						}catch(...){}
-					}
-					else if(s[0].compare(0,2,"Ns")==0)
-					{
-						if(mstring == "") continue;
-						mMtl.hardness=atof(s[1].c_str());
-					}
-					else if(s[0].compare(0,2,"d")==0)
-					{
-						if(mstring == "") continue;
-						mMtl.diffuse.a=atof(s[1].c_str());
-					}
-					else if(s[0].compare(0,2,"Tr")==0)
-					{
-						if(mstring == "") continue;
-						mMtl.diffuse.a=1.0-atof(s[1].c_str());
-					}
-				}catch(...){}
-			}
-			m.insert(pair<string,mtl>(mstring,mMtl));
-			mtl_map = m;
-		}
+		//				mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
+		//				auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
+		//				if(texPtr)
+		//				{
+		//					assets[mMtl.tex] = shared_ptr<asset>(texPtr);
+		//				}
+		//				else
+		//				{
+		//					mMtl.tex = "";
+		//				}
+		//			}
+		//			else if(s[0].compare(0,2,"Kd")==0)
+		//			{
+		//				if(mstring == "") continue;
+		//				try{
+		//					float r = lexical_cast<float>(s[1]);
+		//					float g = lexical_cast<float>(s[2]);
+		//					float b = lexical_cast<float>(s[3]);
+		//					mMtl.diffuse=Color4(r,g,b,mMtl.diffuse.a);
+		//				}catch(...){}
+		//			}
+		//			else if(s[0].compare(0,2,"Ks")==0)
+		//			{
+		//				if(mstring == "") continue;
+		//				try{
+		//					float r = lexical_cast<float>(s[1]);
+		//					float g = lexical_cast<float>(s[2]);
+		//					float b = lexical_cast<float>(s[3]);
+		//					mMtl.specular=Color3(r,g,b);
+		//				}catch(...){}
+		//			}
+		//			else if(s[0].compare(0,2,"Ns")==0)
+		//			{
+		//				if(mstring == "") continue;
+		//				mMtl.hardness=atof(s[1].c_str());
+		//			}
+		//			else if(s[0].compare(0,2,"d")==0)
+		//			{
+		//				if(mstring == "") continue;
+		//				mMtl.diffuse.a=atof(s[1].c_str());
+		//			}
+		//			else if(s[0].compare(0,2,"Tr")==0)
+		//			{
+		//				if(mstring == "") continue;
+		//				mMtl.diffuse.a=1.0-atof(s[1].c_str());
+		//			}
+		//		}catch(...){}
+		//	}
+		//	m.insert(pair<string,mtl>(mstring,mMtl));
+		//	mtl_map = m;
+		//}
 ///////////////////////LOAD MTL END/////////////////////////
+/////////////////////////new mtl////////////////////////////
+		FILE *mtlFilePtr;
+		if((mtlFilePtr=fopen(mtlFile.c_str(), "r")) != nullptr)
+		{
+			enum State{SEARCHING_FOR_NEWMTL, READING_MTL}state=SEARCHING_FOR_NEWMTL;
+			mtl mMtl;
+
+			while(fgets(buffer, 256, mtlFilePtr) != NULL)
+			{
+				token = strtok(buffer, " \t");
+				if(strcmp(token, "newmtl") == 0)
+				{
+					if(state == READING_MTL)
+					{
+						mtl_map[mMtl.name] = mMtl;
+					}
+					mMtl.tex = "";
+					mMtl.name = strtok(NULL, " #\r\n");
+					mMtl.diffuse = white;
+					mMtl.specular = black;
+					mMtl.hardness = 40.0;
+					state = READING_MTL;
+				}
+				else if(strcmp(token, "map_Kd") == 0 && state == READING_MTL)
+				{
+					mMtl.tex = file + strtok(NULL, "#\r\n");
+					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
+					if(texPtr)
+					{
+						assets[mMtl.tex] = shared_ptr<asset>(texPtr);
+					}
+					else
+					{
+						mMtl.tex = "";
+					}
+				}
+				else if(strcmp(token, "map_Ks") == 0 && state == READING_MTL)
+				{
+					mMtl.specularMap = file + strtok(NULL, "#\r\n");
+					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.specularMap), true);
+					if(texPtr)
+					{
+						assets[mMtl.specularMap] = shared_ptr<asset>(texPtr);
+					}
+					else
+					{
+						mMtl.specularMap = "";
+					}
+				}
+				else if(strcmp(token, "Kd") == 0 && state == READING_MTL)
+				{
+					float r,g,b;
+					if(sscanf(strtok(NULL, "#\r\n"), "%f%f%f", &r,&g,&b) == 3)
+					{
+						mMtl.diffuse = Color4(r,g,b,mMtl.diffuse.a);
+					}
+				}
+				else if(strcmp(token, "Ks") == 0 && state == READING_MTL)
+				{
+					float r,g,b;
+					if(sscanf(strtok(NULL, "#\r\n"), "%f%f%f", &r,&g,&b) == 3)
+					{
+						mMtl.specular = Color3(r,g,b);
+					}
+				}
+				else if(strcmp(token, "Ns") == 0 && state == READING_MTL)
+				{
+					sscanf(strtok(NULL, "#\r\n"), "%f", &mMtl.hardness);
+				}
+				else if(strcmp(token, "d") == 0 && state == READING_MTL)
+				{
+					sscanf(strtok(NULL, "#\r\n"), "%f", &mMtl.diffuse.a);
+				}
+				else if(strcmp(token, "Tr") == 0 && state == READING_MTL)
+				{
+					float Tr;
+					if(sscanf(strtok(NULL, "#\r\n"), "%f", &Tr))
+					{
+						mMtl.diffuse.a = 1.0 - Tr;
+					}
+				}
+			}
+
+			if(state == READING_MTL)
+			{
+				mtl_map[mMtl.name] = mMtl;
+			}
+			fclose(mtlFilePtr);
+		}
+////////////////////////new mtl end////////////////////////////
 	}
 
 	vertices	= new Vec3f[numVertices];
@@ -364,6 +459,8 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	faces		= new face[numFaces];
 	normals		= new Vec3f[numNormals];
 	mtls		= new mtl[mtl_map.size()];
+
+
 
 	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
 		mtls[numMtls++]=itt->second;
@@ -377,7 +474,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	numFaces=0;
 
 	int cMtl=-1;
-	while(fgets(buffer, 200, fp) != NULL)
+	while(fgets(buffer, 256, fp) != NULL)
 	{
 		token = strtok(buffer, " \t");
 		if(strcmp(token, "v") == 0)
@@ -422,7 +519,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		}
 		else if(strcmp(token, "usemtl") == 0)
 		{
-			string name=strtok(NULL, " ");
+			string name=strtok(NULL, " \r");
 			if(name.size()!=0)
 			{
 				name=name.substr(0,name.size()-1);
@@ -512,6 +609,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		mat.diffuse = mtls[m].diffuse;
 		mat.specular = mtls[m].specular;
 		mat.hardness = mtls[m].hardness;
+		mat.specularMap = mtls[m].specularMap;
 		mat.tex = mtls[m].tex;
 		mat.numIndices = vNum - lNum;
 		mat.indicesOffset = lNum;

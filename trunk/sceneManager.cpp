@@ -52,6 +52,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 
 	dataManager.bind("model");
 	dataManager.setUniform1i("tex",0);
+	dataManager.setUniform1i("specularMap",1);
 	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 	dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	for(int pass = 0; pass <= 1; pass++)
@@ -70,6 +71,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 				if((material->diffuse.a > 0.999 && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1))
 				{
 					dataManager.bind(material->tex == "" ? "white" : material->tex);
+					dataManager.bind(material->specularMap == "" ? "white" : material->specularMap,1);
 					dataManager.setUniform4f("diffuse", material->diffuse);
 					dataManager.setUniform3f("specular", material->specular);
 					dataManager.setUniform1f("hardness", material->hardness);

@@ -368,7 +368,10 @@ protected:
 
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
-	
+	shared_ptr<vertexBuffer> overlayVBO;
+	shared_ptr<vertexBuffer> shapesVBO;
+
+
 	struct FBO{
 		unsigned int color;
 		//unsigned int normals;

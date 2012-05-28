@@ -1223,9 +1223,11 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 
 		//glUniform2f(glGetUniformLocation(s, "texScale"), (float)(mGround->mResolution.x)/uPowerOfTwo(mGround->mResolution.x),(float)(mGround->mResolution.y)/uPowerOfTwo(mGround->mResolution.y));
 		graphics->drawQuad(	Vec3f(0,0,0),
-							Vec3f(0,0,levelFile.info.mapSize.y),
 							Vec3f(levelFile.info.mapSize.x,0,0),
-							Vec3f(levelFile.info.mapSize.x,0,levelFile.info.mapSize.y));
+							Vec3f(levelFile.info.mapSize.x,0,levelFile.info.mapSize.y),
+							Vec3f(0,0,levelFile.info.mapSize.y));
+							
+							
 
 		dataManager.bind("model");
 	}

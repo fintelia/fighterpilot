@@ -112,6 +112,9 @@
   </shaders>
   
   <models>
+    <model name="j37"                   file="media/j37/j37.obj" />
+    <model name="j37 missile"           file="media/j37/missile.obj" />   
+    
     <model name="f22"                   file="media/f22.obj" />
                                         
     <model name="SAM battery"           file="media/SAM/SAM.obj" />
@@ -127,6 +130,8 @@
     <model name="mirage"                file="media/mirage/mirage.obj" />
     <model name="r550 magic missile"    file="media/mirage/R550 Magic missile.obj" />
     <model name="super530 missile"      file="media/mirage/super530 missile.obj" />
+
+
     
     <model name="flak cannon"           file="media/SAM/SAM.obj" />
     <model name="missile1"              file="media/m1(center).obj" />

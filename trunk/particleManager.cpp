@@ -148,8 +148,6 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
 				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
-
-				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
 			}
 			sAng = sin(particles[pNum].ang);
 			cAng = cos(particles[pNum].ang);
@@ -171,8 +169,6 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 			vNum++;
 		}
 	}
-
-	
 
 	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 }
@@ -204,8 +200,6 @@ void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
 				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
-
-				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
 			}
 			sAng = sin(particles[pNum].ang);
 			cAng = cos(particles[pNum].ang);
@@ -248,8 +242,6 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
 				vertices[vNum*4 + n].a = particles[pNum].a;
-
-				vertices[vNum*4 + n].energy = (world.time() - particles[pNum].startTime) / (particles[pNum].endTime - particles[pNum].startTime);
 			}
 
 			start = particles[pNum].pos;
@@ -276,7 +268,6 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 	}
 
 	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
-
 }
 
 void manager::init()
