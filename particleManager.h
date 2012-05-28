@@ -5,19 +5,19 @@ namespace particle
 struct particle
 {
 	Vec3f pos;
+	float ang;
+	float size;
+	float r, g, b, a;
 	Vec3f lastPos;
 	Vec3f vel;
 	Vec3f dir;
 	Vec3f startPos;
-	Angle ang;
 	float initialSpeed;
 	float angularSpeed;
 	float totalDistance;
 	float friction;
-	float size;
-	float r, g, b, a;
 	float startTime;
-	double endTime;
+	float endTime;
 	bool fadeIn;
 };
 
@@ -26,8 +26,7 @@ struct vertex
 	Vec3f position;
 	float s, t;
 	float r, g, b, a;
-	float energy;
-	float padding[6];
+	float padding[7];
 };
 
 class emitter

@@ -29,6 +29,7 @@ private:
 //		int numMaterials;
 		struct material{
 			string tex;
+			string specularMap;
 			Color4 diffuse;
 			Color3 specular;
 			float hardness;

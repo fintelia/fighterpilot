@@ -316,7 +316,6 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
@@ -343,14 +342,19 @@ void OpenGLgraphics::shaderGL::unbind()
 }
 bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
 {
+	static const char* versionMacro = "#version 120\n";
+	
 	if(shaderId != 0)
 		glDeleteProgram(shaderId);
 
 	GLuint v = glCreateShader(GL_VERTEX_SHADER);
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
-	glShaderSource(v, 1, &vert, NULL);
-	glShaderSource(f, 1, &frag, NULL);
+	const char* vertexSource[] = {versionMacro, vert};
+	const char* fragmentSource[] = {versionMacro, frag};
+
+	glShaderSource(v, 2, vertexSource, NULL);
+	glShaderSource(f, 2, fragmentSource, NULL);
 
 	glCompileShader(v);
 	glCompileShader(f);
@@ -531,13 +535,8 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 	overlay[2].texCoord = Vec2f(1.0,0.0);
 	overlay[3].texCoord = Vec2f(0.0,0.0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(true,false,false);
-
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
-
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -557,13 +556,9 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 	overlay[2].texCoord = Vec2f(1.0,1.0);
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(true,false,false);
+	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
-
-	glDrawArrays(GL_QUADS, 0, 4);
 	return true;
 }
 bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
@@ -580,13 +575,9 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	overlay[2].texCoord = Vec2f(t.x+t.w,	t.y+t.h);
 	overlay[3].texCoord = Vec2f(t.x,		t.y+t.h);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(true,false,false);
+	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
-	glVertexPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].position.x);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(texturedVertex2D), &overlay[0].texCoord.x);
-
-	glDrawArrays(GL_QUADS, 0, 4);
 	return true;
 }
 shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage)
@@ -1134,9 +1125,9 @@ void OpenGLgraphics::render()
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		//glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+		//glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		//glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
@@ -1374,12 +1365,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glDisable(GL_CULL_FACE);
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	//glActiveTexture(GL_TEXTURE4_ARB);	glEnable(GL_TEXTURE_2D);
-	//glActiveTexture(GL_TEXTURE3_ARB);	glEnable(GL_TEXTURE_2D);
-	//glActiveTexture(GL_TEXTURE2_ARB);	glEnable(GL_TEXTURE_2D);
-	//glActiveTexture(GL_TEXTURE1_ARB);	glEnable(GL_TEXTURE_2D);
-	//glActiveTexture(GL_TEXTURE0_ARB);	glEnable(GL_TEXTURE_2D);
-
 	glEnableClientState(GL_VERTEX_ARRAY);
 
 	if (!initFBOs(maxSamples))
@@ -1387,6 +1372,15 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		destroyWindow();
 		return false;
 	}
+
+	overlayVBO = genVertexBuffer(vertexBuffer::STREAM);
+	overlayVBO->addPositionData(2,0);
+	overlayVBO->addTexCoordData(2,2*sizeof(float));
+	overlayVBO->setTotalVertexSize(sizeof(texturedVertex2D));
+
+	shapesVBO = genVertexBuffer(vertexBuffer::STREAM);
+	shapesVBO->addPositionData(3,0);
+	shapesVBO->setTotalVertexSize(sizeof(vertex3D));
 
 	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
 	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
@@ -1469,38 +1463,30 @@ void OpenGLgraphics::drawSphere(Vec3f position, float radius)
 }
 void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(false,false,false);
-
 	shapes3D[0].position = start;
 	shapes3D[1].position = end;
-	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
-	glDrawArrays(GL_LINES, 0, 2);
+
+	shapesVBO->setVertexData(2*sizeof(vertex3D), shapes3D);
+	shapesVBO->drawBuffer(LINES,0,2);
 }
 void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(false,false,false);
-
  	shapes3D[0].position = p1;
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
 
-	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	shapesVBO->setVertexData(3*sizeof(vertex3D), shapes3D);
+	shapesVBO->drawBuffer(TRIANGLES,0,3);
 }
 void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 {
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	setClientStates(false,false,false);
-
 	shapes3D[0].position = p1;
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
 	shapes3D[3].position = p4;
 
-	glVertexPointer(3, GL_FLOAT, sizeof(vertex3D), &shapes3D[0].position.x);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	shapesVBO->setVertexData(4*sizeof(vertex3D), shapes3D);
+	shapesVBO->drawBuffer(TRIANGLE_FAN,0,4);
 }
 void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
 {

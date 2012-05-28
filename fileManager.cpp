@@ -358,7 +358,7 @@ shared_ptr<FileManager::textureFile> FileManager::loadTextureFile(string filenam
 {
 	string ext = extension(filename);
 	if(ext == ".bmp")	return loadBmpFile(filename, asinc);
-	if(ext == ".tga")	return loadPngFile(filename, asinc);
+	if(ext == ".tga")	return loadTgaFile(filename, asinc);
 	if(ext == ".png")	return loadPngFile(filename, asinc);
 
 	return shared_ptr<FileManager::textureFile>();

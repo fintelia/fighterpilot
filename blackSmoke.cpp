@@ -17,7 +17,7 @@ namespace particle
 	{
 		velocity =	fuzzyAttribute(0.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
-		life =		fuzzyAttribute(30000.0);
+		life =		fuzzyAttribute(7000);
 	}
 	bool blackSmoke::createParticle(particle& p, Vec3f currentPosition)
 	{

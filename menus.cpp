@@ -44,6 +44,7 @@ bool objectProperties::init(LevelFile::Object* obj)
 	l->addOption("UAV");			typeOptions.push_back(UAV);
 	l->addOption("b2");				typeOptions.push_back(B2);
 	l->addOption("mirage");			typeOptions.push_back(MIRAGE);
+	l->addOption("j37");			typeOptions.push_back(J37);
 	l->addOption("PLAYER_PLANE");	typeOptions.push_back(PLAYER_PLANE);
 	listBoxes["type"] = l;
 

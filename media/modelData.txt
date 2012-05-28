@@ -36,6 +36,15 @@ PLANE=mirage
 	CURRENT_WEAPON=super530 missile
 	W_OFFSET=(3.05,-0.55,-2.4)
 
+PLANE=j37
+    G_OFFSET=(0.0,0.0,0.0)
+	E_OFFSET=(0.0,0.1,-3.5)
+
+	MIRROR=TRUE
+
+	CURRENT_WEAPON=j37 missile
+	W_OFFSET=(0.9,-0.8,0.5)
+	W_OFFSET=(2.65,-0.55,-3.5)
 
 PLANE=b2
 	G_OFFSET=(0.0,0.0,0.0)

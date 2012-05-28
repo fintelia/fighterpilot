@@ -3,7 +3,7 @@
 
 namespace particle
 {
-	contrailSmall::contrailSmall(): emitter("particle", 48, 800.0, true)
+	contrailSmall::contrailSmall(): emitter("contrail", 48, 800.0, true)
 	{
 
 	}
@@ -20,6 +20,8 @@ namespace particle
 
 		p.vel = random3<float>() * velocity();
 		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
+
+		p.ang = random<float>(2.0*PI);
 
 		p.size = 0.0;
 
