@@ -17,9 +17,12 @@ emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSec
 	}
 	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 
-	VBO->addPositionData(	3,	0*sizeof(float));
-	VBO->addTexCoordData(	2,	3*sizeof(float));
-	VBO->addColorData(		4,	5*sizeof(float));
+	//VBO->addPositionData(	3,	0*sizeof(float));
+	//VBO->addTexCoordData(	2,	3*sizeof(float));
+	//VBO->addColorData(	4,	5*sizeof(float));
+	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0*sizeof(float));
+	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
+	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR4,		5*sizeof(float));
 
 	VBO->setTotalVertexSize(sizeof(vertex));
 }

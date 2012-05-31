@@ -102,7 +102,10 @@ bool LevelFile::loadZIP(string filename)
 	attributesFile->readValue("heightmap", "maxHeight", info.maxHeight);
 	attributesFile->readValue("heightmap", "sizeX", info.mapSize.x);
 	attributesFile->readValue("heightmap", "sizeZ", info.mapSize.y);
+	attributesFile->readValue("heightmap", "foliageAmount", info.foliageAmount);
 	attributesFile->readValue("level", "nextLevel", info.nextLevel);
+
+
 
 	string sType;
 	attributesFile->readValue("shaders", "shaderType", sType);
@@ -265,7 +268,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 
 		unsigned short* h = new unsigned short[w*w];
 		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info.mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y));
+		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),true,info.foliageAmount);
 	}
 
 	bullets = world.newObject(new bulletCloud);

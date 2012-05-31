@@ -14,13 +14,15 @@ uniform vec3 lightPosition;
 
 uniform vec3 eyePos;
 
+attribute vec3 Position;
+
 void main()
 {
-	position = gl_Vertex.xyz;
-	texCoord = (gl_Vertex.xz*scale + center) * 0.00005;
+	position = Position;
+	texCoord = (Position.xz*scale + center) * 0.00005;
 
-	lightDirection = normalize(lightPosition - gl_Vertex.xyz);
-	eyeDirection = eyePos - (modelTransform * gl_Vertex).xyz;
+	lightDirection = normalize(lightPosition - Position);
+	eyeDirection = eyePos - (modelTransform * vec4(Position,1.0)).xyz;
 
-	gl_Position = cameraProjection * modelTransform * gl_Vertex;
+	gl_Position = cameraProjection * modelTransform * vec4(Position,1.0);
 }

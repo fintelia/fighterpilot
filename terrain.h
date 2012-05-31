@@ -83,6 +83,9 @@ protected:
 
 	Circle<float> mBounds;
 	bool waterPlane;
+	
+	shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
+	shared_ptr<GraphicsManager::indexBuffer> foliageIBO;
 
 	shared_ptr<GraphicsManager::textureCube> skyTexture;
 	shared_ptr<GraphicsManager::texture3D> oceanTexture;
@@ -95,11 +98,12 @@ protected:
 	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
 
 	void generateOceanTexture();
+	void generateFoliage(int count);
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true){}
 	~Terrain();
-	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true);
+	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true, int foliageAmount=0);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south

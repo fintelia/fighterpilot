@@ -19,7 +19,8 @@ struct LevelFile
 		string			nextLevel;
 		float			minHeight;
 		float			maxHeight;
-		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0){}
+		unsigned int	foliageAmount;
+		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0),foliageAmount(0){}
 	};
 	struct Object{
 		int				type;			//the type of object

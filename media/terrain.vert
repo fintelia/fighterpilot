@@ -18,30 +18,13 @@ uniform vec3 eyePos;
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;
 
+attribute vec3 Position;
+
 void main()
 {
-	
-//	position.xz = gl_Vertex.xz/XZscale;
-//	position.y = gl_Vertex.y;
-	//position.xyz = gl_Vertex.xyz;
-
-	//h = (gl_Vertex.y-0.0)/(maxHeight-0.0);
-	//lightDir = normalize(lightPosition.xyz - gl_Vertex.xyz);
-	//halfVector = normalize(gl_LightSource[0].halfVector.xyz);
-
-
-	//eyeDirection = eyePos - gl_Vertex.xyz;
-	//gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-
-
-
-
-
-	vec4 pos = modelTransform * gl_Vertex;
+	vec4 pos = modelTransform * vec4(Position,1.0);
 	position = pos.xyz;
 	gl_Position = cameraProjection * pos;
 	lightDir = normalize(lightPosition - position.xyz);
 	halfVector = lightPosition - position.xyz;
-
-	
 }

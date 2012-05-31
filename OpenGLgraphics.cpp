@@ -36,23 +36,64 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
 
-	dynamic_cast<OpenGLgraphics*>(graphics)->setClientStates(texCoordDataSize != 0, normalDataSize == 3, colorDataSize != 0);
 
-	if(positionDataSize != 0)
+	for(unsigned int i=0; i<=6; i++)
 	{
-		glVertexPointer(positionDataSize, GL_FLOAT, totalVertexSize, (void*)(positionDataOffset+offset));
+		auto v = (VertexAttribute)i;
+		auto f = vertexAttributes.find(v);
+		bool b = (f != vertexAttributes.end());
+		dynamic_cast<OpenGLgraphics*>(graphics)->setClientState(i, b);
 	}
-	if(texCoordDataSize != 0)
+
+	//if(dataManager.getBoundShader() == "model")
+	//{
+	//	dynamic_cast<OpenGLgraphics*>(graphics)->setClientStates(false, false, false);
+	//}
+	//else
+	//{
+	//	bool texCoord = false;
+	//	bool normals = false;
+	//	bool colors = false;
+
+	//	for(auto i=vertexAttributes.begin(); i!=vertexAttributes.end(); i++)
+	//	{
+	//		if(i->first == TEXCOORD)
+	//			texCoord = true;
+	//		else if(i->first == NORMAL)
+	//			normals = true;
+	//		else if(i->first == COLOR3 || i->first == COLOR4)
+	//			colors = true;
+	//	}
+	//	dynamic_cast<OpenGLgraphics*>(graphics)->setClientStates(texCoord, normals, colors);
+	//}
+
+	for(auto i=vertexAttributes.begin(); i!=vertexAttributes.end(); i++)
 	{
-		glTexCoordPointer(texCoordDataSize, GL_FLOAT, totalVertexSize, (void*)(texCoordDataOffset+offset));
-	}
-	if(normalDataSize == 3)
-	{
-		glNormalPointer(GL_FLOAT, totalVertexSize, (void*)(normalDataOffset+offset));
-	}
-	if(colorDataSize != 0)
-	{
-		glColorPointer(colorDataSize, GL_FLOAT, totalVertexSize, (void*)(colorDataOffset+offset));
+		//if(dataManager.getBoundShader() == "model")
+		//{
+			if(i->first == POSITION2)		glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == POSITION3)	glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == TEXCOORD)	glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == NORMAL)		glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == COLOR3)		glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == COLOR4)		glVertexAttribPointer(i->first, 4, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == TANGENT)	glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+		//}
+		//else
+		//{
+		//	if(i->first == POSITION2)
+		//		glVertexPointer(2, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//	else if(i->first == POSITION3)
+		//		glVertexPointer(3, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//	else if(i->first == TEXCOORD)
+		//		glTexCoordPointer(2, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//	else if(i->first == NORMAL)
+		//		glNormalPointer(GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//	else if(i->first == COLOR3)
+		//		glColorPointer(3, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//	else if(i->first == COLOR4)
+		//		glColorPointer(4, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
+		//}
 	}
 }
 void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)
@@ -182,7 +223,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		
-		glEnable(GL_TEXTURE_2D); //required for some ATI drivers
+		//glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
@@ -395,6 +436,10 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	shaderId = glCreateProgram();
 	glAttachShader(shaderId,f);
 	glAttachShader(shaderId,v);
+
+	for(auto i=attributes.begin(); i!=attributes.end(); i++)
+		glBindAttribLocation(shaderId, i->second, i->first.c_str());
+
 	glLinkProgram(shaderId);
 
 
@@ -416,6 +461,11 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
 
 	return true;
+}
+void OpenGLgraphics::shaderGL::bindAttribute(string name, unsigned int index)
+{
+	attributes[name] = index;
+	//glBindAttribLocation(shaderId, index, name.c_str());
 }
 string OpenGLgraphics::shaderGL::getErrorStrings()
 {
@@ -680,19 +730,14 @@ void OpenGLgraphics::setBlendMode(BlendMode blend)
 	else if(blend == ADDITIVE)		glBlendFunc(GL_SRC_ALPHA,GL_ONE);
 	else if(blend == ALPHA_ONLY)	glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 }
-void OpenGLgraphics::setClientStates(bool texCoord, bool normal, bool color)
+void OpenGLgraphics::setClientState(unsigned int index, bool state)
 {
-	if(!texCoord_clientState && texCoord)  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	if(texCoord_clientState && !texCoord)  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	texCoord_clientState = texCoord;
-
-	if(!normal_clientState && normal)  glEnableClientState(GL_NORMAL_ARRAY);
-	if(normal_clientState && !normal)  glDisableClientState(GL_NORMAL_ARRAY);
-	normal_clientState = normal;
-
-	if(!color_clientState && color)  glEnableClientState(GL_COLOR_ARRAY);
-	if(color_clientState && !color)  glDisableClientState(GL_COLOR_ARRAY);
-	color_clientState = color;
+	if(clientStates[index] != state)
+	{
+		if(state)	glEnableVertexAttribArray(index);
+		else		glDisableVertexAttribArray(index);
+		clientStates[index] = state;
+	}
 }
 void OpenGLgraphics::setVSync(bool enabled)
 {
@@ -1155,6 +1200,9 @@ void OpenGLgraphics::destroyWindow()
 {
 	destroyFBOs();
 
+	shapesVBO.reset();
+	overlayVBO.reset();
+
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
 
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
@@ -1191,6 +1239,8 @@ void OpenGLgraphics::destroyWindow()
 		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		context->hInstance=NULL;									// Set hInstance To NULL
 	}
+
+	this->~OpenGLgraphics();
 }
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
@@ -1340,10 +1390,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;								// Return false
 	}
 
-	if(!GLEE_VERSION_2_0)
+	if(!GLEE_VERSION_2_1)
 	{
 		destroyWindow();
-		string s = string("Your version of OpenGL must be at least 2.0\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
+		string s = string("Your version of OpenGL must be at least 2.1\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
@@ -1355,17 +1405,39 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;
 	}
 
+	//if(wglCreateContextAttribsARB)	// we still need to eliminate GL_QUADS for this to work
+	//{
+	//	int attribs[] =
+	//	{
+	//		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+	//		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+	//		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+	//		0
+	//	};
+
+	//	auto gl3_hrc = wglCreateContextAttribsARB(context->hDC,0, attribs);
+	//	if(gl3_hrc)
+	//	{
+	//		wglMakeCurrent(NULL,NULL);
+	//		wglDeleteContext(context->hRC);
+	//		context->hRC = gl3_hrc;
+	//		wglMakeCurrent(context->hDC, context->hRC);
+
+	//		GLuint vao;
+	//		glGenVertexArrays(1, &vao);
+	//		glBindVertexArray(vao);
+	//	}
+	//}
+
 	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
 	SetForegroundWindow(context->hWnd);				// Slightly Higher Priority
 	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
-	//graphics->resize(WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top);	// Set Up Our Perspective GL Screen
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	glEnableClientState(GL_VERTEX_ARRAY);
 
 	if (!initFBOs(maxSamples))
 	{
@@ -1374,12 +1446,12 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	}
 
 	overlayVBO = genVertexBuffer(vertexBuffer::STREAM);
-	overlayVBO->addPositionData(2,0);
-	overlayVBO->addTexCoordData(2,2*sizeof(float));
+	overlayVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2,	0);
+	overlayVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		2*sizeof(float));
 	overlayVBO->setTotalVertexSize(sizeof(texturedVertex2D));
 
 	shapesVBO = genVertexBuffer(vertexBuffer::STREAM);
-	shapesVBO->addPositionData(3,0);
+	shapesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3, 0);
 	shapesVBO->setTotalVertexSize(sizeof(vertex3D));
 
 	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
@@ -1510,29 +1582,9 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 	dataManager.bind("model");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform3f("lightPosition", getLightPosition());
-
-	//Mat4f matV = views[currentView].modelViewMat  * Mat4f(rotation,position,scale);
-	//Mat4f matP = views[currentView].projectionMat;
-	//Mat4f mat =  matP * matV;
-	//Mat4f matV2;	glGetFloatv(GL_MODELVIEW_MATRIX,matV2.ptr());
-	//Mat4f matP2;	glGetFloatv(GL_PROJECTION_MATRIX,matP2.ptr());
-	//dataManager.setUniformMatrix("modelviewProjection",mat);
-//	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
-//	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
-
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
 
-	//glBindBuffer(GL_ARRAY_BUFFER, m->id);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//glVertexPointer(3,	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)0);
-	//glNormalPointer(	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(3*sizeof(float)));
-	//glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(6*sizeof(float)));
-
 	bool dMask = true;
-
 	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
 	{
 		dataManager.bind(material->tex == "" ? "white" : material->tex);
@@ -1551,7 +1603,7 @@ void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Ve
 			dMask = false;
 			glDepthMask(false);
 		}
-		m->VBO->drawBuffer(TRIANGLES, material->indicesOffset, material->numIndices);
+		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
 	}
 
 	if(!dMask)	glDepthMask(true);
@@ -1577,17 +1629,8 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
 
 	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-	//glBindBuffer(GL_ARRAY_BUFFER, m->id);
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glEnableClientState(GL_NORMAL_ARRAY);
-	//glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	//glVertexPointer(3,	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)0);
-	//glNormalPointer(	GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(3*sizeof(float)));
-	//glTexCoordPointer(2,GL_FLOAT,	sizeof(texturedLitVertex3D), (void*)(6*sizeof(float)));
 
 	bool dMask = true;
-
 	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
 	{
 		dataManager.setUniform4f("diffuse", material->diffuse);
@@ -1604,8 +1647,7 @@ void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f 
 			dMask = false;
 			setDepthMask(false);
 		}
-		m->VBO->drawBuffer(TRIANGLES, material->indicesOffset, material->numIndices);checkErrors();
-		//glDrawArrays(GL_TRIANGLES,i->indicesOffset, i->numIndices);
+		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
 	}
 	if(!dMask)	glDepthMask(true);
 }

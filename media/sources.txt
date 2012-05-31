@@ -62,3 +62,11 @@ mirage.obj (and related files)
 M2.obj (and related files)
 	http://www.gfx-3d-model.com/2008/12/m1-abrams-tank-model/
 	scaled by a factor of 0.026
+	
+tree.png
+	http://yorik.uncreated.net/greenhouse.html (pine tree)
+	rendered in blender from 2 perpedicular directions
+	resized canvas to center trunk in both images
+	resized images to 1024x1024
+	combined two views into a single image
+	adjusted gamma to 1.5

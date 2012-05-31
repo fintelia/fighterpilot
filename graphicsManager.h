@@ -27,6 +27,14 @@ struct texturedLitVertex3D
 	Vec3f normal;
 	Vec2f UV;
 };
+struct NormalMappedVertex3D
+{
+	Vec3f position;
+	Vec3f normal;
+	Vec3f tangent;
+	Vec2f UV;
+	float padding[5];
+};
 class GraphicsManager
 {
 public:
@@ -119,25 +127,19 @@ public:
 	{
 	public:
 		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
+		enum VertexAttribute{POSITION2=0,POSITION3=1,TEXCOORD=2,NORMAL=3,COLOR3=4, COLOR4=5, TANGENT=6};
 	protected:
-		unsigned int positionDataSize;
-		unsigned int positionDataOffset;
-
-		unsigned int texCoordDataSize;
-		unsigned int texCoordDataOffset;
-
-		unsigned int normalDataSize;		
-		unsigned int normalDataOffset;
-
-		unsigned int colorDataSize;
-		unsigned int colorDataOffset;
-
-
 		unsigned int totalVertexSize;
+
+		struct vertexAttributeData{
+			unsigned int offset;
+		};
+		map<VertexAttribute,vertexAttributeData> vertexAttributes;
+
 
 		UsageFrequency usageFrequency;
 
-		vertexBuffer(UsageFrequency u): usageFrequency(u), positionDataSize(0), positionDataOffset(0), texCoordDataSize(0), texCoordDataOffset(0), normalDataSize(0), normalDataOffset(0), colorDataSize(0), colorDataOffset(0), totalVertexSize(0){}
+		vertexBuffer(UsageFrequency u): usageFrequency(u), totalVertexSize(0){}
 
 		virtual void bindBuffer(unsigned int offset){}
 		virtual void bindBuffer(){bindBuffer(0);}
@@ -145,15 +147,10 @@ public:
 	public:
 		friend class GraphicsManager::indexBuffer;
 		virtual ~vertexBuffer(){}
-		virtual void addPositionData(unsigned int size, unsigned int offset)	{positionDataSize = size; positionDataOffset = offset;}
-		virtual void addTexCoordData(unsigned int size, unsigned int offset)	{texCoordDataSize = size; texCoordDataOffset = offset;}
-		virtual void addNormalData(unsigned int size, unsigned int offset)		{normalDataSize = size;	normalDataOffset = offset;}
-		virtual void addColorData(unsigned int size, unsigned int offset)		{colorDataSize = size;	colorDataOffset = offset;}
 
 		virtual void setTotalVertexSize(unsigned int totalSize){totalVertexSize = totalSize;}
-
+		virtual void addVertexAttribute(VertexAttribute attrib, unsigned int offset);
 		virtual void setVertexData(unsigned int size, void* data)=0;
-
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 	};
 	class indexBuffer
@@ -220,6 +217,8 @@ public:
 
 		virtual void bind()=0;
 		virtual void unbind()=0;
+
+		virtual void bindAttribute(string name, unsigned int index)=0;
 
 		virtual void setUniform1f(string name, float v0)=0;
 		virtual void setUniform2f(string name, float v0, float v1)=0;
@@ -396,6 +395,8 @@ protected:
 	bool normal_clientState;
 	bool color_clientState;
 
+	map<unsigned int, bool> clientStates;
+
 #ifdef _DEBUG
 	double errorGlowEndTime;
 #endif
@@ -479,6 +480,7 @@ public:
 
 		unsigned int shaderId;
 		map<string, int> uniforms;
+		map<string, int> attributes;
 		int getUniformLocation(string uniform);
 	public:
 		shaderGL(): shaderId(0){}
@@ -488,6 +490,8 @@ public:
 		void unbind();
 
 		bool init(const char* vert, const char* frag, const char* geometry);
+
+		void bindAttribute(string name, unsigned int index);
 
 		void setUniform1f(string name, float v0);
 		void setUniform2f(string name, float v0, float v1);
@@ -539,7 +543,7 @@ public:
 	void setDepthMask(bool mask);
 	void setDepthTest(bool enabled);
 	void setBlendMode(BlendMode blend);
-	void setClientStates(bool texCoord, bool normal, bool color);
+	void setClientState(unsigned int index, bool state);
 
 	void setVSync(bool enabled);
 

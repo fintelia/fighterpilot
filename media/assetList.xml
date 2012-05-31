@@ -51,7 +51,7 @@
     <texture name="spark"                     file="media/spark.png" />
     
     <!-- terrain -->
-  	<texture name="grass"                     file="media/grass2.png"                 tileable="true" />
+  	<texture name="grass"                     file="media/grass3.png"                 tileable="true" />
     <texture name="rock"                      file="media/rock.png"                   tileable="true" />
     <texture name="sand"                      file="media/sand.png"                   tileable="true" />
     <texture name="snow"                      file="media/snow.png"                   tileable="true" />
@@ -68,9 +68,11 @@
     <texture name="bullet"                    file="media/bullet.png" />
     <texture name="clouds"                    file="media/clouds.png" />
     <texture name="sun"                       file="media/sun.png" />
-
+    <texture name="tree"                      file="media/tree2.png" />
+    
     <!-- miscellaneous -->
     <texture name="white"                     file="media/white.png"                  tileable="true"/>
+    <texture name="default normals"           file="media/default normals.png"        tileable="true"/>
     <texture name="next level"                file="media/nextLevel.png" />
     <texture name="errorGlow"                 file="media/errorGlow.png" />
 
@@ -79,36 +81,38 @@
 
   <shaders>
     <!-- loading screen -->
-    <shader name="ortho"                  vertex="media/ortho.vert"          fragment="media/ortho.frag"   preload="true" sAspect="true" />
-    <shader name="gamma shader"           vertex="media/gamma.vert"          fragment="media/gamma.frag"   preload="true" />
+    <shader name="ortho"                  vertex="media/ortho.vert"          fragment="media/ortho.frag"   preload="true" sAspect="true" position2="Position" texCoord="TexCoord" />
+    <shader name="gamma shader"           vertex="media/gamma.vert"          fragment="media/gamma.frag"   preload="true" position2="Position" texCoord="TexCoord" />
     
     <!-- HUD-->
-    <shader name="radar"                  vertex="media/radar.vert"          fragment="media/radar.frag"         sAspect="true" />
-    <shader name="radar2"                 vertex="media/radar2.vert"         fragment="media/radar2.frag"        sAspect="true" />
-    <shader name="radar plane shader"     vertex="media/radarPlane.vert"     fragment="media/radarPlane.frag"    sAspect="true" />
-    <shader name="radar bounds"           vertex="media/radar bounds.vert"   fragment="media/radar bounds.frag"  sAspect="true" />
-    <shader name="health"                 vertex="media/health.vert"         fragment="media/health.frag"        sAspect="true" />
-    <shader name="circle shader"          vertex="media/circle.vert"         fragment="media/circle.frag"        sAspect="true"/>
+    <shader name="radar plane shader"     vertex="media/radarPlane.vert"     fragment="media/radarPlane.frag"    sAspect="true" position2="Position" />
+    <shader name="radar"                  vertex="media/radar.vert"          fragment="media/radar.frag"         sAspect="true" position2="Position" texCoord="TexCoord" />
+    <shader name="radar2"                 vertex="media/radar2.vert"         fragment="media/radar2.frag"        sAspect="true" position2="Position" texCoord="TexCoord" />
+    <shader name="radar bounds"           vertex="media/radar bounds.vert"   fragment="media/radar bounds.frag"  sAspect="true" position2="Position" texCoord="TexCoord" />
+    <shader name="health"                 vertex="media/health.vert"         fragment="media/health.frag"        sAspect="true" position2="Position" texCoord="TexCoord" />
+    <shader name="circle shader"          vertex="media/circle.vert"         fragment="media/circle.frag"        sAspect="true" position2="Position" texCoord="TexCoord" />
+
 
     <!-- general -->
-    <shader name="particle shader"        vertex="media/particle.vert"       fragment="media/particle.frag" />
-    <shader name="model"                  vertex="media/model.vert"          fragment="media/model.frag" Position="3" TexCoord="2" Normal="3"/>
-
+    <shader name="particle shader"        vertex="media/particle.vert"       fragment="media/particle.frag" position3="Position" texCoord="TexCoord" color4="Color" />
+    <shader name="model"                  vertex="media/model.vert"          fragment="media/model.frag" position3="Position" texCoord="TexCoord" normal="Normal" tangent="Tangent" />
+            
     <!-- world -->
-    <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" Position="3" />
-    <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" Position="3" TexCoord="2" />
-    <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" Position="3" TexCoord="2" />
+    <shader name="ocean"                  vertex="media/ocean.vert"          fragment="media/ocean.frag" position3="Position" />
+    <shader name="sky shader"             vertex="media/sky.vert"            fragment="media/sky.frag" position3="Position" texCoord="TexCoord" />
+    <shader name="hex grid shader"        vertex="media/hex grid.vert"       fragment="media/hex grid.frag" position3="Position" texCoord="TexCoord" />
+    <shader name="trees shader"           vertex="media/trees.vert"          fragment="media/trees.frag" position3="Position" texCoord="TexCoord" />
 
     <!-- terrain -->
-    <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" Position="3" />
-    <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" Position="3" />
-    <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" Position="3" />
+    <shader name="grass terrain"          vertex="media/terrain.vert"        fragment="media/grass.frag" position3="Position" />
+    <shader name="island terrain"         vertex="media/terrain.vert"        fragment="media/island.frag" position3="Position" />
+    <shader name="snow terrain"           vertex="media/terrain.vert"        fragment="media/snow.frag" position3="Position" />
 
     <!-- terrain preview -->
-    <shader name="island preview terrain" vertex="media/terrain.vert"        fragment="media/island preview.frag" />
-    <shader name="grass preview terrain"  vertex="media/terrain.vert"        fragment="media/grass preview.frag" />
-    <shader name="snow preview terrain"   vertex="media/terrain.vert"        fragment="media/snow preview.frag" />
-    <shader name="ocean preview"          vertex="media/ocean preview.vert"  fragment="media/ocean preview.frag" />
+    <shader name="island preview terrain" vertex="media/terrain.vert"        fragment="media/island preview.frag" position3="Position" />
+    <shader name="grass preview terrain"  vertex="media/terrain.vert"        fragment="media/grass preview.frag" position3="Position" />
+    <shader name="snow preview terrain"   vertex="media/terrain.vert"        fragment="media/snow preview.frag" position3="Position" />
+    <shader name="ocean preview"          vertex="media/ocean preview.vert"  fragment="media/ocean preview.frag" position3="Position" />
   </shaders>
   
   <models>

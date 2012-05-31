@@ -815,7 +815,7 @@ void nPlane::initArmaments()
 	//rockets.firing									= false;	 not used
 
 	bombs.max				= bombs.left				= 1;
-	bombs.roundsMax			= bombs.roundsLeft			= rockets.ammoRounds.size();
+	bombs.roundsMax			= bombs.roundsLeft			= bombs.ammoRounds.size();
 	bombs.coolDown			= bombs.coolDownLeft		= 100.0;
 	bombs.rechargeTime		= bombs.rechargeLeft		= 8000.0f;
 	bombs.firing										= false;
