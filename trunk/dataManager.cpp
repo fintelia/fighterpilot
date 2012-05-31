@@ -176,21 +176,48 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 {
 	///////////////////////types////////////////////////////
 //	struct color{float r,g,b;color(float red, float green, float blue): r(red), g(green), b(blue){}};
-	struct texCoord{float u,v;texCoord(float U, float V): u(U), v(V) {}texCoord(): u(0), v(0) {}};
-	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;
+//	struct texCoord{float u,v;texCoord(float U, float V): u(U), v(V) {}texCoord(): u(0), v(0) {}};
+	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;unsigned int combinedVertices[3];
 		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
 		face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
 		face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
 		face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
-	struct triangle{Vec3f v1;texCoord t1;Vec3f n1;Vec3f v2;texCoord t2;Vec3f n2;Vec3f v3;texCoord t3;Vec3f n3;};
+	struct triangle
+	{
+		Vec3f v1;
+		Vec2f t1;
+		Vec3f n1;
+		
+		Vec3f v2;
+		Vec2f t2;
+		Vec3f n2;
+
+		Vec3f v3;
+		Vec2f t3;
+		Vec3f n3;
+	};
 	struct mtl
 	{
 		string tex;
 		string specularMap;
+		string normalMap;
 		string name;
 		Color4 diffuse;
 		Color3 specular;
 		float hardness;
+	};
+	struct vertexIndices
+	{
+		unsigned int position;
+		unsigned int texCoord;
+		unsigned int normal;
+		bool operator< (const vertexIndices& v)const{return v.position != position ? v.position < position : (v.texCoord != texCoord ? v.texCoord < texCoord : v.normal < normal);}
+		vertexIndices(unsigned int p, unsigned int t, unsigned int n): position(p), texCoord(t), normal(n){}
+	};
+	struct combinedFace
+	{
+		unsigned int vertices[3];
+		unsigned int material;
 	};
 ////////////////////variables///////////////////////////
 	unsigned int	numVertices=0,
@@ -201,13 +228,14 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	Vec3f*			vertices;
 	Vec3f*			normals;
-	texCoord*		texCoords;
+	Vec2f*			texCoords;
 	face*			faces;
 	mtl*			mtls;
 
 	unsigned int	totalVerts,totalFaces;
 
-
+	vector<NormalMappedVertex3D> combinedVertices;
+	map<vertexIndices, unsigned int> indexMap; 
 
 	FILE *fp;
 	if((fp=fopen(filename.c_str(), "r")) == nullptr)
@@ -241,127 +269,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	if(mtlFile.size()!=0)
 	{
-///////////////////////LOAD MTL/////////////////////////////////
-		//{
-		//	string mstring="";
-		//	mtl mMtl;
-		//	mMtl.tex = "";
-		//	mMtl.name = "";
-		//	mMtl.diffuse = white;
-		//	mMtl.specular = black;
-		//	mMtl.hardness = 40.0;
-
-		//	map<string,mtl> m;
-
-		//	ifstream fin;
-		//	fin.open(mtlFile);
-		//	string file;
-		//	int i=mtlFile.find_last_of("/");
-		//	if(i==string::npos)
-		//		file.assign("");
-		//	else
-		//		file=mtlFile.substr(0,i+1);
-		//	if(!fin.is_open())
-		//	{
-		//		messageBox(mtlFile + " could not be loaded");
-		//		return nullptr;
-		//	}
-		//	while (!fin.eof())
-		//	{
-		//		string line;
-		//		char l[256];
-		//		string s[4];
-		//		int i=0, h=0;
-
-		//		fin.getline(l,256);
-		//		line.assign(l);
-		//		if(line.empty())
-		//			continue;
-
-		//		if(line[0] == '\t')
-		//			boost::erase_head(line,1);
-
-		//		h=line.find(" ");
-		//		for(int n=0;n<4;n++)
-		//		{
-		//			s[n].assign(line.substr(i,h-i));
-		//			i=h+1;
-		//			if(i>(signed int)line.size())
-		//				i=line.size();
-		//			h=line.find(" ",h+2);
-		//			if(h==string::npos)
-		//				h=line.size();
-		//		}
-
-		//		try
-		//		{
-		//			if(s[0].compare("newmtl")==0)
-		//			{
-		//				if(mstring != "")
-		//				{
-		//					m.insert(pair<string,mtl>(mstring,mMtl));
-		//				}
-		//				mMtl.tex = "";
-		//				mMtl.diffuse = white;
-		//				mMtl.name = s[1];
-		//				mstring=s[1];
-		//			}
-		//			else if(s[0].compare(0,6,"map_Kd")==0)
-		//			{
-		//				if(mstring == "") continue;
-
-		//				mMtl.tex=file + line.substr(line.find_first_of(' ')+1,line.npos);
-		//				auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.tex), true);
-		//				if(texPtr)
-		//				{
-		//					assets[mMtl.tex] = shared_ptr<asset>(texPtr);
-		//				}
-		//				else
-		//				{
-		//					mMtl.tex = "";
-		//				}
-		//			}
-		//			else if(s[0].compare(0,2,"Kd")==0)
-		//			{
-		//				if(mstring == "") continue;
-		//				try{
-		//					float r = lexical_cast<float>(s[1]);
-		//					float g = lexical_cast<float>(s[2]);
-		//					float b = lexical_cast<float>(s[3]);
-		//					mMtl.diffuse=Color4(r,g,b,mMtl.diffuse.a);
-		//				}catch(...){}
-		//			}
-		//			else if(s[0].compare(0,2,"Ks")==0)
-		//			{
-		//				if(mstring == "") continue;
-		//				try{
-		//					float r = lexical_cast<float>(s[1]);
-		//					float g = lexical_cast<float>(s[2]);
-		//					float b = lexical_cast<float>(s[3]);
-		//					mMtl.specular=Color3(r,g,b);
-		//				}catch(...){}
-		//			}
-		//			else if(s[0].compare(0,2,"Ns")==0)
-		//			{
-		//				if(mstring == "") continue;
-		//				mMtl.hardness=atof(s[1].c_str());
-		//			}
-		//			else if(s[0].compare(0,2,"d")==0)
-		//			{
-		//				if(mstring == "") continue;
-		//				mMtl.diffuse.a=atof(s[1].c_str());
-		//			}
-		//			else if(s[0].compare(0,2,"Tr")==0)
-		//			{
-		//				if(mstring == "") continue;
-		//				mMtl.diffuse.a=1.0-atof(s[1].c_str());
-		//			}
-		//		}catch(...){}
-		//	}
-		//	m.insert(pair<string,mtl>(mstring,mMtl));
-		//	mtl_map = m;
-		//}
-///////////////////////LOAD MTL END/////////////////////////
 /////////////////////////new mtl////////////////////////////
 		FILE *mtlFilePtr;
 		if((mtlFilePtr=fopen(mtlFile.c_str(), "r")) != nullptr)
@@ -398,7 +305,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 						mMtl.tex = "";
 					}
 				}
-				else if(strcmp(token, "map_Ks") == 0 && state == READING_MTL)
+				else if(strcmp(token, "map_Ns") == 0 && state == READING_MTL)
 				{
 					mMtl.specularMap = file + strtok(NULL, "#\r\n");
 					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.specularMap), true);
@@ -409,6 +316,19 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 					else
 					{
 						mMtl.specularMap = "";
+					}
+				}
+				else if(strcmp(token, "map_bump") == 0 && state == READING_MTL)
+				{
+					mMtl.normalMap = file + strtok(NULL, "#\r\n");
+					auto texPtr = registerTexture(fileManager.loadTextureFile(mMtl.normalMap), true);
+					if(texPtr)
+					{
+						assets[mMtl.normalMap] = shared_ptr<asset>(texPtr);
+					}
+					else
+					{
+						mMtl.normalMap = "";
 					}
 				}
 				else if(strcmp(token, "Kd") == 0 && state == READING_MTL)
@@ -455,12 +375,10 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	}
 
 	vertices	= new Vec3f[numVertices];
-	texCoords	= new texCoord[numTexcoords];
+	texCoords	= new Vec2f[numTexcoords];
 	faces		= new face[numFaces];
 	normals		= new Vec3f[numNormals];
 	mtls		= new mtl[mtl_map.size()];
-
-
 
 	for(map<string,mtl>::iterator itt=mtl_map.begin();itt!=mtl_map.end();itt++)
 		mtls[numMtls++]=itt->second;
@@ -487,10 +405,10 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		}
 		else if(strcmp(token, "vt") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].u);
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].v);
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].x);
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].y);
 
-			texCoords[numTexcoords].v = 1.0f - texCoords[numTexcoords].v;
+			texCoords[numTexcoords].y = 1.0f - texCoords[numTexcoords].y;
 			numTexcoords++;
 		}
 		else if(strcmp(token, "vn") == 0)
@@ -576,33 +494,96 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	a->trl = std::shared_ptr<CollisionChecker::triangleList>(new CollisionChecker::triangleList(vertices,fs,totalVerts,totalFaces));
 	a->boundingSphere = Sphere<float>(center, sqrt(radiusSquared));
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	map<vertexIndices, unsigned int>::iterator vertexIndicesItt;
+	bool CCW;
+	float inv;
+	NormalMappedVertex3D tmpVertex;
+	Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
+	for(int i=0; i < totalFaces; i++)
+	{
+		CCW = true;
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0)
+		{
+			faceNormal = (vertices[faces[i].v[1]-1]-vertices[faces[i].v[0]-1]).cross(vertices[faces[i].v[2]-1]-vertices[faces[i].v[0]-1]);
 
-	texturedLitVertex3D* VBOverts = new texturedLitVertex3D[totalFaces*3];
-	unsigned int lNum=0, vNum = 0;
-	Vec3f faceNormal;
+
+		}
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].t[0] != 0 && faces[i].t[1] != 0 && faces[i].t[2] != 0)
+		{
+			inv = (texCoords[faces[i].t[0]-1].x * texCoords[faces[i].t[1]-1].y - texCoords[faces[i].t[1]-1].x * texCoords[faces[i].t[0]-1].y);
+			faceTangent = abs(inv) < 0.001 ? Vec3f(1,0,0).cross(faceNormal) : (vertices[faces[i].v[0]-1] * texCoords[faces[i].t[1]-1].y - vertices[faces[i].v[1]-1] * texCoords[faces[i].t[0]-1].y) / inv;
+		}
+
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].n[0] != 0 && faces[i].n[1] != 0 && faces[i].n[2] != 0)
+		{
+			avgFaceNormal = normals[faces[i].n[0]-1] + normals[faces[i].n[1]-1] + normals[faces[i].n[2]-1];
+			if(faceNormal.dot(faceNormal) < 0.0)// correct triangle winding order
+			{
+				swap(faces[i].v[0], faces[i].v[1]);
+				swap(faces[i].t[0], faces[i].t[1]);
+				swap(faces[i].n[0], faces[i].n[1]);
+				CCW = false;
+			}
+		}
+		for(int j = 0; j < 3; j++)
+		{
+			vertexIndicesItt = indexMap.find(vertexIndices(faces[i].v[j], faces[i].t[j], faces[i].n[j]));
+			if(vertexIndicesItt == indexMap.end())
+			{
+				indexMap[vertexIndices(faces[i].v[j], faces[i].t[j], faces[i].n[j])] = combinedVertices.size();
+				faces[i].combinedVertices[j] = combinedVertices.size();
+
+				tmpVertex.position = (faces[i].v[j] != 0) ? vertices[faces[i].v[j]-1] : Vec3f();
+				tmpVertex.normal = (faces[i].n[j] != 0) ? normals[faces[i].n[j]-1] : faceNormal;
+				tmpVertex.UV = (faces[i].t[j] != 0) ? texCoords[faces[i].t[j]-1] : Vec2f();
+				tmpVertex.tangent = Vec3f(0,0,0);
+				combinedVertices.push_back(tmpVertex);
+			}
+			else
+			{
+				faces[i].combinedVertices[j] = vertexIndicesItt->second;
+			}
+		}
+		combinedVertices[faces[i].combinedVertices[0]].tangent += faceTangent;
+		combinedVertices[faces[i].combinedVertices[1]].tangent += faceTangent;
+		combinedVertices[faces[i].combinedVertices[2]].tangent += faceTangent;
+	}
+
+
+	//unsigned int* indexBuffer = new unsigned int[totalFaces*3];
+	//unsigned int lNum=0, vNum = 0;
 	for(int m=0; m<numMtls; m++)
 	{
+		vector<unsigned int> indexBuffer;
 		for(int i=0; i < totalFaces; i++)
 		{
 			if(faces[i].material == m)
 			{
-				if(faces[i].v[0] == 0 || faces[i].v[1] == 0 || faces[i].v[2] == 0) continue;
-				VBOverts[vNum+0].position = vertices[faces[i].v[0]-1];
-				VBOverts[vNum+1].position = vertices[faces[i].v[1]-1];
-				VBOverts[vNum+2].position = vertices[faces[i].v[2]-1];
+				indexBuffer.push_back(faces[i].combinedVertices[0]);
+				indexBuffer.push_back(faces[i].combinedVertices[1]);
+				indexBuffer.push_back(faces[i].combinedVertices[2]);
 
-				if(faces[i].n[0] == 0 || faces[i].n[1] == 0 || faces[i].n[2] == 0) //so we only have to generate the face normal once
-					faceNormal = (VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+3].position-VBOverts[vNum+0].position);
-				VBOverts[vNum+0].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[0]-1] : faceNormal;
-				VBOverts[vNum+1].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[1]-1] : faceNormal;
-				VBOverts[vNum+2].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[2]-1] : faceNormal;
-
-
-				if(faces[i].t[0] != 0)	VBOverts[vNum+0].UV = Vec2f(texCoords[faces[i].t[0]-1].u,	texCoords[faces[i].t[0]-1].v);
-				if(faces[i].t[1] != 0)	VBOverts[vNum+1].UV = Vec2f(texCoords[faces[i].t[1]-1].u,	texCoords[faces[i].t[1]-1].v);
-				if(faces[i].t[2] != 0)	VBOverts[vNum+2].UV = Vec2f(texCoords[faces[i].t[2]-1].u,	texCoords[faces[i].t[2]-1].v);
-
-				vNum+=3;
+				//if(faces[i].v[0] == 0 || faces[i].v[1] == 0 || faces[i].v[2] == 0) continue;
+				//VBOverts[vNum+0].position = vertices[faces[i].v[0]-1];
+				//VBOverts[vNum+1].position = vertices[faces[i].v[1]-1];
+				//VBOverts[vNum+2].position = vertices[faces[i].v[2]-1];
+				//
+				//if(faces[i].n[0] == 0 || faces[i].n[1] == 0 || faces[i].n[2] == 0) //so we only have to generate the face normal once
+				//	faceNormal = ((VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+3].position-VBOverts[vNum+0].position)).normalize();
+				//VBOverts[vNum+0].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[0]-1].normalize() : faceNormal;
+				//VBOverts[vNum+1].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[1]-1].normalize() : faceNormal;
+				//VBOverts[vNum+2].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[2]-1].normalize() : faceNormal;
+				//
+				//if(faces[i].t[0] != 0)	VBOverts[vNum+0].UV = texCoords[faces[i].t[0]-1];
+				//if(faces[i].t[1] != 0)	VBOverts[vNum+1].UV = texCoords[faces[i].t[1]-1];
+				//if(faces[i].t[2] != 0)	VBOverts[vNum+2].UV = texCoords[faces[i].t[2]-1];
+				//
+				//faceNormal = VBOverts[vNum+0].normal + VBOverts[vNum+1].normal + VBOverts[vNum+2].normal;
+				//if(faceNormal.dot( (VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+2].position-VBOverts[vNum+0].position) ) < 0.0)
+				//{
+				//	swap(VBOverts[vNum+0], VBOverts[vNum+1]);	// correct triangle winding order
+				//}
+				//vNum+=3;
 			}
 		}
 		modelAsset::material mat;
@@ -610,18 +591,22 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		mat.specular = mtls[m].specular;
 		mat.hardness = mtls[m].hardness;
 		mat.specularMap = mtls[m].specularMap;
+		mat.normalMap = mtls[m].normalMap;
 		mat.tex = mtls[m].tex;
-		mat.numIndices = vNum - lNum;
-		mat.indicesOffset = lNum;
+		//mat.numIndices = vNum - lNum;
+		//mat.indicesOffset = lNum;
+		mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+		mat.indexBuffer->setData(!indexBuffer.empty() ? &indexBuffer[0] : nullptr, indexBuffer.size());
 		a->materials.push_back(mat);
-		lNum=vNum;
+		//lNum=vNum;
 	}
 	a->VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-	a->VBO->addPositionData(3,	0);
-	a->VBO->addNormalData(3,	3*sizeof(float));
-	a->VBO->addTexCoordData(2,	6*sizeof(float));
-	a->VBO->setTotalVertexSize(sizeof(texturedLitVertex3D));
-	a->VBO->setVertexData(sizeof(texturedLitVertex3D)*vNum, VBOverts);
+	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
+	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TANGENT,		6*sizeof(float));
+	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		9*sizeof(float));
+	a->VBO->setTotalVertexSize(sizeof(NormalMappedVertex3D));
+	a->VBO->setVertexData(sizeof(NormalMappedVertex3D)*combinedVertices.size(), !combinedVertices.empty() ? &combinedVertices[0] : NULL);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	delete[] fs;
@@ -630,7 +615,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	delete[] faces;
 	delete[] normals;
 	delete[] mtls;
-
 	return a;
 }
 void DataManager::writeErrorLog(string filename)

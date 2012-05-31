@@ -75,9 +75,9 @@ bool levelEditor::init()
 
 	scrollVal=0.0;
 	//level->newGround(129,129);
-	levelFile.heights = new float[1025*1025];
-	levelFile.info.mapResolution.x = 1025;
-	levelFile.info.mapResolution.y = 1025;
+	levelFile.heights = new float[257*257];
+	levelFile.info.mapResolution.x = 257;
+	levelFile.info.mapResolution.y = 257;
 	diamondSquare(0.17,0.5,4);
 	levelFile.info.mapSize.x = 25700;
 	levelFile.info.mapSize.y = 25700;
@@ -523,13 +523,13 @@ void levelEditor::setMinMaxHeights()
 }
 float levelEditor::randomDisplacement(float h1, float h2, float d)
 {
-	d *= 65.0/8;
+	d *= 65.0;//8;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + r) / 2.0;
  }
 float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, float d)
 {
-	d *= 65.0/8;
+	d *= 65.0;//8;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + h3 + h4 + r) / 4.0;
 }
@@ -622,7 +622,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	
 
 	setMinMaxHeights();
-	levelFile.info.mapSize = levelFile.info.mapResolution * 12.5;
+	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
 	sliders["sea level"]->setValue(0.5);
 	resetView();
 	terrainValid=false;
@@ -683,7 +683,7 @@ void levelEditor::faultLine()
 	//	}
 	//}
 
- 	smooth(2);
+ 	smooth(1);
 
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
@@ -1069,7 +1069,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(!terrainValid)
 		{
-			const int LOD = 8;//must be a power of 2
+			const int LOD = 1;//must be a power of 2
 
 			unsigned int width = levelFile.info.mapResolution.x;
 			unsigned int height = levelFile.info.mapResolution.y;
@@ -1095,7 +1095,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 				}
 			}
 
-			numTerrainIndices = 6 * (width-1)/2 * (height-1)/2;
+			numTerrainIndices = 6 * (width-1)/LOD * (height-1)/LOD;
 			unsigned int* indices = new unsigned int[numTerrainIndices];
 			int i=0;
 			for(int x = 0; x < nWidth-1; x++)
@@ -1111,8 +1111,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 					indices[i++] = x + (z+1) * nWidth;
 				}
 			}
-
-			terrainVertexBuffer->addPositionData(3,	0);
+			//terrainVertexBuffer->addPositionData(3,	0);
+			terrainVertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3, 0);
 			terrainVertexBuffer->setTotalVertexSize(sizeof(float)*3);
 			terrainVertexBuffer->setVertexData(sizeof(float)*3*nWidth*nHeight, vertices);
 

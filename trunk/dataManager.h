@@ -26,10 +26,12 @@ private:
 		//std::shared_ptr<texturedLitVertex3D> vertices;
 //		unsigned int VBO_id;
 		shared_ptr<GraphicsManager::vertexBuffer> VBO;
+		shared_ptr<GraphicsManager::indexBuffer> IBO;
 //		int numMaterials;
 		struct material{
 			string tex;
 			string specularMap;
+			string normalMap;
 			Color4 diffuse;
 			Color3 specular;
 			float hardness;
@@ -39,8 +41,9 @@ private:
 			//	int indicesOffset;	//for glDrawArrays
 			//};
 			//vector<group> groups;
-			int numIndices;		//for glDrawArrays
-			int indicesOffset;	//for glDrawArrays
+			shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
+			//int numIndices;		//for glDrawArrays
+			//int indicesOffset;	//for glDrawArrays
 		};
 		vector<material> materials;
 

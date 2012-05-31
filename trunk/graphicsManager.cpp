@@ -348,3 +348,9 @@ shared_ptr<GraphicsManager::View> GraphicsManager::genView()
 //		ortho(0,sAspect,0,1.0, i);
 //	}
 //}
+void GraphicsManager::vertexBuffer::addVertexAttribute(VertexAttribute attrib, unsigned int offset)
+{
+	vertexAttributeData attribData;
+	attribData.offset = offset;
+	vertexAttributes[attrib] = attribData;
+}

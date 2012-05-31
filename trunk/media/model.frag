@@ -1,6 +1,7 @@
 
 varying vec2 texCoord;
-varying vec3 normal;
+//varying vec3 normal;
+//varying vec3 tangent; 
 
 varying vec3 lightDir;
 varying vec4 position;
@@ -13,14 +14,17 @@ uniform float hardness;
 
 uniform sampler2D tex;
 uniform sampler2D specularMap;
-
+uniform sampler2D normalMap;
 
 void main()
 {
 	vec4 Specular, Diffuse;
 	vec3 Normal;
 
-	Normal = normalize(normal);
+	//Normal = normalize(normal);
+	Normal = texture2D(normalMap,texCoord).xyz;
+	Normal.xy = Normal.xy * 2.0 - 1.0;
+
 	Diffuse = vec4(diffuse.rgb * texture2D(tex,texCoord).rgb  * max(dot(Normal, lightDir), 0.5),diffuse.a);
 	Specular.rgb = specular * texture2D(specularMap,texCoord).rgb * pow(max(dot(Normal,normalize(halfVector)),0.0),hardness);
 	Specular.a = max(Specular.r, max(Specular.g, Specular.b));

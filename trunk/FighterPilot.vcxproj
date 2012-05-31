@@ -218,6 +218,8 @@
     <None Include="media\assetList.xml">
       <SubType>Designer</SubType>
     </None>
+    <None Include="media\circle.frag" />
+    <None Include="media\circle.vert" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass preview.frag" />
@@ -253,6 +255,8 @@
     <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
     <None Include="media\terrain.vert" />
+    <None Include="media\trees.frag" />
+    <None Include="media\trees.vert" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc" />

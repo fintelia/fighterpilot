@@ -116,9 +116,13 @@ bool AssetLoader::loadAssetList()
 			{
 				shaderAssetFile* tmpAssetFile = new shaderAssetFile;
 				tmpAssetFile->name = getAttribute(shaderElement, "name");
-				tmpAssetFile->positionComponents = getIntAttribute(shaderElement, "Position");
-				tmpAssetFile->texCoordComponents = getIntAttribute(shaderElement, "TexCoord");
-				tmpAssetFile->normalComponents = getIntAttribute(shaderElement, "Normal");
+				tmpAssetFile->position2 = getAttribute(shaderElement, "position2");
+				tmpAssetFile->position3 = getAttribute(shaderElement, "position3");
+				tmpAssetFile->texCoord = getAttribute(shaderElement, "texCoord");
+				tmpAssetFile->normal = getAttribute(shaderElement, "normal");
+				tmpAssetFile->color3 = getAttribute(shaderElement, "color3");
+				tmpAssetFile->color4 = getAttribute(shaderElement, "color4");
+				tmpAssetFile->tangent = getAttribute(shaderElement, "tangent");
 				string vertFilename = getAttribute(shaderElement, "vertex");
 				string fragFilename = getAttribute(shaderElement, "fragment");
 				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
@@ -268,13 +272,22 @@ int AssetLoader::loadAsset()
 			if(!shaderAsset->vertFile->complete() || !shaderAsset->fragFile->complete()) break;
 			
 			auto shader = graphics->genShader();
+
+			if(shaderAsset->position2 != "") shader->bindAttribute(shaderAsset->position2, GraphicsManager::vertexBuffer::POSITION2);
+			if(shaderAsset->position3 != "") shader->bindAttribute(shaderAsset->position3, GraphicsManager::vertexBuffer::POSITION3);
+			if(shaderAsset->texCoord != "") shader->bindAttribute(shaderAsset->texCoord, GraphicsManager::vertexBuffer::TEXCOORD);
+			if(shaderAsset->normal != "") shader->bindAttribute(shaderAsset->normal, GraphicsManager::vertexBuffer::NORMAL);
+			if(shaderAsset->color3 != "") shader->bindAttribute(shaderAsset->color3, GraphicsManager::vertexBuffer::COLOR3);
+			if(shaderAsset->color4 != "") shader->bindAttribute(shaderAsset->color4, GraphicsManager::vertexBuffer::COLOR4);
+			if(shaderAsset->tangent != "") shader->bindAttribute(shaderAsset->tangent, GraphicsManager::vertexBuffer::TANGENT);
+
 			if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
 			{
 #ifdef _DEBUG
 				messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 			}
-			
+
 			if(shaderAsset->use_sAspect)
 			{
 				shader->setUniform1f("sAspect",sAspect);

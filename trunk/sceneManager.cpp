@@ -53,6 +53,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	dataManager.bind("model");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1i("specularMap",1);
+	dataManager.setUniform1i("normalMap",2);
 	dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 	dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	for(int pass = 0; pass <= 1; pass++)
@@ -72,16 +73,17 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 				{
 					dataManager.bind(material->tex == "" ? "white" : material->tex);
 					dataManager.bind(material->specularMap == "" ? "white" : material->specularMap,1);
+					dataManager.bind(material->normalMap == "" ? "default normals" : material->normalMap,2);
 					dataManager.setUniform4f("diffuse", material->diffuse);
 					dataManager.setUniform3f("specular", material->specular);
 					dataManager.setUniform1f("hardness", material->hardness);
-
+ 
 					for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
 					{
-						if((*instance) != firstPersonObject && (*instance)->renderFlag()/* && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
+						if((*instance) != firstPersonObject && (*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
-							modelPtr->VBO->drawBuffer(GraphicsManager::TRIANGLES, material->indicesOffset, material->numIndices);
+							material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, modelPtr->VBO);
 						}
 					}
 				}

@@ -160,6 +160,12 @@
     <Filter Include="Source Files\ENGINE\ephemeris">
       <UniqueIdentifier>{560f319f-15aa-4d48-bb1f-f6e1d5f38d3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\circle">
+      <UniqueIdentifier>{71d9bc9b-75ca-4483-9589-885b04a93d09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\trees">
+      <UniqueIdentifier>{b2d6ff2e-f7d0-405e-848e-5dcdb689fa91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GLee.c">
@@ -559,6 +565,18 @@
     </None>
     <None Include="media\island.frag">
       <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\circle.frag">
+      <Filter>shaders\circle</Filter>
+    </None>
+    <None Include="media\circle.vert">
+      <Filter>shaders\circle</Filter>
+    </None>
+    <None Include="media\trees.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\trees.vert">
+      <Filter>shaders\trees</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
