@@ -16,13 +16,6 @@ uniform sampler2D groundTex;
 void main()
 {
 	vec4 color;
-	if(position.x < 0.0 || position.x > 1.0 /*|| position.y < 0.0 || position.y > 1.0*/ || position.z < 0.0 || position.z > 1.0)// || (position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5) > 0.25)
-	 discard;
-	//if(!gl_FrontFacing)
-	//{
-	//	gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-	//	return;
-	//}
 
 	vec3 normal = texture2D(groundTex,position.xz).xyz;
 	normal.x = normal.x * 2.0 - 1.0;
@@ -60,7 +53,7 @@ void main()
 	//color.a *= clamp(1.0+position.y*2.0,1.0,0.0);
 	color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 
-	color = vec4(color.rgb*(NdotL*0.7+0.3),color.a);
+	color = vec4(color.rgb*(NdotL*0.4+0.6),1.0);
 
 	///////////////////////
 	//if(position.y > 0.0)

@@ -3,7 +3,7 @@
 
 namespace particle
 {
-	contrail::contrail(): emitter("contrail", 48, 115.0)
+	contrail::contrail(): emitter("contrail", 48, 150.0)
 	{
 
 	}
@@ -41,19 +41,19 @@ namespace particle
 		if(t<0.10)
 		{
 			p.a = min(t*20.0,1.0) * 0.6;
-			p.size = 3.0;
+			p.size = 2.0;
 		}
 		else if(t < 0.75)
 		{
 			t = (t-0.10)/0.65;
 			p.a = lerp(0.6, 0.15, t);
-			p.size = lerp(3.0, 5.0, t);
+			p.size = lerp(2.0, 6.0, t);
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
 			p.a = lerp(0.15, 0.0, t);
-			p.size = lerp(5.0, 8.0, t);
+			p.size = lerp(6.0, 7.5, t);
 		}
 
 	}

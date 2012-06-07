@@ -16,33 +16,38 @@ uniform samplerCube sky;
 uniform vec3 eyePos;
 uniform vec3 invScale;
 
+uniform float minHeight;
+uniform float heightRange;
+
 void main()
 {
 	vec4 color;
-	if(position.y < -45.0)
+
+	vec4 groundTexVal = texture2D(groundTex,position.xz * invScale.xz);
+	vec3 v = groundTexVal.xyz;
+	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
+	//vec3 t = normalize(cross(n, vec3(0,0,1)));
+	//vec3 b = cross(n, t);
+	
+	float height = minHeight + groundTexVal.a * heightRange;
+	if(height < -45.0)
 		discard;
 
-	vec4 goundTexVal = texture2D(groundTex,position.xz * invScale.xz);
-	vec3 v = goundTexVal.xyz;
-	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
-	//n = vec3(0,1,0);
-	vec3 t = normalize(cross(n, vec3(0,0,1)));
-	vec3 b = cross(n, t);
-	
+
 	float noiseVal = texture2D(noiseTex, position.xz*0.0025).x + texture2D(LCnoise, position.xz*0.000625).x;
 	
-	float g = pow(clamp(noiseVal + (position.y-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
+	float g = pow(clamp(noiseVal + (height-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
 	color = mix(texture2D(sand,position.xz*0.0003), texture2D(grass,position.xz*0.00125), g);
 	
 	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
 	//color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 	
-	vec3 normal = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), texture2D(grass_normals, position.xz*0.00125).xyz*2.0 - 1.0, g*g*g));
+	vec3 normal = n;//normalize( mat3(n,t,-b)*mix(vec3(0,0,1), texture2D(grass_normals, position.xz*0.00125).xyz*2.0 - 1.0, g*g*g));
 
 	
 	float NdotL = dot(normal,lightDir);
 	
-	float m = 1.0 + clamp((position.y)/fwidth(position.y),-1.0,0.0)*(0.1-(position.y)*0.02);
+	float m = 1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.02);
 	NdotL *= m;
 	color.a *= m;
 

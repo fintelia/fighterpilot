@@ -578,6 +578,15 @@
     <None Include="media\trees.vert">
       <Filter>shaders\trees</Filter>
     </None>
+    <None Include="media\additiveParticle.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\additiveParticle.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\desert.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

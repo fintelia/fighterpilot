@@ -2,10 +2,9 @@
 varying vec2 texCoord;
 //varying vec3 normal;
 
-varying vec3 lightDir;
-varying vec4 position;
-
-varying vec3 halfVector;
+centroid varying vec3 lightDir;
+centroid varying vec4 position;
+centroid varying vec3 halfVector;
 
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;

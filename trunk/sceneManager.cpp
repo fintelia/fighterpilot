@@ -80,7 +80,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
  
 					for(auto instance = (*meshType).second.begin(); instance != (*meshType).second.end(); instance++)
 					{
-						if((*instance) != firstPersonObject && (*instance)->renderFlag() && view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position))
+						if((*instance) != firstPersonObject && (*instance)->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 						{
 							dataManager.setUniformMatrix("modelTransform", Mat4f((*instance)->rotation,(*instance)->position));
 							material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, modelPtr->VBO);

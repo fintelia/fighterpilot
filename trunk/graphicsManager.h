@@ -27,7 +27,7 @@ struct texturedLitVertex3D
 	Vec3f normal;
 	Vec2f UV;
 };
-struct NormalMappedVertex3D
+struct normalMappedVertex3D
 {
 	Vec3f position;
 	Vec3f normal;
@@ -41,7 +41,7 @@ public:
 	typedef unsigned long gID;
 	enum RenderTarget{RT_FBO_0,RT_FBO_1,RT_MULTISAMPLE_FBO,RT_SCREEN};
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
-	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE};
+	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE, PREMULTIPLIED_ALPHA};
 
 	class View
 	{
@@ -91,7 +91,7 @@ public:
 		function<void(int)> mRenderFunc;
 
 		Vec3f cameraShift;
-
+		Mat4f completeProjectionMat;
 	public:
 		View();
 		Vec2f project(Vec3f p);
@@ -121,13 +121,14 @@ public:
 		void renderParticles(bool b){mRenderParticles=b;}
 
 		void shiftCamera(Vec3f shift);
+		void constrainView(Rect4f bounds);
 	};
 	class indexBuffer;
 	class vertexBuffer
 	{
 	public:
 		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
-		enum VertexAttribute{POSITION2=0,POSITION3=1,TEXCOORD=2,NORMAL=3,COLOR3=4, COLOR4=5, TANGENT=6};
+		enum VertexAttribute{POSITION2=0,POSITION3=1,TEXCOORD=2,NORMAL=3,COLOR3=4, COLOR4=5, TANGENT=6, GENERIC_FLOAT=7};
 	protected:
 		unsigned int totalVertexSize;
 
@@ -168,11 +169,12 @@ public:
 		virtual void setData(unsigned int* data, unsigned int count)=0;
 		virtual void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset)=0;
 		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer){drawBuffer(primitive, buffer, 0);}
+		virtual void drawBufferSegment(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int numIndicies)=0;
 	};
 	class texture
 	{
 	public:
-		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, RGB=3, RGBA=4};
+		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, RGB=3, RGBA=4, RGB16, RGBA16, RGB16F, RGBA16F};
 	protected:
 		Format format;
 	public:
@@ -318,6 +320,8 @@ public:
 	virtual void setDepthMask(bool mask)=0;
 	virtual void setDepthTest(bool enabled)=0;
 	virtual void setBlendMode(BlendMode blend)=0;
+	virtual void setAlphaToCoverage(bool enabled)=0;
+	virtual void setWireFrame(bool enabled)=0;
 	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
 	void setLightPosition(Vec3f position){lightPosition = position;}
 	
@@ -383,6 +387,9 @@ protected:
 	}FBOs[2], multisampleFBO;	//first FBO is a multisample FBO if multisampling == true
 
 
+	bool highResScreenshot;
+	Rect viewConstraint;
+
 	bool multisampling;
 
 	int samples;
@@ -440,6 +447,7 @@ public:
 		void setData(unsigned int* data, unsigned int count);
 
 		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset);
+		void drawBufferSegment(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int numIndicies);
 	};
 	class texture2DGL: public GraphicsManager::texture2D
 	{
@@ -544,8 +552,9 @@ public:
 	void setDepthTest(bool enabled);
 	void setBlendMode(BlendMode blend);
 	void setClientState(unsigned int index, bool state);
-
 	void setVSync(bool enabled);
+	void setAlphaToCoverage(bool enabled);
+	void setWireFrame(bool enabled);
 
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);

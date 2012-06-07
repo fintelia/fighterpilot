@@ -233,6 +233,12 @@ void flakCannon::updateSimulation(double time, double ms)
 		t.z *= 500.0;
 		t.y *= 100.0;
 		//world.newObject(new flakMissile(FLAK_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2), 0, id, world[target]->position + t));
-		particleManager.addEmitter(new particle::flakExplosionSmoke(),world[target]->position + t,20.0);
+	//	particleManager.addEmitter(new particle::flakExplosionSmoke(),world[target]->position + t,20.0);
+
+		particleManager.addEmitter(new particle::explosion(),world[target]->position + t, 10.0);
+		particleManager.addEmitter(new particle::explosionSmoke(),world[target]->position + t, 10.0);
+	//	particleManager.addEmitter(new particle::explosionFlash(),world[target]->position + t, 10.0);
+		particleManager.addEmitter(new particle::explosionFlash2(),world[target]->position + t, 15.0);
+		particleManager.addEmitter(new particle::explosionFlash2(),world[target]->position + t, 15.0);
 	}
 }

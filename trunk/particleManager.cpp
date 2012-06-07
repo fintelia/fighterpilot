@@ -323,15 +323,6 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 	up.x = modelview[1];
 	up.y = modelview[5];
 	up.z = modelview[9];
-
-
-	dataManager.bind("particle shader");
-	dataManager.setUniform1i("tex",0);
-	dataManager.setUniform1i("depth",1);
-	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-
-	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
-
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
 		if((*i)->visible)
@@ -339,6 +330,25 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 			(*i)->prepareRender(up,right);
 		}
 	}
+	dataManager.bind("particle shader");
+	dataManager.setUniform1i("tex",0);
+	dataManager.setUniform1i("depth",1);
+	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
+	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+	for(auto i = emitters.begin(); i!=emitters.end(); i++)
+	{
+		if(!(*i)->additiveBlending && (*i)->visible)
+		{
+			(*i)->render();
+		}
+	}
+
+	dataManager.bind("additive particle shader");
+	dataManager.setUniform1i("tex",0);
+	dataManager.setUniform1i("depth",1);
+	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
@@ -348,7 +358,6 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 			(*i)->render();
 		}
 	}
-
 	graphics->setBlendMode(GraphicsManager::ADDITIVE);
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
@@ -358,14 +367,9 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 		}
 	}
 
+
+
 	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
-	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-	{
-		if(!(*i)->additiveBlending && (*i)->visible)
-		{
-			(*i)->render();
-		}
-	}
 }
 void manager::shutdown()
 {

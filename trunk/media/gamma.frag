@@ -5,6 +5,8 @@ varying float g;
 
 varying vec2 texCoord;
 
+
+
 void main()
 {
 	//    tone mapping
@@ -12,6 +14,7 @@ void main()
 	//t *= 1.0 / (1.0*t+1.0);
 	//gl_FragColor = vec4(pow(t,vec3(g,g,g)),1.0);
 
+	vec3 color = pow(texture2D(tex,texCoord).rgb,vec3(g,g,g));
 
-	gl_FragColor = vec4(pow(texture2D(tex,texCoord).rgb,vec3(g,g,g)),1.0);
+	gl_FragColor = vec4(color,1.0);
 }

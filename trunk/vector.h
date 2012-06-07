@@ -71,7 +71,7 @@ public:
 	}
 	bool equal(const Vector2& v, T maxDifference=0.01) const
 	{
-		return (abs(x-v.x) < maxDifference && abs(y-v.y) < maxDifference);
+		return (abs(x-v.x) <= maxDifference && abs(y-v.y) <= maxDifference);
 	}
 	T distance(const Vector2& v) const
 	{
@@ -186,7 +186,7 @@ public:
 	}
 	bool equal(const Vector3& v,T maxDifference=0.01) const
 	{
-		return (abs(x-v.x) < maxDifference && abs(y-v.y) < maxDifference && abs(z-v.z) < maxDifference);
+		return (abs(x-v.x) <= maxDifference && abs(y-v.y) <= maxDifference && abs(z-v.z) <= maxDifference);
 	}
 	T distance(const Vector3& v) const
 	{
@@ -201,7 +201,7 @@ typedef Vector3<float>		Vec3f;
 typedef Vector3<double>		Vec3d;
 
 template <class T, class U>
-Vector3<T> operator*(const Vector3<T> v, U scale)
+Vector3<T> operator*(const Vector3<T>& v, U scale)
 {
 	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
 }

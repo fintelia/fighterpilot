@@ -6,7 +6,7 @@ private:
 		string name;
 		//string filename[2];		//extra for shaders
 		//set<string> options;
-		enum assetType{SHADER, TEXTURE, TEXTURE_3D, MODEL, FONT};
+		enum assetType{SHADER, TEXTURE, TEXTURE_3D, TEXTURE_CUBE, MODEL, FONT};
 		virtual assetType getType()=0;
 		//vector<shared_ptr<FileManager::file>> files; //for textures
 	};
@@ -22,6 +22,7 @@ private:
 		string color3;
 		string color4;
 		string tangent;
+		string genericFloat;
 		bool use_sAspect;
 	};
 	struct textureAssetFile: public assetFile{
@@ -36,6 +37,11 @@ private:
 		shared_ptr<FileManager::textureFile> file;
 		bool tileable;
 		int depth;
+	};
+	struct textureCubeAssetFile: public assetFile{
+		assetType getType(){return TEXTURE_CUBE;}
+
+		shared_ptr<FileManager::textureFile> file;
 	};
 	struct modelAssetFile: public assetFile{
 		assetType getType(){return MODEL;}

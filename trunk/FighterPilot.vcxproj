@@ -215,11 +215,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
+    <None Include="media\additiveParticle.frag" />
+    <None Include="media\additiveParticle.vert" />
     <None Include="media\assetList.xml">
       <SubType>Designer</SubType>
     </None>
     <None Include="media\circle.frag" />
     <None Include="media\circle.vert" />
+    <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\grass preview.frag" />

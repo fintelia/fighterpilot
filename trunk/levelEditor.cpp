@@ -3,6 +3,8 @@
 
 namespace gui{
 
+	const int LOD=1;
+
 bool levelEditor::init()
 {
 	view = graphics->genView();
@@ -24,9 +26,9 @@ bool levelEditor::init()
 
 	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
 
-	toggles["shaders"]->addButton(new button(0.005,0.005,0.15,0.030,"grass",black,white));
+	toggles["shaders"]->addButton(new button(0.005,0.005,0.15,0.030,"island",black,white));
 	toggles["shaders"]->addButton(new button(0.005,0.040,0.15,0.030,"snow",black,white));
-	toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"ocean",black,white));
+	//toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"desert",black,white));
 
 	//objects
 	buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
@@ -75,9 +77,9 @@ bool levelEditor::init()
 
 	scrollVal=0.0;
 	//level->newGround(129,129);
-	levelFile.heights = new float[257*257];
-	levelFile.info.mapResolution.x = 257;
-	levelFile.info.mapResolution.y = 257;
+	levelFile.heights = new float[((257-1)*LOD+1)*((257-1)*LOD+1)];
+	levelFile.info.mapResolution.x = (257-1)*LOD+1;
+	levelFile.info.mapResolution.y = (257-1)*LOD+1;
 	diamondSquare(0.17,0.5,4);
 	levelFile.info.mapSize.x = 25700;
 	levelFile.info.mapSize.y = 25700;
@@ -523,13 +525,13 @@ void levelEditor::setMinMaxHeights()
 }
 float levelEditor::randomDisplacement(float h1, float h2, float d)
 {
-	d *= 65.0;//8;
+	d *= 65.0/LOD;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + r) / 2.0;
  }
 float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, float d)
 {
-	d *= 65.0;//8;
+	d *= 65.0/LOD;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + h3 + h4 + r) / 4.0;
 }
@@ -607,22 +609,22 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	smooth(1);
 	setMinMaxHeights();
 
-	float d, d_x, d_y;
-	for(x=0;x<levelFile.info.mapResolution.x;x++)					//island
-	{
-		for(y=0;y<levelFile.info.mapResolution.y;y++)
-		{
-			d_x = 2.0*x/levelFile.info.mapResolution.x - 1.0;
-			d_y = 2.0*y/levelFile.info.mapResolution.y - 1.0;
-			d = sqrt(d_x*d_x + d_y*d_y);
-
-			setHeight(x, y, (getHeight(x, y)-levelFile.info.minHeight) * clamp(2.0 - 2.0*d, 0.0, 1.0) + levelFile.info.minHeight);
-		}
-	}
+	//float d, d_x, d_y;
+	//for(x=0;x<levelFile.info.mapResolution.x;x++)					//island
+	//{
+	//	for(y=0;y<levelFile.info.mapResolution.y;y++)
+	//	{
+	//		d_x = 2.0*x/levelFile.info.mapResolution.x - 1.0;
+	//		d_y = 2.0*y/levelFile.info.mapResolution.y - 1.0;
+	//		d = sqrt(d_x*d_x + d_y*d_y);
+	//
+	//		setHeight(x, y, (getHeight(x, y)-levelFile.info.minHeight) * clamp(2.0 - 2.0*d, 0.0, 1.0) + levelFile.info.minHeight);
+	//	}
+	//}
 	
 
 	setMinMaxHeights();
-	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
+	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.5);
 	resetView();
 	terrainValid=false;
@@ -686,7 +688,7 @@ void levelEditor::faultLine()
  	smooth(1);
 
 	setMinMaxHeights();
-	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
+	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.333);
 	resetView();
 	terrainValid=false;
@@ -710,7 +712,7 @@ void levelEditor::fromFile(string filename)
 			}
 
 			setMinMaxHeights();
-			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
+			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 			sliders["sea level"]->setValue(0.333);
 			resetView();
 		}
@@ -802,7 +804,7 @@ void levelEditor::fromFile(string filename)
 
 
 		setMinMaxHeights();
-		levelFile.info.mapSize = levelFile.info.mapResolution * 100.0;
+		levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 		sliders["sea level"]->setValue(0.333);
 		resetView();
 		terrainValid=false;
@@ -874,8 +876,10 @@ void levelEditor::render3D(unsigned int v)
 		view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000);
 		view->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
 
-		if(getShader() != -1)
-			levelFile.info.shaderType = toggles["shaders"]->getValue() + 2;
+		if(toggles["shaders"]->getValue() == 0) levelFile.info.shaderType = TERRAIN_ISLAND;
+		else if(toggles["shaders"]->getValue() == 1) levelFile.info.shaderType = TERRAIN_SNOW;
+		else if(toggles["shaders"]->getValue() == 2) levelFile.info.shaderType = TERRAIN_DESERT;
+		else levelFile.info.shaderType = TERRAIN_ISLAND;
 
 		bool w = getShader() != 1;
 
@@ -936,8 +940,10 @@ void levelEditor::render3D(unsigned int v)
 
 		graphics->setLightPosition(Vec3f(30, 70, 40));
 
-		if(getShader() != -1)
-			levelFile.info.shaderType = toggles["shaders"]->getValue() + 2;
+		if(toggles["shaders"]->getValue() == 0) levelFile.info.shaderType = TERRAIN_ISLAND;
+		else if(toggles["shaders"]->getValue() == 1) levelFile.info.shaderType = TERRAIN_SNOW;
+		else if(toggles["shaders"]->getValue() == 2) levelFile.info.shaderType = TERRAIN_DESERT;
+		else levelFile.info.shaderType = TERRAIN_ISLAND;
 
 		bool w = getShader() != 1;
 
@@ -1069,8 +1075,6 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(!terrainValid)
 		{
-			const int LOD = 1;//must be a power of 2
-
 			unsigned int width = levelFile.info.mapResolution.x;
 			unsigned int height = levelFile.info.mapResolution.y;
 			unsigned int nWidth = (width-1)/LOD+1;
@@ -1141,10 +1145,10 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 
 			terrainValid=true;
 		}
-		if(levelFile.info.shaderType == SHADER_ISLAND || levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_NONE)
+		if(levelFile.info.shaderType == TERRAIN_ISLAND || levelFile.info.shaderType == TERRAIN_DESERT)
 		{
-			if(levelFile.info.shaderType == SHADER_ISLAND)	dataManager.bind("island preview terrain");
-			else											dataManager.bind("grass preview terrain");
+			/*if(levelFile.info.shaderType == TERRAIN_ISLAND)	dataManager.bind("island preview terrain");
+			else											*/dataManager.bind("grass preview terrain");
 
 			dataManager.bind("sand",0);
 			dataManager.bind("grass",1);
@@ -1172,7 +1176,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 
 			dataManager.bind("model");
 		}
-		else if(levelFile.info.shaderType == SHADER_SNOW)
+		else if(levelFile.info.shaderType == TERRAIN_SNOW)
 		{
 			dataManager.bind("snow preview terrain");
 
@@ -1200,7 +1204,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			dataManager.bind("model");
 		}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if(levelFile.info.shaderType == SHADER_ISLAND || levelFile.info.shaderType == SHADER_OCEAN || levelFile.info.shaderType == SHADER_GRASS)
+	if(levelFile.info.shaderType == TERRAIN_ISLAND)
 	{
 		dataManager.bind("ocean preview");
 
@@ -1232,55 +1236,55 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 		dataManager.bind("model");
 	}
 
-	if(levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_SNOW)
-	{
-		dataManager.bind("model");
-		dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(), Vec3f(), Vec3f(levelFile.info.mapSize.x/(levelFile.info.mapResolution.x-1),1,levelFile.info.mapSize.y/(levelFile.info.mapResolution.y-1))));
-		dataManager.setUniform1i("tex", 0);
-
-		float h = levelFile.info.minHeight*scale-20.0;
-	//	dataManager.bind("layers");
-	//	float t=0.0;
-
-	//	glBegin(GL_TRIANGLE_STRIP);
-	//	glNormal3f(0,1,0);
-	//	for(int i = 0; i < mGround->resolutionX()-1; i++)
-	//	{
-	//		glTexCoord2f(t,(mGround->rasterHeight(i,0)-mGround->minHeight+20)/256);		glVertex3f(i,h,0);
-	//		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0)*scale,h) ,0);
-	//		t+=0.2;
-	//	}
-	//	for(int i = 0; i < mGround->resolutionZ()-1; i++)
-	//	{
-	//		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-mGround->minHeight+20)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
-	//		glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i)*scale,h),i);
-	//		t+=0.2;
-	//	}
-	//	t+=0.2;
-	//	for(int i = mGround->resolutionX()-1; i > 0; i--)
-	//	{
-	//		t-=0.2;
-	//		glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-mGround->minHeight+20)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
-	//		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1)*scale,h),mGround->resolutionZ()-1);
-	//	}
-	//	for(int i = mGround->resolutionZ()-1; i >= 0; i--)
-	//	{
-	//		t-=0.2;
-	//		glTexCoord2f(t,(mGround->rasterHeight(0,i)-mGround->minHeight+20)/256);		glVertex3f(0,h,i);
-	//		glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i)*scale,h),i);
-	//	}
-	//	glEnd();
-
-		//dataManager.bind("white");
-		//graphics->setColor(0.73,0.6,0.47);
-		//graphics->drawQuad(	Vec3f(0,h,0),
-		//					Vec3f(0,h,levelFile.info.mapResolution.y-1),
-		//					Vec3f(levelFile.info.mapResolution.x-1,h,0),
-		//					Vec3f(levelFile.info.mapResolution.x-1,h,levelFile.info.mapResolution.y-1));
-		//graphics->setColor(1,1,1);
-
-		dataManager.setUniformMatrix("modelTransform", Mat4f());
-	}
+	//if(levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_SNOW)
+	//{
+	//	dataManager.bind("model");
+	//	dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(), Vec3f(), Vec3f(levelFile.info.mapSize.x/(levelFile.info.mapResolution.x-1),1,levelFile.info.mapSize.y/(levelFile.info.mapResolution.y-1))));
+	//	dataManager.setUniform1i("tex", 0);
+	//
+	//	float h = levelFile.info.minHeight*scale-20.0;
+	////	dataManager.bind("layers");
+	////	float t=0.0;
+	//
+	////	glBegin(GL_TRIANGLE_STRIP);
+	////	glNormal3f(0,1,0);
+	////	for(int i = 0; i < mGround->resolutionX()-1; i++)
+	////	{
+	////		glTexCoord2f(t,(mGround->rasterHeight(i,0)-mGround->minHeight+20)/256);		glVertex3f(i,h,0);
+	////		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,0)*scale,h) ,0);
+	////		t+=0.2;
+	////	}
+	////	for(int i = 0; i < mGround->resolutionZ()-1; i++)
+	////	{
+	////		glTexCoord2f(t,(mGround->rasterHeight(mGround->resolutionX()-1,i)-mGround->minHeight+20)/256);	glVertex3f(mGround->resolutionX()-1,h,i);
+	////		glTexCoord2f(t,0);	glVertex3f(mGround->resolutionX()-1,max(mGround->rasterHeight(mGround->resolutionX()-1,i)*scale,h),i);
+	////		t+=0.2;
+	////	}
+	////	t+=0.2;
+	////	for(int i = mGround->resolutionX()-1; i > 0; i--)
+	////	{
+	////		t-=0.2;
+	////		glTexCoord2f(t,(mGround->rasterHeight(i,mGround->resolutionZ()-1)-mGround->minHeight+20)/256);	glVertex3f(i,h,mGround->resolutionZ()-1);
+	////		glTexCoord2f(t,0);	glVertex3f(i,max(mGround->rasterHeight(i,mGround->resolutionZ()-1)*scale,h),mGround->resolutionZ()-1);
+	////	}
+	////	for(int i = mGround->resolutionZ()-1; i >= 0; i--)
+	////	{
+	////		t-=0.2;
+	////		glTexCoord2f(t,(mGround->rasterHeight(0,i)-mGround->minHeight+20)/256);		glVertex3f(0,h,i);
+	////		glTexCoord2f(t,0);	glVertex3f(0,max(mGround->rasterHeight(0,i)*scale,h),i);
+	////	}
+	////	glEnd();
+	//
+	//	//dataManager.bind("white");
+	//	//graphics->setColor(0.73,0.6,0.47);
+	//	//graphics->drawQuad(	Vec3f(0,h,0),
+	//	//					Vec3f(0,h,levelFile.info.mapResolution.y-1),
+	//	//					Vec3f(levelFile.info.mapResolution.x-1,h,0),
+	//	//					Vec3f(levelFile.info.mapResolution.x-1,h,levelFile.info.mapResolution.y-1));
+	//	//graphics->setColor(1,1,1);
+	//
+	//	dataManager.setUniformMatrix("modelTransform", Mat4f());
+	//}
 	//glPopMatrix();
 }
 }
