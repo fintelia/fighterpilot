@@ -234,7 +234,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 	unsigned int	totalVerts,totalFaces;
 
-	vector<NormalMappedVertex3D> combinedVertices;
+	vector<normalMappedVertex3D> combinedVertices;
 	map<vertexIndices, unsigned int> indexMap; 
 
 	FILE *fp;
@@ -497,7 +497,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	map<vertexIndices, unsigned int>::iterator vertexIndicesItt;
 	bool CCW;
 	float inv;
-	NormalMappedVertex3D tmpVertex;
+	normalMappedVertex3D tmpVertex;
 	Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
 	for(int i=0; i < totalFaces; i++)
 	{
@@ -605,8 +605,8 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
 	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TANGENT,		6*sizeof(float));
 	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		9*sizeof(float));
-	a->VBO->setTotalVertexSize(sizeof(NormalMappedVertex3D));
-	a->VBO->setVertexData(sizeof(NormalMappedVertex3D)*combinedVertices.size(), !combinedVertices.empty() ? &combinedVertices[0] : NULL);
+	a->VBO->setTotalVertexSize(sizeof(normalMappedVertex3D));
+	a->VBO->setVertexData(sizeof(normalMappedVertex3D)*combinedVertices.size(), !combinedVertices.empty() ? &combinedVertices[0] : NULL);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	delete[] fs;

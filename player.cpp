@@ -296,7 +296,7 @@ void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
 	float diffAng = Angle(atan2(destDirection.x, destDirection.z) - p->direction).radians_plusMinusPI();
 	float diffClimb = Angle(atan2(destVector.y, sqrt(destVector.x*destVector.x+destVector.z*destVector.z)) - p->climb).radians_plusMinusPI();
 
-	p->direction += clamp(diffAng,0.8,-0.8) * world.time.length()/1000.0;
+	p->direction += clamp(diffAng,1.2,-1.2) * world.time.length()/1000.0;
 	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0;
 
 	float rollError = (diffAng*0.5 + p->roll.radians_plusMinusPI()) / (PI/2);

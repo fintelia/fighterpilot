@@ -152,8 +152,8 @@ void nPlane::updateSimulation(double time, double ms)
 			}
 			else if(controlType == CONTROL_TYPE_ADVANCED)
 			{
-				float deltaRoll = 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
-				float deltaClimb = (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000));
+				float deltaRoll = 2.0*(controls.right - controls.left)*(ms/1000);
+				float deltaClimb = 1.5*(controls.climb - controls.dive)*(ms/1000);
 				rotation = rotation * Quat4f(Vec3f(0,0,1), deltaRoll) * Quat4f(Vec3f(-1,0,0), deltaClimb);
 
 				Vec3f fwd = rotation * Vec3f(0,0,1);
@@ -171,7 +171,7 @@ void nPlane::updateSimulation(double time, double ms)
 			}
 			else if(controlType == CONTROL_TYPE_AI)
 			{
-				roll += 1.5*controls.right*(ms/1000) - 1.5*controls.left*(ms/1000);
+				roll += 1.5*(controls.right-controls.left)*(ms/1000);
 				//direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (controls.climb - controls.dive) * (ms/1000);
 				climb += (controls.climb - controls.dive) * (ms/1000) * cos(roll);
 			}
@@ -381,26 +381,28 @@ void nPlane::updateSimulation(double time, double ms)
 		if(death == DEATH_TRAILING_SMOKE && altitude < 0.0)
 		{
 			smokeTrail->setActive(false);
-			//death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-			//if(death == DEATH_HIT_GROUND)
-			//{
-			//	position.y -= altitude;
-			//	//particleManager.addEmitter(new particle::blackSmoke(),id);
-			//}
-			//else if(death == DEATH_HIT_WATER)
-			//{
-			//	Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-			//	particleManager.addEmitter(new particle::splash(),splashPos);
-			//
-			//
-			//	Vec3f vel2D = rotation * Vec3f(0,0,1);
-			//	vel2D.y=0;
-			//	vel2D = vel2D.normalize();
-			//
-			//	observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-			//	observer.currentFrame.center = splashPos + vel2D * 45.0;
-			//	observer.currentFrame.up = Vec3f(0,1,0);
-			//}
+			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			if(death == DEATH_HIT_GROUND)
+			{
+				position.y -= altitude;
+				particleManager.addEmitter(new particle::blackSmoke(),id);
+				particleManager.addEmitter(new particle::explosion(),id);
+				particleManager.addEmitter(new particle::groundExplosionFlash(),id);
+			}
+			else if(death == DEATH_HIT_WATER)
+			{
+				Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+				particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
+				particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
+			
+				Vec3f vel2D = rotation * Vec3f(0,0,1);
+				vel2D.y=0;
+				vel2D = vel2D.normalize();
+			
+				observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+				observer.currentFrame.center = splashPos + vel2D * 45.0;
+				observer.currentFrame.up = Vec3f(0,1,0);
+			}
 		}
 	}
 }
@@ -511,8 +513,16 @@ void nPlane::smoothCamera()
 
 	Vec3f shake = random3<float>() * cameraShake * 3.0;
 
-	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
-	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*20.0,cos(15.0*PI/180)*20.0);
+	if(type == MIRAGE || type == J37)
+	{
+		observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
+		observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*20.0,cos(15.0*PI/180)*20.0);
+	}
+	else
+	{
+		observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
+		observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*30.0,cos(15.0*PI/180)*30.0);
+	}
 	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
 void nPlane::autoPilotUpdate(float value)
@@ -678,10 +688,10 @@ void nPlane::die()
 		if(controlType == CONTROL_TYPE_AI)
 		{
 			death = DEATH_TRAILING_SMOKE;
-
+		
 			smokeTrail->setActive(true);
 			smokeTrail->setColor(Color(0.05,0.05,0.05));
-
+		
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);

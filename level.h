@@ -1,11 +1,4 @@
 
-typedef int ShaderType;
-const ShaderType SHADER_NONE		= 0;
-const ShaderType SHADER_ISLAND		= 1;
-const ShaderType SHADER_GRASS		= 2;
-const ShaderType SHADER_SNOW		= 3;
-const ShaderType SHADER_OCEAN		= 4;
-
 struct LevelFile
 {
 	struct Header{
@@ -13,14 +6,14 @@ struct LevelFile
 		unsigned int version;
 	};
 	struct Info{//V1
-		ShaderType		shaderType;
+		TerrainType		shaderType;
 		Vec2f			mapSize;
 		Vec2u			mapResolution;
 		string			nextLevel;
 		float			minHeight;
 		float			maxHeight;
 		unsigned int	foliageAmount;
-		Info(): shaderType(SHADER_NONE), mapSize(1,1), mapResolution(0,0),foliageAmount(0){}
+		Info(): shaderType(TERRAIN_ISLAND), mapSize(1,1), mapResolution(0,0),foliageAmount(0){}
 	};
 	struct Object{
 		int				type;			//the type of object

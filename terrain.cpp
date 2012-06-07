@@ -62,17 +62,17 @@ void TerrainPatch::init(TerrainPatch* trunk, unsigned int levelsDeep, unsigned i
 		col = (this - trunk - cLevelOffset) % (1 << levelsDeep);
 	}
 }
-void TerrainPatch::subdivide(const Vec3f& eye, float error) const
+void TerrainPatch::subdivide(const Vec3f& eye) const
 {
-	float d = eye.distanceSquared(center);
+	float d = (eye.x-center.x)*(eye.x-center.x) + (eye.z-center.z)*(eye.z-center.z);//eye.distanceSquared(center);
 	if(children[0] && children[1] && children[2] && children[3] && d < minDistanceSquared)// || (bounds.minXYZ.x < eye.x && bounds.minXYZ.z < eye.z && bounds.maxXYZ.x > eye.x && bounds.maxXYZ.z > eye.z)
 	{
 		divisionLevel = SUBDIVIDED;
 
-		children[0]->subdivide(eye, error);
-		children[1]->subdivide(eye, error);
-		children[2]->subdivide(eye, error);
-		children[3]->subdivide(eye, error);
+		children[0]->subdivide(eye);
+		children[1]->subdivide(eye);
+		children[2]->subdivide(eye);
+		children[3]->subdivide(eye);
 	}
 	else
 	{
@@ -93,8 +93,10 @@ void TerrainPatch::patchEdges() const
 		//write code to find out whether we need neighbors are further subdivided
 	}
 }
-TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale):minXYZ(position), maxXYZ(position+scale), heights(Heights), trunk(nullptr)
+TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale, unsigned int lod):minXYZ(position), maxXYZ(position+scale),LOD(lod), heights(Heights), trunk(nullptr)
 {
+	double t = GetTime();
+
 	unsigned short* nHeights = nullptr;
 	if(!isPowerOfTwo(patchResolution-1))
 	{
@@ -126,7 +128,7 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	height = patchResolution;
 	width = patchResolution;
 
-	unsigned int v = (patchResolution-1) >> 4;
+	unsigned int v = ((patchResolution-1)/LOD) >> 4;
 	levelsDeep = 0;
 	while(v >>= 1) ++levelsDeep;
 
@@ -134,22 +136,23 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 
 	texture = graphics->genTexture2D();
 
-	float* heightMap = new float[width*height*3];
-	for(int x = 0; x < width; x++)
+	int numHeights=0;
+	float* heightMap = new float[((width-1)/LOD+1)*((height-1)/LOD+1)*3];
+	for(int x = 0; x < width; x += LOD)
 	{
-		for(int y=0; y < height; y++)
+		for(int y=0; y < height; y += LOD)
 		{
-			heightMap[(x+y*width)*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / width;
-			heightMap[(x+y*width)*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX;
-			heightMap[(x+y*width)*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / height;
+			heightMap[numHeights*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / width;
+			heightMap[numHeights*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX;
+			heightMap[numHeights*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / height;
+			numHeights++;
 		}
 	}
 
 	vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0*sizeof(float));
 	vertexBuffer->setTotalVertexSize(sizeof(float)*3);
-	vertexBuffer->setVertexData(sizeof(float)*width*height*3, heightMap);
-
+	vertexBuffer->setVertexData(sizeof(float)*((width-1)/LOD+1)*((height-1)/LOD+1)*3, heightMap);
 
 	const unsigned int numIndices = 16*16 * 6;
 	unsigned int* indices = new unsigned int[numIndices];
@@ -162,13 +165,13 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 			for(int x = 0; x < 16; x++)
 			{
 
-				indices[i++] = (x*spacing)			+	(y*spacing)*width;
-				indices[i++] = (x*spacing)			+	((y+1)*spacing)*width;
-				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*width;
+				indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
+				indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
+				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
 
-				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*width;
-				indices[i++] = (x*spacing)			+	((y+1)*spacing)*width;
-				indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*width;
+				indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
+				indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
+				indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
 			}
 		}
 
@@ -182,22 +185,63 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	Vec3f n;
 	//int xPOT = uPowerOfTwo(width);
 	//int zPOT = uPowerOfTwo(height);
-	unsigned char* groundValues = new unsigned char[(width)*(height)*4];
+
+	/////////////////////////////////////
+	unsigned short* groundValues = new unsigned short[(width)*(height)*4];
 	for(unsigned int x=0; x < width; x++)
 	{
 		for(unsigned int z=0; z < height; z++)
 		{
-			n = interpolatedNormal(Vec2f(x,z));
+			n = rasterNormal(Vec2u(x,z));
+			//n = interpolatedNormal(Vec2f(x,z));
 			if(n.magnitudeSquared() < 0.001)
 				n = Vec3f(0.0,1.0,0.0);
-
-			groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
-			groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
-			groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
-			groundValues[(x + z * width)*4 + 3] = (unsigned char)((interpolatedHeight(Vec2f(x,z))-minXYZ.y)/(maxXYZ.y-minXYZ.y));
+	
+			groundValues[(x + z * width)*4 + 0] = (unsigned short)(32767.0+n.x*32768.0);
+			groundValues[(x + z * width)*4 + 1] = (unsigned short)(n.y*65536.0);
+			groundValues[(x + z * width)*4 + 2] = (unsigned short)(32767.0+n.z*32768.0);
+			groundValues[(x + z * width)*4 + 3] = heights[x+z*width];
 		}
 	}
-	texture->setData(width, height, GraphicsManager::texture::RGBA, groundValues);
+	texture->setData(width, height, GraphicsManager::texture::RGBA16, (unsigned char*)groundValues);
+	/////////////////////////////////////
+	//float sx = static_cast<float>(width-1)/width;
+	//float sz = static_cast<float>(height-1)/height;
+	//unsigned short* groundValues = new unsigned short[(width-1)*(height-1)*4];
+	//for(unsigned int x=0; x < width-1; x++)
+	//{
+	//	for(unsigned int z=0; z < height-1; z++)
+	//	{
+	//		n = interpolatedNormal(Vec2u(sx*x,sz*z));
+	//		//n = interpolatedNormal(Vec2f(x,z));
+	//		if(n.magnitudeSquared() < 0.001)
+	//			n = Vec3f(0.0,1.0,0.0);
+	//
+	//		groundValues[(x + z * (width-1))*4 + 0] = (unsigned short)(32767.0+n.x*32768.0);
+	//		groundValues[(x + z * (width-1))*4 + 1] = (unsigned short)(n.y*65536.0);
+	//		groundValues[(x + z * (width-1))*4 + 2] = (unsigned short)(32767.0+n.z*32768.0);
+	//		groundValues[(x + z * (width-1))*4 + 3] = (unsigned short)(interpolatedHeight(Vec2f(sx*x,sz*z)) - minXYZ.y)/(maxXYZ.y-minXYZ.y)*USHRT_MAX;
+	//	}
+	//}
+	//texture->setData(width-1, height-1, GraphicsManager::texture::RGBA16, (unsigned char*)groundValues);
+	/////////////////////////////////////
+	//unsigned char* groundValues = new unsigned char[(width)*(height)*4];
+	//for(unsigned int x=0; x < width; x++)
+	//{
+	//	for(unsigned int z=0; z < height; z++)
+	//	{
+	//		n = rasterNormal(Vec2u(x,z));
+	//		if(n.magnitudeSquared() < 0.001)
+	//			n = Vec3f(0.0,1.0,0.0);
+	//
+	//		groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
+	//		groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
+	//		groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
+	//		groundValues[(x + z * width)*4 + 3] = (unsigned char)(heights[x+z*width]>>8);
+	//	}
+	//}
+	//texture->setData(width, height, GraphicsManager::texture::RGBA, (unsigned char*)groundValues);
+
 
 	delete[] groundValues;
 	/////////////////
@@ -222,15 +266,14 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 	unsigned int spacing;
 	float errorScale = (maxXYZ.y - minXYZ.y) / USHRT_MAX / 2.0;
 
-	float C = 32.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
-
-	for(int l=0; l<=levelsDeep; l++)
+	float C = 900.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
+	for(int l=levelsDeep; l>=0; l--)
 	{
 		for(unsigned int x=0; x < (1<<l); x++)
 		{
 			for(unsigned int y=0; y < (1<<l); y++)
 			{
-				p = getPatch(l,y,x);
+				p = getPatch(l,x,y);
 
 				if(x > 0)			p->neighbors[0] = getPatch(l,x-1,y);
 				if(x < (1<<l)-1)	p->neighbors[1] = getPatch(l,x+1,y);
@@ -251,13 +294,14 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 					{
 						for(unsigned int k = y*16*spacing; k < (y*16+15)*spacing; k += spacing)
 						{
-							e = errorScale * abs(heights[h + k*width] + heights[(h+spacing) + k*width] - 2*heights[(h+spacing/2) + k*width]);
+							e = errorScale * abs(heights[h*LOD + k*LOD*width] + heights[(h+spacing)*LOD + k*LOD*width] - 2*heights[(h+spacing/2)*LOD + k*LOD*width]);
 							if(e > p->maxError) p->maxError = e;
 
-							e = errorScale * abs(heights[h + k*width] + heights[h + (k+spacing)*width] - 2*heights[h + (k+spacing/2)*width]);
+							e = errorScale * abs(heights[h*LOD + k*LOD*width] + heights[h*LOD + (k+spacing)*LOD*width] - 2*heights[h*LOD + (k+spacing/2)*LOD*width]);
 							if(e > p->maxError) p->maxError = e;
 						}
 					}
+					//p->maxError += max(max(p->children[0]->maxError, p->children[1]->maxError),max(p->children[2]->maxError, p->children[3]->maxError));
 					//p->minDistanceSquared = (p->maxError * C) * (p->maxError * C);
 					p->minDistanceSquared = (p->maxError * C + r/(1<<l)) * (p->maxError * C + r/(1<<l));
 				}
@@ -271,6 +315,9 @@ TerrainPatch* TerrainPage::getPatch(unsigned int level,unsigned int x, unsigned 
 }
 Vec3f TerrainPage::rasterNormal(Vec2u loc) const
 {
+	loc.x = clamp(loc.x, 0, width-1);
+	loc.y = clamp(loc.y, 0, height-1);
+
 	float By = (loc.y < height-1)	? ((float)heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Ay = (loc.x < width-1)	? ((float)heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
@@ -360,7 +407,6 @@ float TerrainPage::getHeight(Vec2f loc) const
 }
 void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 {
-	
 	renderQueue.clear();
 	TerrainPatch* p;
 
@@ -375,92 +421,53 @@ void TerrainPage::render(shared_ptr<GraphicsManager::View> view) const
 		}
 	}
 
-	//trunk->subdivide(view->camera().eye, 0.1);
-	//trunk->patchEdges();
-	//for(int l=0; l<=levelsDeep; l++)
-	//{
-	//	for(unsigned int x=0; x < (1<<l); x++)
-	//	{
-	//		for(unsigned int y=0; y < (1<<l); y++)
-	//		{
-	//			p = getPatch(l,x,y);
-	//			if(p->divisionLevel == TerrainPatch::LEVEL_USED)
-	//			{
-	//				renderQueue.push_back(p);
-	//			}
-	//		}
-	//	}
-	//}
-
-	for(unsigned int x=0; x < (1<<(levelsDeep)); x++) //for now just render the highest level of detail
+	trunk->subdivide(view->camera().eye);
+	trunk->patchEdges();
+	for(int l=0; l<=levelsDeep; l++)
 	{
-		for(unsigned int y=0; y < (1<<(levelsDeep)); y++)
+		for(unsigned int x=0; x < (1<<l); x++)
 		{
-			p = getPatch(levelsDeep,x,y);
-			if(view->boundingBoxInFrustum(p->bounds))
-				renderQueue.push_back(p);
+			for(unsigned int y=0; y < (1<<l); y++)
+			{
+				p = getPatch(l,x,y);
+				if(p->divisionLevel == TerrainPatch::LEVEL_USED && view->boundingBoxInFrustum(p->bounds))
+				{
+					renderQueue.push_back(p);
+				}
+			}
 		}
 	}
 
+	//for(unsigned int x=0; x < (1<<(levelsDeep)); x++) //for now just render the highest level of detail
+	//{
+	//	for(unsigned int y=0; y < (1<<(levelsDeep)); y++)
+	//	{
+	//		p = getPatch(levelsDeep,x,y);
+	//		if(view->boundingBoxInFrustum(p->bounds))
+	//			renderQueue.push_back(p);
+	//	}
+	//}
+
 	//view->lookAt(Vec3f(12900/2,15000,12900/2),Vec3f(12900/2,0,12900/2), Vec3f(0,0,1));
+	texture->bind(1);
+	//graphics->setWireFrame(true);
 
-	dataManager.bind("island terrain");
-	dataManager.bind("sand",1);
-	dataManager.bind("grass",2);
-	dataManager.bind("rock",3);
-	dataManager.bind("LCnoise",4);
-	texture->bind(5);
-	dataManager.bind("grass normals",6);
-	dataManager.bind("noise",7);
-
-
-//	dataManager.setUniform1f("maxHeight",	maxXYZ.y);
-//	dataManager.setUniform1f("minHeight",	minXYZ.y);
-//	dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
-	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	dataManager.setUniformMatrix("modelTransform",		Mat4f());
-	dataManager.setUniform1f("time",					world.time());
-	dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
-	dataManager.setUniform3f("eyePos",					view->camera().eye);
-	dataManager.setUniform3f("invScale",				1.0/(maxXYZ.x-minXYZ.x),1.0/(maxXYZ.y-minXYZ.y),1.0/(maxXYZ.z-minXYZ.z));
-
-	dataManager.setUniform1i("sky",			0);
-	dataManager.setUniform1i("sand",		1);
-	dataManager.setUniform1i("grass",		2);
-	dataManager.setUniform1i("rock",		3);
-	dataManager.setUniform1i("LCnoise",		4);
-	dataManager.setUniform1i("groundTex",	5);
-	dataManager.setUniform1i("grass_normals", 6);
-	dataManager.setUniform1i("noiseTex",	7);			// make sure uniform exists
-
-	//dataManager.bind("snow terrain");
-	//dataManager.bind("snow",0);
-	//dataManager.bind("LCnoise",1);
-	//dataManager.bindTex(texture,2);
-	//dataManager.bind("snow normals",3);
-
-	//dataManager.setUniform1f("maxHeight",	maxXYZ.y);//shader should just accept minXYZ and maxXYZ vectors
-	//dataManager.setUniform1f("minHeight",	minXYZ.y);
-	//dataManager.setUniform1f("XZscale",		maxXYZ.z-minXYZ.z);
-	//dataManager.setUniform1f("time",		world.time());
-
-	//dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-
-	//dataManager.setUniform1i("snow",			0);
-	//dataManager.setUniform1i("LCnoise",			1);
-	//dataManager.setUniform1i("groundTex",		2);
-	//dataManager.setUniform1i("snow_normals",	3);
+	Vec3f eye;
 
 	unsigned int bufferOffset;
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
 	{
-		bufferOffset = sizeof(float)*3 * (  (*i)->row * (16<<(levelsDeep-(*i)->level)) + (*i)->col*width * (16<<(levelsDeep-(*i)->level))  );
+		//float d = (eye.x-(*i)->center.x)*(eye.x-(*i)->center.x) + (eye.z-(*i)->center.z)*(eye.z-(*i)->center.z);
+		//dataManager.setUniform1f("dist", (*i)->minDistanceSquared / d);
+		bufferOffset = sizeof(float)*3 * ((*i)->row + ((*i)->col*((width-1)/LOD+1))) * (16<<(levelsDeep-(*i)->level));
 		indexBuffers[(*i)->level]->drawBuffer(GraphicsManager::TRIANGLES, vertexBuffer, bufferOffset);
 		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
 	}
+
+	//graphics->setWireFrame(false);
 }
 TerrainPage::~TerrainPage()
 {
@@ -560,7 +567,7 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
 	{
 	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
-		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.49853),0.0,1.0) * 255.0;
+		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.498530),0.0,1.0) * 255.0;
 		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
 		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
 	}
@@ -569,7 +576,6 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	t = GetTime();
 
 	skyTexture = graphics->genTextureCube();
-
 	skyTexture->setData(l, l, GraphicsManager::texture::RGB, cubeMapTex);
 
 	delete[] cubeMap;
@@ -679,7 +685,8 @@ void Terrain::generateOceanTexture()
 void Terrain::generateFoliage(int count)
 {
 	vector<texturedVertex3D> vertices;
-	texturedVertex3D tmpVerts[8];
+	texturedVertex3D tmpVerts[16];
+	//plant tmpFoliage;
 	Vec3f position;
 
 	tmpVerts[0].UV = Vec2f(0.0,1);
@@ -692,8 +699,21 @@ void Terrain::generateFoliage(int count)
 	tmpVerts[6].UV = Vec2f(1.0,0);
 	tmpVerts[7].UV = Vec2f(0.5,0);
 
+	tmpVerts[8].UV = Vec2f(0.5,1);
+	tmpVerts[9].UV = Vec2f(0.0,1);
+	tmpVerts[10].UV = Vec2f(0.0,0);
+	tmpVerts[11].UV = Vec2f(0.5,0);
 
+	tmpVerts[12].UV = Vec2f(1.0,1);
+	tmpVerts[13].UV = Vec2f(0.5,1);
+	tmpVerts[14].UV = Vec2f(0.5,0);
+	tmpVerts[15].UV = Vec2f(1.0,0);
+
+	Vec2f dir;
+	Vec3f right, fwd;
 	unsigned int nTriangles=0;
+	unsigned int n = 0;
+
 	for(int i=0; i<1000000 && nTriangles<count*4; i++)
 	{
 		position.x = terrainPosition.x + random<float>(terrainScale.x);
@@ -702,26 +722,63 @@ void Terrain::generateFoliage(int count)
 
 		if(position.y > 40.0)
 		{
+			n = random<float>(1.0) < 0.5 ? 0 : 8;
+
+			dir = random2<float>();
 			float s = 4.0 + random<float>(4.0) + random<float>(4.0);
-			tmpVerts[0].position = position + Vec3f(-2.0, 0.0, 0.0)*s;
-			tmpVerts[1].position = position + Vec3f( 2.0, 0.0, 0.0)*s;
-			tmpVerts[2].position = position + Vec3f( 2.0, 5.0, 0.0)*s;
-			tmpVerts[3].position = position + Vec3f(-2.0, 5.0, 0.0)*s;
+			tmpVerts[n+0].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
+			tmpVerts[n+1].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
+			tmpVerts[n+2].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
+			tmpVerts[n+3].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
 
-			tmpVerts[4].position = position + Vec3f(0.0, 0.0, -2)*s;
-			tmpVerts[5].position = position + Vec3f(0.0, 0.0,  2.0)*s;
-			tmpVerts[6].position = position + Vec3f(0.0, 5.0,  2.0)*s;
-			tmpVerts[7].position = position + Vec3f(0.0, 5.0, -2.0)*s;
+			swap(dir.x, dir.y);
+			dir.x = - dir.x;
+			tmpVerts[n+4].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
+			tmpVerts[n+5].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
+			tmpVerts[n+6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
+			tmpVerts[n+7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
 
-			vertices.push_back(tmpVerts[0]);
-			vertices.push_back(tmpVerts[1]);
-			vertices.push_back(tmpVerts[2]);
-			vertices.push_back(tmpVerts[3]);
 
-			vertices.push_back(tmpVerts[4]);
-			vertices.push_back(tmpVerts[5]);
-			vertices.push_back(tmpVerts[6]);
-			vertices.push_back(tmpVerts[7]);
+			//tmpVerts[n+0].padding[0] = s*0.4;
+			//tmpVerts[n+1].padding[0] = s*0.4;
+			//tmpVerts[n+2].padding[0] = s*0.4;
+			//tmpVerts[n+3].padding[0] = s*0.4;
+
+
+
+			//tmpVerts[4].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
+			//tmpVerts[5].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
+			//tmpVerts[6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
+			//tmpVerts[7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
+
+			vertices.push_back(tmpVerts[n+0]);
+			vertices.push_back(tmpVerts[n+1]);
+			vertices.push_back(tmpVerts[n+2]);
+			vertices.push_back(tmpVerts[n+3]);
+			vertices.push_back(tmpVerts[n+4]);
+			vertices.push_back(tmpVerts[n+5]);
+			vertices.push_back(tmpVerts[n+6]);
+			vertices.push_back(tmpVerts[n+7]);
+
+			//if(random<float>(1.0) < 0.5)
+			//{
+			//	foliageVertices.push_back(tmpVerts[0]);
+			//	foliageVertices.push_back(tmpVerts[1]);
+			//	foliageVertices.push_back(tmpVerts[2]);
+			//	foliageVertices.push_back(tmpVerts[3]);
+			//}
+			//else
+			//{
+			//	foliageVertices.push_back(tmpVerts[4]);
+			//	foliageVertices.push_back(tmpVerts[5]);
+			//	foliageVertices.push_back(tmpVerts[6]);
+			//	foliageVertices.push_back(tmpVerts[7]);
+			//}
+
+			//tmpFoliage.height = 5.0*s;
+			//tmpFoliage.location = position;
+			//foliage.push_back(tmpFoliage);
+
 			nTriangles += 4;
 		}
 	}
@@ -742,7 +799,7 @@ void Terrain::generateFoliage(int count)
 		}
 		foliageIBO->setData(indices, nTriangles*6);
 	}
-	else if(nTriangles > 0 )
+	else if(nTriangles > 0)
 	{
 		unsigned short* indices = new unsigned short[nTriangles*6];
 		for(unsigned int i=0; i<nTriangles; i++)
@@ -757,9 +814,10 @@ void Terrain::generateFoliage(int count)
 		foliageIBO->setData(indices, nTriangles*6);
 	}
 
-	foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
+	//foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::GENERIC_FLOAT,5*sizeof(float));
 	foliageVBO->setTotalVertexSize(sizeof(texturedVertex3D));
 	foliageVBO->setVertexData(sizeof(texturedVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
 }
@@ -773,10 +831,11 @@ Terrain::~Terrain()
 {
 	resetTerrain();
 }
-void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water, int foliageAmount)
+void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, int foliageAmount, unsigned int LOD)
 {
-	waterPlane = water;
-	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,patchResolution,position,scale));
+	shaderType = shader;
+	waterPlane = (shader==TERRAIN_ISLAND);
+	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,patchResolution,position,scale,LOD));
 	terrainPages.push_back(p);
 	terrainPosition = position;
 	terrainScale = scale;
@@ -811,7 +870,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	dataManager.setUniform1i("tex", 0);
 	//dataManager.setUniform1i("clouds", 0);
 	skyTexture->bind();
-
+	//dataManager.bind("skybox");
 	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
 
 
@@ -853,7 +912,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	if(!waterPlane)
 	{
-		graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
+		//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
 	}
 
 	dataManager.bind("ortho");
@@ -864,7 +923,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun"); //doesn't work right in 2 player
 	}
 
-	if(waterPlane)
+//	if(waterPlane)
 	{
 		dataManager.bind("ocean");
 
@@ -896,6 +955,74 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
+	if(shaderType == TERRAIN_ISLAND)
+	{
+		dataManager.bind("island terrain");
+		dataManager.bind("sand",2);
+		dataManager.bind("grass",3);
+		dataManager.bind("rock",4);
+		dataManager.bind("LCnoise",5);
+		dataManager.bind("grass normals",6);
+		dataManager.bind("noise",7);
+
+		dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+		dataManager.setUniformMatrix("modelTransform",		Mat4f());
+		dataManager.setUniform1f("time",					world.time());
+		dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
+		dataManager.setUniform3f("eyePos",					view->camera().eye);
+		dataManager.setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+		dataManager.setUniform1f("minHeight",				terrainPosition.y);
+		dataManager.setUniform1f("heightRange",				terrainScale.y);
+
+		dataManager.setUniform1i("sky",			0);
+		dataManager.setUniform1i("sand",		2);
+		dataManager.setUniform1i("grass",		3);
+		dataManager.setUniform1i("rock",		4);
+		dataManager.setUniform1i("LCnoise",		5);
+		dataManager.setUniform1i("groundTex",	1);
+		dataManager.setUniform1i("grass_normals", 6);
+		dataManager.setUniform1i("noiseTex",	7);			// make sure uniform exists
+	}
+	else if(shaderType == TERRAIN_SNOW)
+	{
+		dataManager.bind("snow terrain");
+		dataManager.bind("snow",2);
+		dataManager.bind("LCnoise",3);
+		dataManager.bind("snow normals",4);
+
+		dataManager.setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
+		dataManager.setUniform1f("minHeight",	terrainPosition.y);
+		dataManager.setUniform1f("XZscale",		terrainScale.x);
+		dataManager.setUniform1f("time",		world.time());
+
+		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
+
+		dataManager.setUniform1i("snow",			2);
+		dataManager.setUniform1i("LCnoise",			3);
+		dataManager.setUniform1i("groundTex",		1);
+		dataManager.setUniform1i("snow_normals",	4);
+	}
+	else if(shaderType == TERRAIN_DESERT)
+	{
+		dataManager.bind("desert terrain");
+		dataManager.bind("desertSand",2);
+		dataManager.bind("LCnoise",3);
+
+		dataManager.bind("noise",4);
+
+		dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+		dataManager.setUniformMatrix("modelTransform",		Mat4f());
+		dataManager.setUniform1f("time",					world.time());
+		dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
+		dataManager.setUniform3f("eyePos",					view->camera().eye);
+		dataManager.setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+
+		dataManager.setUniform1i("sky",			0);
+		dataManager.setUniform1i("sand",		2);
+		dataManager.setUniform1i("LCnoise",		3);
+		dataManager.setUniform1i("groundTex",	1);
+		dataManager.setUniform1i("noiseTex",	4);
+	}
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view);
@@ -908,17 +1035,37 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->setColorMask(true);
 	}
 
-	//graphics->setDepthMask(false);
-	dataManager.bind("tree");
-	skyTexture->bind(1);
+	//if(!foliage.empty())
+	//{
+		//graphics->setDepthMask(false);
+		//Vec3f up = Vec3f(0.0,1.0,0.0);
+		Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
 
-	dataManager.bind("trees shader");
-	dataManager.setUniform1i("tex", 0);
-	dataManager.setUniform1i("sky", 1);
-	dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
-	dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-	//graphics->setDepthMask(true);
+		//for(int i=0; i<foliage.size(); i++)
+		//{
+		//	foliageVertices[i*4+0].position = foliage[i].location - right * foliage[i].height;
+		//	foliageVertices[i*4+1].position = foliage[i].location + right * foliage[i].height;
+		//	foliageVertices[i*4+2].position = foliage[i].location + (up + right) * foliage[i].height;
+		//	foliageVertices[i*4+3].position = foliage[i].location + (up - right) * foliage[i].height;
+		//}
+		
+		//foliageVBO->setVertexData(sizeof(texturedVertex3D)*foliage.size()*4, &foliageVertices[0]);
+		graphics->setAlphaToCoverage(true);
+		dataManager.bind("tree");
+		//dataManager.bind("skybox",1);
+		skyTexture->bind(1);
+
+		dataManager.bind("trees shader");
+		dataManager.setUniform1i("tex", 0);
+		dataManager.setUniform1i("sky", 1);
+		dataManager.setUniform3f("eyePos", eye);
+		dataManager.setUniform3f("right", right);
+		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+
+		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
+		graphics->setAlphaToCoverage(false);
+		//graphics->setDepthMask(true);
+	//}
 }
 std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {

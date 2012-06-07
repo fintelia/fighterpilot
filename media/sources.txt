@@ -70,3 +70,9 @@ tree.png
 	resized images to 1024x1024
 	combined two views into a single image
 	adjusted gamma to 1.5
+
+particle4.png
+	radial gradient from white to alpha
+	
+skybox.png
+	http://www.alusion-fr.com/an1ffa3.htm

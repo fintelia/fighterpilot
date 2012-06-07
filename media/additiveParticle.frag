@@ -12,6 +12,5 @@ void main()
 {
 	float d = texture2D(depth, invScreenDims * gl_FragCoord.xy).x;
 	vec4 Color = color * texture2D(tex, texCoord) * vec4(1.0,1.0,1.0,clamp((d-gl_FragCoord.z)*1000.0,0.0,1.0));
-	Color.rgb *= Color.a;
 	gl_FragColor = Color;
 }

@@ -575,6 +575,7 @@ void FileManager::parseIniFile(std::shared_ptr<iniFile> f, fileContents data)
 			value = "";
 			if(d[i] == '[')
 			{
+				section = "";
 				++i;
 				while(i < size && d[i] != ']' && d[i] != '\n')
 				{
@@ -1038,7 +1039,7 @@ FileManager::fileContents FileManager::loadFileContents(string filename)
 		ifstream fin(filename,ios::in|ios::ate|ios::binary);
 		if(fin.is_open())
 		{
-			f.size = fin.tellg();
+			f.size = (unsigned long)fin.tellg();
 			f.contents = new unsigned char[f.size];
 			memset(f.contents,0,f.size);
 

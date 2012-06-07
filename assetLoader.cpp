@@ -93,7 +93,29 @@ bool AssetLoader::loadAssetList()
 						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
 					}
 				}
+				else if(strcmp(textureElement->Value(), "textureCube") == 0)
+				{
+					textureCubeAssetFile* tmpAssetFile = new textureCubeAssetFile;
+					tmpAssetFile->name = getAttribute(textureElement, "name");
+					string filename = getAttribute(textureElement, "file");
 
+					if(tmpAssetFile->name == "" || filename == "")
+					{
+						debugBreak();
+						continue;
+					}
+
+					if(getAttribute(textureElement,"preload") == "true")
+					{
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+					}
+					else
+					{
+						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+					}
+				}
 				textureElement = textureElement->NextSiblingElement();
 			}
 		}
@@ -123,6 +145,8 @@ bool AssetLoader::loadAssetList()
 				tmpAssetFile->color3 = getAttribute(shaderElement, "color3");
 				tmpAssetFile->color4 = getAttribute(shaderElement, "color4");
 				tmpAssetFile->tangent = getAttribute(shaderElement, "tangent");
+				tmpAssetFile->genericFloat = getAttribute(shaderElement, "genericFloat");
+
 				string vertFilename = getAttribute(shaderElement, "vertex");
 				string fragFilename = getAttribute(shaderElement, "fragment");
 				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
@@ -266,6 +290,16 @@ int AssetLoader::loadAsset()
 
 			pop(preload);
 		}
+		else if(file->getType() == assetFile::TEXTURE_CUBE)
+		{
+			auto textureAsset = dynamic_pointer_cast<textureCubeAssetFile>(file);
+			if(!textureAsset->file->complete()) break;
+			auto texture = graphics->genTextureCube();
+			texture->setData(textureAsset->file->width, textureAsset->file->height/6, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents);
+			dataManager.addTexture(textureAsset->name, texture);
+
+			pop(preload);
+		}
 		else if(file->getType() == assetFile::SHADER)
 		{
 			auto shaderAsset = dynamic_pointer_cast<shaderAssetFile>(file);
@@ -280,6 +314,7 @@ int AssetLoader::loadAsset()
 			if(shaderAsset->color3 != "") shader->bindAttribute(shaderAsset->color3, GraphicsManager::vertexBuffer::COLOR3);
 			if(shaderAsset->color4 != "") shader->bindAttribute(shaderAsset->color4, GraphicsManager::vertexBuffer::COLOR4);
 			if(shaderAsset->tangent != "") shader->bindAttribute(shaderAsset->tangent, GraphicsManager::vertexBuffer::TANGENT);
+			if(shaderAsset->genericFloat != "") shader->bindAttribute(shaderAsset->genericFloat, GraphicsManager::vertexBuffer::GENERIC_FLOAT);
 
 			if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
 			{

@@ -1,4 +1,6 @@
 
+enum TerrainType{TERRAIN_ISLAND, TERRAIN_SNOW, TERRAIN_DESERT};
+
 class TerrainPatch
 {
 public:
@@ -31,7 +33,7 @@ public:
 		}
 		return offset;
 	}
-	void subdivide(const Vec3f& eye, float error) const;
+	void subdivide(const Vec3f& eye) const;
 	void patchEdges() const;
 };
 class TerrainPage
@@ -42,6 +44,7 @@ public:
 
 	unsigned int height;
 	unsigned int width;
+	unsigned int LOD;
 
 	unsigned int levelsDeep;
 	unsigned int blockLength;
@@ -53,6 +56,8 @@ public:
 	shared_ptr<GraphicsManager::texture2D> texture;
 	shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
 	vector<shared_ptr<GraphicsManager::indexBuffer>> indexBuffers;
+
+
 	//struct IndexBuffer
 	//{
 	//	unsigned int numVertices;
@@ -61,7 +66,7 @@ public:
 
 	mutable vector<TerrainPatch*> renderQueue;
 
-	TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale);
+	TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale, unsigned int lod=1);
 	~TerrainPage();
 	TerrainPatch* getPatch(unsigned int level, unsigned int x, unsigned int y) const;
 
@@ -86,6 +91,14 @@ protected:
 	
 	shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
 	shared_ptr<GraphicsManager::indexBuffer> foliageIBO;
+	//struct plant
+	//{
+	//	Vec3f location;
+	//	float height;
+	//};
+	//vector<plant> foliage;
+	//mutable vector<texturedVertex3D> foliageVertices;
+	TerrainType shaderType;
 
 	shared_ptr<GraphicsManager::textureCube> skyTexture;
 	shared_ptr<GraphicsManager::texture3D> oceanTexture;
@@ -103,7 +116,7 @@ protected:
 public:
 	Terrain():waterPlane(true){}
 	~Terrain();
-	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, bool water=true, int foliageAmount=0);
+	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, int foliageAmount=0, unsigned int LOD=1);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south

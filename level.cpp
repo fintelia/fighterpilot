@@ -57,10 +57,9 @@ bool LevelFile::saveZIP(string filename)
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
 
-	if(info.shaderType == SHADER_ISLAND)		attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
-	else if(info.shaderType == SHADER_GRASS)	attributesFile->bindings["shaders"]["shaderType"] = "GRASS";
-	else if(info.shaderType == SHADER_SNOW)		attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
-	else if(info.shaderType == SHADER_OCEAN)	attributesFile->bindings["shaders"]["shaderType"] = "OCEAN";
+	if(info.shaderType == TERRAIN_ISLAND)		attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
+	else if(info.shaderType == TERRAIN_SNOW)	attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
+	else if(info.shaderType == TERRAIN_DESERT)	attributesFile->bindings["shaders"]["shaderType"] = "DESERT";
 	else										attributesFile->bindings["shaders"]["shaderType"] = "NONE";
 
 	for(auto i = objects.begin(); i != objects.end(); i++)
@@ -109,11 +108,11 @@ bool LevelFile::loadZIP(string filename)
 
 	string sType;
 	attributesFile->readValue("shaders", "shaderType", sType);
-	if(sType == "ISLAND")		info.shaderType = SHADER_ISLAND;
-	else if(sType == "GRASS")	info.shaderType = SHADER_GRASS;
-	else if(sType == "SNOW")	info.shaderType = SHADER_SNOW;
-	else if(sType == "OCEAN")	info.shaderType = SHADER_OCEAN;
-	else						info.shaderType = SHADER_GRASS; //grass is default
+	if(sType == "ISLAND")		info.shaderType = TERRAIN_ISLAND;
+	else if(sType == "GRASS")	info.shaderType = TERRAIN_ISLAND;
+	else if(sType == "SNOW")	info.shaderType = TERRAIN_SNOW;
+	else if(sType == "DESERT")	info.shaderType = TERRAIN_DESERT;
+	else						info.shaderType = TERRAIN_ISLAND; //grass is default
 
 	if(info.mapResolution.x == 0 || info.mapResolution.y == 0)
 	{
@@ -268,7 +267,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 
 		unsigned short* h = new unsigned short[w*w];
 		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info.mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),true,info.foliageAmount);
+		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),info.shaderType,info.foliageAmount, info.shaderType==TERRAIN_DESERT?4:1);
 	}
 
 	bullets = world.newObject(new bulletCloud);
@@ -302,6 +301,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 			world.newObject(new flakCannon(i->startloc, i->startRot, i->type, i->team));
 		}
 	}
+	world.time.reset();
 }
 LevelFile::LevelFile(): heights(nullptr)
 {
