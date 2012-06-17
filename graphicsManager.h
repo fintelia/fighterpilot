@@ -220,8 +220,6 @@ public:
 		virtual void bind()=0;
 		virtual void unbind()=0;
 
-		virtual void bindAttribute(string name, unsigned int index)=0;
-
 		virtual void setUniform1f(string name, float v0)=0;
 		virtual void setUniform2f(string name, float v0, float v1)=0;
 		virtual void setUniform3f(string name, float v0, float v1, float v2)=0;
@@ -246,11 +244,8 @@ private:
 protected:
 	gID idGen(){return ++currentId;}
 
-	vector<weak_ptr<View>> views_new;
+	vector<weak_ptr<View>> views;
 	shared_ptr<View> currentView;
-
-	//vector<View> views;
-	//unsigned int currentView;
 
 	float fps;
 
@@ -301,10 +296,6 @@ public:
 	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
 	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
-	//virtual void drawVertexArray(vertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
-	//virtual void drawVertexArray(texturedVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
-	//virtual void drawVertexArray(texturedLitVertex3D* vertices, unsigned int numVertices, const Mat4f& transform)=0;
-
 	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage)=0;
 	virtual shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage)=0;
 
@@ -333,21 +324,6 @@ public:
 
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
-
-	//virtual Vec2f project(Vec3f p, unsigned int view=0);
-	//virtual Vec3f unProject(Vec3f p, unsigned int view=0);
-
-	//const View& getView(unsigned int view){return views[view < views.size() ? view : 0];}
-	//const View& getView(){return views[currentView];}
-
-	//void resetViews(unsigned int numViews=1);
-	//void viewport(float x,float y,float width,float height, unsigned int view=0);
-	//void perspective(float fovy, float aspect, float near, float far, unsigned int view=0);
-	//void ortho(float left, float right, float bottom, float top, float near, float far, unsigned int view=0);
-	//void ortho(float left, float right, float bottom, float top, unsigned int view=0){ortho(left, right, bottom, top, 0.0, 1.0, view);}
-	//void lookAt(Vec3f eye, Vec3f center, Vec3f up, unsigned int view=0);
-
-	//bool sphereInFrustum(Sphere<float> s);
 
 	virtual set<Vec2u> getSupportedResolutions()=0;
 
@@ -384,7 +360,7 @@ protected:
 		bool depthBound;
 
 		FBO():color(0), depth(0), fboID(0),colorBound(true),depthBound(true){}
-	}FBOs[2], multisampleFBO;	//first FBO is a multisample FBO if multisampling == true
+	}FBOs[2], multisampleFBO;
 
 
 	bool highResScreenshot;
@@ -498,8 +474,6 @@ public:
 		void unbind();
 
 		bool init(const char* vert, const char* frag, const char* geometry);
-
-		void bindAttribute(string name, unsigned int index);
 
 		void setUniform1f(string name, float v0);
 		void setUniform2f(string name, float v0, float v1);

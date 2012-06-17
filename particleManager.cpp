@@ -330,43 +330,37 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 			(*i)->prepareRender(up,right);
 		}
 	}
+	auto Pred = [view](shared_ptr<emitter> e1, shared_ptr<emitter> e2)
+	{
+		return view->project3(e1->position).z > view->project3(e2->position).z;
+	};
+
+	sort(emitters.begin(), emitters.end(), Pred);
+
 	dataManager.bind("particle shader");
 	dataManager.setUniform1i("tex",0);
 	dataManager.setUniform1i("depth",1);
 	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
-	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+
+
+	
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
 		if(!(*i)->additiveBlending && (*i)->visible)
 		{
+			graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 			(*i)->render();
 		}
-	}
-
-	dataManager.bind("additive particle shader");
-	dataManager.setUniform1i("tex",0);
-	dataManager.setUniform1i("depth",1);
-	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
-
-	graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);
-	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-	{
-		if((*i)->additiveBlending && (*i)->visible)
+		else if((*i)->additiveBlending && (*i)->visible)
 		{
+			graphics->setBlendMode(GraphicsManager::ALPHA_ONLY);
 			(*i)->render();
-		}
-	}
-	graphics->setBlendMode(GraphicsManager::ADDITIVE);
-	for(auto i = emitters.begin(); i!=emitters.end(); i++)
-	{
-		if((*i)->additiveBlending && (*i)->visible)
-		{
-			(*i)->render();
-		}
-	}
 
+			graphics->setBlendMode(GraphicsManager::ADDITIVE);
+			(*i)->render();
+		}
+	}
 
 
 	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);

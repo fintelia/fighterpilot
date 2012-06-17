@@ -1,7 +1,6 @@
 
 varying vec3 position;
 varying vec3 lightDir, halfVector;
-varying float h;
 
 uniform float time;
 uniform float heightScale;
@@ -13,15 +12,18 @@ uniform sampler2D snow;
 uniform sampler2D LCnoise;
 uniform sampler2D groundTex;
 
+uniform vec3 invScale;
+
+uniform float minHeight;
+uniform float heightRange;
+
 void main()
 {
 	vec4 color;
 
-	vec3 normal = texture2D(groundTex,position.xz).xyz;
-	normal.x = normal.x * 2.0 - 1.0;
-	normal.z = normal.z * 2.0 - 1.0;
-	normal.y /= heightScale;
-	normal = normalize(normal);
+	vec4 groundTexVal = texture2D(groundTex,position.xz * invScale.xz);
+	vec3 normal = normalize(vec3(groundTexVal.x * 2.0 - 1.0, groundTexVal.y/heightScale, groundTexVal.z * 2.0 - 1.0));
+
 
 	float dist=gl_FragCoord.z/gl_FragCoord.w;		//if(dist>9000.0) discard;
 	float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
@@ -31,10 +33,12 @@ void main()
 	if(slope>s1 		) 	r=1.0;
 	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 
+	float height = minHeight + groundTexVal.a * heightRange;
+
 	vec3 TexValues;
-	if(h<0.2)		TexValues = vec3(0.0,1.0,0.0);
-	else if(h<0.4)	TexValues = vec3(0.0,1.0-(h-0.2)/0.2,(h-0.2)/0.2);
-	else				TexValues = vec3(0.0,0.0,1.0);
+	if(height<6.0)			TexValues = vec3(0.0,1.0,0.0);
+	else if(height<26.0)	TexValues = vec3(0.0,1.0-(height-6.0)/20.0,(height-6.0)/20.0);
+	else					TexValues = vec3(0.0,0.0,1.0);
 
 	//if(r<TexValues[0]) r=0.0;
 	//else r-=TexValues[0];

@@ -2,7 +2,7 @@
 #include "game.h"
 
 namespace gui{
-dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl)
+dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl), firstFrame(true)
 {
 
 }
@@ -249,7 +249,7 @@ void dogFight::checkCollisions()
 				{
 					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
 					{
-						i->second->loseHealth(11.2);
+						i->second->loseHealth(3.6);
 
 						if((*i).second->dead)
 						{

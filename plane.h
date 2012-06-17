@@ -73,7 +73,8 @@ public:
 	bool controled;
 	vector<wayPoint> wayPoints;
 	//objectPath planePath;
-
+	int target;
+	bool targetLocked;
 ///////////camera view/////////////
 	vector<cameraState> cameraStates;
 	Quat4f cameraRotation;
@@ -96,7 +97,7 @@ public:
 	}controls;
 	enum ControlType{CONTROL_TYPE_SIMPLE, CONTROL_TYPE_ADVANCED, CONTROL_TYPE_AI}controlType;
 ////////////methods////////////////
-	void findTargetVector();
+	void findTarget();
 	void shootMissile();
 	void dropBomb();
 	void die();

@@ -554,38 +554,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	//unsigned int lNum=0, vNum = 0;
 	for(int m=0; m<numMtls; m++)
 	{
-		vector<unsigned int> indexBuffer;
-		for(int i=0; i < totalFaces; i++)
-		{
-			if(faces[i].material == m)
-			{
-				indexBuffer.push_back(faces[i].combinedVertices[0]);
-				indexBuffer.push_back(faces[i].combinedVertices[1]);
-				indexBuffer.push_back(faces[i].combinedVertices[2]);
-
-				//if(faces[i].v[0] == 0 || faces[i].v[1] == 0 || faces[i].v[2] == 0) continue;
-				//VBOverts[vNum+0].position = vertices[faces[i].v[0]-1];
-				//VBOverts[vNum+1].position = vertices[faces[i].v[1]-1];
-				//VBOverts[vNum+2].position = vertices[faces[i].v[2]-1];
-				//
-				//if(faces[i].n[0] == 0 || faces[i].n[1] == 0 || faces[i].n[2] == 0) //so we only have to generate the face normal once
-				//	faceNormal = ((VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+3].position-VBOverts[vNum+0].position)).normalize();
-				//VBOverts[vNum+0].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[0]-1].normalize() : faceNormal;
-				//VBOverts[vNum+1].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[1]-1].normalize() : faceNormal;
-				//VBOverts[vNum+2].normal	= faces[i].n[0]!=0 ? normals[faces[i].n[2]-1].normalize() : faceNormal;
-				//
-				//if(faces[i].t[0] != 0)	VBOverts[vNum+0].UV = texCoords[faces[i].t[0]-1];
-				//if(faces[i].t[1] != 0)	VBOverts[vNum+1].UV = texCoords[faces[i].t[1]-1];
-				//if(faces[i].t[2] != 0)	VBOverts[vNum+2].UV = texCoords[faces[i].t[2]-1];
-				//
-				//faceNormal = VBOverts[vNum+0].normal + VBOverts[vNum+1].normal + VBOverts[vNum+2].normal;
-				//if(faceNormal.dot( (VBOverts[vNum+1].position-VBOverts[vNum+0].position).cross(VBOverts[vNum+2].position-VBOverts[vNum+0].position) ) < 0.0)
-				//{
-				//	swap(VBOverts[vNum+0], VBOverts[vNum+1]);	// correct triangle winding order
-				//}
-				//vNum+=3;
-			}
-		}
 		modelAsset::material mat;
 		mat.diffuse = mtls[m].diffuse;
 		mat.specular = mtls[m].specular;
@@ -593,12 +561,37 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		mat.specularMap = mtls[m].specularMap;
 		mat.normalMap = mtls[m].normalMap;
 		mat.tex = mtls[m].tex;
-		//mat.numIndices = vNum - lNum;
-		//mat.indicesOffset = lNum;
 		mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-		mat.indexBuffer->setData(!indexBuffer.empty() ? &indexBuffer[0] : nullptr, indexBuffer.size());
+
+		if(totalFaces*3 <= USHRT_MAX)
+		{
+			vector<unsigned short> indexBuffer;
+			for(int i=0; i < totalFaces; i++)
+			{
+				if(faces[i].material == m)
+				{
+					indexBuffer.push_back(faces[i].combinedVertices[0]);
+					indexBuffer.push_back(faces[i].combinedVertices[1]);
+					indexBuffer.push_back(faces[i].combinedVertices[2]);
+				}
+			}
+			mat.indexBuffer->setData(!indexBuffer.empty() ? &indexBuffer[0] : nullptr, indexBuffer.size());
+		}
+		else
+		{
+			vector<unsigned int> indexBuffer;
+			for(int i=0; i < totalFaces; i++)
+			{
+				if(faces[i].material == m)
+				{
+					indexBuffer.push_back(faces[i].combinedVertices[0]);
+					indexBuffer.push_back(faces[i].combinedVertices[1]);
+					indexBuffer.push_back(faces[i].combinedVertices[2]);
+				}
+			}
+			mat.indexBuffer->setData(!indexBuffer.empty() ? &indexBuffer[0] : nullptr, indexBuffer.size());
+		}
 		a->materials.push_back(mat);
-		//lNum=vNum;
 	}
 	a->VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);

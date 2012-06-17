@@ -3,35 +3,6 @@
 
 namespace particle
 {
-	//explosionSmoke::explosionSmoke(): emitter(EXPLOSION, pos, "smoke", 0.3, 0.0, 16, true){}
-	//{
-	//	radius = r;
-	//	velocity =	fuzzyAttribute(8.0*radius, 0.0);
-	//	spread =	fuzzyAttribute(radius*2, radius);
-	//	life =		fuzzyAttribute(600.0);
-
-	//	particle p;
-	//	for(int i = 0; i < 16; i++)
-	//	{
-	//		p.startTime = world.time();
-	//		p.endTime = world.time() + life();
-	//	
-	//		Vec3f dir = random3<float>();
-	//		p.vel = dir * velocity();
-	//		p.pos = pos + dir * spread() + p.vel * p.speed * extraTime/1000.0;
-
-	//		p.size = 0.0;
-
-	//		float g = random<float>(0.1)+0.35;
-
-	//		p.r = g;
-	//		p.g = g;
-	//		p.b = g;
-	//		p.a = 0;
-
-	//		addParticle(p);
-	//	}
-	//}
 	explosionSmoke::explosionSmoke(): emitter("smoke", 64, 0.0, false)
 	{
 	

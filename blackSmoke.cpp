@@ -3,12 +3,6 @@
 
 namespace particle
 {
-	//blackSmoke::blackSmoke(Vec3f pos): emitter(SMOKE, pos, "smoke", 1.0, 3.0, 19)
-	//{
-	//	velocity =	fuzzyAttribute(3.0, 1.0);
-	//	spread =	fuzzyAttribute(1.0, 0.5);
-	//	life =		fuzzyAttribute(6000.0, 100.0);
-	//}
 	blackSmoke::blackSmoke(): emitter("smoke", 36, 4.0)
 	{
 

@@ -737,7 +737,13 @@ void FileManager::parseZipFile(shared_ptr<zipFile> f, fileContents data)
 				f->files[name] = parseFile(name, d);
 				delete[] d.contents;
 			}
-
+			else if(localHeader.uncompressedSize == 0)
+			{
+				fileContents d;
+				d.contents = nullptr;
+				d.size = 0;
+				f->files[name] = parseFile(name, d);
+			}
 			position += localHeader.compressedSize;
 		}
 		f->completeLoad(true);
@@ -1161,14 +1167,17 @@ bool FileManager::writeZipFile(shared_ptr<zipFile> f, bool asinc)
 }
 bool FileManager::writeBmpFile(shared_ptr<textureFile> f, bool asinc)
 {
+	f->format = BMP;
 	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writeTgaFile(shared_ptr<textureFile> f, bool asinc)
 {
+	f->format = TGA;
 	return writeFileContents(f->filename, f, asinc);
 }
 bool FileManager::writePngFile(shared_ptr<textureFile> f, bool asinc)
 {
+	f->format = PNG;
 	return writeFileContents(f->filename, f, asinc);
 }
 
@@ -1339,17 +1348,23 @@ FileManager::fileContents FileManager::serializeBmpFile(shared_ptr<textureFile> 
 	writeAs<unsigned long>(		c.contents + 46, 0);					//colors used (or zero)
 	writeAs<unsigned long>(		c.contents + 50, 0);					//important colors used (or zero)
 
+	unsigned char tmpChar;
+	int off1, off2;
+
 	for(unsigned int y = 0; y < f->height; y++)
 	{
+		memcpy(c.contents+54+pWidth*y, f->contents+pWidth*y, width);
+
 		for(unsigned int x = 0; x < f->width; x++)
 		{
-			c.contents[54 + pWidth * y + x * f->channels + 0] = f->contents[width * y + x * f->channels + 2];
-			c.contents[54 + pWidth * y + x * f->channels + 1] = f->contents[width * y + x * f->channels + 1];
-			c.contents[54 + pWidth * y + x * f->channels + 2] = f->contents[width * y + x * f->channels + 0];
+			off1 = 54 + pWidth * y + x * f->channels + 0;
+			off2 = off1 + 2;
+
+			tmpChar = c.contents[off1];
+			c.contents[off1] = c.contents[off2];
+			c.contents[off2] = tmpChar;
 		}
 	}
-
-
 	return c;
 }
 FileManager::fileContents FileManager::serializeTgaFile(shared_ptr<textureFile> f)

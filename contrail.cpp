@@ -3,14 +3,12 @@
 
 namespace particle
 {
-	contrail::contrail(): emitter("contrail", 48, 150.0)
+	contrail::contrail(): emitter("contrail", 48, 300.0)
 	{
 
 	}
 	void contrail::init()
 	{
-		//velocity =	fuzzyAttribute(0.2, 0.1);
-		//spread =	fuzzyAttribute(0.0);
 		life =		fuzzyAttribute(8000.0, 1500.0);
 	}
 	bool contrail::createParticle(particle& p, Vec3f currentPosition)
@@ -47,13 +45,13 @@ namespace particle
 		{
 			t = (t-0.10)/0.65;
 			p.a = lerp(0.6, 0.15, t);
-			p.size = lerp(2.0, 6.0, t);
+			p.size = lerp(2.0, 3.5, t);
 		}
 		else
 		{
 			t = (t-0.75)/0.25;
 			p.a = lerp(0.15, 0.0, t);
-			p.size = lerp(6.0, 7.5, t);
+			p.size = lerp(3.5, 5.0, t);
 		}
 
 	}

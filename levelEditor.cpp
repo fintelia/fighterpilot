@@ -1157,6 +1157,9 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			groundTex->bind(4);
 
 			dataManager.setUniform1f("heightScale",	scale);
+			dataManager.setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			dataManager.setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			dataManager.setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
 
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
 			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);

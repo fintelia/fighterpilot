@@ -195,7 +195,7 @@ bool chooseMode::keyDown(int vkey)
 		input.up(VK_RETURN);
 
 		std::shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadZIP("media/map file.lvl"))
+		if(l->loadZIP("media/simpleCampaign/mission1.lvl"))
 		{
 			menuManager.setMenu(new gui::campaign(l));
 		}

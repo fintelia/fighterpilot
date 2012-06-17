@@ -1,7 +1,9 @@
 
 #include "engine.h"
 #include <Windows.h>
-#include "GL/glee.h"
+#include "GL/glew.h"
+#include "GL/wglew.h"
+
 #include <GL/glu.h>
 #include "png/png.h"
 
@@ -66,11 +68,12 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 	//	}
 	//	dynamic_cast<OpenGLgraphics*>(graphics)->setClientStates(texCoord, normals, colors);
 	//}
-
+	
 	for(auto i=vertexAttributes.begin(); i!=vertexAttributes.end(); i++)
 	{
-		//if(dataManager.getBoundShader() == "model")
+		//if(dataManager.getBoundShader() != "model")
 		//{
+			//glDisableClientState(GL_VERTEX_ARRAY);
 			if(i->first == POSITION2)			glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
 			else if(i->first == POSITION3)		glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
 			else if(i->first == TEXCOORD)		glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
@@ -82,6 +85,7 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 		//}
 		//else
 		//{
+		//	glEnableClientState(GL_VERTEX_ARRAY);
 		//	if(i->first == POSITION2)
 		//		glVertexPointer(2, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
 		//	else if(i->first == POSITION3)
@@ -113,6 +117,7 @@ void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned in
 	else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
 	else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
 	else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	//glDisableClientState(GL_VERTEX_ARRAY);
 }
 OpenGLgraphics::indexBufferGL::indexBufferGL(UsageFrequency u): indexBuffer(u), bufferID(0), dataCount(0), dataType(NO_TYPE)
 {
@@ -225,12 +230,12 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	height = Height;
 	
 	//extention check needed since GeForce FX graphics cards do not support NPOT textures (even though they support OpenGL 2.0)
-	bool NPOT = GLEE_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
+	bool NPOT = GLEW_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
 	
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, NPOT ? GL_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
 
 	if(tileable)
 	{
@@ -243,8 +248,10 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 	
-	if(GLEE_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
+	if(GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
 	{
+		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
 		if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 		else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 		else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -253,8 +260,8 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 		else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
 		else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
-		//glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
+	
+		glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
@@ -512,8 +519,17 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	glAttachShader(shaderId,f);
 	glAttachShader(shaderId,v);
 
-	for(auto i=attributes.begin(); i!=attributes.end(); i++)
-		glBindAttribLocation(shaderId, i->second, i->first.c_str());
+//	for(auto i=attributes.begin(); i!=attributes.end(); i++)
+//		glBindAttribLocation(shaderId, i->second, i->first.c_str());
+
+	glBindAttribLocation(shaderId, 0, "Position2");
+	glBindAttribLocation(shaderId, 1, "Position");
+	glBindAttribLocation(shaderId, 2, "TexCoord");
+	glBindAttribLocation(shaderId, 3, "Normal");
+	glBindAttribLocation(shaderId, 4, "Color3");
+	glBindAttribLocation(shaderId, 5, "Color4");
+	glBindAttribLocation(shaderId, 6, "Tangent");
+	glBindAttribLocation(shaderId, 7, "GenericFloat");
 
 	glLinkProgram(shaderId);
 
@@ -537,20 +553,63 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 
 	return true;
 }
-void OpenGLgraphics::shaderGL::bindAttribute(string name, unsigned int index)
-{
-	attributes[name] = index;
-	//glBindAttribLocation(shaderId, index, name.c_str());
-}
+//void OpenGLgraphics::shaderGL::bindAttribute(string name, unsigned int index)
+//{
+//	attributes[name] = index;
+//	//glBindAttribLocation(shaderId, index, name.c_str());
+//}
 string OpenGLgraphics::shaderGL::getErrorStrings()
 {
-	if(vertErrorLog != "" && fragErrorLog != "")
+	//string str;
+	//
+	//int numAttributes=0;
+	//int maxLength=0;
+	//
+	//glGetProgramiv(shaderId, GL_ACTIVE_ATTRIBUTES, &numAttributes);
+	//glGetProgramiv(shaderId, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &maxLength);
+	//
+	//char* attribName = new char[maxLength];
+	//
+	//for(int i=0; i<numAttributes; i++)
+	//{
+	//	int size;
+	//	GLenum type;
+	//	glGetActiveAttrib(shaderId, i, maxLength, nullptr, &size, &type, attribName);
+	//
+	//	str += attribName;
+	//	if(type==GL_FLOAT)		str += " (float): ";
+	//	else if(type==GL_FLOAT_VEC2)	str += " (float2): ";
+	//	else if(type==GL_FLOAT_VEC3)	str += " (float3): ";
+	//	else if(type==GL_FLOAT_VEC4)	str += " (float4): ";
+	//	else					str += " (???): ";
+	//
+	//	str += lexical_cast<string>(glGetAttribLocation(shaderId, attribName));
+	//	str += "\n";
+	//}
+	//
+	//
+	//delete[] attribName;
+	//return str;
+
+	if(vertErrorLog != "" && fragErrorLog != "" && linkErrorLog != "")
+	{
+		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog + string("link:") + linkErrorLog;
+	}
+	else if(vertErrorLog != "" && fragErrorLog != "")
 	{
 		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog;
+	}
+	else if(vertErrorLog != "" && linkErrorLog != "")
+	{
+		return string("vert:") + vertErrorLog + string("link:") + linkErrorLog;
 	}
 	else if(vertErrorLog != "")
 	{
 		return string("vert:") + vertErrorLog;
+	}
+	else if(fragErrorLog != "" && linkErrorLog != "")
+	{
+		return string("frag:") + fragErrorLog + string("link:") + linkErrorLog;
 	}
 	else if(fragErrorLog != "")
 	{
@@ -740,26 +799,26 @@ void OpenGLgraphics::setColor(float r, float g, float b, float a)
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
-	if(renderTarget == RT_SCREEN && mask != colorMask)
-	{
+	//if(renderTarget == RT_SCREEN && mask != colorMask)
+	//{
 		colorMask = mask;
 		glColorMask(mask, mask, mask, mask);
-	}
-	else if(renderTarget == RT_FBO_0 && mask != FBOs[0].colorBound)
-	{
-		FBOs[0].colorBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[0].color : 0, 0);
-	}
-	else if(renderTarget == RT_FBO_1 && mask != FBOs[1].colorBound)
-	{
-		FBOs[1].colorBound = mask;
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[1].color : 0, 0);		
-	}
-	else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.colorBound)
-	{
-		multisampleFBO.colorBound = mask;
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.color : 0);
-	}
+	//}
+	//else if(renderTarget == RT_FBO_0 && mask != FBOs[0].colorBound)
+	//{
+	//	FBOs[0].colorBound = mask;
+	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[0].color : 0, 0);
+	//}
+	//else if(renderTarget == RT_FBO_1 && mask != FBOs[1].colorBound)
+	//{
+	//	FBOs[1].colorBound = mask;
+	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[1].color : 0, 0);		
+	//}
+	//else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.colorBound)
+	//{
+	//	multisampleFBO.colorBound = mask;
+	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.color : 0);
+	//}
 }
 void OpenGLgraphics::setDepthMask(bool mask)
 {
@@ -802,10 +861,10 @@ void OpenGLgraphics::setDepthTest(bool enabled)
 }
 void OpenGLgraphics::setBlendMode(BlendMode blend)
 {
-	if(blend == TRANSPARENCY)				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	else if(blend == ADDITIVE)				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	else if(blend == ALPHA_ONLY)			glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+	if(blend == TRANSPARENCY)				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	else if(blend == ADDITIVE)				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
 	else if(blend == PREMULTIPLIED_ALPHA)	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	else if(blend == ALPHA_ONLY)			glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 }
 void OpenGLgraphics::setClientState(unsigned int index, bool state)
 {
@@ -818,7 +877,7 @@ void OpenGLgraphics::setClientState(unsigned int index, bool state)
 }
 void OpenGLgraphics::setVSync(bool enabled)
 {
-	if(wglSwapIntervalEXT)
+	if(WGLEW_EXT_swap_control)// wglSwapIntervalEXT)
 		wglSwapIntervalEXT(enabled ? 1 : 0);//turn on/off vsync (0 = off and 1 = on)
 }
 void OpenGLgraphics::setAlphaToCoverage(bool enabled)
@@ -826,16 +885,9 @@ void OpenGLgraphics::setAlphaToCoverage(bool enabled)
 	if(multisampling)
 	{
 		if(enabled)
-			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 		else
-			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
-	}
-	else
-	{
-		if(enabled)
-			glEnable(GL_ALPHA_TEST);
-		else
-			glDisable(GL_ALPHA_TEST);
+			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 	}
 }
 void OpenGLgraphics::setWireFrame(bool enabled)
@@ -1023,7 +1075,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	/////////////////////////////////////////////////////////////////////////////////////
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
 	samples = samples >= maxSamples ? maxSamples : samples;
-	multisampling = GLEE_EXT_framebuffer_multisample && samples > 1;
+	multisampling = GLEW_EXT_framebuffer_multisample && samples > 1;
 	//////////////////////////////////////////////////////////////////////////////////////
 	for(int i = 0; i < 2; i++)
 	{
@@ -1068,22 +1120,15 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
 		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA/*GL_RGBA16F*/, sw, sh);
 
-		//glGenRenderbuffersEXT(1, &multisampleFBO.normals);
-		//glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.normals);
-		//glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA16F, sw, sh);
-
 		glGenRenderbuffersEXT(1, &multisampleFBO.depth);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
 		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT, sw, sh);
 
 		glGenFramebuffersEXT(1, &multisampleFBO.fboID);
 
-
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
-		//glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.normals);
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
-		//glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
 		checkErrors();
 		if(!checkForFBOErrors())
@@ -1137,7 +1182,6 @@ void OpenGLgraphics::render()
 		totalTime+=((*i)*0.001);
 	fps= ((double)frameTimes.size()) /  totalTime;
 
-
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
 	bindRenderTarget(multisampling ? RT_MULTISAMPLE_FBO : RT_FBO_0);
 	setDepthMask(true);
@@ -1146,7 +1190,6 @@ void OpenGLgraphics::render()
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 //////////////////////////////////SET LIGHTING///////////////////////////////////
 	//float lightPos[4] = {lightPosition.x, lightPosition.y, lightPosition.z, 1.0};
@@ -1171,11 +1214,11 @@ void OpenGLgraphics::render()
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 		//render scene
-		for(auto i = views_new.begin(); i != views_new.end();)
+		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //if the view no longer exists
 			{
-				i = views_new.erase(i);
+				i = views.erase(i);
 			}
 			else
 			{
@@ -1184,22 +1227,30 @@ void OpenGLgraphics::render()
 				auto c = currentView->camera();
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 
-				if(stereo)				currentView->shiftCamera(cameraOffset);
 				if(highResScreenshot)	currentView->constrainView(viewConstraint);
+				else if(stereo)			currentView->shiftCamera(cameraOffset);
 
 				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
-				dataManager.setUniformMatrix("modelTransform", Mat4f());	
+				dataManager.setUniformMatrix("modelTransform", Mat4f());
 
 				currentView->render();
 
-				if(highResScreenshot)	currentView->constrainView(Rect::XYXY(0,0,1,1));
-				if(stereo)				currentView->shiftCamera(Vec3f(0,0,0));
+				//dataManager.setUniformMatrix("cameraProjection",Mat4f());
+				//dataManager.setUniformMatrix("modelTransform", Mat4f());
+				//drawTriangle(Vec3f(0,0,0), Vec3f(0.5,0.4,0.0), Vec3f(0,0.4,0.0));
 
-				//currentView->constrainView(Rect::XYXY(0,0,1,1));
+				//dataManager.bind("ortho");
+				//dataManager.setUniform4f("color",white);
+				//drawOverlay(Rect::CWH(0.25,0.25,0.1,0.1), "grass");
+
+
+				if(highResScreenshot)	currentView->constrainView(Rect::XYXY(0,0,1,1));
+				else if(stereo)			currentView->shiftCamera(Vec3f(0,0,0));
 
 				i++;
 			}
 		}
+		
 
 		//capture depth buffer for reading and bind it to texture unit 1
 		if(multisampling)
@@ -1220,16 +1271,12 @@ void OpenGLgraphics::render()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
 	
-		//bindRenderTarget(RT_FBO_1);
-		//glClearColor(0,0,0,0);
-		//glClear(GL_COLOR_BUFFER_BIT);
-	
 		//render particles
-		for(auto i = views_new.begin(); i != views_new.end();)
+		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //check if the view no longer exists (just to be safe)
 			{
-				i = views_new.erase(i);
+				i = views.erase(i);
 			}
 			else
 			{
@@ -1237,28 +1284,23 @@ void OpenGLgraphics::render()
 				if(currentView->renderParticles())
 				{
 					glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);			
-					
-					if(stereo)				currentView->shiftCamera(cameraOffset);
-					if(highResScreenshot)	currentView->constrainView(viewConstraint);
+
+					if(highResScreenshot)	currentView->constrainView(viewConstraint);					
+					else if(stereo)			currentView->shiftCamera(cameraOffset);
+
 
 					particleManager.render(currentView);
 
 					if(highResScreenshot)	currentView->constrainView(Rect::XYXY(0,0,1,1));
-					if(stereo)				currentView->shiftCamera(Vec3f(0,0,0));
+					else if(stereo)			currentView->shiftCamera(Vec3f(0,0,0));
 				}
 				i++;
 			}
 		}
-
-		//setBlendMode(PREMULTIPLIED_ALPHA);
-		//bindRenderTarget(RT_MULTISAMPLE_FBO);
-		//dataManager.bind("ortho");
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, FBOs[RT_FBO_1].color);
-		//drawOverlay(Rect::XYXY(0,1,sAspect,0));
-		//setBlendMode(TRANSPARENCY);
-		
 	}
+
+	glDisable(GL_DEPTH_TEST);
+
 	currentView.reset(); //set the current view to null
 	if(stereo)
 		glColorMask(true,true,true,true);
@@ -1292,24 +1334,16 @@ void OpenGLgraphics::render()
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		//glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		//glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-		//glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		//glReadBuffer(GL_COLOR_ATTACHMENT1_EXT);
-		//glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		//glDrawBuffer(GL_COLOR_ATTACHMENT1_EXT);
-		//glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
 	}
 
 	bindRenderTarget(RT_SCREEN);
-	glClearColor(0.0,0.0,0.0,1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClearColor(0.0,0.0,0.0,1.0f);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	dataManager.bind("gamma shader");
 	dataManager.setUniform1f("gamma",currentGamma);
 	dataManager.setUniform1i("tex",0);
@@ -1512,17 +1546,41 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;								// Return false
 	}
 
-	if(!GLEE_VERSION_2_1)
+	GLenum err = glewInit();
+	if(GLEW_OK != err)
 	{
 		destroyWindow();
-		string s = string("Your version of OpenGL must be at least 2.1\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
+		string s = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
+		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+	}
+	else if(!GLEW_VERSION_2_1)
+	{
+		destroyWindow();
+		const char* version = (const char*)glGetString(GL_VERSION);
+		const char* renderer = (const char*)glGetString(GL_RENDERER);
+		const char* vender = (const char*)glGetString(GL_VENDOR);
+
+		string s("Your version of OpenGL must be at least 2.1");
+		if(version) s += string("\n   OpenGL version: ") + version;
+		if(renderer) s += string("\n   Renderer: ") + renderer;
+		if(vender) s += string("\n   Vender: ") + vender;
+
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
-	else if(!GLEE_EXT_framebuffer_blit)
+	else if(!GLEW_EXT_framebuffer_blit)
 	{
 		destroyWindow();
-		string s = string("Your graphics card must support GL_EXT_framebuffer_blit\n   OpenGL version: ") + (char*)glGetString(GL_VERSION) + "\n   Renderer: " + (char*)glGetString(GL_RENDERER) + "\n   Vender: " + (char*)glGetString(GL_VENDOR);
+
+		const char* version = (const char*)glGetString(GL_VERSION);
+		const char* renderer = (const char*)glGetString(GL_RENDERER);
+		const char* vender = (const char*)glGetString(GL_VENDOR);
+
+		string s("Your graphics card must support GL_EXT_framebuffer_blit");
+		if(version) s += string("\n   OpenGL version: ") + version;
+		if(renderer) s += string("\n   Renderer: ") + renderer;
+		if(vender) s += string("\n   Vender: ") + vender;
+
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
@@ -1558,7 +1616,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
-	glAlphaFunc(GL_GREATER, 0.0);
 
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
@@ -1677,7 +1734,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	delete[] tileContents;
 
-	fileManager.writeBmpFile(file,false);
+	fileManager.writeBmpFile(file,true);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
 	world.time.unpause();

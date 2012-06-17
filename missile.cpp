@@ -141,7 +141,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
-	speed = min(speed + acceleration*(ms/1000), 1180.0);
+	speed = min(speed + acceleration*(ms/1000), 700.0);
 	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;

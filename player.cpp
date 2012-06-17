@@ -322,7 +322,7 @@ void AIplayer::update()
 	}
 	else if(state == STATE_PATROL)
 	{
-		graphics->drawLine(o->position, destination);
+		//graphics->drawLine(o->position, destination);
 		//Profiler.setOutput(lexical_cast<string>(o->id) + " distance", sqrt((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z)));
 		if((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z) < 1000.0 * 1000.0)
 		{

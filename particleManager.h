@@ -107,7 +107,6 @@ protected:
 
 public:
 	friend class manager;
-
 	emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false);
 	virtual void init(){}
 	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
