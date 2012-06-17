@@ -54,6 +54,7 @@ bool LevelFile::saveZIP(string filename)
 	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(maxHeight);
 	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info.mapSize.x);
 	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info.mapSize.y);
+	attributesFile->bindings["heightmap"]["foliageAmount"] = lexical_cast<string>(info.foliageAmount);
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
 
@@ -206,7 +207,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				}
 				else
 				{
-					while(str[pos] != '\n' && pos < str.size())
+					while(pos < str.size() && str[pos] != '\n')
 						++pos;
 					pos++;
 				}

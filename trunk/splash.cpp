@@ -4,21 +4,6 @@
 
 namespace particle
 {
-	//splash::splash(): emitter(SMOKE, "splash", 1.0, 100.0, 50), totalCreated(0)
-	//{
-	//	position.y = 0;
-
-	//	velocity =	fuzzyAttribute(10.0, 10.0);
-	//	spread =	fuzzyAttribute(1.0, 0.5);
-	//	life =		fuzzyAttribute(6000.0, 100.0);
-
-	//	//particle p;
-	//	//for(int i=0; i < 50;i++)
-	//	//{
-	//	//	createParticle(p,position);
-	//	//	addParticle(p);
-	//	//}
-	//}
 	splash::splash(): emitter("splash", 50, 100.0), totalCreated(0)
 	{
 
@@ -27,16 +12,8 @@ namespace particle
 	{
 		position.y = 0;
 
-		//velocity =	fuzzyAttribute(3.0, 0.0);
 		spread =	fuzzyAttribute(4.0, 2.0);
 		life =		fuzzyAttribute(6000.0, 100.0);
-
-		//particle p;
-		//for(int i=0; i < 50;i++)
-		//{
-		//	createParticle(p,position);
-		//	addParticle(p);
-		//}
 	}
 	bool splash::createParticle(particle& p, Vec3f currentPosition)
 	{

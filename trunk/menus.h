@@ -179,6 +179,7 @@ class dogFight: public screen
 {
 protected:
 	std::shared_ptr<LevelFile> level;
+	bool firstFrame;
 
 public:
 	dogFight(std::shared_ptr<LevelFile> lvl);

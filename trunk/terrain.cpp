@@ -839,7 +839,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	terrainPages.push_back(p);
 	terrainPosition = position;
 	terrainScale = scale;
-	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z));
+	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z)/2.0);
 
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
@@ -1064,7 +1064,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		graphics->setAlphaToCoverage(false);
-		//graphics->setDepthMask(true);
 	//}
 }
 std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const

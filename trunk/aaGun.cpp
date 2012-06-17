@@ -176,7 +176,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	if(missileCoolDown <= 0.0 && target != 0)
 	{
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
-		missileCoolDown = 7000;
+		missileCoolDown = 18000;
 		world.newObject(new SAMmissile(SAM_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target));
 	}
 }

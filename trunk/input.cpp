@@ -3,6 +3,9 @@
 #include <Windows.h>
 #ifdef XINPUT
 #include <Xinput.h>
+#ifdef XINPUT_USE_9_1_0
+	#error wrong Xinput version used
+#endif
 #endif
 
 #ifdef DIRECT_INPUT

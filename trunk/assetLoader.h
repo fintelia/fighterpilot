@@ -15,14 +15,6 @@ private:
 
 		shared_ptr<FileManager::textFile> vertFile;
 		shared_ptr<FileManager::textFile> fragFile;
-		string position2;
-		string position3;
-		string texCoord;
-		string normal;
-		string color3;
-		string color4;
-		string tangent;
-		string genericFloat;
 		bool use_sAspect;
 	};
 	struct textureAssetFile: public assetFile{

@@ -33,7 +33,7 @@ bool Game::init()
 		settingsFile->bindings["graphics"]["maxFrameRate"] = "60.0";
 		settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(GetSystemMetrics(SM_CXSCREEN));
 		settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(GetSystemMetrics(SM_CYSCREEN));
-		settingsFile->bindings["graphics"]["samples"] = "8";
+		settingsFile->bindings["graphics"]["samples"] = "4";
 		settingsFile->bindings["graphics"]["gamma"] = "1.0";
 		if(!fileManager.writeIniFile(settingsFile))
 			debugBreak();

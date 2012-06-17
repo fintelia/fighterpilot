@@ -315,7 +315,8 @@ void nPlane::updateSimulation(double time, double ms)
 			}
 		}
 
-		findTargetVector();
+		targeter = rotation * Vec3f(0,0,1);
+		findTarget();
 	}//end if(!dead)
 	if(dead) //if we were, or are now dead
 	{
@@ -709,22 +710,38 @@ void nPlane::die()
 	}
 	//smokeTrail->setVisible(false);
 }
-void nPlane::findTargetVector()
+void nPlane::findTarget()
 {
-	//Vec3f enemy;
-	//for(map<int,planeBase*>::iterator i = planes.begin(); i != planes.end();i++)
-	//{
-	//	enemy=(*i).second->pos;
-	//	if(acos( velocity.dot( (enemy-pos).normalize() )) < 0.1 && (*i).first!=id && !(*i).second->dead && pos.distance(enemy)<4000)
-	//	{
-	//		targeter=(enemy-pos).normalize();
-	//		return;
-	//	}
-	//}
-	//targeter=velocity;
-	targeter = rotation * Vec3f(0,0,1);
-}
+	target = 0;
+	//Angle minAng =PI/3;
+	float minDistSquared = 10000 * 10000;
+	float distSquared;
+	Angle ang;
+	auto planes = world(PLANE);
+	for(auto i = planes.begin(); i != planes.end();i++)
+	{
+		distSquared = position.distanceSquared((*i).second->position);
+		if(!i->second->dead && team != i->second->team && distSquared < minDistSquared)
+		{
+			ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			minDistSquared = distSquared;
+			target = i->second->id;
+		}
+	}
+	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+	for(auto i = AAA.begin(); i != AAA.end();i++)
+	{
+		distSquared = position.distanceSquared((*i).second->position);
+		if(!i->second->dead && team != i->second->team && distSquared < minDistSquared)
+		{
+			ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			minDistSquared = distSquared;
+			target = i->second->id;
+		}
+	}
 
+	targetLocked = (ang < PI/6 && minDistSquared < 2000 * 2000);
+}
 void nPlane::shootMissile()
 {
 	if(rockets.coolDownLeft>0 || rockets.left<=0 || controled)
@@ -735,25 +752,33 @@ void nPlane::shootMissile()
 		  right	= (rotation * Vec3f(1,0,0)).normalize();
 
 	int pId=0;
-	Angle minAng=PI/6;
-	auto planes = world(PLANE);
-	for(auto i = planes.begin(); i != planes.end();i++)
+
+	if(target != 0 && world[target] != nullptr && targetLocked && acosA( (rotation*Vec3f(0,0,1)).dot((world[target]->position-position).normalize()) ) && position.distanceSquared(world[target]->position) < 2000 * 2000)
 	{
-		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
-		if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
-		{
-			minAng = ang;
-			pId = i->second->id;
-		}
+		pId = target;
 	}
-	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
-	for(auto i = AAA.begin(); i != AAA.end();i++)
+	else
 	{
-		Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
-		if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
+		Angle minAng=PI/6;
+		auto planes = world(PLANE);
+		for(auto i = planes.begin(); i != planes.end();i++)
 		{
-			minAng = ang;
-			pId = i->second->id;
+			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
+			{
+				minAng = ang;
+				pId = i->second->id;
+			}
+		}
+		auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+		for(auto i = AAA.begin(); i != AAA.end();i++)
+		{
+			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
+			{
+				minAng = ang;
+				pId = i->second->id;
+			}
 		}
 	}
 	//if(pId == 0)
@@ -880,6 +905,9 @@ void nPlane::spawn()
 
 	respawning=false;
 	shotsFired = 0;
+
+	target=0;
+	targetLocked=false;
 
 	smoothCamera(); //set up the camera
 

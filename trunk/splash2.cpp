@@ -13,7 +13,6 @@ namespace particle
 		velocity =	fuzzyAttribute(19.0, 10.0);
 		spread =	fuzzyAttribute(radius/2, radius/2);
 		life =		fuzzyAttribute(2000,300);
-		//color =		fuzzyColor(1.0,0.5,0.4);
 
 		particle p;
 		for(int i = 0; i < 256; i++)

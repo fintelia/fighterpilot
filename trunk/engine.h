@@ -68,23 +68,16 @@ using boost::lexical_cast;
 #define UNICODE
 #endif
 
-//extern bool	active;		// Window Active Flag
 extern const double PI;
 
 const int NumPlayers = 2;
-
-//LRESULT	CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-namespace gui{class levelEditor;}
 
 #define OPENGL2
 #define WINDOWS
 
 extern int sh, sw;
 extern float sAspect;
-//extern int frame,Time,timebase;
-//extern float fps;
 
-//#include "enums.h"
 #include "definitions.h"
 
 #include "time.h"

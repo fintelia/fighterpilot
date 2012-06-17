@@ -96,23 +96,6 @@ void GraphicsManager::View::ortho(float left, float right, float bottom, float t
 }
 void GraphicsManager::View::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 {
-	//if(stereo)			//stereo disabled for now
-	//{
-	//	Vec3f f = (center - eye).normalize();
-	//	Vec3f r = (up.normalize()).cross(f);
-	//	if(leftEye)
-	//	{
-	//		eye += r * interOcularDistance * 0.5;
-	//		center += r * interOcularDistance * 0.5;
-	//	}
-	//	else
-	//	{
-	//		eye -= r * interOcularDistance * 0.5;
-	//		center -= r * interOcularDistance * 0.5;
-	//	}
-	//}
-
-
 	up = up.normalize();
 
 	Vec3f f = (center-eye).normalize();
@@ -152,22 +135,22 @@ bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 	}
 	return true;
 }
-
 bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 {
 	for(int p = 0; p < 6; ++p) 
 	{
-		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
-		
-		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z > -mClipPlanes[p].d) continue;
-		if(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z > -mClipPlanes[p].d) continue;
-
-		return false;
+		if(	(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			
+			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d))
+		{
+			return false;
+		}
 	}
 	return true;
 }
@@ -218,7 +201,7 @@ shared_ptr<GraphicsManager::View> GraphicsManager::genView()
 {
 	shared_ptr<View> v(new View);
 	
-	views_new.push_back(weak_ptr<View>(v));
+	views.push_back(weak_ptr<View>(v));
 
 	return v;
 }

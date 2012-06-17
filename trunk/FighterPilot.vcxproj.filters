@@ -168,9 +168,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GLee.c">
-      <Filter>glee</Filter>
-    </ClCompile>
     <ClCompile Include="collide.cpp">
       <Filter>Source Files\ENGINE\math</Filter>
     </ClCompile>
@@ -336,6 +333,9 @@
     <ClCompile Include="debrisSmokeTrail.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
+    <ClCompile Include="glew.c">
+      <Filter>glee</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -405,9 +405,6 @@
     <ClInclude Include="profiler.h">
       <Filter>Source Files\ENGINE</Filter>
     </ClInclude>
-    <ClInclude Include="GL\GLee.h">
-      <Filter>glee</Filter>
-    </ClInclude>
     <ClInclude Include="time.h">
       <Filter>Source Files\ENGINE\time</Filter>
     </ClInclude>
@@ -458,6 +455,12 @@
     </ClInclude>
     <ClInclude Include="ephemeris.h">
       <Filter>Source Files\ENGINE\ephemeris</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\glew.h">
+      <Filter>glee</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\wglew.h">
+      <Filter>glee</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -577,12 +580,6 @@
     </None>
     <None Include="media\trees.vert">
       <Filter>shaders\trees</Filter>
-    </None>
-    <None Include="media\additiveParticle.frag">
-      <Filter>shaders\particle</Filter>
-    </None>
-    <None Include="media\additiveParticle.vert">
-      <Filter>shaders\particle</Filter>
     </None>
     <None Include="media\desert.frag">
       <Filter>shaders\terrain</Filter>

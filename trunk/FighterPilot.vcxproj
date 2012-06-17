@@ -135,10 +135,7 @@
     <ClCompile Include="fileManager.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gameMath.cpp" />
-    <ClCompile Include="GLee.c">
-      <FloatingPointExceptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </FloatingPointExceptions>
-    </ClCompile>
+    <ClCompile Include="glew.c" />
     <ClCompile Include="graphicsManager.cpp" />
     <ClCompile Include="groundExposionFlash.cpp" />
     <ClCompile Include="input.cpp" />
@@ -184,7 +181,8 @@
     <ClInclude Include="ephemeris.h" />
     <ClInclude Include="fileManager.h" />
     <ClInclude Include="game.h" />
-    <ClInclude Include="GL\GLee.h" />
+    <ClInclude Include="GL\glew.h" />
+    <ClInclude Include="GL\wglew.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="menus.h" />
     <ClInclude Include="object.h" />
@@ -215,8 +213,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
-    <None Include="media\additiveParticle.frag" />
-    <None Include="media\additiveParticle.vert" />
     <None Include="media\assetList.xml">
       <SubType>Designer</SubType>
     </None>

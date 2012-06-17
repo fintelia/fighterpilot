@@ -111,7 +111,13 @@ int campaign::update()
 	{
 		int enemies_left=0;
 		auto planes = world(PLANE);
+		auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 		for(auto i = planes.begin(); i != planes.end();i++)
+		{
+			if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
+				enemies_left++;
+		}
+		for(auto i = AAA.begin(); i != AAA.end();i++)
 		{
 			if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
 				enemies_left++;
@@ -170,6 +176,37 @@ void campaign::render()
 	{
 //		radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
 //		healthBar(0.768*sAspect, 0.042, 0.188*sAspect, 0.042, p->health/p->maxHealth,false);
+
+		if(p->target != 0 && world[p->target] != nullptr)
+		{
+			Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * world[p->target]->position;
+			if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
+			{
+				dataManager.bind("circle shader");
+				if(p->targetLocked)		graphics->setColor(1,0,0);
+				else					graphics->setColor(0,0,1);
+				graphics->drawOverlay(Rect::CWH(view->project(world[p->target]->position), Vec2f(0.02,0.02)));
+				graphics->setColor(1,1,1);
+				dataManager.bind("ortho");
+			}
+			else
+			{
+				Vec3f fwd = view->camera().fwd;
+				Vec3f up = view->camera().up;
+				Vec3f right = view->camera().right;
+				Vec3f direction = (world[p->target]->position - p->position).normalize();
+				Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
+				Vec2f screenDirection(projectedDirection.dot(right), projectedDirection.dot(up));
+				screenDirection = screenDirection.normalize();
+				Angle ang = atan2A(screenDirection.y,screenDirection.x);
+				screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
+				screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95);
+				if(p->targetLocked)		graphics->setColor(1,0,0);
+				else					graphics->setColor(0,0,1);
+				graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
+				graphics->setColor(1,1,1);
+			}
+		}
 	}
 	
 
@@ -182,11 +219,24 @@ void campaign::render()
 
 void campaign::render3D(unsigned int v)
 {
+	//if(firstFrame)
+	//{
+	//	firstFrame = false;
+	//	return;
+	//}
+
 	drawScene(view, 0);
 	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
 		sceneManager.renderScene(view, players[v]->getObject()->meshInstance);
 	else
 		sceneManager.renderScene(view);
 
+	//graphics->setDepthTest(false);
+	//graphics->setColor(1,0,0,1);
+	//dataManager.bind("model");
+	//dataManager.bind("white");
+	//dataManager.setUniformMatrix("modelTransform", Mat4f());
+	//graphics->drawTriangle(Vec3f(0,0,0), Vec3f(100000,0,100000), Vec3f(50000,1000,50000));
+	//graphics->setDepthTest(true);
 }
 }
