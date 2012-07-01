@@ -30,9 +30,9 @@ bool LevelFile::saveZIP(string filename)
 			maxHeight = max(maxHeight, heights[x+z*width]);
 			minHeight = min(minHeight, heights[x+z*width]);
 		}
-	} 
+	}
 
-	//store heightmap data in our "heightmap.raw" file 
+	//store heightmap data in our "heightmap.raw" file
 	rawFile->size = 2 * width * height;
 	rawFile->contents = new unsigned char[rawFile->size];
 	memset(rawFile->contents,0,rawFile->size);
@@ -75,7 +75,7 @@ bool LevelFile::saveZIP(string filename)
 	lvlFile->files["heightmap.raw"] = rawFile;
 	lvlFile->files["attributes.ini"] = attributesFile;
 	lvlFile->files["objects.txt"] = objectsFile;
-	//attempt to write the lvl file and return whether we were successful 
+	//attempt to write the lvl file and return whether we were successful
 	return fileManager.writeZipFile(lvlFile);
 }
 bool LevelFile::loadZIP(string filename)
@@ -186,7 +186,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 	//	else
 	//	{
 	//		while(str[pos] != '\n' && pos < str.size())
-	//			++pos;			
+	//			++pos;
 	//	}
 	//	++pos;
 	//}
@@ -228,7 +228,6 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				{
 					string s = readLine();
 					object->startloc = lexical_cast<Vec3f>(s);
-					int i=0;
 				}
 				else if(readSubString("}\n"))
 				{
@@ -279,7 +278,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		if(i->type & PLANE)
 		{
 			if(/*obj.controlType == CONTROL_HUMAN &&*/ players.numPlayers() < humanPlayers)
-			{	
+			{
 				auto id = world.newObject(new nPlane(i->startloc, i->startRot, MIRAGE/*i->type*/, i->team));
 				players.addHumanPlayer(id);
 			}
@@ -289,15 +288,15 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 				players.addAIplayer(id);
 			}
 		}
-		else if(i->type == AA_GUN)	
+		else if(i->type == AA_GUN)
 		{
 			world.newObject(new AAgun(i->startloc, i->startRot, i->type, i->team));
 		}
-		else if(i->type == SAM_BATTERY)	
+		else if(i->type == SAM_BATTERY)
 		{
 			world.newObject(new SAMbattery(i->startloc, i->startRot, i->type, i->team));
 		}
-		else if(i->type == FLAK_CANNON)	
+		else if(i->type == FLAK_CANNON)
 		{
 			world.newObject(new flakCannon(i->startloc, i->startRot, i->type, i->team));
 		}

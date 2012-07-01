@@ -2,5 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
+    <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerConnection Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">RemoteWithoutAuthentication</RemoteDebuggerConnection>
+    <RemoteDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\\JONATHAN-PC\FighterPilot\Release\fighterPilot.exe</RemoteDebuggerCommand>
+    <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">VSB</RemoteDebuggerServerName>
+    <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\\JONATHAN-PC\FighterPilot\</RemoteDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    </LocalDebuggerCommandArguments>
+    <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

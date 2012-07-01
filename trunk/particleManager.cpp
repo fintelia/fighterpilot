@@ -5,6 +5,10 @@
 particle::manager& particleManager = particle::manager::getInstance();
 
 namespace particle{
+
+shared_ptr<GraphicsManager::indexBuffer> emitter::quadIBO;
+unsigned int emitter::IBOnumQuads=0;
+
 emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true)
 {
 	if(compacity != 0)
@@ -17,9 +21,6 @@ emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSec
 	}
 	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 
-	//VBO->addPositionData(	3,	0*sizeof(float));
-	//VBO->addTexCoordData(	2,	3*sizeof(float));
-	//VBO->addColorData(	4,	5*sizeof(float));
 	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0*sizeof(float));
 	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
 	VBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR4,		5*sizeof(float));
@@ -179,8 +180,30 @@ void emitter::render()
 {
 	if(vNum != 0)
 	{
+		if(IBOnumQuads > vNum)
+		{	
+			IBOnumQuads = vNum + 1024;
+			unsigned short* iboContents = new unsigned short[IBOnumQuads*6];
+
+			for(unsigned int i=0; i<IBOnumQuads; i++)
+			{
+				iboContents[i*6 + 0] = i*4 + 0;
+				iboContents[i*6 + 1] = i*4 + 1;
+				iboContents[i*6 + 2] = i*4 + 2; 
+
+				iboContents[i*6 + 3] = i*4 + 0; 
+				iboContents[i*6 + 4] = i*4 + 2;
+				iboContents[i*6 + 5] = i*4 + 3;
+			}
+
+			quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);// Changes should be so rare (never?) that static is still the best option 
+			quadIBO->setData(iboContents, IBOnumQuads*6);
+
+			delete[] iboContents;
+		}
+
 		dataManager.bind(texture);
-		VBO->drawBuffer(GraphicsManager::QUADS, 0, vNum*4);
+		quadIBO->drawBufferSegment(GraphicsManager::TRIANGLES, VBO, min(vNum*6, IBOnumQuads*6));
 	}
 }
 void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
@@ -275,7 +298,25 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 
 void manager::init()
 {
+	const unsigned int numQuads = 4096;
+	unsigned short* iboContents = new unsigned short[numQuads*6];
 
+	for(unsigned int i=0; i<numQuads; i++)
+	{
+		iboContents[i*6 + 0] = i*4 + 0;
+		iboContents[i*6 + 1] = i*4 + 1;
+		iboContents[i*6 + 2] = i*4 + 2; 
+
+		iboContents[i*6 + 3] = i*4 + 0; 
+		iboContents[i*6 + 4] = i*4 + 2;
+		iboContents[i*6 + 5] = i*4 + 3;
+	}
+
+	emitter::quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+	emitter::quadIBO->setData(iboContents, numQuads*6);
+	emitter::IBOnumQuads = numQuads;
+
+	delete[] iboContents;
 }
 void manager::addEmitter(shared_ptr<emitter> e, Vec3f position, float radius)
 {

@@ -33,7 +33,7 @@ namespace particle
 		p.r = 1.0;
 		p.g = 0.48;
 		p.b = 0.17;
-		p.a = 1.0;
+		p.a = 0.0;
 
 		p.size = 0.8;
 
@@ -45,7 +45,8 @@ namespace particle
 		p.pos += p.vel * world.time.length() / 1000;
 		p.ang += p.angularSpeed * world.time.length() / 1000;
 
-		p.a = 1.0 - t;
+
+		p.a = t < 0.1 ? t*10.0 : 1.0 - (t-0.1)/0.9;
 		p.size = (1.0 - 0.25*t) * 0.8;
 	}
 	void planeEngines::render()

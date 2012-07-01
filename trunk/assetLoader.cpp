@@ -211,7 +211,7 @@ bool AssetLoader::loadAssetList()
 
 
 			while(assetElement != nullptr)
-			{	
+			{
 				fontAssetFile* tmpAssetFile = new fontAssetFile;
 				tmpAssetFile->name = getAttribute(assetElement, "name");
 				string filename = getAttribute(assetElement, "file");
@@ -245,7 +245,6 @@ int AssetLoader::loadAsset()
 	if(assetFilesPreload.empty() && assetFiles.empty())
 		return 0;
 
-	bool loadedAsset=false;
 	shared_ptr<assetFile> file;
 	bool preload;
 	auto pop = [this](bool p)
@@ -263,56 +262,91 @@ int AssetLoader::loadAsset()
 		if(file->getType() == assetFile::TEXTURE)
 		{
 			auto textureAsset = dynamic_pointer_cast<textureAssetFile>(file);
-			if(!textureAsset->file->complete()) break;
-
-			auto texture = graphics->genTexture2D();
-			texture->setData(textureAsset->file->width, textureAsset->file->height, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
-			dataManager.addTexture(textureAsset->name, texture);
-
+			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
+			{
+				break;
+			}
+			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			{
+				auto texture = graphics->genTexture2D();
+				texture->setData(textureAsset->file->width, textureAsset->file->height, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+				dataManager.addTexture(textureAsset->name, texture);
+			}
+			else
+			{
+				debugBreak(); //file failed to load properly
+			}
 			pop(preload);
 		}
 		else if(file->getType() == assetFile::TEXTURE_3D)
 		{
 			auto textureAsset = dynamic_pointer_cast<texture3AssetFile>(file);
-			if(!textureAsset->file->complete()) break;
-			auto texture = graphics->genTexture3D();
-			texture->setData(textureAsset->file->width, textureAsset->file->height/textureAsset->depth, textureAsset->depth, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
-			dataManager.addTexture(textureAsset->name, texture);
-
+			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
+			{
+				break;
+			}
+			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			{
+				auto texture = graphics->genTexture3D();
+				texture->setData(textureAsset->file->width, textureAsset->file->height/textureAsset->depth, textureAsset->depth, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+				dataManager.addTexture(textureAsset->name, texture);
+			}
+			else
+			{
+				debugBreak(); //file failed to load properly
+			}
 			pop(preload);
 		}
 		else if(file->getType() == assetFile::TEXTURE_CUBE)
 		{
 			auto textureAsset = dynamic_pointer_cast<textureCubeAssetFile>(file);
-			if(!textureAsset->file->complete()) break;
-			auto texture = graphics->genTextureCube();
-			texture->setData(textureAsset->file->width, textureAsset->file->height/6, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents);
-			dataManager.addTexture(textureAsset->name, texture);
-
+			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
+			{
+				break;
+			}
+			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			{
+				auto texture = graphics->genTextureCube();
+				texture->setData(textureAsset->file->width, textureAsset->file->height/6, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents);
+				dataManager.addTexture(textureAsset->name, texture);
+			}
+			else
+			{
+				debugBreak(); //file failed to load properly
+			}
 			pop(preload);
 		}
 		else if(file->getType() == assetFile::SHADER)
 		{
 			auto shaderAsset = dynamic_pointer_cast<shaderAssetFile>(file);
-			if(!shaderAsset->vertFile->complete() || !shaderAsset->fragFile->complete()) break;
-			
-			auto shader = graphics->genShader();
-
-			if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
+			if(!shaderAsset->vertFile->complete() || !shaderAsset->fragFile->complete())
 			{
-#ifdef _DEBUG
-				messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
-#endif
+				break;
 			}
-
-			if(shaderAsset->use_sAspect)
+			else if(shaderAsset->vertFile->valid() && shaderAsset->fragFile->valid())
 			{
-				shader->setUniform1f("sAspect",sAspect);
-				dataManager.addShader(shaderAsset->name, shader, true);
+				auto shader = graphics->genShader();
+
+				if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
+				{
+	#ifdef _DEBUG
+					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+	#endif
+				}
+
+				if(shaderAsset->use_sAspect)
+				{
+					shader->setUniform1f("sAspect",sAspect);
+					dataManager.addShader(shaderAsset->name, shader, true);
+				}
+				else
+				{
+					dataManager.addShader(shaderAsset->name, shader, false);
+				}
 			}
 			else
 			{
-				dataManager.addShader(shaderAsset->name, shader, false);
+				debugBreak();
 			}
 			pop(preload);
 		}
@@ -333,6 +367,6 @@ int AssetLoader::loadAsset()
 			pop(preload);
 		}
 	}while(!assetFilesPreload.empty() && !assetFiles.empty());
-	
+
 	return assetFiles.size();
 }

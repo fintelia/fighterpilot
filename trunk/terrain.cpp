@@ -711,10 +711,10 @@ void Terrain::generateFoliage(int count)
 
 	Vec2f dir;
 	Vec3f right, fwd;
-	unsigned int nTriangles=0;
+	unsigned int nQuads=0;
 	unsigned int n = 0;
 
-	for(int i=0; i<1000000 && nTriangles<count*4; i++)
+	for(int i=0; i<1000000 && nQuads<count*2; i++)
 	{
 		position.x = terrainPosition.x + random<float>(terrainScale.x);
 		position.z = terrainPosition.z + random<float>(terrainScale.z);
@@ -737,7 +737,6 @@ void Terrain::generateFoliage(int count)
 			tmpVerts[n+5].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
 			tmpVerts[n+6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
 			tmpVerts[n+7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
-
 
 			//tmpVerts[n+0].padding[0] = s*0.4;
 			//tmpVerts[n+1].padding[0] = s*0.4;
@@ -779,16 +778,15 @@ void Terrain::generateFoliage(int count)
 			//tmpFoliage.location = position;
 			//foliage.push_back(tmpFoliage);
 
-			nTriangles += 4;
+			nQuads += 2;
 		}
 	}
-	
 
 	foliageIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-	if(nTriangles > 0 && nTriangles*6 > 65536)
+	if(nQuads > 0 && nQuads*6 > 65536)
 	{
-		unsigned int* indices = new unsigned int[nTriangles*6];
-		for(unsigned int i=0; i<nTriangles; i++)
+		unsigned int* indices = new unsigned int[nQuads*6];
+		for(unsigned int i=0; i<nQuads; i++)
 		{
 			indices[i*6+0] = i*4 + 0;
 			indices[i*6+1] = i*4 + 1;
@@ -797,12 +795,12 @@ void Terrain::generateFoliage(int count)
 			indices[i*6+4] = i*4 + 2;
 			indices[i*6+5] = i*4 + 3;
 		}
-		foliageIBO->setData(indices, nTriangles*6);
+		foliageIBO->setData(indices, nQuads*6);
 	}
-	else if(nTriangles > 0)
+	else if(nQuads > 0)
 	{
-		unsigned short* indices = new unsigned short[nTriangles*6];
-		for(unsigned int i=0; i<nTriangles; i++)
+		unsigned short* indices = new unsigned short[nQuads*6];
+		for(unsigned int i=0; i<nQuads; i++)
 		{
 			indices[i*6+0] = i*4 + 0;
 			indices[i*6+1] = i*4 + 1;
@@ -811,13 +809,13 @@ void Terrain::generateFoliage(int count)
 			indices[i*6+4] = i*4 + 2;
 			indices[i*6+5] = i*4 + 3;
 		}
-		foliageIBO->setData(indices, nTriangles*6);
+		foliageIBO->setData(indices, nQuads*6);
 	}
 
 	foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
-	//foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::GENERIC_FLOAT,5*sizeof(float));
+	//foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
 	foliageVBO->setTotalVertexSize(sizeof(texturedVertex3D));
 	foliageVBO->setVertexData(sizeof(texturedVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
 }
@@ -912,7 +910,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	if(!waterPlane)
 	{
-		//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
+	//	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
 	}
 
 	dataManager.bind("ortho");
@@ -928,9 +926,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		dataManager.bind("ocean");
 
 		dataManager.bind("ocean normals", 1);
-		//oceanTexture->bind(1);
-		//glActiveTexture(GL_TEXTURE1);
-		//glBindTexture(GL_TEXTURE_3D, oceanTextureId);
 
 		dataManager.setUniform1i("sky",	0);
 		dataManager.setUniform1i("oceanNormals",	1);
@@ -945,13 +940,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
-		//glBindTexture(GL_TEXTURE_3D, 0);
 	}
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_CUBE_MAP, 0); //could be unbound earlier but left to use for refletions from the water
-	//dataManager.unbindShader();
-
-
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
@@ -1035,6 +1024,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->setColorMask(true);
 	}
 
+	
 	//if(!foliage.empty())
 	//{
 		//graphics->setDepthMask(false);
@@ -1055,16 +1045,22 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//dataManager.bind("skybox",1);
 		skyTexture->bind(1);
 
-		dataManager.bind("trees shader");
+		if(graphics->getMultisampling())
+			dataManager.bind("trees shader");
+		else
+			dataManager.bind("trees alpha test shader");
+
 		dataManager.setUniform1i("tex", 0);
 		dataManager.setUniform1i("sky", 1);
 		dataManager.setUniform3f("eyePos", eye);
+
 		dataManager.setUniform3f("right", right);
 		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 
 		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		graphics->setAlphaToCoverage(false);
 	//}
+	
 }
 std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {

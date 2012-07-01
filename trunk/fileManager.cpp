@@ -9,6 +9,7 @@
 #include <map>
 #include <queue>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/crc.hpp>
 
 #ifdef _WIN32
@@ -26,6 +27,7 @@
 #include "png/png.h"
 
 using namespace std;
+using boost::lexical_cast;
 
 #include "definitions.h"
 #include "fileManager.h"
@@ -1237,7 +1239,7 @@ FileManager::fileContents FileManager::serializeZipFile(shared_ptr<zipFile> f)	/
 
 	fileContents fContents;
 	centralFileHeader cFileHeader;
-	
+
 
 	for(auto file = f->files.begin(); file != f->files.end(); file++)
 	{
@@ -1388,7 +1390,7 @@ FileManager::fileContents FileManager::serializeTgaFile(shared_ptr<textureFile> 
 	writeAs<unsigned char>(		c.contents + 17, 0);					//descriptor
 
 	for(unsigned int y = 0; y < f->height; y++)
-	{   
+	{
 		for(unsigned int x = 0; x < f->width; x++)
 		{
 			c.contents[18 + f->width * f->channels * y + x * f->channels + 0] = f->contents[f->width * f->channels * y + x * f->channels + 2];
@@ -1408,7 +1410,7 @@ void pngStreamWrite(png_structp png_ptr, png_bytep data, png_size_t length)
 void pngStreamFlush(png_structp png_ptr){}
 FileManager::fileContents FileManager::serializePngFile(shared_ptr<textureFile> f)
 {
-	vector<unsigned char> data; 
+	vector<unsigned char> data;
 
 	int colorType;
 	if(f->channels == 1)

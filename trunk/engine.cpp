@@ -126,9 +126,12 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	// Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+const char* emergencyMemory = new char[5 * 1024];
 void outOfMemory()
 {
-	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION);
+	delete[] emergencyMemory; //free up enough memory to ensure that we can successfully display an error message
+	emergencyMemory = nullptr;
+	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION|MB_SYSTEMMODAL);
 	exit(EXIT_FAILURE);
 }
 //#pragma comment (lib, "Urlmon.lib")
@@ -159,14 +162,15 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	//	SetCurrentDirectoryA(cmdLineStr.c_str());
 	//}
 
-	boost::split(game->commandLineOptions, string(lpCmdLine), boost::is_any_of(" "), boost::token_compress_on); 
+    string cmdLineString(lpCmdLine);
+	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);
 
 	if(!game->init())
 	{
 		return 1;
 	}
 
-	float nextUpdate=0; 
+	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;
 	while(!game->done)
@@ -202,7 +206,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 				graphics->swapBuffers();
 
-				//more timing code:  
+				//more timing code:
 				swapTime =  time - GetTime();
 			}
 			else

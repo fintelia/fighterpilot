@@ -4,10 +4,7 @@ varying vec3 position;
 
 attribute vec3 Position;
 attribute vec2 TexCoord;
-//attribute float scale;
 
-//uniform vec3 eyePos;
-// vec3 right;
 uniform mat4 cameraProjection;
 
 void main()

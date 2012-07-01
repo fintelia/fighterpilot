@@ -72,7 +72,7 @@ extern const double PI;
 
 const int NumPlayers = 2;
 
-#define OPENGL2
+#define OPENGL
 #define WINDOWS
 
 extern int sh, sw;
@@ -108,8 +108,14 @@ public:
 	bool done;
 	float maxFrameRate;
 
-	Game():active(true), done(false){}
+	bool hasCommandLineOption(string option)
+	{
+		for(auto i=commandLineOptions.begin(); i!=commandLineOptions.end();i++)
+			if(*i == option) return true;
+		return false;
+	}
 
+	Game():active(true), done(false){}
 	virtual bool init();
 	virtual void update();
 };
