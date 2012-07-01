@@ -187,7 +187,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		Vec3f v1;
 		Vec2f t1;
 		Vec3f n1;
-		
+
 		Vec3f v2;
 		Vec2f t2;
 		Vec3f n2;
@@ -235,7 +235,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	unsigned int	totalVerts,totalFaces;
 
 	vector<normalMappedVertex3D> combinedVertices;
-	map<vertexIndices, unsigned int> indexMap; 
+	map<vertexIndices, unsigned int> indexMap;
 
 	FILE *fp;
 	if((fp=fopen(filename.c_str(), "r")) == nullptr)
@@ -264,8 +264,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	}
 	rewind(fp);
 	//fclose(fp);
-
-	double t = GetTime();
 
 	if(mtlFile.size()!=0)
 	{
@@ -495,13 +493,11 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 	a->boundingSphere = Sphere<float>(center, sqrt(radiusSquared));
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	map<vertexIndices, unsigned int>::iterator vertexIndicesItt;
-	bool CCW;
 	float inv;
 	normalMappedVertex3D tmpVertex;
 	Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
 	for(int i=0; i < totalFaces; i++)
 	{
-		CCW = true;
 		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0)
 		{
 			faceNormal = (vertices[faces[i].v[1]-1]-vertices[faces[i].v[0]-1]).cross(vertices[faces[i].v[2]-1]-vertices[faces[i].v[0]-1]);
@@ -522,7 +518,6 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 				swap(faces[i].v[0], faces[i].v[1]);
 				swap(faces[i].t[0], faces[i].t[1]);
 				swap(faces[i].n[0], faces[i].n[1]);
-				CCW = false;
 			}
 		}
 		for(int j = 0; j < 3; j++)

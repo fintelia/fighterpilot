@@ -60,7 +60,9 @@ public:
 
 	//const enum Type{NONE=0,EXPLOSION,EXPLOSION_FLASH,SMOKE,SPLASH,CONTRAIL_SMALL,CONTRAIL_LARGE}type;
 
-
+private:
+	static shared_ptr<GraphicsManager::indexBuffer> quadIBO;
+	static unsigned int IBOnumQuads;
 
 protected:
 	int parentObject;

@@ -71,7 +71,7 @@ public:
 	}
 	bool equal(const Vector2& v, T maxDifference=0.01) const
 	{
-		return (abs(x-v.x) <= maxDifference && abs(y-v.y) <= maxDifference);
+		return (::abs(x-v.x) <= maxDifference && ::abs(y-v.y) <= maxDifference);
 	}
 	T distance(const Vector2& v) const
 	{

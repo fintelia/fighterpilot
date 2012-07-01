@@ -214,7 +214,6 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 	graphics->setDepthMask(false);
 
 	Vec3f cCenter(world.bounds().center.x,0,world.bounds().center.y);
-	double cRadius = world.bounds().radius;
 
 	//drawHexCylinder(cCenter,cRadius,20000, white);
 

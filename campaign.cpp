@@ -13,7 +13,6 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 	view->setRenderFunc(bind(&campaign::render3D, this, placeholders::_1));
 	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
 	graphics->setLightPosition(Vec3f(0.0, 160000.0, 100000.0));
-
 	//ephemeris.setTime(0.0, 1, 1, 2000.0);
 	//graphics->setLightPosition(ephemeris.getSunDirection() * 100000.0);
 }
@@ -37,7 +36,7 @@ int campaign::update()
 	//timeSinceSkyUpdate +=world.time.length();
 
 
-	auto& controller = input.getXboxController(0);
+	//auto& controller = input.getXboxController(0);
 
 	//set camera position
 	nPlane* p=(nPlane*)players[0]->getObject();
@@ -83,7 +82,7 @@ int campaign::update()
 		((nPlane*)players[0]->getObject())->loseHealth(world.time.length()/10.0);
 	}
 #endif
-	
+
 	if(levelup)
 	{
 		countdown-=world.time.length();
@@ -138,7 +137,7 @@ int campaign::update()
 
 
 	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
-	
+
 
 
 	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
@@ -156,7 +155,7 @@ int campaign::update()
 void campaign::render()
 {
 	nPlane* p = ((nPlane*)players[0]->getObject());
-	
+
 	if(players[0]->firstPersonView && !p->controled && !p->dead)
 	{
 	//	planeIdBoxes(p,0,0,sw,sh);
@@ -166,7 +165,7 @@ void campaign::render()
 
 		targeter(0.5*sAspect, 0.5, 0.08, -p->roll);
 		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
-		
+
 		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
@@ -208,7 +207,7 @@ void campaign::render()
 			}
 		}
 	}
-	
+
 
 	if(levelup)
 	{

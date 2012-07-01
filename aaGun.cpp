@@ -142,8 +142,6 @@ void SAMbattery::updateSimulation(double time, double ms)
 		return;
 
 	/////////////////////CONTROL//////////////////////
-	bool shoot;
-
 	target=0;
 	float lDistSquared = 0.0;
 	float nDistSquared;
@@ -162,13 +160,11 @@ void SAMbattery::updateSimulation(double time, double ms)
 	{
 		targeter = (world[target]->position - position).normalize();
 //		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
-		shoot = true;
 	}
 	else
 	{
 		targeter = Vec3f();
 //		rotation = Quat4f(targeter);
-		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
 
@@ -193,8 +189,6 @@ void flakCannon::updateSimulation(double time, double ms)
 	if(dead)
 		return;
 	/////////////////////CONTROL//////////////////////
-	bool shoot;
-
 	target=0;
 	float lDistSquared = 0.0;
 	float nDistSquared;
@@ -213,13 +207,11 @@ void flakCannon::updateSimulation(double time, double ms)
 	{
 		targeter = (world[target]->position - position).normalize();
 		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
-		shoot = true;
 	}
 	else
 	{
 		targeter = Vec3f();
 		rotation = Quat4f(targeter);
-		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
 

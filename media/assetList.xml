@@ -34,7 +34,6 @@
     <texture name="targeter"                  file="media/targeter.png" />
     <texture name="radar frame"               file="media/radar_frame.png" />
     <texture name="cockpit square"            file="media/cockpit square.png" />
-    <texture name="target ring"               file="media/target ring.png" />
     <texture name="arrow"                     file="media/arrow.png" />
     
     <!-- effects -->
@@ -64,18 +63,14 @@
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
     <texture name="layers"                    file="media/layers.png"                 tileable="true"/>    
     <texture name="bullet"                    file="media/bullet.png" />
-    <texture name="clouds"                    file="media/clouds.png" />
     <texture name="sun"                       file="media/sun.png" />
     <texture name="tree"                      file="media/tree2.png" />
-    <textureCube name="skybox"                file="media/skybox.png" />
     
     <!-- miscellaneous -->
     <texture name="white"                     file="media/white.png"                  tileable="true"/>
     <texture name="default normals"           file="media/default normals.png"        tileable="true"/>
     <texture name="next level"                file="media/nextLevel.png" />
     <texture name="errorGlow"                 file="media/errorGlow.png" />
-
-
   </textures>
 
   <shaders>
@@ -100,6 +95,7 @@
     <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
     <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
     <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
+    <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
 
     <!-- terrain -->
     <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />

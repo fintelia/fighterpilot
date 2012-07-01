@@ -137,19 +137,20 @@ public:
 		};
 		map<VertexAttribute,vertexAttributeData> vertexAttributes;
 
-
+		unsigned int totalSize;
 		UsageFrequency usageFrequency;
 
-		vertexBuffer(UsageFrequency u): usageFrequency(u), totalVertexSize(0){}
+		vertexBuffer(UsageFrequency u): totalVertexSize(0), totalSize(0), usageFrequency(u){}
 
 		virtual void bindBuffer(unsigned int offset){}
 		virtual void bindBuffer(){bindBuffer(0);}
 
 	public:
+		unsigned int getNumVertices(){return totalSize / totalVertexSize;}
 		friend class GraphicsManager::indexBuffer;
 		virtual ~vertexBuffer(){}
 
-		virtual void setTotalVertexSize(unsigned int totalSize){totalVertexSize = totalSize;}
+		virtual void setTotalVertexSize(unsigned int size){totalVertexSize = size;}
 		virtual void addVertexAttribute(VertexAttribute attrib, unsigned int offset);
 		virtual void setVertexData(unsigned int size, void* data)=0;
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
@@ -315,12 +316,13 @@ public:
 	virtual void setWireFrame(bool enabled)=0;
 	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
 	void setLightPosition(Vec3f position){lightPosition = position;}
-	
+
 	virtual void setVSync(bool enabled)=0;
 
 	Vec3f getLightPosition(){return lightPosition;}
 
 	float getGamma(){return currentGamma;}
+	virtual bool getMultisampling()=0;
 
 	void useAnagricStereo(bool b){stereo = b;}
 	void setInterOcularDistance(float d){interOcularDistance = d;}
@@ -333,7 +335,7 @@ public:
 	virtual void checkErrors()=0;
 };
 
-#ifdef OPENGL2
+#ifdef OPENGL
 class OpenGLgraphics: public GraphicsManager
 {
 public:
@@ -414,7 +416,9 @@ public:
 		unsigned int bufferID;
 		unsigned int dataCount;
 		enum DataType{NO_TYPE,UCHAR,USHORT,UINT}dataType;
-
+#ifdef _DEBUG
+		unsigned int maxIndex;
+#endif
 	public:
 		indexBufferGL(UsageFrequency u);
 		~indexBufferGL();
@@ -535,7 +539,7 @@ public:
 	Vec2f getTextSize(string text, string font);
 
 	set<Vec2u> getSupportedResolutions();
-
+	bool getMultisampling(){return multisampling;}
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 

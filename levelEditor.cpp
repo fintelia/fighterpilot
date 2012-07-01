@@ -33,10 +33,8 @@ bool levelEditor::init()
 	//objects
 	buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
 	buttons["addAAgun"]		= new button(0.005,0.040,0.25,0.030,"new AA gun",lightGreen,white);
-#ifdef _DEBUG
 	buttons["addSAMbattery"]= new button(0.005,0.075,0.25,0.030,"new SAM Battery",lightGreen,white);
 	buttons["addFlakCannon"]= new button(0.005,0.110,0.25,0.030,"new Flak Cannon",lightGreen,white);
-#endif
 
 	//settings
 	//v.clear();
@@ -233,7 +231,6 @@ int levelEditor::update()
 			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
-#ifdef _DEBUG
 		else if(buttons["addSAMbattery"]->checkChanged())
 		{
 			awaitingNewObject=true;
@@ -248,7 +245,6 @@ int levelEditor::update()
 			p->callback = (functor<void,popup*>*)this;
 			menuManager.setPopup(p);
 		}
-#endif
 	}
 	else if(getTab() == REGIONS)
 	{
@@ -273,10 +269,8 @@ int levelEditor::update()
 		{
 			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
 			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
-#ifdef _DEBUG
 			buttons["addSAMbattery"]->setVisibility(newTab==OBJECTS);
 			buttons["addFlakCannon"]->setVisibility(newTab==OBJECTS);
-#endif
 		}
 		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{
@@ -447,7 +441,7 @@ void levelEditor::updateObjectCircles()
 			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*10);
 			r = max(0.004f,s.distance(t));
 
-			
+
 		}
 		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
 		{
@@ -505,7 +499,7 @@ Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 	float Ay = (x < levelFile.info.mapResolution.y-1)	? (levelFile.heights[(x+1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float Dy = (z > 0)									? (levelFile.heights[x+(z-1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float By = (x > 0)									? (levelFile.heights[(x-1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
-	
+
 	return Vec3f(Cy - Ay, 200.0, Dy - By).normalize(); //y value should be changed to calculate the true normal6
 }
 
@@ -621,7 +615,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//		setHeight(x, y, (getHeight(x, y)-levelFile.info.minHeight) * clamp(2.0 - 2.0*d, 0.0, 1.0) + levelFile.info.minHeight);
 	//	}
 	//}
-	
+
 
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
@@ -634,7 +628,6 @@ void levelEditor::faultLine()
 	unsigned int length = levelFile.info.mapResolution.x;
 	unsigned int width = levelFile.info.mapResolution.y;
 	float a,b,c;
-	float disp=0.5  * 100.0;
 	float x,y;
 	float v;
 
@@ -653,13 +646,12 @@ void levelEditor::faultLine()
 		a = sin(v);
 		b = cos(v);
 		c = random<float>(-0.5,0.5) * sqrt((float)length * length + width * width);
-		disp = 30.0 * 500.0 / (500.0 + i) * random<float>(-1.0,1.0);
 
 		if(c>0)
 		n += 1;
 
 		for(x=0;x<length;x++)
-		{ 
+		{
 			for(y=0;y<width;y++)
 			{
 				//pd = ((x-level->ground()->resolutionX()/2) * a + (y-level->ground()->resolutionZ()/2) * b + c)/(128.0/30)/2;//  ***/2500
@@ -951,7 +943,7 @@ void levelEditor::render3D(unsigned int v)
  		//level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
 	}
 
-	
+
 
 	if(getTab() == OBJECTS)
 	{
@@ -1003,7 +995,7 @@ void levelEditor::render3D(unsigned int v)
 
 
 
-		
+
 		//dataManager.bind("ortho");
 		//dataManager.bind("circle shader");
 
@@ -1012,7 +1004,7 @@ void levelEditor::render3D(unsigned int v)
 		//updateObjectCircles();
 		//for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		//{
-		//	graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
+		//	graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2));
 		//}
 		//dataManager.unbindShader();
 
@@ -1033,7 +1025,7 @@ void levelEditor::render3D(unsigned int v)
 		//	}
 		//	if(frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE && s.x > -r && s.x < 1.0+r && s.y > -r && s.y < 1.0+r)
 		//	{
-		//		graphics->drawOverlay(s.x - r, s.y*sh/sw - r, s.x + r, s.y*sh/sw + r,"target ring");
+		//		graphics->drawOverlay(s.x - r, s.y*sh/sw - r, s.x + r, s.y*sh/sw + r);
 		//	}
 		//}
 	}
@@ -1048,11 +1040,11 @@ void levelEditor::render()
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
-			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2)/*,"target ring"*/);
+			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2));
 		}
 		dataManager.bind("ortho");
 	}
-	
+
 	if(getTab() == REGIONS)
 	{
 		Rect viewRect = orthoView();
@@ -1065,12 +1057,17 @@ void levelEditor::render()
 			Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
 			graphics->drawOverlay(Rect::CWH(c,s));
 		}
-		
+
 		dataManager.bind("ortho");
 	}
 }
 void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffset)
 {
+	if(levelFile.info.mapResolution.x < 2 || levelFile.info.mapResolution.y < 2)
+	{
+		debugBreak();
+		return;
+	}
 	//glPushMatrix();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(!terrainValid)
@@ -1082,20 +1079,20 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 
 			//if(nWidth * nHeight > 65535) //we are now using 4 byte indices so this is not a problem
 			//{
-			//	debugBreak(); // terrain size too large to use 2 byte indices 
+			//	debugBreak(); // terrain size too large to use 2 byte indices
 			//	return;
 			//}
 
-			
+
 
 			float* vertices = new float[nWidth * nHeight * 3];
 			for(int x = 0; x < width; x += LOD)
 			{
 				for(int z = 0; z < height; z += LOD)
 				{
-					vertices[(x/LOD + nWidth * z/LOD)*3 + 0] = levelFile.info.mapSize.x * static_cast<float>(x) / width;
+					vertices[(x/LOD + nWidth * z/LOD)*3 + 0] = levelFile.info.mapSize.x * static_cast<float>(x) / (width-1);
 					vertices[(x/LOD + nWidth * z/LOD)*3 + 1] = getHeight(x, z)-levelFile.info.minHeight;
-					vertices[(x/LOD + nWidth * z/LOD)*3 + 2] = levelFile.info.mapSize.y * static_cast<float>(z) / height;
+					vertices[(x/LOD + nWidth * z/LOD)*3 + 2] = levelFile.info.mapSize.y * static_cast<float>(z) / (height-1);
 				}
 			}
 
@@ -1140,15 +1137,14 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			}
 			groundTex->setData(width,height,GraphicsManager::texture::RGBA, tex);
 
-
-
-
 			terrainValid=true;
 		}
 		if(levelFile.info.shaderType == TERRAIN_ISLAND || levelFile.info.shaderType == TERRAIN_DESERT)
 		{
 			/*if(levelFile.info.shaderType == TERRAIN_ISLAND)	dataManager.bind("island preview terrain");
-			else											*/dataManager.bind("grass preview terrain");
+			else											dataManager.bind("grass preview terrain");*/
+
+			dataManager.bind("island preview terrain");
 
 			dataManager.bind("sand",0);
 			dataManager.bind("grass",1);
@@ -1164,7 +1160,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
 			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
 			dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
-	
+
 			dataManager.setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
 			dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 			dataManager.setUniform3f("eyePos",		view->camera().eye);
@@ -1192,7 +1188,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
 			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
 			dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
-	
+
 			dataManager.setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
 			dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
 			dataManager.setUniform3f("eyePos",		view->camera().eye);
@@ -1233,8 +1229,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 							Vec3f(levelFile.info.mapSize.x,0,0),
 							Vec3f(levelFile.info.mapSize.x,0,levelFile.info.mapSize.y),
 							Vec3f(0,0,levelFile.info.mapSize.y));
-							
-							
+
+
 
 		dataManager.bind("model");
 	}
