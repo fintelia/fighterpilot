@@ -1,4 +1,4 @@
-There is finally another version of Fighter-Pilot! It can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot%20%286.6.12%29.zip here].
+The first alpha version of Fighter-Pilot has been released! It can be downloaded [http://code.google.com/p/fighter-pilot/downloads/detail?name=FighterPilot%20%28alpha1%29.zip here].
 
 Xinput is required to play Fighter-Pilot. If you receive an error message the xinput1_3.dll is missing, you can correct the problem by downloading the redistribute package [http://code.google.com/p/fighter-pilot/downloads/detail?name=xinput%20redistribute.zip here].
 
