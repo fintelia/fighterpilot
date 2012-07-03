@@ -10,7 +10,7 @@ Xinput is required to play Fighter-Pilot. If you receive an error message the xi
 
 *Instructions:*
 
-After extracting, run _FighterPilot.exe._ Once the loading bar finishes you will see the main menu. 
+After extracting, run _!FighterPilot.exe._ Once the loading bar finishes you will see the main menu. 
 Use the arrow keys and Space/Enter to navigate the menu. To exit from the main menu, press the 
 escape key. Pressing escape while in the game will bring up the in-game menu. If you want to 
 play a map other than the default, press Ctrl + Enter in the main menu.
