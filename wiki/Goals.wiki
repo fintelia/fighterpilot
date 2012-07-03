@@ -5,9 +5,9 @@
  * Level selection menu
 
 * New Models To Make *
- # AA gun
- # Ships
- # Tanks 
+ * AA gun
+ * Ships
+ * Tanks 
 
 *Possible Things To Do*
 
