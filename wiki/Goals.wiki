@@ -1,12 +1,11 @@
 *Things To Do:*
-
- # Colored text
- # Terrain LOD
- # Expand fileManager
+ * Fix frustum culling bug
+ * Expand single player campaign
+ * Add a cooperative campaign
+ * Level selection menu
 
 * New Models To Make *
  # AA gun
- # SAM battery
  # Ships
  # Tanks 
 
@@ -20,6 +19,6 @@
  * Terrain LOD
 
 *Future Plans*
- * Add a campaign
  * Add more planes
- * Add ground units and ships
+ * Add more ground units and ships
+ * Cut-scenes and scripted paths
