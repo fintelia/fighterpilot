@@ -18,8 +18,7 @@ void nPlane::init()
 	{
 		particleManager.addEmitter(new particle::planeEngines, id, *i);
 	}
-//	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(-0.4, 0, -3.3));
-//	particleManager.addEmitter(new particle::planeEngines, id, Vec3f(0.4, 0, -3.3));
+
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
 

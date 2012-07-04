@@ -11,6 +11,11 @@
 #include "png/png.h"
 
 
+//EXTENSIONS USED:
+//GL_EXT_framebuffer_object (required)
+//GL_EXT_framebuffer_multisample (optional)
+//WGL_EXT_swap_control (optional)
+
 bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
 bool openGL3=false;
 
@@ -336,7 +341,11 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		{
 			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
 		}
-		glGenerateMipmapEXT(GL_TEXTURE_2D);
+
+		if(openGL3)
+			glGenerateMipmap(GL_TEXTURE_2D);
+		else
+			glGenerateMipmapEXT(GL_TEXTURE_2D);
 	}
 	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
 	{
@@ -386,7 +395,10 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 	else if(format == RGB16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
 	else if(format == RGBA16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data);
 
-	glGenerateMipmapEXT(GL_TEXTURE_3D);
+	if(openGL3)
+		glGenerateMipmap(GL_TEXTURE_3D);
+	else
+		glGenerateMipmapEXT(GL_TEXTURE_3D);
 
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -503,8 +515,10 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 4);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 5);
 	}
-
-	glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
+	if(openGL3)
+		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+	else
+		glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
 
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1109,25 +1123,22 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget t)
 {
-	if(t == RT_FBO_0)
+	renderTarget = t;
+	if(openGL3)
 	{
-		renderTarget = RT_FBO_0;
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		if(t == RT_FBO_0)					glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0].fboID);
+		else if(t == RT_FBO_1)				glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1].fboID);
+		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
+		else if(t == RT_SCREEN)				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		else debugBreak();
 	}
-	else if(t == RT_FBO_1)
+	else
 	{
-		renderTarget = RT_FBO_1;
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
-	}
-	else if(t == RT_MULTISAMPLE_FBO)
-	{
-		renderTarget = RT_MULTISAMPLE_FBO;
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-	}
-	else if(t == RT_SCREEN)
-	{
-		renderTarget = RT_SCREEN;
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		if(t == RT_FBO_0)					glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		else if(t == RT_FBO_1)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
+		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		else if(t == RT_SCREEN)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		else debugBreak();
 	}
 }
 void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
@@ -1149,25 +1160,28 @@ void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
+	bool gl3FBOs = openGL3 || GLEW_ARB_framebuffer_object;
 	//////////////////////////////////////////////////////////////////////////////////////
-	auto checkForFBOErrors = []()-> bool
+	auto checkForFBOErrors = [gl3FBOs]()-> bool
 	{
-		GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-		if(status == GL_FRAMEBUFFER_COMPLETE_EXT)							return true;
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)			MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-		else 																MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+		GLenum status = gl3FBOs ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+		if(status == GL_FRAMEBUFFER_COMPLETE)							return true;
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+		else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
+		else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
 		return false;
 	};
 	/////////////////////////////////////////////////////////////////////////////////////
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
 	samples = samples >= maxSamples ? maxSamples : samples;
-	multisampling = GLEW_EXT_framebuffer_multisample && samples > 1;
+	multisampling = (GLEW_EXT_framebuffer_multisample || gl3FBOs) && samples > 1;
 	//////////////////////////////////////////////////////////////////////////////////////
 	for(int i = 0; i < 2; i++)
 	{
@@ -1196,11 +1210,22 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT24, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
-		glGenFramebuffersEXT(1, &FBOs[i].fboID);
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i].fboID);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
-		//glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, FBOs[i].normals, 0);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
+		if(gl3FBOs)
+		{
+			glGenFramebuffers(1, &FBOs[i].fboID);
+			glBindFramebuffer(GL_FRAMEBUFFER, FBOs[i].fboID);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[i].color, 0);
+			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, FBOs[i].normals, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, FBOs[i].depth, 0);
+		}
+		else
+		{
+			glGenFramebuffersEXT(1, &FBOs[i].fboID);
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i].fboID);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
+			//glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, FBOs[i].normals, 0);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
+		}
 
 		if(!checkForFBOErrors())
 			return false;
@@ -1208,47 +1233,93 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	//////////////////////////////////////////////////////////////////////////////////////
 	if(multisampling)
 	{
-		glGenRenderbuffersEXT(1, &multisampleFBO.color);
-		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
-		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
-
-		glGenRenderbuffersEXT(1, &multisampleFBO.depth);
-		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
-		glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
-
-		glGenFramebuffersEXT(1, &multisampleFBO.fboID);
-
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
-
-		checkErrors();
-		if(!checkForFBOErrors())
+		if(gl3FBOs)
 		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			return false;
+			glGenRenderbuffers(1, &multisampleFBO.color);
+			glBindRenderbuffer(GL_RENDERBUFFER, multisampleFBO.color);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA, sw, sh);
+
+			glGenRenderbuffers(1, &multisampleFBO.depth);
+			glBindRenderbuffer(GL_RENDERBUFFER, multisampleFBO.depth);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
+
+			glGenFramebuffers(1, &multisampleFBO.fboID);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleFBO.color);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleFBO.depth);
+
+			checkErrors();
+			if(!checkForFBOErrors())
+			{
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				return false;
+			}
+		}
+		else
+		{
+			glGenRenderbuffersEXT(1, &multisampleFBO.color);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
+			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
+
+			glGenRenderbuffersEXT(1, &multisampleFBO.depth);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
+
+			glGenFramebuffersEXT(1, &multisampleFBO.fboID);
+
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+
+			checkErrors();
+			if(!checkForFBOErrors())
+			{
+				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+				return false;
+			}
 		}
 	}
 
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	if(gl3FBOs)
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	else		
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
 	return true;
 }
 void OpenGLgraphics::destroyFBOs()
 {
-	if(FBOs[0].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[0].fboID);
 	if(FBOs[0].color != 0)		glDeleteTextures(1, &FBOs[0].color);
 	if(FBOs[0].depth != 0)		glDeleteTextures(1, &FBOs[0].depth);
-
-	if(FBOs[1].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[1].fboID);
 	if(FBOs[1].color != 0)		glDeleteTextures(1, &FBOs[1].color);
 	if(FBOs[1].depth != 0)		glDeleteTextures(1, &FBOs[1].depth);
 
-	if(multisampling)
+	if(openGL3 || GLEW_ARB_framebuffer_object)
 	{
-		if(multisampleFBO.fboID != 0)	glDeleteFramebuffersEXT(1, &multisampleFBO.fboID);
-		if(multisampleFBO.color != 0)	glDeleteRenderbuffers(1, &multisampleFBO.color);
-		if(multisampleFBO.depth != 0)	glDeleteRenderbuffers(1, &multisampleFBO.depth);
+		if(FBOs[0].fboID != 0)		glDeleteFramebuffers(1, &FBOs[0].fboID);
+		if(FBOs[1].fboID != 0)		glDeleteFramebuffers(1, &FBOs[1].fboID);
+		if(multisampling)
+		{
+			if(multisampleFBO.fboID != 0)	glDeleteFramebuffers(1, &multisampleFBO.fboID);
+			if(multisampleFBO.color != 0)	glDeleteRenderbuffers(1, &multisampleFBO.color);
+			if(multisampleFBO.depth != 0)	glDeleteRenderbuffers(1, &multisampleFBO.depth);
+		}
 	}
+	else
+	{
+		if(FBOs[0].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[0].fboID);
+		if(FBOs[1].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[1].fboID);
+		if(multisampling)
+		{
+			if(multisampleFBO.fboID != 0)	glDeleteFramebuffersEXT(1, &multisampleFBO.fboID);
+			if(multisampleFBO.color != 0)	glDeleteRenderbuffersEXT(1, &multisampleFBO.color);
+			if(multisampleFBO.depth != 0)	glDeleteRenderbuffersEXT(1, &multisampleFBO.depth);
+		}
+	}
+
+
+
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -1346,7 +1417,17 @@ void OpenGLgraphics::render()
 		}
 
 		//capture depth buffer for reading and bind it to texture unit 1
-		if(multisampling)
+		if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
+			glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
+		}
+		else if(multisampling)
 		{
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
@@ -1422,7 +1503,17 @@ void OpenGLgraphics::render()
 		#endif
 	}
 ///////////////////////////////////////Post Processing//////////////////////////////////
-	if(multisampling)
+	if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
+		glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	}
+	else if(multisampling)
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
@@ -1662,15 +1753,14 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
 		return false;
 	}
-	else if(!GLEW_EXT_framebuffer_blit)
+	else if(!GL_EXT_framebuffer_object)
 	{
 		destroyWindow();
-
 		const char* version = (const char*)glGetString(GL_VERSION);
 		const char* renderer = (const char*)glGetString(GL_RENDERER);
 		const char* vender = (const char*)glGetString(GL_VENDOR);
 
-		string s("Your graphics card must support GL_EXT_framebuffer_blit");
+		string s("Your graphics card must support GL_EXT_framebuffer_object");
 		if(version) s += string("\n   OpenGL version: ") + version;
 		if(renderer) s += string("\n   Renderer: ") + renderer;
 		if(vender) s += string("\n   Vender: ") + vender;
@@ -1701,6 +1791,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			glBindVertexArray(vao);
 			gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
 			openGL3 = true;
+		}
+		else
+		{
+			MessageBoxA(NULL, "OpenGL 3 unsupported. Reverting to OpenGL 2.1","",MB_OK);
 		}
 	}
 	else if(game->hasCommandLineOption("--opengl3"))
@@ -1794,7 +1888,7 @@ void OpenGLgraphics::takeScreenshot()
 	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" +
 				lexical_cast<string>(sTime.wDay) + " " + lexical_cast<string>(sTime.wHour+1) + "-" +
 				lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" +
-				lexical_cast<string>(sTime.wMilliseconds) + ".bmp";
+				lexical_cast<string>(sTime.wMilliseconds) + ".png";
 #else
 	string filename = "screen shots/FighterPilot.bmp";
 #endif
@@ -1803,7 +1897,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	fileManager.createDirectory("screen shots");
 	highResScreenshot = true;
-	const int TILES=4;
+	const int TILES=2;
 
 	shared_ptr<FileManager::textureFile> file(new FileManager::pngFile(filename));
 	file->channels = 3;
@@ -1837,7 +1931,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	delete[] tileContents;
 
-	fileManager.writeBmpFile(file,true);
+	fileManager.writePngFile(file,false);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
 	world.time.unpause();
