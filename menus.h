@@ -115,7 +115,7 @@ private:
 	void resetView();
 	void fromFile(string filename);
 
-	void addObject(int type, int team, int controlType, float x, float y);
+	void addObject(int type, int team, float x, float y);
 	void updateObjectCircles();
 
 	void renderTerrain(bool drawWater, float scale, float seaLevelOffset);

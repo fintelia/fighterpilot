@@ -18,7 +18,6 @@ struct LevelFile
 	struct Object{
 		int				type;			//the type of object
 		int				team;			//what team it is part of
-		int				controlType;	//how this object is being controlled
 		Vec3f			startloc;		//the location where the object will spawn
 		Quat4f			startRot;		//what direction the object will face when it spawns
 		Object();
