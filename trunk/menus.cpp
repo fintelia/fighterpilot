@@ -25,8 +25,8 @@ bool objectProperties::init(LevelFile::Object* obj)
 	textBoxes["y location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.024,0.098,floor(object->startloc.y+0.5),black);
 	textBoxes["z location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.063,0.098,floor(object->startloc.z+0.5),black);
 
-	checkBoxes["control"]	= new checkBox(0.5*sAspect+0.098,0.5+0.049,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
-	checkBoxes["respawn"]	= new checkBox(0.5*sAspect+0.098,0.5+0.078,"respawn when destroyed\n(comming soon)",false,black);
+//	checkBoxes["control"]	= new checkBox(0.5*sAspect+0.098,0.5+0.049,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
+//	checkBoxes["respawn"]	= new checkBox(0.5*sAspect+0.098,0.5+0.078,"respawn when destroyed\n(comming soon)",false,black);
 
 	listBox* l = new listBox(0.5*sAspect + 0.098,0.5-0.015,0.098,"team " + lexical_cast<string>(object->team+1),black);
 	l->addOption("team 1");
@@ -45,7 +45,7 @@ bool objectProperties::init(LevelFile::Object* obj)
 	l->addOption("b2");				typeOptions.push_back(B2);
 	l->addOption("mirage");			typeOptions.push_back(MIRAGE);
 	l->addOption("j37");			typeOptions.push_back(J37);
-	l->addOption("PLAYER_PLANE");	typeOptions.push_back(PLAYER_PLANE);
+	l->addOption("<player>");			typeOptions.push_back(PLAYER_PLANE);
 	listBoxes["type"] = l;
 
 	return true;
@@ -65,7 +65,7 @@ int objectProperties::update()
 			int ptype = listBoxes["type"]->getOptionNumber();
 			object->type = typeOptions[listBoxes["type"]->getOptionNumber()];
 
-			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
+//			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
 		}
 		catch(...)
 		{

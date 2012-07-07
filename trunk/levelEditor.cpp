@@ -315,7 +315,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			if(newObjectType != 0)
 			{
 				static int teamNum=0;
-				addObject(newObjectType, teamNum, teamNum<=1 ? PLAYER_HUMAN : PLAYER_COMPUTER, p.x, p.y);
+				addObject(newObjectType, teamNum, p.x, p.y);
 				newObjectType = 0;
 				teamNum++;
 				return true;
@@ -833,7 +833,7 @@ void levelEditor::smooth(int a)
 	delete[] smoothed;
 	terrainValid=false;
 }
-void levelEditor::addObject(int type, int team, int controlType, float x, float y)//in screen coordinates
+void levelEditor::addObject(int type, int team, float x, float y)//in screen coordinates
 {
 	Vec2f cursorPos = input.getMousePos();
 	Vec3f P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
@@ -846,7 +846,6 @@ void levelEditor::addObject(int type, int team, int controlType, float x, float 
 	LevelFile::Object o;
 	o.type=type;
 	o.team=team;
-	o.controlType=controlType;
 	o.startloc=val;
 	o.startRot=rot;
 	levelFile.objects.push_back(o);
