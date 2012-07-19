@@ -265,7 +265,7 @@ const camera& humanPlayer::getCamera(bool forceThirdPerson) const
 {
 	return (firstPersonView && !forceThirdPerson) ? firstPerson : thirdPerson;
 }
-AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),target(0),destination(0,0,0), state(STATE_NONE)
+AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),missileCountDown(0.0),target(0),destination(0,0,0), state(STATE_NONE)
 {
 	object* o = getObject();
 	if(o != nullptr && o->type & PLANE)
@@ -316,6 +316,7 @@ void AIplayer::update()
 	}
 	nPlane* p = (nPlane*)o;
 
+	missileCountDown -= world.time.length();
 	if(state == STATE_NONE)
 	{
 		startPatrol();
@@ -375,7 +376,14 @@ void AIplayer::update()
 			p->controls.accelerate = 1.0;
 		}
 
-		if(distance < 3000.0 && ang < PI/6)
+		/*if(distance < 3000.0 && ang < PI/6 && missileCountDown < 0)
+		{
+			missileCountDown = 30000.0;
+			p->controls.shoot1 = true;
+			p->controls.shoot2 = true;
+			p->controls.shoot3 = false;
+		}
+		else*/ if(distance < 3000.0 && ang < PI/6)
 		{
 			p->controls.shoot1 = true;
 			p->controls.shoot2 = false;

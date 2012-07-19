@@ -26,6 +26,7 @@ const int INPUT_CALLBACK	= 0x100;
 const int KEY_STROKE		= 0x101;
 const int MOUSE_CLICK		= 0x102;
 const int MOUSE_SCROLL		= 0x103;
+const int MENU_KEY_STROKE	= 0x104;
 
 const int MOUSE_BUTTON		= 0x200;
 const int LEFT_BUTTON		= 0x201;

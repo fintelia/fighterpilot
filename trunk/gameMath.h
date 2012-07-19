@@ -4,7 +4,7 @@
 #include "vector.h"
 #include "quaternion.h"
 #include "matrix.h"
-#include "collide.h"
+
 
 class SVertex
 {
@@ -161,29 +161,29 @@ template <class T>
 class Plane
 {
 public:
-	Vector3<T> normal,point;
+	//plane is defined by the equation:
+	// (normal.x) * X + (normal.y) * Y + (normal.z) * Z + d = 0 
+	Vector3<T> normal;
 	T d;
 
-	Plane(): normal(0,1,0), point(0,0,0), d(0)
+	Plane(): normal(0,1,0), d(0)
 	{
 		
 	}
-	Plane(Vector3<T> p1, Vector3<T> p2, Vector3<T> p3): normal(((p1-p2).cross(p3-p2)).normalize()), point(p2), d(-normal.dot(point))
+	Plane(Vector3<T> p1, Vector3<T> p2, Vector3<T> p3): normal(((p1-p2).cross(p3-p2)).normalize()), d(-normal.dot(p1))
 	{
 		
 	}
-	Plane(Vector3<T> Normal, Vector3<T> Point): normal(Normal.normalize()), point(Point), d(-normal.dot(point))
+	Plane(Vector3<T> Normal, Vector3<T> Point): normal(Normal.normalize()), d(-normal.dot(point))
 	{
 
 	}
-	Plane(T A, T B, T C, T D): normal(A,B,C), point(), d(D)
+	Plane(T A, T B, T C, T D): normal(A,B,C), d(D)
 	{
 		T l = normal.magnitude();
 
 		normal /= l;
 		d /= l;
-
-		point = normal * d;
 	}
 	Plane(Vector3<T> n, T D): normal(n), point(), d(D)
 	{
@@ -191,8 +191,6 @@ public:
 
 		normal /= l;
 		d /= l;
-
-		point = normal * d;
 	}
 	template<class U>
 	T distance(Vector3<U> p)
@@ -200,6 +198,22 @@ public:
 		return d + normal.dot(p);
 	}
 };
+//template <class T>
+//Plane<T> operator*(const Plane<T>& p, const Matrix4<T>& m)
+//{
+//	Matrix4<T> inv;
+//	if(m.inverse(inv))
+//	{
+//		return Plane<T>((inv.v[0]*p.normal.x +  inv.v[1]*p.normal.y +  inv.v[2]*p.normal.z  + inv.v[3]*p.d),
+//						(inv.v[4]*p.normal.x +  inv.v[5]*p.normal.y +  inv.v[6]*p.normal.z  + inv.v[7]*p.d),
+//						(inv.v[8]*p.normal.x +  inv.v[9]*p.normal.y +  inv.v[10]*p.normal.z + inv.v[11]*p.d),
+//						(inv.v[12]*p.normal.x + inv.v[13]*p.normal.y + inv.v[14]*p.normal.z + inv.v[15]*p.d));
+//	}
+//	else
+//	{
+//		return p; //transform failed
+//	}
+//}
 
 typedef Plane<float>			Plane3f;
 typedef Plane<double>			Plane3d;
@@ -279,3 +293,5 @@ template <class T> T taylor(T t, T x, T dx, T ddx, T dddx)
 {
 	return x + dx * t + ddx * t*t + dddx * t*t*t;
 }
+
+#include "collide.h"

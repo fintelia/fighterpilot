@@ -1,4 +1,68 @@
 An incomplete list of how resources were obtained:
+_________________________________________________________________________________________________________________________
+
+													TEXTURES
+_________________________________________________________________________________________________________________________
+
+arrow.png -- created in GIMP (Jonathan)
+bullet.png -- created in GIMP (Jonathan)
+bullet2.png -- created in GIMP (Jonathan)
+button.png -- created in Photoshop (Nicholas)
+check box.png -- created in Photoshop (Nicholas)
+check.png -- created in Photoshop (Nicholas)
+cockpit square.png -- created in Photoshop (Nicholas)
+cockpit.png -- created in Photoshop (Nicholas)
+cursor.png -- created in Photoshop (Nicholas)
+default normals.png -- created in GIMP (Jonathan)
+desertSand.png -- created in Genetica viewer (Jonathan)
+dialog box.png -- created in Photoshop (Nicholas)
+dialogBack.png -- created in GIMP (Jonathan)
+entry bar.png -- created in Photoshop (Nicholas)
+errorGlow.png -- ceated in GIMP (Jonathan)
+f16texture.png -- ???
+f18hornet_Cylinder.png -- created in GIMP (Jonathan)
+f22.png -- ???
+file viewer.png -- created in Photoshop (Nicholas)
+fire.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
+fire2.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
+flash.png -- created in GIMP (Jonathan)
+glow.png -- created in Photoshop (Nicholas)
+grass.png -- ???
+grass3.png -- created in GIMP from grass2.png (Jonathan)
+hardNoiseDOT3.png -- created in GIMP and SSbump Generator (Jonathan)
+health bar.png -- created in Photoshop (Nicholas)
+hexGrid.png -- ceated in GIMP (Jonathan)
+layers.png -- created in Genetica viewer (Jonathan)
+LCnoise.png -- ceated in GIMP (Jonathan)
+nextlevel.png -- ceated in GIMP (Jonathan)
+noise.png -- ceated in GIMP (Jonathan)
+noiseDOT3.png -- created in GIMP and SSbump Generator (Jonathan)
+oceanNormals.png -- generated proceedurally by FighterPilot
+particle4.png -- ceated in GIMP (Jonathan)
+particle8.png -- ceated in GIMP (Jonathan)
+particleAtlas.png -- ceated in GIMP from other particle textures (Jonathan)
+plane radar2.png -- created in Photoshop (Nicholas)
+progress back.png -- created in Photoshop (Nicholas)
+progress front.png -- created in Photoshop (Nicholas)
+radar_frame.png -- created in Photoshop (Nicholas)
+radar2.png -- created in Photoshop (Nicholas)
+rock.png -- ???
+sand.png -- ???
+slider bar.png -- created in Photoshop (Nicholas)
+slider.png -- created in Photoshop (Nicholas)
+smoke.png -- ceated in GIMP (Jonathan)
+smoke5.png -- ceated in GIMP (Jonathan)
+SmokeShape.png -- http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
+snow.png -- created in Genetica viewer (Jonathan)
+snow_normals.png -- created in SSbump Generator from snow.png (Jonathan)
+spark.png -- ceated in GIMP (Jonathan)
+splash.png -- ceated in GIMP (Jonathan)
+sun.png -- ceated in GIMP (Jonathan)
+targeter.png -- created in Photoshop (Nicholas)
+thumbnails.png -- created in Photoshop (Nicholas)
+tilt.png -- created in Photoshop (Nicholas)
+tree2.png -- created same way as tree.png
+white.png -- ceated in GIMP (Jonathan)
 
 grass2.png
 	"Just Add Bison" Genetica viewer
@@ -23,10 +87,7 @@ dialogBack.png
 smokeShape.png
 	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
 	made the color more white in gimp
-	
-SAM.obj (and related files)
-	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
-	adjusted in scale and changed texture format
+
 	
 sun.png
 	Used several layered nova effects in GIMP
@@ -36,6 +97,29 @@ smokeShape2.png
 	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
 	made the color more white in gimp
 	applied clouds filter in GIMP (level=5, X_size=4, Y_size=4)
+	
+tree.png
+	http://yorik.uncreated.net/greenhouse.html (pine tree)
+	rendered in blender from 2 perpedicular directions
+	resized canvas to center trunk in both images
+	resized images to 1024x1024
+	combined two views into a single image
+	adjusted gamma to 1.5
+
+particle4.png
+	radial gradient from white to alpha
+	
+skybox.png
+	http://www.alusion-fr.com/an1ffa3.htm
+
+_________________________________________________________________________________________________________________________
+
+													MODELS
+_________________________________________________________________________________________________________________________
+
+SAM.obj (and related files)
+	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
+	adjusted in scale and changed texture format
 	
 spitfire.obj (and related files)
 	http://www.gfx-3d-model.com/2011/08/supermarine-spitfire-3d-model/
@@ -62,17 +146,15 @@ mirage.obj (and related files)
 M2.obj (and related files)
 	http://www.gfx-3d-model.com/2008/12/m1-abrams-tank-model/
 	scaled by a factor of 0.026
-	
-tree.png
-	http://yorik.uncreated.net/greenhouse.html (pine tree)
-	rendered in blender from 2 perpedicular directions
-	resized canvas to center trunk in both images
-	resized images to 1024x1024
-	combined two views into a single image
-	adjusted gamma to 1.5
 
-particle4.png
-	radial gradient from white to alpha
+bunker.obj (and related files)
+	model created in blender
+	texture from http://www.polygonblog.com/seamless-texture/ (free for both personal and commercial projects)
 	
-skybox.png
-	http://www.alusion-fr.com/an1ffa3.htm
+_________________________________________________________________________________________________________________________
+
+													MODELS
+_________________________________________________________________________________________________________________________
+
+All fonts were created using BMFont (http://www.angelcode.com/products/bmfont/)
+	

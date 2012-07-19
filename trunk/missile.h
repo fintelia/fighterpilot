@@ -43,6 +43,8 @@ public:
 
 class SAMmissile: public missileBase
 {
+protected:
+	float minAngle;
 public:
 	int target;
 

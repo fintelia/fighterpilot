@@ -128,6 +128,8 @@ public:
 
 class AIplayer: public player
 {
+private:
+	double missileCountDown;
 public:
 	int	target;
 	Vec3f destination;

@@ -176,6 +176,29 @@ void manager::inputCallback(InputManager::callBack* callback)
 			menu->inputCallback(call);
 		}
 	}
+	else if(callback->type == MENU_KEY_STROKE)
+	{
+		InputManager::menuKeystroke* call = (InputManager::menuKeystroke*)callback;
+		if(!popups.empty())
+		{
+			int pSize = popups.size();
+			if(popups.back()->menuKey(call->mkey)) 
+				return;
+
+			debugAssert(popups.size() == pSize);
+
+			popups.back()->inputCallback(call);
+		}
+		else if(menu!=NULL)
+		{
+			if(menu->menuKey(call->mkey))
+				return;
+
+			debugAssert(menu != NULL);
+
+			menu->inputCallback(call);
+		}
+	}
 	else if(callback->type == MOUSE_CLICK)
 	{
 		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;

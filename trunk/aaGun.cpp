@@ -98,13 +98,13 @@ void AAgun::updateSimulation(double time, double ms)
 	if(target != 0)
 	{
 		targeter = (world[target]->position - position).normalize();
-		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
+//		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
 		shoot = true;
 	}
 	else
 	{
 		targeter = Vec3f();
-		rotation = Quat4f(targeter);
+//		rotation = Quat4f(targeter);
 		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
@@ -206,12 +206,12 @@ void flakCannon::updateSimulation(double time, double ms)
 	if(target != 0)
 	{
 		targeter = (world[target]->position - position).normalize();
-		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
+//		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
 	}
 	else
 	{
 		targeter = Vec3f();
-		rotation = Quat4f(targeter);
+//		rotation = Quat4f(targeter);
 	}
 	///////////////////END CONTROL////////////////////
 

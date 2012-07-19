@@ -1,23 +1,4 @@
 
-//const int UP	= VK_UP;
-//const int DOWN	= VK_DOWN;
-//const int LEFT	= VK_LEFT;
-//const int RIGHT	= VK_RIGHT;
-//const int _5	= 53;
-//const int _2	= 50;
-//const int _9	= 57;
-//const int _W	= 119;
-//const int _A	= 100;
-//const int _S	= 115;
-//const int _D	= 97;
-//const int _U	= 117;
-//const int _J	= 106;
-//const int SPACE = 32;
-//const int _B	= 98;
-//const int _0    = 48;m
-//const int F1    = VK_F1;
-//const int F2    = VK_F2;
-//const int ENTER = 13;
 struct _XINPUT_STATE;
 typedef _XINPUT_STATE XINPUT_STATE;
 
@@ -96,7 +77,11 @@ public:
 		mouseScroll(): callBack(MOUSE_SCROLL){}
 		mouseScroll(double rot): callBack(MOUSE_SCROLL), rotations(rot){}
 	};
-
+	struct menuKeystroke: public callBack{
+		int mkey;
+		menuKeystroke(): mkey(0),callBack(MENU_KEY_STROKE){}
+		menuKeystroke(int Mkey): callBack(MENU_KEY_STROKE), mkey(Mkey){}
+	};
 protected:
 	void sendCallbacks(callBack* c);
 	//friend LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -127,69 +112,7 @@ public:
 	InputManager();
 	~InputManager();
  };
-
-//class standard_input: public Input
-//{
-//protected:
-//
-//
-//public:
-//	standard_input();
-//	~standard_input();
-//	virtual void down(int k);
-//	virtual void up(int k);
-//	virtual bool getKey(int key);
-//	virtual const mouseButtonState& getMouseState(mouseButton m);
-//	virtual void windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam);
-//	virtual void update();
-//	virtual float operator() (int key) {return getKey(key) ? 1.0f : 0.0f;}
-//};
-
 extern InputManager& input;
-//
-//typedef int inputSource;
-//const inputSource INPUT_MOUSE		= 0;
-//const inputSource INPUT_KEYBOARD	= 1;
-//const inputSource INPUT_XBOX		= 2;
-//const inputSource INPUT_XBOX_1		= 2;
-//const inputSource INPUT_XBOX_2		= 3;
-//const inputSource INPUT_XBOX_3		= 4;
-//const inputSource INPUT_XBOX_4		= 5;
-//
-//typedef int inputType;
-//const int INPUT_MOUSE_X	= 0;
-//const int INPUT_MOUSE_Y	= 1;
-//const int INPUT_MOUSE_DX	= 2;
-//const int INPUT_MOUSE_DY	= 3;
-//
-//class InputManager
-//{
-//	class InputSource{
-//	protected:
-//		virtual void update(){}
-//		friend class InputManager;
-//	public:
-//		virtual ~InputSource(){}
-//		virtual float operator() (int)=0;
-//	};
-//	class Mouse: public InputSource
-//	{
-//	private:
-//		Vec2f position;
-//	public
-//		virtual float operator() (int key);
-//	};
-//	class Keyboard: public InputSource
-//	{
-//	private:
-//		unsigned char keyStates;
-//
-//	};
-//
-//public:
-//
-//	void update()
-//};
 
 const int VK_LBUTTON        = 0x01;
 const int VK_RBUTTON        = 0x02;
@@ -293,47 +216,11 @@ const int XINPUT_A              = 0x1000;
 const int XINPUT_B              = 0x2000;
 const int XINPUT_X              = 0x4000;
 const int XINPUT_Y              = 0x8000;
-//
-//const int XBOX_DPAD_UP			= 6;
-//const int XBOX_DPAD_DOWN		= 7;
-//const int XBOX_DPAD_LEFT		= 8;
-//const int XBOX_DPAD_RIGHT		= 9;
-//const int XBOX_GAMEPAD_START	= 10;
-//const int XBOX_GAMEPAD_BACK		= 11;
-//const int XBOX_LEFT_THUMB		= 12;
-//const int XBOX_RIGHT_THUMB		= 13;
-//const int XBOX_LEFT_SHOULDER	= 14;
-//const int XBOX_RIGHT_SHOULDER	= 15;
-//const int XBOX_GAMEPAD_A		= 16;
-//const int XBOX_GAMEPAD_B		= 17;
-//const int XBOX_GAMEPAD_X		= 18;
-//const int XBOX_GAMEPAD_Y		= 19;
 
-const int XBOX_GAMEPAD_OFFSET[4]	= {256,276,296,316};
-
-//class xinput_input: public Input
-//{
-//protected:
-//	bool joy[14][4];
-//	int axes[6 * 4];
-//	float deadZone;
-//
-//	struct ControllerState
-//	{
-//		XINPUT_STATE state;
-//		bool connected;
-//	} controllers[4];
-//
-//	inline bool compareButtons(const XINPUT_GAMEPAD& g1, const XINPUT_GAMEPAD& g2, int button);
-//
-//public:
-//
-//	xinput_input();
-//	~xinput_input();
-//
-//	void update();
-//
-//	float operator() (int key);
-//	void checkNewHardware();
-//	bool controllerConnected(int controller);
-//};
+const int MENU_LEFT				= 0x125;
+const int MENU_UP				= 0x126;
+const int MENU_RIGHT			= 0x127;
+const int MENU_DOWN				= 0x128;
+const int MENU_ENTER			= 0x129;
+const int MENU_BACK				= 0x130;
+const int MENU_START			= 0x131;

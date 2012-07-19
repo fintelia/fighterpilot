@@ -97,13 +97,13 @@ void Game::update()
 	/*                 COLLISION CHECKING GOES HERE						*/
 
 	int n=0;
+	input.update();
 	while(world.time.needsUpdate())
 	{
 		n++;
 
 		world.time.nextUpdate();
 
-		input.update();
 		players.update();
 		world.simulationUpdate();
 		particleManager.update();
