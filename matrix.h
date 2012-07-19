@@ -220,9 +220,9 @@ public:
 	Matrix4 operator* (T o) const
 	{
 		return Matrix4(	v[0]*o,		v[4]*o,		v[8]*o,		v[12]*o,
-							v[1]*o,		v[5]*o,		v[9]*o,		v[13]*o,
-							v[2]*o,		v[6]*o,		v[10]*o,	v[14]*o,
-							v[3]*o,		v[7]*o,		v[11]*o,	v[15]*o);
+						v[1]*o,		v[5]*o,		v[9]*o,		v[13]*o,
+						v[2]*o,		v[6]*o,		v[10]*o,	v[14]*o,
+						v[3]*o,		v[7]*o,		v[11]*o,	v[15]*o);
 	}
 	T operator[] (int i) const
 	{

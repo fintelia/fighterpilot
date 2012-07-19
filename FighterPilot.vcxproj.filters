@@ -587,6 +587,9 @@
     <None Include="media\treesAlphaTest.frag">
       <Filter>shaders\trees</Filter>
     </None>
+    <None Include="media\desert preview.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

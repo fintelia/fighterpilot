@@ -104,24 +104,36 @@ void inGame::render()
 }
 bool inGame::keyDown(int vkey)
 {
-	if(vkey==VK_UP)		activeChoice = choice(int(activeChoice)-1);
-	if(vkey==VK_DOWN)	activeChoice = choice(int(activeChoice)+1);
+	if(vkey==VK_PAUSE || vkey==VK_ESCAPE)
+	{
+		input.up(VK_PAUSE);
+		input.up(VK_ESCAPE);
+		world.time.unpause();
+		done = true;
+		return true;
+	}
+	return false;
+}
+bool inGame::menuKey(int mkey)
+{
+	if(mkey==MENU_UP)	activeChoice = choice(int(activeChoice)-1);
+	if(mkey==MENU_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if(((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==RESUME) || vkey==VK_PAUSE || vkey==VK_ESCAPE)
+	if(mkey == MENU_ENTER && activeChoice == RESUME)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
-		input.up(0x31);
+		input.up(VK_PAUSE);
 		input.up(VK_ESCAPE);
 		world.time.unpause();
 		done = true;
 	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==OPTIONS)
+	else if(mkey == MENU_ENTER && activeChoice == OPTIONS)
 	{
 		//
 	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==QUIT)
+	else if(mkey == MENU_ENTER && activeChoice == QUIT)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
@@ -173,15 +185,14 @@ void chooseMode::render()
 		graphics->drawPartialOverlay(Rect::XYWH((i*0.263-0.144)*sAspect,1.0-0.503,0.256*sAspect,0.0417),Rect::XYWH(0,0.33*(i-1),1,0.33),"menu mode choices");
 	}
 }
-bool chooseMode::keyDown(int vkey)
+bool chooseMode::menuKey(int mkey)
 {
-	if(vkey==VK_ESCAPE)	game->done = true;//end the program
-	if(vkey==VK_LEFT)	activeChoice = choice(int(activeChoice)-1);
-	if(vkey==VK_RIGHT)	activeChoice = choice(int(activeChoice)+1);
+	if(mkey==MENU_LEFT)	activeChoice = choice(int(activeChoice)-1);
+	if(mkey==MENU_RIGHT)activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
 
-	if((vkey==VK_SPACE || vkey==VK_RETURN) && input.getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
+	if(mkey == MENU_ENTER && input.getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
 	{
 		openFile* p = new openFile;
 		p->callback = (functor<void,popup*>*)this;
@@ -189,7 +200,7 @@ bool chooseMode::keyDown(int vkey)
 		menuManager.setPopup(p);
 		choosingFile = true;
 	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==SINGLE_PLAYER)
+	else if(mkey == MENU_ENTER && activeChoice == SINGLE_PLAYER)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
@@ -200,7 +211,7 @@ bool chooseMode::keyDown(int vkey)
 			menuManager.setMenu(new gui::campaign(l));
 		}
 	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MULTIPLAYER)
+	else if(mkey == MENU_ENTER && activeChoice == MULTIPLAYER)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
@@ -211,11 +222,23 @@ bool chooseMode::keyDown(int vkey)
 			menuManager.setMenu(new gui::splitScreen(l));
 		}
 	}
-	else if((vkey==VK_SPACE || vkey==VK_RETURN) && activeChoice==MAP_EDITOR)
+	else if(mkey == MENU_ENTER && activeChoice==MAP_EDITOR)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 		menuManager.setMenu(new gui::levelEditor);
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+bool chooseMode::keyDown(int vkey)
+{
+	if(vkey==VK_ESCAPE)
+	{
+		game->done = true;//end the program
 	}
 	else if(vkey==VK_F3)
 	{

@@ -104,6 +104,7 @@
 
     <!-- terrain preview -->
     <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />
+    <shader name="desert preview terrain"    vertex="media/terrain.vert"           fragment="media/desert preview.frag" />
     <shader name="snow preview terrain"      vertex="media/terrain.vert"           fragment="media/snow preview.frag" />
     <shader name="ocean preview"             vertex="media/ocean preview.vert"     fragment="media/ocean preview.frag" />
   </shaders>

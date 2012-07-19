@@ -106,6 +106,7 @@ void missile::updateSimulation(double time, double ms)
 }
 void SAMmissile::init()
 {
+	minAngle = 2.0*PI;
 	particleManager.addEmitter(new particle::contrail(),id);
 	particleManager.addEmitter(new particle::contrailSmall(),id,Vec3f(0,0,-5.0));
 }
@@ -121,11 +122,12 @@ void SAMmissile::updateSimulation(double time, double ms)
 		destVec = (enemy->position - position).normalize();
 		Vec3f fwd = rotation * Vec3f(0,0,1);
 
-		Angle angle = acosA(destVec.dot(fwd));
-
+		float angle = acos(destVec.dot(fwd));
 		Quat4f targetRot(destVec);
 
-		if( angle > PI*3/4)
+		minAngle = min(angle,minAngle);
+
+		if(angle > PI*3/4 || angle > minAngle + PI/12)
 		{
 			target = 0;
 		}
@@ -133,7 +135,6 @@ void SAMmissile::updateSimulation(double time, double ms)
 		{
 			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
 		}
-
 	}
 	else if(enemy != NULL && enemy->dead)
 	{

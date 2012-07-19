@@ -815,6 +815,7 @@ void nPlane::loseHealth(float healthLoss)
 	health-=healthLoss;
 	if(health<=0.0)
 	{
+		//smokeTrail->setActive(false);
 		health=0;
 		cameraShake = 1.0;
 		die();

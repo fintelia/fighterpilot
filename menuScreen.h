@@ -269,6 +269,7 @@ public:
 	virtual bool mouseR(bool down, float x, float y){return false;}
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
+	virtual bool menuKey(int mkey){return false;}
 	virtual bool scroll(float rotations){return false;}
 
 	bool isDone(){return done;}
@@ -378,7 +379,7 @@ public:
 
 	virtual bool keyDown(int vkey){return false;}
 	virtual bool keyUp(int vkey){return false;}
-
+	virtual bool menuKey(int mkey){return false;}
 	virtual bool scroll(float rotations){return false;}
 	///////////////////////////////////////////
 	virtual void operator() (popup* p){}

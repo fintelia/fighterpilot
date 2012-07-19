@@ -221,6 +221,7 @@
     </None>
     <None Include="media\circle.frag" />
     <None Include="media\circle.vert" />
+    <None Include="media\desert preview.frag" />
     <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />

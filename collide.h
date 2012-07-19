@@ -14,14 +14,13 @@ public:
 	private:
 		mutable bool radiusValid;
 	public:
-		Vec3f a,b,c;
-		float pA,pB,pC,pD; // Plane normals
+		Vec3f vertices[3];
 		mutable Vec3f center;
 		mutable float radius;
 
 		void findRadius() const;
-		triangle(Vec3f A,Vec3f B,Vec3f C):radiusValid(false),a(A),b(B),c(C),center(0,0,0),radius(0.0){findRadius();}
-		triangle():radiusValid(false),a(0,0,0),b(0,0,0),c(0,0,0),center(0,0,0),radius(0.0){}
+		triangle(Vec3f a,Vec3f b,Vec3f c):radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=a;vertices[1]=b;vertices[2]=c;findRadius();}
+		triangle():radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=vertices[1]=vertices[2]=Vec3f(0,0,0);}
 	};
 	class triangleList
 	{
@@ -47,10 +46,12 @@ private:
 	CollisionChecker(){}
 	~CollisionChecker(){}
 
-	Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const;
-	bool pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const;
-	bool pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z) const;
+	//Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const;
+	bool segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const;
+	//bool pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const;
+	bool pointInTriangle(const triangle& tri,const Vec3f& vert) const;
 	bool triangleCollision(const triangle& tri1, const triangle& tri2) const;
+	bool triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const;
 public:
 
 	//void findPolygonRadius(triangle& tri);
@@ -63,6 +64,6 @@ public:
 	bool operator() (objectType t1, Vec3f center, float radius) const;
 	bool operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const;
 
-	bool operator() (object* o1, object* o2) const;
+	bool operator() (shared_ptr<object> o1, shared_ptr<object> o2) const;
 };
 extern CollisionChecker& collisionCheck;

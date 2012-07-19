@@ -240,6 +240,7 @@ void dogFight::checkCollisions()
 
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
+		float damageMultiplier = dynamic_pointer_cast<nPlane>(i->second)->controlType == nPlane::CONTROL_TYPE_AI ? 1.0 : 0.25;
 		if(!i->second->dead)
 		{
 			for(auto l=0;l<(signed int)bulletRef.size();l++)
@@ -248,7 +249,7 @@ void dogFight::checkCollisions()
 				{
 					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
 					{
-						i->second->loseHealth(3.6);
+						i->second->loseHealth(14.4 * damageMultiplier);
 
 						if((*i).second->dead)
 						{
@@ -266,18 +267,23 @@ void dogFight::checkCollisions()
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
 				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
-					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
-					//collisionCheck(i->second,l->second))
+					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) &&
+					collisionCheck(i->second,l->second))
 				{
-					if(l->second->type == SAM_MISSILE)
-						i->second->loseHealth(27);
-					else
-						i->second->loseHealth(105);
+					
+					i->second->loseHealth(105 * damageMultiplier);
 
 					if((*i).second->dead)
 					{
 						if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
 						if(players.numPlayers() >= 2 && owner==players[1]->objectNum()) players[1]->addKill();
+					}
+					else
+					{
+						particleManager.addEmitter(new particle::explosion(), l->second->position, 5.0);
+					//	particleManager.addEmitter(new particle::explosionSmoke(), l->second->position, 2.0);
+						particleManager.addEmitter(new particle::explosionFlash(), l->second->position, 5.0);
+					//	particleManager.addEmitter(new particle::explosionFlash2(), l->second->position, 2.0);
 					}
 					l->second->awaitingDelete = true;
 				}
@@ -288,14 +294,31 @@ void dogFight::checkCollisions()
 	{
 		if(!i->second->dead)
 		{
+			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			{
+				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				{
+					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
+					{
+						i->second->loseHealth(14.4);
+						if((*i).second->dead)
+						{
+							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
+							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
+						}
+						bulletRef.erase(bulletRef.begin()+l);
+						l--;
+					}
+				}
+			}
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
 				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
 				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
 				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
-					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) )
-					//collisionCheck(i->second,l->second))
+					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) &&
+					collisionCheck(i->second,l->second))
 				{
 					i->second->loseHealth(105);
 					if((*i).second->dead)

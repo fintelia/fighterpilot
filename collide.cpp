@@ -7,126 +7,156 @@ bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& t
 	tri2.findRadius();
 	return tri1.center.distanceSquared(tri2.center) < (tri1.radius+tri2.radius)*(tri1.radius+tri2.radius);
 }
-Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const
+//Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const
+//{
+//	float final_x,final_y,final_z,final_t;
+//	float t,i;
+//	Vec3f temp;
+//
+//	t=0.0f; i=0.0f;
+//	i+=(tri1.pA*b.x)+(tri1.pB*b.y)+(tri1.pC*b.z)+(tri1.pD);
+//	t+=(tri1.pA*(b.x*-1))+(tri1.pB*(b.y*-1))+(tri1.pC*(b.z*-1));
+//	t+=(tri1.pA*a.x)+(tri1.pB*a.y)+(tri1.pC*a.z);
+//
+//	// Be wary of possible divide-by-zeros here (i.e. if t==0)
+//	final_t = (-i)/t;
+//
+//	// Vertical Line Segment
+//	if ((a.x == b.x)&&(a.z == b.z)) { // vertical line segment
+//		temp.x = a.x;
+//		temp.y = (-((tri1.pA*a.x)+(tri1.pC*a.z)+(tri1.pD)))/(tri1.pB);
+//		temp.z = a.z;
+//
+//		return(temp);
+//	}
+//
+//	final_x = (((a.x)*(final_t))+((b.x)*(1-final_t)));
+//	final_y = (((a.y)*(final_t))+((b.y)*(1-final_t)));
+//	final_z = (((a.z)*(final_t))+((b.z)*(1-final_t)));
+//
+//	temp.x = final_x;
+//	temp.y = final_y;
+//	temp.z = final_z;
+//
+//	return(temp);
+//}
+bool CollisionChecker::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
 {
-	float final_x,final_y,final_z,final_t;
-	float t,i;
-	Vec3f temp;
+	//see: http://paulbourke.net/geometry/planeline/
 
-	t=0.0f; i=0.0f;
-	i+=(tri1.pA*b.x)+(tri1.pB*b.y)+(tri1.pC*b.z)+(tri1.pD);
-	t+=(tri1.pA*(b.x*-1))+(tri1.pB*(b.y*-1))+(tri1.pC*(b.z*-1));
-	t+=(tri1.pA*a.x)+(tri1.pB*a.y)+(tri1.pC*a.z);
+	float numerator = (p.normal).dot(a) + p.d;
+	float denominator = (p.normal).dot(a-b);
 
-	// Be wary of possible divide-by-zeros here (i.e. if t==0)
-	final_t = (-i)/t;
-
-	// Vertical Line Segment
-	if ((a.x == b.x)&&(a.z == b.z)) { // vertical line segment
-		temp.x = a.x;
-		temp.y = (-((tri1.pA*a.x)+(tri1.pC*a.z)+(tri1.pD)))/(tri1.pB);
-		temp.z = a.z;
-
-		return(temp);
+	if(abs(denominator) > 0.001) //make sure line and plane are not parallel
+	{
+		float u = numerator/denominator;
+		collisionPoint = lerp(a, b, u);
+		return u >= 0.0 && u <= 1.0;
 	}
-
-	final_x = (((a.x)*(final_t))+((b.x)*(1-final_t)));
-	final_y = (((a.y)*(final_t))+((b.y)*(1-final_t)));
-	final_z = (((a.z)*(final_t))+((b.z)*(1-final_t)));
-
-	temp.x = final_x;
-	temp.y = final_y;
-	temp.z = final_z;
-
-	return(temp);
+	else //if they are parallel
+	{
+		collisionPoint = lerp(a, b, 0.5);
+		return abs(numerator) < 0.001; //return whether the line lies entirely in the plane
+	}
 }
-bool CollisionChecker::pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const
+//bool CollisionChecker::pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const
+//{
+//	float t,i,final_t;
+//
+//	t=0.0f; i=0.0f;
+//	i+=(tri1.pA*b.x)+(tri1.pB*b.y)+(tri1.pC*b.z)+(tri1.pD);
+//	t+=(tri1.pA*(b.x*-1))+(tri1.pB*(b.y*-1))+(tri1.pC*(b.z*-1));
+//	t+=(tri1.pA*a.x)+(tri1.pB*a.y)+(tri1.pC*a.z);
+//
+//	// Be wary of possible divide-by-zeros here (i.e. if t==0)
+//	final_t = (-i)/t;
+//
+//	return  (final_t >= 0) && (final_t <= 1);
+//}
+bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert) const
 {
-	float t,i,final_t;
-
-	t=0.0f; i=0.0f;
-	i+=(tri1.pA*b.x)+(tri1.pB*b.y)+(tri1.pC*b.z)+(tri1.pD);
-	t+=(tri1.pA*(b.x*-1))+(tri1.pB*(b.y*-1))+(tri1.pC*(b.z*-1));
-	t+=(tri1.pA*a.x)+(tri1.pB*a.y)+(tri1.pC*a.z);
-
-	// Be wary of possible divide-by-zeros here (i.e. if t==0)
-	final_t = (-i)/t;
-
-	return  (final_t >= 0) && (final_t <= 1);
-}
-bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert, bool x, bool y, bool z) const
-{
-	triangle tri2=tri;
-	Vec3f p=vert;
-	if(!x)
-	{
-		p.x=0;
-		tri2.a.x=0;
-		tri2.b.x=0;
-		tri2.c.x=0;
-	}
-	else if(!y)
-	{
-		p.y=0;
-		tri2.a.y=0;
-		tri2.b.y=0;
-		tri2.c.y=0;
-	}
-	else if(!z)
-	{
-		p.z=0;
-		tri2.a.z=0;
-		tri2.b.z=0;
-		tri2.c.z=0;
-	}
-	Angle ang = acosA((tri2.a-p).normalize().dot((tri2.b-p).normalize())) +
-				acosA((tri2.b-p).normalize().dot((tri2.c-p).normalize())) +
-				acosA((tri2.c-p).normalize().dot((tri2.a-p).normalize()));
+	float ang = acos((tri.vertices[0]-vert).normalize().dot((tri.vertices[0]-vert).normalize())) +
+				acos((tri.vertices[1]-vert).normalize().dot((tri.vertices[1]-vert).normalize())) +
+				acos((tri.vertices[2]-vert).normalize().dot((tri.vertices[2]-vert).normalize()));
 	return ang > 2.0 * PI - 0.01;
 }
+//bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2) const
+//{
+//	Vec3f p;
+//	bool temp = false;
+//
+//	// Scroll thru 3 line segments of the other triangle
+//
+//	// First iteration  (a,b)
+//	p=linePlaneCollision(tri2.a, tri2.b, tri1);
+//	// Determine which axis to project to
+//	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// X is greatest
+//	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true,false,true);	// Y is greatest
+//	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);	// Z is greatest
+//	if (temp) // Point needs to be checked to see if it lies between the two vertices, First check for the special case of vertical line segments,
+//		return (tri2.a.x == tri2.b.x && tri2.a.z==tri2.b.z && ( (tri2.a.y<=p.y && p.y<=tri2.b.y) || (tri2.b.y<=p.y && p.y <= tri2.a.y) )) || pointBetweenVertices(tri2.a, tri2.b, tri1);
+//
+//
+//
+//	// Second iteration (b,c)
+//	p=linePlaneCollision(tri2.b, tri2.c, tri1);
+//	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// Determine which axis to project to
+//	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true, false, true);
+//	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);
+//	if (temp) return ((tri2.b.x == tri2.c.x) && (tri2.b.z == tri2.c.z) && (((tri2.b.y <= p.y) && (p.y <= tri2.c.y)) || ((tri2.c.y <= p.y) && (p.y <= tri2.b.y)))) || pointBetweenVertices(tri2.b, tri2.c, tri1);
+//
+//
+//
+//	// Third iteration  (c,a)
+//	p=linePlaneCollision( tri2.c, tri2.a, tri1);
+//	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// Determine which axis to project to
+//	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true, false, true);
+//	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);
+//	if (temp) return ((tri2.c.x == tri2.a.x) && (tri2.c.z == tri2.a.z) && (((tri2.c.y <= p.y) && (p.y <= tri2.a.y)) || ((tri2.a.y <= p.y) && (p.y <= tri2.c.y)))) || pointBetweenVertices(tri2.c, tri2.a, tri1);
+//
+//
+//	return false; // Default value/no collision
+//}
 bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2) const
 {
 	Vec3f p;
-	bool temp = false;
 
-	// Scroll thru 3 line segments of the other triangle
+	Plane3f plane1(tri1.vertices[0], tri1.vertices[1], tri1.vertices[2]);
+	if(	(segmentPlaneCollision(tri2.vertices[0], tri2.vertices[1], plane1, p) && pointInTriangle(tri1,p)) ||
+		(segmentPlaneCollision(tri2.vertices[1], tri2.vertices[2], plane1, p) && pointInTriangle(tri1,p)) ||
+		(segmentPlaneCollision(tri2.vertices[2], tri2.vertices[0], plane1, p) && pointInTriangle(tri1,p)))
+			return true;
 
-	// First iteration  (a,b)
-	p=linePlaneCollision(tri2.a, tri2.b, tri1);
-	// Determine which axis to project to
-	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// X is greatest
-	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true,false,true);	// Y is greatest
-	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);	// Z is greatest
-	if (temp) // Point needs to be checked to see if it lies between the two vertices, First check for the special case of vertical line segments,
-		return (tri2.a.x == tri2.b.x && tri2.a.z==tri2.b.z && ( (tri2.a.y<=p.y && p.y<=tri2.b.y) || (tri2.b.y<=p.y && p.y <= tri2.a.y) )) || pointBetweenVertices(tri2.a, tri2.b, tri1);
+	Plane3f plane2(tri2.vertices[0], tri2.vertices[1], tri2.vertices[2]);
+	if(	(segmentPlaneCollision(tri1.vertices[0], tri1.vertices[1], plane2, p) && pointInTriangle(tri2,p)) ||
+		(segmentPlaneCollision(tri1.vertices[1], tri1.vertices[2], plane2, p) && pointInTriangle(tri2,p)) ||
+		(segmentPlaneCollision(tri1.vertices[2], tri1.vertices[0], plane2, p) && pointInTriangle(tri2,p)))
+			return true;
 
+	return false;
+}
+bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const
+{
+	triangle T1 = tri1;
+	triangle T2 = tri2;
 
+	T1.vertices[0] = rot1 * T1.vertices[0];
+	T1.vertices[1] = rot1 * T1.vertices[1];
+	T1.vertices[2] = rot1 * T1.vertices[2];
 
-	// Second iteration (b,c)
-	p=linePlaneCollision(tri2.b, tri2.c, tri1);
-	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// Determine which axis to project to
-	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true, false, true);
-	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);
-	if (temp) return ((tri2.b.x == tri2.c.x) && (tri2.b.z == tri2.c.z) && (((tri2.b.y <= p.y) && (p.y <= tri2.c.y)) || ((tri2.c.y <= p.y) && (p.y <= tri2.b.y)))) || pointBetweenVertices(tri2.b, tri2.c, tri1);
+	
+	T2.vertices[0] = rot2 * T2.vertices[0];
+	T2.vertices[1] = rot2 * T2.vertices[1];
+	T2.vertices[2] = rot2 * T2.vertices[2];
 
-
-
-	// Third iteration  (c,a)
-	p=linePlaneCollision( tri2.c, tri2.a, tri1);
-	if		((abs(tri1.pA) >= abs(tri1.pB)) && (abs(tri1.pA) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, false, true, true);	// Determine which axis to project to
-	else if ((abs(tri1.pB) >= abs(tri1.pA)) && (abs(tri1.pB) >= abs(tri1.pC)))	temp = pointInTriangle(tri1, p, true, false, true);
-	else if ((abs(tri1.pC) >= abs(tri1.pA)) && (abs(tri1.pC) >= abs(tri1.pB)))	temp = pointInTriangle(tri1, p, true, true, false);
-	if (temp) return ((tri2.c.x == tri2.a.x) && (tri2.c.z == tri2.a.z) && (((tri2.c.y <= p.y) && (p.y <= tri2.a.y)) || ((tri2.a.y <= p.y) && (p.y <= tri2.c.y)))) || pointBetweenVertices(tri2.c, tri2.a, tri1);
-
-
-	return false; // Default value/no collision
+	return triangleCollision(T1, T2);
 }
 Vec3f CollisionChecker::triangleList::getRandomVertex()
 {
 	int r = random<int>(numTriangles*3);
-	if(r % 3 == 0)		return triangles[r / 3].a;
-	else if(r % 3 == 1)	return triangles[r / 3].b;
-	else				return triangles[r / 3].c;
+	if(r % 3 == 0)		return triangles[r / 3].vertices[0];
+	else if(r % 3 == 1)	return triangles[r / 3].vertices[1];
+	else				return triangles[r / 3].vertices[2];
 }
 CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces):triangles(NULL), numTriangles(0), center(0.0f,0.0f,0.0f), radius(-99999999.9f)
 {
@@ -141,18 +171,18 @@ CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* face
 	numTriangles = nFaces;
 	for(i=0;i<nFaces;i++)
 	{
-		triangles[i].a=vertices[faces[i*3+0]];
-		triangles[i].b=vertices[faces[i*3+1]];
-		triangles[i].c=vertices[faces[i*3+2]];
+		triangles[i].vertices[0]=vertices[faces[i*3+0]];
+		triangles[i].vertices[1]=vertices[faces[i*3+1]];
+		triangles[i].vertices[2]=vertices[faces[i*3+2]];
 		triangles[i].findRadius();
 
-		Vec3f cross_v1xv2 = (triangles[i].b - triangles[i].a).cross(triangles[i].c - triangles[i].a);
-		triangles[i].pA = cross_v1xv2.x;
-		triangles[i].pB = cross_v1xv2.y;
-		triangles[i].pC = cross_v1xv2.z;
-		triangles[i].pD += (-(triangles[i].a.x))*(cross_v1xv2.x);
-		triangles[i].pD += (-(triangles[i].a.y))*(cross_v1xv2.y);
-		triangles[i].pD += (-(triangles[i].a.z))*(cross_v1xv2.z);
+		//Vec3f cross_v1xv2 = (triangles[i].b - triangles[i].a).cross(triangles[i].c - triangles[i].a);
+		//triangles[i].pA = cross_v1xv2.x;
+		//triangles[i].pB = cross_v1xv2.y;
+		//triangles[i].pC = cross_v1xv2.z;
+		//triangles[i].pD += (-(triangles[i].a.x))*(cross_v1xv2.x);
+		//triangles[i].pD += (-(triangles[i].a.y))*(cross_v1xv2.y);
+		//triangles[i].pD += (-(triangles[i].a.z))*(cross_v1xv2.z);
 
 
 	}
@@ -181,33 +211,34 @@ void CollisionChecker::triangle::findRadius() const
 	if(radiusValid) return;
 	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
 
-	minx = maxx = a.x;
-	miny = maxy = a.y;
-	minz = maxz = a.z;
 
-	if (b.x < minx)	minx = b.x;
-	if (c.x < minx)	minx = c.x;
-	if (b.y < miny)	miny = b.y;
-	if (c.y < miny)	miny = c.y;
-	if (b.z < minz)	minz = b.z;
-	if (c.z < minz)	minz = c.z;
+	minx = maxx = vertices[0].x;
+	miny = maxy = vertices[0].y;
+	minz = maxz = vertices[0].z;
 
-	if (b.x > maxx)	maxx = b.x;
-	if (c.x > maxx)	maxx = c.x;
-	if (b.y > maxy)	maxy = b.y;
-	if (c.y > maxy)	maxy = c.y;
-	if (b.z > maxz)	maxz = b.z;
-	if (c.z > maxz)	maxz = c.z;
+	if(vertices[1].x < minx)	minx = vertices[1].x;
+	if(vertices[2].x < minx)	minx = vertices[2].x;
+	if(vertices[1].y < miny)	miny = vertices[1].y;
+	if(vertices[2].y < miny)	miny = vertices[2].y;
+	if(vertices[1].z < minz)	minz = vertices[1].z;
+	if(vertices[2].z < minz)	minz = vertices[2].z;
+
+	if(vertices[1].x > maxx)	maxx = vertices[1].x;
+	if(vertices[2].x > maxx)	maxx = vertices[2].x;
+	if(vertices[1].y > maxy)	maxy = vertices[1].y;
+	if(vertices[2].y > maxy)	maxy = vertices[2].y;
+	if(vertices[1].z > maxz)	maxz = vertices[1].z;
+	if(vertices[2].z > maxz)	maxz = vertices[2].z;
 
 	center.x = ((minx+maxx)/2);
 	center.y = ((miny+maxy)/2);
 	center.z = ((minz+maxz)/2);
 
-	radiusSquared = center.distanceSquared(a);
-	if (center.distanceSquared(b) > radiusSquared)
-		radiusSquared = center.distanceSquared(b);
-  	if (center.distanceSquared(c) > radiusSquared)
-		radiusSquared = center.distanceSquared(c);
+	radiusSquared = center.distanceSquared(vertices[0]);
+	if (center.distanceSquared(vertices[1]) > radiusSquared)
+		radiusSquared = center.distanceSquared(vertices[1]);
+  	if (center.distanceSquared(vertices[2]) > radiusSquared)
+		radiusSquared = center.distanceSquared(vertices[2]);
 
 	radius = sqrt(radiusSquared);
 	radiusValid=true;
@@ -287,35 +318,35 @@ bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd
 	return operator()(*dataManager.getModel(t1)->trl, lineStart, lineEnd);
 }
 
-bool CollisionChecker::operator() (object* o1, object* o2) const
+bool CollisionChecker::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
 {
 	auto tr1 = dataManager.getModel(o1->type)->trl;
 	auto tr2 = dataManager.getModel(o2->type)->trl;
 
-	Quat4f rot1 = o1->rotation;
-	Quat4f rot2 = o2->rotation;
+	Mat4f mat1(o1->rotation, o1->position);
+	Mat4f mat2(o2->rotation, o2->position);
 
-	Vec3f pos1 = o1->position;
-	Vec3f pos2 = o2->position;
+	Vec3f _center1 = o1->position + o1->rotation * tr1->center;
+	Vec3f _center2 = o2->position + o2->rotation * tr2->center;
 
-	Vec3f center1 = o1->position + rot1 * tr1->center;
-	Vec3f center2 = o2->position + rot2 * tr2->center;
+	Vec3f center1 = mat1 * tr1->center;
+	Vec3f center2 = mat1 * tr2->center;
 
 	if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
 	{
 		int i1,i2;
 		for(i1=0; i1 < tr1->numTriangles; i1++)
 		{
-			if((pos1 + rot1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
+			if((mat1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
 			{
-				for(i2 = 0; i2 < tr2->numTriangles; i2++)
-				{
-					if((pos1 + rot1*tr1->triangles[i1].center).distanceSquared(pos2 + rot2*tr2->triangles[i2].center) < (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
-					{
-						if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2]))
+			//	for(i2 = 0; i2 < tr2->numTriangles; i2++)
+			//	{
+			//		if((mat1*tr1->triangles[i1].center).distanceSquared(mat2*tr2->triangles[i2].center) <= (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
+			//		{
+			//			if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2], mat1, mat2))
 							return true;
-					}
-				}
+			//		}
+			//	}
 			}
 		}
 	}

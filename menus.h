@@ -36,6 +36,7 @@ public:
 	~inGame(){}
 	int update(){return 30;}
 	void render();
+	bool menuKey(int mkey);
 	bool keyDown(int vkey);
 protected:
 	choice activeChoice;
@@ -132,6 +133,7 @@ public:
 	int update(){return 30;}
 	void render();
 	bool keyDown(int vkey);
+	bool menuKey(int mkey);
 	void operator() (popup* p);
 protected:
 	choice activeChoice;
