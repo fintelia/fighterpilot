@@ -87,7 +87,7 @@ private:
 #if defined(WINDOWS)
 	void* handle;
 #elif defined(LINUX)
-	pthread_mutex_t* mutexPtr;
+	pthread_mutex_t pmutex;
 #endif
 public:
 	mutex();
