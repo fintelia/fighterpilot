@@ -488,11 +488,11 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 
 
 	//xyY color space stored as:		x						  Y						  y			
-	float constants[5][3] =	{{-0.0193*L - 0.2592,		 0.1787*L - 1.4630,		-0.0167*L - 0.2608},
-							 {-0.0665*L + 0.0008,		-0.3554*L + 0.4275,		-0.0950*L + 0.0092},
-							 {-0.0004*L + 0.2125,		-0.0227*L + 5.3251,		-0.0079*L + 0.2102},
-							 {-0.0641*L - 0.8989,		 0.1206*L - 2.5771,		-0.0441*L - 1.6537},
-							 {-0.0033*L + 0.0452,		-0.0670*L + 0.3703,		-0.0109*L + 0.0529}};
+	float constants[5][3] =	{{-0.0193f*L - 0.2592f,		 0.1787f*L - 1.4630f,		-0.0167f*L - 0.2608f},
+							 {-0.0665f*L + 0.0008f,		-0.3554f*L + 0.4275f,		-0.0950f*L + 0.0092f},
+							 {-0.0004f*L + 0.2125f,		-0.0227f*L + 5.3251f,		-0.0079f*L + 0.2102f},
+							 {-0.0641f*L - 0.8989f,		 0.1206f*L - 2.5771f,		-0.0441f*L - 1.6537f},
+							 {-0.0033f*L + 0.0452f,		-0.0670f*L + 0.3703f,		-0.0109f*L + 0.0529f}};
 
 
 
@@ -502,9 +502,9 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	float zenithLuminance = abs((4.0453*L - 4.9710) * tan(chi) - 0.2155*L + 0.24192);// * 1000;
 	float zenith_x = L*L*(0.00166*theta3 - 0.00375*theta2 + 0.00209*theta) + L*(-0.02903*theta3 + 0.06377*theta2 - 0.03202*theta + 0.00394) + (0.11693*theta3 - 0.21196*theta2 + 0.06052*theta + 0.25886);
 	float zenith_y = L*L*(0.00275*theta3 - 0.00610*theta2 + 0.00317*theta) + L*(-0.04214*theta3 + 0.08970*theta2 - 0.04153*theta + 0.00516) + (0.15346*theta3 - 0.26756*theta2 + 0.06670*theta + 0.26688);
-	float zenithOverSun[3] = {0.85*zenith_x /		((1.0 + constants[0][0] * exp(constants[1][0])) * (1.0 + constants[2][0]*exp(constants[3][0]*(float)theta) + constants[4][0]*cos(theta)*cos(theta))),
-							  0.20*zenithLuminance / ((1.0 + constants[0][1] * exp(constants[1][1])) * (1.0 + constants[2][1]*exp(constants[3][1]*(float)theta) + constants[4][1]*cos(theta)*cos(theta))),
-							  0.85*zenith_y /		((1.0 + constants[0][2] * exp(constants[1][2])) * (1.0 + constants[2][2]*exp(constants[3][2]*(float)theta) + constants[4][2]*cos(theta)*cos(theta)))};
+	float zenithOverSun[3] = {static_cast<float>(0.85f*zenith_x /		((1.0 + constants[0][0] * exp(constants[1][0])) * (1.0f + constants[2][0]*exp(constants[3][0]*(float)theta) + constants[4][0]*cos(theta)*cos(theta)))),
+							  static_cast<float>(0.20f*zenithLuminance / ((1.0 + constants[0][1] * exp(constants[1][1])) * (1.0f + constants[2][1]*exp(constants[3][1]*(float)theta) + constants[4][1]*cos(theta)*cos(theta)))),
+							  static_cast<float>(0.85f*zenith_y /		((1.0 + constants[0][2] * exp(constants[1][2])) * (1.0f + constants[2][2]*exp(constants[3][2]*(float)theta) + constants[4][2]*cos(theta)*cos(theta))))};
 
 	//float zenithOverSun[3] = {1.0/0.186220,
 	//						  1.0/0.13,

@@ -1,36 +1,47 @@
 
-#include "debugBreak.h"
+//#include "debugBreak.h"
 
-#include <memory>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <set>
-#include <map>
-#include <queue>
+//#include <memory>
+//#include <fstream>
+//#include <string>
+//#include <vector>
+//#include <set>
+//#include <map>
+//#include <queue>
 
-#include <boost/lexical_cast.hpp>
+//#include <boost/lexical_cast.hpp>
+#include "engine.h"
 #include <boost/crc.hpp>
+//#include <boost/thread.hpp>
 
-#ifdef _WIN32
-	#include <Windows.h>
-	#include <process.h>
-	#include <shlwapi.h>
-	#include <ShlObj.h>
-	#pragma comment(lib,"shlwapi.lib")
-	#define WINDOWS
-#else
-	#error operating system not currently supported by fileManager
-#endif
+//#ifdef _WIN32
+//	#include <Windows.h>
+//	#include <process.h>
+//	#include <shlwapi.h>
+//	#include <ShlObj.h>
+//	#pragma comment(lib,"shlwapi.lib")
+//	#define WINDOWS
+//#else
+//	#error operating system not currently supported by fileManager
+//#endif
+
+#if defined(LINUX)
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	#include <dirent.h>
+#endif 
 
 #include "zlib/zlib.h"
 #include "png/png.h"
 
-using namespace std;
-using boost::lexical_cast;
+//using namespace std;
+//using boost::lexical_cast;
 
-#include "definitions.h"
-#include "fileManager.h"
+//#include "definitions.h"
+//#include "fileManager.h"
+
+
+
 /////////////////////////////////THREADING///////////////////////////////////////////////////
 //template<class T>
 //struct threadData{
@@ -56,12 +67,13 @@ using boost::lexical_cast;
 //}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-#ifdef WINDOWS
+//#ifdef WINDOWS
 FileManager::FileManager()
 {
-	_beginthread(startWorkerThread,0,this);
+	boost::thread workerThread(startWorkerThread, nullptr);
+	//_beginthread(startWorkerThread,0,this);
 }
-#endif
+//#endif
 string FileManager::filename(string filename)
 {
 	size_t nDot = filename.find_last_of('.');
@@ -110,7 +122,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 	else
 		return filename.substr(0,nDot) + newExtension;
 }
-#ifdef WINDOWS
+#if defined(WINDOWS)
 	string FileManager::getAppDataDirectory()
 	{
 		char szPath[MAX_PATH];
@@ -282,6 +294,134 @@ string FileManager::changeExtension(string filename, string newExtension)
 		FindClose(h);
 		return v;
 	}
+#elif defined(LINUX)
+	string FileManager::getAppDataDirectory()
+	{
+		return "";
+	}
+	bool FileManager::fileExists(string filename)
+	{
+		struct stat sb;
+		if (stat(filename.c_str(), &sb) == -1)
+			return false;
+		
+		return (sb.st_mode & S_IFMT) == S_IFREG;
+	}
+	bool FileManager::directoryExists(string directory)
+	{
+		struct stat sb;
+		if (stat(directory.c_str(), &sb) == -1)
+			return false;
+		
+		return (sb.st_mode & S_IFMT) == S_IFDIR;
+	}
+	bool FileManager::createDirectory(string directory)
+	{
+		int status = mkdir(directory.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		return status==0 || errno == EEXIST;
+	}
+	vector<string> FileManager::getAllFiles(string directory)
+	{
+		DIR *dp = opendir(directory.c_str());
+		if(dp == nullptr)
+		{
+			return vector<string>();
+		}
+
+		struct dirent *dirp;
+		vector<string> files;
+		while((dirp = readdir(dp)) != nullptr)
+		{
+			if(dirp->d_type == DT_REG)
+			{
+				files.push_back(string(dirp->d_name));
+			}
+		}
+		closedir(dp);
+		return files;
+	}
+	vector<string> FileManager::getAllFiles(string directory,string ext)
+	{
+		DIR *dp = opendir(directory.c_str());
+		if(dp == nullptr)
+		{
+			return vector<string>();
+		}
+
+		struct dirent *dirp;
+		vector<string> files;
+		while((dirp = readdir(dp)) != nullptr)
+		{
+			if(dirp->d_type == DT_REG && extension(string(dirp->d_name)) == ext)
+			{
+				files.push_back(string(dirp->d_name));
+			}
+		}
+		closedir(dp);
+		return files;
+	}
+	vector<string> FileManager::getAllFiles(string directory,set<string> ext)
+	{
+		DIR *dp = opendir(directory.c_str());
+		if(dp == nullptr)
+		{
+			return vector<string>();
+		}
+
+		struct dirent *dirp;
+		vector<string> files;
+		while((dirp = readdir(dp)) != nullptr)
+		{
+			if(dirp->d_type == DT_REG && ext.count(extension(string(dirp->d_name))) != 0)
+			{
+				files.push_back(string(dirp->d_name));
+			}
+		}
+		closedir(dp);
+		return files;
+	}
+	vector<string> FileManager::getAllDirectories(string directory)
+	{
+		DIR *dp = opendir(directory.c_str());
+		if(dp == nullptr)
+		{
+			return vector<string>();
+		}
+
+		struct dirent *dirp;
+		vector<string> directories;
+		while((dirp = readdir(dp)) != nullptr)
+		{
+			if(dirp->d_type == DT_DIR)
+			{
+				directories.push_back(string(dirp->d_name));
+			}
+		}
+		closedir(dp);
+		return directories;
+	}
+	vector<string> FileManager::getAllFilesAndDirectories(string directory)
+	{
+		DIR *dp = opendir(directory.c_str());
+		if(dp == nullptr)
+		{
+			return vector<string>();
+		}
+
+		struct dirent *dirp;
+		vector<string> files;
+		while((dirp = readdir(dp)) != nullptr)
+		{
+			if(dirp->d_type == DT_REG || dirp->d_type == DT_DIR)
+			{
+				files.push_back(string(dirp->d_name));
+			}
+		}
+		closedir(dp);
+		return files;
+	}
+#else
+	#error OS not supported by fileManager
 #endif
 shared_ptr<FileManager::textFile> FileManager::loadTextFile(string filename, bool asinc)
 {
@@ -1088,10 +1228,8 @@ void FileManager::workerThread()
 			else if(f->type == ZIP_FILE)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
-			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);
-			#ifdef _DEBUG
-				else __debugbreak();
-			#endif
+			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);	
+			debugBreak();
 			delete[] data.contents;
 		}
 		else if(!writeEmpty)

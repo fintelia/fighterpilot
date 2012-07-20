@@ -1,7 +1,7 @@
 
 
 #include "game.h"
-#include <Windows.h>
+//#include <Windows.h>
 #ifdef XINPUT
 //#include <Xinput.h>
 #endif

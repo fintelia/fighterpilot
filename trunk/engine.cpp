@@ -1,6 +1,8 @@
 
 #include "engine.h"
+#ifdef WINDOWS
 #include <Windows.h>
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //														DEFINITIONS																				    //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
@@ -30,16 +32,19 @@ SceneManager& sceneManager = SceneManager::getInstance();																						/
 
 void ShowHideTaskBar(bool bHide)
 {
+#ifdef WINDOWS
 	// find taskbar window
 	HWND pWnd = FindWindow(L"Shell_TrayWnd",L"");
 	if(!pWnd)	return;
 	if(bHide)	ShowWindow(pWnd,SW_HIDE);
 	else		ShowWindow(pWnd,SW_SHOW);
+#endif
 }
 void minimizeActiveWindow()
 {
 	graphics->minimizeWindow();
 }
+#ifdef WINDOWS
 LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							UINT	uMsg,			// Message For This Window
 							WPARAM	wParam,			// Additional Message Information
@@ -126,21 +131,30 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	// Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+#endif
 const char* emergencyMemory = new char[5 * 1024];
 void outOfMemory()
 {
 	delete[] emergencyMemory; //free up enough memory to ensure that we can successfully display an error message
 	emergencyMemory = nullptr;
+#ifdef WINDOWS
 	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION|MB_SYSTEMMODAL);
+#endif
 	exit(EXIT_FAILURE);
 }
 //#pragma comment (lib, "Urlmon.lib")
+#ifdef WINDOWS
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
 					int			nCmdShow)			// Window Show State
 {
 	MSG	msg; // Windows Message Structure
+#else
+int main(int argc, const char* argv[])
+{
+#endif
+
 	set_new_handler(outOfMemory);
 
 	srand((unsigned int)time(nullptr));
@@ -161,10 +175,13 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	//	cmdLineStr = cmdLineStr.substr(0,cmdLineStr.find_last_of("\\/"));
 	//	SetCurrentDirectoryA(cmdLineStr.c_str());
 	//}
-
-    string cmdLineString(lpCmdLine);
+	
+#ifdef WINDOWS
+    	string cmdLineString(lpCmdLine);
 	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);
-
+#else
+	//TODO: parse argv
+#endif
 	if(!game->init())
 	{
 		return 1;
@@ -175,6 +192,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	float time=0.0;
 	while(!game->done)
 	{
+#ifdef WINDOWS
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{
 			if (msg.message==WM_QUIT)
@@ -188,6 +206,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 			}
 		}
 		else
+#else
+	//TODO: handle linux input
+#endif
 		{
 			game->update();
 

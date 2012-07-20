@@ -1,6 +1,8 @@
 
 #include "debugBreak.h"
 
+#ifdef VISUAL_STUDIO
+
 using namespace std;
 
 #ifdef _ITERATOR_DEBUG_LEVEL
@@ -15,3 +17,5 @@ void errorMsg(const wchar_t *a, const wchar_t *b, unsigned int c)
 }
 #endif
 #endif
+
+#endif /*VISUAL_STUDIO*/

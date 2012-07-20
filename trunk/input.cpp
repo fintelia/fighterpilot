@@ -1,5 +1,7 @@
 
 #include "engine.h"
+
+#ifdef WINDOWS
 #include <Windows.h>
 #ifdef XINPUT
 #include <Xinput.h>
@@ -38,10 +40,11 @@ BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,
     return DIENUM_STOP;
 }
 
-#endif
+#endif /* DIRECT_INPUT */
+#endif /* WINDOWS */
 
 const unsigned char KEYSTATE_CURRENT	= 0x01;
-const unsigned char KEYSTATE_LAST		= 0x02; 
+const unsigned char KEYSTATE_LAST	= 0x02; 
 const unsigned char KEYSTATE_VIRTUAL	= 0x04;
 
 
@@ -158,13 +161,15 @@ const InputManager::joystickControllerState* InputManager::getJoystick(unsigned 
 }
 void InputManager::update()
 {
+	static char newKeyStates[256];
+#if defined WINDOWS
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
-
-
-	static char newKeyStates[256];
 	GetKeyboardState((PBYTE)newKeyStates);
-
+#elif defined LINUX
+	Vec2i cursorPos;
+	//TODO:process keyboard and mouse state
+#endif
 
 #ifdef XINPUT
 	bool xboxControllersConnected[4];
@@ -182,6 +187,7 @@ void InputManager::update()
 	}
 #endif
 
+#ifdef XINPUT
 	if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT)) || // KEYSTATE_CURRENT actually reflects the old state (we are about to update it)
 		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
 		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
@@ -225,7 +231,21 @@ void InputManager::update()
 		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_START) ||
 		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_START))
 			sendCallbacks(new menuKeystroke(MENU_START)); //can't be triggered from keyboard!!!
+#else
+	if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT))) // KEYSTATE_CURRENT actually reflects the old state (we are about to update it)
+			sendCallbacks(new menuKeystroke(MENU_LEFT));
+	if(((newKeyStates[VK_RIGHT] & 0x80) && !(keys[VK_RIGHT] & KEYSTATE_CURRENT)))
+			sendCallbacks(new menuKeystroke(MENU_RIGHT));
+	if(((newKeyStates[VK_UP] & 0x80) && !(keys[VK_UP] & KEYSTATE_CURRENT)))
+			sendCallbacks(new menuKeystroke(MENU_UP));
+	if(((newKeyStates[VK_DOWN] & 0x80) && !(keys[VK_DOWN] & KEYSTATE_CURRENT))) 
+			sendCallbacks(new menuKeystroke(MENU_DOWN));
 
+	if(((newKeyStates[VK_SPACE] & 0x80) && !(keys[VK_SPACE] & KEYSTATE_CURRENT)) ||	((newKeyStates[VK_RETURN] & 0x80) && !(keys[VK_RETURN] & KEYSTATE_CURRENT))) 
+			sendCallbacks(new menuKeystroke(MENU_ENTER));
+	if(((newKeyStates[VK_ESCAPE] & 0x80) && !(keys[VK_ESCAPE] & KEYSTATE_CURRENT))) 
+			sendCallbacks(new menuKeystroke(MENU_BACK));
+#endif
 
 ////////////////////////////////////////////////////mutex lock////////////////////////////////////////////////////
 	inputMutex.lock();
@@ -262,6 +282,7 @@ const InputManager::mouseButtonState& InputManager::getMouseState(mouseButton m)
 	else if(m == MIDDLE_BUTTON) return middleMouse;
 	else						return rightMouse;
 }
+#ifdef WINDOWS
 void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if(uMsg == WM_KEYDOWN)
@@ -331,6 +352,7 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
 	}
 }
+#endif /*WINDOWS*/
 float InputManager::operator() (int key)
 {
 	float i=0;

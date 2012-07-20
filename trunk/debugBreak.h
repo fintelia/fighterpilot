@@ -1,9 +1,11 @@
 
-#pragma once
 
+
+#ifdef VISUAL_STUDIO
+#pragma once
 extern void minimizeActiveWindow();
 
-#ifdef _DEBUG
+#if defined WINDOWS && defined _DEBUG
 #include <xutility>
 #endif
 
@@ -41,3 +43,10 @@ extern void minimizeActiveWindow();
 #else
 	#define debugAssert(a) {}
 #endif
+
+#else
+
+#define debugBreak() {}
+#define debugAssert(a) {}
+
+#endif /*VISUAL_STUDIO*/

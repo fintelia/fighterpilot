@@ -81,17 +81,22 @@ T uPowerOfTwo(T i)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef WINDOWS
-class mutex
-{
-private:
-	void* handle;
-public:
-	mutex();
-	~mutex();
-	bool lock(unsigned long timeout=0xffffffff);
-	void unlock();
-};
+//class mutex
+//{
+//private:
+//	void* handle;
+//public:
+//	mutex();
+//	~mutex();
+//	bool lock(unsigned long timeout=0xffffffff);
+//	void unlock();
+//};
 void sleep(unsigned long milliseconds);
+#else
+#define __int8 char
+#define __int16 short
+#define __int32 int
+#define __int64 long long
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern unsigned __int8 uPowerOfTwo(unsigned __int8 i);

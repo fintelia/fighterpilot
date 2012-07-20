@@ -174,7 +174,7 @@ public:
 	{
 		
 	}
-	Plane(Vector3<T> Normal, Vector3<T> Point): normal(Normal.normalize()), d(-normal.dot(point))
+	Plane(Vector3<T> Normal, Vector3<T> Point): normal(Normal.normalize()), d(-normal.dot(Point))
 	{
 
 	}
@@ -185,7 +185,7 @@ public:
 		normal /= l;
 		d /= l;
 	}
-	Plane(Vector3<T> n, T D): normal(n), point(), d(D)
+	Plane(Vector3<T> n, T D): normal(n), d(D)
 	{
 		T l = normal.magnitude();
 
