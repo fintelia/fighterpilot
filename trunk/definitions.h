@@ -80,19 +80,23 @@ T uPowerOfTwo(T i)
     return ++i;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef WINDOWS
-//class mutex
-//{
-//private:
-//	void* handle;
-//public:
-//	mutex();
-//	~mutex();
-//	bool lock(unsigned long timeout=0xffffffff);
-//	void unlock();
-//};
-void sleep(unsigned long milliseconds);
-#else
+void threadSleep(unsigned long milliseconds);
+class mutex
+{
+private:
+#if defined(WINDOWS)
+	void* handle;
+#elif defined(LINUX)
+	pthread_mutex_t* mutexPtr;
+#endif
+public:
+	mutex();
+	~mutex();
+	bool lock(unsigned long timeout=0xffffffff);
+	void unlock();
+};
+
+#ifndef WINDOWS
 #define __int8 char
 #define __int16 short
 #define __int32 int

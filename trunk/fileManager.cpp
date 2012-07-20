@@ -24,11 +24,15 @@
 //#else
 //	#error operating system not currently supported by fileManager
 //#endif
-
-#if defined(LINUX)
+#if defined(WINDOWS)
+	#include <Windows.h>
+	#include <process.h>
+	#include <Shlobj.h>
+#elif defined(LINUX)
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	#include <dirent.h>
+	#include <pthread.h>
 #endif 
 
 #include "zlib/zlib.h"
@@ -67,13 +71,16 @@
 //}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-//#ifdef WINDOWS
+
 FileManager::FileManager()
 {
-	boost::thread workerThread(startWorkerThread, nullptr);
-	//_beginthread(startWorkerThread,0,this);
+#if defined(WINDOWS)
+	_beginthread(startWorkerThread,0,this);
+#elif defined(LINUX)
+	//TODO:add code to start posix thread
+#endif
 }
-//#endif
+
 string FileManager::filename(string filename)
 {
 	size_t nDot = filename.find_last_of('.');
@@ -1229,7 +1236,7 @@ void FileManager::workerThread()
 			else if(f->type == TEXTURE_FILE && f->format == BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);	
-			debugBreak();
+			else debugBreak();
 			delete[] data.contents;
 		}
 		else if(!writeEmpty)
@@ -1243,7 +1250,7 @@ void FileManager::workerThread()
 		else
 		{
 			fileQueueMutex.unlock();
-			sleep(15);
+			threadSleep(15);
 		}
 	}
 }

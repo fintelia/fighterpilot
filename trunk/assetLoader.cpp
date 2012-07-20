@@ -1,38 +1,41 @@
 
 #include "engine.h"
-#include "xml/tinyxml.h"
+//#include "xml/tinyxml.h"
+#include "xml/tinyxml2.h"
 
-string getAttribute(TiXmlElement* element, const char* attribute)
+using namespace tinyxml2;
+
+string getAttribute(XMLElement* element, const char* attribute)
 {
 	const char* c = element->Attribute(attribute);
 	string s = (c != NULL) ? string(c) : string("");
 	return s;
 }
-int getIntAttribute(TiXmlElement* element, const char* attribute)//returns 0 on failure
+int getIntAttribute(XMLElement* element, const char* attribute)//returns 0 on failure
 {
 	int i;
-	return element->QueryIntAttribute(attribute, &i) == TIXML_SUCCESS ? i : 0;
+	return element->QueryIntAttribute(attribute, &i) == XML_SUCCESS ? i : 0;
 }
 bool AssetLoader::loadAssetList()
 {
-	TiXmlDocument doc("media/assetList.xml");
-	if(!doc.LoadFile())
+	XMLDocument doc;
+	if(doc.LoadFile("media/assetList.xml"))
 	{
 		return false;
 	}
 
-	TiXmlNode* node					= nullptr;
-	TiXmlNode* assetsNode			= nullptr;
+	XMLElement* node				= nullptr;
+	XMLElement* assetsNode			= nullptr;
 
-	assetsNode = doc.FirstChild("assets");
+	assetsNode = doc.FirstChildElement("assets");
 	if(assetsNode == nullptr) return false;
-
+	
 ////////////////////////////////////////textures//////////////////////////////////////////
-	node = assetsNode->FirstChild("textures");
+	node = assetsNode->FirstChildElement("textures");
 	if(node != nullptr)
 	{
-		TiXmlElement* texturesElement	= nullptr;
-		TiXmlElement* textureElement	= nullptr;
+		XMLElement* texturesElement	= nullptr;
+		XMLElement* textureElement	= nullptr;
 
 		texturesElement = node->ToElement();
 		if(texturesElement != nullptr)
@@ -76,7 +79,7 @@ bool AssetLoader::loadAssetList()
 					string filename = getAttribute(textureElement, "file");
 					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
 
-					if(tmpAssetFile->name == "" || filename == "" || textureElement->QueryIntAttribute("depth", &tmpAssetFile->depth) != TIXML_SUCCESS)
+					if(tmpAssetFile->name == "" || filename == "" || textureElement->QueryIntAttribute("depth", &tmpAssetFile->depth) != XML_SUCCESS)
 					{
 						debugBreak();
 						continue;
@@ -121,11 +124,11 @@ bool AssetLoader::loadAssetList()
 		}
 	}
 ////////////////////////////////////////shaders///////////////////////////////////////////
-	node = assetsNode->FirstChild("shaders");
+	node = assetsNode->FirstChildElement("shaders");
 	if(node != nullptr)
 	{
-		TiXmlElement* shadersElement	= nullptr;
-		TiXmlElement* shaderElement		= nullptr;
+		XMLElement* shadersElement	= nullptr;
+		XMLElement* shaderElement	= nullptr;
 
 		shadersElement = node->ToElement();
 		if(shadersElement != nullptr)
@@ -165,11 +168,11 @@ bool AssetLoader::loadAssetList()
 		}
 	}
 ////////////////////////////////////////models///////////////////////////////////////////
-	node = assetsNode->FirstChild("models");
+	node = assetsNode->FirstChildElement("models");
 	if(node != nullptr)
 	{
-		TiXmlElement* modelsElement		= nullptr;
-		TiXmlElement* modelElement		= nullptr;
+		XMLElement* modelsElement		= nullptr;
+		XMLElement* modelElement		= nullptr;
 
 		modelsElement = node->ToElement();
 		if(modelsElement != nullptr)
@@ -197,11 +200,11 @@ bool AssetLoader::loadAssetList()
 		}
 	}
 ///////////////////////////////////////font//////////////////////////////////////////////
-	node = assetsNode->FirstChild("fonts");
+	node = assetsNode->FirstChildElement("fonts");
 	if(node != nullptr)
 	{
-		TiXmlElement* assetsElement		= nullptr;
-		TiXmlElement* assetElement		= nullptr;
+		XMLElement* assetsElement		= nullptr;
+		XMLElement* assetElement		= nullptr;
 
 		assetsElement = node->ToElement();
 		if(assetsElement != nullptr)

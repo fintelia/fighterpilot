@@ -1,7 +1,7 @@
 
 #include "engine.h"
 #include "png/png.h"
-#include "xml/tinyxml.h"
+
 DataManager::~DataManager()
 {
 	shutdown();

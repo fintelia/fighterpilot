@@ -218,7 +218,7 @@ int main(int argc, const char* argv[])
 
 				///timing code
 				float waitTime = (nextUpdate - max(swapTime,0)) - GetTime();
-				if(waitTime>1.0)	sleep(waitTime-1);
+				if(waitTime>1.0)	threadSleep(waitTime-1);
 				do{
 					time = GetTime();
 				}while(time < nextUpdate - max(swapTime,0));
@@ -232,7 +232,7 @@ int main(int argc, const char* argv[])
 			}
 			else
 			{
-				sleep(10);
+				threadSleep(10);
 			}
 		}
 	}

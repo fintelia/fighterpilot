@@ -19,7 +19,6 @@
 
     #pragma comment (lib, "libz.lib")
     #pragma comment (lib, "libpng15.lib")
-    #pragma comment (lib, "tinyxml.lib")
 
 	#pragma comment (lib,"xinput")
 
@@ -60,7 +59,6 @@ typedef void* HANDLE;
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/thread.hpp>
 //--Namespaces
 using namespace std;
 using boost::lexical_cast;

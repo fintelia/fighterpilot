@@ -3,6 +3,8 @@
 
 #ifdef OPENGL
 
+#define GLEW_STATIC
+
 #if defined(WINDOWS)
 	#include <Windows.h>
 	#include "GL/glew.h"

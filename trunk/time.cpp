@@ -2,9 +2,9 @@
 
 #include <cmath>
 
-#if defined __WIN32
+#if defined(_WIN32)
 	#include <windows.h>
-#elif defined __linux__
+#elif defined(__linux__)
 	#include <time.h>
 #else
 	#error OS not supported by time.cpp
@@ -16,7 +16,7 @@
 
 
 
-#if defined __WIN32
+#if defined(_WIN32)
 	long long getTotalTicksPerSecond()
 	{
 		long long ticksPerSecond;
@@ -31,7 +31,7 @@
 			ticks = (long long)GetTickCount();
 		return ticks;
 	}
-#elif defined __linux__
+#elif defined(__linux__)
 	long long getTotalTicksPerSecond()
 	{
 		return 1000000000;
