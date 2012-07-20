@@ -165,18 +165,18 @@ void threadSleep(unsigned long milliseconds)
 }
 mutex::mutex()
 {
-	pthread_mutex_init(mutexPtr, nullptr);
+	pthread_mutex_init(&pmutex, nullptr);
 }
 mutex::~mutex()
 {
-	pthread_mutex_destroy(mutexPtr);
+	pthread_mutex_destroy(&pmutex);
 }
 bool mutex::lock(unsigned long timeout)
 {
-	pthread_mutex_lock(mutexPtr);
+	pthread_mutex_lock(&pmutex);
 }
 void mutex::unlock()
 {
-	pthread_mutex_unlock(mutexPtr);
+	pthread_mutex_unlock(&pmutex);
 }
 #endif
