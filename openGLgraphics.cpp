@@ -3,9 +3,20 @@
 
 #ifdef OPENGL
 
-#include <Windows.h>
-#include "GL/glew.h"
-#include "GL/wglew.h"
+#if defined(WINDOWS)
+	#include <Windows.h>
+	#include "GL/glew.h"
+	#include "GL/wglew.h"
+#elif defined(LINUX)
+	#include <X11/Xlib.h>
+	#include <X11/extensions/xf86vmode.h>
+
+	#include "GL/glew.h"
+	#include <GL/glx.h>
+#else
+	#error OS not supported by openGLgraphics
+#endif
+
 
 #include <GL/glu.h>
 #include "png/png.h"
@@ -19,6 +30,7 @@
 bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
 bool openGL3=false;
 
+#if defined WINDOWS
 struct OpenGLgraphics::Context
 {
 	HDC			hDC;
@@ -27,6 +39,12 @@ struct OpenGLgraphics::Context
 	HINSTANCE	hInstance; // not initialized?
 	Context(): hDC(NULL),hRC(NULL),hWnd(NULL){}
 };
+#elif defined(LINUX)
+struct OpenGLgraphics::Context
+{
+
+};
+#endif
 OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
 {
 	glGenBuffers(1, &vBufferID);
@@ -795,7 +813,9 @@ void OpenGLgraphics::flashTaskBar(int times, int length)
 }
 void OpenGLgraphics::minimizeWindow()
 {
+#ifdef WINDOWS
 	ShowWindow(context->hWnd, SW_MINIMIZE);
+#endif
 }
 OpenGLgraphics::OpenGLgraphics():highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
@@ -983,8 +1003,10 @@ void OpenGLgraphics::setClientState(unsigned int index, bool state)
 }
 void OpenGLgraphics::setVSync(bool enabled)
 {
+#ifdef WINDOWS
 	if(WGLEW_EXT_swap_control)// wglSwapIntervalEXT)
 		wglSwapIntervalEXT(enabled ? 1 : 0);//turn on/off vsync (0 = off and 1 = on)
+#endif
 }
 void OpenGLgraphics::setAlphaToCoverage(bool enabled)
 {
@@ -1166,6 +1188,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	{
 		GLenum status = gl3FBOs ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 		if(status == GL_FRAMEBUFFER_COMPLETE)							return true;
+#ifdef WINDOWS
 		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
 		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
 		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
@@ -1176,6 +1199,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
 		else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
 		else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#endif
 		return false;
 	};
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -1544,6 +1568,7 @@ void OpenGLgraphics::destroyWindow()
 
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
 
+#if defined(WINDOWS)
 	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
 	ShowCursor(true);								// Show Mouse Pointer
 
@@ -1578,16 +1603,21 @@ void OpenGLgraphics::destroyWindow()
 		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
 		context->hInstance=NULL;									// Set hInstance To NULL
 	}
-
+#elif defined(LINUX)
+	//TODO: write windows destruction code 
+#endif
 	this->~OpenGLgraphics();
 }
+#ifdef WINDOWS
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+#endif
 bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
 {
 	static bool arbMultisampleSupported=false;
 	static int arbMultisampleFormat=0;
 	bool fullscreenflag=true;
 
+#if defined(WINDOWS)
 	GLuint		PixelFormat;			// Holds The Results After Searching For A Match
 	WNDCLASSEX	wc;						// Windows Class Structure
 	DWORD		dwExStyle;				// Window Extended Style
@@ -1728,6 +1758,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		MessageBox(NULL,L"Can't Activate The GL Rendering Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
+#elif defined(LINUX)
+	//TODO:add window creation code
+#endif
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
 	GLenum err = glewInit();
@@ -1735,7 +1768,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	{
 		destroyWindow();
 		string s = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
+#ifdef WINDOWS
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+#endif
 		return false;
 	}
 	else if(!GLEW_VERSION_2_1)
@@ -1749,8 +1784,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		if(version) s += string("\n   OpenGL version: ") + version;
 		if(renderer) s += string("\n   Renderer: ") + renderer;
 		if(vender) s += string("\n   Vender: ") + vender;
-
+#ifdef WINDOWS
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+#endif
 		return false;
 	}
 	else if(!GL_EXT_framebuffer_object)
@@ -1764,11 +1800,13 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		if(version) s += string("\n   OpenGL version: ") + version;
 		if(renderer) s += string("\n   Renderer: ") + renderer;
 		if(vender) s += string("\n   Vender: ") + vender;
-
+#ifdef WINDOWS
 		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+#endif
 		return false;
 	}
 
+#ifdef WINDOWS
 	if(game->hasCommandLineOption("--opengl3") && wglCreateContextAttribsARB)
 	{
 		int attribs[] =
@@ -1805,6 +1843,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
 	SetForegroundWindow(context->hWnd);				// Slightly Higher Priority
 	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
+	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
+	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
+#endif
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -1831,13 +1872,13 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	shapesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3, 0);
 	shapesVBO->setTotalVertexSize(sizeof(vertex3D));
 
-	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
-	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
+
 
 	return true;
 }
 bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples) // may invalidate OpenGL function pointers?
 {
+#if defined(WINDOWS)
 	DEVMODE dmScreenSettings;										// Device Mode
 	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
 	dmScreenSettings.dmSize			= sizeof(dmScreenSettings);		// Size Of The Devmode Structure
@@ -1855,10 +1896,14 @@ bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples)
 		resize(resolution.x, resolution.y);
 		return true;
 	}
+#elif defined(LINUX)
+	//TODO: add window resize code
+#endif
 	return false;
 }
 set<Vec2u> OpenGLgraphics::getSupportedResolutions()
 {
+#if defined(WINDOWS)
 	int i=0;
 	DEVMODE d;
 	set<Vec2u> s;
@@ -1872,11 +1917,19 @@ set<Vec2u> OpenGLgraphics::getSupportedResolutions()
 		i++;
 	}
 	return s;
+#elif defined(LINUX)
+	//TODO: add resolution enumeration code
+#endif
 }
 void OpenGLgraphics::swapBuffers()
 {
+#if defined(WINDOWS)
 	SwapBuffers(context->hDC);
+#elif defined(LINUX)
+	//TODO: add swap buffer code
+#endif
 }
+
 void OpenGLgraphics::takeScreenshot()
 {
 	world.time.pause();

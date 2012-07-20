@@ -183,7 +183,7 @@ private:
 
 	queue<std::shared_ptr<file>> fileQueue;
 	queue<std::shared_ptr<file>> fileWriteQueue;
-	mutex fileQueueMutex;
+	boost::mutex fileQueueMutex;
 };
 
 extern FileManager& fileManager;

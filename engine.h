@@ -60,6 +60,7 @@ typedef void* HANDLE;
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/thread.hpp>
 //--Namespaces
 using namespace std;
 using boost::lexical_cast;
@@ -73,8 +74,11 @@ extern const double PI;
 const int NumPlayers = 2;
 
 #define OPENGL
+#ifdef _WIN32 
 #define WINDOWS
-
+#elif __linux__
+#define LINUX
+#endif
 extern int sh, sw;
 extern float sAspect;
 

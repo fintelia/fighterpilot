@@ -396,6 +396,7 @@ void openFile::refreshView()
 }
 int openFile::update()
 {
+#if defined WINDOWS
 	if(buttons["desktop"]->checkChanged())
 	{
 		char aFolder[MAX_PATH];
@@ -436,6 +437,10 @@ int openFile::update()
 		}
 		return 0;
 	}
+#elif defined LINUX
+	//TODO: add support for default directories on linux
+#endif
+
 	//for(vector<button*>::iterator i=folderButtons.begin();i!=folderButtons.end();i++)
 	//{
 	//	if((*i)->checkChanged())
@@ -515,8 +520,11 @@ bool openFile::keyDown(int vkey)
 	}
 	else
 	{
+#ifdef WINDOWS
 		char ascii = MapVirtualKey(vkey,2/*MAPVK_VK_TO_CHAR*/);
-
+#else
+		char ascii = 0; //TODO: add support for mapping virtual keys on linux
+#endif
 		if(ascii != 0 && !input.getKey(VK_SHIFT))
 			file  += tolower(ascii);
 		else if(ascii != 0)
@@ -1330,7 +1338,11 @@ void closingMessage(string text,string title)
 	if(!dataManager.assetLoaded("default font"))
 	{
 		graphics->destroyWindow();
+#ifdef WINDOWS
 		MessageBoxA(NULL,text.c_str(),title.c_str(),MB_ICONERROR);
+#else
+		//TODO: add support for linux "message boxes"
+#endif
 		exit(0);
 	}
 	else

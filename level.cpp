@@ -141,7 +141,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 	int pos=0;
 	vector<Object>::iterator object=objects.end();
 
-	auto readSubString = [str, &pos](char* c)->bool
+	auto readSubString = [str, &pos](const char* c)->bool
 	{
 		int p=0;
 		while(p+pos < str.size())

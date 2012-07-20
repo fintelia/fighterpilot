@@ -50,7 +50,7 @@ protected:
 
 	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
-	mutex  inputMutex;
+	boost::mutex  inputMutex;
 public:
 	struct callBack
 	{
@@ -91,8 +91,9 @@ public:
 		static InputManager* pInstance = new InputManager();
 		return *pInstance;
 	}
-
+#ifdef WINDOWS
 	virtual void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
+#endif
 	int lastKey;
 	int tPresses;
 	virtual void down(int k);

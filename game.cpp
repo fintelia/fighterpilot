@@ -1,6 +1,8 @@
 
 #include "game.h"
+#ifdef WINDOWS
 #include <Windows.h>
+#endif
 PlayerManager& players = PlayerManager::getInstance();
 SettingsManager& settings = SettingsManager::getInstance();
 
@@ -12,18 +14,22 @@ planeType defaultPlane;
 
 bool Game::init()
 {
-#ifdef _DEBUG
+#if defined WINDOWS && defined _DEBUG
 	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
 #endif
 
 	if(!fileManager.directoryExists("media"))
 	{
+#ifdef WINDOWS
 		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+#endif
 		return false;
 	}
 	else if(!assetLoader.loadAssetList())
 	{
+#ifdef WINDOWS
 		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+#endif
 		return false;
 	}
 	string appData = fileManager.getAppDataDirectory();
@@ -31,8 +37,14 @@ bool Game::init()
 	{
 		shared_ptr<FileManager::iniFile> settingsFile(new FileManager::iniFile(appData + "settings.ini"));
 		settingsFile->bindings["graphics"]["maxFrameRate"] = "60.0";
+#ifdef WINDOWS
 		settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(GetSystemMetrics(SM_CXSCREEN));
 		settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(GetSystemMetrics(SM_CYSCREEN));
+#else
+		settingsFile->bindings["graphics"]["resolutionX"] = "0";
+		settingsFile->bindings["graphics"]["resolutionY"] = "0";
+
+#endif
 		settingsFile->bindings["graphics"]["samples"] = "4";
 		settingsFile->bindings["graphics"]["gamma"] = "1.0";
 		if(!fileManager.writeIniFile(settingsFile))
@@ -52,8 +64,13 @@ bool Game::init()
 	
 
 	Vec2u r, rWanted;
+#ifdef WINDOWS
 	r.x = GetSystemMetrics(SM_CXSCREEN);
 	r.y = GetSystemMetrics(SM_CYSCREEN);
+#else
+	r.x = 0;
+	r.y = 0;
+#endif
 	rWanted.x = settings.get<int>("graphics","resolutionX");
 	rWanted.y = settings.get<int>("graphics","resolutionY");
 
@@ -64,6 +81,16 @@ bool Game::init()
 		{
 			r = rWanted;
 		}
+	}
+	if(r.x == 0 || r.y == 0) //if we failed to get the resolution we wanted and we don't know the screen resolution
+	{
+		for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
+		{
+			if((*i).y > r.y || ((*i).y == r.y && (*i).x > r.x)) //pick the highest vertical resolution
+			{
+				r = *i;
+			}
+		}		
 	}
 
 	float gamma = settings.get<float>("graphics","gamma");
