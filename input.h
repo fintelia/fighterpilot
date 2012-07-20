@@ -50,7 +50,7 @@ protected:
 
 	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
-	boost::mutex  inputMutex;
+	mutex  inputMutex;
 public:
 	struct callBack
 	{

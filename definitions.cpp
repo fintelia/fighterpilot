@@ -1,7 +1,9 @@
 
 #include "engine.h"
-#ifdef WINDOWS
+#if defined(WINDOWS)
 #include <Windows.h>
+#elif defined(LINUX)
+#include <pthread.h>
 #endif
 
 const double UPDATE_LENGTH	= 8.333;
@@ -132,8 +134,8 @@ __int64 uPowerOfTwo(__int64 i)
 //	debugBreak();
 //	return "";
 //}
-#ifdef WINDOWS
-void sleep(unsigned long milliseconds)
+#if defined(WINDOWS)
+void threadSleep(unsigned long milliseconds)
 {
 	Sleep(milliseconds);
 }
@@ -152,5 +154,29 @@ bool mutex::lock(unsigned long timeout)
 void mutex::unlock()
 {
 	ReleaseMutex(handle);
+}
+#elif defined(LINUX)
+void threadSleep(unsigned long milliseconds)
+{
+	timespec t;
+	t.tv_sec = milliseconds / 1000;
+	t.tv_nsec = (milliseconds % 1000) * 1000;
+	nanosleep(&t, &t);
+}
+mutex::mutex()
+{
+	pthread_mutex_init(mutexPtr, nullptr);
+}
+mutex::~mutex()
+{
+	pthread_mutex_destroy(mutexPtr);
+}
+bool mutex::lock(unsigned long timeout)
+{
+	pthread_mutex_lock(mutexPtr);
+}
+void mutex::unlock()
+{
+	pthread_mutex_unlock(mutexPtr);
 }
 #endif

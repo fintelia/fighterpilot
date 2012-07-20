@@ -166,6 +166,9 @@
     <Filter Include="shaders\trees">
       <UniqueIdentifier>{b2d6ff2e-f7d0-405e-848e-5dcdb689fa91}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tinyxml2">
+      <UniqueIdentifier>{a6c2b302-98cc-4d45-ab2d-98d3b7383df1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -336,6 +339,9 @@
     <ClCompile Include="glew.c">
       <Filter>glee</Filter>
     </ClCompile>
+    <ClCompile Include="xml\tinyxml2.cpp">
+      <Filter>tinyxml2</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -461,6 +467,9 @@
     </ClInclude>
     <ClInclude Include="GL\wglew.h">
       <Filter>glee</Filter>
+    </ClInclude>
+    <ClInclude Include="xml\tinyxml2.h">
+      <Filter>tinyxml2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
