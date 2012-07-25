@@ -223,9 +223,8 @@ template<class T>
 std::istream& operator>>(std::istream& s, Vector3<T>& v)
 {
 	char c[64];
-	s.width(64);
-	s >> c;
-
+	s.get(c, 64);
+		
 	v.x=0;
 	v.y=0;
 	v.z=0;
@@ -276,6 +275,10 @@ std::istream& operator>>(std::istream& s, Vector3<T>& v)
 		}
 		n++;
 	}
+	
+//	while(!s.eof()) s.get(); 	//extract characters until the stream is empty
+//								//if any are left, boost::lexical_cast will fail
+	
     return s;
 }
 

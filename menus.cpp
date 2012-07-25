@@ -62,7 +62,7 @@ int objectProperties::update()
 			object->startloc = v;
 			object->team = listBoxes["team"]->getOptionNumber();
 
-			int ptype = listBoxes["type"]->getOptionNumber();
+			//int ptype = listBoxes["type"]->getOptionNumber();
 			object->type = typeOptions[listBoxes["type"]->getOptionNumber()];
 
 //			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
@@ -472,6 +472,7 @@ int loading::update()
 		dataManager.writeErrorLog("media/shaderErrors.txt");
 		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 	}
+	
 	return 30;
 }
 void loading::render()

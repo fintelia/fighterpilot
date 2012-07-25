@@ -77,6 +77,7 @@ void SettingsManager::load(string filename)
 			}
 			catch(boost::bad_lexical_cast &)
 			{
+				cout << line << endl;
 				debugBreak();//boost type conversion failed
 				closingMessage("Error reading 'modelData.txt'. Fighter-Pilot will now close.","Error");
 				return;

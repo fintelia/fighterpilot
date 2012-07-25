@@ -81,14 +81,11 @@ T uPowerOfTwo(T i)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void threadSleep(unsigned long milliseconds);
+
 class mutex
 {
 private:
-#if defined(WINDOWS)
 	void* handle;
-#elif defined(LINUX)
-	pthread_mutex_t pmutex;
-#endif
 public:
 	mutex();
 	~mutex();

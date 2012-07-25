@@ -72,12 +72,18 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef LINUX
+pthread_t pWorkerThread;
+#endif
+
 FileManager::FileManager()
 {
 #if defined(WINDOWS)
 	_beginthread(startWorkerThread,0,this);
 #elif defined(LINUX)
-	//TODO:add code to start posix thread
+	int errorCode = pthread_create(&pWorkerThread, nullptr, startWorkerThread, this);
+	if(errorCode)
+		cout << "fileManager worker thread creation failed with error code" << errorCode << endl;
 #endif
 }
 

@@ -163,20 +163,23 @@ void threadSleep(unsigned long milliseconds)
 	t.tv_nsec = (milliseconds % 1000) * 1000;
 	nanosleep(&t, &t);
 }
-mutex::mutex()
+mutex::mutex(): handle(nullptr)
 {
-	pthread_mutex_init(&pmutex, nullptr);
+	handle = new pthread_mutex_t;
+	pthread_mutex_init(static_cast<pthread_mutex_t*>(handle), nullptr);
 }
 mutex::~mutex()
 {
-	pthread_mutex_destroy(&pmutex);
+	pthread_mutex_destroy(static_cast<pthread_mutex_t*>(handle));
+	delete static_cast<pthread_mutex_t*>(handle);
 }
 bool mutex::lock(unsigned long timeout)
 {
-	pthread_mutex_lock(&pmutex);
+	pthread_mutex_lock(static_cast<pthread_mutex_t*>(handle));
+	return true;
 }
 void mutex::unlock()
 {
-	pthread_mutex_unlock(&pmutex);
+	pthread_mutex_unlock(static_cast<pthread_mutex_t*>(handle));
 }
 #endif

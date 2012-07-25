@@ -123,7 +123,7 @@ void nPlane::updateSimulation(double time, double ms)
 						rollAng += deltaRoll;
 					}
 
-					if(roll.inRange(0.0,PI,false) && (controls.right-controls.left > 0) || roll.inRange(PI,2.0*PI,false) && (controls.right-controls.left < 0))
+					if((roll.inRange(0.0,PI,false) && (controls.right-controls.left > 0)) || (roll.inRange(PI,2.0*PI,false) && (controls.right-controls.left < 0)))
 					{
 						direction -= Lift / (mass*0.2*speed) * sin(roll)/*cos(climb)*/ * (ms/1000);
 					}

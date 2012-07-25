@@ -150,10 +150,19 @@ private:
 		vec.insert(vec.end(), (unsigned char*)&value, (unsigned char*)&value + sizeof(T));
 	}
 	void workerThread();
+#if defined(WINDOWS)
 	static void startWorkerThread(void* pThis)
 	{
 		((FileManager*)pThis)->workerThread();
+	}	
+#elif defined(LINUX)
+	static void* startWorkerThread(void* pThis)
+	{
+		((FileManager*)pThis)->workerThread();
+		return nullptr;
 	}
+#endif 
+
 
 	fileContents loadFileContents(string filename);
 	bool writeFileContents(string filename, fileContents contents); //deletes contents after writing!!!

@@ -1341,6 +1341,7 @@ void closingMessage(string text,string title)
 #ifdef WINDOWS
 		MessageBoxA(NULL,text.c_str(),title.c_str(),MB_ICONERROR);
 #else
+		cout << text << endl;
 		//TODO: add support for linux "message boxes"
 #endif
 		exit(0);
