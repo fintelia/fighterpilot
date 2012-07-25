@@ -326,15 +326,16 @@ bool CollisionChecker::operator() (shared_ptr<object> o1, shared_ptr<object> o2)
 	Mat4f mat1(o1->rotation, o1->position);
 	Mat4f mat2(o2->rotation, o2->position);
 
-	Vec3f _center1 = o1->position + o1->rotation * tr1->center;
-	Vec3f _center2 = o2->position + o2->rotation * tr2->center;
+	//Vec3f _center1 = o1->position + o1->rotation * tr1->center;
+	//Vec3f _center2 = o2->position + o2->rotation * tr2->center;
 
 	Vec3f center1 = mat1 * tr1->center;
 	Vec3f center2 = mat1 * tr2->center;
 
 	if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
 	{
-		int i1,i2;
+		int i1;
+		//int i2;
 		for(i1=0; i1 < tr1->numTriangles; i1++)
 		{
 			if((mat1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))

@@ -289,7 +289,7 @@ void AIplayer::startHunt(int targetID)
 }
 void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
 {
-	Vec3f velocity = p->rotation * Vec3f(0,0,1);
+	//Vec3f velocity = p->rotation * Vec3f(0,0,1);
 	Vec3f destVector = dest - p->position;
 	Vec3f destDirection = destVector.normalize();
 

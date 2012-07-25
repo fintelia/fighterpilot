@@ -1,7 +1,13 @@
 
 #include "engine.h"
-#ifdef WINDOWS
-#include <Windows.h>
+#if defined(WINDOWS)
+	#include <Windows.h>
+#elif defined(LINUX)
+	#include <X11/keysym.h>
+	#include <X11/Xlib.h>
+	Display* x11_display;
+	int x11_screen;
+	unsigned int x11_window;
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //														DEFINITIONS																				    //
@@ -44,7 +50,7 @@ void minimizeActiveWindow()
 {
 	graphics->minimizeWindow();
 }
-#ifdef WINDOWS
+#if defined(WINDOWS)
 LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							UINT	uMsg,			// Message For This Window
 							WPARAM	wParam,			// Additional Message Information
@@ -131,6 +137,66 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	// Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
+#elif defined(LINUX)
+void linuxEventHandler(XEvent event)
+{
+	if(event.type == KeyPress || event.type == KeyRelease)
+	{
+		XKeyEvent* e = &event.xkey;
+		bool keyup = e->type == KeyRelease;
+		unsigned int keysym = XLookupKeysym(e,0);
+
+		auto trySym = [keysym,keyup](unsigned int sym, unsigned int vk)->bool
+		{
+			if(keysym == sym)
+			{
+				input.sendCallbacks(new InputManager::keyStroke(keyup, vk));
+				cout << keysym << endl;
+				return true;
+			}
+			return false;
+		};
+		auto trySymRange = [keysym,keyup](unsigned int minSym, unsigned int maxSym, unsigned int 															minVK)
+		{
+			if(keysym >= (minSym) && keysym <= (maxSym))
+			{
+				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(maxSym)+(minVK)));
+				cout << keysym << endl;
+				return true;
+			}
+			return false;
+		};
+		
+		if(keysym == 0xffe1 || keysym == 0xffe2)// L-SHIFT / R-SHIFT
+			input.sendCallbacks(new InputManager::keyStroke(keyup, VK_SHIFT));
+
+		if(keysym == 0xffe3 || keysym == 0xffe4)// L-CONTROL / R-CONTROL
+			input.sendCallbacks(new InputManager::keyStroke(keyup, VK_CONTROL));
+		
+		
+		//see input.h and x11/keysymdef.h 
+		if(	!trySym(XK_BackSpace, 						VK_BACK) &&
+			!trySym(XK_Tab, 							VK_TAB) &&
+			!trySym(XK_Return, 							VK_RETURN) &&
+			!trySym(XK_Alt_L,							VK_MENU) &&		//L-ALT
+			!trySym(XK_Alt_R,							VK_MENU) &&		//R-ALT
+			!trySym(XK_Pause,							VK_PAUSE) &&
+			!trySym(XK_Caps_Lock,						VK_CAPITAL) &&
+			!trySym(XK_Escape,							VK_ESCAPE) &&
+			!trySym(XK_space,							VK_SPACE) &&
+			!trySymRange(XK_Home, XK_Down,				VK_HOME) && 	// home,up,down,left,right
+			!trySymRange(XK_KP_0, XK_KP_9,				VK_NUMPAD0) &&
+			!trySymRange(XK_KP_Multiply, XK_KP_Divide,	VK_MULTIPLY) &&	// multiply, add, seperator, subtract, decimal, divide (keypad)
+			!trySymRange(XK_F1, XK_F24,					VK_F1) && 		// F1 - F24
+			!trySymRange(XK_Shift_L, XK_Control_R,		VK_LSHIFT) &&	// L-SHIFT, R-SHIFT, L-CONTROL, R-CONTROL
+			!trySymRange(XK_KP_0, XK_KP_9,				0x30) && 		// 0-9
+			!trySymRange(XK_A, XK_Z,					0x41) && 		// A-Z
+			!trySymRange(XK_a, XK_z,					0x41)) 			// a-z
+		{
+			//keysym not found...
+		}
+	}
+}
 #endif
 const char* emergencyMemory = new char[5 * 1024];
 void outOfMemory()
@@ -141,7 +207,7 @@ void outOfMemory()
 	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION|MB_SYSTEMMODAL);
 #endif
 	exit(EXIT_FAILURE);
-}
+} 
 //#pragma comment (lib, "Urlmon.lib")
 #ifdef WINDOWS
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
@@ -149,7 +215,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					LPSTR		lpCmdLine,			// Command Line Parameters
 					int			nCmdShow)			// Window Show State
 {
-	MSG	msg; // Windows Message Structure
+
 #else
 int main(int argc, const char* argv[])
 {
@@ -176,26 +242,41 @@ int main(int argc, const char* argv[])
 	//	SetCurrentDirectoryA(cmdLineStr.c_str());
 	//}
 	
-#ifdef WINDOWS
-    	string cmdLineString(lpCmdLine);
-	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);
-#else
-	//TODO: parse argv
+#if defined(WINDOWS)
+    string cmdLineString(lpCmdLine);
+	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);	
+	MSG	msg; // Windows Message Structure
+#elif defined(LINUX)
+	for(int i=0; i<argc; i++)
+	{
+		game->commandLineOptions.push_back(string(argv[i]));
+	}
+	x11_display = XOpenDisplay(0);
+	x11_screen = DefaultScreen(x11_display);
 #endif
+
 	if(!game->init())
 	{
 		return 1;
 	}
-
+	
+#ifdef LINUX
+	XSelectInput(x11_display, x11_window, ButtonPressMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
+	Atom wmDeleteMessage=XInternAtom(x11_display, "WM_DELETE_WINDOW", true);
+	XSetWMProtocols(x11_display, x11_window, &wmDeleteMessage, 1);
+	XAutoRepeatOff(x11_display);
+	XEvent event;
+#endif
+	
 	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;
 	while(!game->done)
 	{
-#ifdef WINDOWS
-		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
+#if defined(WINDOWS)
+		if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{
-			if (msg.message==WM_QUIT)
+			if(msg.message==WM_QUIT)
 			{
 				break;
 			}
@@ -206,12 +287,25 @@ int main(int argc, const char* argv[])
 			}
 		}
 		else
-#else
-	//TODO: handle linux input
+#elif defined(LINUX)
+		if(XPending(x11_display))
+		{
+			XNextEvent(x11_display, &event);
+			if((event.type == ClientMessage && event.xclient.data.l[0] == wmDeleteMessage) || (event.type == KeyPress && event.xkey.keycode == 9)) 
+			{
+				XDestroyWindow(x11_display,event.xclient.window);
+				break;
+			}
+			else
+			{
+				linuxEventHandler(event);
+			}
+		}
+		//else
 #endif
 		{
 			game->update();
-
+			
 			if(game->active)
 			{
 				graphics->render();

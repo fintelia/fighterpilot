@@ -44,7 +44,15 @@ struct OpenGLgraphics::Context
 #elif defined(LINUX)
 struct OpenGLgraphics::Context
 {
-
+//	Display*				display;
+//	int						screen;
+//	/* our window instance */
+//	Window					window;
+	GLXContext				context;
+	XSetWindowAttributes	winAttr;
+	/*original desktop mode which we save so we can restore it later*/
+	XF86VidModeModeInfo		desktopMode;
+	bool					fullscreen;
 };
 #endif
 OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
@@ -255,7 +263,7 @@ void OpenGLgraphics::indexBufferGL::drawBuffer(Primitive primitive, shared_ptr<v
 	}
 #endif
 
-	GLenum type;
+	GLenum type = UINT;//just to be safe
 	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
 	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
 	else if(dataType == UINT) type = GL_UNSIGNED_INT;
@@ -281,7 +289,7 @@ void OpenGLgraphics::indexBufferGL::drawBufferSegment(Primitive primitive, share
 
 	numIndicies = min(dataCount, numIndicies);
 
-	GLenum type;
+	GLenum type = UINT;//just to be safe
 	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
 	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
 	else if(dataType == UINT) type = GL_UNSIGNED_INT;
@@ -1516,7 +1524,7 @@ void OpenGLgraphics::render()
 		#ifdef _DEBUG
 			if(fps<59.0)dataManager.setUniform4f("color",red);
 			else dataManager.setUniform4f("color",black);
- 			graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
+			graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
 			dataManager.setUniform4f("color",white);
 			Profiler.draw();
 
@@ -1606,7 +1614,21 @@ void OpenGLgraphics::destroyWindow()
 		context->hInstance=NULL;									// Set hInstance To NULL
 	}
 #elif defined(LINUX)
-	//TODO: write windows destruction code 
+	//TODO: write windows destruction code
+	if(context->context)
+	{
+		glXMakeCurrent(x11_display, None, nullptr);
+		glXDestroyContext(x11_display, context->context);
+		context->context = nullptr;
+	}
+	/* switch back to original desktop resolution if we were in fullscreen */
+	if(context->fullscreen)
+	{
+		XF86VidModeSwitchToMode(x11_display, x11_screen, &context->desktopMode);
+		XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
+	}
+	XCloseDisplay(x11_display);
+
 #endif
 	this->~OpenGLgraphics();
 }
@@ -1615,11 +1637,12 @@ extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 #endif
 bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
 {
-	static bool arbMultisampleSupported=false;
-	static int arbMultisampleFormat=0;
 	bool fullscreenflag=true;
 
 #if defined(WINDOWS)
+	static bool arbMultisampleSupported=false;
+	static int arbMultisampleFormat=0;
+	
 	GLuint		PixelFormat;			// Holds The Results After Searching For A Match
 	WNDCLASSEX	wc;						// Windows Class Structure
 	DWORD		dwExStyle;				// Window Extended Style
@@ -1761,7 +1784,90 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;								// Return false
 	}
 #elif defined(LINUX)
-	//TODO:add window creation code
+	fullscreenflag = false;
+	sw = screenResolution.x = 1024;
+	sh = screenResolution.y = 786;
+	
+	
+	
+	context->fullscreen = fullscreenflag;
+	//based on http://content.gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
+	static int attrListDbl[] =
+	{
+		GLX_RGBA, GLX_DOUBLEBUFFER,
+		GLX_RED_SIZE, 4,
+		GLX_GREEN_SIZE, 4,
+		GLX_BLUE_SIZE, 4,
+		GLX_DEPTH_SIZE, 16,
+		None
+	};
+	
+	int glxMajor, glxMinor, vmMajor, vmMinor;
+	XF86VidModeModeInfo **modes;
+	int modeNum, bestMode=0;
+	XSetWindowAttributes winAttr;
+	
+	XF86VidModeQueryVersion(x11_display, &vmMajor, &vmMinor);
+	XF86VidModeGetAllModeLines(x11_display, x11_screen, &modeNum, &modes);
+	/* save desktop-resolution before switching modes */
+	context->desktopMode = *modes[0];
+	/* look for mode with requested resolution */
+	for (int i = 0; i < modeNum; i++)
+	{
+		if ((modes[i]->hdisplay == screenResolution.x) && (modes[i]->vdisplay == screenResolution.y))
+			bestMode = i;
+	}
+	/* get an appropriate visual */
+	XVisualInfo* vi = glXChooseVisual(x11_display, x11_screen, attrListDbl);
+	if (vi == nullptr)
+	{
+		//TODO: add cleanup code
+		return false;// could not find
+	}
+	glXQueryVersion(x11_display, &glxMajor, &glxMinor);
+	/* create a GLX context */
+	context->context = glXCreateContext(x11_display, vi, 0, true);
+	/* create a color map */
+	Colormap cmap = XCreateColormap(x11_display, RootWindow(x11_display, vi->screen), vi->visual, AllocNone);
+	winAttr.colormap = cmap;
+	winAttr.border_pixel = 0;
+
+	if (fullscreenflag)
+	{
+		/* switch to fullscreen */
+		XF86VidModeSwitchToMode(x11_display, x11_screen, modes[bestMode]);
+		XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
+		int dpyWidth = modes[bestMode]->hdisplay;
+		int dpyHeight = modes[bestMode]->vdisplay;
+		XFree(modes);
+
+		/* set window attributes */
+		winAttr.override_redirect = True;
+		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |  StructureNotifyMask;
+		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect, &winAttr);
+		XWarpPointer(x11_display, None, x11_window, 0, 0, 0, 0, 0, 0);
+		XMapRaised(x11_display, x11_window);
+		XGrabKeyboard(x11_display, x11_window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+		XGrabPointer(x11_display, x11_window, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, x11_window, None, CurrentTime);
+	}
+	else
+	{
+		/* create a window in window mode*/
+		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
+		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, screenResolution.x, screenResolution.y, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask, &winAttr);
+		/* only set window title and handle wm_delete_events if in windowed mode */
+		Atom wmDelete = XInternAtom(x11_display, "WM_DELETE_WINDOW", True);
+		XSetWMProtocols(x11_display, x11_window, &wmDelete, 1);
+		XSetStandardProperties(x11_display, x11_window, "FighterPilot", "FighterPilot", None, NULL, 0, NULL);
+		XMapRaised(x11_display, x11_window);
+	}
+	/* connect the glx-context to the window */
+	glXMakeCurrent(x11_display, x11_window, context->context);
+	if(!glXIsDirect(x11_display, context->context))
+	{
+		//we don't have hardware acceleration!
+		//TODO: display warning message about this issue 
+	}
 #endif
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
@@ -1905,30 +2011,37 @@ bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples)
 }
 set<Vec2u> OpenGLgraphics::getSupportedResolutions()
 {
+	set<Vec2u> s;
 #if defined(WINDOWS)
 	int i=0;
 	DEVMODE d;
-	set<Vec2u> s;
 
 	d.dmSize = sizeof(DEVMODE);
 	d.dmDriverExtra = 0;
 
-	while(EnumDisplaySettings(nullptr, i, &d))
+	while(EnumDisplaySettings(nullptr, i++, &d))
 	{
 		s.insert(Vec2u(d.dmPelsWidth, d.dmPelsHeight));
-		i++;
 	}
-	return s;
+
 #elif defined(LINUX)
-	//TODO: add resolution enumeration code
+	XF86VidModeModeInfo **modes;
+	int numModes;
+	XF86VidModeGetAllModeLines(x11_display, x11_screen, &numModes, &modes);
+
+	for(int i = 0; i < numModes; i++)
+	{
+		s.insert(Vec2u(modes[i]->hdisplay, modes[i]->vdisplay));
+	}
 #endif
+	return s;
 }
 void OpenGLgraphics::swapBuffers()
 {
 #if defined(WINDOWS)
 	SwapBuffers(context->hDC);
 #elif defined(LINUX)
-	//TODO: add swap buffer code
+	glXSwapBuffers(x11_display, x11_window);
 #endif
 }
 
@@ -2005,7 +2118,7 @@ void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 }
 void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 {
- 	shapes3D[0].position = p1;
+	shapes3D[0].position = p1;
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
 

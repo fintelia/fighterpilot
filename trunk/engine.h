@@ -72,11 +72,18 @@ extern const double PI;
 const int NumPlayers = 2;
 
 #define OPENGL
+
 #ifdef _WIN32 
-#define WINDOWS
+	#define WINDOWS
 #elif __linux__
-#define LINUX
+	#define LINUX
+	struct _XDisplay;
+	typedef _XDisplay Display;
+	extern Display* x11_display;
+	extern int x11_screen;
+	extern unsigned int x11_window;
 #endif
+
 extern int sh, sw;
 extern float sAspect;
 

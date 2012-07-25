@@ -102,6 +102,7 @@ bool Game::init()
 	// Create Our OpenGL Window
 	if (!graphics->createWindow("Fighter Pilot",r,maxSamples))
 	{
+		cout << "create windows failed";
 		return false;
 	}
 	

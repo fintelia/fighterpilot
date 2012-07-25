@@ -95,8 +95,6 @@ void TerrainPatch::patchEdges() const
 }
 TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale, unsigned int lod):minXYZ(position), maxXYZ(position+scale),LOD(lod), heights(Heights), trunk(nullptr)
 {
-	double t = GetTime();
-
 	unsigned short* nHeights = nullptr;
 	if(!isPowerOfTwo(patchResolution-1))
 	{
@@ -563,7 +561,7 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	t = GetTime() - t;
 	t = GetTime();
 
-	const float invGamma = 1.0/1.8;
+	//const float invGamma = 1.0/1.8;
 	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
 	{
 	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
@@ -874,10 +872,10 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	// based on GPU GEMS 2: Chapter 16 Accurate Atmospheric Scattering
 	/*double terrainRadius = max(terrainScale.x,terrainScale.z);
-	double planetRadius = 6367500.0;//*0.003;
+	double planetRadius = 6367500.0;// *0.003;
 	Vec3f planetCenter(eye.x,-sqrt(planetRadius*planetRadius-terrainRadius*terrainRadius),eye.z);
 	float m_fWavelength4[3] = {0.17850623,0.10556000,0.050906640};
-	float m_fInnerRadius = planetRadius;//*0.003;
+	float m_fInnerRadius = planetRadius;// *0.003;
 	float m_fOuterRadius = planetRadius*1.025;
 	float m_ESun = 20.0;
 	float m_Kr = 0.0025;
@@ -917,7 +915,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
 	if(sunPos.z > 0)
 	{
-		Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
+	//	Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
 	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun"); //doesn't work right in 2 player
 	}
 

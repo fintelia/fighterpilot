@@ -1,46 +1,48 @@
 
 #include "engine.h"
 
-#ifdef WINDOWS
-#include <Windows.h>
-#ifdef XINPUT
-#include <Xinput.h>
-const int XBOX_GAMEPAD_OFFSET[4]	= {256,276,296,316};
-#endif
+#if defined(WINDOWS)
+	#include <Windows.h>
+	#ifdef XINPUT
+	#include <Xinput.h>
+	const int XBOX_GAMEPAD_OFFSET[4]	= {256,276,296,316};
+	#endif
 
-#ifdef DIRECT_INPUT
-#include <dinput.h>
-LPDIRECTINPUT8  directInputPtr;
+	#ifdef DIRECT_INPUT
+	#include <dinput.h>
+	LPDIRECTINPUT8  directInputPtr;
 
-BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,
-                                     VOID* pContext )
-{
-    DI_ENUM_CONTEXT* pEnumContext = ( DI_ENUM_CONTEXT* )pContext;
-    HRESULT hr;
+	BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,
+										VOID* pContext )
+	{
+		DI_ENUM_CONTEXT* pEnumContext = ( DI_ENUM_CONTEXT* )pContext;
+		HRESULT hr;
 
-    if( g_bFilterOutXinputDevices && IsXInputDevice( &pdidInstance->guidProduct ) )
-        return DIENUM_CONTINUE;
+		if( g_bFilterOutXinputDevices && IsXInputDevice( &pdidInstance->guidProduct ) )
+			return DIENUM_CONTINUE;
 
-    // Skip anything other than the perferred joystick device as defined by the control panel.  
-    // Instead you could store all the enumerated joysticks and let the user pick.
-    if( pEnumContext->bPreferredJoyCfgValid &&
-        !IsEqualGUID( pdidInstance->guidInstance, pEnumContext->pPreferredJoyCfg->guidInstance ) )
-        return DIENUM_CONTINUE;
+		// Skip anything other than the perferred joystick device as defined by the control panel.  
+		// Instead you could store all the enumerated joysticks and let the user pick.
+		if( pEnumContext->bPreferredJoyCfgValid &&
+			!IsEqualGUID( pdidInstance->guidInstance, pEnumContext->pPreferredJoyCfg->guidInstance ) )
+			return DIENUM_CONTINUE;
 
-    // Obtain an interface to the enumerated joystick.
-    hr = g_pDI->CreateDevice( pdidInstance->guidInstance, &g_pJoystick, NULL );
+		// Obtain an interface to the enumerated joystick.
+		hr = g_pDI->CreateDevice( pdidInstance->guidInstance, &g_pJoystick, NULL );
 
-    // If it failed, then we can't use this joystick. (Maybe the user unplugged
-    // it while we were in the middle of enumerating it.)
-    if( FAILED( hr ) )
-        return DIENUM_CONTINUE;
+		// If it failed, then we can't use this joystick. (Maybe the user unplugged
+		// it while we were in the middle of enumerating it.)
+		if( FAILED( hr ) )
+			return DIENUM_CONTINUE;
 
-    // Stop enumeration. Note: we're just taking the first joystick we get. You
-    // could store all the enumerated joysticks and let the user pick.
-    return DIENUM_STOP;
-}
-
-#endif /* DIRECT_INPUT */
+		// Stop enumeration. Note: we're just taking the first joystick we get. You
+		// could store all the enumerated joysticks and let the user pick.
+		return DIENUM_STOP;
+	}
+	#endif /* DIRECT_INPUT */
+#elif defined(LINUX)
+	#include <X11/keysym.h>
+	#include <X11/Xlib.h> 
 #endif /* WINDOWS */
 
 const unsigned char KEYSTATE_CURRENT	= 0x01;
@@ -162,13 +164,29 @@ const InputManager::joystickControllerState* InputManager::getJoystick(unsigned 
 void InputManager::update()
 {
 	static char newKeyStates[256];
+	memset(newKeyStates, 0, 256);
 #if defined WINDOWS
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
 	GetKeyboardState((PBYTE)newKeyStates);
 #elif defined LINUX
 	Vec2i cursorPos;
-	//TODO:process keyboard and mouse state
+	Vec2i child_cursorPos;
+	Window root;
+	Window child;
+	unsigned int mask;
+	XQueryPointer(x11_display, x11_window, &root, &child, &cursorPos.x, &cursorPos.y, &child_cursorPos.x, &child_cursorPos.y, &mask);
+	//TODO:process all keys
+	char newKeycodes[32];
+	XQueryKeymap(x11_display, newKeycodes);
+	newKeyStates[VK_LEFT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Left)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Left) % 8)) 	? 0x80 : 0;
+	newKeyStates[VK_RIGHT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Right)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Right) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_UP] = 		newKeycodes[XKeysymToKeycode(x11_display,XK_Up)/8] 		& (1<<(XKeysymToKeycode(x11_display,XK_Up) % 8)) 	? 0x80 : 0;
+	newKeyStates[VK_DOWN] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Down)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Down) % 8)) 	? 0x80 : 0;
+	newKeyStates[VK_SPACE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_space)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_space) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_RETURN] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Return)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Return) % 8))? 0x80 : 0;
+	newKeyStates[VK_ESCAPE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Escape)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Escape) % 8))? 0x80 : 0;	
+	
 #endif
 
 #ifdef XINPUT

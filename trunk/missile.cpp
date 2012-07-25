@@ -29,9 +29,8 @@ void missileBase::updateFrame(float interpolation) const
 	{
 		meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !awaitingDelete);
 	}
-}	bool engineStarted;
-	double engineStartTime;
-missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target), launchTime(world.time()), engineStarted(false), smallContrailStarted(false), contrailStarted(false)
+}
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target), launchTime(world.time()), engineStarted(false), contrailStarted(false), smallContrailStarted(false) 
 {
 
 }

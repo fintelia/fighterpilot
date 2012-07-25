@@ -79,12 +79,9 @@ public:
 	};
 	struct menuKeystroke: public callBack{
 		int mkey;
-		menuKeystroke(): mkey(0),callBack(MENU_KEY_STROKE){}
+		menuKeystroke(): callBack(MENU_KEY_STROKE), mkey(0){}
 		menuKeystroke(int Mkey): callBack(MENU_KEY_STROKE), mkey(Mkey){}
 	};
-protected:
-	void sendCallbacks(callBack* c);
-	//friend LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 public:
 	static InputManager& getInstance()
 	{
@@ -94,6 +91,8 @@ public:
 #ifdef WINDOWS
 	virtual void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
 #endif
+	void sendCallbacks(callBack* c);
+	
 	int lastKey;
 	int tPresses;
 	virtual void down(int k);
