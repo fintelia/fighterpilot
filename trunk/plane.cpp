@@ -215,7 +215,7 @@ void nPlane::updateSimulation(double time, double ms)
 
 			if(!controls.shoot1)
 				extraShootTime=0.0;
-			else
+			else if(settings.planeStats[type].machineGuns.size() > 0)
 			{
 				extraShootTime+=ms;
 				while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)

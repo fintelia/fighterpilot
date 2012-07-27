@@ -114,6 +114,45 @@ float InputManager::xboxControllerState::getAxis(int a) const
 }
 void InputManager::sendCallbacks(callBack* c)
 {
+	if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == LEFT_BUTTON)
+	{
+		if((leftMouse.down = static_cast<mouseClick*>(c)->down) == true)
+		{
+			leftMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
+			leftMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;		
+		}
+		else
+		{
+			leftMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
+			leftMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
+		}
+	}
+	else if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == MIDDLE_BUTTON)
+	{
+		if((middleMouse.down = static_cast<mouseClick*>(c)->down) == true)
+		{
+			middleMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
+			middleMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;		
+		}
+		else
+		{
+			middleMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
+			middleMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
+		}
+	}
+	else if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == RIGHT_BUTTON)
+	{
+		if((rightMouse.down = static_cast<mouseClick*>(c)->down) == true)
+		{
+			rightMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
+			rightMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;			
+		}
+		else
+		{
+			rightMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
+			rightMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
+		}
+	}
 	menuManager.inputCallback(c);
 }
 InputManager::InputManager(): tPresses(0)
@@ -171,14 +210,16 @@ void InputManager::update()
 	GetKeyboardState((PBYTE)newKeyStates);
 #elif defined LINUX
 	Vec2i cursorPos;
-	Vec2i child_cursorPos;
+	Vec2i root_cursorPos;
 	Window root;
 	Window child;
 	unsigned int mask;
-	XQueryPointer(x11_display, x11_window, &root, &child, &cursorPos.x, &cursorPos.y, &child_cursorPos.x, &child_cursorPos.y, &mask);
+	
+	XQueryPointer(x11_display, x11_window, &root, &child, &root_cursorPos.x, &root_cursorPos.y, &cursorPos.x, &cursorPos.y, &mask);
 	//TODO:process all keys
 	char newKeycodes[32];
 	XQueryKeymap(x11_display, newKeycodes);
+	
 	newKeyStates[VK_LEFT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Left)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Left) % 8)) 	? 0x80 : 0;
 	newKeyStates[VK_RIGHT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Right)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Right) % 8)) ? 0x80 : 0;
 	newKeyStates[VK_UP] = 		newKeycodes[XKeysymToKeycode(x11_display,XK_Up)/8] 		& (1<<(XKeysymToKeycode(x11_display,XK_Up) % 8)) 	? 0x80 : 0;
@@ -186,7 +227,14 @@ void InputManager::update()
 	newKeyStates[VK_SPACE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_space)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_space) % 8)) ? 0x80 : 0;
 	newKeyStates[VK_RETURN] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Return)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Return) % 8))? 0x80 : 0;
 	newKeyStates[VK_ESCAPE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Escape)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Escape) % 8))? 0x80 : 0;	
-	
+
+	//keypad should also include key syms for when num lock is not on
+	newKeyStates[VK_NUMPAD0] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_0)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_0) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_NUMPAD2] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_2)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_2) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_NUMPAD5] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_5)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_5) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_NUMPAD8] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_8)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_8) % 8)) ? 0x80 : 0;
+	newKeyStates[VK_NUMPAD9] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_9)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_9) % 8)) ? 0x80 : 0;
+
 #endif
 
 #ifdef XINPUT
@@ -325,45 +373,45 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	else if(uMsg == WM_LBUTTONDOWN)
 	{
-		leftMouse.down = true;
-		leftMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		leftMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, LEFT_BUTTON, leftMouse.downPos));
+		//leftMouse.down = true;
+		//leftMouse.downPos.x = (float)LOWORD(lParam) / sh;
+		//leftMouse.downPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(true, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MBUTTONDOWN)
 	{
-		middleMouse.down = true;
-		middleMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		middleMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, MIDDLE_BUTTON, middleMouse.downPos));
+		//middleMouse.down = true;
+		//middleMouse.downPos.x = (float)LOWORD(lParam) / sh;
+		//middleMouse.downPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(true, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_RBUTTONDOWN)
 	{
-		rightMouse.down = true;
-		rightMouse.downPos.x = (float)LOWORD(lParam) / sh;
-		rightMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, RIGHT_BUTTON, rightMouse.downPos));
+		//rightMouse.down = true;
+		//rightMouse.downPos.x = (float)LOWORD(lParam) / sh;
+		//rightMouse.downPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(true, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_LBUTTONUP)
 	{
-		leftMouse.down = false;
-		leftMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		leftMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, LEFT_BUTTON, leftMouse.upPos));
+		//leftMouse.down = false;
+		//leftMouse.upPos.x = (float)LOWORD(lParam) / sh;
+		//leftMouse.upPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(false, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MBUTTONUP)
 	{
-		middleMouse.down = false;
-		middleMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		middleMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, MIDDLE_BUTTON, middleMouse.upPos));
+		//middleMouse.down = false;
+		//middleMouse.upPos.x = (float)LOWORD(lParam) / sh;
+		//middleMouse.upPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(false, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_RBUTTONUP)
 	{
-		rightMouse.down = false;
-		rightMouse.upPos.x = (float)LOWORD(lParam) / sh;
-		rightMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, RIGHT_BUTTON, rightMouse.upPos));
+		//rightMouse.down = false;
+		//rightMouse.upPos.x = (float)LOWORD(lParam) / sh;
+		//rightMouse.upPos.y = (float)HIWORD(lParam) / sh;
+		sendCallbacks(new mouseClick(false, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MOUSEWHEEL)
 	{

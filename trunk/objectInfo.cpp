@@ -28,6 +28,7 @@ objectType objectTypeFromString(string s)
 	if(s=="bullet cloud")		return BULLET_CLOUD;
 	if(s=="PLAYER_PLANE")		return PLAYER_PLANE;
 	debugBreak();
+	cout << "objectType: " << s << " not found" << endl;
 	return 0;
 }
 string objectTypeString(objectType t)

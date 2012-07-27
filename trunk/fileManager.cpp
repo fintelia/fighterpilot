@@ -1158,7 +1158,7 @@ void FileManager::parsePngFile(shared_ptr<textureFile> f, fileContents data)
 
 		png_read_image(png_ptr, row_pointers);
 		png_read_end(png_ptr, NULL);
-		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+		png_destroy_read_struct(&png_ptr, &info_ptr, &end_ptr);
 		//fclose(infile);
 
 

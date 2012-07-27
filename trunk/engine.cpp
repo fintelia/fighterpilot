@@ -151,7 +151,7 @@ void linuxEventHandler(XEvent event)
 			if(keysym == sym)
 			{
 				input.sendCallbacks(new InputManager::keyStroke(keyup, vk));
-				cout << keysym << endl;
+				//cout << keysym << endl;
 				return true;
 			}
 			return false;
@@ -161,7 +161,7 @@ void linuxEventHandler(XEvent event)
 			if(keysym >= (minSym) && keysym <= (maxSym))
 			{
 				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(maxSym)+(minVK)));
-				cout << keysym << endl;
+				//cout << keysym << endl;
 				return true;
 			}
 			return false;
@@ -195,6 +195,22 @@ void linuxEventHandler(XEvent event)
 		{
 			//keysym not found...
 		}
+	}
+	else if(event.type == ButtonPress)
+	{
+		XButtonEvent* e = &event.xbutton;
+		if(e->button == 1)	input.sendCallbacks(new InputManager::mouseClick(true, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 2)	input.sendCallbacks(new InputManager::mouseClick(true, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 3)	input.sendCallbacks(new InputManager::mouseClick(true, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 4)	input.sendCallbacks(new InputManager::mouseScroll(1.0/3.0));
+		if(e->button == 5)	input.sendCallbacks(new InputManager::mouseScroll(-1.0/3.0));
+	}
+	else if(event.type == ButtonRelease)
+	{
+		XButtonEvent* e = &event.xbutton;
+		if(e->button == 1)	input.sendCallbacks(new InputManager::mouseClick(false, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 2)	input.sendCallbacks(new InputManager::mouseClick(false, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 3)	input.sendCallbacks(new InputManager::mouseClick(false, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
 	}
 }
 #endif
@@ -261,10 +277,9 @@ int main(int argc, const char* argv[])
 	}
 	
 #ifdef LINUX
-	XSelectInput(x11_display, x11_window, ButtonPressMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
+	XSelectInput(x11_display, x11_window, ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
 	Atom wmDeleteMessage=XInternAtom(x11_display, "WM_DELETE_WINDOW", true);
 	XSetWMProtocols(x11_display, x11_window, &wmDeleteMessage, 1);
-	XAutoRepeatOff(x11_display);
 	XEvent event;
 #endif
 	
@@ -291,7 +306,7 @@ int main(int argc, const char* argv[])
 		if(XPending(x11_display))
 		{
 			XNextEvent(x11_display, &event);
-			if((event.type == ClientMessage && event.xclient.data.l[0] == wmDeleteMessage) || (event.type == KeyPress && event.xkey.keycode == 9)) 
+			if((event.type == ClientMessage && event.xclient.data.l[0] == wmDeleteMessage)/* || (event.type == KeyPress && event.xkey.keycode == 9)*/) 
 			{
 				XDestroyWindow(x11_display,event.xclient.window);
 				break;
@@ -311,18 +326,19 @@ int main(int argc, const char* argv[])
 				graphics->render();
 
 				///timing code
-				float waitTime = (nextUpdate - max(swapTime,0)) - GetTime();
+				float waitTime = (nextUpdate - swapTime) - GetTime();
 				if(waitTime>1.0)	threadSleep(waitTime-1);
 				do{
 					time = GetTime();
-				}while(time < nextUpdate - max(swapTime,0));
+				}while(time < nextUpdate - swapTime);
 				nextUpdate = 1000.0/game->maxFrameRate + GetTime();
+				time = GetTime();
 				//end timing code
 
 				graphics->swapBuffers();
 
 				//more timing code:
-				swapTime =  time - GetTime();
+				swapTime = max(time - GetTime(), 0.0f);
 			}
 			else
 			{

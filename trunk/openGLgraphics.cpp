@@ -125,32 +125,32 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 			{
 				if(gl2Hacks)
 				{
-					glVertexPointer(2, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
-					glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+					glVertexPointer(2, GL_FLOAT, totalVertexSize, (void*)((long)i->second.offset+offset));
+					glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 				}
 				else
 				{
-					glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+					glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 				}
 			}
 			else if(i->first == POSITION3)
 			{
 				if(gl2Hacks)
 				{
-					glVertexPointer(3, GL_FLOAT, totalVertexSize, (void*)(i->second.offset+offset));
-					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+					glVertexPointer(3, GL_FLOAT, totalVertexSize, (void*)((long)i->second.offset+offset));
+					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 				}
 				else
 				{
-					glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+					glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 				}
 			}
-			else if(i->first == TEXCOORD)		glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
-			else if(i->first == NORMAL)			glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
-			else if(i->first == COLOR3)			glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
-			else if(i->first == COLOR4)			glVertexAttribPointer(i->first, 4, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
-			else if(i->first == TANGENT)		glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
-			else if(i->first == GENERIC_FLOAT)	glVertexAttribPointer(i->first, 1, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)(i->second.offset+offset));
+			else if(i->first == TEXCOORD)		glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
+			else if(i->first == NORMAL)			glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
+			else if(i->first == COLOR3)			glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
+			else if(i->first == COLOR4)			glVertexAttribPointer(i->first, 4, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
+			else if(i->first == TANGENT)		glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
+			else if(i->first == GENERIC_FLOAT)	glVertexAttribPointer(i->first, 1, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 		//}
 		//else
 		//{
@@ -205,7 +205,8 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, unsigned int co
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STREAM_DRAW);
-
+	else cout << "useageFrequency not set: ";
+	
 #ifdef _DEBUG
 	maxIndex = 0;
 	for(unsigned int i=0; i<count; i++)
@@ -217,13 +218,16 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, unsigned int co
 }
 void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, unsigned int count)
 {
+	static_assert(sizeof(unsigned short) == 2, "unsigned short must have size of 2 bytes");
+	
 	dataType = USHORT;
 	dataCount = count;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STREAM_DRAW);
-
+	else cout << "useageFrequency not set: ";
+	
 #ifdef _DEBUG
 	maxIndex = 0;
 	for(unsigned int i=0; i<count; i++)
@@ -235,13 +239,16 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, unsigned int c
 }
 void OpenGLgraphics::indexBufferGL::setData(unsigned int* data, unsigned int count)
 {
+	static_assert(sizeof(unsigned int) == 4, "unsigned int must have size of 4 bytes");
+	
 	dataType = UINT;
 	dataCount = count;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STREAM_DRAW);
-
+	else cout << "useageFrequency not set: ";
+	
 #ifdef _DEBUG
 	maxIndex = 0;
 	for(unsigned int i=0; i<count; i++)
@@ -260,6 +267,7 @@ void OpenGLgraphics::indexBufferGL::drawBuffer(Primitive primitive, shared_ptr<v
 	if(buffer->getNumVertices() < maxIndex)
 	{
 		debugBreak();
+		cout << "vertex index exceeds vertex count!!!" << endl;
 	}
 #endif
 
@@ -267,7 +275,8 @@ void OpenGLgraphics::indexBufferGL::drawBuffer(Primitive primitive, shared_ptr<v
 	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
 	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
 	else if(dataType == UINT) type = GL_UNSIGNED_INT;
-
+	else cout << "indexBuffer datatype not set" << endl;
+	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	bindVertexBuffer(buffer, offset);
 
@@ -293,7 +302,8 @@ void OpenGLgraphics::indexBufferGL::drawBufferSegment(Primitive primitive, share
 	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
 	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
 	else if(dataType == UINT) type = GL_UNSIGNED_INT;
-
+	else cout << "indexBuffer datatype not set" << endl;
+	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	bindVertexBuffer(buffer, 0);
 
@@ -319,7 +329,11 @@ OpenGLgraphics::texture2DGL::~texture2DGL()
 void OpenGLgraphics::texture2DGL::bind(unsigned int textureUnit)
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	double t = GetTime();
 	glBindTexture(GL_TEXTURE_2D, textureID);
+	t = GetTime() - t;
+	if(t > 5.0)
+		cout << t << endl;
 }
 void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)
 {
@@ -1787,7 +1801,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	fullscreenflag = false;
 	sw = screenResolution.x = 1024;
 	sh = screenResolution.y = 786;
-	
+	sAspect = ((float)sw)/sh;
 	
 	
 	context->fullscreen = fullscreenflag;
@@ -1861,12 +1875,15 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		XSetStandardProperties(x11_display, x11_window, "FighterPilot", "FighterPilot", None, NULL, 0, NULL);
 		XMapRaised(x11_display, x11_window);
 	}
+	free(modes);
+	XFree(vi);
 	/* connect the glx-context to the window */
 	glXMakeCurrent(x11_display, x11_window, context->context);
 	if(!glXIsDirect(x11_display, context->context))
 	{
 		//we don't have hardware acceleration!
 		//TODO: display warning message about this issue 
+		cout << "No hardware acceleration!!!" << endl;
 	}
 #endif
 
@@ -1914,7 +1931,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;
 	}
 
-#ifdef WINDOWS
+#if defined(WINDOWS)
 	if(game->hasCommandLineOption("--opengl3") && wglCreateContextAttribsARB)
 	{
 		int attribs[] =
@@ -1953,6 +1970,12 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	SetFocus(context->hWnd);						// Sets Keyboard Focus To The Window
 	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
 	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
+#elif defined(LINUX)
+	//GLuint vao;
+	//glGenVertexArrays(1, &vao);
+	//glBindVertexArray(vao);
+	//gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
+	//openGL3 = true;	
 #endif
 
 	glEnable(GL_DEPTH_TEST);
@@ -1979,8 +2002,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	shapesVBO = genVertexBuffer(vertexBuffer::STREAM);
 	shapesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3, 0);
 	shapesVBO->setTotalVertexSize(sizeof(vertex3D));
-
-
 
 	return true;
 }
@@ -2033,6 +2054,7 @@ set<Vec2u> OpenGLgraphics::getSupportedResolutions()
 	{
 		s.insert(Vec2u(modes[i]->hdisplay, modes[i]->vdisplay));
 	}
+	free(modes);
 #endif
 	return s;
 }

@@ -395,25 +395,25 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 		token = strtok(buffer, " \t");
 		if(strcmp(token, "v") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].x);
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].y);
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].z);
+			sscanf(strtok(NULL, " \r"), "%f", &vertices[numVertices].x);
+			sscanf(strtok(NULL, " \r"), "%f", &vertices[numVertices].y);
+			sscanf(strtok(NULL, " \r"), "%f", &vertices[numVertices].z);
 			vertices[numVertices].x = -vertices[numVertices].x;
 			numVertices++;
 		}
 		else if(strcmp(token, "vt") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].x);
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].y);
+			sscanf(strtok(NULL, " \r"), "%f", &texCoords[numTexcoords].x);
+			sscanf(strtok(NULL, " \r"), "%f", &texCoords[numTexcoords].y);
 
 			texCoords[numTexcoords].y = 1.0f - texCoords[numTexcoords].y;
 			numTexcoords++;
 		}
 		else if(strcmp(token, "vn") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].x);
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].y);
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].z);
+			sscanf(strtok(NULL, " \r"), "%f", &normals[numNormals].x);
+			sscanf(strtok(NULL, " \r"), "%f", &normals[numNormals].y);
+			sscanf(strtok(NULL, " \r"), "%f", &normals[numNormals].z);
 			normals[numNormals] = normals[numNormals].normalize();
 			numNormals++;
 		}
@@ -423,7 +423,7 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 
 			for(i = 0; i<3; i++) //should check for faces that do not include both a vertex, normal and position
 			{
-				token = strtok(NULL, " \t");
+				token = strtok(NULL, " \r\t");
 				sscanf(token, "%d/%d/%d", &v, &t, &n);
 
 				faces[numFaces].n[i] = n;
@@ -438,7 +438,9 @@ DataManager::asset* DataManager::registerOBJ(string filename)
 			string name=strtok(NULL, " \r");
 			if(name.size()!=0)
 			{
+#ifdef WINDOWS //not sure why...
 				name=name.substr(0,name.size()-1);
+#endif
 				for(int l=0; l<numMtls; l++)
 				{
 					if(mtls[l].name.compare(name)==0)
