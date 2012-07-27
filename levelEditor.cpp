@@ -906,10 +906,10 @@ void levelEditor::render3D(unsigned int v)
 		c = center;
 		if(input.getMouseState(MIDDLE_BUTTON).down)
 		{
+			
 			Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
 			Vec2f newP = input.getMousePos();
-
-
+			
 			Vec3f xAxis = rot * Vec3f(-1,0,0);
 
 			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();

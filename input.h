@@ -69,7 +69,7 @@ public:
 		bool down;
 		mouseButton button;
 		Vec2f pos;
-		mouseClick(): callBack(MOUSE_SCROLL){}
+		mouseClick(): callBack(MOUSE_CLICK){}
 		mouseClick(bool Down, mouseButton b, Vec2f p): callBack(MOUSE_CLICK), down(Down), button(b), pos(p){}
 	};
 	struct mouseScroll: public callBack{

@@ -2,6 +2,10 @@
 
 #include <cmath>
 
+#ifdef _DEBUG
+#include <iostream>
+#endif
+
 #if defined(_WIN32)
 	#include <windows.h>
 #elif defined(__linux__)
@@ -49,6 +53,9 @@
 		}
 		else
 		{
+#ifdef _DEBUG
+			std::cout << "clock_gettime failed" << std::endl;
+#endif
 			return -1;
 		}
 	}
@@ -56,15 +63,8 @@
 
 double GetTime()
 {
-	static long long ticksPerSecond=-1;
-	if(ticksPerSecond==-1)
-	{
-		ticksPerSecond = getTotalTicksPerSecond();
-	}
-
-
-	// Divide by frequency to get the time in ms (long long)
-	return static_cast<double>( (totalTicks()*1000.0) )/ticksPerSecond;
+	static long long ticksPerSecond = getTotalTicksPerSecond();
+	return static_cast<double>(totalTicks()) * 1000.0 / ticksPerSecond;
 }
 double GameTime::trueGameTime() const
 {

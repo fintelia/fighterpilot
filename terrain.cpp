@@ -949,7 +949,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		dataManager.bind("grass",3);
 		dataManager.bind("rock",4);
 		dataManager.bind("LCnoise",5);
-		dataManager.bind("grass normals",6);
+	//	dataManager.bind("grass normals",6); //dramatically slow down the game under linux?
 		dataManager.bind("noise",7);
 
 		dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());

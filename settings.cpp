@@ -1,6 +1,6 @@
 
 #include "game.h"
-void SettingsManager::load(string filename)
+void SettingsManager::load(string filename) //should be rewritten to use FileManager to load the modelData.txt file
 {
 	string line;
 	ifstream fin(filename, ios::in);
@@ -26,7 +26,7 @@ void SettingsManager::load(string filename)
 			unsigned int f=line.find_first_of("=");
 			string var = line.substr(0,f);
 
-			unsigned int comment=line.find_first_of("'#");
+			unsigned int comment=line.find_first_of("'#\r"); //by treating \r as qa comment we don't have to worry about eliminating it before newlines
 			string value = line.substr(f+1,comment-f-1);
 
 
@@ -79,7 +79,7 @@ void SettingsManager::load(string filename)
 			{
 				cout << line << endl;
 				debugBreak();//boost type conversion failed
-				closingMessage("Error reading 'modelData.txt'. Fighter-Pilot will now close.","Error");
+				closingMessage(string("Error reading '") + filename + "'. Fighter-Pilot will now close.","Error");
 				return;
 			}
 		}
@@ -88,7 +88,7 @@ void SettingsManager::load(string filename)
 	else 
 	{
 		debugBreak();//could not open model data file
-		closingMessage("'modelData.txt' not found. Fighter-Pilot will now close.","Missing File");
+		closingMessage(string("'") + filename + "' not found. Fighter-Pilot will now close.","Missing File");
 	}
 }
 void SettingsManager::load(const map<string,map<string,string>>& m)
