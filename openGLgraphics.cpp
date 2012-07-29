@@ -329,11 +329,7 @@ OpenGLgraphics::texture2DGL::~texture2DGL()
 void OpenGLgraphics::texture2DGL::bind(unsigned int textureUnit)
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
-	double t = GetTime();
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	t = GetTime() - t;
-	if(t > 5.0)
-		cout << t << endl;
 }
 void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)
 {
@@ -1628,7 +1624,6 @@ void OpenGLgraphics::destroyWindow()
 		context->hInstance=NULL;									// Set hInstance To NULL
 	}
 #elif defined(LINUX)
-	//TODO: write windows destruction code
 	if(context->context)
 	{
 		glXMakeCurrent(x11_display, None, nullptr);
@@ -1641,6 +1636,8 @@ void OpenGLgraphics::destroyWindow()
 		XF86VidModeSwitchToMode(x11_display, x11_screen, &context->desktopMode);
 		XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
 	}
+	//XDestroyWindow(x11_display, x11_window);
+	//XFreeColormap(x11_display, context->winAttr.colormap);
 	XCloseDisplay(x11_display);
 
 #endif
@@ -1844,8 +1841,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	/* create a color map */
 	Colormap cmap = XCreateColormap(x11_display, RootWindow(x11_display, vi->screen), vi->visual, AllocNone);
 	winAttr.colormap = cmap;
-	winAttr.border_pixel = 0;
-
+	winAttr.background_pixmap = None;
+    winAttr.background_pixel = 0;
+    winAttr.border_pixel = 0;
+	
 	if (fullscreenflag)
 	{
 		/* switch to fullscreen */
@@ -1882,9 +1881,13 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	if(!glXIsDirect(x11_display, context->context))
 	{
 		//we don't have hardware acceleration!
-		//TODO: display warning message about this issue 
 		cout << "No hardware acceleration!!!" << endl;
 	}
+	const char* cTitle = title.c_str();
+	XTextProperty textProperty;
+	XStringListToTextProperty( (char **) &cTitle, 1, &textProperty );
+	XSetWMProperties(x11_display, x11_window, &textProperty, &textProperty, 0, 0, nullptr, nullptr, nullptr);
+	
 #endif
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)

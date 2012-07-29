@@ -100,7 +100,7 @@ bool Game::init()
 	unsigned int maxSamples = settings.get<unsigned int>("graphics","samples");
 
 	// Create Our OpenGL Window
-	if (!graphics->createWindow("Fighter Pilot",r,maxSamples))
+	if (!graphics->createWindow("FighterPilot",r,maxSamples))
 	{
 		cout << "create windows failed";
 		return false;
