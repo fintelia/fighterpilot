@@ -115,7 +115,7 @@ protected:
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true){}
-	~Terrain();
+	virtual ~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, int foliageAmount=0, unsigned int LOD=1);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 

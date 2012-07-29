@@ -278,6 +278,7 @@ int AssetLoader::loadAsset()
 			else
 			{
 				debugBreak(); //file failed to load properly
+				cout << textureAsset->file->filename << " failed to load properly" << endl;
 			}
 			pop(preload);
 		}
@@ -297,6 +298,7 @@ int AssetLoader::loadAsset()
 			else
 			{
 				debugBreak(); //file failed to load properly
+				cout << textureAsset->file->filename << " failed to load properly" << endl;
 			}
 			pop(preload);
 		}
@@ -316,6 +318,7 @@ int AssetLoader::loadAsset()
 			else
 			{
 				debugBreak(); //file failed to load properly
+				cout << textureAsset->file->filename << " failed to load properly" << endl;
 			}
 			pop(preload);
 		}
@@ -350,6 +353,10 @@ int AssetLoader::loadAsset()
 			else
 			{
 				debugBreak();
+				if(!shaderAsset->vertFile->valid())
+					cout << shaderAsset->vertFile->filename << " failed to load properly" << endl;
+				if(!shaderAsset->fragFile->valid())
+					cout << shaderAsset->fragFile->filename << " failed to load properly" << endl;				
 			}
 			pop(preload);
 		}
