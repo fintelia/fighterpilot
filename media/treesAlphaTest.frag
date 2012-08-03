@@ -10,7 +10,7 @@ uniform samplerCube sky;
 void main()
 {
 	vec4 color = texture2D(tex,texCoord).rgba;
-	if(color.a < 0.5)
+	if(color.a < 0.999)
 	{
 		discard;
 	}

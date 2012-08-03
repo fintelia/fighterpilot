@@ -1,14 +1,14 @@
 
 //////////////////////////////////////////////////////////////////
 const int PLANE						= 0x0100;
-const int F12						= 0x0101;
-const int F16						= 0x0102;
-const int F18						= 0x0103;
-const int F22						= 0x0104;
-const int UAV						= 0x0105;
-const int B2						= 0x0106;
-const int MIRAGE					= 0x0107;
-const int J37						= 0x0108;
+//const int F12						= 0x0101;
+//const int F16						= 0x0102;
+//const int F18						= 0x0103;
+//const int F22						= 0x0104;
+//const int UAV						= 0x0105;
+//const int B2						= 0x0106;
+//const int MIRAGE					= 0x0107;
+//const int J37						= 0x0108;
 const int PLAYER_PLANE				= 0x01ff;
 
 const int ANTI_AIRCRAFT_ARTILLARY	= 0x0200;
@@ -41,9 +41,42 @@ typedef int bombType;
 //////////////////////////////////////////////////////////////////
 extern planeType defaultPlane;
 
-//class ObjectInfo
-//{
-//public:
-//	objectType typeFromString(string s);
-//	string typeString(objectType t);
-//};
+class ObjectInfo
+{
+public:
+	struct objectData
+	{
+		string name;
+		objectType type;
+		shared_ptr<PhysicsManager::collisionBounds> bounds;
+		shared_ptr<SceneManager::mesh>				mesh;
+	};
+	struct planeObjectData: public objectData
+	{
+		struct hardpoint
+		{
+			objectType mType;
+			Vec3f offset;
+		};
+		vector<hardpoint> hardpoints;//offsets
+		vector<Vec3f> machineGuns;
+		vector<Vec3f> engines;
+		float cameraDistance;
+	};
+private:
+	map<objectType,shared_ptr<objectData>> objectMap;
+	ObjectInfo(){}
+public:
+	static ObjectInfo& getInstance()
+	{
+		static ObjectInfo* pInstance = new ObjectInfo();
+		return *pInstance;
+	}
+	bool loadObjectData(string filename="media/objectData.xml");
+	objectType typeFromString(string s);
+	string typeString(objectType t);
+	shared_ptr<objectData> operator[] (objectType t);
+	const planeObjectData& planeStats(objectType t);
+};
+
+extern ObjectInfo& objectInfo;

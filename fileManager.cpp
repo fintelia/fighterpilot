@@ -1,29 +1,7 @@
 
-//#include "debugBreak.h"
-
-//#include <memory>
-//#include <fstream>
-//#include <string>
-//#include <vector>
-//#include <set>
-//#include <map>
-//#include <queue>
-
-//#include <boost/lexical_cast.hpp>
 #include "engine.h"
 #include <boost/crc.hpp>
-//#include <boost/thread.hpp>
 
-//#ifdef _WIN32
-//	#include <Windows.h>
-//	#include <process.h>
-//	#include <shlwapi.h>
-//	#include <ShlObj.h>
-//	#pragma comment(lib,"shlwapi.lib")
-//	#define WINDOWS
-//#else
-//	#error operating system not currently supported by fileManager
-//#endif
 #if defined(WINDOWS)
 	#include <Windows.h>
 	#include <process.h>
@@ -38,48 +16,16 @@
 #include "zlib/zlib.h"
 #include "png/png.h"
 
-//using namespace std;
-//using boost::lexical_cast;
-
-//#include "definitions.h"
-//#include "fileManager.h"
-
-
-
-/////////////////////////////////THREADING///////////////////////////////////////////////////
-//template<class T>
-//struct threadData{
-//	void( *func )( T );
-//	T val;
-//};
-//
-//template <class T>
-//void newThreadStart(void* t)
-//{
-//	threadData<T>* m = (threadData<T>*)t;
-//	((threadData<T>*)t)->func( ((threadData<T>*)t)->val );
-//	delete t;
-//}
-//
-//template <class T>
-//void startInNewThread(void(*func)( T ), T val)
-//{
-//	threadData<T>* t = new threadData<T>();
-//	t->func = func;
-//	t->val = val;
-//	_beginthread(newThreadStart<T>,0,(void*)t);
-//}
-
-///////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef LINUX
-pthread_t pWorkerThread;
+#if defined(WINDOWS)
+	HANDLE pWorkerThread;
+#elif defined(LINUX)
+	pthread_t pWorkerThread;
 #endif
 
-FileManager::FileManager()
+FileManager::FileManager(): terminateFlag(false)
 {
 #if defined(WINDOWS)
-	_beginthread(startWorkerThread,0,this);
+	pWorkerThread = (HANDLE)_beginthread(startWorkerThread,0,this);
 #elif defined(LINUX)
 	int errorCode = pthread_create(&pWorkerThread, nullptr, startWorkerThread, this);
 	if(errorCode)
@@ -438,7 +384,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 #endif
 shared_ptr<FileManager::textFile> FileManager::loadTextFile(string filename, bool asinc)
 {
-	std::shared_ptr<textFile> f(new textFile(filename));
+	shared_ptr<textFile> f(new textFile(filename));
 
 	if(asinc)
 	{
@@ -456,7 +402,7 @@ shared_ptr<FileManager::textFile> FileManager::loadTextFile(string filename, boo
 }
 shared_ptr<FileManager::binaryFile> FileManager::loadBinaryFile(string filename, bool asinc)
 {
-	std::shared_ptr<binaryFile> f(new binaryFile(filename));
+	shared_ptr<binaryFile> f(new binaryFile(filename));
 
 	if(asinc)
 	{
@@ -475,7 +421,7 @@ shared_ptr<FileManager::binaryFile> FileManager::loadBinaryFile(string filename,
 }
 shared_ptr<FileManager::iniFile> FileManager::loadIniFile(string filename, bool asinc)
 {
-	std::shared_ptr<iniFile> f(new iniFile(filename));
+	shared_ptr<iniFile> f(new iniFile(filename));
 
 	if(asinc)
 	{
@@ -493,7 +439,7 @@ shared_ptr<FileManager::iniFile> FileManager::loadIniFile(string filename, bool 
 }
 shared_ptr<FileManager::zipFile> FileManager::loadZipFile(string filename, bool asinc)
 {
-	std::shared_ptr<zipFile> f(new zipFile(filename));
+	shared_ptr<zipFile> f(new zipFile(filename));
 
 	if(asinc)
 	{
@@ -520,7 +466,7 @@ shared_ptr<FileManager::textureFile> FileManager::loadTextureFile(string filenam
 }
 shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, bool asinc)
 {
-	std::shared_ptr<textureFile> f(new bmpFile(filename));
+	shared_ptr<textureFile> f(new bmpFile(filename));
 
 	if(asinc)
 	{
@@ -538,7 +484,7 @@ shared_ptr<FileManager::textureFile> FileManager::loadBmpFile(string filename, b
 }
 shared_ptr<FileManager::textureFile> FileManager::loadTgaFile(string filename, bool asinc)
 {
-	std::shared_ptr<textureFile> f(new tgaFile(filename));
+	shared_ptr<textureFile> f(new tgaFile(filename));
 
 	if(asinc)
 	{
@@ -556,7 +502,7 @@ shared_ptr<FileManager::textureFile> FileManager::loadTgaFile(string filename, b
 }
 shared_ptr<FileManager::textureFile> FileManager::loadPngFile(string filename, bool asinc)
 {
-	std::shared_ptr<textureFile> f(new pngFile(filename));
+	shared_ptr<textureFile> f(new pngFile(filename));
 
 	if(asinc)
 	{
@@ -568,6 +514,24 @@ shared_ptr<FileManager::textureFile> FileManager::loadPngFile(string filename, b
 	{
 		fileContents data = loadFileContents(f->filename);
 		parsePngFile(f, data);
+		delete[] data.contents;
+	}
+	return f;
+}
+shared_ptr<FileManager::modelFile> FileManager::loadObjFile(string filename, bool asinc)
+{
+	shared_ptr<modelFile> f(new objFile(filename));
+
+	if(asinc)
+	{
+		fileQueueMutex.lock();
+		fileQueue.push(f);
+		fileQueueMutex.unlock();
+	}
+	else
+	{
+		fileContents data = loadFileContents(f->filename);
+		parseObjFile(f, data);
 		delete[] data.contents;
 	}
 	return f;
@@ -669,7 +633,7 @@ FileManager::fileContents FileManager::serializeFile(shared_ptr<file> f)
 		return fileContents();
 	}
 }
-void FileManager::parseBinaryFile(std::shared_ptr<binaryFile> f, fileContents data)
+void FileManager::parseBinaryFile(shared_ptr<binaryFile> f, fileContents data)
 {
 	if(data.contents != nullptr && data.size != 0)
 	{
@@ -690,7 +654,7 @@ void FileManager::parseBinaryFile(std::shared_ptr<binaryFile> f, fileContents da
 		f->completeLoad(false);
 	}
 }
-void FileManager::parseTextFile(std::shared_ptr<textFile> f, fileContents data)
+void FileManager::parseTextFile(shared_ptr<textFile> f, fileContents data)
 {
 	if(data.contents != nullptr)
 	{
@@ -706,7 +670,7 @@ void FileManager::parseTextFile(std::shared_ptr<textFile> f, fileContents data)
 		f->completeLoad(false);
 	}
 }
-void FileManager::parseIniFile(std::shared_ptr<iniFile> f, fileContents data)
+void FileManager::parseIniFile(shared_ptr<iniFile> f, fileContents data)
 {
 	if(data.contents != nullptr && data.size != 0)
 	{
@@ -1192,19 +1156,394 @@ void FileManager::parsePngFile(shared_ptr<textureFile> f, fileContents data)
 		f->completeLoad(false);
 	}
 }
+void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
+{
+	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;unsigned int combinedVertices[3];
+	face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
+	face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
+	face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
+	face() {v[0]=0;v[1]=0;v[2]=0;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}};
+	struct triangle
+	{
+		Vec3f v1;
+		Vec2f t1;
+		Vec3f n1;
+
+		Vec3f v2;
+		Vec2f t2;
+		Vec3f n2;
+
+		Vec3f v3;
+		Vec2f t3;
+		Vec3f n3;
+	};
+	struct vertexIndices
+	{
+		unsigned int position;
+		unsigned int texCoord;
+		unsigned int normal;
+		bool operator< (const vertexIndices& v)const{return v.position != position ? v.position < position : (v.texCoord != texCoord ? v.texCoord < texCoord : v.normal < normal);}
+		vertexIndices(unsigned int p, unsigned int t, unsigned int n): position(p), texCoord(t), normal(n){}
+	};
+////////////////////variables///////////////////////////
+	unsigned int			numVertices=0,
+							numTexcoords=0,
+							numNormals=0,
+							numFaces=0,
+							numMtls=0;
+
+	Vec3f*					vertices;
+	Vec3f*					normals;
+	Vec2f*					texCoords;
+	face*					faces;
+
+	modelFile::material*	mtls;
+
+	unsigned int			totalVerts,
+							totalFaces;
+	map<string,unsigned int> mtlNames;
+
+	string dataString;
+	for(unsigned int i=0; i < data.size; i++)
+	{
+		if(data.contents[i] != '\r')
+			dataString += (char)data.contents[i];
+	}
+	std::stringstream dataStream;
+	dataStream.str(dataString);
+
+	map<vertexIndices, unsigned int> indexMap;
+
+	///////
+	map<string,modelFile::material>	mtl_map;
+	//string file(filename);
+	//int i=file.find_last_of("/");
+	//if(i==string::npos)
+	//	file.assign("");
+	//else
+	//	file=file.substr(0,i+1);
+	string mtlFilename;
+
+	unsigned int position;
+
+	char* token;
+	char line[256];
+	//////
+	while(dataStream.getline(line,256))
+	{
+		if((token = strtok(line, " \t")) != nullptr)
+		{
+			if(strcmp(token, "v") == 0) 		numVertices++;
+			if(strcmp(token, "vt") == 0) 		numTexcoords++;
+			if(strcmp(token, "f") == 0) 		numFaces++;
+			if(strcmp(token, "vn") == 0)		numNormals++;
+			if(strcmp(token, "mtllib") == 0)	mtlFilename = strtok(NULL, "\r\n");
+		}
+	}
+
+/////////////////////////new mtl////////////////////////////
+	if(mtlFilename != "")
+	{
+		auto mtlFile = loadTextFile(directory(f->filename) + mtlFilename);
+
+		dataStream.clear();
+		dataStream.str(mtlFile->contents);
+
+		if(mtlFile->valid())
+		{
+			enum State{SEARCHING_FOR_NEWMTL, READING_MTL}state=SEARCHING_FOR_NEWMTL;
+			modelFile::material mMtl;
+			string mtlName;
+			while(dataStream.getline(line,256))
+			{
+				token = strtok(line, " \t");
+				if(token == nullptr)
+					continue;
+
+				if(strcmp(token, "newmtl") == 0)
+				{
+					if(state == READING_MTL)
+					{
+						mtl_map[mtlName] = mMtl;
+					}
+					mMtl.tex.reset();
+					mMtl.normalMap.reset();
+					mMtl.specularMap.reset();
+					mtlName = strtok(NULL, " #\n");
+					mMtl.diffuse = white;
+					mMtl.specular = black;
+					mMtl.hardness = 40.0;
+					state = READING_MTL;
+				}
+				else if(strcmp(token, "map_Kd") == 0 && state == READING_MTL)
+				{
+					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					mMtl.tex = loadTextureFile(filename);
+				}
+				else if(strcmp(token, "map_Ns") == 0 && state == READING_MTL)
+				{
+					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					mMtl.specularMap = loadTextureFile(filename);
+				}
+				else if(strcmp(token, "map_bump") == 0 && state == READING_MTL)
+				{
+					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					mMtl.normalMap = loadTextureFile(filename);
+				}
+				else if(strcmp(token, "Kd") == 0 && state == READING_MTL)
+				{
+					float r,g,b;
+					if(sscanf(strtok(NULL, "#\n"), "%f%f%f", &r,&g,&b) == 3)
+					{
+						mMtl.diffuse = Color4(r,g,b,mMtl.diffuse.a);
+					}
+				}
+				else if(strcmp(token, "Ks") == 0 && state == READING_MTL)
+				{
+					float r,g,b;
+					if(sscanf(strtok(NULL, "#\n"), "%f%f%f", &r,&g,&b) == 3)
+					{
+						mMtl.specular = Color3(r,g,b);
+					}
+				}
+				else if(strcmp(token, "Ns") == 0 && state == READING_MTL)
+				{
+					sscanf(strtok(NULL, "#\n"), "%f", &mMtl.hardness);
+				}
+				else if(strcmp(token, "d") == 0 && state == READING_MTL)
+				{
+					sscanf(strtok(NULL, "#\n"), "%f", &mMtl.diffuse.a);
+				}
+				else if(strcmp(token, "Tr") == 0 && state == READING_MTL)
+				{
+					float Tr;
+					if(sscanf(strtok(NULL, "#\n"), "%f", &Tr))
+					{
+						mMtl.diffuse.a = 1.0 - Tr;
+					}
+				}
+			}
+
+			if(state == READING_MTL)
+			{
+				mtl_map[mtlName] = mMtl;
+			}
+		}
+
+	}
+////////////////////////new mtl end////////////////////////////
+
+	dataStream.clear();
+	dataStream.str(dataString);
+
+	vertices	= new Vec3f[numVertices];
+	texCoords	= new Vec2f[numTexcoords];
+	faces		= new face[numFaces];
+	normals		= new Vec3f[numNormals];
+	mtls		= new modelFile::material[mtl_map.size()];
+
+
+	int i=0;
+	for(auto itt=mtl_map.begin();itt!=mtl_map.end();itt++)
+	{
+		mtls[numMtls++]=itt->second;
+		mtlNames[itt->first] = i++;
+	}
+
+	totalVerts = numVertices;
+	totalFaces = numFaces;
+
+	numVertices=0;
+	numTexcoords=0;
+	numNormals=0;
+	numFaces=0;
+
+	int cMtl=-1;
+	while(dataStream.getline(line,256))
+	{
+		token = strtok(line, " \t");
+		if(token == nullptr)
+			continue;
+
+		if(strcmp(token, "v") == 0)
+		{
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].x);
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].y);
+			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].z);
+			vertices[numVertices].x = -vertices[numVertices].x;
+			numVertices++;
+		}
+		else if(strcmp(token, "vt") == 0)
+		{
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].x);
+			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].y);
+
+			texCoords[numTexcoords].y = 1.0f - texCoords[numTexcoords].y;
+			numTexcoords++;
+		}
+		else if(strcmp(token, "vn") == 0)
+		{
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].x);
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].y);
+			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].z);
+			normals[numNormals] = normals[numNormals].normalize();
+			numNormals++;
+		}
+		else if(strcmp(token, "f") == 0)
+		{
+			int i, v = 0, t = 0, n = 0;
+
+			for(i = 0; i<3; i++) //should check for faces that do not include both a vertex, normal and position
+			{
+				token = strtok(NULL, " \t");
+				sscanf(token, "%d/%d/%d", &v, &t, &n);
+
+				faces[numFaces].n[i] = n;
+				faces[numFaces].t[i] = t;
+				faces[numFaces].v[i] = v;
+			}
+			faces[numFaces].material=cMtl;
+			numFaces++;
+		}
+		else if(strcmp(token, "usemtl") == 0)
+		{
+			string name=strtok(NULL, " ");
+			if(name.size()!=0)
+			{
+				auto n = mtlNames.find(name);
+				if(n != mtlNames.end())
+				{
+					cMtl = n->second;
+				}
+			}
+		}
+	}
+
+////////////////////////////////////////////////bounding sphere///////////////////////////////////////////////////
+	Vec3f center;
+	float minx=0, maxx=0, miny=0, maxy=0, minz=0, maxz=0, radiusSquared=0;
+	if(numVertices >= 1)
+	{
+		minx = maxx = vertices[0].x;
+		miny = maxy = vertices[0].y;
+		minz = maxz = vertices[0].z;
+		for(i=1;i<numVertices;i++)
+		{
+			if(vertices[i].x<minx) minx=vertices[i].x;
+			if(vertices[i].y<miny) miny=vertices[i].y;
+			if(vertices[i].z<minz) minz=vertices[i].z;
+			if(vertices[i].x>maxx) maxx=vertices[i].x;
+			if(vertices[i].y>maxy) maxy=vertices[i].y;
+			if(vertices[i].z>maxz) maxz=vertices[i].z;
+		}
+		f->boundingSphere.center = Vec3f((minx+maxx)/2,((miny+maxy)/2),(minz+maxz)/2);
+		radiusSquared = center.distanceSquared(vertices[0]);
+		for(i=1;i<numVertices;i++)
+		{
+			if(center.distanceSquared(vertices[i]) > radiusSquared)
+			{
+				radiusSquared = center.distanceSquared(vertices[i]);
+			}
+		}
+		f->boundingSphere.radius = sqrt(radiusSquared);
+	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	map<vertexIndices, unsigned int>::iterator vertexIndicesItt;
+	float inv;
+	normalMappedVertex3D tmpVertex;
+	Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
+	for(int i=0; i < totalFaces; i++)
+	{
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0)
+		{
+			faceNormal = (vertices[faces[i].v[1]-1]-vertices[faces[i].v[0]-1]).cross(vertices[faces[i].v[2]-1]-vertices[faces[i].v[0]-1]);
+		}
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].t[0] != 0 && faces[i].t[1] != 0 && faces[i].t[2] != 0)
+		{
+			inv = (texCoords[faces[i].t[0]-1].x * texCoords[faces[i].t[1]-1].y - texCoords[faces[i].t[1]-1].x * texCoords[faces[i].t[0]-1].y);
+			faceTangent = abs(inv) < 0.001 ? Vec3f(1,0,0).cross(faceNormal) : (vertices[faces[i].v[0]-1] * texCoords[faces[i].t[1]-1].y - vertices[faces[i].v[1]-1] * texCoords[faces[i].t[0]-1].y) / inv;
+		}
+
+		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].n[0] != 0 && faces[i].n[1] != 0 && faces[i].n[2] != 0)
+		{
+			avgFaceNormal = normals[faces[i].n[0]-1] + normals[faces[i].n[1]-1] + normals[faces[i].n[2]-1];
+			if(faceNormal.dot(faceNormal) < 0.0)// correct triangle winding order
+			{
+				swap(faces[i].v[0], faces[i].v[1]);
+				swap(faces[i].t[0], faces[i].t[1]);
+				swap(faces[i].n[0], faces[i].n[1]);
+			}
+		}
+		for(int j = 0; j < 3; j++)
+		{
+			vertexIndicesItt = indexMap.find(vertexIndices(faces[i].v[j], faces[i].t[j], faces[i].n[j]));
+			if(vertexIndicesItt == indexMap.end())
+			{
+				indexMap[vertexIndices(faces[i].v[j], faces[i].t[j], faces[i].n[j])] = f->vertices.size();
+				faces[i].combinedVertices[j] = f->vertices.size();
+
+				tmpVertex.position = (faces[i].v[j] != 0) ? vertices[faces[i].v[j]-1] : Vec3f();
+				tmpVertex.normal = (faces[i].n[j] != 0) ? normals[faces[i].n[j]-1] : faceNormal;
+				tmpVertex.UV = (faces[i].t[j] != 0) ? texCoords[faces[i].t[j]-1] : Vec2f();
+				tmpVertex.tangent = Vec3f(0,0,0);
+				f->vertices.push_back(tmpVertex);
+			}
+			else
+			{
+				faces[i].combinedVertices[j] = vertexIndicesItt->second;
+			}
+		}
+		f->vertices[faces[i].combinedVertices[0]].tangent += faceTangent;
+		f->vertices[faces[i].combinedVertices[1]].tangent += faceTangent;
+		f->vertices[faces[i].combinedVertices[2]].tangent += faceTangent;
+	}
+
+
+	//unsigned int* indexBuffer = new unsigned int[totalFaces*3];
+	//unsigned int lNum=0, vNum = 0;
+	for(int m=0; m<numMtls; m++)
+	{
+		modelFile::material mat;
+		mat.diffuse = mtls[m].diffuse;
+		mat.specular = mtls[m].specular;
+		mat.hardness = mtls[m].hardness;
+		mat.specularMap = mtls[m].specularMap;
+		mat.normalMap = mtls[m].normalMap;
+		mat.tex = mtls[m].tex;
+		//mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+
+		for(int i=0; i < totalFaces; i++)
+		{
+			if(faces[i].material == m)
+			{
+				mat.indices.push_back(faces[i].combinedVertices[0]);
+				mat.indices.push_back(faces[i].combinedVertices[1]);
+				mat.indices.push_back(faces[i].combinedVertices[2]);
+			}
+		}
+		f->materials.push_back(mat);
+	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	delete[] vertices;
+	delete[] texCoords;
+	delete[] faces;
+	delete[] normals;
+	delete[] mtls;
+	f->completeLoad(true);
+}
 FileManager::fileContents FileManager::loadFileContents(string filename)
 {
 	fileContents f;
 
 	try{
-		ifstream fin(filename,ios::in|ios::ate|ios::binary);
+		std::ifstream fin(filename,std::ios::in|std::ios::ate|std::ios::binary);
 		if(fin.is_open())
 		{
 			f.size = (unsigned long)fin.tellg();
 			f.contents = new unsigned char[f.size];
 			memset(f.contents,0,f.size);
 
-			fin.seekg(0, ios::beg);
+			fin.seekg(0, std::ios::beg);
 			fin.read((char*)f.contents, f.size);
 			fin.close();
 		}
@@ -1215,7 +1554,7 @@ void FileManager::workerThread()
 {
 	bool empty;
 	bool writeEmpty;
-	while(true)
+	while(!terminateFlag)
 	{
 		fileQueueMutex.lock();
 		empty = fileQueue.empty();
@@ -1241,7 +1580,8 @@ void FileManager::workerThread()
 			else if(f->type == ZIP_FILE)	parseZipFile(dynamic_pointer_cast<zipFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == BMP)	parseBmpFile(dynamic_pointer_cast<textureFile>(f),data);
 			else if(f->type == TEXTURE_FILE && f->format == TGA)	parseTgaFile(dynamic_pointer_cast<textureFile>(f),data);
-			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);	
+			else if(f->type == TEXTURE_FILE && f->format == PNG)	parsePngFile(dynamic_pointer_cast<textureFile>(f),data);
+			else if(f->type == MODEL_FILE && f->format == OBJ)		parseObjFile(dynamic_pointer_cast<modelFile>(f),data);
 			else debugBreak();
 			delete[] data.contents;
 		}
@@ -1268,10 +1608,10 @@ void FileManager::workerThread()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool FileManager::writeFileContents(string filename, fileContents contents)
 {
-	unique_ptr<unsigned char[]> p(contents.contents); //makes sure that memory get deleted
+	std::unique_ptr<unsigned char[]> p(contents.contents); //makes sure that memory get deleted
 
 	try{
-		ofstream fout(filename,ios::out|ios::binary|ios::trunc);
+		std::ofstream fout(filename,std::ios::out|std::ios::binary|std::ios::trunc);
 		if(fout.is_open())
 		{
 			fout.write((const char*)contents.contents, contents.size);
@@ -1610,4 +1950,23 @@ FileManager::fileContents FileManager::serializePngFile(shared_ptr<textureFile> 
 	c.contents = new unsigned char[c.size];
 	memcpy(c.contents, &data[0], c.size);
 	return c;
+}
+void FileManager::shutdown()
+{
+	queue<shared_ptr<file>> tmpQueue;
+	fileQueueMutex.lock();
+	while(!fileQueue.empty())
+	{
+		if(fileQueue.front()->writeFile)
+			tmpQueue.push(fileQueue.front());
+		fileQueue.pop();
+	}
+	fileQueue = tmpQueue;
+	fileQueueMutex.unlock();
+	terminateFlag = true;
+#if defined(WINDOWS)
+	WaitForSingleObject(pWorkerThread, INFINITE);
+#elif defined(LINUX)
+	//TODO: wait for workerThread to terminate
+#endif
 }

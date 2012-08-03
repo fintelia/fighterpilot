@@ -10,21 +10,21 @@ public:
 	}
 	map<string,map<string,string>> categories;
 
-	struct planeStat
-	{
-		struct hardpoint
-		{
-			objectType mType;
-			Vec3f offset;
-			hardpoint(): mType(MISSILE), offset(0,0,0) {}
-			hardpoint(objectType t,Vec3f Offset): mType(t), offset(Offset) {}
-		};
-		vector<hardpoint> hardpoints;//offsets
-		vector<Vec3f> machineGuns;
-		vector<Vec3f> engines;
-		planeStat(){}
-	};
-	map<planeType,planeStat> planeStats;
+	//struct planeStat
+	//{
+	//	struct hardpoint
+	//	{
+	//		objectType mType;
+	//		Vec3f offset;
+	//		hardpoint(): mType(MISSILE), offset(0,0,0) {}
+	//		hardpoint(objectType t,Vec3f Offset): mType(t), offset(Offset) {}
+	//	};
+	//	vector<hardpoint> hardpoints;//offsets
+	//	vector<Vec3f> machineGuns;
+	//	vector<Vec3f> engines;
+	//	planeStat(){}
+	//};
+	//map<planeType,planeStat> planeStats;
 	template <class T> T get (string category, string name)
 	{
 		try{

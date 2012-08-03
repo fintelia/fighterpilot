@@ -47,7 +47,7 @@ public:
 			v=0;
 			for(auto s=i->second.begin();s!=i->second.end();s++)
 				v+=*s;
-			ostringstream buffer;
+			std::ostringstream buffer;
 			buffer << std::fixed << std::setprecision(1) << max(v/i->second.size(),0.0f);
 			graphics->drawText(buffer.str(),Vec2f(0.2,y));
 		}
@@ -59,7 +59,7 @@ public:
 		for(auto i=outputd.begin();i!=outputd.end();i++,y+=0.02)
 		{
 			graphics->drawText(i->first,Vec2f(0.01,y));
-			ostringstream buffer;
+			std::ostringstream buffer;
 			buffer << std::fixed << std::setprecision(2) << i->second;
 			graphics->drawText(buffer.str(),Vec2f(0.2,y));
 		}

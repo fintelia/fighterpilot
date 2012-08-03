@@ -1,4 +1,4 @@
 
 #include "engine.h"
 
-minstd_rand randomGen;
+std::minstd_rand randomGen;

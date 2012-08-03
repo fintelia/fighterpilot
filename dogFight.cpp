@@ -2,7 +2,7 @@
 #include "game.h"
 
 namespace gui{
-dogFight::dogFight(std::shared_ptr<LevelFile> lvl): level(lvl), firstFrame(true)
+dogFight::dogFight(shared_ptr<LevelFile> lvl): level(lvl), firstFrame(true)
 {
 
 }
@@ -229,8 +229,6 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 }
 void dogFight::checkCollisions()
 {
-	std::shared_ptr<CollisionChecker::triangleList> trl1, trl2;
-
 	auto planes = world(PLANE);
 	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 	auto missiles = world(MISSILE);
@@ -247,7 +245,7 @@ void dogFight::checkCollisions()
 			{
 				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
 				{
-					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
+					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
 					{
 						i->second->loseHealth(14.4 * damageMultiplier);
 
@@ -263,14 +261,9 @@ void dogFight::checkCollisions()
 			}
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
-				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
-				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
-					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) &&
-					collisionCheck(i->second,l->second))
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
 				{
-					
 					i->second->loseHealth(105 * damageMultiplier);
 
 					if((*i).second->dead)
@@ -298,7 +291,7 @@ void dogFight::checkCollisions()
 			{
 				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
 				{
-					if(collisionCheck(i->second->type,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000-i->second->position, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000-i->second->position))
+					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
 					{
 						i->second->loseHealth(14.4);
 						if((*i).second->dead)
@@ -313,12 +306,8 @@ void dogFight::checkCollisions()
 			}
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
-				trl1 = dataManager.getModel(objectTypeString(i->second->type))->trl;
-				trl2 = dataManager.getModel(objectTypeString(l->second->type))->trl;
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete &&
-					(i->second->position + i->second->rotation*(trl1!=NULL?trl1->getCenter():Vec3f(0,0,0))).distance(l->second->position + l->second->rotation*(trl2!=NULL?trl2->getCenter():Vec3f(0,0,0))) < (trl1!=NULL?trl1->getRadius():0)+(trl2!=NULL?trl2->getRadius():0) &&
-					collisionCheck(i->second,l->second))
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
 				{
 					i->second->loseHealth(105);
 					if((*i).second->dead)

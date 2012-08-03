@@ -1,9 +1,9 @@
 
-extern minstd_rand randomGen;
+extern std::minstd_rand randomGen;
 
 template<class T> T random(T min, T max)
 {
-    static uniform_real_distribution<double> dist(0.0, 1.0);
+    static std::uniform_real_distribution<double> dist(0.0, 1.0);
 
 	return min + dist(randomGen) * (max - min);
 }
@@ -15,7 +15,7 @@ template<class T> T random(T max)
 ////////////////////////////////////////////////////////////////////
 template<class T> T random()
 {
-	static uniform_real_distribution<T> dist;
+	static std::uniform_real_distribution<T> dist;
 	return dist(randomGen);
 }
 template<class T> Vector3<T> random3()

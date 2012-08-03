@@ -23,10 +23,10 @@ private:
 	struct modelAsset: public asset
 	{
 		//int numVertices;
-		//std::shared_ptr<texturedLitVertex3D> vertices;
+		//shared_ptr<texturedLitVertex3D> vertices;
 //		unsigned int VBO_id;
 		shared_ptr<GraphicsManager::vertexBuffer> VBO;
-		shared_ptr<GraphicsManager::indexBuffer> IBO;
+//		shared_ptr<GraphicsManager::indexBuffer> IBO;
 //		int numMaterials;
 		struct material{
 			string tex;
@@ -48,7 +48,7 @@ private:
 		vector<material> materials;
 
 		Sphere<float> boundingSphere;
-		std::shared_ptr<CollisionChecker::triangleList> trl;
+		//shared_ptr<CollisionChecker::triangleList> trl;
 	};
 	struct fontAsset: public asset{
 		shared_ptr<GraphicsManager::texture2D> texture;
@@ -126,11 +126,11 @@ private:
 
 	//bool registerTGA(string name, string filename, bool tileable=false);
 	//bool registerPNG(string name, string filename, bool tileable=false);
-	asset* registerOBJ(string filename);
-	asset* registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect=false);
+	modelAsset* registerOBJ(string filename);
+	shaderAsset* registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect=false);
 	//bool registerTerrainShader(string name, string frag);
-	asset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false);
-	asset* registerFont(shared_ptr<FileManager::textFile> f);
+	textureAsset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false);
+	fontAsset* registerFont(shared_ptr<FileManager::textFile> f);
 
 	//int getId(string name);
 	//int getId(objectType t);

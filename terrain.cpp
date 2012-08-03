@@ -833,7 +833,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 {
 	shaderType = shader;
 	waterPlane = (shader==TERRAIN_ISLAND);
-	std::shared_ptr<TerrainPage> p(new TerrainPage(Heights,patchResolution,position,scale,LOD));
+	shared_ptr<TerrainPage> p(new TerrainPage(Heights,patchResolution,position,scale,LOD));
 	terrainPages.push_back(p);
 	terrainPosition = position;
 	terrainScale = scale;
@@ -842,7 +842,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
 	generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8); //should actually make the sun be at the position of the light source...
-	generateOceanTexture();
+	//generateOceanTexture(); we now load this texture from disk to reduce startup time
 
 	generateFoliage(foliageAmount);
 
@@ -866,9 +866,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	dataManager.bind("sky shader");
 
 	dataManager.setUniform1i("tex", 0);
-	//dataManager.setUniform1i("clouds", 0);
+	dataManager.setUniform1i("noise", 1);
 	skyTexture->bind();
-	//dataManager.bind("skybox");
+	dataManager.bind("noise",1);
 	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
 
 
@@ -1024,45 +1024,56 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->setColorMask(true);
 	}
 
-	
-	//if(!foliage.empty())
-	//{
-		//graphics->setDepthMask(false);
-		//Vec3f up = Vec3f(0.0,1.0,0.0);
-		Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
 
-		//for(int i=0; i<foliage.size(); i++)
-		//{
-		//	foliageVertices[i*4+0].position = foliage[i].location - right * foliage[i].height;
-		//	foliageVertices[i*4+1].position = foliage[i].location + right * foliage[i].height;
-		//	foliageVertices[i*4+2].position = foliage[i].location + (up + right) * foliage[i].height;
-		//	foliageVertices[i*4+3].position = foliage[i].location + (up - right) * foliage[i].height;
-		//}
-		
-		//foliageVBO->setVertexData(sizeof(texturedVertex3D)*foliage.size()*4, &foliageVertices[0]);
-		graphics->setAlphaToCoverage(true);
+		Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
+		//graphics->setAlphaToCoverage(true);
 		dataManager.bind("tree");
-		//dataManager.bind("skybox",1);
 		skyTexture->bind(1);
 
-		if(graphics->getMultisampling())
-			dataManager.bind("trees shader");
-		else
-			dataManager.bind("trees alpha test shader");
-
+		//if(graphics->getMultisampling())
+		//	dataManager.bind("trees shader");
+		//else
+		//	dataManager.bind("trees alpha test shader");
+		//
+		//dataManager.setUniform1i("tex", 0);
+		//dataManager.setUniform1i("sky", 1);
+		//dataManager.setUniform3f("eyePos", eye);
+		//
+		//dataManager.setUniform3f("right", right);
+		//dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		//
+		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
+		//graphics->setAlphaToCoverage(false);
+	
+		dataManager.bind("trees alpha test shader");
 		dataManager.setUniform1i("tex", 0);
 		dataManager.setUniform1i("sky", 1);
 		dataManager.setUniform3f("eyePos", eye);
-
 		dataManager.setUniform3f("right", right);
 		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-
 		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-		graphics->setAlphaToCoverage(false);
-	//}
-	
+
+		graphics->setDepthMask(false);
+		dataManager.bind("trees shader");
+		dataManager.setUniform1i("tex", 0);
+		dataManager.setUniform1i("sky", 1);
+		dataManager.setUniform3f("eyePos", eye);
+		dataManager.setUniform3f("right", right);
+		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
+		graphics->setDepthMask(true);
+
+
+
+	//graphics->setDepthMask(false);
+	//dataManager.bind("cirrus cloud shader");
+	//dataManager.bind("noise");
+	//dataManager.setUniform1i("tex", 0);
+	//dataManager.setUniform3f("eyePos", view->camera().eye);
+	//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,900,eye.z),Quat4f(),Vec3f(radius,100,radius));
+	//graphics->setDepthMask(true);
 }
-std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
+shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {
 	for(auto i=terrainPages.begin(); i!=terrainPages.end(); i++)
 	{
@@ -1071,9 +1082,9 @@ std::shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 			return *i;
 		}
 	}
-	return std::shared_ptr<TerrainPage>();
+	return shared_ptr<TerrainPage>();
 }
-std::shared_ptr<TerrainPage> Terrain::getPage(Vec3f position) const // position.y is ignored
+shared_ptr<TerrainPage> Terrain::getPage(Vec3f position) const // position.y is ignored
 {
 	for(auto i=terrainPages.begin(); i!=terrainPages.end(); i++)
 	{
@@ -1082,7 +1093,7 @@ std::shared_ptr<TerrainPage> Terrain::getPage(Vec3f position) const // position.
 			return *i;
 		}
 	}
-	return std::shared_ptr<TerrainPage>();
+	return shared_ptr<TerrainPage>();
 }
 float Terrain::elevation(Vec2f v) const
 {

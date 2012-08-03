@@ -55,6 +55,7 @@ struct OpenGLgraphics::Context
 	bool					fullscreen;
 };
 #endif
+
 OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
 {
 	glGenBuffers(1, &vBufferID);
@@ -362,19 +363,42 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 
+	int depth;
+	if(format == LUMINANCE)				depth = 1;
+	else if(format == LUMINANCE_ALPHA)	depth = 2;
+	else if(format == RGB)				depth = 3;
+	else if(format == RGBA)				depth = 4;
+	else if(format == RGB16)			depth = 6;
+	else if(format == RGBA16)			depth = 8;
+	else if(format == RGB16)			depth = 6;
+	else if(format == RGBA16)			depth = 8;
+
 	if(!gl2Hacks || GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
 	{
 		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-		if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-		else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-		else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
-		else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-		else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
-		else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
-
+		if(GLEW_EXT_texture_compression_s3tc)
+		{
+			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
+			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
+			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
+		}
+		else
+		{
+			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
+			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
+			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
+		}
 		if(gl2Hacks)
 		{
 			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
@@ -571,7 +595,7 @@ int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
 	auto it = uniforms.find(uniform);
 	if(it == uniforms.end())
 	{
-		it = uniforms.insert(pair<string, int>(uniform, glGetUniformLocation(shaderId, uniform.c_str()))).first;
+		it = uniforms.insert(std::pair<string, int>(uniform, glGetUniformLocation(shaderId, uniform.c_str()))).first;
 	}
 	return it->second;
 }
@@ -837,16 +861,13 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
+OpenGLgraphics::OpenGLgraphics():highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
 #ifdef _DEBUG
 	errorGlowEndTime = 0;
 #endif
 	viewConstraint = Rect::XYXY(0,0,1,1);
-
 	context = new Context;
-	//useAnagricStereo(true);
-	//setInterOcularDistance(0.25);
 }
 OpenGLgraphics::~OpenGLgraphics()
 {
@@ -948,7 +969,7 @@ void OpenGLgraphics::setColorMask(bool mask)
 	//if(renderTarget == RT_SCREEN && mask != colorMask)
 	//{
 		colorMask = mask;
-		glColorMask(mask, mask, mask, mask);
+		glColorMask(mask && redChannelMask, mask && greenChannelMask, mask && blueChannelMask, mask);
 	//}
 	//else if(renderTarget == RT_FBO_0 && mask != FBOs[0].colorBound)
 	//{
@@ -1412,12 +1433,18 @@ void OpenGLgraphics::render()
 		if(stereo && eye==0)
 		{
 			leftEye = true;
+			redChannelMask = true;
+			greenChannelMask = false;
+			blueChannelMask = false;
 			glColorMask(true,false,false,true);
 			cameraOffset = Vec3f(-interOcularDistance/2,0,0);
 		}
 		else if(stereo && eye==1)
 		{
 			leftEye = false;
+			redChannelMask = false;
+			greenChannelMask = true;
+			blueChannelMask = true;
 			glColorMask(false,true,true,true);
 			cameraOffset = Vec3f(interOcularDistance/2,0,0);
 
@@ -1520,8 +1547,12 @@ void OpenGLgraphics::render()
 
 	currentView.reset(); //set the current view to null
 	if(stereo)
+	{
+		redChannelMask = true;
+		greenChannelMask = true;
+		blueChannelMask = true;
 		glColorMask(true,true,true,true);
-
+	}
 	sceneManager.endRender(); //do some post render cleanup
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
@@ -1997,6 +2028,12 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;
 	}
 
+	if(game->hasCommandLineOption("--stereo"))
+	{
+		useAnagricStereo(true);
+		setInterOcularDistance(0.25);
+	}
+
 	overlayVBO = genVertexBuffer(vertexBuffer::STREAM);
 	overlayVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2,	0);
 	overlayVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		2*sizeof(float));
@@ -2111,7 +2148,6 @@ void OpenGLgraphics::takeScreenshot()
 			world.frameUpdate();
 			render();
 
-
 			glPixelStorei(GL_PACK_ALIGNMENT, 1);
 			glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, tileContents);
 
@@ -2124,7 +2160,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	delete[] tileContents;
 
-	fileManager.writePngFile(file,false);
+	fileManager.writePngFile(file,true);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
 	world.time.unpause();

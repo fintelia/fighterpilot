@@ -160,7 +160,6 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="sceneManager.cpp" />
-    <ClCompile Include="script.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
@@ -208,7 +207,6 @@
     <ClInclude Include="random.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sceneManager.h" />
-    <ClInclude Include="script.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="terrain.h" />
     <ClInclude Include="time.h" />
@@ -223,6 +221,8 @@
     </None>
     <None Include="media\circle.frag" />
     <None Include="media\circle.vert" />
+    <None Include="media\cirrusCloud.frag" />
+    <None Include="media\cirrusCloud.vert" />
     <None Include="media\desert preview.frag" />
     <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />

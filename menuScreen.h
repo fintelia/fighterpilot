@@ -398,7 +398,7 @@ public:
 	}
 
 	void setMenu(screen* m);
-	bool setPopup(popup* p){if(p != NULL)popups.push_back(std::shared_ptr<popup>(p));return p!=NULL;}
+	bool setPopup(popup* p){if(p != NULL)popups.push_back(shared_ptr<popup>(p));return p!=NULL;}
 
 	void shutdown();
 	int update();
@@ -410,7 +410,7 @@ public:
 
 	void drawCursor(){mDrawCursor = true;}
 private:
-	vector<std::shared_ptr<popup>> popups;
+	vector<shared_ptr<popup>> popups;
 	screen* menu;
 
 	manager():menu(nullptr){}

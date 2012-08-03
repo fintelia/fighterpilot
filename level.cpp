@@ -1,6 +1,6 @@
 
 #include "game.h"
-LevelFile::Object::Object():type(F22), team(NEUTRAL), startloc(), startRot()
+LevelFile::Object::Object():type(0), team(NEUTRAL), startloc(), startRot()
 {
 
 }
@@ -217,7 +217,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				if(readSubString("\ttype="))
 				{
 					string s = readLine();
-					object->type = objectTypeFromString(s);
+					object->type = objectInfo.typeFromString(s);
 				}
 				else if(readSubString("\tteam="))
 				{
@@ -277,7 +277,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 	{
 		if(i->type == PLAYER_PLANE && players.numPlayers() < humanPlayers)
 		{
-			auto id = world.newObject(new nPlane(i->startloc, i->startRot, MIRAGE, i->team));
+			auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.typeFromString("MIRAGE"), i->team));
 			players.addHumanPlayer(id);
 		}
 	}
@@ -288,7 +288,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			if(players.numPlayers() < humanPlayers) //if the number of objects marked PLAYER_PLANE is less than the number of human players
 			{
-				auto id = world.newObject(new nPlane(i->startloc, i->startRot, MIRAGE, i->team)); //keep creating objects as though they were marked PLAYER_PLANE
+				auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.typeFromString("MIRAGE"), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
 				players.addHumanPlayer(id);
 			}
 			else

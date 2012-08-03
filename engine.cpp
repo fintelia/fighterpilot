@@ -9,32 +9,31 @@
 	int x11_screen;
 	unsigned int x11_window;
 #endif
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//														DEFINITIONS																				    //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
-//bool active=true;					// Window Active Flag																						//	//
-																																				//	//
-extern const double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;										//	//
-int sh=1024;																																	//	//
-int sw=1280;																																	//	//
-float sAspect=((float)sw)/sh;																													//	//
-																																				//  //
-profiler Profiler;																																//	//
-																																				//	//
-Ephemeris& ephemeris=Ephemeris::getInstance();																									//  //
-InputManager& input=InputManager::getInstance();																								//	//
-gui::manager& menuManager = gui::manager::getInstance();																						//	//
-DataManager& dataManager = DataManager::getInstance();																							//	//
-AssetLoader& assetLoader = AssetLoader::getInstance();																							//  //
-WorldManager& world = WorldManager::getInstance();																								//	//
-CollisionChecker& collisionCheck = CollisionChecker::getInstance();																				//	//
-GraphicsManager* graphics = OpenGLgraphics::getInstance();																						//	//
-FileManager& fileManager = FileManager::getInstance();																							//  //
-SceneManager& sceneManager = SceneManager::getInstance();																						//  //
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
-//																																				    //
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//															DEFINITIONS														    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
+																															//	//
+extern const double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;					//	//
+int sh=1024;																												//	//
+int sw=1280;																												//	//
+float sAspect=((float)sw)/sh;																								//	//
+																															//  //
+profiler Profiler;																											//	//
+																															//	//
+Ephemeris& ephemeris=Ephemeris::getInstance();																				//  //
+InputManager& input=InputManager::getInstance();																			//	//
+gui::manager& menuManager = gui::manager::getInstance();																	//	//
+DataManager& dataManager = DataManager::getInstance();																		//	//
+AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
+WorldManager& world = WorldManager::getInstance();																			//	//
+PhysicsManager& physics = PhysicsManager::getInstance();																	//	//
+GraphicsManager* graphics = OpenGLgraphics::getInstance();																	//	//
+FileManager& fileManager = FileManager::getInstance();																		//  //
+SceneManager& sceneManager = SceneManager::getInstance();																	//  //
+																															//  //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
+//																															    //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ShowHideTaskBar(bool bHide)
 {
@@ -62,11 +61,11 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 		{
 			if (!HIWORD(wParam))					// Check Minimization State
 			{
-				game->active=true;						// Program Is Active
+				game->active=true;					// Program Is Active
 			}
 			else
 			{
-				game->active=false;						// Program Is No Longer Active
+				game->active=false;					// Program Is No Longer Active
 			}
 
 			return 0;								// Return To The Message Loop
@@ -156,7 +155,7 @@ void linuxEventHandler(XEvent event)
 			}
 			return false;
 		};
-		auto trySymRange = [keysym,keyup](unsigned int minSym, unsigned int maxSym, unsigned int 															minVK)
+		auto trySymRange = [keysym,keyup](unsigned int minSym, unsigned int maxSym, unsigned int minVK)
 		{
 			if(keysym >= (minSym) && keysym <= (maxSym))
 			{
@@ -237,7 +236,7 @@ int main(int argc, const char* argv[])
 {
 #endif
 
-	set_new_handler(outOfMemory);
+	std::set_new_handler(outOfMemory);
 
 	srand((unsigned int)time(nullptr));
 	randomGen.seed(time(nullptr));
@@ -282,7 +281,7 @@ int main(int argc, const char* argv[])
 	XSetWMProtocols(x11_display, x11_window, &wmDeleteMessage, 1);
 	XEvent event;
 #endif
-	
+
 	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;
@@ -350,5 +349,6 @@ int main(int argc, const char* argv[])
 	menuManager.shutdown();
 	dataManager.shutdown();
 	graphics->destroyWindow();
+	fileManager.shutdown(); //will wait for all files to be written
 	return 0;
 }

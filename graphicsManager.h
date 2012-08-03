@@ -88,7 +88,7 @@ public:
 		bool mRenderParticles;
 
 		int mRenderFuncParam;
-		function<void(int)> mRenderFunc;
+		std::function<void(int)> mRenderFunc;
 
 		Vec3f cameraShift;
 		Mat4f completeProjectionMat;
@@ -110,7 +110,7 @@ public:
 		const Mat4f& projectionMatrix(){return mProjectionMat;}
 		const Mat4f& modelViewMatrix(){return mModelViewMat;}
 
-		void setRenderFunc(function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
+		void setRenderFunc(std::function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
 
 		bool sphereInFrustum(Sphere<float> s);
 		bool boundingBoxInFrustum(BoundingBox<float> b);
@@ -375,6 +375,10 @@ protected:
 	Context* context;
 	bool colorMask;
 	bool depthMask;
+
+	bool redChannelMask;
+	bool greenChannelMask;
+	bool blueChannelMask;
 
 	bool texCoord_clientState;
 	bool normal_clientState;

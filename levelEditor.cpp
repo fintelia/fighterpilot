@@ -10,7 +10,7 @@ bool levelEditor::init()
 	view = graphics->genView();
 	view->viewport(0,0, sAspect,1.0);
 	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
-	view->setRenderFunc(bind(&levelEditor::render3D, this, placeholders::_1));
+	view->setRenderFunc(std::bind(&levelEditor::render3D, this, std::placeholders::_1));
 
 	//terrain
 	buttons["dSquare"]		= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
@@ -723,7 +723,7 @@ void levelEditor::fromFile(string filename)
 		vector<string> tokens;
 
 		string file = fileManager.changeExtension(filename, ".hdr");
-		ifstream fin(file);
+		std::ifstream fin(file);
 		if(!fin.is_open())
 			return;
 
@@ -745,7 +745,7 @@ void levelEditor::fromFile(string filename)
 		}
 		fin.close();
 
-		fin.open(filename,ios::binary);
+		fin.open(filename,std::ios::binary);
 		if(!fin.is_open())
 			return;
 

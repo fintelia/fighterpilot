@@ -35,17 +35,17 @@ bool objectProperties::init(LevelFile::Object* obj)
 	l->addOption("team 4");
 	listBoxes["team"] = l;
 
-	string ptype = objectTypeString(object->type);
+	string ptype = objectInfo.typeString(object->type);
 
 	l = new listBox(0.5*sAspect+0.244,0.5-0.015,0.098,ptype,black);
-	l->addOption("f16");			typeOptions.push_back(F16);
-	l->addOption("f18");			typeOptions.push_back(F18);
-	l->addOption("f22");			typeOptions.push_back(F22);
-	l->addOption("UAV");			typeOptions.push_back(UAV);
-	l->addOption("b2");				typeOptions.push_back(B2);
-	l->addOption("mirage");			typeOptions.push_back(MIRAGE);
-	l->addOption("j37");			typeOptions.push_back(J37);
-	l->addOption("<player>");			typeOptions.push_back(PLAYER_PLANE);
+	l->addOption("f16");			typeOptions.push_back(objectInfo.typeFromString("F16"));
+	l->addOption("f18");			typeOptions.push_back(objectInfo.typeFromString("F18"));
+	l->addOption("f22");			typeOptions.push_back(objectInfo.typeFromString("F22"));
+	l->addOption("UAV");			typeOptions.push_back(objectInfo.typeFromString("UAV"));
+	l->addOption("b2");				typeOptions.push_back(objectInfo.typeFromString("B2"));
+	l->addOption("mirage");			typeOptions.push_back(objectInfo.typeFromString("MIRAGE"));
+	l->addOption("j37");			typeOptions.push_back(objectInfo.typeFromString("J37"));
+	l->addOption("<player>");		typeOptions.push_back(PLAYER_PLANE);
 	listBoxes["type"] = l;
 
 	return true;
@@ -205,7 +205,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 
-		std::shared_ptr<LevelFile> l(new LevelFile);
+		shared_ptr<LevelFile> l(new LevelFile);
 		if(l->loadZIP("media/simpleCampaign/mission1.lvl"))
 		{
 			menuManager.setMenu(new gui::campaign(l));
@@ -216,7 +216,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 
-		std::shared_ptr<LevelFile> l(new LevelFile);
+		shared_ptr<LevelFile> l(new LevelFile);
 		if(l->loadZIP("media/map file.lvl"))
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
@@ -260,7 +260,7 @@ void chooseMode::operator() (popup* p)
 			input.up(VK_RETURN);
 
 
-			std::shared_ptr<LevelFile> l(new LevelFile);
+			shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadZIP(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::campaign(l));
@@ -272,7 +272,7 @@ void chooseMode::operator() (popup* p)
 			input.up(VK_SPACE);
 			input.up(VK_RETURN);
 
-			std::shared_ptr<LevelFile> l(new LevelFile);
+			shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadZIP(((openFile*)p)->getFile()))
 			{
 				menuManager.setMenu(new gui::splitScreen(l));
@@ -444,7 +444,7 @@ int loading::update()
 	{
 		assetLoader.loadAsset(); // does preload if this is the first time it is called
 
-		settings.load("media/modelData.txt");
+		//settings.load("media/modelData.txt");
 
 		//dataManager.registerAsset("menu background", "media/menu/menu background.png");
 		//dataManager.registerAsset("progress back", "media/progress back.png");

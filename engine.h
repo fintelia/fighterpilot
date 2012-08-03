@@ -60,7 +60,18 @@ typedef void* HANDLE;
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 //--Namespaces
-using namespace std;
+using std::string;
+using std::vector;
+using std::map;
+using std::set;
+using std::queue;
+using std::shared_ptr;
+using std::weak_ptr;
+using std::dynamic_pointer_cast;
+using std::static_pointer_cast;
+using std::cout;
+using std::endl;
+using std::swap;
 using boost::lexical_cast;
 
 #ifndef UNICODE
@@ -91,17 +102,17 @@ extern float sAspect;
 
 #include "time.h"
 #include "gameMath.h"
+#include "collide.h"
 #include "random.h"
 #include "ephemeris.h"
-#include "fileManager.h"
 #include "controlManager.h"
 #include "graphicsManager.h"
+#include "fileManager.h"
 #include "dataManager.h"
 #include "assetLoader.h"
 #include "sceneManager.h"
 #include "particleManager.h"
 #include "input.h"
-#include "script.h"
 #include "profiler.h"
 #include "object.h"
 #include "terrain.h"

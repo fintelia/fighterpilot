@@ -5,7 +5,7 @@ objId objectList::newObject(object* newObj)
 {
 	if(newObj != nullptr)
 	{
-		std::shared_ptr<object> ptr(newObj);
+		shared_ptr<object> ptr(newObj);
 
 		mObjects[ptr->id] = ptr;
 		mObjectTypes[ptr->type][ptr->id] = ptr;
@@ -55,14 +55,14 @@ void objectList::objectsFrameUpdate(double interpolation)
 		i->second->updateFrame(interpolation);
 	}
 }
-std::shared_ptr<object> objectList::operator[] (objId id) const
+shared_ptr<object> objectList::operator[] (objId id) const
 {
 	auto o = mObjects.find(id);
 	if(o!=mObjects.end())
 		return o->second;
-	return std::shared_ptr<object>();
+	return shared_ptr<object>();
 }
-const map<objId,std::shared_ptr<object>>& objectList::operator() (objectType t)
+const map<objId,shared_ptr<object>>& objectList::operator() (objectType t)
 {
 	return mObjectTypes[t];
 }
