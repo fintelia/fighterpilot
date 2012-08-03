@@ -30,6 +30,7 @@ public:
 	int					team;
 	bool				awaitingDelete;
 	meshInstancePtr		meshInstance;
+	physicsInstancePtr	physicsInstance;
 	cameraPtr			firstPerson;
 	cameraPtr			thirdPerson;
 	object(Vec3f sPos, Quat4f sRot, objectType Type, int Team=NEUTRAL): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(Team), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}

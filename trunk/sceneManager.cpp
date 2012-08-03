@@ -27,15 +27,15 @@ void SceneManager::meshInstance::setTemperaryFlag(bool b)
 	if(b)	flags |=  0x04;
 	else	flags &= ~0x04;
 }
-std::shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(string model, Vec3f position, Quat4f rotation)
+shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(string model, Vec3f position, Quat4f rotation)
 {
-	std::shared_ptr<meshInstance> ptr(new meshInstance(model,position,rotation));
+	shared_ptr<meshInstance> ptr(new meshInstance(model,position,rotation));
 	meshInstances[model].push_back(ptr);
 	return ptr;
 }
 void SceneManager::newTemperaryMesh(string model, Vec3f position, Quat4f rotation)
 {
-	std::shared_ptr<meshInstance> ptr(new meshInstance(model,position,rotation));
+	shared_ptr<meshInstance> ptr(new meshInstance(model,position,rotation));
 	ptr->setTemperaryFlag(true);
 	meshInstances[model].push_back(ptr);
 }
@@ -47,7 +47,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 {
 	for(auto meshType=meshInstances.begin(); meshType!=meshInstances.end(); meshType++)
 	{
-		meshType->second.erase(remove_if(meshType->second.begin(), meshType->second.end(), [](std::shared_ptr<meshInstance> p)->bool{return p->deleteFlag();}), meshType->second.end());
+		meshType->second.erase(std::remove_if(meshType->second.begin(), meshType->second.end(), [](shared_ptr<meshInstance> p)->bool{return p->deleteFlag();}), meshType->second.end());
 	}
 
 	dataManager.bind("model");

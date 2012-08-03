@@ -180,11 +180,11 @@ protected:
 class dogFight: public screen
 {
 protected:
-	std::shared_ptr<LevelFile> level;
+	shared_ptr<LevelFile> level;
 	bool firstFrame;
 
 public:
-	dogFight(std::shared_ptr<LevelFile> lvl);
+	dogFight(shared_ptr<LevelFile> lvl);
 	virtual ~dogFight();
 
 	virtual bool init()=0;
@@ -206,7 +206,7 @@ protected:
 	shared_ptr<GraphicsManager::View> views[2];
 
 public:
-	splitScreen(std::shared_ptr<LevelFile> lvl);
+	splitScreen(shared_ptr<LevelFile> lvl);
 	bool init();
 	int update();
 	void render();
@@ -225,7 +225,7 @@ protected:
 
 	shared_ptr<GraphicsManager::View> view;
 public:
-	campaign(std::shared_ptr<LevelFile> lvl);
+	campaign(shared_ptr<LevelFile> lvl);
 	bool init();
 	int update();
 	void render();

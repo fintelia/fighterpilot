@@ -105,13 +105,14 @@ protected:
 	//unsigned int skyTextureId; //id for the sky cube-map
 	//unsigned int oceanTextureId; //id for the ocean normals cube map
 
-	vector<std::shared_ptr<TerrainPage>> terrainPages;
+	vector<shared_ptr<TerrainPage>> terrainPages;
 
-	std::shared_ptr<TerrainPage> getPage(Vec2f position) const;
-	std::shared_ptr<TerrainPage> getPage(Vec3f position) const;
+	shared_ptr<TerrainPage> getPage(Vec2f position) const;
+	shared_ptr<TerrainPage> getPage(Vec3f position) const;
 
 	void generateOceanTexture();
 	void generateFoliage(int count);
+
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true){}

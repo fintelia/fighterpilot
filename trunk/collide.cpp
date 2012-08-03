@@ -1,12 +1,26 @@
 
 #include "engine.h"
 
-bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
+shared_ptr<PhysicsManager::physicsInstance> PhysicsManager::newPhysicsInstance(objectType t, Vec3f position, Quat4f rotation)
 {
-	tri1.findRadius();
-	tri2.findRadius();
-	return tri1.center.distanceSquared(tri2.center) < (tri1.radius+tri2.radius)*(tri1.radius+tri2.radius);
+	auto i = objectBounds.find(t);
+	if(i != objectBounds.end())
+	{
+		shared_ptr<physicsInstance> ptr(new physicsInstance(i->second,position,rotation));
+		physicsInstances[t & MAJOR_OBJECT_TYPE].push_back(ptr);
+		return ptr;
+	}
+	else
+	{
+		return shared_ptr<physicsInstance>();
+	}
 }
+//bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
+//{
+//	tri1.findRadius();
+//	tri2.findRadius();
+//	return tri1.center.distanceSquared(tri2.center) < (tri1.radius+tri2.radius)*(tri1.radius+tri2.radius);
+//}
 //Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const
 //{
 //	float final_x,final_y,final_z,final_t;
@@ -40,7 +54,7 @@ bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& t
 //
 //	return(temp);
 //}
-bool CollisionChecker::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
+bool PhysicsManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
 {
 	//see: http://paulbourke.net/geometry/planeline/
 
@@ -73,7 +87,7 @@ bool CollisionChecker::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, con
 //
 //	return  (final_t >= 0) && (final_t <= 1);
 //}
-bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert) const
+bool PhysicsManager::pointInTriangle(const triangle& tri,const Vec3f& vert) const
 {
 	float ang = acos((tri.vertices[0]-vert).normalize().dot((tri.vertices[0]-vert).normalize())) +
 				acos((tri.vertices[1]-vert).normalize().dot((tri.vertices[1]-vert).normalize())) +
@@ -117,7 +131,7 @@ bool CollisionChecker::pointInTriangle(const triangle& tri,const Vec3f& vert) co
 //
 //	return false; // Default value/no collision
 //}
-bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2) const
+bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri2) const
 {
 	Vec3f p;
 
@@ -135,7 +149,7 @@ bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& t
 
 	return false;
 }
-bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const
+bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const
 {
 	triangle T1 = tri1;
 	triangle T2 = tri2;
@@ -151,62 +165,62 @@ bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& t
 
 	return triangleCollision(T1, T2);
 }
-Vec3f CollisionChecker::triangleList::getRandomVertex()
-{
-	int r = random<int>(numTriangles*3);
-	if(r % 3 == 0)		return triangles[r / 3].vertices[0];
-	else if(r % 3 == 1)	return triangles[r / 3].vertices[1];
-	else				return triangles[r / 3].vertices[2];
-}
-CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces):triangles(NULL), numTriangles(0), center(0.0f,0.0f,0.0f), radius(-99999999.9f)
-{
-	if(nVertices == 0 || nFaces == 0)
-		return;
-
-	float minx,miny,minz,maxx,maxy,maxz;
-	Vec3f cross_v1xv2,p;
-	int i;
-
-	triangles = new triangle[nFaces];
-	numTriangles = nFaces;
-	for(i=0;i<nFaces;i++)
-	{
-		triangles[i].vertices[0]=vertices[faces[i*3+0]];
-		triangles[i].vertices[1]=vertices[faces[i*3+1]];
-		triangles[i].vertices[2]=vertices[faces[i*3+2]];
-		triangles[i].findRadius();
-
-		//Vec3f cross_v1xv2 = (triangles[i].b - triangles[i].a).cross(triangles[i].c - triangles[i].a);
-		//triangles[i].pA = cross_v1xv2.x;
-		//triangles[i].pB = cross_v1xv2.y;
-		//triangles[i].pC = cross_v1xv2.z;
-		//triangles[i].pD += (-(triangles[i].a.x))*(cross_v1xv2.x);
-		//triangles[i].pD += (-(triangles[i].a.y))*(cross_v1xv2.y);
-		//triangles[i].pD += (-(triangles[i].a.z))*(cross_v1xv2.z);
-
-
-	}
-	minx = maxx = vertices[0].x;
-	miny = maxy = vertices[0].y;
-	minz = maxz = vertices[0].z;
-	for(i=1;i<nVertices;i++)
-	{
-		if(vertices[i].x<minx) minx=vertices[i].x;
-		if(vertices[i].y<miny) miny=vertices[i].y;
-		if(vertices[i].z<minz) minz=vertices[i].z;
-		if(vertices[i].x>maxx) maxx=vertices[i].x;
-		if(vertices[i].y>maxy) maxy=vertices[i].y;
-		if(vertices[i].z>maxz) maxz=vertices[i].z;
-	}
-	center = Vec3f((minx+maxx)/2,((miny+maxy)/2),(minz+maxz)/2);
-	float radiusSquared = center.distanceSquared(vertices[0]);
-	for(i=1;i<nVertices;i++)
-	{
-		if (center.distanceSquared(vertices[i]) > radiusSquared) radiusSquared = center.distanceSquared(vertices[i]);
-	}
-	radius = sqrt(radiusSquared);
-}
-void CollisionChecker::triangle::findRadius() const
+//Vec3f CollisionChecker::triangleList::getRandomVertex()
+//{
+//	int r = random<int>(numTriangles*3);
+//	if(r % 3 == 0)		return triangles[r / 3].vertices[0];
+//	else if(r % 3 == 1)	return triangles[r / 3].vertices[1];
+//	else				return triangles[r / 3].vertices[2];
+//}
+//CollisionChecker::triangleList::triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces):triangles(NULL), numTriangles(0), center(0.0f,0.0f,0.0f), radius(-99999999.9f)
+//{
+//	if(nVertices == 0 || nFaces == 0)
+//		return;
+//
+//	float minx,miny,minz,maxx,maxy,maxz;
+//	Vec3f cross_v1xv2,p;
+//	int i;
+//
+//	triangles = new triangle[nFaces];
+//	numTriangles = nFaces;
+//	for(i=0;i<nFaces;i++)
+//	{
+//		triangles[i].vertices[0]=vertices[faces[i*3+0]];
+//		triangles[i].vertices[1]=vertices[faces[i*3+1]];
+//		triangles[i].vertices[2]=vertices[faces[i*3+2]];
+//		triangles[i].findRadius();
+//
+//		//Vec3f cross_v1xv2 = (triangles[i].b - triangles[i].a).cross(triangles[i].c - triangles[i].a);
+//		//triangles[i].pA = cross_v1xv2.x;
+//		//triangles[i].pB = cross_v1xv2.y;
+//		//triangles[i].pC = cross_v1xv2.z;
+//		//triangles[i].pD += (-(triangles[i].a.x))*(cross_v1xv2.x);
+//		//triangles[i].pD += (-(triangles[i].a.y))*(cross_v1xv2.y);
+//		//triangles[i].pD += (-(triangles[i].a.z))*(cross_v1xv2.z);
+//
+//
+//	}
+//	minx = maxx = vertices[0].x;
+//	miny = maxy = vertices[0].y;
+//	minz = maxz = vertices[0].z;
+//	for(i=1;i<nVertices;i++)
+//	{
+//		if(vertices[i].x<minx) minx=vertices[i].x;
+//		if(vertices[i].y<miny) miny=vertices[i].y;
+//		if(vertices[i].z<minz) minz=vertices[i].z;
+//		if(vertices[i].x>maxx) maxx=vertices[i].x;
+//		if(vertices[i].y>maxy) maxy=vertices[i].y;
+//		if(vertices[i].z>maxz) maxz=vertices[i].z;
+//	}
+//	center = Vec3f((minx+maxx)/2,((miny+maxy)/2),(minz+maxz)/2);
+//	float radiusSquared = center.distanceSquared(vertices[0]);
+//	for(i=1;i<nVertices;i++)
+//	{
+//		if (center.distanceSquared(vertices[i]) > radiusSquared) radiusSquared = center.distanceSquared(vertices[i]);
+//	}
+//	radius = sqrt(radiusSquared);
+//}
+void PhysicsManager::triangle::findRadius() const
 {
 	if(radiusValid) return;
 	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
@@ -244,112 +258,160 @@ void CollisionChecker::triangle::findRadius() const
 	radiusValid=true;
 }
 
-bool CollisionChecker::operator() (const triangleList& t1, const triangleList& t2) const
+//bool CollisionChecker::operator() (const triangleList& t1, const triangleList& t2) const
+//{
+//	if(t1.center.distanceSquared(t2.center) < (t1.radius+t2.radius)*(t1.radius+t2.radius))
+//	{
+//		int i1,i2;
+//		for(i1=0; i1 < t1.numTriangles; i1++)
+//		{
+//			if(t1.triangles[i1].center.distanceSquared(t2.center) < (t1.triangles[i1].radius+t2.radius)*(t1.triangles[i1].radius+t2.radius))
+//			{
+//				for(i2 = 0; i2 < t2.numTriangles; i2++)
+//				{
+//					if(t1.triangles[i1].center.distanceSquared(t2.triangles[i2].center) < (t1.triangles[i1].radius+t2.triangles[i2].radius)*(t1.triangles[i1].radius+t2.triangles[i2].radius))
+//					{
+//						if(triangleCollision(t1.triangles[i1],t2.triangles[i2]))
+//							return true;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return false;
+//}
+//bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float radius) const
+//{
+//	if(t1.center.distanceSquared(center) < (t1.radius+radius)*(t1.radius+radius))
+//	{
+//		int i1;
+//		for(i1=0; i1 < t1.numTriangles; i1++)
+//		{
+//			if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
+//			{
+//				if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
+//				{
+//					//we should also check that the triangle itself (not just its bounding sphere) intersects the shpere
+//						return true;
+//				}
+//			}
+//		}
+//	}
+//	return false;
+//}
+//bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
+//{
+//	double d1 = t1.center.distanceSquared(lineStart);
+//	double d2 = t1.center.distanceSquared(lineEnd);
+//
+//	//if(d1 < smallestD) smallestD = d1;
+//	//if(d2 < smallestD) smallestD = d2;
+//	//Profiler.setOutput("d value",sqrt(smallestD));
+//
+// 	if(d1 < t1.radius*t1.radius || d2 < t1.radius*t1.radius)
+//		return true;
+//
+//	float u = (t1.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+//
+//	if(u < 0.0 || u > 1.0) return false;
+//	double d3 = t1.center.distanceSquared(lineStart+(lineEnd-lineStart)*u);
+//	//if(d3 < smallestD) smallestD = d3;
+//	return d3 < t1.radius*t1.radius;
+//}
+//
+//bool CollisionChecker::operator() (objectType t1, objectType t2) const
+//{
+//	return operator()(*dataManager.getModel(t1)->trl,*dataManager.getModel(t2)->trl);
+//}
+//bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) const
+//{
+//	return operator()(*dataManager.getModel(t1)->trl, center, radius);
+//}
+bool PhysicsManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	if(t1.center.distanceSquared(t2.center) < (t1.radius+t2.radius)*(t1.radius+t2.radius))
+	auto o = objectBounds.find(o1->type);
+	if(o != objectBounds.end() && o->second->getType() == collisionBounds::SPHERE)
 	{
-		int i1,i2;
-		for(i1=0; i1 < t1.numTriangles; i1++)
-		{
-			if(t1.triangles[i1].center.distanceSquared(t2.center) < (t1.triangles[i1].radius+t2.radius)*(t1.triangles[i1].radius+t2.radius))
-			{
-				for(i2 = 0; i2 < t2.numTriangles; i2++)
-				{
-					if(t1.triangles[i1].center.distanceSquared(t2.triangles[i2].center) < (t1.triangles[i1].radius+t2.triangles[i2].radius)*(t1.triangles[i1].radius+t2.triangles[i2].radius))
-					{
-						if(triangleCollision(t1.triangles[i1],t2.triangles[i2]))
-							return true;
-					}
-				}
-			}
-		}
+		Sphere<float> sphere = static_pointer_cast<collisionSphere>(o->second)->sphere;
+		sphere.center = o1->rotation * sphere.center + o1->position;
+
+		//early detection
+		double d1 = sphere.center.distanceSquared(lineStart);
+		double d2 = sphere.center.distanceSquared(lineEnd);
+ 		if(d1 < sphere.radius*sphere.radius || d2 < sphere.radius*sphere.radius)
+			return true;
+
+		//fallback
+		float u = (sphere.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+		if(u < 0.0 || u > 1.0) return false;
+		return sphere.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < sphere.radius*sphere.radius;
 	}
 	return false;
 }
-bool CollisionChecker::operator() (const triangleList& t1, Vec3f center, float radius) const
+
+bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
 {
-	if(t1.center.distanceSquared(center) < (t1.radius+radius)*(t1.radius+radius))
+	auto b1 = objectBounds.find(o1->type);
+	auto b2 = objectBounds.find(o1->type);
+	if(b1 == objectBounds.end() || b2 == objectBounds.end())
 	{
-		int i1;
-		for(i1=0; i1 < t1.numTriangles; i1++)
-		{
-			if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
-			{
-				if(t1.triangles[i1].center.distanceSquared(center) < (t1.triangles[i1].radius+radius)*(t1.triangles[i1].radius+radius))
-				{
-					//we should also check that the triangle itself (not just its bounding sphere) intersects the shpere
-						return true;
-				}
-			}
-		}
+		return false;
+	}
+	else if(b1->second->getType() == collisionBounds::SPHERE && b2->second->getType() == collisionBounds::SPHERE)
+	{
+		Sphere<float> s1 = static_pointer_cast<collisionSphere>(b1->second)->sphere;
+		Sphere<float> s2 = static_pointer_cast<collisionSphere>(b2->second)->sphere;
+		s1.center = o1->rotation * s1.center + o1->position;
+		s2.center = o2->rotation * s2.center + o2->position;
+
+		return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
 	}
 	return false;
+	//auto tr1 = dataManager.getModel(o1->type)->trl;
+	//auto tr2 = dataManager.getModel(o2->type)->trl;
+	//
+	//Mat4f mat1(o1->rotation, o1->position);
+	//Mat4f mat2(o2->rotation, o2->position);
+	//
+	////Vec3f _center1 = o1->position + o1->rotation * tr1->center;
+	////Vec3f _center2 = o2->position + o2->rotation * tr2->center;
+	//
+	//Vec3f center1 = mat1 * tr1->center;
+	//Vec3f center2 = mat1 * tr2->center;
+	//
+	//if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
+	//{
+	//	int i1;
+	//	//int i2;
+	//	for(i1=0; i1 < tr1->numTriangles; i1++)
+	//	{
+	//		if((mat1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
+	//		{
+	//		//	for(i2 = 0; i2 < tr2->numTriangles; i2++)
+	//		//	{
+	//		//		if((mat1*tr1->triangles[i1].center).distanceSquared(mat2*tr2->triangles[i2].center) <= (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
+	//		//		{
+	//		//			if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2], mat1, mat2))
+	//						return true;
+	//		//		}
+	//		//	}
+	//		}
+	//	}
+	//}
+	//return false;
 }
-bool CollisionChecker::operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const
+bool PhysicsManager::groundCollsion(shared_ptr<object> o1) const //WAY TO SLOW!!!
 {
-	double d1 = t1.center.distanceSquared(lineStart);
-	double d2 = t1.center.distanceSquared(lineEnd);
-
-	//if(d1 < smallestD) smallestD = d1;
-	//if(d2 < smallestD) smallestD = d2;
-	//Profiler.setOutput("d value",sqrt(smallestD));
-
- 	if(d1 < t1.radius*t1.radius || d2 < t1.radius*t1.radius)
-		return true;
-
-	float u = (t1.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
-
-	if(u < 0.0 || u > 1.0) return false;
-	double d3 = t1.center.distanceSquared(lineStart+(lineEnd-lineStart)*u);
-	//if(d3 < smallestD) smallestD = d3;
-	return d3 < t1.radius*t1.radius;
-}
-
-bool CollisionChecker::operator() (objectType t1, objectType t2) const
-{
-	return operator()(*dataManager.getModel(t1)->trl,*dataManager.getModel(t2)->trl);
-}
-bool CollisionChecker::operator() (objectType t1, Vec3f center, float radius) const
-{
-	return operator()(*dataManager.getModel(t1)->trl, center, radius);
-}
-bool CollisionChecker::operator() (objectType t1, Vec3f lineStart, Vec3f lineEnd) const
-{
-	return operator()(*dataManager.getModel(t1)->trl, lineStart, lineEnd);
-}
-
-bool CollisionChecker::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
-{
-	auto tr1 = dataManager.getModel(o1->type)->trl;
-	auto tr2 = dataManager.getModel(o2->type)->trl;
-
-	Mat4f mat1(o1->rotation, o1->position);
-	Mat4f mat2(o2->rotation, o2->position);
-
-	//Vec3f _center1 = o1->position + o1->rotation * tr1->center;
-	//Vec3f _center2 = o2->position + o2->rotation * tr2->center;
-
-	Vec3f center1 = mat1 * tr1->center;
-	Vec3f center2 = mat1 * tr2->center;
-
-	if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
-	{
-		int i1;
-		//int i2;
-		for(i1=0; i1 < tr1->numTriangles; i1++)
-		{
-			if((mat1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
-			{
-			//	for(i2 = 0; i2 < tr2->numTriangles; i2++)
-			//	{
-			//		if((mat1*tr1->triangles[i1].center).distanceSquared(mat2*tr2->triangles[i2].center) <= (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
-			//		{
-			//			if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2], mat1, mat2))
-							return true;
-			//		}
-			//	}
-			}
-		}
-	}
+	//auto trl = dataManager.getModel(o1->type)->trl;
+	//Mat4f mat1(o1->rotation, o1->position);
+	//for(int i1=0; i1<trl->numTriangles; i1++)
+	//{
+	//	if(world.altitude(mat1 * trl->triangles[i1].vertices[0]) <= 0 || world.altitude(mat1 * trl->triangles[i1].vertices[1]) <= 0 || world.altitude(mat1 * trl->triangles[i1].vertices[2]) <= 0)
+	//		return true;
+	//}
 	return false;
+}
+void PhysicsManager::setCollsionBounds(objectType type, Sphere<float> s)
+{
+	objectBounds[type] = shared_ptr<collisionSphere>(new collisionSphere(s));
 }

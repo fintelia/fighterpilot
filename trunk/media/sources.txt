@@ -1,4 +1,4 @@
-An incomplete list of how resources were obtained:
+An (incomplete) list of how assets were obtained:
 _________________________________________________________________________________________________________________________
 
 													TEXTURES
@@ -153,7 +153,7 @@ bunker.obj (and related files)
 	
 _________________________________________________________________________________________________________________________
 
-													MODELS
+													FONTS
 _________________________________________________________________________________________________________________________
 
 All fonts were created using BMFont (http://www.angelcode.com/products/bmfont/)

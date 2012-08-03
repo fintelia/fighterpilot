@@ -5,15 +5,6 @@
 #include "quaternion.h"
 #include "matrix.h"
 
-
-class SVertex
-{
-public:
-	float x,y,z;
-	float r,g,b,a;
-	float s,t;
-};
-
 template<class T>
 class Circle
 {
@@ -293,5 +284,3 @@ template <class T> T taylor(T t, T x, T dx, T ddx, T dddx)
 {
 	return x + dx * t + ddx * t*t + dddx * t*t*t;
 }
-
-#include "collide.h"

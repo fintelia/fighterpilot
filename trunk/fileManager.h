@@ -2,8 +2,8 @@
 class FileManager
 {
 public:	
-	enum FileType{NO_FILE_TYPE, BINARY_FILE,TEXT_FILE,INI_FILE,ZIP_FILE,TEXTURE_FILE};
-	enum FileFormat{NO_FILE_FORMAT, BIN, TXT, INI, ZIP, BMP, PNG, TGA};
+	enum FileType{NO_FILE_TYPE, BINARY_FILE,TEXT_FILE,INI_FILE,ZIP_FILE,TEXTURE_FILE,MODEL_FILE};
+	enum FileFormat{NO_FILE_FORMAT, BIN, TXT, INI, ZIP, BMP, PNG, TGA, OBJ};
 	static FileManager& getInstance()
 	{
 		static FileManager* pInstance = new FileManager();
@@ -63,7 +63,7 @@ public:
 	};
 	struct iniFile: public file
 	{
-		map<string,map<string, string> > bindings;
+		map<string,map<string, string>> bindings;
 
 //		iniFile(): file("",INI){}
 		iniFile(string fName): file(fName,INI_FILE){}
@@ -102,7 +102,28 @@ public:
 	{
 		tgaFile(string fName):textureFile(fName, TGA){}
 	};
+	struct modelFile: public file
+	{
+		struct material
+		{
+			shared_ptr<textureFile> tex;
+			shared_ptr<textureFile> specularMap;
+			shared_ptr<textureFile> normalMap;
+			Color4 diffuse;
+			Color3 specular;
+			float hardness;
+			vector<unsigned int> indices; //indices are offsets in the vertices vector, every 3 indices represent a triangle
+		};
 
+		vector<normalMappedVertex3D> vertices;
+		vector<material> materials;
+		Sphere<float> boundingSphere;
+		modelFile(string fName, FileFormat fmt): file(fName, MODEL_FILE, fmt){}
+	};
+	struct objFile: public modelFile
+	{
+		objFile(string fName):modelFile(fName, OBJ){}
+	};
 	shared_ptr<binaryFile> loadBinaryFile(string filename, bool asinc = false);
 	shared_ptr<textFile> loadTextFile(string filename, bool asinc = false);
 	shared_ptr<iniFile> loadIniFile(string filename, bool asinc = false);
@@ -111,6 +132,7 @@ public:
 	shared_ptr<textureFile> loadBmpFile(string filename, bool asinc = false);
 	shared_ptr<textureFile> loadTgaFile(string filename, bool asinc = false);
 	shared_ptr<textureFile> loadPngFile(string filename, bool asinc = false);
+	shared_ptr<modelFile> loadObjFile(string filename, bool asinc = false);
 
 	bool writeBinaryFile(shared_ptr<binaryFile> f, bool asinc = false);
 	bool writeTextFile(shared_ptr<textFile> f, bool asinc = false);
@@ -135,6 +157,8 @@ public:
 	bool fileExists(string file);
 	bool directoryExists(string directory);
 	bool createDirectory(string directory);
+
+	void shutdown();
 private:
 	template<class T> T readAs(void* c)
 	{
@@ -178,6 +202,7 @@ private:
 	void parseBmpFile(shared_ptr<textureFile> f, fileContents data);
 	void parseTgaFile(shared_ptr<textureFile> f, fileContents data);
 	void parsePngFile(shared_ptr<textureFile> f, fileContents data);
+	void parseObjFile(shared_ptr<modelFile> f, fileContents data);
 
 	fileContents serializeBinaryFile(shared_ptr<binaryFile> f);
 	fileContents serializeTextFile(shared_ptr<textFile> f);
@@ -190,9 +215,10 @@ private:
 	FileManager();
 	~FileManager(){}
 
-	queue<std::shared_ptr<file>> fileQueue;
-	queue<std::shared_ptr<file>> fileWriteQueue;
+	queue<shared_ptr<file>> fileQueue;
+	queue<shared_ptr<file>> fileWriteQueue;
 	mutex fileQueueMutex;
+	bool terminateFlag;
 };
 
 extern FileManager& fileManager;

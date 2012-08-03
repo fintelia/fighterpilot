@@ -1,3 +1,4 @@
+#include <iostream>
 
 #include "engine.h"
 //#include "xml/tinyxml.h"
@@ -5,19 +6,20 @@
 
 using namespace tinyxml2;
 
-string getAttribute(XMLElement* element, const char* attribute)
-{
-	const char* c = element->Attribute(attribute);
-	string s = (c != NULL) ? string(c) : string("");
-	return s;
-}
-int getIntAttribute(XMLElement* element, const char* attribute)//returns 0 on failure
-{
-	int i;
-	return element->QueryIntAttribute(attribute, &i) == XML_SUCCESS ? i : 0;
-}
 bool AssetLoader::loadAssetList()
 {
+	auto  getAttribute = [](XMLElement* element, const char* attribute)->string
+	{
+		const char* c = element->Attribute(attribute);
+		string s = (c != NULL) ? string(c) : string("");
+		return s;
+	};
+	auto getIntAttribute = [](XMLElement* element, const char* attribute)->int //returns 0 on failure
+	{
+		int i;
+		return element->QueryIntAttribute(attribute, &i) == XML_SUCCESS ? i : 0;
+	};
+
 	XMLDocument doc;
 	if(doc.LoadFile("media/assetList.xml"))
 	{

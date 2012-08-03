@@ -2,6 +2,24 @@
 class SceneManager
 {
 public:
+	class mesh
+	{
+		struct material{
+			string tex;
+			string specularMap;
+			string normalMap;
+			Color4 diffuse;
+			Color3 specular;
+			float hardness;
+			shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
+		};
+
+		vector<material> materials;
+		shared_ptr<GraphicsManager::vertexBuffer> VBO;
+		Sphere<float> boundingSphere;
+
+		friend class SceneManager;
+	};
 	class meshInstance
 	{
 		string modelName;
@@ -28,7 +46,7 @@ public:
 	};
 private:
 	SceneManager(){}
-	map<string,vector<std::shared_ptr<meshInstance>>> meshInstances;
+	map<string,vector<shared_ptr<meshInstance>>> meshInstances;
 public:
 	static SceneManager& getInstance()
 	{
@@ -36,7 +54,7 @@ public:
 		return *pInstance;
 	}
 
-	std::shared_ptr<meshInstance> newMeshInstance(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
+	shared_ptr<meshInstance> newMeshInstance(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 	void newTemperaryMesh(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 	void resetMeshInstances();
 	void renderScene(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);

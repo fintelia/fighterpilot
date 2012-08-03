@@ -26,7 +26,7 @@ void bulletCloud::addBullet(Vec3f pos,Vec3f vel,int Owner)
 void bulletCloud::updateSimulation(double time, double ms)
 {
 	double t = world.time();
-	bullets.erase(remove_if(bullets.begin(), bullets.end(), [&t] (bullet& b) -> bool {return b.startTime + b.life <= t;}), bullets.end());
+	bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [&t] (bullet& b) -> bool {return b.startTime + b.life <= t;}), bullets.end());
 	// ---
 }
 void bulletCloud::updateFrame(float interpolation) const

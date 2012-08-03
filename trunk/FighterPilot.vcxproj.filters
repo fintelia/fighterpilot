@@ -9,10 +9,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="glee">
-      <UniqueIdentifier>{e4727c1f-d859-412b-b661-0383e5ed22ae}</UniqueIdentifier>
-      <ParseFiles>true</ParseFiles>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
     </Filter>
@@ -118,9 +114,6 @@
     <Filter Include="Source Files\ENGINE\input">
       <UniqueIdentifier>{f1d057cc-fddc-4281-bdc7-95cc02e44054}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ENGINE\file I/O">
-      <UniqueIdentifier>{d9ed103c-a250-4cf8-8096-e4c1ed3ccef1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ENGINE\world">
       <UniqueIdentifier>{d98c40e8-fc7a-42a7-8c48-a20cabfaa8d7}</UniqueIdentifier>
     </Filter>
@@ -168,6 +161,13 @@
     </Filter>
     <Filter Include="tinyxml2">
       <UniqueIdentifier>{a6c2b302-98cc-4d45-ab2d-98d3b7383df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\cirrusCloud">
+      <UniqueIdentifier>{2a9c6203-b083-4428-8e17-dc382879a6a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="glew">
+      <UniqueIdentifier>{e4727c1f-d859-412b-b661-0383e5ed22ae}</UniqueIdentifier>
+      <ParseFiles>true</ParseFiles>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -258,9 +258,6 @@
     <ClCompile Include="input.cpp">
       <Filter>Source Files\ENGINE\input</Filter>
     </ClCompile>
-    <ClCompile Include="script.cpp">
-      <Filter>Source Files\ENGINE\file I/O</Filter>
-    </ClCompile>
     <ClCompile Include="game.cpp">
       <Filter>Source Files\GAME</Filter>
     </ClCompile>
@@ -337,7 +334,7 @@
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
     <ClCompile Include="glew.c">
-      <Filter>glee</Filter>
+      <Filter>glew</Filter>
     </ClCompile>
     <ClCompile Include="xml\tinyxml2.cpp">
       <Filter>tinyxml2</Filter>
@@ -420,9 +417,6 @@
     <ClInclude Include="input.h">
       <Filter>Source Files\ENGINE\input</Filter>
     </ClInclude>
-    <ClInclude Include="script.h">
-      <Filter>Source Files\ENGINE\file I/O</Filter>
-    </ClInclude>
     <ClInclude Include="engine.h">
       <Filter>Source Files\ENGINE</Filter>
     </ClInclude>
@@ -463,10 +457,10 @@
       <Filter>Source Files\ENGINE\ephemeris</Filter>
     </ClInclude>
     <ClInclude Include="GL\glew.h">
-      <Filter>glee</Filter>
+      <Filter>glew</Filter>
     </ClInclude>
     <ClInclude Include="GL\wglew.h">
-      <Filter>glee</Filter>
+      <Filter>glew</Filter>
     </ClInclude>
     <ClInclude Include="xml\tinyxml2.h">
       <Filter>tinyxml2</Filter>
@@ -598,6 +592,12 @@
     </None>
     <None Include="media\desert preview.frag">
       <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\cirrusCloud.frag">
+      <Filter>shaders\cirrusCloud</Filter>
+    </None>
+    <None Include="media\cirrusCloud.vert">
+      <Filter>shaders\cirrusCloud</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

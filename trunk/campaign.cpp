@@ -2,7 +2,7 @@
 #include "game.h"
 
 namespace gui{
-campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
+campaign::campaign(shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
 #ifdef _DEBUG
 	,slow(false)
 #endif
@@ -10,7 +10,7 @@ campaign::campaign(std::shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0
 	view = graphics->genView();
 	view->viewport(0, 0, sAspect, 1.0);
 	view->perspective(50.0, (double)sw / ((double)sh), 1.0, 500000.0);
-	view->setRenderFunc(bind(&campaign::render3D, this, placeholders::_1));
+	view->setRenderFunc(bind(&campaign::render3D, this, std::placeholders::_1));
 	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
 	graphics->setLightPosition(Vec3f(0.0, 160000.0, 100000.0));
 	//ephemeris.setTime(0.0, 1, 1, 2000.0);
@@ -91,7 +91,7 @@ int campaign::update()
 			string nLevel = level->info.nextLevel;
 			if(nLevel == "") nLevel="media/map file.lvl";
 
-			std::shared_ptr<LevelFile> l(new LevelFile);
+			shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadZIP(nLevel))
 			{
 				menuManager.setMenu(new gui::campaign(l));

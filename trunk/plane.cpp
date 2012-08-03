@@ -14,7 +14,8 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, 
 
 void nPlane::init()
 {
-	for(auto i=settings.planeStats[type].engines.begin(); i!=settings.planeStats[type].engines.end(); i++)
+	auto& engines = objectInfo.planeStats(type).engines;
+	for(auto i=engines.begin(); i!=engines.end(); i++)
 	{
 		particleManager.addEmitter(new particle::planeEngines, id, *i);
 	}
@@ -215,7 +216,7 @@ void nPlane::updateSimulation(double time, double ms)
 
 			if(!controls.shoot1)
 				extraShootTime=0.0;
-			else if(settings.planeStats[type].machineGuns.size() > 0)
+			else if(objectInfo.planeStats(type).machineGuns.size() > 0)
 			{
 				extraShootTime+=ms;
 				while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
@@ -225,7 +226,7 @@ void nPlane::updateSimulation(double time, double ms)
 
 					Quat4f rot(slerp(rotation,lastRotation,(float)extraShootTime/ms));
 
-					Vec3f o=rot*(settings.planeStats[type].machineGuns[shotsFired%settings.planeStats[type].machineGuns.size()]);
+					Vec3f o=rot*(objectInfo.planeStats(type).machineGuns[shotsFired%objectInfo.planeStats(type).machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
 
 
@@ -513,16 +514,9 @@ void nPlane::smoothCamera()
 
 	Vec3f shake = random3<float>() * cameraShake * 3.0;
 
-	if(type == MIRAGE || type == J37)
-	{
-		observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
-		observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*20.0,cos(15.0*PI/180)*20.0);
-	}
-	else
-	{
-		observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
-		observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*30.0,cos(15.0*PI/180)*30.0);
-	}
+	float cameraDistance = objectInfo.planeStats(type).cameraDistance;
+	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
+	observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*cameraDistance,cos(15.0*PI/180)*cameraDistance);
 	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
 void nPlane::autoPilotUpdate(float value)
@@ -828,16 +822,17 @@ void nPlane::loseHealth(float healthLoss)
 void nPlane::initArmaments()
 {
 	armament::ammo a;
-	for(int i = 0; i < settings.planeStats[type].hardpoints.size(); i++)
+	auto& hardpoints = objectInfo.planeStats(type).hardpoints;
+	for(int i = 0; i < hardpoints.size(); i++)
 	{
-		a.type = settings.planeStats[type].hardpoints[i].mType;
-		a.offset = settings.planeStats[type].hardpoints[i].offset;
+		a.type = hardpoints[i].mType;
+		a.offset = hardpoints[i].offset;
 		a.meshInstance = sceneManager.newMeshInstance(objectTypeString(a.type), position + rotation * a.offset, rotation);
-		if(settings.planeStats[type].hardpoints[i].mType & MISSILE)
+		if(hardpoints[i].mType & MISSILE)
 		{
 			rockets.ammoRounds.push_back(a);
 		}
-		else if(settings.planeStats[type].hardpoints[i].mType & BOMB)
+		else if(hardpoints[i].mType & BOMB)
 		{
 			bombs.ammoRounds.push_back(a);
 		}

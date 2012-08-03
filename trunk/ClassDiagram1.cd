@@ -3,8 +3,8 @@
   <Class Name="gui::levelEditor" Collapsed="true">
     <Position X="13" Y="8" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAgQBCABAAQAAEgQcgAEglACAYUygCKAAQAABgAUQgA=</HashCode>
-      <FileName>engine.h</FileName>
+      <HashCode>AAgADCQBAAQQAEiQcwBGglACAYQywCaEAQAABgAWQiA=</HashCode>
+      <FileName>menus.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="gui::newObject" Collapsed="true">
@@ -17,21 +17,21 @@
   <Class Name="gui::objectProperties" Collapsed="true">
     <Position X="6.25" Y="7.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAACAAAAAAAAAAAAAAAAAAAAIIAAQAAAAUAAA=</HashCode>
+      <HashCode>AAAAAAAAACgAAAAAAAAAAAAAAAAAAAIIAAQAAAAUAAA=</HashCode>
       <FileName>menus.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="gui::inGame" Collapsed="true">
     <Position X="8.5" Y="7.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAABAAAAAAAAEAIAAAAAAAAAAAAAAAAgAAAAUAAA=</HashCode>
+      <HashCode>IAAAAABAAAAAAAAEAIAAAAAAAAAAAAAAAAgAAAAUAAA=</HashCode>
       <FileName>menus.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="gui::chooseMode" Collapsed="true">
     <Position X="15.25" Y="8" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAABAAAQAAAAAEIBAAAAAgAAAAAIAAAAAAAAUAAA=</HashCode>
+      <HashCode>IAAAAABAAAQAAAAAEIBAAAAAgAAAAAIAAAAAAAAUAAA=</HashCode>
       <FileName>menus.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -59,7 +59,7 @@
   <Class Name="gui::dogFight" Collapsed="true">
     <Position X="25.25" Y="8" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAADQEAAAAAAAAAAAAAAAAAIEAQAJAAAAAAAAQAAQ=</HashCode>
+      <HashCode>AAAAADQEAAAAAAAAAAAAAAAAAIEAQAJAAAAAEAAQAAQ=</HashCode>
       <FileName>menus.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -148,7 +148,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="gui::manager" Collapsed="true">
-    <Position X="35.25" Y="3" Width="1.5" />
+    <Position X="12.25" Y="5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAQAIAAAAAABoAAEAAgEAAIAAAQAAAAAgAAUAAA=</HashCode>
       <FileName>menuScreen.h</FileName>
@@ -185,7 +185,7 @@
   <Class Name="gui::screen" Collapsed="true">
     <Position X="19.75" Y="6.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAABAAAAAAACAAAMIAAAEQAAAAAACIAAAAAAAAUAAA=</HashCode>
+      <HashCode>IAAABAAAAAAACAAAMIAAAEQAAAAAACIAAAAAAAAUAAA=</HashCode>
       <FileName>menuScreen.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -290,12 +290,12 @@
   <Class Name="particle::emitter" Collapsed="true">
     <Position X="16.5" Y="1" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ggEggIkBKAQQAAEAAIgkIAAAAAAUAgKBgMSAqABUAAA=</HashCode>
+      <HashCode>ggEggJkBKAQQAAEAAIgkIAAAAAAUAgKBgMSAqABUAAg=</HashCode>
       <FileName>particleManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="particle::manager" Collapsed="true">
-    <Position X="33.5" Y="3" Width="1.5" />
+    <Position X="14.75" Y="1" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAIAAAAAAAABAAAAAACEAAAAAAYAAAAAAAAUAAA=</HashCode>
       <FileName>particleManager.h</FileName>
@@ -325,12 +325,12 @@
   <Class Name="AIplayer" Collapsed="true">
     <Position X="17.75" Y="17.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAgAAAAAIAAAABAAAAEAAQAEBAAABAAEAAA=</HashCode>
+      <HashCode>AAAAAAAAAAgAAAAQIAAAABAAAAEAAQAEBAAABAAEAAA=</HashCode>
       <FileName>player.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Angle" Collapsed="true">
-    <Position X="33.5" Y="1" Width="1.5" />
+    <Position X="40.25" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAGAABAA4AAAAgAAAAQAAAAIAAAAAAEAgAAIAQAA=</HashCode>
       <FileName>angle.h</FileName>
@@ -344,7 +344,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="AssetLoader" Collapsed="true">
-    <Position X="35.25" Y="1" Width="1.5" />
+    <Position X="40.25" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAACAAQAAQAAAAAgAAAgAA=</HashCode>
       <FileName>assetLoader.h</FileName>
@@ -358,14 +358,14 @@
     </TypeIdentifier>
   </Class>
   <Class Name="BoundingBox&lt;T&gt;" Collapsed="true">
-    <Position X="37" Y="1" Width="1.5" />
+    <Position X="40.25" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AgAAAIAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>gameMath.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="bullet" Collapsed="true">
-    <Position X="38.75" Y="1" Width="1.5" />
+    <Position X="31.5" Y="8.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAEAAAAAAAAAgAAAAAAgAAAAAAAAAAAAABQAAAAAAAI=</HashCode>
       <FileName>bullet.h</FileName>
@@ -374,49 +374,42 @@
   <Class Name="bulletCloud" Collapsed="true">
     <Position X="1.25" Y="14.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAAABAAIAAAAAAAAIAAAABAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <HashCode>AEAAAABAAIAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>bullet.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Circle&lt;T&gt;" Collapsed="true">
-    <Position X="40.5" Y="1" Width="1.5" />
+    <Position X="36.75" Y="3.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAgAAAAACAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>gameMath.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="CollisionChecker" Collapsed="true">
-    <Position X="42.25" Y="1" Width="1.5" />
+    <Position X="36.75" Y="8.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAEQAABCAEAAAAAAAAAAARAQAEAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAMQAAADAEAAAAAAAAAAABAQAEAAAAAAABAA=</HashCode>
       <FileName>collide.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="DataManager" Collapsed="true">
-    <Position X="33.5" Y="2" Width="1.5" />
+    <Position X="36.75" Y="7" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AECAAMGhAIAAAABBAgAhAAIgCAhMAGQIFAABwAAEBgI=</HashCode>
+      <HashCode>AEAAAIGBAIAAAABBAAAhAAIgAAhIAGQIFAABAAAEAgI=</HashCode>
       <FileName>dataManager.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="editLevel" Collapsed="true">
-    <Position X="0.5" Y="17.25" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAQAAAAAACgAAAAACAEAAAAAAAAAIKAAAAIKQAAAAA=</HashCode>
-      <FileName>level.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="Ephemeris" Collapsed="true">
-    <Position X="35.25" Y="2" Width="1.5" />
+    <Position X="38.5" Y="7" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAQQAAAAAEAAAAAAAAAAAACCAAAAAQAAAAAAQASAAA=</HashCode>
       <FileName>ephemeris.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="FileManager" Collapsed="true">
-    <Position X="37" Y="2" Width="1.5" />
+    <Position X="36.75" Y="7.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>SENQAAFIIRBUiAEACAhABAA0AaiYEEYFAKEGQAABBgE=</HashCode>
+      <HashCode>SENQAAFIIxBUiAEBCAjBBAA0AaiYEEYFAKEGQAABBgE=</HashCode>
       <FileName>fileManager.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -428,63 +421,56 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Game" Collapsed="true">
-    <Position X="38.75" Y="2" Width="1.5" />
+    <Position X="38.5" Y="7.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAQAAAAAAAAAAAAAAEAAgAAAIAAAAAIAAEAAA=</HashCode>
+      <HashCode>AAAAACAAQAAAAAAAAAAAAAAEAAgAAAoAAAAAIAAEAAA=</HashCode>
       <FileName>engine.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GameTime" Collapsed="true">
-    <Position X="40.5" Y="2" Width="1.5" />
+    <Position X="40.25" Y="7" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>BAAFEAAECAAEAAQBEEAIAkAIAAEMGgIBAEQABAAAIAg=</HashCode>
+      <HashCode>BAAFEAAECAAEAAQBEEAIAkAIAAEEGgIBAEQABAAAIAg=</HashCode>
       <FileName>time.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GraphicsManager" Collapsed="true">
     <Position X="0.5" Y="9" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ARQQgADAAAEQBwABQIAGAACGGwAA4QkFSxAoxAAcQGA=</HashCode>
+      <HashCode>ARQQgADAACEQBwABQIAGQAAGGwAA4YkFyxAqxAIcQEA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="humanPlayer" Collapsed="true">
     <Position X="15.5" Y="17.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAEAAAEABAAAEAAgAAAAgAIAAAAAQCAAAAAAJAAEAAE=</HashCode>
+      <HashCode>AAEAAAEABAAAEAAgAAAAgAIAAAAAQCAAAAAApAAEAAE=</HashCode>
       <FileName>player.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="InputManager" Collapsed="true">
-    <Position X="42.25" Y="2" Width="1.5" />
+    <Position X="40.25" Y="7.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AABAARCAAQEKAAACHAgAAEAAAAAMAAUAAIAAIgEEAAA=</HashCode>
+      <HashCode>AABAQRCAAQEKAAACHAgAAEAAAAAMAAUAAIAAIgEEAAA=</HashCode>
       <FileName>input.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Level" Collapsed="true">
-    <Position X="0.5" Y="16" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>DACQQAAAAAAABAAAAAAAAAAAAQAAIAIBIAQAAAAAAAE=</HashCode>
-      <FileName>level.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="Matrix2&lt;T&gt;" Collapsed="true">
-    <Position X="37" Y="3" Width="1.5" />
+    <Position X="40.25" Y="3" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAIAAAAQAAAAAIAAAAEAACBAAAAAAAAA=</HashCode>
       <FileName>matrix.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Matrix3&lt;T&gt;" Collapsed="true">
-    <Position X="38.75" Y="3" Width="1.5" />
+    <Position X="40.25" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAEAAAAQAAAAAIAAAAEAACBAAAAAAAAA=</HashCode>
       <FileName>matrix.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Matrix4&lt;T&gt;" Collapsed="true">
-    <Position X="40.5" Y="3" Width="1.5" />
+    <Position X="38.5" Y="3" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAIAAAAAIAAgIAAAQAAAAAIAEAgEAACBAgAAAAAAA=</HashCode>
       <FileName>matrix.h</FileName>
@@ -505,7 +491,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="mutex" Collapsed="true">
-    <Position X="42.25" Y="3" Width="1.5" />
+    <Position X="31.5" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAIAAEAAAAAAAAAABAAAAAAAAAAAAAAACAAAAIAA=</HashCode>
       <FileName>definitions.h</FileName>
@@ -514,7 +500,7 @@
   <Class Name="nPlane" Collapsed="true">
     <Position X="17" Y="14.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AkIIEAAIAiCAqQIAAAQQYgBhBIAASWIIBADAoAAQgAw=</HashCode>
+      <HashCode>AkIIEAAIAiCAqQIAIAQQYgAhBJAASWIIBADAIAAQgA0=</HashCode>
       <FileName>plane.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -532,24 +518,17 @@
       <FileName>objectList.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="objectPath" Collapsed="true">
-    <Position X="33.5" Y="4" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAQCCAAAQAAAAAAEEAgICMIAAAAAAAAAAAQAAAAAAA=</HashCode>
-      <FileName>path.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="OpenGLgraphics" Collapsed="true">
     <Position X="0.5" Y="10.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>gQZSgABgAAEwAMAAQIIGBJCCCyAA4QyESwAggAAYQGA=</HashCode>
+      <HashCode>gQZWgCBgACEwAMQASIIGRJACCyEA4YyE6wAiwAAYQEA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Plane&lt;T&gt;" Collapsed="true">
-    <Position X="35.25" Y="4" Width="1.5" />
+    <Position X="38.5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAACAAAAAAAAAAAAAAAgAAEAAAAAEAAIAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAEAAAAAEAAIAAAAAAAA=</HashCode>
       <FileName>gameMath.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -561,28 +540,28 @@
     </TypeIdentifier>
   </Class>
   <Class Name="PlayerManager" Collapsed="true">
-    <Position X="37" Y="4" Width="1.5" />
+    <Position X="36.75" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAABAAAAIAIAABAAAAAAAAAEEAQAQAAIAAFAAEEAA=</HashCode>
       <FileName>player.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="profiler" Collapsed="true">
-    <Position X="38.75" Y="4" Width="1.5" />
+    <Position X="38.5" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAACAAAAABAgCCIAAAAACAAAAAEEAAAAAAAAgAA=</HashCode>
       <FileName>profiler.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Quaternion&lt;T&gt;" Collapsed="true">
-    <Position X="40.5" Y="4" Width="1.5" />
+    <Position X="38.5" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>EAAAAAAAAAAQAAAAAAAIAAAAAAAAAAAAAAhgAQAQAAA=</HashCode>
       <FileName>quaternion.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="rectangle&lt;T&gt;" Collapsed="true">
-    <Position X="42.25" Y="4" Width="1.5" />
+    <Position X="36.75" Y="3" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAAAAAAAAAAAAAAAAIgAACAAAgQRAACAQAhhAAQQAAE=</HashCode>
       <FileName>gameMath.h</FileName>
@@ -598,75 +577,68 @@
   <Class Name="SAMmissile" Collapsed="true">
     <Position X="12.5" Y="15.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAAAAAAAAAAAAAIAAAgAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <HashCode>AEAAAAAAAAAAAAAAIAAAgAABAAAAAAIAAAAAAAAAAAA=</HashCode>
       <FileName>missile.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="SceneManager" Collapsed="true">
-    <Position X="33.5" Y="5" Width="1.5" />
+    <Position X="38.5" Y="8.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAIQAAAAAAIAAAAEAAAAAAEAAQAAAQAAAAAAAAAAAQ=</HashCode>
       <FileName>sceneManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="SettingsManager" Collapsed="true">
-    <Position X="35.25" Y="5" Width="1.5" />
+    <Position X="40.25" Y="8.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAQAAAIAAAAAAEAAAQAAQACAAAAQAAAAAAAAAAAA=</HashCode>
       <FileName>settings.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="slidingList&lt;T, totalSize&gt;" Collapsed="true">
-    <Position X="37" Y="5" Width="1.5" />
+    <Position X="31.5" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAABgAEAABAAAAABIAAIAAAAAEAAAAAAAAAAAAgAAA=</HashCode>
       <FileName>definitions.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Sphere&lt;T&gt;" Collapsed="true">
-    <Position X="38.75" Y="5" Width="1.5" />
+    <Position X="36.75" Y="1.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAgAAAAACAAAAAAAAAQAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
-      <FileName>gameMath.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="SVertex" Collapsed="true">
-    <Position X="40.5" Y="5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAYRhAQAAAAA=</HashCode>
       <FileName>gameMath.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Terrain" Collapsed="true">
     <Position X="3.5" Y="4" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAEACAAgAAgAEAAAQAAABQAAoAAAADAAEACAggAAIg=</HashCode>
+      <HashCode>AAAEACACwAAgAEAAAQACABQAAoAAAADAAEACAwgAAIg=</HashCode>
       <FileName>terrain.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TerrainPage" Collapsed="true">
-    <Position X="42.25" Y="5" Width="1.5" />
+    <Position X="3.5" Y="5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>IgAAAIAABAAAAAQCRAgAAgIAABABQgAAAAgAAQAUiAA=</HashCode>
+      <HashCode>IgAQAIAABAgAAAQCRAgAAgIAABABQgAAAAgAAQAQiAA=</HashCode>
       <FileName>terrain.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TerrainPatch" Collapsed="true">
-    <Position X="33.5" Y="6" Width="1.5" />
+    <Position X="3.5" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAgAAAAAAAAAAERAAAEAARACAAEgAAoAAAACAAAwAAg=</HashCode>
       <FileName>terrain.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Vector2&lt;T&gt;" Collapsed="true">
-    <Position X="35.25" Y="6" Width="1.5" />
+    <Position X="36.75" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAACRAggAAAQIAQAAAEEAAAAAAQBgAAAAAAA=</HashCode>
       <FileName>vector.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Vector3&lt;T&gt;" Collapsed="true">
-    <Position X="37" Y="6" Width="1.5" />
+    <Position X="38.5" Y="2.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAICQAggAAAQIAQAAAEEAAIAAAQBgAQAAAAA=</HashCode>
       <FileName>vector.h</FileName>
@@ -680,77 +652,70 @@
     </TypeIdentifier>
   </Class>
   <Struct Name="particle::particle" Collapsed="true">
-    <Position X="40.5" Y="7.25" Width="1.5" />
+    <Position X="18.25" Y="1" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAgACAAACAQAAAAgKAgAKAAAQAAAAAoAUABACAAAAI=</HashCode>
       <FileName>particleManager.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="particle::vertex" Collapsed="true">
-    <Position X="38.75" Y="8.25" Width="1.5" />
+    <Position X="38.5" Y="5.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAQAAAAAIAAAAAAAAAAoAYQBAAACAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAoAYQBAAACAAA=</HashCode>
       <FileName>particleManager.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="camera" Collapsed="true">
-    <Position X="33.5" Y="7.25" Width="1.5" />
+    <Position X="33.75" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAgAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAgAAAAA=</HashCode>
       <FileName>object.h</FileName>
     </TypeIdentifier>
   </Struct>
-  <Struct Name="Color" Collapsed="true">
-    <Position X="35.25" Y="7.25" Width="1.5" />
+  <Struct Name="Color4" Collapsed="true">
+    <Position X="33.75" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoAQABgAAAAAA=</HashCode>
       <FileName>definitions.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="LevelFile" Collapsed="true">
-    <Position X="37" Y="7.25" Width="1.5" />
+    <Position X="33.75" Y="8.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>ACAIAAQAAAAAAAAAAAAAAAIAAQAAIAAAYAAAAgAAAAE=</HashCode>
+      <HashCode>ACAIAAQAAAAAAAAAAAAAAAIAAQAAIAAAYAAAAoAAAAE=</HashCode>
       <FileName>level.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="litVertex3D" Collapsed="true">
-    <Position X="38.75" Y="7.25" Width="1.5" />
+    <Position X="40.25" Y="5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAAAAAAACAAA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Struct>
-  <Struct Name="scriptVar" Collapsed="true">
-    <Position X="42.25" Y="7.25" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAQACAAAAAAAAAAAAA=</HashCode>
-      <FileName>script.h</FileName>
-    </TypeIdentifier>
-  </Struct>
   <Struct Name="texturedLitVertex3D" Collapsed="true">
-    <Position X="33.5" Y="8.25" Width="1.5" />
+    <Position X="36.75" Y="5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAgAAAAAAAAAAIAAAAAAAAA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="texturedVertex2D" Collapsed="true">
-    <Position X="35.25" Y="8.25" Width="1.5" />
+    <Position X="36.75" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAIAAAAAAAA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="texturedVertex3D" Collapsed="true">
-    <Position X="37" Y="8.25" Width="1.5" />
+    <Position X="38.5" Y="5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAIAAAAACAAA=</HashCode>
       <FileName>graphicsManager.h</FileName>
     </TypeIdentifier>
   </Struct>
   <Struct Name="vertex3D" Collapsed="true">
-    <Position X="40.5" Y="8.25" Width="1.5" />
+    <Position X="40.25" Y="5.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAACAAA=</HashCode>
       <FileName>graphicsManager.h</FileName>

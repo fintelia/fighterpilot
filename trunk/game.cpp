@@ -14,7 +14,7 @@ planeType defaultPlane;
 
 bool Game::init()
 {
-#if defined WINDOWS && defined _DEBUG
+#if defined(WINDOWS) && defined(_DEBUG)
 	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
 #endif
 
@@ -29,6 +29,13 @@ bool Game::init()
 	{
 #ifdef WINDOWS
 		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+#endif
+		return false;
+	}
+	else if(!objectInfo.loadObjectData())
+	{
+#ifdef WINDOWS
+		MessageBox(NULL,L"Error reading media/objectData.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
 #endif
 		return false;
 	}
