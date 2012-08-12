@@ -52,8 +52,8 @@ bool ObjectInfo::loadObjectData(string filename)
 				
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = MISSILE + missileCount;		
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(weaponElement, "collisionMesh"), true);
+				obj->meshFile = fileManager.loadObjFile(getAttribute(weaponElement, "model"), true);
 				obj->name = getAttribute(weaponElement, "name");
 				objectMap[obj->type] = obj;	
 			}
@@ -67,8 +67,8 @@ bool ObjectInfo::loadObjectData(string filename)
 
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = BOMB + bombCount;
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(weaponElement, "collisionMesh"), true);
+				obj->meshFile = fileManager.loadObjFile(getAttribute(weaponElement, "model"), true);
 				obj->name = getAttribute(weaponElement, "name");
 				objectMap[obj->type] = obj;	
 			}
@@ -84,8 +84,8 @@ bool ObjectInfo::loadObjectData(string filename)
 			{
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = SAM_BATTERY;	
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
+				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
 				obj->name = getAttribute(aaaElement, "name");
 				objectMap[obj->type] = obj;	
 			}
@@ -99,8 +99,8 @@ bool ObjectInfo::loadObjectData(string filename)
 
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = AA_GUN;
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
+				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
 				obj->name = getAttribute(aaaElement, "name");
 				objectMap[obj->type] = obj;	
 			}
@@ -108,8 +108,8 @@ bool ObjectInfo::loadObjectData(string filename)
 			{
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = FLAK_CANNON;
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
+				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
 				obj->name = getAttribute(aaaElement, "name");
 				objectMap[obj->type] = obj;	
 			}
@@ -129,10 +129,13 @@ bool ObjectInfo::loadObjectData(string filename)
 					continue;
 				}
 
+				string cmName = getAttribute(planeElement, "collisionMesh");
+				string mName = getAttribute(planeElement, "model");
+
 				shared_ptr<planeObjectData> obj(new planeObjectData);
 				obj->type = PLANE + planeCount;
-				obj->bounds = nullptr;
-				obj->mesh = nullptr;
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
 				obj->name = getAttribute(planeElement, "name");
 
 
@@ -177,6 +180,46 @@ bool ObjectInfo::loadObjectData(string filename)
 		}
 	}
 	return true;
+}
+int ObjectInfo::loadObjectMeshes()
+{
+	int numLeft=0;
+	bool timeUp=false;
+	double startTime = GetTime();
+	for(auto i = objectMap.begin(); i != objectMap.end(); i++)
+	{
+		if(!timeUp && i->second->meshFile && i->second->meshFile->valid())
+		{
+			i->second->mesh = sceneManager.createMesh(i->second->meshFile);
+			i->second->meshFile.reset();
+			physics.setCollsionBounds(i->first, i->second->mesh->getBoundingSphere());
+			if(GetTime() - startTime > 33.3)
+				timeUp = true;
+		}
+		else if(i->second->meshFile && (!i->second->meshFile->complete() || timeUp))
+		{
+			numLeft++;
+		}
+
+		if(!timeUp && i->second->collisionMeshFile && i->second->collisionMeshFile->valid())
+		{
+			if(!i->second->collisionMeshFile->materials.empty())
+			{
+				vector<Vec3f> vertices;
+				for(auto v=i->second->collisionMeshFile->vertices.begin(); v!=i->second->collisionMeshFile->vertices.end(); v++)
+					vertices.push_back(v->position);
+				physics.setCollsionBounds(i->first, i->second->collisionMeshFile->boundingSphere, vertices, i->second->collisionMeshFile->materials[0].indices);
+			}
+			i->second->collisionMeshFile.reset();
+			if(GetTime() - startTime > 33.3)
+				timeUp = true;
+		}
+		else if(i->second->collisionMeshFile && (!i->second->collisionMeshFile->complete() || timeUp))
+		{
+			numLeft++;
+		}
+	}
+	return numLeft;
 }
 objectType ObjectInfo::typeFromString(string s)
 {

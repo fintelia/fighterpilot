@@ -25,7 +25,7 @@
 			<w_offset weapon="F22_missile1" x="5.7" y="-0.75" z="-2.55" mirror="true" />
 			<w_offset weapon="F22_missile2" x="7.05" y="-0.65" z="-2.4" mirror="true" />
 		</plane>
-		<plane name="MIRAGE" model="media/mirage/mirage.obj" cameraDistance="20.0">
+		<plane name="MIRAGE" model="media/mirage/mirage.obj" cameraDistance="20.0" collisionMesh="media/mirage/mirageCollision.obj">
 			<g_offset x="0.0" y="0.0" z="0.0" />
 			<e_offset x="0.0" y="0.25" z="-3.4" mirror="true" />
 			<w_offset weapon="MIRAGE_missile1" x="0.8" y="-0.5" z="0.5" mirror="true" />

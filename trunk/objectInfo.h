@@ -46,10 +46,17 @@ class ObjectInfo
 public:
 	struct objectData
 	{
+	private:
+		shared_ptr<FileManager::modelFile>			meshFile;
+		shared_ptr<FileManager::modelFile>			collisionMeshFile;
+	public:
 		string name;
 		objectType type;
-		shared_ptr<PhysicsManager::collisionBounds> bounds;
+
+		//shared_ptr<PhysicsManager::collisionBounds> collisionMesh;
 		shared_ptr<SceneManager::mesh>				mesh;
+
+		friend class ObjectInfo;
 	};
 	struct planeObjectData: public objectData
 	{
@@ -73,6 +80,7 @@ public:
 		return *pInstance;
 	}
 	bool loadObjectData(string filename="media/objectData.xml");
+	int loadObjectMeshes();
 	objectType typeFromString(string s);
 	string typeString(objectType t);
 	shared_ptr<objectData> operator[] (objectType t);

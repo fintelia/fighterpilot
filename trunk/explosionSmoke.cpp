@@ -13,11 +13,11 @@ namespace particle
 		for(int i = 0; i < 48; i++)
 		{
 			p.startTime = world.time();
-			p.endTime = p.startTime + 5000;
+			p.invLife = 1.0 / 5000.0;
 
 			Vec3f dir = random3<float>();
-			p.vel = dir * sqrt(random(radius) * random(radius));
-			p.pos = position + dir * random<float>(radius*0.5,radius*1.5) + p.vel * extraTime/1000.0;
+			p.velocity = dir * sqrt(random(radius) * random(radius));
+			p.pos = position + dir * random<float>(radius*0.5,radius*1.5) + p.velocity * extraTime/1000.0;
 
 			p.size = radius*1.5;
 
@@ -37,8 +37,8 @@ namespace particle
 	}
 	void explosionSmoke::updateParticle(particle& p)
 	{
-		p.vel *= pow(0.2, world.time.length()/1000.0f);	
-		p.pos += p.vel * world.time.length()/1000.0;
+		p.velocity *= pow(0.2, world.time.length()/1000.0f);	
+		p.pos += p.velocity * world.time.length()/1000.0;
 
 		float t = world.time() - p.startTime;
 
@@ -76,12 +76,12 @@ namespace particle
 		for(int i = 0; i < 64; i++)
 		{
 			p.startTime = world.time();
-			p.endTime = p.startTime + 5000;
+			p.invLife = 1.0 / life();
 
 			Vec3f dir = random3<float>();
 			float r = random<float>();
-			p.vel = dir * r*r*radius*20.0;//dir * radius;
-			p.pos = position + /*dir * r*r*radius*2.0 + */ p.vel * extraTime/1000.0;
+			p.velocity = dir * r*r*radius*20.0;//dir * radius;
+			p.pos = position + /*dir * r*r*radius*2.0 + */ p.velocity * extraTime/1000.0;
 
 			p.size = radius*1.5;
 
@@ -107,11 +107,11 @@ namespace particle
 
 		if(t < 100)
 		{
-			p.pos += p.vel * world.time.length()/1000.0;
+			p.pos += p.velocity * world.time.length()/1000.0;
 		}
 		else
 		{
-			p.pos += p.vel * 0.01 * world.time.length()/1000.0;
+			p.pos += p.velocity * 0.01 * world.time.length()/1000.0;
 		}
 		p.ang += p.angularSpeed * world.time.length() / 1000.0;
 

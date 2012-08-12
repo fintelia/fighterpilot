@@ -30,13 +30,13 @@ public:
 	int					team;
 	bool				awaitingDelete;
 	meshInstancePtr		meshInstance;
-	physicsInstancePtr	physicsInstance;
+//	physicsInstancePtr	physicsInstance;
 	cameraPtr			firstPerson;
 	cameraPtr			thirdPerson;
 	object(Vec3f sPos, Quat4f sRot, objectType Type, int Team=NEUTRAL): startPos(sPos), startRot(sRot), type(Type), id(++currentId), position(sPos), rotation(sRot), dead(false), team(Team), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}
 	virtual void init(){}
-	virtual ~object(){if(meshInstance)meshInstance->setDeleteFlag(true);}
-	virtual void draw();
+	virtual ~object(){}
+	virtual void draw(){}
 
 	virtual void updateSimulation(double time, double ms) {}
 	virtual void updateFrame(float interpolation) const {}

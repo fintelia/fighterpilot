@@ -38,14 +38,14 @@ bool objectProperties::init(LevelFile::Object* obj)
 	string ptype = objectInfo.typeString(object->type);
 
 	l = new listBox(0.5*sAspect+0.244,0.5-0.015,0.098,ptype,black);
-	l->addOption("f16");			typeOptions.push_back(objectInfo.typeFromString("F16"));
-	l->addOption("f18");			typeOptions.push_back(objectInfo.typeFromString("F18"));
-	l->addOption("f22");			typeOptions.push_back(objectInfo.typeFromString("F22"));
-	l->addOption("UAV");			typeOptions.push_back(objectInfo.typeFromString("UAV"));
-	l->addOption("b2");				typeOptions.push_back(objectInfo.typeFromString("B2"));
-	l->addOption("mirage");			typeOptions.push_back(objectInfo.typeFromString("MIRAGE"));
-	l->addOption("j37");			typeOptions.push_back(objectInfo.typeFromString("J37"));
-	l->addOption("<player>");		typeOptions.push_back(PLAYER_PLANE);
+	l->addOption("f16");			typeOptions.push_back(objectInfo.typeFromString("F16"));		if(ptype == "F16")			l->setOption(0);
+	l->addOption("f18");			typeOptions.push_back(objectInfo.typeFromString("F18"));		if(ptype == "F18")			l->setOption(1);
+	l->addOption("f22");			typeOptions.push_back(objectInfo.typeFromString("F22"));		if(ptype == "F22")			l->setOption(2);
+	l->addOption("UAV");			typeOptions.push_back(objectInfo.typeFromString("UAV"));		if(ptype == "UAV")			l->setOption(3);
+	l->addOption("b2");				typeOptions.push_back(objectInfo.typeFromString("B2"));			if(ptype == "B2")			l->setOption(4);
+	l->addOption("mirage");			typeOptions.push_back(objectInfo.typeFromString("MIRAGE"));		if(ptype == "MIRAGE")		l->setOption(5);
+	l->addOption("j37");			typeOptions.push_back(objectInfo.typeFromString("J37"));		if(ptype == "J37")			l->setOption(6);
+	l->addOption("<player>");		typeOptions.push_back(PLAYER_PLANE);							if(ptype == "PLAYER_PLANE")	l->setOption(7);
 	listBoxes["type"] = l;
 
 	return true;
@@ -439,6 +439,8 @@ bool loading::init()
 }
 int loading::update()
 {
+	static double loadStartTime = GetTime();
+
 	static bool toLoad = true;
 	if(toLoad)
 	{
@@ -457,19 +459,26 @@ int loading::update()
 	}
 	
 	static int totalAssets = -1;
-
+	static int totalObjectMeshes = -1;
 	static vector<double> times;
 
+	if(totalObjectMeshes == -1) totalObjectMeshes = objectInfo.loadObjectMeshes();
+
 	int assetsLeft = assetLoader.loadAsset();
+	int objectMeshesLeft = totalObjectMeshes;
 
 	if(totalAssets == -1) totalAssets = assetsLeft+1;
 
+	if(assetsLeft == 0)
+		objectMeshesLeft = objectInfo.loadObjectMeshes();
+	
+
 	//graphics->minimizeWindow();
 	//MessageBox(NULL,(wstring(L"loaded asset #") + lexical_cast<wstring>(totalAssets - assetsLeft)).c_str(),L"",0);
-	progress = 1.0-(float)assetsLeft/totalAssets;
-	if(assetsLeft==0)
+	progress = 1.0-static_cast<float>(assetsLeft+objectMeshesLeft)/(totalAssets+totalObjectMeshes);
+	if(assetsLeft == 0 && objectMeshesLeft == 0)
 	{
-		dataManager.writeErrorLog("media/shaderErrors.txt");
+		shaders.writeErrorLog("media/shaderErrors.txt");
 		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 	}
 	

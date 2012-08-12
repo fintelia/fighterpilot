@@ -3,9 +3,13 @@ namespace particle
 {
 class explosion: public emitter
 {
+private:
+	double startTime;
+	shared_ptr<SceneManager::pointLight> flash;
 public:
 	explosion();
 	void init();
+	void update();
 
 	void updateParticle(particle& p);
 };
@@ -157,9 +161,8 @@ class bulletEffect: public sparkEmitter
 {
 public:
 	bulletEffect();
-	void init();
 
-	void update();
+	void update(){}
 	void prepareRender(Vec3f up, Vec3f right);
 	bool toDelete(){return false;}
 };

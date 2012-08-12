@@ -7,6 +7,7 @@ PlayerManager& players = PlayerManager::getInstance();
 SettingsManager& settings = SettingsManager::getInstance();
 
 
+
 Game* game = new Game;
 
 objId bullets;
@@ -148,7 +149,7 @@ void Game::update()
 			//we can no-longer keep up with the simulation
 			break;
 		}
-	}	
+	}
 
 	world.time.nextFrame();	
 	world.frameUpdate();

@@ -9,15 +9,11 @@ namespace particle
 	}
 	void explosionFlash::init()
 	{
-		life =		fuzzyAttribute(400.0);
-
 		particle p;
 		p.startTime = world.time();
-		p.endTime = world.time() + life();
+		p.invLife = 1.0 / 400.0;
 
-		Vec3f dir = random3<float>();
-		p.vel = dir * velocity();
-		p.pos = position + dir * spread() + p.vel * extraTime/1000.0;
+		p.pos = position + random3<float>() * spread();
 
 		p.ang = random<float>(2.0*PI);
 
@@ -36,7 +32,7 @@ namespace particle
 	{
 		//p.vel *= pow(friction, (float)world.time.length()/1000.0f);
 		//p.pos += p.vel * world.time.length()/1000.0;
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
+		float t = (world.time() - p.startTime) * p.invLife;
 
 		float e = world.elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)

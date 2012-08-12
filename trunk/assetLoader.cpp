@@ -345,11 +345,13 @@ int AssetLoader::loadAsset()
 				if(shaderAsset->use_sAspect)
 				{
 					shader->setUniform1f("sAspect",sAspect);
-					dataManager.addShader(shaderAsset->name, shader, true);
+					shaders.add(shaderAsset->name, shader, true);
+					//dataManager.addShader(shaderAsset->name, shader, true);
 				}
 				else
 				{
-					dataManager.addShader(shaderAsset->name, shader, false);
+					shaders.add(shaderAsset->name, shader, false);
+					//dataManager.addShader(shaderAsset->name, shader, false);
 				}
 			}
 			else

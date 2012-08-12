@@ -42,30 +42,36 @@ public:
 	//	~triangleList(){if(triangles) delete[] triangles;}
 	//	friend class CollisionChecker;
 	//};
-	struct collisionBounds
-	{
-	public:
-		enum Type{SPHERE};
-		Type getType(){return type;}
-	private:
-		Type type;
-	protected:
-		collisionBounds(Type t):type(t){}
-	};
+
 private:
 	PhysicsManager(){}
 	~PhysicsManager(){}
 
-
-	struct collisionSphere: public collisionBounds
+	struct collisionBounds
 	{
+	public:
+		enum Type{SPHERE,MESH}type;
 		Sphere<float> sphere;
-		collisionSphere():collisionBounds(SPHERE){}
-		collisionSphere(Sphere<float> s):collisionBounds(SPHERE),sphere(s){}
+		collisionBounds(Sphere<float> s):type(SPHERE),sphere(s){}
+		virtual ~collisionBounds(){}
+	protected:
+		collisionBounds(Type t):type(t){}
+	};
+	//struct collisionSphere: public collisionBounds
+	//{
+	//	collisionSphere():collisionBounds(SPHERE){}
+	//	collisionSphere(Sphere<float> s):collisionBounds(SPHERE),sphere(s){}
+	//};
+	struct collisionMesh: public collisionBounds
+	{
+		vector<Vec3f> vertices;
+		vector<triangle> triangles;
+		collisionMesh():collisionBounds(MESH){}
 	};
 	map<objectType, shared_ptr<collisionBounds>> objectBounds;
 
-
+	Vec3f closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const;
+	bool sphereTriangleCollision(const triangle& a, const Mat4f& m, const Sphere<float>& s) const;
 	//Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const;
 	bool segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const;
 	//bool pointBetweenVertices(const Vec3f& a,const Vec3f& b, const triangle& tri1) const;
@@ -75,23 +81,24 @@ private:
 
 
 public:
-	class physicsInstance
-	{
-		shared_ptr<collisionBounds> bounds;
-
-		Quat4f rotation;
-		Vec3f position;
-
-		friend class PhysicsManager;
-	public:
-		physicsInstance(shared_ptr<collisionBounds> b, Vec3f pos, Quat4f rot): bounds(b), rotation(rot), position(pos){}
-
-		void update(const Vec3f& pos){position=pos;}
-		void update(const Vec3f& pos, const Quat4f& rot){position=pos; rotation=rot;}
-	};
-	shared_ptr<physicsInstance> newPhysicsInstance(objectType t, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
+	//class physicsInstance
+	//{
+	//	shared_ptr<collisionBounds> bounds;
+	//
+	//	Quat4f rotation;
+	//	Vec3f position;
+	//
+	//	friend class PhysicsManager;
+	//public:
+	//	physicsInstance(shared_ptr<collisionBounds> b, Vec3f pos, Quat4f rot): bounds(b), rotation(rot), position(pos){}
+	//
+	//	void update(const Vec3f& pos){position=pos;}
+	//	void update(const Vec3f& pos, const Quat4f& rot){position=pos; rotation=rot;}
+	//};
+	//shared_ptr<physicsInstance> newPhysicsInstance(objectType t, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 
 	void setCollsionBounds(objectType type, Sphere<float> s);
+	void setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices);
 
 	//void findPolygonRadius(triangle& tri);
 	bool groundCollsion(shared_ptr<object> o1) const;
@@ -110,5 +117,5 @@ private:
 	friend class physicsInstance;
 	map<majorObjectType, vector<std::weak_ptr<physicsInstance>>> physicsInstances;
 };
-typedef shared_ptr<PhysicsManager::physicsInstance> physicsInstancePtr;
+//typedef shared_ptr<PhysicsManager::physicsInstance> physicsInstancePtr;
 extern PhysicsManager& physics;

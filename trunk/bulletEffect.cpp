@@ -7,14 +7,6 @@ namespace particle
 	{
 
 	}
-	void bulletEffect::init()
-	{
-		velocity =	fuzzyAttribute(3.0, 1.0);
-		spread =	fuzzyAttribute(1.0, 0.5);
-		life =		fuzzyAttribute(6000.0, 100.0);
-	}
-	void bulletEffect::update(){} //no need to do updates
-
 	void bulletEffect::prepareRender(Vec3f up, Vec3f right)
 	{
 		shared_ptr<bulletCloud> obj = dynamic_pointer_cast<bulletCloud>(world[parentObject]);

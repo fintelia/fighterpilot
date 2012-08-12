@@ -3,10 +3,10 @@
 
 namespace gui{
 
-	const int LOD=1;
-
 bool levelEditor::init()
 {
+	defaultPlane = objectInfo.typeFromString("F22");
+
 	view = graphics->genView();
 	view->viewport(0,0, sAspect,1.0);
 	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
@@ -73,6 +73,7 @@ bool levelEditor::init()
 	//if(level != NULL) delete level;
 	//level = new editLevel;
 
+	LOD = 1;
 	scrollVal=0.0;
 	//level->newGround(129,129);
 	levelFile.heights = new float[((257-1)*LOD+1)*((257-1)*LOD+1)];
@@ -95,6 +96,7 @@ bool levelEditor::init()
 	terrainSkirtVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::DYNAMIC);
 
 	graphics->setLightPosition(Vec3f(-100000,1000000,0));
+
 
 	return true;
 }
@@ -130,6 +132,8 @@ void levelEditor::operator() (popup* p)
 
 		if(!levelFile.loadZIP(f))
 			debugBreak();
+
+		LOD = levelFile.info.LOD;
 
 		sliders["sea level"]->setValue(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight));
 		resetView();
@@ -428,15 +432,15 @@ void levelEditor::updateObjectCircles()
 		Vec2f s;
 		float r;
 
-		auto model = dataManager.getModel(i->type);
-		if(model==NULL)
+		auto obj = objectInfo[i->type];//dataManager.getModel(i->type);
+		if(!obj)
 		{
 			r = 0.006;
 			s = view->project(i->startloc);
 		}
 		else
 		{
-			Sphere<float> sphere = model->boundingSphere;
+			Sphere<float> sphere = obj->mesh->getBoundingSphere();
 			s = view->project(i->startloc + i->startRot * sphere.center*10);
 			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*10);
 			r = max(0.004f,s.distance(t));
@@ -616,12 +620,14 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//	}
 	//}
 
-
+	LOD = 1;
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.5);
 	resetView();
 	terrainValid=false;
+
+	graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 }
 void levelEditor::faultLine()
 {
@@ -679,11 +685,13 @@ void levelEditor::faultLine()
 
  	smooth(1);
 
+	LOD = 1;
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.333);
 	resetView();
 	terrainValid=false;
+	graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 }
 void levelEditor::fromFile(string filename)
 {
@@ -703,10 +711,12 @@ void levelEditor::fromFile(string filename)
 				}
 			}
 
+			LOD = 1;
 			setMinMaxHeights();
 			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 			sliders["sea level"]->setValue(0.333);
 			resetView();
+			graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 		}
 	}
 	else if(ext == ".bil")
@@ -794,12 +804,13 @@ void levelEditor::fromFile(string filename)
 		levelFile.info.mapSize.x = nRows * 30.87 * xRes;
 		levelFile.info.mapSize.y = nColumns * 30.87 * zRes;
 
-
+		LOD = 1;
 		setMinMaxHeights();
 		levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 		sliders["sea level"]->setValue(0.333);
 		resetView();
 		terrainValid=false;
+		graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 	}
 }
 void levelEditor::smooth(int a)
@@ -948,7 +959,11 @@ void levelEditor::render3D(unsigned int v)
 	{
 		for(auto i = levelFile.objects.begin(); i != levelFile.objects.end(); i++)
 		{
-			graphics->drawModel(i->type,i->startloc,i->startRot,10.0);
+			auto obj = objectInfo[i->type];
+			if(obj)
+			{
+				sceneManager.drawMesh(view, obj->mesh, Mat4f(i->startRot,i->startloc,10.0));
+			}
 		}
 
 		if(newObjectType != 0)
@@ -962,7 +977,12 @@ void levelEditor::render3D(unsigned int v)
 
 			if(abs(dir.y) < 0.001) return;
 			Vec3d val = P1 + dir*(levelFile.info.maxHeight+objPlacementAlt-P1.y)/dir.y;
-			graphics->drawModel(newObjectType, Vec3f(val), Quat4f(),10.0);
+			
+			auto obj = objectInfo[newObjectType];
+			if(obj)
+			{
+				sceneManager.drawMesh(view, obj->mesh, Mat4f(Quat4f(),Vec3f(val),10.0));
+			}
 			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
 			//glDepthMask(false);
 			//glColor4f(0.1,0.3,1.0,0.3);
@@ -1035,20 +1055,20 @@ void levelEditor::render()
 
 	if(getTab() == OBJECTS)
 	{
-		dataManager.bind("circle shader");
+		shaders.bind("circle shader");
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
 			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2));
 		}
-		dataManager.bind("ortho");
+		shaders.bind("ortho");
 	}
 
 	if(getTab() == REGIONS)
 	{
 		Rect viewRect = orthoView();
 
-		dataManager.bind("circle shader");
+		shaders.bind("circle shader");
 
 		for(auto i = levelFile.regions.begin(); i != levelFile.regions.end(); i++)
 		{
@@ -1057,7 +1077,7 @@ void levelEditor::render()
 			graphics->drawOverlay(Rect::CWH(c,s));
 		}
 
-		dataManager.bind("ortho");
+		shaders.bind("ortho");
 	}
 }
 void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffset)
@@ -1143,93 +1163,99 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			/*if(levelFile.info.shaderType == TERRAIN_ISLAND)	dataManager.bind("island preview terrain");
 			else											dataManager.bind("grass preview terrain");*/
 
-			dataManager.bind("island preview terrain");
+			auto shader = shaders.bind("island preview terrain");
+			//dataManager.bind("island preview terrain");
+			shader->bind();
 
 			dataManager.bind("sand",0);
 			dataManager.bind("grass",1);
 			dataManager.bind("rock",2);
 			dataManager.bind("LCnoise",3);
 			groundTex->bind(4);
+			
 
-			dataManager.setUniform1f("heightScale",	scale);
-			dataManager.setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
-			dataManager.setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
-			dataManager.setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
+			shader->setUniform1f("heightScale",	scale);
+			shader->setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
 
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
-			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
-			dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
+			shader->setUniformMatrix("cameraProjection", cameraProjectionMat);
+			shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
 
-			dataManager.setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
-			dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-			dataManager.setUniform3f("eyePos",		view->camera().eye);
-			dataManager.setUniform1f("time",		world.time());
-			dataManager.setUniform1i("sand",		0);
-			dataManager.setUniform1i("grass",		1);
-			dataManager.setUniform1i("rock",		2);
-			dataManager.setUniform1i("LCnoise",		3);
-			dataManager.setUniform1i("groundTex",	4);
+			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
+			shader->setUniform3f("sunPosition", graphics->getLightPosition());
+			shader->setUniform3f("eyePos",		view->camera().eye);
+			shader->setUniform1f("time",		world.time());
+			shader->setUniform1i("sand",		0);
+			shader->setUniform1i("grass",		1);
+			shader->setUniform1i("rock",		2);
+			shader->setUniform1i("LCnoise",		3);
+			shader->setUniform1i("groundTex",	4);
 			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
 
-			dataManager.bind("model");
+			shaders.bind("model");
 		}
 		else if(levelFile.info.shaderType == TERRAIN_DESERT)
 		{
-			dataManager.bind("desert preview terrain");
+			auto shader = shaders.bind("desert preview terrain");
+			//dataManager.bind("desert preview terrain");
 
 			dataManager.bind("sand",0);
 			dataManager.bind("LCnoise",1);
 			groundTex->bind(2);
 
-			dataManager.setUniform1f("heightScale",	scale);
-			dataManager.setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
-			dataManager.setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
-			dataManager.setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
+			shader->setUniform1f("heightScale",	scale);
+			shader->setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
 
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
-			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
-			dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
+			shader->setUniformMatrix("cameraProjection", cameraProjectionMat);
+			shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
 
-			dataManager.setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
-			dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-			dataManager.setUniform3f("eyePos",		view->camera().eye);
-			dataManager.setUniform1i("sand",		0);
-			dataManager.setUniform1i("LCnoise",		1);
-			dataManager.setUniform1i("groundTex",	2);
+			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
+			shader->setUniform3f("sunPosition", graphics->getLightPosition());
+			shader->setUniform3f("eyePos",		view->camera().eye);
+			shader->setUniform1i("sand",		0);
+			shader->setUniform1i("LCnoise",		1);
+			shader->setUniform1i("groundTex",	2);
 			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
 
-			dataManager.bind("model");
+			shaders.bind("model");
 		}
 		else if(levelFile.info.shaderType == TERRAIN_SNOW)
 		{
-			dataManager.bind("snow preview terrain");
+			auto shader = shaders.bind("snow preview terrain");
+			//dataManager.bind("snow preview terrain");
 
 			dataManager.bind("snow",0);
 			dataManager.bind("LCnoise",1);
 			groundTex->bind(2);
 
-			dataManager.setUniform1f("heightScale",	scale);
+			shader->setUniform1f("heightScale",	scale);
 
 			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
-			dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
-			dataManager.setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
+			shader->setUniformMatrix("cameraProjection", cameraProjectionMat);
+			shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
 
-			dataManager.setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
-			dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-			dataManager.setUniform3f("eyePos",		view->camera().eye);
-			dataManager.setUniform1f("time",		world.time());
-			dataManager.setUniform1i("snow",		0);
-			dataManager.setUniform1i("LCnoise",		1);
-			dataManager.setUniform1i("groundTex",	2);
+			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
+			shader->setUniform3f("sunPosition", graphics->getLightPosition());
+			shader->setUniform3f("eyePos",		view->camera().eye);
+			shader->setUniform1f("time",		world.time());
+			shader->setUniform1i("snow",		0);
+			shader->setUniform1i("LCnoise",		1);
+			shader->setUniform1i("groundTex",	2);
 
 			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
 
-			dataManager.bind("model");
+			shaders.bind("model");
 		}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if(levelFile.info.shaderType == TERRAIN_ISLAND)
 	{
-		dataManager.bind("ocean preview");
+		auto ocean = shaders.bind("ocean preview");
+		//dataManager.bind("ocean preview");
 
 		dataManager.bind("ocean normals",0);
 	//	if(levelFile.info.shaderType == SHADER_OCEAN)	dataManager.bindTex(0,1);
@@ -1237,14 +1263,14 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//	dataManager.bind("rock",2);
 	//	dataManager.bind("sand",3);
 		Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
-		dataManager.setUniformMatrix("cameraProjection", cameraProjectionMat);
-		dataManager.setUniformMatrix("modelTransform", Mat4f());
+		ocean->setUniformMatrix("cameraProjection", cameraProjectionMat);
+		ocean->setUniformMatrix("modelTransform", Mat4f());
 
-		dataManager.setUniform1i("bumpMap", 0);
+		ocean->setUniform1i("bumpMap", 0);
 	//	dataManager.setUniform1i("groundTex", 1);
 	//	dataManager.setUniform1i("rock", 2);
 	//	dataManager.setUniform1i("sand", 3);
-		dataManager.setUniform1f("time", world.time());
+		ocean->setUniform1f("time", world.time());
 	//	dataManager.setUniform1f("seaLevel", (seaLevelOffset-levelFile.info.minHeight)/(levelFile.info.maxHeight-levelFile.info.minHeight));
 	//	dataManager.setUniform1f("XZscale", levelFile.info.mapSize.x);
 
@@ -1255,8 +1281,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 							Vec3f(0,0,levelFile.info.mapSize.y));
 
 
-
-		dataManager.bind("model");
+		shaders.bind("model");
+		//dataManager.bind("model");
 	}
 
 	//if(levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_SNOW)

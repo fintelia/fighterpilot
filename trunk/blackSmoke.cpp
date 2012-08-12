@@ -9,17 +9,17 @@ namespace particle
 	}
 	void blackSmoke::init()
 	{
-		velocity =	fuzzyAttribute(0.0);
+		speed =	fuzzyAttribute(0.0);
 		spread =	fuzzyAttribute(1.0, 0.5);
 		life =		fuzzyAttribute(7000);
 	}
 	bool blackSmoke::createParticle(particle& p, Vec3f currentPosition)
 	{
 		p.startTime = world.time() - extraTime;
-		p.endTime = world.time() - extraTime + life();
+		p.invLife = 1.0 / life();
 
-		p.vel = random3<float>() * velocity();
-		p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
+		p.velocity = random3<float>() * speed();
+		p.pos = currentPosition + random3<float>()*spread() + p.velocity * extraTime/1000.0;
 
 		p.size = 5.0;
 
@@ -37,7 +37,7 @@ namespace particle
 	}
 	void blackSmoke::updateParticle(particle& p)
 	{
-		p.pos += p.vel * world.time.length()/1000.0;
+		p.pos += p.velocity * world.time.length()/1000.0;
 		p.ang += p.angularSpeed * world.time.length()/1000.0;
 		p.pos.y += world.time.length()/100;
 		float t = (world.time() - p.startTime);

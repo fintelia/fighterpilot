@@ -5,21 +5,17 @@ namespace particle
 struct particle
 {
 	Vec3f pos;
+	Vec3f velocity;
+
 	float ang;
+	float angularSpeed;
+
 	float size;
 	float r, g, b, a;
-	Vec3f lastPos;
-	Vec3f vel;
-	Vec3f dir;
-	Vec3f startPos;
-	float initialSpeed;
-	float angularSpeed;
-	float totalDistance;
-	float friction;
 	float startTime;
-	float endTime;
-	bool fadeIn;
+	float invLife;	
 };
+const unsigned char FADE_IN = 0x01;
 
 struct vertex
 {
@@ -73,7 +69,7 @@ protected:
 
 	string texture;
 
-	fuzzyAttribute velocity;
+	fuzzyAttribute speed;
 	fuzzyAttribute spread;
 	fuzzyAttribute life;
 	fuzzyColor color;
@@ -86,6 +82,8 @@ protected:
 	//float friction;
 
 	particle* particles;
+	Vec3f* oldParticlePositions;
+	unsigned char* particleFlags;
 	vertex* vertices;
 	unsigned int compacity;
 	unsigned int liveParticles;
@@ -115,7 +113,7 @@ public:
 	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;parentOffset=ParentOffset;}
 
 	virtual ~emitter();
-	void addParticle(particle& p);
+	unsigned int addParticle(particle& p);
 	//virtual void setDefaults(...)=0;
 
 

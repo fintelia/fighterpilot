@@ -606,11 +606,8 @@ OpenGLgraphics::shaderGL::~shaderGL()
 }
 void OpenGLgraphics::shaderGL::bind()
 {
+	boundShader = this;
 	glUseProgram(shaderId);
-}
-void OpenGLgraphics::shaderGL::unbind()
-{
-	glUseProgram(0);
 }
 bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
 {
@@ -794,55 +791,94 @@ string OpenGLgraphics::shaderGL::getErrorStrings()
 }
 void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform1f(getUniformLocation(name), v0);
 }
 void OpenGLgraphics::shaderGL::setUniform2f(string name, float v0, float v1)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform2f(getUniformLocation(name), v0, v1);
 }
 void OpenGLgraphics::shaderGL::setUniform3f(string name, float v0, float v1, float v2)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform3f(getUniformLocation(name), v0, v1, v2);
 }
 void OpenGLgraphics::shaderGL::setUniform4f(string name, float v0, float v1, float v2, float v3)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
 }
 void OpenGLgraphics::shaderGL::setUniform1i(string name, int v0)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform1i(getUniformLocation(name), v0);
 }
 void OpenGLgraphics::shaderGL::setUniform2i(string name, int v0, int v1)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform2i(getUniformLocation(name), v0, v1);
 }
 void OpenGLgraphics::shaderGL::setUniform3i(string name, int v0, int v1, int v2)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform3i(getUniformLocation(name), v0, v1, v2);
 }
 void OpenGLgraphics::shaderGL::setUniform4i(string name, int v0, int v1, int v2, int v3)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniform4i(getUniformLocation(name), v0, v1, v2, v3);
 }
 void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat3f& m)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniformMatrix3fv(getUniformLocation(name),1,false,m.ptr());
 }
 void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat4f& m)
 {
-	glUseProgram(shaderId);
+	if(boundShader != this) bind();
 	glUniformMatrix4fv(getUniformLocation(name),1,false,m.ptr());
 }
-
+void OpenGLgraphics::shaderGL::setUniform1fv(string name, unsigned int n, float* v)
+{
+	if(boundShader != this) bind();
+	glUniform1fv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform2fv(string name, unsigned int n, float* v)
+{
+	if(boundShader != this) bind();
+	glUniform2fv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform3fv(string name, unsigned int n, float* v)
+{
+	if(boundShader != this) bind();
+	glUniform3fv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform4fv(string name, unsigned int n, float* v)
+{
+	if(boundShader != this) bind();
+	glUniform4fv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform1iv(string name, unsigned int n, int* v)
+{
+	if(boundShader != this) bind();
+	glUniform1iv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform2iv(string name, unsigned int n, int* v)
+{
+	if(boundShader != this) bind();
+	glUniform2iv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform3iv(string name, unsigned int n, int* v)
+{
+	if(boundShader != this) bind();
+	glUniform3iv(getUniformLocation(name), n, v);
+}
+void OpenGLgraphics::shaderGL::setUniform4iv(string name, unsigned int n, int* v)
+{
+	if(boundShader != this) bind();
+	glUniform4iv(getUniformLocation(name), n, v);
+}
 void OpenGLgraphics::flashTaskBar(int times, int length)
 {
 #ifdef VISUAL_STUDIO
@@ -962,7 +998,7 @@ void OpenGLgraphics::setGamma(float gamma)
 }
 void OpenGLgraphics::setColor(float r, float g, float b, float a)
 {
-	dataManager.setUniform4f("color", r, g, b, a);
+	getBoundShader()->setUniform4f("color", r, g, b, a);
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
@@ -1418,7 +1454,7 @@ void OpenGLgraphics::render()
 	setDepthMask(true);
 	setColorMask(true);
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
-	glClearColor(0.47f,0.57f,0.63f,1.0f);
+	//glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1459,15 +1495,17 @@ void OpenGLgraphics::render()
 			}
 			else
 			{
-				dataManager.bind("model");
+				auto model = shaders("model");
 				currentView = shared_ptr<View>(*i);
 				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 
 				if(highResScreenshot)	currentView->constrainView(viewConstraint);
 				else if(stereo)			currentView->shiftCamera(cameraOffset);
 
-				dataManager.setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
-				dataManager.setUniformMatrix("modelTransform", Mat4f());
+				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
+				model->setUniformMatrix("modelTransform", Mat4f());
+
+				model->setUniform1i("numLights",1);
 
 				currentView->render();
 
@@ -1558,15 +1596,15 @@ void OpenGLgraphics::render()
 	glViewport(0,0,sw,sh);
 	if(!highResScreenshot)
 	{
-		dataManager.bind("ortho");
-		dataManager.setUniform4f("color",white);
+		auto ortho = shaders.bind("ortho");
+		ortho->setUniform4f("color",white);
 		menuManager.render();
 
 		#ifdef _DEBUG
-			if(fps<59.0)dataManager.setUniform4f("color",red);
-			else dataManager.setUniform4f("color",black);
+			if(fps<59.0)ortho->setUniform4f("color",red);
+			else ortho->setUniform4f("color",black);
 			graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
-			dataManager.setUniform4f("color",white);
+			ortho->setUniform4f("color",white);
 			Profiler.draw();
 
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
@@ -1602,9 +1640,9 @@ void OpenGLgraphics::render()
 	bindRenderTarget(RT_SCREEN);
 	//glClearColor(0.0,0.0,0.0,1.0f);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	dataManager.bind("gamma shader");
-	dataManager.setUniform1f("gamma",currentGamma);
-	dataManager.setUniform1i("tex",0);
+	auto gamma = shaders.bind("gamma shader");
+	gamma->setUniform1f("gamma",currentGamma);
+	gamma->setUniform1i("tex",0);
 	renderFBO(RT_FBO_0);
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -2016,6 +2054,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	glClearColor(0.47f,0.57f,0.63f,1.0f);
 
 	if(gl2Hacks)
 	{
@@ -2127,7 +2166,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	fileManager.createDirectory("screen shots");
 	highResScreenshot = true;
-	const int TILES=2;
+	const int TILES=4;
 
 	shared_ptr<FileManager::textureFile> file(new FileManager::pngFile(filename));
 	file->channels = 3;
@@ -2167,7 +2206,8 @@ void OpenGLgraphics::takeScreenshot()
 }
 void OpenGLgraphics::drawSphere(Vec3f position, float radius)
 {
-	drawModel("sphere", position, Quat4f(), Vec3f(radius, radius, radius));
+	debugBreak();
+	//drawModel("sphere", position, Quat4f(), Vec3f(radius, radius, radius));
 }
 void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 {
@@ -2196,97 +2236,97 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 	shapesVBO->setVertexData(4*sizeof(vertex3D), shapes3D);
 	shapesVBO->drawBuffer(TRIANGLE_FAN,0,4);
 }
-void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
-{
-	if(!currentView)
-		return;
-
-	auto m = dataManager.getModel(model);
-
-	float s;
-	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
-		s = scale.x;
-	else if(abs(scale.y) >= abs(scale.z))
-		s = scale.y;
-	else
-		s = scale.z;
-
-	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
-		return;
-
-	dataManager.bind("white");
-	dataManager.bind("model");
-	dataManager.setUniform1i("tex",0);
-	dataManager.setUniform3f("lightPosition", getLightPosition());
-	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-
-	bool dMask = true;
-	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
-	{
-		dataManager.bind(material->tex == "" ? "white" : material->tex);
-
-		dataManager.setUniform4f("diffuse", material->diffuse);
-		dataManager.setUniform3f("specular", material->specular);
-		dataManager.setUniform1f("hardness", material->hardness);
-
-		if(material->diffuse.a > 0.999 && !dMask)
-		{
-			dMask = true;
-			glDepthMask(true);
-		}
-		else if(material->diffuse.a <= 0.999 && dMask)
-		{
-			dMask = false;
-			glDepthMask(false);
-		}
-		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
-	}
-
-	if(!dMask)	glDepthMask(true);
-
-	dataManager.setUniform4f("color", 1,1,1,1);
-}
-void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
-{
-	if(!currentView)
-		return;
-
-	auto m = dataManager.getModel(model);
-	float s;
-	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
-		s = scale.x;
-	else if(abs(scale.y) >= abs(scale.z))
-		s = scale.y;
-	else
-		s = scale.z;
-	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
-		return;
-	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
-	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
-
-	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-
-	bool dMask = true;
-	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
-	{
-		dataManager.setUniform4f("diffuse", material->diffuse);
-		dataManager.setUniform3f("specular", material->specular);
-		dataManager.setUniform1f("hardness", material->hardness);
-
-		if(material->diffuse.a > 0.999 && !dMask)
-		{
-			dMask = true;
-			setDepthMask(true);
-		}
-		else if(material->diffuse.a <= 0.999 && dMask)
-		{
-			dMask = false;
-			setDepthMask(false);
-		}
-		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
-	}
-	if(!dMask)	glDepthMask(true);
-}
+//void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
+//{
+//	if(!currentView)
+//		return;
+//
+//	auto m = dataManager.getModel(model);
+//
+//	float s;
+//	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
+//		s = scale.x;
+//	else if(abs(scale.y) >= abs(scale.z))
+//		s = scale.y;
+//	else
+//		s = scale.z;
+//
+//	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
+//		return;
+//
+//	dataManager.bind("white");
+//	dataManager.bind("model");
+//	dataManager.setUniform1i("tex",0);
+//	dataManager.setUniform3f("lightPosition", getLightPosition());
+//	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
+//
+//	bool dMask = true;
+//	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
+//	{
+//		dataManager.bind(material->tex == "" ? "white" : material->tex);
+//
+//		dataManager.setUniform4f("diffuse", material->diffuse);
+//		dataManager.setUniform3f("specular", material->specular);
+//		dataManager.setUniform1f("hardness", material->hardness);
+//
+//		if(material->diffuse.a > 0.999 && !dMask)
+//		{
+//			dMask = true;
+//			glDepthMask(true);
+//		}
+//		else if(material->diffuse.a <= 0.999 && dMask)
+//		{
+//			dMask = false;
+//			glDepthMask(false);
+//		}
+//		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
+//	}
+//
+//	if(!dMask)	glDepthMask(true);
+//
+//	dataManager.setUniform4f("color", 1,1,1,1);
+//}
+//void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
+//{
+//	if(!currentView)
+//		return;
+//
+//	auto m = dataManager.getModel(model);
+//	float s;
+//	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
+//		s = scale.x;
+//	else if(abs(scale.y) >= abs(scale.z))
+//		s = scale.y;
+//	else
+//		s = scale.z;
+//	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
+//		return;
+//	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
+//	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
+//
+//	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
+//
+//	bool dMask = true;
+//	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
+//	{
+//		dataManager.setUniform4f("diffuse", material->diffuse);
+//		dataManager.setUniform3f("specular", material->specular);
+//		dataManager.setUniform1f("hardness", material->hardness);
+//
+//		if(material->diffuse.a > 0.999 && !dMask)
+//		{
+//			dMask = true;
+//			setDepthMask(true);
+//		}
+//		else if(material->diffuse.a <= 0.999 && dMask)
+//		{
+//			dMask = false;
+//			setDepthMask(false);
+//		}
+//		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
+//	}
+//	if(!dMask)	glDepthMask(true);
+//}
 void OpenGLgraphics::checkErrors()
 {
 #ifdef _DEBUG

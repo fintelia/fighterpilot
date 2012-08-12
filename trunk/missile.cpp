@@ -20,7 +20,7 @@
 //}
 missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner):object(sPos, sRot, Type), life(15.0), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)
 {
-	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
+	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 }
 
 void missileBase::updateFrame(float interpolation) const
@@ -36,6 +36,9 @@ missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float s
 }
 void missile::updateSimulation(double time, double ms)
 {
+	if(awaitingDelete)
+		return;
+
 	if(!contrailStarted && time - launchTime >= 200.0)
 	{
 		contrailStarted = true;
@@ -98,10 +101,8 @@ void missile::updateSimulation(double time, double ms)
 	if(life < 0.0 || world.altitude(position) < 0.0)
 	{
 		awaitingDelete = true;
-		meshInstance->setDeleteFlag(true);
-		meshInstance = nullptr;
+		meshInstance.reset();
 	}
-
 }
 void SAMmissile::init()
 {

@@ -3,7 +3,7 @@
 
 bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):object(sPos, sRot, Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
 {
-	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
+	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 }
 void bomb::updateSimulation(double time, double ms)
 {
@@ -19,8 +19,7 @@ void bomb::updateSimulation(double time, double ms)
 		particleManager.addEmitter(new particle::explosion,position,15.0);
 		particleManager.addEmitter(new particle::groundExplosionFlash,position,15.0);
 		awaitingDelete = true;
-		meshInstance->setDeleteFlag(true);
-		meshInstance = nullptr;
+		meshInstance.reset();
 	}
 }
 void bomb::updateFrame(float interpolation) const

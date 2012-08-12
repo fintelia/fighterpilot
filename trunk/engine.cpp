@@ -24,6 +24,7 @@ Ephemeris& ephemeris=Ephemeris::getInstance();																				//  //
 InputManager& input=InputManager::getInstance();																			//	//
 gui::manager& menuManager = gui::manager::getInstance();																	//	//
 DataManager& dataManager = DataManager::getInstance();																		//	//
+ShaderManager& shaders = ShaderManager::getInstance();																		//	//
 AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
 WorldManager& world = WorldManager::getInstance();																			//	//
 PhysicsManager& physics = PhysicsManager::getInstance();																	//	//

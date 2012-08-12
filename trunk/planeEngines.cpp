@@ -9,8 +9,7 @@ namespace particle
 	}
 	void planeEngines::init()
 	{
-		spread =	fuzzyAttribute(0.0);
-		life =		fuzzyAttribute(800.0);
+
 	}
 	bool planeEngines::createParticle(particle& p, Vec3f currentPosition)
 	{
@@ -21,10 +20,10 @@ namespace particle
 		}
 
 		p.startTime = world.time() - extraTime;
-		p.endTime = p.startTime + life();
+		p.invLife = 1.0 / 800.0;
 
 		p.pos = Vec3f(0,0,0);//currentPosition;
-		p.vel = Vec3f(0,0,-2.0);
+		p.velocity = Vec3f(0,0,-2.0);
 
 		p.ang = random<float>(0,PI*2.0);
 		p.angularSpeed = random<float>(-2.0,2.0);
@@ -41,8 +40,8 @@ namespace particle
 	}
 	void planeEngines::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		p.pos += p.vel * world.time.length() / 1000;
+		float t = (world.time() - p.startTime) * p.invLife;
+		p.pos += p.velocity * world.time.length() / 1000;
 		p.ang += p.angularSpeed * world.time.length() / 1000;
 
 

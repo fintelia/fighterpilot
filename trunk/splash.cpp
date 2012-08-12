@@ -22,15 +22,15 @@ namespace particle
 			particlesPerSecond = 0;
 
 		p.startTime = world.time() - extraTime;
-		p.endTime = world.time() - extraTime + life();
+		p.invLife = 1.0 / life();
 		
 		float r = random<float>(0, 0.5 * radius);
 		Vec2f v = random2<float>();
-		p.vel.x = v.x * r;
-		p.vel.z = v.y * r;
-		p.vel.y = random<float>(1.3,3.3) * radius;
+		p.velocity.x = v.x * r;
+		p.velocity.z = v.y * r;
+		p.velocity.y = random<float>(1.3,3.3) * radius;
 
-		p.pos = currentPosition + random3<float>()*random<float>(0.2,0.6)*radius + p.vel * extraTime/1000.0;
+		p.pos = currentPosition + random3<float>()*random<float>(0.2,0.6)*radius + p.velocity * extraTime/1000.0;
 
 		p.size = 0.5 * radius;
 
@@ -49,10 +49,10 @@ namespace particle
 	{
 		float elapsedTime = (world.time() - p.startTime)/1000.0;
 
-		p.pos.x += p.vel.x * world.time.length()/1000.0;
-		p.pos.z += p.vel.z * world.time.length()/1000.0;
-		p.pos.y = p.vel.y * elapsedTime - 0.98 * elapsedTime * elapsedTime * radius;
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
+		p.pos.x += p.velocity.x * world.time.length()/1000.0;
+		p.pos.z += p.velocity.z * world.time.length()/1000.0;
+		p.pos.y = p.velocity.y * elapsedTime - 0.98 * elapsedTime * elapsedTime * radius;
+		float t = (world.time() - p.startTime) * p.invLife;
 		if(t<0.02)
 		{
 			p.a = t * 20.0 * 0.15;

@@ -1,6 +1,7 @@
 
 #include "engine.h"
 
+GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
 
 GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereo(false), leftEye(true), interOcularDistance(0.0)
 {
@@ -137,22 +138,51 @@ bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 }
 bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 {
-	for(int p = 0; p < 6; ++p) 
-	{
-		if(	(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-			
-			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-			(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d))
-		{
-			return false;
-		}
-	}
-	return true;
+	Vec3f points[8] =  {mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.minXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.maxXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.minXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.maxXYZ.z),
+
+						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.minXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.maxXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.minXYZ.z),
+						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.maxXYZ.z)};
+	
+	return !((points[0].x < -1.0 && points[1].x < -1.0 && points[1].x < -1.0 && points[3].x < -1.0 && points[4].x < -1.0 && points[5].x < -1.0 && points[6].x < -1.0 && points[7].x < -1.0) ||
+			(points[0].y < -1.0 && points[1].y < -1.0 && points[1].y < -1.0 && points[3].y < -1.0 && points[4].y < -1.0 && points[5].y < -1.0 && points[6].y < -1.0 && points[7].y < -1.0) ||
+			(points[0].z < -1.0 && points[1].z < -1.0 && points[1].z < -1.0 && points[3].z < -1.0 && points[4].z < -1.0 && points[5].z < -1.0 && points[6].z < -1.0 && points[7].z < -1.0) ||
+			(points[0].x >  1.0 && points[1].x >  1.0 && points[1].x >  1.0 && points[3].x >  1.0 && points[4].x >  1.0 && points[5].x >  1.0 && points[6].x >  1.0 && points[7].x >  1.0) ||
+			(points[0].y >  1.0 && points[1].y >  1.0 && points[1].y >  1.0 && points[3].y >  1.0 && points[4].y >  1.0 && points[5].y >  1.0 && points[6].y >  1.0 && points[7].y >  1.0) ||
+			(points[0].z >  1.0 && points[1].z >  1.0 && points[1].z >  1.0 && points[3].z >  1.0 && points[4].z >  1.0 && points[5].z >  1.0 && points[6].z >  1.0 && points[7].z >  1.0));
+
+	//for(int p = 0; p < 6; ++p) 
+	//{
+	//	if(	(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+	//		
+	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d))
+	//	{
+	//		if(	mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.minXYZ.y,b.minXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.minXYZ.y,b.maxXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.maxXYZ.y,b.minXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.maxXYZ.y,b.maxXYZ.z)) > 0 || 
+
+	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.minXYZ.y,b.minXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.minXYZ.y,b.maxXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.maxXYZ.y,b.minXYZ.z)) > 0 ||  
+	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.maxXYZ.y,b.maxXYZ.z)) > 0)
+	//				return false;
+	//		if(result)
+	//			return false;
+	//		return false;
+	//	}
+	//}
+	//return true;
 }
 void GraphicsManager::View::shiftCamera(Vec3f shift)
 {

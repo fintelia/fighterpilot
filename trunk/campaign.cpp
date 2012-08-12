@@ -67,12 +67,12 @@ int campaign::update()
 		input.up(0x54);
 		if(!slow)
 		{
-			world.time.changeSpeed(0.1, 5.0);
+			world.time.changeSpeed(0.1, 300.0);
 			slow = true;
 		}
 		else
 		{
-			world.time.changeSpeed(1.0, 5.0);
+			world.time.changeSpeed(1.0, 300.0);
 			slow = false;
 		}
 	}
@@ -181,12 +181,12 @@ void campaign::render()
 			Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * world[p->target]->position;
 			if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 			{
-				dataManager.bind("circle shader");
+				shaders.bind("circle shader");
 				if(p->targetLocked)		graphics->setColor(1,0,0);
 				else					graphics->setColor(0,0,1);
 				graphics->drawOverlay(Rect::CWH(view->project(world[p->target]->position), Vec2f(0.02,0.02)));
 				graphics->setColor(1,1,1);
-				dataManager.bind("ortho");
+				shaders.bind("ortho");
 			}
 			else
 			{

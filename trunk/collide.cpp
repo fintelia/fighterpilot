@@ -1,20 +1,20 @@
 
 #include "engine.h"
 
-shared_ptr<PhysicsManager::physicsInstance> PhysicsManager::newPhysicsInstance(objectType t, Vec3f position, Quat4f rotation)
-{
-	auto i = objectBounds.find(t);
-	if(i != objectBounds.end())
-	{
-		shared_ptr<physicsInstance> ptr(new physicsInstance(i->second,position,rotation));
-		physicsInstances[t & MAJOR_OBJECT_TYPE].push_back(ptr);
-		return ptr;
-	}
-	else
-	{
-		return shared_ptr<physicsInstance>();
-	}
-}
+//shared_ptr<PhysicsManager::physicsInstance> PhysicsManager::newPhysicsInstance(objectType t, Vec3f position, Quat4f rotation)
+//{
+//	auto i = objectBounds.find(t);
+//	if(i != objectBounds.end())
+//	{
+//		shared_ptr<physicsInstance> ptr(new physicsInstance(i->second,position,rotation));
+//		physicsInstances[t & MAJOR_OBJECT_TYPE].push_back(ptr);
+//		return ptr;
+//	}
+//	else
+//	{
+//		return shared_ptr<physicsInstance>();
+//	}
+//}
 //bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
 //{
 //	tri1.findRadius();
@@ -54,6 +54,57 @@ shared_ptr<PhysicsManager::physicsInstance> PhysicsManager::newPhysicsInstance(o
 //
 //	return(temp);
 //}
+
+Vec3f PhysicsManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const //see http://pisa.ucsd.edu/cse125/2003/cse190g2/Collision.pdf
+{
+	// Determine t (the length of the vector from ‘a’ to ‘p’)
+	Vec3f v = (s2 - s1).normalize();
+	float d = s1.distanceSquared(s2);
+	float t = v.dot(point - s1);
+
+	if(t < 0) return s1;
+	if(t*t > d) return s2;
+	return s1 + v * t;
+}
+bool PhysicsManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat, const Sphere<float>& s) const 
+{//see: http://realtimecollisiondetection.net/blog/?p=103
+	Vec3f a = mat * t.vertices[0] - s.center;
+	Vec3f b = mat * t.vertices[1] - s.center;
+	Vec3f c = mat * t.vertices[2] - s.center;
+	float rr = s.radius * s.radius;
+	Vec3f AB = b - a; 
+	Vec3f BC = c - b;
+	Vec3f CA = a - c;
+	
+	Vec3f v = AB.cross(CA);
+	float d = a.dot(v);
+	float e = v.magnitudeSquared();
+	if(d * d > rr * e)
+		return false;
+	
+	float aa = a.dot(a);
+	float ab = a.dot(b);
+	float ac = a.dot(c);
+	float bb = b.dot(b);
+	float bc = b.dot(c);
+	float cc = c.dot(c);
+	if((aa > rr && ab > aa && ac > aa) || (bb > rr && ab > bb && bc > bb) || (cc > rr && ac > cc && bc > cc))
+		return false;
+	
+	float d1 = a.dot(AB);
+	float e1 = AB.magnitudeSquared();
+	float d2 = b.dot(BC);
+	float e2 = BC.magnitudeSquared();
+	float d3 = c.dot(CA);
+	float e3 = CA.magnitudeSquared();
+	Vec3f Q1 = a * e1 - AB * d1;
+	Vec3f QC = c * e1 - Q1;
+	Vec3f Q2 = b * e2 - BC * d2;
+	Vec3f QA = a * e2 - Q2;
+	Vec3f Q3 = c * e3 - CA * d3;
+	Vec3f QB = b * e3 - Q3;
+	return !((Q1.dot(Q1) > rr * e1*e1 && Q1.dot(QC) > 0) || (Q2.dot(Q2) > rr * e2*e2 && Q2.dot(QA) > 0) || (Q3.dot(Q3) > rr * e3*e3 && Q3.dot(QB) > 0));
+}
 bool PhysicsManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
 {
 	//see: http://paulbourke.net/geometry/planeline/
@@ -225,7 +276,6 @@ void PhysicsManager::triangle::findRadius() const
 	if(radiusValid) return;
 	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
 
-
 	minx = maxx = vertices[0].x;
 	miny = maxy = vertices[0].y;
 	minz = maxz = vertices[0].z;
@@ -330,9 +380,25 @@ void PhysicsManager::triangle::findRadius() const
 bool PhysicsManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const
 {
 	auto o = objectBounds.find(o1->type);
-	if(o != objectBounds.end() && o->second->getType() == collisionBounds::SPHERE)
+	if(o != objectBounds.end() && o->second->type == collisionBounds::SPHERE)
 	{
-		Sphere<float> sphere = static_pointer_cast<collisionSphere>(o->second)->sphere;
+		Sphere<float> sphere = o->second->sphere;
+		sphere.center = o1->rotation * sphere.center + o1->position;
+
+		//early detection
+		double d1 = sphere.center.distanceSquared(lineStart);
+		double d2 = sphere.center.distanceSquared(lineEnd);
+ 		if(d1 < sphere.radius*sphere.radius || d2 < sphere.radius*sphere.radius)
+			return true;
+
+		//fallback
+		float u = (sphere.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+		if(u < 0.0 || u > 1.0) return false;
+		return sphere.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < sphere.radius*sphere.radius;
+	}
+	else if(o != objectBounds.end() && o->second->type == collisionBounds::MESH) //right now just uses boundin sphere
+	{
+		Sphere<float> sphere = o->second->sphere;
 		sphere.center = o1->rotation * sphere.center + o1->position;
 
 		//early detection
@@ -352,19 +418,44 @@ bool PhysicsManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f l
 bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
 {
 	auto b1 = objectBounds.find(o1->type);
-	auto b2 = objectBounds.find(o1->type);
+	auto b2 = objectBounds.find(o2->type);
+
 	if(b1 == objectBounds.end() || b2 == objectBounds.end())
 	{
 		return false;
 	}
-	else if(b1->second->getType() == collisionBounds::SPHERE && b2->second->getType() == collisionBounds::SPHERE)
+	else if(b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::SPHERE)
 	{
-		Sphere<float> s1 = static_pointer_cast<collisionSphere>(b1->second)->sphere;
-		Sphere<float> s2 = static_pointer_cast<collisionSphere>(b2->second)->sphere;
+		Sphere<float> s1 = b1->second->sphere;
+		Sphere<float> s2 = b2->second->sphere;
 		s1.center = o1->rotation * s1.center + o1->position;
 		s2.center = o2->rotation * s2.center + o2->position;
 
 		return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
+	}
+	else if(b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::SPHERE || b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH)
+	{
+		if(b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH) //make sure b1's type == MESH and b2's type == SPHERE
+			swap(b1,b2);
+
+		Sphere<float> s1 = b1->second->sphere;
+		Sphere<float> s2 = b2->second->sphere;
+		s1.center = o1->rotation * s1.center + o1->position;
+		s2.center = o2->rotation * s2.center + o2->position;
+		if((s1.center).distanceSquared(s2.center) > (s1.radius+s2.radius)*(s1.radius+s2.radius))
+			return false;
+
+		Mat4f mat1(o1->rotation, o1->position);
+		auto m = static_pointer_cast<collisionMesh>(b1->second);
+		for(auto i = m->triangles.begin(); i != m->triangles.end(); i++)
+		{
+			if(sphereTriangleCollision(*i, mat1, s2))
+				return true;
+		}
+	}
+	else if(b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::MESH)
+	{
+		debugBreak(); // code not yet written!!!
 	}
 	return false;
 	//auto tr1 = dataManager.getModel(o1->type)->trl;
@@ -400,18 +491,48 @@ bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) c
 	//}
 	//return false;
 }
-bool PhysicsManager::groundCollsion(shared_ptr<object> o1) const //WAY TO SLOW!!!
+bool PhysicsManager::groundCollsion(shared_ptr<object> o1) const
 {
-	//auto trl = dataManager.getModel(o1->type)->trl;
-	//Mat4f mat1(o1->rotation, o1->position);
-	//for(int i1=0; i1<trl->numTriangles; i1++)
-	//{
-	//	if(world.altitude(mat1 * trl->triangles[i1].vertices[0]) <= 0 || world.altitude(mat1 * trl->triangles[i1].vertices[1]) <= 0 || world.altitude(mat1 * trl->triangles[i1].vertices[2]) <= 0)
-	//		return true;
-	//}
+	auto b1 = objectBounds.find(o1->type);
+	if(b1 == objectBounds.end())
+	{
+		return false;
+	}
+	else if(b1->second->type == collisionBounds::SPHERE)
+	{
+		Sphere<float> s1 = b1->second->sphere;
+		s1.center = o1->rotation * s1.center + o1->position;
+
+		return world.altitude(s1.center) <= s1.radius;
+	}
+	else if(b1->second->type == collisionBounds::MESH)
+	{
+		Mat4f mat1(o1->rotation, o1->position);
+		shared_ptr<collisionMesh> m = static_pointer_cast<collisionMesh>(b1->second);
+		for(auto i = m->vertices.begin(); i != m->vertices.end(); i++)
+		{
+			if(world.altitude(mat1 * (*i)) < 0.0)
+				return true;
+		}
+		return false;
+	}
 	return false;
 }
 void PhysicsManager::setCollsionBounds(objectType type, Sphere<float> s)
 {
-	objectBounds[type] = shared_ptr<collisionSphere>(new collisionSphere(s));
+	if(objectBounds.find(type) == objectBounds.end())
+	{
+		objectBounds[type] = shared_ptr<collisionBounds>(new collisionBounds(s));
+	}
+}
+void PhysicsManager::setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices)
+{
+	collisionMesh* m = new collisionMesh;
+	m->sphere = s;
+	m->vertices = vertices;
+	for(int i=0; i<indices.size(); i += 3)
+	{
+		m->triangles.push_back(triangle(vertices[indices[i]], vertices[indices[i+1]], vertices[indices[i+2]]));
+	}
+	objectBounds[type] = shared_ptr<collisionBounds>(m);
 }

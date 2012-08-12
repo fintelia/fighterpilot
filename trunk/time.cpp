@@ -1,12 +1,14 @@
 
+#include "engine.h"
 
-#include <cmath>
-
-#ifdef _DEBUG
-#include <iostream>
-#endif
+//#include <cmath>
+//
+//#ifdef _DEBUG
+//#include <iostream>
+//#endif
 
 #if defined(_WIN32)
+	#define NOMINMAX
 	#include <windows.h>
 #elif defined(__linux__)
 	#include <time.h>
@@ -14,8 +16,8 @@
 	#error OS not supported by time.cpp
 #endif
 
-#include "debugBreak.h"
-#include "time.h"
+//#include "debugBreak.h"
+//#include "time.h"
 
 
 
@@ -77,14 +79,14 @@ double GameTime::trueGameTime() const
 		}
 		else
 		{
-			double t = 1000.0*(real-sReal)/ticksPerSecond;
-			if(real < eReal)
+			double t = 1000.0*(real-cReal)/ticksPerSecond;
+			if(t <= changeTimeLeft)
 			{
-				return sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond);
+				return cGame + timeSpeed * t + (finalTimeSpeed-timeSpeed) * t*t / changeTimeLeft;
 			}
 			else
 			{
-				return sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond) + eSpeed*(1000.0*(real - eReal)/ticksPerSecond);
+				return cGame + timeSpeed * changeTimeLeft + (finalTimeSpeed-timeSpeed) * changeTimeLeft + finalTimeSpeed*(changeTimeLeft-t);
 			}
 		}
 	}
@@ -100,11 +102,10 @@ double GameTime::trueGameTime() const
 		}
 	}
 }
-GameTime::GameTime(): sReal(0), eReal(0), sGame(0), sSpeed(0), eSpeed(0), changingSpeed(false), timeSpeed(1.0), paused(0), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), numUpdates(0)
+GameTime::GameTime(): changingSpeed(false), changeTimeLeft(0.0), finalTimeSpeed(1.0), timeSpeed(1.0), paused(0), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), cUpdateTime(0), lUpdateTime(0), updateLength(8.33333)
 {
 	ticksPerSecond = getTotalTicksPerSecond();
-	lReal = totalTicks();
-	cReal = lReal;
+	lReal = cReal = totalTicks();
 }
 void GameTime::reset()
 {
@@ -115,12 +116,14 @@ void GameTime::reset()
 	paused = false;
 	changingSpeed = false;
 	updateStage = false;
-	numUpdates = 0;
+	lUpdateTime = 0;
+	cUpdateTime = 0;
 }
 void GameTime::nextUpdate()
 {
 	updateStage = true;
-	numUpdates++;
+	lUpdateTime = cUpdateTime;
+	cUpdateTime += updateLength;
 }
 void GameTime::nextFrame()
 {
@@ -131,39 +134,37 @@ void GameTime::nextFrame()
 	cReal = totalTicks();
 	if(changingSpeed)
 	{
-		if(paused)
+		if(!paused)
 		{
-			sReal += cReal - lReal;
-			eReal += cReal - lReal;
-		}
-		else
-		{
-			double t = 1000.0*(cReal-sReal)/ticksPerSecond;
-			if(cReal < eReal)
+			double t = static_cast<float>(1000.0*(cReal - lReal))/ticksPerSecond;
+			if(t <= changeTimeLeft)
 			{
-				cGame = sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond);
+				cGame += timeSpeed * t + (finalTimeSpeed-timeSpeed) * t*t / changeTimeLeft;
+				timeSpeed += (finalTimeSpeed-timeSpeed) * t / changeTimeLeft;
+				changeTimeLeft -= t;
 			}
 			else
 			{
-				timeSpeed = eSpeed;
+				cGame += timeSpeed * changeTimeLeft + (finalTimeSpeed-timeSpeed) * changeTimeLeft + finalTimeSpeed*(changeTimeLeft-t);
+				timeSpeed = finalTimeSpeed;
+				changeTimeLeft = 0.0;
 				changingSpeed = false;
-				cGame = sGame + t*sSpeed - (t*t/2-t) * (sSpeed-eSpeed)/(1000.0*(eReal-sReal)/ticksPerSecond) + timeSpeed*(1000.0*(cReal - eReal)/ticksPerSecond);
 			}
 		}
 	}
 	else
 	{
-		if(paused)
+		if(!paused)
 		{
-			cGame = lGame;
-		}
-		else
-		{
-			cGame = lGame + timeSpeed*(1000*(cReal - lReal)/ticksPerSecond);
+			cGame += timeSpeed*(1000*(cReal - lReal)/ticksPerSecond);
 		}
 	}
+	if(cGame > cUpdateTime)
+	{
+		cGame = cUpdateTime;
+	}
 }
-void GameTime::changeSpeed(double speed, double changeRate)//change rate in ms^2(gametime) / ms(realtime)
+void GameTime::changeSpeed(double speed, double changeTime)//change rate in ms^2(gametime) / ms(realtime)
 {
 	if(speed <= 0.0)
 	{
@@ -176,7 +177,7 @@ void GameTime::changeSpeed(double speed, double changeRate)//change rate in ms^2
 	//}
 	//if(changeRate == 0.0)
 	//{
-		timeSpeed = speed;
+	//	timeSpeed = speed;
 	//}
 	//else
 	//{
@@ -188,6 +189,16 @@ void GameTime::changeSpeed(double speed, double changeRate)//change rate in ms^2
 	//	eReal = sReal + (long long)abs(d/changeRate);
 	//	changingSpeed = true;
 	//}
+	if(changeTime <= 0)
+	{
+		timeSpeed = speed;
+	}
+	else
+	{
+		changingSpeed = true;
+		changeTimeLeft = changeTime;
+		finalTimeSpeed = speed;
+	}
 }
 void GameTime::pause()
 {
@@ -212,21 +223,21 @@ bool GameTime::isPaused() const
 double GameTime::length() const
 {
 	if(updateStage)
-		return UPDATE_LENGTH;
+		return cUpdateTime-lUpdateTime;
 	else
 		return cGame-lGame;
 }
 double GameTime::lastTime() const
 {
 	if(updateStage)
-		return UPDATE_LENGTH * numUpdates - UPDATE_LENGTH;
+		return lUpdateTime;
 	else
 		return lGame;
 }
 double GameTime::time() const
 {
 	if(updateStage)
-		return UPDATE_LENGTH * numUpdates;
+		return cUpdateTime;
 	else
 		return cGame;
 }
@@ -236,20 +247,16 @@ double GameTime::operator() () const
 }
 bool GameTime::needsUpdate() const
 {
-	return trueGameTime() > UPDATE_LENGTH * numUpdates;
+	return trueGameTime() > cUpdateTime;
 }
 double GameTime::interpolate() const
 {
-	return 1.0 - (((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH < 1.0) ? ((UPDATE_LENGTH * numUpdates - cGame) / UPDATE_LENGTH) : 1.0);
+	double i = 1.0 - (cUpdateTime - cGame) / (cUpdateTime - lUpdateTime);
+	if(i <= 0.0) return 0.0;
+	if(i >= 1.0) return 1.0;
+	return i;
 }
 double GameTime::getSpeed() const
 {
-	if(changingSpeed)
-	{
-		return sSpeed + (eSpeed - sSpeed) * (cReal - sReal) / (eReal - sReal);
-	}
-	else
-	{
-		return timeSpeed;
-	}
+	return timeSpeed;
 }

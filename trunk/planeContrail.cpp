@@ -12,7 +12,7 @@ namespace particle
 	{
 		//velocity =	fuzzyAttribute(0.2, 0.1);
 		//spread =	fuzzyAttribute(0.0);
-		life =		fuzzyAttribute(125.0);
+		//life =		fuzzyAttribute(125.0);
 	}
 	bool planeContrail::createParticle(particle& p, Vec3f currentPosition)
 	{
@@ -22,10 +22,9 @@ namespace particle
 		if(ang > 0.001*world.time.length())	//TODO: trail needs to spawn for a set amound of time after the plane stops rotating
 		{
 			p.startTime = world.time() - extraTime;
-			p.endTime = world.time() - extraTime + life();
+			p.invLife = 1.0 / 125.0;
 		
-			p.vel = random3<float>() * velocity();
-			p.pos = currentPosition + random3<float>()*spread() + p.vel * extraTime/1000.0;
+			p.pos = currentPosition + random3<float>()*spread();
 
 			p.size = 0.25;
 
@@ -43,7 +42,7 @@ namespace particle
 	}
 	void planeContrail::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
+		float t = (world.time() - p.startTime) * p.invLife;
 		if(t<0.01)
 		{
 			p.a = t * 100.0;
