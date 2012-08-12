@@ -9,7 +9,7 @@
 //}
 nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED)
 {
-	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
+	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 }
 
 void nPlane::init()
@@ -18,6 +18,7 @@ void nPlane::init()
 	for(auto i=engines.begin(); i!=engines.end(); i++)
 	{
 		particleManager.addEmitter(new particle::planeEngines, id, *i);
+//		engineLights.push_back(sceneManager.genPointLight());
 	}
 
 //	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
@@ -28,6 +29,8 @@ void nPlane::init()
 	smokeTrail->setActive(false);
 
 	spawn();
+	//position.x += 850;
+	//position.z -= 1000;
 }
 void nPlane::updateSimulation(double time, double ms)
 {
@@ -283,36 +286,36 @@ void nPlane::updateSimulation(double time, double ms)
 			}
 
 			altitude=world.altitude(position);
-			if(altitude < 0.0)
-			{
-				death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
-				if(death == DEATH_HIT_GROUND)
-				{
-					position.y -= altitude;
+		//	if(altitude < 0.0)
+		//	{
+		//		die(world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER);
+				//if(death == DEATH_HIT_GROUND)
+				//{
+				//	position.y -= altitude;
 
-					//particleManager.addEmitter(new particle::blackSmoke(id));
+				//	//particleManager.addEmitter(new particle::blackSmoke(id));
 
-					death = DEATH_EXPLOSION;
-					particleManager.addEmitter(new particle::explosion(),id);
-					particleManager.addEmitter(new particle::groundExplosionFlash(),id);
-					cameraShake = 1.0;
-				}
-				else if(death == DEATH_HIT_WATER)
-				{
-					Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-					particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
-					particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
+				//	death = DEATH_EXPLOSION;
+				//	particleManager.addEmitter(new particle::explosion(),id);
+				//	particleManager.addEmitter(new particle::groundExplosionFlash(),id);
+				//	cameraShake = 1.0;
+				//}
+				//else if(death == DEATH_HIT_WATER)
+				//{
+				//	Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+				//	particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
+				//	particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
 
-					Vec3f vel2D = rotation * Vec3f(0,0,1);
-					vel2D.y=0;
-					vel2D = vel2D.normalize();
+				//	Vec3f vel2D = rotation * Vec3f(0,0,1);
+				//	vel2D.y=0;
+				//	vel2D = vel2D.normalize();
 
-					observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-					observer.currentFrame.center = splashPos + vel2D * 45.0;
-					observer.currentFrame.up = Vec3f(0,1,0);
-				}
-				die();
-			}
+				//	observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+				//	observer.currentFrame.center = splashPos + vel2D * 45.0;
+				//	observer.currentFrame.up = Vec3f(0,1,0);
+				//}
+				//die();
+		//	}
 		}
 
 		targeter = rotation * Vec3f(0,0,1);
@@ -421,6 +424,11 @@ void nPlane::updateFrame(float interpolation) const
 	n=0;
 	for(auto i = rockets.ammoRounds.begin(); i != rockets.ammoRounds.end(); i++, n++)
 		i->meshInstance->update(pos + rot * i->offset, rot, rockets.max - rockets.left <= n && visible);
+
+	//auto& engines = objectInfo.planeStats(type).engines;
+	//for(int i=0; i < engines.size(); i++)
+	//	engineLights[i]->position = pos + rot * engines[i];
+
 
 	if(firstPerson)
 	{
@@ -655,21 +663,19 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 
 }
 
-void nPlane::die()
+void nPlane::die(deathType d)
 {
-	//if(!dead)	explode=new explosion(position);
-	if(!dead)
-	{
-		//particleManager.addEmitter(new particle::blackSmoke(id));
-	}
-	dead =true;
+	if(dead) //if we are already dead
+		return;
+
+	//explode=new explosion(position);
+	//particleManager.addEmitter(new particle::blackSmoke(id));
+
+	dead = true;
 	if(controled)
 	{
 		exitAutoPilot();
-	//	controled=true;
 	}
-
-	
 
 	if(!respawning)
 		respawnTime=world.time()+5000;
@@ -677,7 +683,7 @@ void nPlane::die()
 
 
 
-	if(death == DEATH_NONE)
+	if(d == DEATH_NONE)
 	{
 		if(controlType == CONTROL_TYPE_AI)
 		{
@@ -701,39 +707,66 @@ void nPlane::die()
 		particleManager.addEmitter(new particle::explosionFlash2(),id);
 		//particleManager.addEmitter(new particle::explosionSparks(),id);
 	}
+	else if(d == DEATH_HIT_GROUND)
+	{
+		//position.y -= world.altitude(position);
+		//particleManager.addEmitter(new particle::blackSmoke(id));
+
+		death = DEATH_EXPLOSION;
+		particleManager.addEmitter(new particle::explosion(),id);
+		particleManager.addEmitter(new particle::groundExplosionFlash(),id);
+		cameraShake = 1.0;
+	}
+	else if(d == DEATH_HIT_WATER)
+	{
+		death = DEATH_HIT_WATER;
+		Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+		particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
+		particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
+
+		Vec3f vel2D = rotation * Vec3f(0,0,1);
+		vel2D.y=0;
+		vel2D = vel2D.normalize();
+
+		observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
+		observer.currentFrame.center = splashPos + vel2D * 45.0;
+		observer.currentFrame.up = Vec3f(0,1,0);
+	}
 	//smokeTrail->setVisible(false);
 }
 void nPlane::findTarget()
 {
 	target = 0;
 	//Angle minAng =PI/3;
-	float minDistSquared = 10000 * 10000;
+	bool targetFound=false;
+	float minDistSquared;
 	float distSquared;
 	Angle ang;
 	auto planes = world(PLANE);
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
-		if(!i->second->dead && team != i->second->team && distSquared < minDistSquared)
+		if(!i->second->dead && team != i->second->team && (!targetFound || distSquared < minDistSquared))
 		{
 			ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
 			minDistSquared = distSquared;
 			target = i->second->id;
+			targetFound = true;
 		}
 	}
 	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 	for(auto i = AAA.begin(); i != AAA.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
-		if(!i->second->dead && team != i->second->team && distSquared < minDistSquared)
+		if(!i->second->dead && team != i->second->team && (!targetFound || distSquared < minDistSquared))
 		{
 			ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
 			minDistSquared = distSquared;
 			target = i->second->id;
+			targetFound = true;
 		}
 	}
-
-	targetLocked = (ang < PI/6 && minDistSquared < 2000 * 2000);
+	targetLocked = targetFound && (ang < PI/6 && minDistSquared < 2000 * 2000);
 }
 void nPlane::shootMissile()
 {
@@ -827,7 +860,7 @@ void nPlane::initArmaments()
 	{
 		a.type = hardpoints[i].mType;
 		a.offset = hardpoints[i].offset;
-		a.meshInstance = sceneManager.newMeshInstance(objectTypeString(a.type), position + rotation * a.offset, rotation);
+		a.meshInstance = sceneManager.newMeshInstance(objectInfo[a.type]->mesh, position + rotation * a.offset, rotation);
 		if(hardpoints[i].mType & MISSILE)
 		{
 			rockets.ammoRounds.push_back(a);
@@ -856,7 +889,6 @@ void nPlane::initArmaments()
 	machineGun.coolDown		= machineGun.coolDownLeft	= 26.0;
 	machineGun.firing									= false;
 }
-
 void nPlane::spawn()
 {
 	initArmaments();

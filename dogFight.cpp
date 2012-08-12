@@ -25,11 +25,11 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 	}
 	else
 	{
-		dataManager.bind("health");
-		dataManager.setUniform1f("health",health);
-		dataManager.setUniform1f("angle",1.24f);
+		auto healthShader = shaders.bind("health");
+		healthShader->setUniform1f("health",health);
+		healthShader->setUniform1f("angle",1.24f);
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
-		dataManager.bind("ortho");
+		shaders.bind("ortho");
 	}
 }
 void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
@@ -51,8 +51,8 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 	if(firstPerson)
 	{
-		dataManager.bind("radar");
-		dataManager.setUniform1f("radarAng", radarAng);
+		auto radarShader = shaders.bind("radar");
+		radarShader->setUniform1f("radarAng", radarAng);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
@@ -60,8 +60,8 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		float radius = width/2;
 
 		dataManager.bind("radar plane shader");
-		dataManager.setUniform2f("center",nC.x,nC.y);
-		dataManager.setUniform1f("radius",radius);
+		radarShader->setUniform2f("center",nC.x,nC.y);
+		radarShader->setUniform1f("radius",radius);
 		graphics->setColor(0.19,0.58,0.87);
 
 		Vec3f n;
@@ -89,11 +89,11 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 	}
 	else
 	{
-		dataManager.bind("radar2");
+		auto radarShader = shaders.bind("radar2");
 		dataManager.bind("radarTex",0);
 
-		dataManager.setUniform1f("radarAng", radarAng);
-		dataManager.setUniform1i("backgroundTexture", 0);
+		radarShader->setUniform1f("radarAng", radarAng);
+		radarShader->setUniform1i("backgroundTexture", 0);
 
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
@@ -119,10 +119,10 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		Vec3f nC((x+width/2),(y+height/2),0);
 		float radius = width/2;
 
-		dataManager.bind("radar plane shader");
-		dataManager.setUniform2f("center",nC.x,nC.y);
-		dataManager.setUniform1f("radius",radius);
-		dataManager.setUniform1f("sAspect",sAspect);
+		auto radarPlane = shaders.bind("radar plane shader");
+		radarPlane->setUniform2f("center",nC.x,nC.y);
+		radarPlane->setUniform1f("radius",radius);
+		radarPlane->setUniform1f("sAspect",sAspect);
 		graphics->setColor(0.05,0.69,0.04);
 		Vec3f n;
 		Vec3f cent, u, v;
@@ -178,19 +178,19 @@ void dogFight::targeter(float x, float y, float apothem, Angle tilt)
 	graphics->drawRotatedOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),tilt,"tilt");
 	graphics->drawOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),"targeter");
 }
-void dogFight::drawHexCylinder(Vec3f center, float radius, float height, Color c)
+void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c)
 {
-	dataManager.bind("hex grid shader");
+	auto hexGrid = shaders.bind("hex grid shader");
 	dataManager.bind("hex grid", 0);
 
-	dataManager.setUniform1i("tex",0);
-	dataManager.setUniform1f("minHeight",center.y);
-	dataManager.setUniform1f("maxHeight",center.y+height);
-	dataManager.setUniform1f("radius",radius);
-	dataManager.setUniform4f("color",c.r,c.g,c.b,c.a);
+	hexGrid->setUniform1i("tex",0);
+	hexGrid->setUniform1f("minHeight",center.y);
+	hexGrid->setUniform1f("maxHeight",center.y+height);
+	hexGrid->setUniform1f("radius",radius);
+	hexGrid->setUniform4f("color",c.r,c.g,c.b,c.a);
 
-	graphics->drawModelCustomShader("cylinder", Vec3f(center), Quat4f(),Vec3f(radius,height,radius));
-
+	//graphics->drawModelCustomShader("cylinder", Vec3f(center), ,Vec3f(radius,height,radius));
+	sceneManager.drawMeshCustomShader(view, dataManager.getModel("cylinder"), Mat4f(Quat4f(), center, radius), hexGrid);
 	dataManager.bind("model");
 }
 void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
@@ -238,7 +238,8 @@ void dogFight::checkCollisions()
 
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		float damageMultiplier = dynamic_pointer_cast<nPlane>(i->second)->controlType == nPlane::CONTROL_TYPE_AI ? 1.0 : 0.25;
+		shared_ptr<nPlane> p = dynamic_pointer_cast<nPlane>(i->second); //probably should replace all the 'i->second' with 'p'
+		float damageMultiplier = p->controlType == nPlane::CONTROL_TYPE_AI ? 1.0 : 0.25;
 		if(!i->second->dead)
 		{
 			for(auto l=0;l<(signed int)bulletRef.size();l++)
@@ -280,6 +281,10 @@ void dogFight::checkCollisions()
 					}
 					l->second->awaitingDelete = true;
 				}
+			}
+			if(physics.groundCollsion(i->second))
+			{
+				p->die(world.isLand(i->second->position.x,i->second->position.z) ? nPlane::DEATH_HIT_GROUND : nPlane::DEATH_HIT_WATER);
 			}
 		}
 	}

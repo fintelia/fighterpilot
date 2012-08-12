@@ -2,8 +2,8 @@
 varying vec2 texCoord;
 //varying vec3 normal;
 
-centroid varying vec3 lightDir;
 centroid varying vec4 position;
+centroid varying vec3 lightDir;
 centroid varying vec3 halfVector;
 
 uniform mat4 cameraProjection;
@@ -15,7 +15,6 @@ attribute vec3 Position;
 attribute vec2 TexCoord;
 attribute vec3 Normal;
 attribute vec3 Tangent;
-
 
 void main()
 {

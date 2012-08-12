@@ -43,8 +43,7 @@
     <texture name="contrail"                  file="media/smoke.png" />
     <texture name="splash"                    file="media/splash.png" />
     <texture name="flash"                     file="media/flash.png" />
-    <texture name="spark"                     file="media/spark.png" />
-    
+    <texture name="spark"                     file="media/spark.png" /> 
     
     <!-- terrain -->
   	<texture name="grass"                     file="media/grass2.png"                 tileable="true" />
@@ -64,6 +63,7 @@
     <texture name="bullet"                    file="media/bullet.png" />
     <texture name="sun"                       file="media/sun.png" />
     <texture name="tree"                      file="media/tree2.png" />
+    <textureCube name="skybox"                file="media/skybox.png" />
     
     <!-- miscellaneous -->
     <texture name="white"                     file="media/white.png"                  tileable="true"/>
@@ -110,15 +110,16 @@
   </shaders>
   
   <models>
-    <model name="J37"                   file="media/j37/j37.obj" />
-    <model name="J37_missile1"          file="media/j37/missile.obj" />   
-    
-    <model name="F22"                   file="media/f22.obj" />
-                                        
-    <model name="SAM battery"           file="media/SAM/SAM.obj" />
     <model name="sky dome"              file="media/dome.obj" />
     <model name="cylinder"              file="media/cylinder.obj" />
     <model name="disk"                  file="media/disk.obj" />
+    
+<!--
+    <model name="J37"                   file="media/j37/j37.obj" />
+    <model name="J37_missile1"          file="media/j37/missile.obj" />   
+    <model name="F22"                   file="media/f22.obj" />             
+    <model name="SAM battery"           file="media/SAM/SAM.obj" />
+
     <model name="F16"                   file="media/f16.obj" />
     <model name="F18"                   file="media/f18hornet.obj" />
     <model name="UAV"                   file="media/UAV.obj" />
@@ -128,14 +129,16 @@
     <model name="MIRAGE"                file="media/mirage/mirage.obj" />
     <model name="MIRAGE_missile1"       file="media/mirage/R550 Magic missile.obj" />
     <model name="MIRAGE_missile2"       file="media/mirage/super530 missile.obj" />
-    
+
     <model name="flak cannon"            file="media/SAM/SAM.obj" />
     <model name="F22_bomb1"              file="media/m1(center).obj" />
     <model name="F22_bomb2"              file="media/m2(center).obj" />
     <model name="F22_missile1"           file="media/m3(center).obj" />
     <model name="F22_missile2"           file="media/m4(center).obj" />
     <model name="SAM missile"            file="media/m3(center).obj" />
-  <!--  <model name="flak missile"          file="media/m3(center).obj" />  -->
+    <model name="flak missile"          file="media/m3(center).obj" /> 
+-->
+    
     <model name="sphere" file="media/sphere.obj" />
   </models>
   <fonts>

@@ -55,6 +55,7 @@ bool LevelFile::saveZIP(string filename)
 	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info.mapSize.x);
 	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info.mapSize.y);
 	attributesFile->bindings["heightmap"]["foliageAmount"] = lexical_cast<string>(info.foliageAmount);
+	attributesFile->bindings["heightmap"]["LOD"] = lexical_cast<string>(info.LOD);
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
 
@@ -103,6 +104,7 @@ bool LevelFile::loadZIP(string filename)
 	attributesFile->readValue("heightmap", "sizeX", info.mapSize.x);
 	attributesFile->readValue("heightmap", "sizeZ", info.mapSize.y);
 	attributesFile->readValue("heightmap", "foliageAmount", info.foliageAmount);
+	attributesFile->readValue<unsigned int>("heightmap", "LOD", info.LOD, 1);
 	attributesFile->readValue("level", "nextLevel", info.nextLevel);
 
 

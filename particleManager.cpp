@@ -9,15 +9,14 @@ namespace particle{
 shared_ptr<GraphicsManager::indexBuffer> emitter::quadIBO;
 unsigned int emitter::IBOnumQuads=0;
 
-emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true)
+emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), oldParticlePositions(NULL), particleFlags(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true)
 {
 	if(compacity != 0)
 	{
 		particles = new particle[compacity];
+		oldParticlePositions = new Vec3f[compacity];
+		particleFlags = new unsigned char[compacity];
 		vertices = new vertex[compacity*4];
-
-		memset(particles,0,compacity*sizeof(particle));
-		memset(vertices,0,compacity*sizeof(vertex)*4);
 	}
 	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 
@@ -30,38 +29,51 @@ emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSec
 emitter::~emitter()
 {
 	delete[] particles;
+	delete[] oldParticlePositions;
+	delete[] particleFlags;
 	delete[] vertices;
 }
-void emitter::addParticle(particle& p)
+unsigned int emitter::addParticle(particle& p)
 {
 	for(int i = 0; i < total; i++)
 	{
-		if(particles[i].endTime <= world.time())
+		if((world.time() - particles[i].startTime) * particles[i].invLife > 1.0)
 		{
 			particles[i] = p;
-			return;
+			return i;
 		}
 	}
 
 	if(total == compacity)
 	{
 		unsigned int tmpCompacity = (compacity != 0) ? compacity * 2 : 64;
-		particle* tmpParticles = new particle[tmpCompacity];
-		vertex *tmpVertices = new vertex[tmpCompacity*4];
 
-		memset(tmpParticles,0,tmpCompacity*sizeof(particle));
-		memset(tmpVertices,0,tmpCompacity*sizeof(vertex)*4);
+		particle* tmpParticles			= new particle[tmpCompacity];
+		Vec3f* tmpOldParticlePositions	= new Vec3f[tmpCompacity];
+		unsigned char* tmpParticleFlags	= new unsigned char[tmpCompacity];
+		vertex *tmpVertices				= new vertex[tmpCompacity*4];
 
 		memcpy(tmpParticles,particles,compacity*sizeof(particle));
+		memcpy(tmpOldParticlePositions,oldParticlePositions,compacity*sizeof(Vec3f));
+		memcpy(tmpParticleFlags,particleFlags,compacity*sizeof(unsigned char));
 		memcpy(tmpVertices,vertices,compacity*sizeof(vertex)*4);
-		delete [] particles; particles = NULL;
-		delete[] vertices; vertices = NULL;
+
+		delete[] particles;
+		delete[] oldParticlePositions;
+		delete[] particleFlags;
+		delete[] vertices;
+
 		particles = tmpParticles;
+		oldParticlePositions = tmpOldParticlePositions;
+		particleFlags = tmpParticleFlags;
 		vertices = tmpVertices;
+
 		compacity = tmpCompacity;
 	}
 	particles[total] = p;
-	total++;
+	oldParticlePositions[total] = p.pos;
+	particleFlags[total] = 0;
+	return total++;
 }
 void emitter::update()
 {
@@ -84,13 +96,14 @@ void emitter::update()
 	}
 	for(int i=0; i < total; i++)
 	{
-		if(particles[i].endTime > time)
-			particles[i].fadeIn = false;
+		if((world.time() - particles[i].startTime) * particles[i].invLife < 1.0)
+			particleFlags[i] &= ~FADE_IN;
 	}
 
 	
 	if(active)
 	{
+		unsigned int pNum;
 		particle p;
 		extraTime += ms;
 		while(particlesPerSecond > 0.0 && extraTime > (1000.0 / particlesPerSecond))
@@ -101,8 +114,8 @@ void emitter::update()
 			float t = (ms-extraTime)/ms;
 			if(createParticle(p,position*t + lastPosition*(1.0-t)))
 			{
-				p.fadeIn = true;
-				addParticle(p);
+				pNum = addParticle(p);
+				particleFlags[pNum] |= FADE_IN;
 			}
 		}
 	}
@@ -110,28 +123,19 @@ void emitter::update()
 	liveParticles = 0;
 	for(int i=0; i < total; i++)
 	{
-		if(particles[i].endTime > time)
+		if((world.time() - particles[i].startTime) * particles[i].invLife < 1.0)
 		{
 			liveParticles++;
 		}
 	}
 
-	float n=0;
-	double t = GetTime();
 	for(int i=0; i < total; i++)
 	{
-		if(particles[i].endTime > time)
-		{
-			particles[i].lastPos = particles[i].pos;
-			updateParticle(particles[i]);
-
-			n += 1.0;
-		}
+		oldParticlePositions[i] = particles[i].pos;
 	}
-	t = GetTime() - t;
-	if(n > 0)
+	for(int i=0; i < total; i++)
 	{
-		//Profiler.setOutput("update time x 1000", (1000.0 * t) / n);
+		updateParticle(particles[i]);
 	}
 }
 void emitter::prepareRender(Vec3f up, Vec3f right)
@@ -144,21 +148,21 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
-		if(particles[pNum].endTime > world.time())
+		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 		{
 			for(n = 0; n<4; n++)
 			{
 				vertices[vNum*4 + n].r = particles[pNum].r;
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
 			}
 			sAng = sin(particles[pNum].ang);
 			cAng = cos(particles[pNum].ang);
 			u = -right * sAng + up * cAng;
 			r = right * cAng + up * sAng;
 
-			pos = particles[pNum].pos * interpolate + particles[pNum].lastPos * (1.0 - interpolate);
+			pos = lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate);
 
 			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
 			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
@@ -218,21 +222,21 @@ void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
 
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
-		if(particles[pNum].endTime > world.time())
+		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 		{
 			for(n = 0; n<4; n++)
 			{
 				vertices[vNum*4 + n].r = particles[pNum].r;
 				vertices[vNum*4 + n].g = particles[pNum].g;
 				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = (particles[pNum].fadeIn && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
 			}
 			sAng = sin(particles[pNum].ang);
 			cAng = cos(particles[pNum].ang);
 			u = -right * sAng + up * cAng;
 			r = right * cAng + up * sAng;
 
-			pos = interpolatedPos + rotation * (parentOffset + lerp(particles[pNum].lastPos, particles[pNum].pos, interpolate));
+			pos = interpolatedPos + rotation * (parentOffset + lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate));
 
 			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
 			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
@@ -260,7 +264,7 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 
 	for(pNum = 0, vNum=0; pNum < total; pNum++)
 	{
-		if(particles[pNum].endTime > world.time())
+		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 		{
 			for(n = 0; n<4; n++)
 			{
@@ -271,7 +275,7 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 			}
 
 			start = particles[pNum].pos;
-			end = particles[pNum].pos - particles[pNum].dir*particles[pNum].size;
+			end = particles[pNum].pos - particles[pNum].velocity.normalize()*particles[pNum].size;
 
 			dir = end - start;
 			a1 = dir.dot(up);
@@ -327,8 +331,9 @@ void manager::addEmitter(shared_ptr<emitter> e, Vec3f position, float radius)
 void manager::addEmitter(shared_ptr<emitter> e, int parent, Vec3f offset)
 {
 	emitters.push_back(e);
-	auto model = dataManager.getModel(world[parent]->type);
-	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, model!=nullptr ? model->boundingSphere.radius : 0.0);
+
+	auto mesh = world[parent]->meshInstance;
+	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, mesh ? mesh->getBoundingSphere().radius : 0.0);
 	e->setParent(parent, offset);
 	e->init();
 }
@@ -378,11 +383,11 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 
 	sort(emitters.begin(), emitters.end(), Pred);
 
-	dataManager.bind("particle shader");
-	dataManager.setUniform1i("tex",0);
-	dataManager.setUniform1i("depth",1);
-	dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	dataManager.setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
+	auto particleShader = shaders.bind("particle shader");
+	particleShader->setUniform1i("tex",0);
+	particleShader->setUniform1i("depth",1);
+	particleShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	particleShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 
 	

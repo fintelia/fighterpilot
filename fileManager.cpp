@@ -1158,7 +1158,7 @@ void FileManager::parsePngFile(shared_ptr<textureFile> f, fileContents data)
 }
 void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 {
-	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];unsigned int material;unsigned int combinedVertices[3];
+	struct face{unsigned int v[3];unsigned int t[3];unsigned int n[3];int material;unsigned int combinedVertices[3];
 	face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3, unsigned int n1, unsigned int n2, unsigned int n3) {	v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=n1;n[1]=n2;n[2]=n3;}
 	face(unsigned int v1, unsigned int v2, unsigned int v3, unsigned int t1, unsigned int t2, unsigned int t3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=t1;t[1]=t2;t[2]=t3;n[0]=0;n[1]=0;n[2]=0;}
 	face(unsigned int v1, unsigned int v2, unsigned int v3) {v[0]=v1;v[1]=v2;v[2]=v3;t[0]=0;t[1]=0;t[2]=0;n[0]=0;n[1]=0;n[2]=0;}
@@ -1186,31 +1186,42 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 		vertexIndices(unsigned int p, unsigned int t, unsigned int n): position(p), texCoord(t), normal(n){}
 	};
 ////////////////////variables///////////////////////////
-	unsigned int			numVertices=0,
-							numTexcoords=0,
-							numNormals=0,
-							numFaces=0,
-							numMtls=0;
+	if(data.size == 0 || data.contents == nullptr)
+	{
+		f->completeLoad(false);
+		return;
+	}
 
-	Vec3f*					vertices;
-	Vec3f*					normals;
-	Vec2f*					texCoords;
-	face*					faces;
+
+	//unsigned int			numVertices=0,
+	//						numTexcoords=0,
+	//						numNormals=0,
+	//						numFaces=0,
+	unsigned int			numMtls=0;
+
+	vector<Vec3f>			vertices;
+	vector<Vec3f>			normals;
+	vector<Vec2f>			texCoords;
+	vector<face>			faces;
 
 	modelFile::material*	mtls;
 
-	unsigned int			totalVerts,
-							totalFaces;
-	map<string,unsigned int> mtlNames;
+	map<string,int>			mtlNames;
 
 	string dataString;
+	dataString.reserve(data.size);
 	for(unsigned int i=0; i < data.size; i++)
 	{
 		if(data.contents[i] != '\r')
 			dataString += (char)data.contents[i];
 	}
+
 	std::stringstream dataStream;
 	dataStream.str(dataString);
+	
+	//char* stringContents = new char[dataString.size()+1];
+	//strcpy(stringContents, dataString.c_str());
+	//char* stringContentsStart = stringContents;
 
 	map<vertexIndices, unsigned int> indexMap;
 
@@ -1228,17 +1239,47 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 
 	char* token;
 	char line[256];
+
+	//auto gLine = [&stringContents, &line]()->bool
+	//{
+	//	line = stringContents;
+	//	if(*stringContents == '\0')
+	//		return false;
+	//
+	//	while(*stringContents != '\0')
+	//	{
+	//		if(*stringContents == '\n')
+	//		{
+	//			*stringContents = 0;
+	//			stringContents++;
+	//			return true;
+	//		}
+	//		stringContents++;
+	//	}
+	//	return true;
+	//};
+
 	//////
-	while(dataStream.getline(line,256))
+	//while(dataStream.getline(line,256))
+	//{
+	//	if((token = strtok(line, " \t")) != nullptr)
+	//	{
+	//		if(strcmp(token, "v") == 0) 		numVertices++;
+	//		if(strcmp(token, "vt") == 0) 		numTexcoords++;
+	//		if(strcmp(token, "f") == 0) 		numFaces++;
+	//		if(strcmp(token, "vn") == 0)		numNormals++;
+	//		if(strcmp(token, "mtllib") == 0)	mtlFilename = strtok(NULL, "\r\n");
+	//	}
+	//}
+	//const char* tmpString = strstr(stringContents, "mtllib ");
+	//if(tmpString)
+	//{
+	//	mtlFilename = string(tmpString+7,tmpString+7+strcspn(tmpString+7, "\n"));
+	//}
+	int stringPos = dataString.find("mtllib ");
+	if(stringPos != dataString.npos)
 	{
-		if((token = strtok(line, " \t")) != nullptr)
-		{
-			if(strcmp(token, "v") == 0) 		numVertices++;
-			if(strcmp(token, "vt") == 0) 		numTexcoords++;
-			if(strcmp(token, "f") == 0) 		numFaces++;
-			if(strcmp(token, "vn") == 0)		numNormals++;
-			if(strcmp(token, "mtllib") == 0)	mtlFilename = strtok(NULL, "\r\n");
-		}
+		mtlFilename = dataString.substr(stringPos+7,dataString.find("\n",stringPos+7)-(stringPos+7));
 	}
 
 /////////////////////////new mtl////////////////////////////
@@ -1336,10 +1377,10 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 	dataStream.clear();
 	dataStream.str(dataString);
 
-	vertices	= new Vec3f[numVertices];
-	texCoords	= new Vec2f[numTexcoords];
-	faces		= new face[numFaces];
-	normals		= new Vec3f[numNormals];
+	//vertices	= new Vec3f[numVertices];
+	//texCoords	= new Vec2f[numTexcoords];
+	//faces		= new face[numFaces];
+	//normals		= new Vec3f[numNormals];
 	mtls		= new modelFile::material[mtl_map.size()];
 
 
@@ -1350,15 +1391,15 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 		mtlNames[itt->first] = i++;
 	}
 
-	totalVerts = numVertices;
-	totalFaces = numFaces;
-
-	numVertices=0;
-	numTexcoords=0;
-	numNormals=0;
-	numFaces=0;
+	//numVertices=0;
+	//numTexcoords=0;
+	//numNormals=0;
+	//numFaces=0;
 
 	int cMtl=-1;
+	Vec2f tmpVec2;
+	Vec3f tmpVec3;
+	face tmpFace;
 	while(dataStream.getline(line,256))
 	{
 		token = strtok(line, " \t");
@@ -1367,27 +1408,25 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 
 		if(strcmp(token, "v") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].x);
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].y);
-			sscanf(strtok(NULL, " "), "%f", &vertices[numVertices].z);
-			vertices[numVertices].x = -vertices[numVertices].x;
-			numVertices++;
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.x);
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.y);
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.z);
+			tmpVec3.x = -tmpVec3.x;
+			vertices.push_back(tmpVec3);
 		}
 		else if(strcmp(token, "vt") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].x);
-			sscanf(strtok(NULL, " "), "%f", &texCoords[numTexcoords].y);
-
-			texCoords[numTexcoords].y = 1.0f - texCoords[numTexcoords].y;
-			numTexcoords++;
+			sscanf(strtok(NULL, " "), "%f", &tmpVec2.x);
+			sscanf(strtok(NULL, " "), "%f", &tmpVec2.y);
+			tmpVec2.y = 1.0f - tmpVec2.y;
+			texCoords.push_back(tmpVec2);
 		}
 		else if(strcmp(token, "vn") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].x);
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].y);
-			sscanf(strtok(NULL, " "), "%f", &normals[numNormals].z);
-			normals[numNormals] = normals[numNormals].normalize();
-			numNormals++;
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.x);
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.y);
+			sscanf(strtok(NULL, " "), "%f", &tmpVec3.z);
+			normals.push_back(tmpVec3.normalize());
 		}
 		else if(strcmp(token, "f") == 0)
 		{
@@ -1398,12 +1437,12 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 				token = strtok(NULL, " \t");
 				sscanf(token, "%d/%d/%d", &v, &t, &n);
 
-				faces[numFaces].n[i] = n;
-				faces[numFaces].t[i] = t;
-				faces[numFaces].v[i] = v;
+				tmpFace.n[i] = n;
+				tmpFace.t[i] = t;
+				tmpFace.v[i] = v;
 			}
-			faces[numFaces].material=cMtl;
-			numFaces++;
+			tmpFace.material=cMtl;
+			faces.push_back(tmpFace);
 		}
 		else if(strcmp(token, "usemtl") == 0)
 		{
@@ -1418,16 +1457,15 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 			}
 		}
 	}
-
 ////////////////////////////////////////////////bounding sphere///////////////////////////////////////////////////
 	Vec3f center;
 	float minx=0, maxx=0, miny=0, maxy=0, minz=0, maxz=0, radiusSquared=0;
-	if(numVertices >= 1)
+	if(vertices.size() >= 1)
 	{
 		minx = maxx = vertices[0].x;
 		miny = maxy = vertices[0].y;
 		minz = maxz = vertices[0].z;
-		for(i=1;i<numVertices;i++)
+		for(i=1;i<vertices.size();i++)
 		{
 			if(vertices[i].x<minx) minx=vertices[i].x;
 			if(vertices[i].y<miny) miny=vertices[i].y;
@@ -1438,7 +1476,7 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 		}
 		f->boundingSphere.center = Vec3f((minx+maxx)/2,((miny+maxy)/2),(minz+maxz)/2);
 		radiusSquared = center.distanceSquared(vertices[0]);
-		for(i=1;i<numVertices;i++)
+		for(i=1;i<vertices.size();i++)
 		{
 			if(center.distanceSquared(vertices[i]) > radiusSquared)
 			{
@@ -1452,7 +1490,7 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 	float inv;
 	normalMappedVertex3D tmpVertex;
 	Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
-	for(int i=0; i < totalFaces; i++)
+	for(int i=0; i < faces.size(); i++)
 	{
 		if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0)
 		{
@@ -1504,31 +1542,59 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 	for(int m=0; m<numMtls; m++)
 	{
 		modelFile::material mat;
-		mat.diffuse = mtls[m].diffuse;
-		mat.specular = mtls[m].specular;
-		mat.hardness = mtls[m].hardness;
-		mat.specularMap = mtls[m].specularMap;
-		mat.normalMap = mtls[m].normalMap;
-		mat.tex = mtls[m].tex;
-		//mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+		//if(m >= 0)
+		//{
+			mat.diffuse = mtls[m].diffuse;
+			mat.specular = mtls[m].specular;
+			mat.hardness = mtls[m].hardness;
+			mat.specularMap = mtls[m].specularMap;
+			mat.normalMap = mtls[m].normalMap;
+			mat.tex = mtls[m].tex;
+		//}
+		//else
+		//{
+		//	mat.diffuse = white;
+		//	mat.specular = white;
+		//	mat.hardness = 40.0;
+		//}
 
-		for(int i=0; i < totalFaces; i++)
+		int n=0;
+		for(int i=0; i < faces.size(); i++)
 		{
 			if(faces[i].material == m)
 			{
+				n++;
 				mat.indices.push_back(faces[i].combinedVertices[0]);
 				mat.indices.push_back(faces[i].combinedVertices[1]);
 				mat.indices.push_back(faces[i].combinedVertices[2]);
 			}
 		}
-		f->materials.push_back(mat);
+		if(n > 0)
+		{
+			f->materials.push_back(mat);
+		}
+	}
+
+	int n=0;
+	modelFile::material unnamedMat;
+	unnamedMat.diffuse = white;
+	unnamedMat.specular = white;
+	unnamedMat.hardness = 40.0;
+	for(int i=0; i < faces.size(); i++)
+	{
+		if(faces[i].material == -1)
+		{
+			n++;
+			unnamedMat.indices.push_back(faces[i].combinedVertices[0]);
+			unnamedMat.indices.push_back(faces[i].combinedVertices[1]);
+			unnamedMat.indices.push_back(faces[i].combinedVertices[2]);
+		}
+	}
+	if(n > 0)
+	{
+		f->materials.push_back(unnamedMat);
 	}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	delete[] vertices;
-	delete[] texCoords;
-	delete[] faces;
-	delete[] normals;
-	delete[] mtls;
 	f->completeLoad(true);
 }
 FileManager::fileContents FileManager::loadFileContents(string filename)
@@ -1554,7 +1620,7 @@ void FileManager::workerThread()
 {
 	bool empty;
 	bool writeEmpty;
-	while(!terminateFlag)
+	while(true)
 	{
 		fileQueueMutex.lock();
 		empty = fileQueue.empty();
@@ -1596,6 +1662,8 @@ void FileManager::workerThread()
 		else
 		{
 			fileQueueMutex.unlock();
+			if(terminateFlag)
+				break;
 			threadSleep(15);
 		}
 	}
@@ -1953,20 +2021,14 @@ FileManager::fileContents FileManager::serializePngFile(shared_ptr<textureFile> 
 }
 void FileManager::shutdown()
 {
-	queue<shared_ptr<file>> tmpQueue;
 	fileQueueMutex.lock();
 	while(!fileQueue.empty())
-	{
-		if(fileQueue.front()->writeFile)
-			tmpQueue.push(fileQueue.front());
 		fileQueue.pop();
-	}
-	fileQueue = tmpQueue;
 	fileQueueMutex.unlock();
 	terminateFlag = true;
 #if defined(WINDOWS)
 	WaitForSingleObject(pWorkerThread, INFINITE);
 #elif defined(LINUX)
-	//TODO: wait for workerThread to terminate
+	pthread_join(pWorkerThread, NULL);
 #endif
 }

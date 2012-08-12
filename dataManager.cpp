@@ -126,15 +126,15 @@ DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::
 	a->data = NULL;
 	return a;
 }
-DataManager::shaderAsset* DataManager::registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect)
-{
-	shaderAsset* a = new shaderAsset;
-	a->shader = graphics->genShader();
-	a->shader->init(vert->contents.c_str(), frag->contents.c_str());
-	a->type = asset::SHADER;
-	a->use_sAspect = use_sAspect;
-	return a;
-}
+//DataManager::shaderAsset* DataManager::registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect)
+//{
+//	shaderAsset* a = new shaderAsset;
+//	a->shader = graphics->genShader();
+//	a->shader->init(vert->contents.c_str(), frag->contents.c_str());
+//	a->type = asset::SHADER;
+//	a->use_sAspect = use_sAspect;
+//	return a;
+//}
 void DataManager::addTexture(string name, shared_ptr<GraphicsManager::texture> tex)
 {
 	if(tex)
@@ -150,105 +150,110 @@ void DataManager::addTexture(string name, shared_ptr<GraphicsManager::texture> t
 		assets[name] = shared_ptr<asset>(a);
 	}
 }
-void DataManager::addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
-{
-	if(shader)
-	{
-		shaderAsset* a = new shaderAsset;
-		a->shader = shader;
-		a->type = asset::SHADER;
-		a->use_sAspect = use_sAspect;
-
-		assets[name] = shared_ptr<asset>(a);
-	}
-}
+//void DataManager::addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
+//{
+//	if(shader)
+//	{
+//		shaderAsset* a = new shaderAsset;
+//		a->shader = shader;
+//		a->type = asset::SHADER;
+//		a->use_sAspect = use_sAspect;
+//
+//		assets[name] = shared_ptr<asset>(a);
+//	}
+//}
 void DataManager::addModel(string name, string OBJfile)
 {
-	auto modelPtr = registerOBJ(OBJfile);
-	if(modelPtr)
-	{
-		assets[name] = shared_ptr<asset>(modelPtr);
-		objectType t = objectTypeFromString(name);
-		if(t != 0)
-		{
-			physics.setCollsionBounds(t, modelPtr->boundingSphere);
-		}
-	}
+	modelAsset* modelPtr = new modelAsset;
+	modelPtr->type = asset::MODEL;
+	modelPtr->mesh = sceneManager.createMesh(fileManager.loadObjFile(OBJfile));
+	assets[name] = shared_ptr<asset>(modelPtr);
+
+	//auto modelPtr = registerOBJ(OBJfile);
+	//if(modelPtr)
+	//{
+	//	assets[name] = shared_ptr<asset>(modelPtr);
+	//	//objectType t = objectTypeFromString(name);
+	//	//if(t != 0)
+	//	//{
+	//	//	physics.setCollsionBounds(t, modelPtr->boundingSphere);
+	//	//}
+	//}
 }
 void DataManager::addFont(string name, shared_ptr<FileManager::textFile> f)
 {
 	auto fontPtr = registerFont(f);
 	if(fontPtr) assets[name] = shared_ptr<asset>(fontPtr);
 }
-DataManager::modelAsset* DataManager::registerOBJ(string filename)
-{
-	modelAsset* a = new modelAsset;
-	auto modelFile = fileManager.loadObjFile(filename);
-
-	a->type = asset::MODEL;
-	a->boundingSphere = modelFile->boundingSphere;
-	a->VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
-	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TANGENT,		6*sizeof(float));
-	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		9*sizeof(float));
-	a->VBO->setTotalVertexSize(sizeof(normalMappedVertex3D));
-	a->VBO->setVertexData(sizeof(normalMappedVertex3D)*modelFile->vertices.size(), !modelFile->vertices.empty() ? &modelFile->vertices[0] : NULL);
-
-	modelAsset::material mat;
-	for(auto i = modelFile->materials.begin(); i != modelFile->materials.end(); i++)
-	{
-		mat.diffuse = i->diffuse;
-		mat.specular = i->specular;
-		mat.hardness = i->hardness;
-
-		auto texPtr = registerTexture(i->tex, true);
-		if(texPtr)
-		{
-			assets[i->tex->filename] = shared_ptr<asset>(texPtr);
-			mat.tex = i->tex->filename;
-		}
-
-		auto normalPtr = registerTexture(i->normalMap, true);
-		if(normalPtr)
-		{
-			assets[i->normalMap->filename] = shared_ptr<asset>(normalPtr);
-			mat.normalMap = i->normalMap->filename;
-		}
-
-		auto specularPtr = registerTexture(i->specularMap, true);
-		if(specularPtr)
-		{
-			assets[i->specularMap->filename] = shared_ptr<asset>(specularPtr);
-			mat.specularMap = i->specularMap->filename;
-		}
-
-		mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-		mat.indexBuffer->setData(!i->indices.empty() ? &i->indices[0] : nullptr, i->indices.size());
-		a->materials.push_back(mat);
-	}
-	
-	return a;
-}
-void DataManager::writeErrorLog(string filename)
-{
-	shared_ptr<FileManager::textFile> file(new FileManager::textFile(filename));
-
-	string error;
-	for(auto i=assets.begin(); i!=assets.end(); i++)
-	{
-		if(i->second->type == asset::SHADER)
-		{
-			error = static_pointer_cast<shaderAsset>(i->second)->shader->getErrorStrings();
-			if(error != "")
-			{
-				file->contents += "[" + i->first + "]\n";
-				file->contents += error + "\n";
-			}
-		}
-	}
-	fileManager.writeTextFile(file, true);
-}
+//DataManager::modelAsset* DataManager::registerOBJ(string filename)
+//{
+//	modelAsset* a = new modelAsset;
+//	auto modelFile = fileManager.loadObjFile(filename);
+//
+//	a->type = asset::MODEL;
+//	a->boundingSphere = modelFile->boundingSphere;
+//	a->VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+//	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+//	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
+//	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TANGENT,		6*sizeof(float));
+//	a->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		9*sizeof(float));
+//	a->VBO->setTotalVertexSize(sizeof(normalMappedVertex3D));
+//	a->VBO->setVertexData(sizeof(normalMappedVertex3D)*modelFile->vertices.size(), !modelFile->vertices.empty() ? &modelFile->vertices[0] : NULL);
+//
+//	modelAsset::material mat;
+//	for(auto i = modelFile->materials.begin(); i != modelFile->materials.end(); i++)
+//	{
+//		mat.diffuse = i->diffuse;
+//		mat.specular = i->specular;
+//		mat.hardness = i->hardness;
+//
+//		auto texPtr = registerTexture(i->tex, true);
+//		if(texPtr)
+//		{
+//			assets[i->tex->filename] = shared_ptr<asset>(texPtr);
+//			mat.tex = i->tex->filename;
+//		}
+//
+//		auto normalPtr = registerTexture(i->normalMap, true);
+//		if(normalPtr)
+//		{
+//			assets[i->normalMap->filename] = shared_ptr<asset>(normalPtr);
+//			mat.normalMap = i->normalMap->filename;
+//		}
+//
+//		auto specularPtr = registerTexture(i->specularMap, true);
+//		if(specularPtr)
+//		{
+//			assets[i->specularMap->filename] = shared_ptr<asset>(specularPtr);
+//			mat.specularMap = i->specularMap->filename;
+//		}
+//
+//		mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+//		mat.indexBuffer->setData(!i->indices.empty() ? &i->indices[0] : nullptr, i->indices.size());
+//		a->materials.push_back(mat);
+//	}
+//	
+//	return a;
+//}
+//void DataManager::writeErrorLog(string filename)
+//{
+//	shared_ptr<FileManager::textFile> file(new FileManager::textFile(filename));
+//
+//	string error;
+//	for(auto i=assets.begin(); i!=assets.end(); i++)
+//	{
+//		if(i->second->type == asset::SHADER)
+//		{
+//			error = static_pointer_cast<shaderAsset>(i->second)->shader->getErrorStrings();
+//			if(error != "")
+//			{
+//				file->contents += "[" + i->first + "]\n";
+//				file->contents += error + "\n";
+//			}
+//		}
+//	}
+//	fileManager.writeTextFile(file, true);
+//}
 void DataManager::bind(string name, int textureUnit)
 {
 	if(assets.find(name)==assets.end())
@@ -257,14 +262,18 @@ void DataManager::bind(string name, int textureUnit)
 	{
 		static_pointer_cast<textureAsset>(assets[name])->texture->bind(textureUnit);
 	}
-	else if(assets[name]->type==asset::SHADER)
+	else
 	{
-		if(boundShader == name)
-			return;
-
-		static_pointer_cast<shaderAsset>(assets[name])->shader->bind();
-		boundShader = name;
+		debugBreak();
 	}
+	//else if(assets[name]->type==asset::SHADER)
+	//{
+	//	if(boundShader == name)
+	//		return;
+
+	//	static_pointer_cast<shaderAsset>(assets[name])->shader->bind();
+	//	boundShader = name;
+	//}
 }
 shared_ptr<const DataManager::fontAsset> DataManager::getFont(string name)
 {
@@ -274,92 +283,156 @@ shared_ptr<const DataManager::fontAsset> DataManager::getFont(string name)
 
 	return static_pointer_cast<const fontAsset>(i->second);
 }
-shared_ptr<const DataManager::modelAsset> DataManager::getModel(string name)
+//shared_ptr<const DataManager::modelAsset> DataManager::getModel(string name)
+//{
+//	auto i = assets.find(name);
+//	if(i == assets.end() || i->second->type != asset::MODEL)
+//		return nullptr;
+//
+//	return static_pointer_cast<const modelAsset>(i->second);
+//}
+shared_ptr<SceneManager::mesh> DataManager::getModel(string name)
 {
 	auto i = assets.find(name);
 	if(i == assets.end() || i->second->type != asset::MODEL)
 		return nullptr;
 
-	return static_pointer_cast<const modelAsset>(i->second);
+	return static_pointer_cast<modelAsset>(i->second)->mesh;
+}
+shared_ptr<GraphicsManager::texture> DataManager::getTexture(string name)
+{
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::TEXTURE)
+		return nullptr;
+
+	return static_pointer_cast<textureAsset>(i->second)->texture;
 }
 bool DataManager::assetLoaded(string name)
 {
 	return assets.find(name) != assets.end();
 }
 
-void DataManager::setUniform1f(string name, float v0)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1f(name, v0);
-	}
-}
-void DataManager::setUniform2f(string name, float v0, float v1)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2f(name, v0, v1);
-	}
-}
-void DataManager::setUniform3f(string name, float v0, float v1, float v2)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3f(name, v0, v1, v2);
-	}
-}
-void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4f(name, v0, v1, v2, v3);
-	}
-}
-void DataManager::setUniform1i(string name, int v0)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1i(name, v0);
-	}
-}
-void DataManager::setUniform2i(string name, int v0, int v1)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2i(name, v0, v1);
-	}
-}
-void DataManager::setUniform3i(string name, int v0, int v1, int v2)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3i(name, v0, v1, v2);
-	}
-}
-void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4i(name, v0, v1, v2, v3);
-	}
-}
-void DataManager::setUniformMatrix(string name, const Mat3f& m)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
-	}
-}
-void DataManager::setUniformMatrix(string name, const Mat4f& m)
-{
-	if(boundShader != "")
-	{
-		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
-	}
-}
+//void DataManager::setUniform1f(string name, float v0)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1f(name, v0);
+//	}
+//}
+//void DataManager::setUniform2f(string name, float v0, float v1)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2f(name, v0, v1);
+//	}
+//}
+//void DataManager::setUniform3f(string name, float v0, float v1, float v2)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3f(name, v0, v1, v2);
+//	}
+//}
+//void DataManager::setUniform4f(string name, float v0, float v1, float v2, float v3)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4f(name, v0, v1, v2, v3);
+//	}
+//}
+//void DataManager::setUniform1i(string name, int v0)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform1i(name, v0);
+//	}
+//}
+//void DataManager::setUniform2i(string name, int v0, int v1)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform2i(name, v0, v1);
+//	}
+//}
+//void DataManager::setUniform3i(string name, int v0, int v1, int v2)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform3i(name, v0, v1, v2);
+//	}
+//}
+//void DataManager::setUniform4i(string name, int v0, int v1, int v2, int v3)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniform4i(name, v0, v1, v2, v3);
+//	}
+//}
+//void DataManager::setUniformMatrix(string name, const Mat3f& m)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+//	}
+//}
+//void DataManager::setUniformMatrix(string name, const Mat4f& m)
+//{
+//	if(boundShader != "")
+//	{
+//		static_pointer_cast<shaderAsset>(assets[boundShader])->shader->setUniformMatrix(name, m);
+//	}
+//}
 
 void DataManager::shutdown()
 {
 	boundShader = "";
 	assets.clear();
+}
+
+shared_ptr<GraphicsManager::shader> ShaderManager::bind(string name)
+{
+	auto s = shaderAssets.find(name);
+	if(s != shaderAssets.end())
+	{
+		s->second->shader->bind();
+		return s->second->shader;
+	}
+	return nullptr;
+}
+shared_ptr<GraphicsManager::shader> ShaderManager::operator() (string name)
+{
+	auto s = shaderAssets.find(name);
+	if(s != shaderAssets.end())
+		return s->second->shader;
+	return nullptr;
+}
+void ShaderManager::add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
+{
+	if(shader)
+	{
+		shared_ptr<shaderAsset> a(new shaderAsset);
+		a->shader = shader;
+		a->use_sAspect = use_sAspect;
+		shaderAssets[name] = a;
+	}
+}
+void ShaderManager::writeErrorLog(string filename)
+{
+	shared_ptr<FileManager::textFile> file(new FileManager::textFile(filename));
+
+	string error;
+	for(auto i=shaderAssets.begin(); i!=shaderAssets.end(); i++)
+	{
+		error = i->second->shader->getErrorStrings();
+		if(error != "")
+		{
+			file->contents += "[" + i->first + "]\n";
+			file->contents += error + "\n";
+		}
+	}
+	fileManager.writeTextFile(file, true);
+}
+void ShaderManager::shutdown()
+{
+	shaderAssets.clear();
 }

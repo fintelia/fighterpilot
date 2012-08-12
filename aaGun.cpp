@@ -39,7 +39,7 @@ void antiAircraftArtilleryBase::spawn()
 }
 antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
 {
-	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
+	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 	spawn();
 }
 

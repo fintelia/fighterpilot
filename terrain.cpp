@@ -195,9 +195,9 @@ TerrainPage::TerrainPage(unsigned short* Heights, unsigned int patchResolution, 
 			if(n.magnitudeSquared() < 0.001)
 				n = Vec3f(0.0,1.0,0.0);
 	
-			groundValues[(x + z * width)*4 + 0] = (unsigned short)(32767.0+n.x*32768.0);
-			groundValues[(x + z * width)*4 + 1] = (unsigned short)(n.y*65536.0);
-			groundValues[(x + z * width)*4 + 2] = (unsigned short)(32767.0+n.z*32768.0);
+			groundValues[(x + z * width)*4 + 0] = (unsigned short)(32767.5+n.x*32767.5);
+			groundValues[(x + z * width)*4 + 1] = (unsigned short)(n.y*65535.0);
+			groundValues[(x + z * width)*4 + 2] = (unsigned short)(32767.5+n.z*32767.5);
 			groundValues[(x + z * width)*4 + 3] = heights[x+z*width];
 		}
 	}
@@ -321,7 +321,7 @@ Vec3f TerrainPage::rasterNormal(Vec2u loc) const
 	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 	float Cy = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
 
-	return Vec3f(Cy - Ay, 2.0 * (maxXYZ.x-minXYZ.x) / width, Dy - By).normalize();
+	return Vec3f((Cy - Ay) * width / (maxXYZ.x-minXYZ.x), 2.0 /* /(maxXYZ.y-minXYZ.y)*/, (Dy - By) * height / (maxXYZ.z-minXYZ.z)).normalize();
 }
 float TerrainPage::rasterHeight(Vec2u loc) const
 {
@@ -720,6 +720,8 @@ void Terrain::generateFoliage(int count)
 
 		if(position.y > 40.0)
 		{
+			trees.push_back(position);
+
 			n = random<float>(1.0) < 0.5 ? 0 : 8;
 
 			dir = random2<float>();
@@ -847,6 +849,9 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	generateFoliage(foliageAmount);
 
 	graphics->checkErrors();
+
+//	skyTexture = static_pointer_cast<GraphicsManager::textureCube>(dataManager.getTexture("skybox"));
+
 }
 void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 {
@@ -863,13 +868,14 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	graphics->setDepthMask(false);
 	graphics->setDepthTest(false);
-	dataManager.bind("sky shader");
+	auto sky = shaders.bind("sky shader");
 
-	dataManager.setUniform1i("tex", 0);
-	dataManager.setUniform1i("noise", 1);
+	sky->setUniform1i("tex", 0);
+	sky->setUniform1i("noise", 1);
 	skyTexture->bind();
 	dataManager.bind("noise",1);
-	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
+	sceneManager.drawMeshCustomShader(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
+	//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,radius,radius));
 
 
 	// based on GPU GEMS 2: Chapter 16 Accurate Atmospheric Scattering
@@ -912,8 +918,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	{
 	//	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
 	}
-
-	dataManager.bind("ortho");
+	shaders.bind("ortho");
 	Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
 	if(sunPos.z > 0)
 	{
@@ -923,30 +928,31 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 //	if(waterPlane)
 	{
-		dataManager.bind("ocean");
+		auto ocean = shaders.bind("ocean");
 
 		dataManager.bind("ocean normals", 1);
 
-		dataManager.setUniform1i("sky",	0);
-		dataManager.setUniform1i("oceanNormals",	1);
-		dataManager.setUniform1f("time",	world.time());
-		dataManager.setUniform1f("seaLevel",0);
-		dataManager.setUniform2f("center",	center.x,center.z);
-		dataManager.setUniform3f("eyePos", eye.x, eye.y, eye.z);
-		dataManager.setUniform1f("scale", radius);
+		ocean->setUniform1i("sky",	0);
+		ocean->setUniform1i("oceanNormals",	1);
+		ocean->setUniform1f("time",	world.time());
+		ocean->setUniform1f("seaLevel",0);
+		ocean->setUniform2f("center",	center.x,center.z);
+		ocean->setUniform3f("eyePos", eye.x, eye.y, eye.z);
+		ocean->setUniform1f("scale", radius);
 
-		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		dataManager.setUniformMatrix("modelTransform", Mat4f());
+		ocean->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		ocean->setUniformMatrix("modelTransform", Mat4f());
 
-		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
-		graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
+		ocean->setUniform3f("lightPosition", graphics->getLightPosition());
+		sceneManager.drawMeshCustomShader(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)), ocean);
+		//graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 	}
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
 	if(shaderType == TERRAIN_ISLAND)
 	{
-		dataManager.bind("island terrain");
+		auto islandShader = shaders.bind("island terrain");
 		dataManager.bind("sand",2);
 		dataManager.bind("grass",3);
 		dataManager.bind("rock",4);
@@ -954,73 +960,82 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
 		dataManager.bind("noise",7);
 
-		dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-		dataManager.setUniformMatrix("modelTransform",		Mat4f());
-		dataManager.setUniform1f("time",					world.time());
-		dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
-		dataManager.setUniform3f("eyePos",					view->camera().eye);
-		dataManager.setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-		dataManager.setUniform1f("minHeight",				terrainPosition.y);
-		dataManager.setUniform1f("heightRange",				terrainScale.y);
+		islandShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+		islandShader->setUniformMatrix("modelTransform",	Mat4f());
+		islandShader->setUniform1f("time",					world.time());
+		islandShader->setUniform3f("lightPosition",			graphics->getLightPosition());
+		islandShader->setUniform3f("eyePos",				view->camera().eye);
+		islandShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+		islandShader->setUniform1f("minHeight",				terrainPosition.y);
+		islandShader->setUniform1f("heightRange",			terrainScale.y);
 
-		dataManager.setUniform1i("sky",			0);
-		dataManager.setUniform1i("sand",		2);
-		dataManager.setUniform1i("grass",		3);
-		dataManager.setUniform1i("rock",		4);
-		dataManager.setUniform1i("LCnoise",		5);
-		dataManager.setUniform1i("groundTex",	1);
-		dataManager.setUniform1i("grass_normals", 6);
-		dataManager.setUniform1i("noiseTex",	7);			// make sure uniform exists
+		islandShader->setUniform1i("sky",			0);
+		islandShader->setUniform1i("sand",		2);
+		islandShader->setUniform1i("grass",		3);
+		islandShader->setUniform1i("rock",		4);
+		islandShader->setUniform1i("LCnoise",		5);
+		islandShader->setUniform1i("groundTex",	1);
+		islandShader->setUniform1i("grass_normals", 6);
+		islandShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
+
+		sceneManager.bindLights(islandShader);
 	}
 	else if(shaderType == TERRAIN_SNOW)
 	{
-		dataManager.bind("snow terrain");
+		auto snowShader = shaders.bind("snow terrain");
 		dataManager.bind("snow",2);
 		dataManager.bind("LCnoise",3);
 		dataManager.bind("snow normals",4);
 
-		dataManager.setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
-		dataManager.setUniform1f("minHeight",	terrainPosition.y);
-		dataManager.setUniform1f("XZscale",		terrainScale.x);
-		dataManager.setUniform1f("time",		world.time());
+		snowShader->setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
+		snowShader->setUniform1f("minHeight",	terrainPosition.y);
+		snowShader->setUniform1f("XZscale",		terrainScale.x);
+		snowShader->setUniform1f("time",		world.time());
 
-		dataManager.setUniform3f("lightPosition", graphics->getLightPosition());
+		//snowShader->setUniform3f("lightPosition", graphics->getLightPosition());
 
-		dataManager.setUniform1i("snow",			2);
-		dataManager.setUniform1i("LCnoise",			3);
-		dataManager.setUniform1i("groundTex",		1);
-		dataManager.setUniform1i("snow_normals",	4);
+		snowShader->setUniform1i("snow",			2);
+		snowShader->setUniform1i("LCnoise",			3);
+		snowShader->setUniform1i("groundTex",		1);
+		snowShader->setUniform1i("snow_normals",	4);
+
+		sceneManager.bindLights(snowShader);
 	}
 	else if(shaderType == TERRAIN_DESERT)
 	{
-		dataManager.bind("desert terrain");
+		auto desertShader = shaders.bind("desert terrain");
 		dataManager.bind("desertSand",2);
-		dataManager.bind("LCnoise",3);
+		dataManager.bind("LCnoise",4);
+		dataManager.bind("sand", 3);
 
-		dataManager.bind("noise",4);
+		dataManager.bind("noise",5);
 
-		dataManager.setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-		dataManager.setUniformMatrix("modelTransform",		Mat4f());
-		dataManager.setUniform1f("time",					world.time());
-		dataManager.setUniform3f("lightPosition",			graphics->getLightPosition());
-		dataManager.setUniform3f("eyePos",					view->camera().eye);
-		dataManager.setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+		desertShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+		desertShader->setUniformMatrix("modelTransform",	Mat4f());
+		desertShader->setUniform1f("time",					world.time());
+		desertShader->setUniform3f("lightPosition",			graphics->getLightPosition());
+		desertShader->setUniform3f("eyePos",				view->camera().eye);
+		desertShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
 
-		dataManager.setUniform1i("sky",			0);
-		dataManager.setUniform1i("sand",		2);
-		dataManager.setUniform1i("LCnoise",		3);
-		dataManager.setUniform1i("groundTex",	1);
-		dataManager.setUniform1i("noiseTex",	4);
+		desertShader->setUniform1i("sky",		0);
+		desertShader->setUniform1i("groundTex",	1);
+		desertShader->setUniform1i("sand",		2);
+		desertShader->setUniform1i("sand2",		3);
+		desertShader->setUniform1i("LCnoise",	4);
+		desertShader->setUniform1i("noiseTex",	5);
+
+		sceneManager.bindLights(desertShader);
 	}
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view);
 	}
-	dataManager.bind("model");
+	shaders.bind("model");
 	if(waterPlane)
 	{
 		graphics->setColorMask(false);
-		graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
+		sceneManager.drawMesh(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)));
+		//graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
 		graphics->setColorMask(true);
 	}
 
@@ -1045,25 +1060,23 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		//graphics->setAlphaToCoverage(false);
 	
-		dataManager.bind("trees alpha test shader");
-		dataManager.setUniform1i("tex", 0);
-		dataManager.setUniform1i("sky", 1);
-		dataManager.setUniform3f("eyePos", eye);
-		dataManager.setUniform3f("right", right);
-		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		auto alphaTreesShader = shaders.bind("trees alpha test shader");
+		alphaTreesShader->setUniform1i("tex", 0);
+		alphaTreesShader->setUniform1i("sky", 1);
+		alphaTreesShader->setUniform3f("eyePos", eye);
+		alphaTreesShader->setUniform3f("right", right);
+		alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-
+		
 		graphics->setDepthMask(false);
-		dataManager.bind("trees shader");
-		dataManager.setUniform1i("tex", 0);
-		dataManager.setUniform1i("sky", 1);
-		dataManager.setUniform3f("eyePos", eye);
-		dataManager.setUniform3f("right", right);
-		dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		auto treesShader = shaders.bind("trees shader");
+		treesShader->setUniform1i("tex", 0);
+		treesShader->setUniform1i("sky", 1);
+		treesShader->setUniform3f("eyePos", eye);
+		treesShader->setUniform3f("right", right);
+		treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		graphics->setDepthMask(true);
-
-
 
 	//graphics->setDepthMask(false);
 	//dataManager.bind("cirrus cloud shader");

@@ -1,7 +1,7 @@
 
 
 varying vec3 position;
-varying vec3 lightDir, halfVector;
+varying vec3 sunDir;
 
 uniform float time;
 uniform float heightScale;
@@ -19,7 +19,7 @@ void main()
 	normal.z = normal.z * 2.0 - 1.0;
 	normal.y /= heightScale;
 	normal = normalize(normal);
-	float NdotL = dot(normal,normalize(lightDir));
+	float NdotL = dot(normal,normalize(sunDir));
 
 	gl_FragColor = vec4(texture2D(snow,position.xz*0.00062).rgb*(0.7+0.3*NdotL), 1.0);
 }

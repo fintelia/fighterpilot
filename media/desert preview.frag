@@ -1,6 +1,6 @@
 
 varying vec3 position;
-varying vec3 lightDir, halfVector;
+varying vec3 sunDir;
 
 uniform float heightScale;
 
@@ -18,7 +18,7 @@ void main()
 	normal.y /= heightScale;
 	normal = normalize(normal);
 
-	float NdotL = dot(normal, normalize(lightDir));
+	float NdotL = dot(normal, normalize(sunDir));
 
 	float noiseVal = texture2D(LCnoise, position.xz*0.0005).x + texture2D(LCnoise, position.xz*0.002).x + texture2D(LCnoise, position.xz*0.006).x;
 	gl_FragColor = vec4(texture2D(sand,position.xz*0.000125).rgb * max(NdotL,0.5) * noiseVal, 1.0);

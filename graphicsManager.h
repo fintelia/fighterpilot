@@ -214,30 +214,47 @@ public:
 	};
 	class shader
 	{
+	protected:
+		friend class GraphicsManager;
+		static shader* boundShader;
 	public:
 		virtual bool init(const char* vert, const char* frag, const char* geometry)=0;
 		bool init(const char* vert, const char* frag){return init(vert, frag, nullptr);}
 
 		virtual void bind()=0;
-		virtual void unbind()=0;
 
 		virtual void setUniform1f(string name, float v0)=0;
 		virtual void setUniform2f(string name, float v0, float v1)=0;
 		virtual void setUniform3f(string name, float v0, float v1, float v2)=0;
 		virtual void setUniform4f(string name, float v0, float v1, float v2, float v3)=0;
+		virtual void setUniform1fv(string name, unsigned int n, float* v)=0;
+		virtual void setUniform2fv(string name, unsigned int n, float* v)=0;
+		virtual void setUniform3fv(string name, unsigned int n, float* v)=0;
+		virtual void setUniform4fv(string name, unsigned int n, float* v)=0;
 		void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
 		void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
-		void setUniform3f(string name, Color c){setUniform3f(name,c.r,c.r,c.b);}
-		void setUniform4f(string name, Color c, float a = 1.0){setUniform4f(name,c.r,c.r,c.b,a);}
+		void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.r,c.b);}
+		void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.r,c.b,c.a);}
+		void setUniform2fv(string name, unsigned int n, Vec2f* v){setUniform2fv(name,n,&v->x);}
+		void setUniform3fv(string name, unsigned int n, Vec3f* v){setUniform3fv(name,n,&v->x);}
+		void setUniform3fv(string name, unsigned int n, Color3* c){setUniform3fv(name,n,&c->r);}
+		void setUniform4fv(string name, unsigned int n, Color4* c){setUniform4fv(name,n,&c->r);}
+
 		virtual void setUniform1i(string name, int v0)=0;
 		virtual void setUniform2i(string name, int v0, int v1)=0;
 		virtual void setUniform3i(string name, int v0, int v1, int v2)=0;
 		virtual void setUniform4i(string name, int v0, int v1, int v2, int v3)=0;
+		virtual void setUniform1iv(string name, unsigned int n, int* v)=0;
+		virtual void setUniform2iv(string name, unsigned int n, int* v)=0;
+		virtual void setUniform3iv(string name, unsigned int n, int* v)=0;
+		virtual void setUniform4iv(string name, unsigned int n, int* v)=0;
 
 		virtual void setUniformMatrix(string name, const Mat3f& m)=0;
 		virtual void setUniformMatrix(string name, const Mat4f& m)=0;
 
 		virtual string getErrorStrings(){return "";}
+
+		virtual ~shader(){if(boundShader==this)boundShader=nullptr;}
 	};
 private:
 	gID currentId;
@@ -259,6 +276,7 @@ protected:
 	Vec3f lightPosition;
 
 	GraphicsManager();
+	shader* getBoundShader(){return shader::boundShader;}
 	virtual ~GraphicsManager(){}
 public:
 	virtual bool drawOverlay(Rect4f r, string tex="")=0;
@@ -289,13 +307,13 @@ public:
 	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
 
-	virtual void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
-	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
+	//virtual void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
+	//virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
 
-	virtual void drawModel(string model, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
-	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
-	virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
-	virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
+	//virtual void drawModel(string model, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
+	//virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
+	//virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
+	//virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
 
 	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage)=0;
 	virtual shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage)=0;
@@ -479,7 +497,6 @@ public:
 		~shaderGL();
 
 		void bind();
-		void unbind();
 
 		bool init(const char* vert, const char* frag, const char* geometry);
 
@@ -491,6 +508,14 @@ public:
 		void setUniform2i(string name, int v0, int v1);
 		void setUniform3i(string name, int v0, int v1, int v2);
 		void setUniform4i(string name, int v0, int v1, int v2, int v3);
+		void setUniform1fv(string name, unsigned int n, float* v);
+		void setUniform2fv(string name, unsigned int n, float* v);
+		void setUniform3fv(string name, unsigned int n, float* v);
+		void setUniform4fv(string name, unsigned int n, float* v);
+		void setUniform1iv(string name, unsigned int n, int* v);
+		void setUniform2iv(string name, unsigned int n, int* v);
+		void setUniform3iv(string name, unsigned int n, int* v);
+		void setUniform4iv(string name, unsigned int n, int* v);
 
 		void setUniformMatrix(string name, const Mat3f& m);
 		void setUniformMatrix(string name, const Mat4f& m);
@@ -513,8 +538,8 @@ public:
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
 	void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4);
 
-	void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale);
-	void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale);
+	//void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale);
+	//void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale);
 
 	bool drawOverlay(Rect4f r, string tex="");
 	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");

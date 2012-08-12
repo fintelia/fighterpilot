@@ -9,24 +9,21 @@ namespace particle
 	}
 	void groundExplosionFlash::init()
 	{
-		velocity =	fuzzyAttribute(25.0, 10.0);
+		speed =		fuzzyAttribute(25.0, 10.0);
 		spread =	fuzzyAttribute(radius/3, radius/3);
 		life =		fuzzyAttribute(500,25);
-		//color =		fuzzyColor(1.0,0.5,0.4);
+		//color =	fuzzyColor(1.0,0.5,0.4);
 
 		particle p;
 		for(int i = 0; i < 128; i++)
 		{
 			p.startTime = world.time();
-			p.endTime = world.time() + life();
+			p.invLife = world.time() + life();
 		
-			p.dir = (random3<float>() + Vec3f(0,1.5,0.0)).normalize();
-			p.initialSpeed = velocity();
-			p.vel = p.dir * p.initialSpeed;
-			p.startPos = position + p.dir * spread();
-			p.pos = p.startPos + p.vel * extraTime/1000.0;
+			Vec3f dir = (random3<float>() + Vec3f(0,1.5,0.0)).normalize();
+			p.velocity = dir * speed();
+			p.pos = position + dir * spread() + p.velocity * extraTime/1000.0;
 			p.size = 0.0;
-			p.totalDistance = radius;
 
 			p.ang = random<float>(2.0*PI);
 			p.angularSpeed = random<float>(-0.3*PI,0.3*PI);
@@ -41,9 +38,9 @@ namespace particle
 	}
 	void groundExplosionFlash::updateParticle(particle& p)
 	{
-		p.pos += p.vel * world.time.length()/1000.0;
+		p.pos += p.velocity * world.time.length()/1000.0;
 
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
+		float t = (world.time() - p.startTime) * p.invLife;
 
 		if(t<0.05)
 		{

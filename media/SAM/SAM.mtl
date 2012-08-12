@@ -14,8 +14,7 @@ newmtl Material__6416
 	Ke 0.0000 0.0000 0.0000
 	map_Ka 5e39b7f8.png
 	map_Kd 5e39b7f8.png
-	map_Ke Map__374_Mask.png
-	map_bump -bm 0.3000 Map__369_Normal_Bump.png
+	map_bump Map__369_Normal_Bump.png
 
 newmtl Material__6417
 	Ns 10.0000
@@ -30,4 +29,4 @@ newmtl Material__6417
 	Ke 0.0000 0.0000 0.0000
 	map_Ka 964f8dac.png
 	map_Kd 964f8dac.png
-	map_bump -bm 0.3000 Map__372_Normal_Bump.png
+	map_bump Map__372_Normal_Bump.png

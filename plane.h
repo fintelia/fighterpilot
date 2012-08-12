@@ -1,9 +1,6 @@
 
 //const unsigned long double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;
 
-void spawn();
-void die();
-
 class nPlane: public object
 {
 private:
@@ -12,6 +9,7 @@ private:
 	unsigned long shotsFired;
 
 	shared_ptr<particle::smokeTrail> smokeTrail;
+	vector<shared_ptr<SceneManager::pointLight>> engineLights;
 public:
 //////////////structs//////////////
 	struct wayPoint
@@ -99,7 +97,7 @@ public:
 	void findTarget();
 	void shootMissile();
 	void dropBomb();
-	void die();
+	void die(deathType d = DEATH_NONE);
 	void loseHealth(float healthLoss);
 	void autoPilotUpdate(float value);
 	void exitAutoPilot();

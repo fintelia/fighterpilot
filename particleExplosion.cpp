@@ -10,7 +10,12 @@ namespace particle
 	}
 	void explosion::init()
 	{
-		velocity =	fuzzyAttribute(1.0, 1.0);
+		flash = sceneManager.genPointLight();
+		flash->position = position;
+		flash->strength = 0.0;
+		startTime = world.time();
+
+		speed =		fuzzyAttribute(1.0, 1.0);
 		spread =	fuzzyAttribute(radius/8, radius/8);
 		life =		fuzzyAttribute(1000.0,100.0);
 
@@ -18,15 +23,11 @@ namespace particle
 		for(int i = 0; i < 64; i++)
 		{
 			p.startTime = world.time();
-			p.endTime = world.time() + life();
+			p.invLife = 1.0 / life();
 		
-			p.dir = random3<float>();
-			p.initialSpeed = sqrt(velocity() * velocity());
-			p.vel = p.dir * p.initialSpeed;
-			p.startPos = position + p.dir * spread();
-			p.pos = p.startPos + p.vel * extraTime/1000.0;
+			p.velocity = random3<float>(); //note: velocity only stores direction
+			p.pos = position + p.velocity * spread() + p.velocity * sqrt(speed() * speed()) * extraTime/1000.0;
 			p.size = 0.0;
-			p.totalDistance = radius;
 
 			p.ang = random<float>(2.0*PI);
 			p.angularSpeed = random<float>(-0.3*PI,0.3*PI);
@@ -39,19 +40,35 @@ namespace particle
 			addParticle(p);
 		}
 	}
+	void explosion::update()
+	{
+		double t = (world.time() - startTime) / 1100.0;
+
+		if(t<0.05)
+		{
+			flash->strength = 1.0 * t * 20;
+		}
+		else if(t<0.75)
+		{
+			flash->strength = 1.0 - 0.5 * (t-0.05)/0.7;
+		}
+		else if(t<1.0)
+		{
+			flash->strength = 0.5 - 0.5 * (t-0.75)/0.25;
+		}
+		else
+		{
+			flash->strength = 0.0;
+		}
+		flash->color.r = 1.0 * flash->strength;
+		flash->color.g = 0.6 * flash->strength;
+		flash->color.b = 0.3 * flash->strength;
+		emitter::update();
+	}
 	void explosion::updateParticle(particle& p)
 	{
-		//float velMag = p.vel.magnitude();
-
-		//p.vel = p.dir * p.initialSpeed * pow(2.718,-friction*(world.time() - p.startTime)/1000);
-		//p.vel *= (velMag - pow(friction, (float)world.time.length()/1000.0f)) / velMag;	
-		//p.pos += p.vel * world.time.length()/1000.0;
-
-		//p.pos = p.startPos + p.dir * p.initialSpeed * (1.0-pow(2.718,-friction*(world.time() - p.startTime)/1000));
-		float t = (world.time() - p.startTime) / (p.endTime - p.startTime);
-		float a = 1.0;//(2.0 - p.initialSpeed);
-		//Profiler.setOutput("x",   (a*t*t*t - (2.0*a+1.0)*t*t + (2.0+a)*t)  );
-		p.pos = p.startPos + p.dir * p.totalDistance * (a*t*t*t - (2.0*a+1.0)*t*t + (2.0+a)*t);
+		float t = (world.time() - p.startTime) * p.invLife;
+		p.pos += p.velocity * radius * 3.0f*(t-1.0)*(t-1.0)*world.time.length()*p.invLife; //NOTE: velocity is actually just a direction
 
 		p.ang += p.angularSpeed * world.time.length() / 1000.0;
 

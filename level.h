@@ -13,7 +13,8 @@ struct LevelFile
 		float			minHeight;
 		float			maxHeight;
 		unsigned int	foliageAmount;
-		Info(): shaderType(TERRAIN_ISLAND), mapSize(1,1), mapResolution(0,0),foliageAmount(0){}
+		unsigned int	LOD;
+		Info(): shaderType(TERRAIN_ISLAND), mapSize(1,1), mapResolution(0,0),foliageAmount(0), LOD(1){}
 	};
 	struct Object{
 		int				type;			//the type of object

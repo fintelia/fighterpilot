@@ -147,9 +147,6 @@
     <Filter Include="Source Files\ENGINE\dataManager\assetLoader">
       <UniqueIdentifier>{564f38bb-8c86-455b-8ada-aebf9fbb35f9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ENGINE\dataManager\textureManager">
-      <UniqueIdentifier>{099f7035-f03e-48c3-969f-6a5b2970e453}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ENGINE\ephemeris">
       <UniqueIdentifier>{560f319f-15aa-4d48-bb1f-f6e1d5f38d3d}</UniqueIdentifier>
     </Filter>

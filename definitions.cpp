@@ -6,7 +6,7 @@
 #include <pthread.h>
 #endif
 
-const double UPDATE_LENGTH	= 8.333;
+//const double UPDATE_LENGTH	= 8.333;
 
 const Color3 white(1.0f,1.0f,1.0f);
 const Color3 black(0.0f,0.0f,0.0f);

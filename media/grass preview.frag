@@ -1,6 +1,6 @@
 
 varying vec3 position;
-varying vec3 lightDir, halfVector;
+varying vec3 sunDir;
 
 uniform float time;
 uniform float heightScale;
@@ -24,7 +24,7 @@ void main()
 	normal.y /= heightScale;
 	normal = normalize(normal);
 
-	float NdotL = dot(normal, normalize(lightDir));
+	float NdotL = dot(normal, normalize(sunDir));
 
 	float slope = acos(dot(vec3(0.0,1.0,0.0),normal));
 	float r=0.0;

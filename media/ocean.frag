@@ -21,16 +21,21 @@ void main()
 	
 	NdotL = dot(n,normalize(lightDirection));
 
-	float fresnel = clamp(0.2 + (1.0-0.2)*pow(1.0 - NdotL, 2.0), 0.0,1.0); //0.0 = bias; 5.0 = power <--- these change the water reflections
-	vec3 cReflect = textureCube(sky, reflect(normalize(eyeDirection),n)).rgb;
+	float power = 2.0;
+	float bias = 0.2;
+	float fresnel = clamp(bias + (1.0-bias)*pow(1.0 - NdotL, power), 0.0,1.0); //0.0 = bias; 5.0 = power <--- these change the water reflections
+
+
+	vec3 r = reflect(-normalize(eyeDirection),n);
+	r.y = max(r.y,0.0);
+	vec3 cReflect = textureCube(sky, r).rgb;
 
 	const vec3 darkColor = vec3(0.08, 0.24, 0.26);
 	const vec3 lightColor = vec3(0.12, 0.26, 0.55);
 
-	color = mix(darkColor, lightColor, fresnel)   *   (0.6 + 0.4 * NdotL);
-	color = mix(color, cReflect, fresnel * 0.3 /* *shorelineAlpha*/);
+	color = mix(darkColor, lightColor, fresnel);
+	color = mix(color, cReflect, fresnel * 0.3 /* *shorelineAlpha*/)   *   (0.6 + 0.4 * NdotL);
 	color = mix(color, textureCube(sky, position).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection), 0.0, 1.0));
-
 
 	gl_FragColor = vec4(color,1.0);
 }

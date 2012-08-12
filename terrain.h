@@ -91,6 +91,7 @@ protected:
 	
 	shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
 	shared_ptr<GraphicsManager::indexBuffer> foliageIBO;
+	vector<Vec3f> trees;
 	//struct plant
 	//{
 	//	Vec3f location;
