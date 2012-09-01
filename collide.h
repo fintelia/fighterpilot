@@ -114,8 +114,8 @@ public:
 	bool operator() (shared_ptr<object> o1, shared_ptr<object> o2) const;
 
 private:
-	friend class physicsInstance;
-	map<majorObjectType, vector<std::weak_ptr<physicsInstance>>> physicsInstances;
+	//friend class physicsInstance;
+	//map<majorObjectType, vector<std::weak_ptr<physicsInstance>>> physicsInstances;
 };
 //typedef shared_ptr<PhysicsManager::physicsInstance> physicsInstancePtr;
 extern PhysicsManager& physics;

@@ -15,14 +15,14 @@ public:
 		if(index==0)	return x;
 		if(index==1)	return y;
 		debugBreak();
-		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
+		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
 	}
 	T operator[](int index) const
 	{
 		if(index==0)	return x;
 		if(index==1)	return y;
 		debugBreak();
-		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
+		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
 	}
 	Vector2 operator*(T scale) const{return Vector2(x * scale, y * scale);}
 	Vector2 operator/(T scale) const{return Vector2(x / scale, y / scale);}
@@ -123,7 +123,7 @@ public:
 		if(index==1)	return y;
 		if(index==2)	return z;
 		debugBreak();
-		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
+		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
 	}
 	T operator[](int index) const
 	{
@@ -131,7 +131,7 @@ public:
 		if(index==1)	return y;
 		if(index==2)	return z;
 		debugBreak();
-		throw out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
+		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
 	}
 
 
