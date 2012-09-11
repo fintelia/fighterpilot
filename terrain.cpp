@@ -684,28 +684,33 @@ void Terrain::generateFoliage(int count)
 {
 	vector<texturedVertex3D> vertices;
 	texturedVertex3D tmpVerts[16];
-	//plant tmpFoliage;
 	Vec3f position;
 
-	tmpVerts[0].UV = Vec2f(0.0,1);
-	tmpVerts[1].UV = Vec2f(0.5,1);
-	tmpVerts[2].UV = Vec2f(0.5,0);
-	tmpVerts[3].UV = Vec2f(0.0,0);
+	tmpVerts[0].UV = Vec2f(0.0,1.0);
+	tmpVerts[1].UV = Vec2f(0.5,1.0);
+	tmpVerts[2].UV = Vec2f(0.5,0.0);
+	tmpVerts[3].UV = Vec2f(0.0,0.0);
 
-	tmpVerts[4].UV = Vec2f(0.5,1);
-	tmpVerts[5].UV = Vec2f(1.0,1);
-	tmpVerts[6].UV = Vec2f(1.0,0);
-	tmpVerts[7].UV = Vec2f(0.5,0);
+	tmpVerts[4].UV = Vec2f(0.5,1.0);
+	tmpVerts[5].UV = Vec2f(1.0,1.0);
+	tmpVerts[6].UV = Vec2f(1.0,0.0);
+	tmpVerts[7].UV = Vec2f(0.5,0.0);
 
-	tmpVerts[8].UV = Vec2f(0.5,1);
-	tmpVerts[9].UV = Vec2f(0.0,1);
-	tmpVerts[10].UV = Vec2f(0.0,0);
-	tmpVerts[11].UV = Vec2f(0.5,0);
+	tmpVerts[8].UV = Vec2f(0.5,1.0);
+	tmpVerts[9].UV = Vec2f(0.0,1.0);
+	tmpVerts[10].UV = Vec2f(0.0,0.0);
+	tmpVerts[11].UV = Vec2f(0.5,0.0);
 
-	tmpVerts[12].UV = Vec2f(1.0,1);
-	tmpVerts[13].UV = Vec2f(0.5,1);
-	tmpVerts[14].UV = Vec2f(0.5,0);
-	tmpVerts[15].UV = Vec2f(1.0,0);
+	tmpVerts[12].UV = Vec2f(1.0,1.0);
+	tmpVerts[13].UV = Vec2f(0.5,1.0);
+	tmpVerts[14].UV = Vec2f(0.5,0.0);
+	tmpVerts[15].UV = Vec2f(1.0,0.0);
+
+	//texturedVertex3D tmpTopVerts[4];
+	//tmpTopVerts[0].UV = Vec2f(0.0,1.0);
+	//tmpTopVerts[1].UV = Vec2f(0.5,1.0);
+	//tmpTopVerts[2].UV = Vec2f(0.5,0.5);
+	//tmpTopVerts[3].UV = Vec2f(0.0,0.5);
 
 	Vec2f dir;
 	Vec3f right, fwd;
@@ -738,45 +743,25 @@ void Terrain::generateFoliage(int count)
 			tmpVerts[n+6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
 			tmpVerts[n+7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
 
-			//tmpVerts[n+0].padding[0] = s*0.4;
-			//tmpVerts[n+1].padding[0] = s*0.4;
-			//tmpVerts[n+2].padding[0] = s*0.4;
-			//tmpVerts[n+3].padding[0] = s*0.4;
-
-
-
-			//tmpVerts[4].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
-			//tmpVerts[5].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
-			//tmpVerts[6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
-			//tmpVerts[7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
+			//tmpTopVerts[0].position = position + Vec3f( 3.0*dir.x, 1.0,  3.0*dir.y)*s;
+			//tmpTopVerts[1].position = position + Vec3f( 3.0*dir.y, 1.0, -3.0*dir.x)*s;
+			//tmpTopVerts[2].position = position + Vec3f(-3.0*dir.x, 1.0, -3.0*dir.y)*s;
+			//tmpTopVerts[3].position = position + Vec3f(-3.0*dir.y, 1.0,  3.0*dir.x)*s;
 
 			vertices.push_back(tmpVerts[n+0]);
 			vertices.push_back(tmpVerts[n+1]);
 			vertices.push_back(tmpVerts[n+2]);
 			vertices.push_back(tmpVerts[n+3]);
+
 			vertices.push_back(tmpVerts[n+4]);
 			vertices.push_back(tmpVerts[n+5]);
 			vertices.push_back(tmpVerts[n+6]);
 			vertices.push_back(tmpVerts[n+7]);
 
-			//if(random<float>(1.0) < 0.5)
-			//{
-			//	foliageVertices.push_back(tmpVerts[0]);
-			//	foliageVertices.push_back(tmpVerts[1]);
-			//	foliageVertices.push_back(tmpVerts[2]);
-			//	foliageVertices.push_back(tmpVerts[3]);
-			//}
-			//else
-			//{
-			//	foliageVertices.push_back(tmpVerts[4]);
-			//	foliageVertices.push_back(tmpVerts[5]);
-			//	foliageVertices.push_back(tmpVerts[6]);
-			//	foliageVertices.push_back(tmpVerts[7]);
-			//}
-
-			//tmpFoliage.height = 5.0*s;
-			//tmpFoliage.location = position;
-			//foliage.push_back(tmpFoliage);
+			//vertices.push_back(tmpTopVerts[0]);
+			//vertices.push_back(tmpTopVerts[1]);
+			//vertices.push_back(tmpTopVerts[2]);
+			//vertices.push_back(tmpTopVerts[3]);
 
 			nQuads += 2;
 		}
@@ -815,7 +800,6 @@ void Terrain::generateFoliage(int count)
 	foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
 	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
-	//foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
 	foliageVBO->setTotalVertexSize(sizeof(texturedVertex3D));
 	foliageVBO->setVertexData(sizeof(texturedVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
 }
@@ -918,14 +902,13 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	{
 	//	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
 	}
-	shaders.bind("ortho");
-	Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
-	if(sunPos.z > 0)
-	{
+	//shaders.bind("ortho");
+	//Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
+	//if(sunPos.z > 0)
+	//{
 	//	Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
 	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun"); //doesn't work right in 2 player
-	}
-
+	//}
 //	if(waterPlane)
 	{
 		auto ocean = shaders.bind("ocean");
@@ -1040,10 +1023,10 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	}
 
 
-		Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
+		//Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
 		//graphics->setAlphaToCoverage(true);
-		dataManager.bind("tree");
-		skyTexture->bind(1);
+		//dataManager.bind("tree");
+		//skyTexture->bind(1);
 
 		//if(graphics->getMultisampling())
 		//	dataManager.bind("trees shader");
@@ -1060,23 +1043,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		//graphics->setAlphaToCoverage(false);
 	
-		auto alphaTreesShader = shaders.bind("trees alpha test shader");
-		alphaTreesShader->setUniform1i("tex", 0);
-		alphaTreesShader->setUniform1i("sky", 1);
-		alphaTreesShader->setUniform3f("eyePos", eye);
-		alphaTreesShader->setUniform3f("right", right);
-		alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-		
-		graphics->setDepthMask(false);
-		auto treesShader = shaders.bind("trees shader");
-		treesShader->setUniform1i("tex", 0);
-		treesShader->setUniform1i("sky", 1);
-		treesShader->setUniform3f("eyePos", eye);
-		treesShader->setUniform3f("right", right);
-		treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-		graphics->setDepthMask(true);
+	
 
 	//graphics->setDepthMask(false);
 	//dataManager.bind("cirrus cloud shader");
@@ -1085,6 +1052,29 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	//dataManager.setUniform3f("eyePos", view->camera().eye);
 	//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,900,eye.z),Quat4f(),Vec3f(radius,100,radius));
 	//graphics->setDepthMask(true);
+}
+void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
+{
+	dataManager.bind("tree");
+	skyTexture->bind(1);
+
+	auto alphaTreesShader = shaders.bind("trees alpha test shader");
+	alphaTreesShader->setUniform1i("tex", 0);
+	alphaTreesShader->setUniform1i("sky", 1);
+	alphaTreesShader->setUniform3f("eyePos", view->camera().eye);
+	alphaTreesShader->setUniform3f("right", view->camera().right);
+	alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
+	
+	graphics->setDepthMask(false);
+	auto treesShader = shaders.bind("trees shader");
+	treesShader->setUniform1i("tex", 0);
+	treesShader->setUniform1i("sky", 1);
+	treesShader->setUniform3f("eyePos", view->camera().eye);
+	treesShader->setUniform3f("right", view->camera().right);
+	treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
+	graphics->setDepthMask(true);
 }
 shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {

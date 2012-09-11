@@ -6,18 +6,21 @@
 		<bomb name="F22_bomb1" model="media/m1(center).obj" />
 		<bomb name="F22_bomb2" model="media/m2(center).obj" />
 		
+		<missile name="SAM_missile1" model="media/m3(center).obj" />
+		
 		<missile name="MIRAGE_missile1" model="media/mirage/R550 Magic missile.obj" />
 		<missile name="MIRAGE_missile2" model="media/mirage/Super530 missile.obj" />
 		<missile name="J37_missile1" model="media/j37/missile.obj" />
 	</weapons>
-	<planes>
-		<plane name="F16" model="media/f16.obj" >
+	<planes default="MIRAGE">
+		<plane name="F16" model="media/f16/f16.obj" cameraDistance="25.0" placeable="true">
 			<g_offset x="0.0" y="-0.6" z="0.0" />
+			<e_offset x="0.0" y="-0.35" z="-5.1" radius="0.75" mirror="true" />
 		</plane>
-		<plane name="F18" model="media/f18.obj">
+		<plane name="F18" model="media/f18hornet.obj">
 			<g_offset x="0.0" y="-0.1" z="0.0" />
 		</plane>
-		<plane name="F22" model="media/f22.obj" >
+		<plane name="F22" model="media/f22.obj" placeable="true">
 			<g_offset x="-3.0" y="0.0" z="-1.0" />
 			<e_offset x="0.4" y="0.0" z="-3.3" mirror="true" />
 			<w_offset weapon="F22_bomb1" x="3.0" y="-1.0" z="-1.05" mirror="true" />
@@ -25,14 +28,14 @@
 			<w_offset weapon="F22_missile1" x="5.7" y="-0.75" z="-2.55" mirror="true" />
 			<w_offset weapon="F22_missile2" x="7.05" y="-0.65" z="-2.4" mirror="true" />
 		</plane>
-		<plane name="MIRAGE" model="media/mirage/mirage.obj" cameraDistance="20.0" collisionMesh="media/mirage/mirageCollision.obj">
+		<plane name="MIRAGE" textName="Mirage" model="media/mirage/mirage.obj" cameraDistance="20.0" collisionMesh="media/mirage/mirageCollision.obj" placeable="true">
 			<g_offset x="0.0" y="0.0" z="0.0" />
 			<e_offset x="0.0" y="0.25" z="-3.4" mirror="true" />
 			<w_offset weapon="MIRAGE_missile1" x="0.8" y="-0.5" z="0.5" mirror="true" />
 			<w_offset weapon="MIRAGE_missile1" x="0.8" y="-0.5" z="-2.5" mirror="true" />
 			<w_offset weapon="MIRAGE_missile2" x="3.05" y="-0.55" z="-2.4" mirror="true" />
 		</plane>
-		<plane name="J37" model="media/j37/j37.obj" cameraDistance="20.0">
+		<plane name="J37" model="media/j37/j37.obj" cameraDistance="20.0" placeable="true">
 			<g_offset x="0.0" y="0.0" z="0.0" />
 			<e_offset x="0.0" y="0.1" z="-3.5" mirror="true" />
 			<w_offset weapon="J37_missile1" x="0.9" y="-0.8" z="0.5" mirror="true" />
@@ -46,14 +49,17 @@
 		</plane>
 	</planes>
 	<AAA>
-		<SAM name="SAM_BATTERY" model="media/SAM/SAM.obj">
+		<SAM name="SAM_BATTERY" textName="SAM" model="media/SAM/SAM.obj" placeable="true">
 		
 		</SAM>
-		<AAgun name="AA_GUN" model="media/SAM/SAM.obj">
+		<AAgun name="AA_GUN" textName="AA gun" model="media/SAM/SAM.obj" placeable="true">
 		
 		</AAgun>
-		<flakCannon name="FLAK_CANNON" model="media/SAM/SAM.obj">
+		<flakCannon name="FLAK_CANNON" textName="Flak Cannon" model="media/SAM/SAM.obj" placeable="true">
 		
 		</flakCannon>
 	</AAA>
+	<ships>
+		<ship name="BATTLESHIP_1" textName="Battleship" model="media/ship/ship2.obj" collisionMesh="media/ship/ship collide.obj" placeable="true"/>
+	</ships>
 </objects>

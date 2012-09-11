@@ -166,6 +166,9 @@
       <UniqueIdentifier>{e4727c1f-d859-412b-b661-0383e5ed22ae}</UniqueIdentifier>
       <ParseFiles>true</ParseFiles>
     </Filter>
+    <Filter Include="Source Files\GAME\objects\ship">
+      <UniqueIdentifier>{08639322-847c-49fd-b873-4b0d9ef72dff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -336,6 +339,9 @@
     <ClCompile Include="xml\tinyxml2.cpp">
       <Filter>tinyxml2</Filter>
     </ClCompile>
+    <ClCompile Include="ship.cpp">
+      <Filter>Source Files\GAME\objects\ship</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -462,6 +468,9 @@
     <ClInclude Include="xml\tinyxml2.h">
       <Filter>tinyxml2</Filter>
     </ClInclude>
+    <ClInclude Include="ship.h">
+      <Filter>Source Files\GAME\objects\ship</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="media\health.frag">
@@ -528,7 +537,6 @@
     <None Include="media\particle.vert">
       <Filter>shaders\particle</Filter>
     </None>
-    <None Include="media\modelData.txt" />
     <None Include="media\grass preview.frag">
       <Filter>shaders\terrain</Filter>
     </None>
@@ -596,6 +604,7 @@
     <None Include="media\cirrusCloud.vert">
       <Filter>shaders\cirrusCloud</Filter>
     </None>
+    <None Include="media\objectData.xml" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

@@ -231,6 +231,7 @@ void dogFight::checkCollisions()
 {
 	auto planes = world(PLANE);
 	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+	auto ships = world(SHIP);
 	auto missiles = world(MISSILE);
 	auto& bulletRef = ((bulletCloud*)world[bullets].get())->bullets;
 
@@ -319,6 +320,49 @@ void dogFight::checkCollisions()
 					{
 						if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
 						if(players.numPlayers() >= 2 && owner==players[1]->objectNum()) players[1]->addKill();
+					}
+					l->second->awaitingDelete = true;
+				}
+			}
+		}
+	}
+	for(auto i = ships.begin(); i != ships.end();i++)
+	{
+		if(!i->second->dead)
+		{
+			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			{
+				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				{
+					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					{
+						i->second->loseHealth(0.75);
+						if((*i).second->dead)
+						{
+							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
+							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
+						}
+						bulletRef.erase(bulletRef.begin()+l);
+						l--;
+					}
+				}
+			}
+			for(auto l=missiles.begin();l!=missiles.end();l++)
+			{
+				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
+				{
+					Profiler.increaseCounter("hitCount");
+					i->second->loseHealth(35);
+					if((*i).second->dead)
+					{
+						if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
+						if(players.numPlayers() >= 2 && owner==players[1]->objectNum()) players[1]->addKill();
+					}
+					else
+					{
+						particleManager.addEmitter(new particle::explosion(), l->second->position, 5.0);
+						particleManager.addEmitter(new particle::explosionFlash(), l->second->position, 5.0);
 					}
 					l->second->awaitingDelete = true;
 				}

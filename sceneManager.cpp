@@ -73,7 +73,7 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 			if(i->tex && i->tex->valid())
 			{
 				mat.tex = graphics->genTexture2D();
-				mat.tex->setData(i->tex->width, i->tex->height, (GraphicsManager::texture::Format)i->tex->channels, i->tex->contents);
+				mat.tex->setData(i->tex->width, i->tex->height, (GraphicsManager::texture::Format)i->tex->channels, i->tex->contents,true);
 			}
 			else
 			{
@@ -82,7 +82,7 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 			if(i->normalMap && i->normalMap->valid())
 			{
 				mat.normalMap = graphics->genTexture2D();
-				mat.normalMap->setData(i->normalMap->width, i->normalMap->height, (GraphicsManager::texture::Format)i->normalMap->channels, i->normalMap->contents);
+				mat.normalMap->setData(i->normalMap->width, i->normalMap->height, (GraphicsManager::texture::Format)i->normalMap->channels, i->normalMap->contents,true);
 			}
 			else
 			{
@@ -91,7 +91,7 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 			if(i->specularMap && i->specularMap->valid())
 			{
 				mat.specularMap = graphics->genTexture2D();
-				mat.specularMap->setData(i->specularMap->width, i->specularMap->height, (GraphicsManager::texture::Format)i->specularMap->channels, i->specularMap->contents);
+				mat.specularMap->setData(i->specularMap->width, i->specularMap->height, (GraphicsManager::texture::Format)i->specularMap->channels, i->specularMap->contents,true);
 			}
 			else
 			{
@@ -125,23 +125,19 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	}
 
 	shared_ptr<meshInstance> i;
-
+	
 	auto model = shaders.bind("model");
 	model->setUniform1i("tex",0);
 	model->setUniform1i("specularMap",1);
 	model->setUniform1i("normalMap",2);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	for(int pass = 0; pass <= 1; pass++)
-	{
+	//for(int pass = 0; pass <= 1; pass++)
+	//{
 		for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
 		{
 			if(meshType->second.empty())
 				continue;
-
-			//auto modelPtr = dataManager.getModel(meshType->first);
-			//if(modelPtr == nullptr)
-			//	continue;
 
 			auto meshPtr = meshes[meshType->first];
 			if(!meshPtr)
@@ -149,7 +145,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 
 			for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 			{
-				if((material->diffuse.a > 0.999 && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1))
+				if(/*(*/material->diffuse.a > 0.999/* && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1)*/)
 				{
 					if(material->tex)
 						material->tex->bind(0);
@@ -183,9 +179,76 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 			}
 		}
 		
-		if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
-		if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
+	//	if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
+	//	if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
+	//}
+}
+void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> view, meshInstancePtr firstPersonObject)
+{
+	for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
+	{
+		meshType->second.erase(std::remove_if(meshType->second.begin(), meshType->second.end(), [](weak_ptr<meshInstance> p)->bool{return p.expired();}), meshType->second.end());
 	}
+
+	shared_ptr<meshInstance> i;
+	
+	auto model = shaders.bind("model");
+	model->setUniform1i("tex",0);
+	model->setUniform1i("specularMap",1);
+	model->setUniform1i("normalMap",2);
+	model->setUniform3f("lightPosition", graphics->getLightPosition());
+	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
+	{
+		if(meshType->second.empty())
+			continue;
+
+		//auto modelPtr = dataManager.getModel(meshType->first);
+		//if(modelPtr == nullptr)
+		//	continue;
+
+		auto meshPtr = meshes[meshType->first];
+		if(!meshPtr)
+			continue;
+
+		for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
+		{
+			if(material->diffuse.a)
+			{
+				if(material->tex)
+					material->tex->bind(0);
+				else
+					dataManager.bind("white", 0);
+
+				if(material->specularMap)
+					material->specularMap->bind(1);
+				else
+					dataManager.bind("white", 1);
+
+				if(material->specularMap)
+					material->normalMap->bind(2);
+				else
+					dataManager.bind("default normals", 2);
+				model->setUniform4f("diffuse", material->diffuse);
+				model->setUniform3f("specular", material->specular);
+				model->setUniform1f("hardness", material->hardness);
+ 
+				for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
+				{
+					i = instance->lock();
+					if(i != firstPersonObject && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
+					{
+						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
+						material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+					}
+					i.reset();
+				}
+			}
+		}
+	}
+		
+	//if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
+	//if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 }
 void SceneManager::endRender()
 {

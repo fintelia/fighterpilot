@@ -3,7 +3,7 @@
 void antiAircraftArtilleryBase::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation)/*, !dead*/);
+		meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation)/*, !dead*/);
 }
 void antiAircraftArtilleryBase::die()
 {
@@ -21,35 +21,24 @@ void antiAircraftArtilleryBase::loseHealth(float healthLoss)
 		die();
 	}
 }
-void antiAircraftArtilleryBase::spawn()
+antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
-	position = startPos;
-	rotation = startRot;
+	lastPosition = position = Vec3f(sPos.x,world.elevation(sPos.x,sPos.z),sPos.z);
+	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
+	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 
-	dead = false;
-	health=maxHealth;
-
-
-	position = Vec3f(position.x,world.elevation(position.x,position.z),position.z);
-
-	rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
-	target = 0;
+	target.reset();
+	health = 100.0;
 	shotsFired = 0;
 	extraShootTime=0.0;
-}
-antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Vec3f(sPos.x,world.elevation(position.x,position.z),sPos.z), sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), maxHealth(100)
-{
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
-	spawn();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //																		AA gun																				//
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void AAgun::spawn()
+AAgun::AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team)
 {
 	initArmaments();
-	antiAircraftArtilleryBase::spawn();
 }
 void AAgun::initArmaments()
 {
@@ -81,30 +70,52 @@ void AAgun::updateSimulation(double time, double ms)
 	/////////////////////CONTROL//////////////////////
 	bool shoot;
 
-	target=0;
+	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
 	auto planes = world(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target == 0 || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = n->second->id;
+			target = static_pointer_cast<nPlane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
 
-	if(target != 0)
+	if(!target.expired())
 	{
-		targeter = (world[target]->position - position).normalize();
-//		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
+		auto targetPtr = target.lock();
+		targeter = (targetPtr->position - position).normalize();
+
+		/////////////find position and time that plane and bullet would be at the same location (makes AA guns too good)
+		//float s = 1000; //speed of bullets
+		//Vec3f r = targetPtr->position - position;
+		//Vec3f v = targetPtr->rotation * Vec3f(0,0,targetPtr->speed);
+		//
+		//float a = v.dot(v) - s*s;
+		//float b = 2.0 * v.dot(r);
+		//float c = r.dot(r);
+		//
+		//if(b*b - 4.0*a*c >= 0.0)
+		//{
+		//	float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//
+		//	if(t <= 0.0) //doen't seem to happen...
+		//	{
+		//		t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//	}
+		//
+		//	targeter = (targetPtr->position + v * t - position).normalize();
+		//}
+		////////////////////////////////////////////////////////////////////////////
+
 		shoot = true;
 	}
 	else
 	{
 		targeter = Vec3f();
-//		rotation = Quat4f(targeter);
 		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
@@ -116,7 +127,7 @@ void AAgun::updateSimulation(double time, double ms)
 		extraShootTime+=ms;
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(position,targeter+random3<float>()*0.010,id,time-extraShootTime-machineGun.coolDown);
+			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(position,targeter+random3<float>()*0.01,id,time-extraShootTime-machineGun.coolDown);
 
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
@@ -142,23 +153,23 @@ void SAMbattery::updateSimulation(double time, double ms)
 		return;
 
 	/////////////////////CONTROL//////////////////////
-	target=0;
+	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
 	auto planes = world(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 3000 * 3000 && (target == 0 || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && nDistSquared < 3000 * 3000 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = n->second->id;
+			target = static_pointer_cast<nPlane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
 
-	if(target != 0)
+	if(!target.expired())
 	{
-		targeter = (world[target]->position - position).normalize();
+		targeter = (target.lock()->position - position).normalize();
 //		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
 	}
 	else
@@ -169,11 +180,11 @@ void SAMbattery::updateSimulation(double time, double ms)
 	///////////////////END CONTROL////////////////////
 
 	missileCoolDown -= ms;
-	if(missileCoolDown <= 0.0 && target != 0)
+	if(missileCoolDown <= 0.0 && !target.expired())
 	{
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
 		missileCoolDown = 18000;
-		world.newObject(new SAMmissile(SAM_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target));
+		world.newObject(new SAMmissile(objectInfo.typeFromString("SAM_missile1"), team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target.lock()->id));
 	}
 }
 
@@ -189,23 +200,23 @@ void flakCannon::updateSimulation(double time, double ms)
 	if(dead)
 		return;
 	/////////////////////CONTROL//////////////////////
-	target=0;
+	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
 	auto planes = world(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 5000 * 5000 && (target == 0 || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && nDistSquared < 2200 * 2200 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = n->second->id;
+			target = static_pointer_cast<nPlane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
 
-	if(target != 0)
+	if(!target.expired())
 	{
-		targeter = (world[target]->position - position).normalize();
+		targeter = (target.lock()->position - position).normalize();
 //		rotation = Quat4f(targeter) * Quat4f(Vec3f(1,0,0), PI/2);
 	}
 	else
@@ -216,21 +227,28 @@ void flakCannon::updateSimulation(double time, double ms)
 	///////////////////END CONTROL////////////////////
 
 	missileCoolDown -= ms;
-	if(missileCoolDown <= 0.0 && target != 0)
+	if(missileCoolDown <= 0.0 && !target.expired())
 	{
-		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
+		shared_ptr<nPlane> planePtr = target.lock();
+
 		missileCoolDown = random<float>(1900, 2200);
 		Vec3f t = random3<float>();
-		t.x *= 500.0;
-		t.z *= 500.0;
-		t.y *= 100.0;
-		//world.newObject(new flakMissile(FLAK_MISSILE, team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2), 0, id, world[target]->position + t));
-	//	particleManager.addEmitter(new particle::flakExplosionSmoke(),world[target]->position + t,20.0);
+		t.x = t.x * 200.0;
+		t.y = t.y * 200.0;
+		t.z = t.z * 200.0 + 185;
 
-		particleManager.addEmitter(new particle::explosion(),world[target]->position + t, 10.0);
-		particleManager.addEmitter(new particle::explosionSmoke(),world[target]->position + t, 10.0);
-	//	particleManager.addEmitter(new particle::explosionFlash(),world[target]->position + t, 10.0);
-		particleManager.addEmitter(new particle::explosionFlash2(),world[target]->position + t, 15.0);
-		particleManager.addEmitter(new particle::explosionFlash2(),world[target]->position + t, 15.0);
+		t = planePtr->rotation * t;
+
+		if(world.altitude(planePtr->position + t) >= 200.0)
+		{
+			float strength = clamp( (40.0*40.0 - t.magnitudeSquared()) / (40.0*40.0), 0.0, 1.0);
+			planePtr->cameraShake = 0.3 * strength;
+			planePtr->loseHealth(10.0 * strength);
+			particleManager.addEmitter(new particle::explosion(),planePtr->position + t, 10.0);
+			particleManager.addEmitter(new particle::explosionSmoke(),planePtr->position + t, 10.0);
+		//	particleManager.addEmitter(new particle::explosionFlash(),planePtr->position + t, 10.0);
+			particleManager.addEmitter(new particle::explosionFlash2(),planePtr->position + t, 15.0);
+			particleManager.addEmitter(new particle::explosionFlash2(),planePtr->position + t, 15.0);
+		}
 	}
 }

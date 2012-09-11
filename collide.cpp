@@ -1,60 +1,301 @@
 
 #include "engine.h"
 
-//shared_ptr<PhysicsManager::physicsInstance> PhysicsManager::newPhysicsInstance(objectType t, Vec3f position, Quat4f rotation)
-//{
-//	auto i = objectBounds.find(t);
-//	if(i != objectBounds.end())
-//	{
-//		shared_ptr<physicsInstance> ptr(new physicsInstance(i->second,position,rotation));
-//		physicsInstances[t & MAJOR_OBJECT_TYPE].push_back(ptr);
-//		return ptr;
-//	}
-//	else
-//	{
-//		return shared_ptr<physicsInstance>();
-//	}
-//}
-//bool CollisionChecker::boundingCollision(const triangle& tri1, const triangle& tri2) const
-//{
-//	tri1.findRadius();
-//	tri2.findRadius();
-//	return tri1.center.distanceSquared(tri2.center) < (tri1.radius+tri2.radius)*(tri1.radius+tri2.radius);
-//}
-//Vec3f CollisionChecker::linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const
-//{
-//	float final_x,final_y,final_z,final_t;
-//	float t,i;
-//	Vec3f temp;
 //
-//	t=0.0f; i=0.0f;
-//	i+=(tri1.pA*b.x)+(tri1.pB*b.y)+(tri1.pC*b.z)+(tri1.pD);
-//	t+=(tri1.pA*(b.x*-1))+(tri1.pB*(b.y*-1))+(tri1.pC*(b.z*-1));
-//	t+=(tri1.pA*a.x)+(tri1.pB*a.y)+(tri1.pC*a.z);
+//	Much of the code for PhysicsManager is from "Real-Time Collision Detection" by Christer Ericson
 //
-//	// Be wary of possible divide-by-zeros here (i.e. if t==0)
-//	final_t = (-i)/t;
-//
-//	// Vertical Line Segment
-//	if ((a.x == b.x)&&(a.z == b.z)) { // vertical line segment
-//		temp.x = a.x;
-//		temp.y = (-((tri1.pA*a.x)+(tri1.pC*a.z)+(tri1.pD)))/(tri1.pB);
-//		temp.z = a.z;
-//
-//		return(temp);
-//	}
-//
-//	final_x = (((a.x)*(final_t))+((b.x)*(1-final_t)));
-//	final_y = (((a.y)*(final_t))+((b.y)*(1-final_t)));
-//	final_z = (((a.z)*(final_t))+((b.z)*(1-final_t)));
-//
-//	temp.x = final_x;
-//	temp.y = final_y;
-//	temp.z = final_z;
-//
-//	return(temp);
-//}
 
+Vec3f PhysicsManager::cpPlanePoint(Plane<float> plane, Vec3f point) const
+{
+	float t = (plane.normal).dot(point) - plane.d; // t = signed distance between plane and point
+	return point - plane.normal * t;
+}
+Vec3f PhysicsManager::cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
+{
+	Vec3f s = sFinal - sInitial;
+	float t = (point-sInitial).dot(s);
+	if(t <= 0.0f)
+	{
+		//t = 0.0;
+		return sInitial;
+	}
+	else
+	{
+		float denom = s.magnitudeSquared();
+		if(t > denom)
+		{
+			//t = 1.0;
+			return sFinal;
+		}
+		else
+		{
+			t = t / denom;
+			return sInitial + s * t;
+		}
+	}
+}
+Vec3f PhysicsManager::cpTrianglePoint(Vec3f a, Vec3f b, Vec3f c, Vec3f point) const
+{
+	Vec3f ab = b - a;
+	Vec3f ac = c - a;
+
+	Vec3f ap = point - a;
+	float d1 = ab.dot(ap);
+	float d2 = ac.dot(ap);
+	if(d1 <= 0.0f && d2 <= 0.0f)
+		return a;
+
+	Vec3f bp = point - b;
+	float d3 = ab.dot(bp);
+	float d4 = ac.dot(bp);
+	if(d3 >= 0.0f && d4 <= d3)
+		return b;
+
+	Vec3f cp = point - c;
+	float d5 = ab.dot(cp);
+	float d6 = ac.dot(cp);
+	if(d6 >= 0.0f && d5 <= d6)
+		return c;
+
+	float vc = d1*d4 - d3*d2;
+	if(vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f)
+	{
+		float v = d1 / (d1 - d3);
+		return a + ab * v;
+	}
+
+	float vb = d5*d2 - d1*d6;
+	if(vb < 0.0f && d2 >= 0.0f && d6 <= 0.0f)
+	{
+		float w = d2 / (d2 - d6);
+		return a + ac * w;
+	}
+
+	float va = d3*d6 - d5*d4;
+	if(va <= 0.0f && (d4-d3) >= 0.0f && (d5-d6) >= 0.0f)
+	{
+		float w = (d4-d3) / ((d4-d3) + (d5-d6));
+		return b + (c - b) * w;
+	}
+
+	float invDenom = 1.0 / (va+vb+vc);
+	float v = vb * invDenom;
+	float w = vc * invDenom;
+	return a + ab * v + ac * w;
+}
+float PhysicsManager::squareDistanceSegmentSegment(Vec3f s1_initial, Vec3f s1_final, Vec3f s2_initial, Vec3f s2_final, Vec3f& s1_closest, Vec3f& s2_closest) const //returns closest point on s1
+{
+	Vec3f d1 = s1_final - s1_initial;
+	Vec3f d2 = s2_final - s2_initial;
+	Vec3f r = s1_initial - s2_initial;
+	float a = d1.magnitudeSquared();
+	float e = d2.magnitudeSquared();
+	float f = d2.dot(r);
+
+	float s;
+	float t;
+
+	if(a <= 1e-5 && e <= 1e-5)
+	{
+		s1_closest = s1_initial;
+		s2_closest = s2_initial;
+		return s1_initial.distanceSquared(s2_initial);
+	}
+	else if(a <= 1e-5)
+	{
+		s = 0.0;
+		t = f / e;
+		s = clamp(t, 0.0f, 1.0f);
+	}
+	else
+	{
+		float c = d1.dot(d2);
+		if(e <= 1e-5)
+		{
+			t = 0.0f;
+			s = clamp(-c/a, 0.0,1.0);
+		}
+		else
+		{
+			float b = d1.dot(d2);
+			float denom = a*e - b*b; //always nonnegative
+
+			if(denom != 0.0f)
+			{
+				s = clamp((b*f-c*e) / denom, 0.0, 1.0);
+			}
+			else
+			{
+				s = 0.0f;
+			}
+
+			float tnom = b*s + f;
+			if(tnom < 0.0f)
+			{
+				t = 0.0f;
+				s = clamp(-c/a, 0.0, 1.0);
+			}
+			else if(tnom > e)
+			{
+				t = 1.0;
+				s = clamp((b-c) / a, 0.0, 1.0);
+			}
+			else
+			{
+				t = tnom / e;
+			}
+		}
+	}
+	s1_closest = s1_initial + d1 * s;
+	s2_closest = s2_initial + d1 * t;
+	return s1_closest.distanceSquared(s2_closest);
+}
+float PhysicsManager::squareDistanceSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
+{
+	Vec3f s = sFinal - sInitial;
+	Vec3f ip = point - sInitial;
+	Vec3f fp = point - sFinal;
+
+	float e = ip.dot(s);
+	if(e < 0.0f) return ip.magnitudeSquared();
+
+	float f = s.magnitudeSquared();
+	if(e >= f) return fp.magnitudeSquared();
+
+	return ip.magnitudeSquared() - e * e / f;
+}
+bool PhysicsManager::sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float> s2, Vec3f v2) const
+{
+	Vec3f s = s2.center - s1.center;
+	Vec3f v = v2 - v1;
+	float r = s2.radius + s1.radius;
+	float c = s.magnitudeSquared() - r*r;
+
+	if(c < 0.0f)
+	{
+		return true; //spheres initially overlap
+	}
+
+	float a = v.magnitudeSquared();
+	if(a <= 1e-5) return false; //spheres not moving
+
+	float b = v.dot(s);
+	if(b >= 0.0f) return false; //spheres not moving towards each other
+
+	float d = b*b - a*c;
+	if(d < 0.0f) return false; //no real root: spheres do not intersect
+
+	float t = (-b - sqrt(d)) / a;
+	return t <= 1.0;
+}
+bool PhysicsManager::testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float> plane, Vec3f& intersectionPoint) const
+{
+	Vec3f s = sFinal - sInitial;
+	float t = (plane.d - (plane.normal).dot(sInitial)) / (plane.normal).dot(s);
+	if(t >= 0.0f && t <= 1.0f)
+	{
+		intersectionPoint = sInitial + s * t;
+		return true;
+	}
+	return false;
+}
+bool PhysicsManager::testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& intersectionPoint) const
+{
+	Vec3f m = p - s.center;
+	float b = m.dot(d);
+	float c = m.magnitudeSquared() - s.radius*s.radius;
+
+	if(c > 0.0f && b > 0.0f)	// ray is outside of and pointing away from sphere
+		return false;
+
+	float discr = b*b - c;
+	if(discr < 0.0f)			//ray misses sphere
+		return false;
+
+	float t = -b - sqrt(discr);
+	if(t < 0.0f)				//ray started inside sphere
+		t = 0.0f;
+
+	intersectionPoint = p + d*t;
+	return true;
+}
+bool PhysicsManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const
+{	//	"based on A Fast Triangle-Triangle Intersection Test" by Tomas Moller
+	//	http://knight.temple.edu/~lakamper/courses/cis350_2004/etc/moeller_triangle.pdf
+
+	Vec3f N1 = (t1_b - t1_a).cross(t1_c - t1_a);
+	Vec3f N2 = (t2_b - t2_a).cross(t2_c - t2_a);
+	float d1 = -N1.dot(t1_a);
+	float d2 = -N2.dot(t2_a);
+
+	float dv1a = N2.dot(t1_a) + d2;
+	float dv1b = N2.dot(t1_b) + d2;
+	float dv1c = N2.dot(t1_c) + d2;
+
+	if((dv1a > 0.0f && dv1b > 0.0f && dv1c > 0.0f) || (dv1a < 0.0f && dv1b < 0.0f && dv1c < 0.0f)) //if all three points of triangle 1 are on the same side of the plane of triangle 2
+	{
+		return false;
+	}
+	else if(dv1a == 0.0f && dv1b == 0.0f && dv1c == 0.0f)
+	{
+		//triangles are co-planar
+	}
+
+	float dv2a = N1.dot(t2_a) + d1;
+	float dv2b = N1.dot(t2_b) + d1;
+	float dv2c = N1.dot(t2_c) + d1;
+
+	if((dv2a > 0.0f && dv2b > 0.0f && dv2c > 0.0f) || (dv2a < 0.0f && dv2b < 0.0f && dv2c < 0.0f)) //if all three points of triangle 2 are on the same side of the plane of triangle 1
+	{
+		return false;
+	}
+
+	float N1dotN1 = N1.magnitudeSquared();
+	float N2dotN2 = N2.magnitudeSquared();
+	float N1dotN2 = N1.dot(N2);
+
+	Vec3f D = N1.cross(N2);
+	Vec3f O = (N1*(d1*N1dotN1-d2*N1dotN2) + N2*(d2*N2dotN2-d1*N1dotN2)) / (N1dotN1*N2dotN2-N1dotN2*N1dotN2);
+
+	float pa1 = D.dot(t1_a - O);
+	float pa2 = D.dot(t1_b - O);
+	float pa3 = D.dot(t1_c - O);
+	float pb1 = D.dot(t2_a - O);
+	float pb2 = D.dot(t2_b - O);
+	float pb3 = D.dot(t2_c - O);
+
+	//TODO: finish writing code...
+	return false;
+}
+//bool PhysicsManager::testLineTriangle(Vec3f lStart, Vec3f lEnd, Vec3f t1, Vec3f t2, Vec3f t3, Vec3f& intersectionPoint) const
+//{									// not "double sided"?
+//	Vec3f line = lEnd - lStart;
+//	Vec3f pa = t1 - lStart;
+//	Vec3f pb = t2 - lStart;
+//	Vec3f pc = t3 - lStart;
+//
+//	Vec3f m = line.cross(pc);
+//	float u = pb.dot(m);				//scalar triple product [line,pc,pb]
+//	if(u < 0.0f) return false;
+//	float v = -(pa.dot(m));				//scalar triple product [line,pa,pc]
+//	if(v < 0.0f) return false;
+//	float w = line.cross(pb).dot(pa);	//scalar triple product [line,pb,pa]
+//	if(w < 0.0f) return false;
+//
+//	float invDenom = u + v + w;
+//	if(invDenom == 0.0f)
+//	{
+//		intersectionPoint = lStart;
+//		return true;
+//	}
+//
+//	float denom = 1.0f / invDenom;
+//	u *= denom;
+//	v *= denom;
+//	w *= denom;
+//	intersectionPoint = t1 * u + t2 * v + t3 * w;
+//	return true;
+//}
 Vec3f PhysicsManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const //see http://pisa.ucsd.edu/cse125/2003/cse190g2/Collision.pdf
 {
 	// Determine t (the length of the vector from ‘a’ to ‘p’)
@@ -105,6 +346,10 @@ bool PhysicsManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat
 	Vec3f QB = b * e3 - Q3;
 	return !((Q1.dot(Q1) > rr * e1*e1 && Q1.dot(QC) > 0) || (Q2.dot(Q2) > rr * e2*e2 && Q2.dot(QA) > 0) || (Q3.dot(Q3) > rr * e3*e3 && Q3.dot(QB) > 0));
 }
+//bool PhysicsManager::triangleSweptSphere(const triangle& a, const Mat4f& m, const Sphere<float>& s, Vec3f sphereInitial, Vec3f sphereFinal, float radius)const
+//{
+//
+//}
 bool PhysicsManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
 {
 	//see: http://paulbourke.net/geometry/planeline/

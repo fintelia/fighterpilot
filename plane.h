@@ -9,7 +9,6 @@ private:
 	unsigned long shotsFired;
 
 	shared_ptr<particle::smokeTrail> smokeTrail;
-	vector<shared_ptr<SceneManager::pointLight>> engineLights;
 public:
 //////////////structs//////////////
 	struct wayPoint
@@ -61,7 +60,6 @@ public:
 ////////////life///////////////////
 	//bool dead; (from entity)
 	float health;
-	float maxHealth;
 	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_EXPLOSION,DEATH_TRAILING_SMOKE,DEATH_MISSILE,DEATH_BULLETS}death;
 	bool respawning;
 	float respawnTime;
@@ -102,7 +100,6 @@ public:
 	void autoPilotUpdate(float value);
 	void exitAutoPilot();
 	void returnToBattle();
-	void spawn();
 	void initArmaments();
 	void init();
 
@@ -110,7 +107,6 @@ public:
 	void updateFrame(float interpolation) const;
 
 	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
-
 private:
 	void smoothCamera();
 };

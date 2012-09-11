@@ -13,6 +13,7 @@
 #include "bomb.h"
 #include "plane.h"
 #include "aaGun.h"
+#include "ship.h"
 
 #include "player.h"
 

@@ -6,22 +6,16 @@ protected:
 	double extraShootTime;//time since it last shot;
 	unsigned long shotsFired;
 public:
-//////////////functions////////////
-	void die();
-	void loseHealth(float healthLoss);
-	virtual void spawn();
-	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
-	virtual void updateFrame(float interpolation) const;
-///////////orientation/////////////
 	Vec3f targeter;
-	int target;
-////////////life///////////////////
+	weak_ptr<nPlane> target;
+
 	//bool dead; (from entity)
 	float health;
-	float maxHealth;
-///////////camera view/////////////
-	Vec3f camera;
-	Vec3f center;
+
+	void die();
+	void loseHealth(float healthLoss);
+	antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
+	virtual void updateFrame(float interpolation) const;
 };
 
 class AAgun: public antiAircraftArtilleryBase
@@ -35,10 +29,9 @@ public:
 		float rechargeTime, rechargeLeft;//all in milliseconds
 		float coolDown, coolDownLeft;
 	}machineGun;
-	void spawn();
 	void initArmaments();
 	void updateSimulation(double time, double ms);
-	AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team){initArmaments();}
+	AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
 };
 
 class SAMbattery: public antiAircraftArtilleryBase

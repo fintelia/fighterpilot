@@ -20,7 +20,7 @@ bool ObjectInfo::loadObjectData(string filename)
 		bool b = element->QueryFloatAttribute(attribute, &f) == XML_SUCCESS;
 		if(!b)
 			debugBreak();
-		return b ? f : 0;
+		return b ? f : 0.0f;
 	};
 
 	XMLDocument doc;
@@ -36,7 +36,7 @@ bool ObjectInfo::loadObjectData(string filename)
 	unsigned int missileCount	= 0;
 	unsigned int bombCount		= 0;
 	unsigned int planeCount		= 0;
-
+	unsigned int shipCount		= 0;
 	if((node=objectsNode->FirstChildElement("weapons")) != nullptr && node->ToElement() != nullptr && (node=node->ToElement()->FirstChildElement()) != nullptr)
 	{
 		XMLElement* weaponElement = node->ToElement();
@@ -44,6 +44,9 @@ bool ObjectInfo::loadObjectData(string filename)
 		{
 			if(strcmp(weaponElement->Value(), "missile") == 0)
 			{
+				string cmName = getAttribute(weaponElement, "collisionMesh");
+				string mName = getAttribute(weaponElement, "model");
+
 				if(++missileCount > MINOR_OBJECT_TYPE)	//to many missiles
 				{
 					debugBreak();
@@ -52,13 +55,16 @@ bool ObjectInfo::loadObjectData(string filename)
 				
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = MISSILE + missileCount;		
-				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(weaponElement, "collisionMesh"), true);
-				obj->meshFile = fileManager.loadObjFile(getAttribute(weaponElement, "model"), true);
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
 				obj->name = getAttribute(weaponElement, "name");
 				objectMap[obj->type] = obj;	
 			}
 			else if(strcmp(weaponElement->Value(), "bomb") == 0)
 			{
+				string cmName = getAttribute(weaponElement, "collisionMesh");
+				string mName = getAttribute(weaponElement, "model");
+
 				if(++bombCount > MINOR_OBJECT_TYPE)	//to many bombs
 				{
 					debugBreak();
@@ -67,10 +73,10 @@ bool ObjectInfo::loadObjectData(string filename)
 
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = BOMB + bombCount;
-				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(weaponElement, "collisionMesh"), true);
-				obj->meshFile = fileManager.loadObjFile(getAttribute(weaponElement, "model"), true);
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
 				obj->name = getAttribute(weaponElement, "name");
-				objectMap[obj->type] = obj;	
+				objectMap[obj->type] = obj;
 			}
 			weaponElement = weaponElement->NextSiblingElement();
 		}
@@ -82,38 +88,79 @@ bool ObjectInfo::loadObjectData(string filename)
 		{
 			if(strcmp(aaaElement->Value(), "SAM") == 0)
 			{
+				string cmName = getAttribute(aaaElement, "collisionMesh");
+				string mName = getAttribute(aaaElement, "model");
+
 				shared_ptr<objectData> obj(new objectData);
 				obj->type = SAM_BATTERY;	
-				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
-				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
 				obj->name = getAttribute(aaaElement, "name");
+				obj->textName = getAttribute(aaaElement, "textName");
 				objectMap[obj->type] = obj;	
+				if(getAttribute(aaaElement,"placeable") == "true")
+					placeableObjects.push_back(obj->type);
 			}
 			else if(strcmp(aaaElement->Value(), "AAgun") == 0)
 			{
-				if(++bombCount > MINOR_OBJECT_TYPE)	//to many bombs
+				string cmName = getAttribute(aaaElement, "collisionMesh");
+				string mName = getAttribute(aaaElement, "model");
+
+				shared_ptr<objectData> obj(new objectData);
+				obj->type = AA_GUN;
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
+				obj->name = getAttribute(aaaElement, "name");
+				obj->textName = getAttribute(aaaElement, "textName");
+				objectMap[obj->type] = obj;	
+				if(getAttribute(aaaElement,"placeable") == "true")
+					placeableObjects.push_back(obj->type);
+			}
+			else if(strcmp(aaaElement->Value(), "flakCannon") == 0)
+			{
+				string cmName = getAttribute(aaaElement, "collisionMesh");
+				string mName = getAttribute(aaaElement, "model");
+
+				shared_ptr<objectData> obj(new objectData);
+				obj->type = FLAK_CANNON;
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
+				obj->name = getAttribute(aaaElement, "name");
+				obj->textName = getAttribute(aaaElement, "textName");
+				objectMap[obj->type] = obj;	
+				if(getAttribute(aaaElement,"placeable") == "true")
+					placeableObjects.push_back(obj->type);
+			}
+			aaaElement = aaaElement->NextSiblingElement();
+		}
+	}
+	if((node=objectsNode->FirstChildElement("ships")) != nullptr && node->ToElement() != nullptr && (node=node->ToElement()->FirstChildElement()) != nullptr)
+	{
+		XMLElement* shipElement = node->ToElement();
+		while(shipElement != nullptr)
+		{
+			if(strcmp(shipElement->Value(), "ship") == 0)
+			{
+				if(++shipCount > MINOR_OBJECT_TYPE)	//to many bombs
 				{
 					debugBreak();
 					continue;
 				}
 
+				string cmName = getAttribute(shipElement, "collisionMesh");
+				string mName = getAttribute(shipElement, "model");
+
 				shared_ptr<objectData> obj(new objectData);
-				obj->type = AA_GUN;
-				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
-				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
-				obj->name = getAttribute(aaaElement, "name");
+				obj->type = SHIP + shipCount;	
+				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
+				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
+				obj->name = getAttribute(shipElement, "name");
+				obj->textName = getAttribute(shipElement, "textName");
 				objectMap[obj->type] = obj;	
+				if(getAttribute(shipElement,"placeable") == "true")
+					placeableObjects.push_back(obj->type);
 			}
-			else if(strcmp(aaaElement->Value(), "flakCannon") == 0)
-			{
-				shared_ptr<objectData> obj(new objectData);
-				obj->type = FLAK_CANNON;
-				obj->collisionMeshFile = fileManager.loadObjFile(getAttribute(aaaElement, "collisionMesh"), true);
-				obj->meshFile = fileManager.loadObjFile(getAttribute(aaaElement, "model"), true);
-				obj->name = getAttribute(aaaElement, "name");
-				objectMap[obj->type] = obj;	
-			}
-			aaaElement = aaaElement->NextSiblingElement();
+			shipElement = shipElement->NextSiblingElement();
 		}
 	}
 	if((node=objectsNode->FirstChildElement("planes")) != nullptr && node->ToElement() != nullptr && (node=node->ToElement()->FirstChildElement()) != nullptr)
@@ -137,10 +184,12 @@ bool ObjectInfo::loadObjectData(string filename)
 				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
 				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
 				obj->name = getAttribute(planeElement, "name");
-
+				obj->textName = getAttribute(planeElement, "textName");
 
 				if(planeElement->QueryFloatAttribute("cameraDistance", &obj->cameraDistance) != XML_SUCCESS)
 					obj->cameraDistance = 30.0;
+
+
 
 				XMLElement* planeProperties = planeElement->FirstChildElement();
 				while(planeProperties != nullptr)
@@ -154,10 +203,21 @@ bool ObjectInfo::loadObjectData(string filename)
 					}
 					else if(strcmp(planeProperties->Value(), "e_offset") == 0)
 					{
-						Vec3f v(getFloatAttribute(planeProperties,"x"), getFloatAttribute(planeProperties,"y"), getFloatAttribute(planeProperties,"z"));
-						obj->engines.push_back(v);
+						planeObjectData::engine e;
+						e.offset = Vec3f(getFloatAttribute(planeProperties,"x"), getFloatAttribute(planeProperties,"y"), getFloatAttribute(planeProperties,"z"));
+						if(planeProperties->QueryFloatAttribute("radius", &e.radius) != XML_SUCCESS)
+							e.radius = 1.0;
+
+						if(e.radius == 0.0f)
+							e.radius = 1.0;
+
+						obj->engines.push_back(e);
+
 						if(getAttribute(planeProperties,"mirror") == "true")
-							obj->engines.push_back(Vec3f(-v.x,v.y,v.z));
+						{
+							e.offset.x *= -1;
+							obj->engines.push_back(e);
+						}
 					}
 					else if(strcmp(planeProperties->Value(), "w_offset") == 0)
 					{
@@ -175,8 +235,23 @@ bool ObjectInfo::loadObjectData(string filename)
 				}
 
 				objectMap[obj->type] = obj;	
+				if(getAttribute(planeElement,"placeable") == "true")
+					placeableObjects.push_back(obj->type);
 			}
 			planeElement = planeElement->NextSiblingElement();
+		}
+		defaultPlane = typeFromString(getAttribute(objectsNode->FirstChildElement("planes"), "default"));
+		if(!(defaultPlane & PLANE))
+		{
+			defaultPlane = 0;
+			for(auto i=objectMap.begin(); i!=objectMap.end(); i++)
+			{
+				if(i->first & PLANE)
+				{
+					defaultPlane = i->first;
+					break;
+				}
+			}
 		}
 	}
 	return true;
@@ -188,35 +263,51 @@ int ObjectInfo::loadObjectMeshes()
 	double startTime = GetTime();
 	for(auto i = objectMap.begin(); i != objectMap.end(); i++)
 	{
-		if(!timeUp && i->second->meshFile && i->second->meshFile->valid())
+		if(i->second->meshFile)
 		{
-			i->second->mesh = sceneManager.createMesh(i->second->meshFile);
-			i->second->meshFile.reset();
-			physics.setCollsionBounds(i->first, i->second->mesh->getBoundingSphere());
-			if(GetTime() - startTime > 33.3)
-				timeUp = true;
-		}
-		else if(i->second->meshFile && (!i->second->meshFile->complete() || timeUp))
-		{
-			numLeft++;
+			if(!i->second->meshFile->complete() || timeUp)
+			{
+				numLeft++;
+			}
+			else if(i->second->meshFile->valid())
+			{
+				i->second->mesh = sceneManager.createMesh(i->second->meshFile);
+				i->second->meshFile.reset();
+				physics.setCollsionBounds(i->first, i->second->mesh->getBoundingSphere());
+				if(GetTime() - startTime > 33.3)
+					timeUp = true;
+			}
+			else
+			{
+				debugBreak();
+				i->second->meshFile.reset();
+			}
 		}
 
-		if(!timeUp && i->second->collisionMeshFile && i->second->collisionMeshFile->valid())
+		if(i->second->collisionMeshFile)
 		{
-			if(!i->second->collisionMeshFile->materials.empty())
+			if(!i->second->collisionMeshFile->complete() || timeUp)
 			{
-				vector<Vec3f> vertices;
-				for(auto v=i->second->collisionMeshFile->vertices.begin(); v!=i->second->collisionMeshFile->vertices.end(); v++)
-					vertices.push_back(v->position);
-				physics.setCollsionBounds(i->first, i->second->collisionMeshFile->boundingSphere, vertices, i->second->collisionMeshFile->materials[0].indices);
+				numLeft++;
 			}
-			i->second->collisionMeshFile.reset();
-			if(GetTime() - startTime > 33.3)
-				timeUp = true;
-		}
-		else if(i->second->collisionMeshFile && (!i->second->collisionMeshFile->complete() || timeUp))
-		{
-			numLeft++;
+			else if(i->second->collisionMeshFile->valid())
+			{
+				if(!i->second->collisionMeshFile->materials.empty())
+				{
+					vector<Vec3f> vertices;
+					for(auto v=i->second->collisionMeshFile->vertices.begin(); v!=i->second->collisionMeshFile->vertices.end(); v++)
+						vertices.push_back(v->position);
+					physics.setCollsionBounds(i->first, i->second->collisionMeshFile->boundingSphere, vertices, i->second->collisionMeshFile->materials[0].indices);
+				}
+				i->second->collisionMeshFile.reset();
+				if(GetTime() - startTime > 33.3)
+					timeUp = true;
+			}
+			else
+			{
+				debugBreak();
+				i->second->collisionMeshFile.reset();
+			}
 		}
 	}
 	return numLeft;
@@ -237,8 +328,26 @@ objectType ObjectInfo::typeFromString(string s)
 }
 string ObjectInfo::typeString(objectType t)
 {
+	if(t == PLAYER_PLANE)
+		return "PLAYER_PLANE";
+
 	auto i = objectMap.find(t);
 	return i!=objectMap.end() ? i->second->name : "";
+}
+string ObjectInfo::textName(objectType t)
+{
+	if(t == PLAYER_PLANE)
+		return "<player plane>";
+
+	auto i = objectMap.find(t);
+	if(i!=objectMap.end())
+	{
+		return i->second->textName != "" ? i->second->textName : i->second->name;
+	}
+	else
+	{
+		return "";
+	}
 }
 shared_ptr<ObjectInfo::objectData> ObjectInfo::operator[] (objectType t)
 {
@@ -258,62 +367,7 @@ objectType objectTypeFromString(string s)
 {
 	return objectInfo.typeFromString(s);
 }
-//	if(s=="f12")				return F12;
-//	if(s=="f16")				return F16;
-//	if(s=="f18")				return F18;
-//	if(s=="f22")				return F22;
-//	if(s=="UAV")				return UAV;
-//	if(s=="b2")					return B2;
-//	if(s=="mirage")				return MIRAGE;
-//	if(s=="j37")				return J37;
-//	if(s=="missile1")			return BOMB1;
-//	if(s=="bomb1")				return BOMB1;
-//	if(s=="missile2")			return BOMB2;
-//	if(s=="bomb2")				return BOMB2;
-//	if(s=="missile3")			return MISSILE3;
-//	if(s=="missile4")			return MISSILE4;
-//	if(s=="r550 magic missile")	return R550_MAGIC_MISSILE;
-//	if(s=="super530 missile")	return SUPER_530_MISSILE;
-//	if(s=="j37 missile")		return J37_MISSILE;
-//	if(s=="SAM missile")		return SAM_MISSILE;
-//	if(s=="flak missile")		return FLAK_MISSILE;
-//	if(s=="AA gun")				return AA_GUN;
-//	if(s=="SAM battery")		return SAM_BATTERY;
-//	if(s=="flak cannon")		return FLAK_CANNON;
-//	if(s=="bullet cloud")		return BULLET_CLOUD;
-//	if(s=="PLAYER_PLANE")		return PLAYER_PLANE;
-////	debugBreak();
-////	cout << "objectType: " << s << " not found" << endl;
-//	return 0;
-//}
 string objectTypeString(objectType t)
 {
 	return objectInfo.typeString(t);
 }
-//	if(t==F12)					return "f12";
-//	if(t==F16)					return "f16";
-//	if(t==F18)					return "f18";
-//	if(t==F22)					return "f22";
-//	if(t==UAV)					return "UAV";
-//	if(t==B2)					return "b2";
-//	if(t==MIRAGE)				return "mirage";
-//	if(t==J37)					return "j37";
-//	if(t==MISSILE1)				return "missile1";
-//	if(t==MISSILE2)				return "missile2";
-//	if(t==MISSILE3)				return "missile3";
-//	if(t==MISSILE4)				return "missile4";
-//	if(t==BOMB1)				return "missile1";
-//	if(t==BOMB2)				return "missile2";
-//	if(t==R550_MAGIC_MISSILE)	return "r550 magic missile";
-//	if(t==SUPER_530_MISSILE)	return "super530 missile";
-//	if(t==J37_MISSILE)			return "j37 missile";
-//	if(t==SAM_MISSILE)			return "SAM missile";
-//	if(t==FLAK_MISSILE)			return "flak missile";
-//	if(t==AA_GUN)				return "AA gun";
-//	if(t==SAM_BATTERY)			return "SAM battery";
-//	if(t==FLAK_CANNON)			return "flak cannon";
-//	if(t==BULLET_CLOUD)			return "bullet cloud";
-//	if(t==PLAYER_PLANE)			return "PLAYER_PLANE";
-//	debugBreak();
-//	return "";
-//}

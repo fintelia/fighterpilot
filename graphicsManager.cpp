@@ -2,8 +2,9 @@
 #include "engine.h"
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
+bool GraphicsManager::texture::compression = true;
 
-GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereo(false), leftEye(true), interOcularDistance(0.0)
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0)
 {
 
 }
@@ -13,47 +14,49 @@ GraphicsManager::View::View(): mRenderParticles(true)
 }
 Vec2f GraphicsManager::View::project(Vec3f p)
 {
-	p -= mCamera.eye;
-
-	Vec3f f = mCamera.fwd;
-	Vec3f UP = mCamera.up;
-
-	Vec3f s = (f.cross(UP)).normalize();
-	Vec3f u = (s.cross(f)).normalize();
-
-	float F = 1.0/tan((mProjection.fovy*PI/180.0) / 2.0);
-
-	Vec3f v = Vec3f(s.dot(p)*F/mProjection.aspect,   -u.dot(p)*F,   f.dot(p)*(mProjection.zNear+mProjection.zFar)-2.0*mProjection.zNear*mProjection.zFar) / (f.dot(p));
-
-	return Vec2f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0);
+	//p -= mCamera.eye;
+	//
+	//Vec3f f = mCamera.fwd;
+	//Vec3f UP = mCamera.up;
+	//
+	//Vec3f s = (f.cross(UP)).normalize();
+	//Vec3f u = (s.cross(f)).normalize();
+	//
+	//float F = 1.0/tan((mProjection.fovy*PI/180.0) / 2.0);
+	//
+	//Vec3f v = Vec3f(s.dot(p)*F/mProjection.aspect,   -u.dot(p)*F,   f.dot(p)*(mProjection.zNear+mProjection.zFar)-2.0*mProjection.zNear*mProjection.zFar) / (f.dot(p));
+	//
+	//return Vec2f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0);
+	Vec3f projected = mProjectionMat * mModelViewMat * p;
+	return Vec2f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5));
 }
 Vec3f GraphicsManager::View::project3(Vec3f p)
 {
-	p -= mCamera.eye;
-
-	Vec3f f = mCamera.fwd;
-	Vec3f UP = mCamera.up;
-
-	Vec3f s = (f.cross(UP)).normalize();
-	Vec3f u = (s.cross(f)).normalize();
-
-	float F = 1.0/tan((mProjection.fovy*PI/180.0) / 2.0);
-
-	Vec3f v = Vec3f(s.dot(p)*F/mProjection.aspect,   -u.dot(p)*F,   f.dot(p)*(mProjection.zNear+mProjection.zFar)-2.0*mProjection.zNear*mProjection.zFar) / (f.dot(p));
-
-	return Vec3f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0, (v.z + 1.0) / 2.0);
+	//p -= mCamera.eye;
+	//
+	//Vec3f f = mCamera.fwd;
+	//Vec3f UP = mCamera.up;
+	//
+	//Vec3f s = (f.cross(UP)).normalize();
+	//Vec3f u = (s.cross(f)).normalize();
+	//
+	//float F = 1.0/tan((mProjection.fovy*PI/180.0) / 2.0);
+	//
+	//Vec3f v = Vec3f(s.dot(p)*F/mProjection.aspect,   -u.dot(p)*F,   f.dot(p)*(mProjection.zNear+mProjection.zFar)-2.0*mProjection.zNear*mProjection.zFar) / (f.dot(p));
+	//
+	//return Vec3f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0, (v.z + 1.0) / 2.0);
+	Vec3f projected = mProjectionMat * mModelViewMat * p;
+	return Vec3f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5), 1.0-projected.z);
 }
 Vec3f GraphicsManager::View::unProject(Vec3f p)// from x=0 to sAspect && y=0 to 1 && z from 0 to 1
 {
-	p.y = 1.0-p.y; //we have to cheat since the 2D and 3D coordinate systems used are reversed
-
 	Mat4f A = mProjectionMat * mModelViewMat;
 	Mat4f inv;
 
 	if(!A.inverse(inv))
 		return Vec3f();//inverse could not be calculated
 
-	return inv * Vec3f(2.0*(p.x - mViewport.x)/mViewport.width - 1.0, 2.0 * (p.y - mViewport.y)/mViewport.height - 1.0, p.z*2.0 - 1.0);
+	return inv * Vec3f(2.0*(p.x - mViewport.x)/mViewport.width - 1.0, 2.0 * (1.0 - mViewport.y - p.y/mViewport.height) - 1.0, p.z*2.0 - 1.0);
 }
 void GraphicsManager::View::viewport(float x,float y,float width,float height)
 {
@@ -138,51 +141,27 @@ bool GraphicsManager::View::sphereInFrustum(Sphere<float> s)
 }
 bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 {
-	Vec3f points[8] =  {mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.minXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.maxXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.minXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.maxXYZ.z),
+	Mat4f combinedMat = mProjectionMat * mModelViewMat;
 
-						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.minXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.maxXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.minXYZ.z),
-						mProjectionMat * mModelViewMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.maxXYZ.z)};
-	
-	return !((points[0].x < -1.0 && points[1].x < -1.0 && points[1].x < -1.0 && points[3].x < -1.0 && points[4].x < -1.0 && points[5].x < -1.0 && points[6].x < -1.0 && points[7].x < -1.0) ||
-			(points[0].y < -1.0 && points[1].y < -1.0 && points[1].y < -1.0 && points[3].y < -1.0 && points[4].y < -1.0 && points[5].y < -1.0 && points[6].y < -1.0 && points[7].y < -1.0) ||
-			(points[0].z < -1.0 && points[1].z < -1.0 && points[1].z < -1.0 && points[3].z < -1.0 && points[4].z < -1.0 && points[5].z < -1.0 && points[6].z < -1.0 && points[7].z < -1.0) ||
-			(points[0].x >  1.0 && points[1].x >  1.0 && points[1].x >  1.0 && points[3].x >  1.0 && points[4].x >  1.0 && points[5].x >  1.0 && points[6].x >  1.0 && points[7].x >  1.0) ||
-			(points[0].y >  1.0 && points[1].y >  1.0 && points[1].y >  1.0 && points[3].y >  1.0 && points[4].y >  1.0 && points[5].y >  1.0 && points[6].y >  1.0 && points[7].y >  1.0) ||
-			(points[0].z >  1.0 && points[1].z >  1.0 && points[1].z >  1.0 && points[3].z >  1.0 && points[4].z >  1.0 && points[5].z >  1.0 && points[6].z >  1.0 && points[7].z >  1.0));
+	Vec3f points[8] =  {combinedMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.minXYZ.z),
+						combinedMat * Vec3f(b.minXYZ.x, b.minXYZ.y, b.maxXYZ.z),
+						combinedMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.minXYZ.z),
+						combinedMat * Vec3f(b.minXYZ.x, b.maxXYZ.y, b.maxXYZ.z),
 
-	//for(int p = 0; p < 6; ++p) 
-	//{
-	//	if(	(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.minXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-	//		
-	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.minXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
-	//		(mClipPlanes[p].normal.x * b.maxXYZ.x    +    mClipPlanes[p].normal.y * b.maxXYZ.y    +    mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d))
-	//	{
-	//		if(	mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.minXYZ.y,b.minXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.minXYZ.y,b.maxXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.maxXYZ.y,b.minXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.minXYZ.x,b.maxXYZ.y,b.maxXYZ.z)) > 0 || 
+						combinedMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.minXYZ.z),
+						combinedMat * Vec3f(b.maxXYZ.x, b.minXYZ.y, b.maxXYZ.z),
+						combinedMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.minXYZ.z),
+						combinedMat * Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.maxXYZ.z)};
 
-	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.minXYZ.y,b.minXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.minXYZ.y,b.maxXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.maxXYZ.y,b.minXYZ.z)) > 0 ||  
-	//			mClipPlanes[p].distance(Vec3f(b.maxXYZ.x,b.maxXYZ.y,b.maxXYZ.z)) > 0)
-	//				return false;
-	//		if(result)
-	//			return false;
-	//		return false;
-	//	}
-	//}
-	//return true;
+	bool result = !((points[0].x < -1.0 && points[1].x < -1.0 && points[2].x < -1.0 && points[3].x < -1.0 && points[4].x < -1.0 && points[5].x < -1.0 && points[6].x < -1.0 && points[7].x < -1.0) ||
+					(points[0].y < -1.0 && points[1].y < -1.0 && points[2].y < -1.0 && points[3].y < -1.0 && points[4].y < -1.0 && points[5].y < -1.0 && points[6].y < -1.0 && points[7].y < -1.0) ||
+					(points[0].z < -1.0 && points[1].z < -1.0 && points[2].z < -1.0 && points[3].z < -1.0 && points[4].z < -1.0 && points[5].z < -1.0 && points[6].z < -1.0 && points[7].z < -1.0) ||
+		
+					(points[0].x > 1.0 && points[1].x > 1.0 && points[2].x > 1.0 && points[3].x > 1.0 && points[4].x > 1.0 && points[5].x > 1.0 && points[6].x > 1.0 && points[7].x > 1.0) ||
+					(points[0].y > 1.0 && points[1].y > 1.0 && points[2].y > 1.0 && points[3].y > 1.0 && points[4].y > 1.0 && points[5].y > 1.0 && points[6].y > 1.0 && points[7].y > 1.0) ||
+					(points[0].z > 1.0 && points[1].z > 1.0 && points[2].z > 1.0 && points[3].z > 1.0 && points[4].z > 1.0 && points[5].z > 1.0 && points[6].z > 1.0 && points[7].z > 1.0));
+
+	return result;
 }
 void GraphicsManager::View::shiftCamera(Vec3f shift)
 {
@@ -240,4 +219,44 @@ void GraphicsManager::vertexBuffer::addVertexAttribute(VertexAttribute attrib, u
 	vertexAttributeData attribData;
 	attribData.offset = offset;
 	vertexAttributes[attrib] = attribData;
+}
+GraphicsManager::shader* GraphicsManager::getBoundShader()
+{
+	return shader::boundShader;
+}
+float GraphicsManager::getGamma()const
+{
+	return currentGamma;
+}
+Vec3f GraphicsManager::getLightPosition()const
+{
+	return lightPosition;
+}
+bool GraphicsManager::getTextureCompression()const
+{
+	return texture::compression;
+}
+bool GraphicsManager::getVSync()const
+{
+	return vSync;
+}
+void GraphicsManager::setColor(float r, float g, float b)
+{
+	setColor(r,g,b,1.0);
+}
+void GraphicsManager::setLightPosition(Vec3f position)
+{
+	lightPosition = position;
+}
+void GraphicsManager::setTextureCompression(bool enabled)
+{
+	texture::compression = enabled;
+}
+void GraphicsManager::setStereoMode(StereoMode s)
+{
+	stereoMode = s;
+}
+void GraphicsManager::setInterOcularDistance(float d)
+{
+	interOcularDistance = d;
 }

@@ -6,13 +6,13 @@ namespace gui{
 splitScreen::splitScreen(shared_ptr<LevelFile> lvl): dogFight(lvl)
 {
 	views[0] = graphics->genView();
-	views[0]->viewport(0, 0.5, sAspect, 0.5);
-	views[0]->perspective(80.0, (double)sw / ((double)sh/2), 1.0, 500000.0);
+	views[0]->viewport(0, 0.0, sAspect, 0.5);
+	views[0]->perspective(40.0, (double)sw / ((double)sh/2), 1.0, 500000.0);
 	views[0]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 0);
 
 	views[1] = graphics->genView();
-	views[1]->viewport(0,0.0, sAspect,0.5);
-	views[1]->perspective(80.0, (double)sw / ((double)sh/2),1.0, 500000.0);
+	views[1]->viewport(0, 0.5, sAspect, 0.5);
+	views[1]->perspective(40.0, (double)sw / ((double)sh/2),1.0, 500000.0);
 	views[1]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 1);
 
 	graphics->setLightPosition(Vec3f(0.0, 16000.0, 10000.0));
@@ -76,10 +76,66 @@ void splitScreen::render()
 			graphics->drawOverlay(Rect::XYXY(0,0.5*acplayer,sAspect,0.5*(acplayer+1)),"cockpit");
 			targeter(sAspect*0.5,0.25+0.5*acplayer,0.049,-p->roll);
 			radar(0.222 * sAspect, 0.437+0.5*acplayer, 0.1, -0.1, true, p);
-			healthBar(0.175*sAspect, 0.6-0.5*acplayer, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
+			healthBar(0.175*sAspect, 0.6-0.5*acplayer, 0.25*sAspect, 0.333, p->health/100.0,true);
 		}
 		else if(!p->dead)
 		{
+			if(p->target != 0 && world[p->target] != nullptr)
+			{
+				Vec3f proj = (views[acplayer]->projectionMatrix() * views[acplayer]->modelViewMatrix()) * world[p->target]->position;
+				if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
+				{
+					shaders.bind("circle shader");
+					if(p->targetLocked)		graphics->setColor(1,0,0);
+					else					graphics->setColor(0,0,1);
+					graphics->drawOverlay(Rect::CWH(views[acplayer]->project(world[p->target]->position), Vec2f(0.02,0.02)));
+
+					if(world[p->target]->type & PLANE && p->position.distanceSquared(world[p->target]->position) <= 2000.0*2000.0)
+					{
+						auto targetPtr = dynamic_pointer_cast<nPlane>(world[p->target]);
+						float s = 1000; //speed of bullets
+						Vec3f r = targetPtr->position - p->position;
+						Vec3f v = targetPtr->rotation * Vec3f(0,0,targetPtr->speed);
+		
+						float a = v.dot(v) - s*s;
+						float b = 2.0 * v.dot(r);
+						float c = r.dot(r);
+		
+						if(b*b - 4.0*a*c >= 0.0)
+						{
+							float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		
+							if(t <= 0.0) //can only happen when plane is flying faster than bullets
+							{
+								t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+							}
+		
+							graphics->setColor(1,1,1,0.3);
+							graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPtr->position + v * t), Vec2f(0.015,0.015)));
+						}
+					}
+					graphics->setColor(1,1,1);
+					shaders.bind("ortho");
+				}
+				else
+				{
+					Vec3f fwd = views[acplayer]->camera().fwd;
+					Vec3f up = views[acplayer]->camera().up;
+					Vec3f right = views[acplayer]->camera().right;
+					Vec3f direction = (world[p->target]->position - p->position).normalize();
+					Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
+					Vec2f screenDirection(projectedDirection.dot(right), projectedDirection.dot(up));
+					screenDirection = screenDirection.normalize();
+					Angle ang = atan2A(screenDirection.y,screenDirection.x);
+					screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
+					screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95) * 0.5 + 0.5 * acplayer;
+					if(p->targetLocked)		graphics->setColor(1,0,0);
+					else					graphics->setColor(0,0,1);
+					graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
+					graphics->setColor(1,1,1);
+				}
+			}
+
 	//		radar(sAspect-0.11, 0.389+0.5*acplayer, 0.094, 0.094, false, p);	
 	//		healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
 		}
@@ -101,6 +157,14 @@ void splitScreen::render3D(unsigned int v)
 		sceneManager.renderScene(views[v], players[v]->getObject()->meshInstance);
 	else
 		sceneManager.renderScene(views[v]);
+
+	world.renderFoliage(views[v]);
+
+	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+		sceneManager.renderSceneTransparency(views[v], players[v]->getObject()->meshInstance);
+	else
+		sceneManager.renderSceneTransparency(views[v]);
+
 //	glViewport(0, 0, sw, sh/2);
 //	drawScene(1);
 }

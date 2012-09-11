@@ -33,10 +33,10 @@ public:
 		T cosp = cos(pitch);
 		T cosr = cos(roll);
  
-		this->x = sinr * cosp * cosy - cosr * sinp * siny;
-		this->y = cosr * sinp * cosy + sinr * cosp * siny;
-		this->z = cosr * cosp * siny - sinr * sinp * cosy;
-		this->w = cosr * cosp * cosy + sinr * sinp * siny;
+		x = sinr * cosp * cosy - cosr * sinp * siny;
+		y = cosr * sinp * cosy + sinr * cosp * siny;
+		z = cosr * cosp * siny - sinr * sinp * cosy;
+		w = cosr * cosp * cosy + sinr * sinp * siny;
  
 		normalize();
 	}

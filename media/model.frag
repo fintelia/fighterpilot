@@ -24,7 +24,7 @@ void main()
 	Normal = texture2D(normalMap,texCoord).xyz;
 	Normal.xy = Normal.xy * 2.0 - 1.0;
 
-	float NdotL = max(dot(normalize(Normal), normalize(lightDir)),0.0);
+	float NdotL = max(dot(normalize(Normal), normalize(lightDir))*0.5+0.5,0.0);
 
 	//NdotL = NdotL * 0.5 + 0.5;
 	//NdotL = NdotL * NdotL;

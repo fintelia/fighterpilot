@@ -34,19 +34,18 @@ namespace particle
 		p.b = 0.17;
 		p.a = 0.0;
 
-		p.size = 0.8;
+		p.size = 0.8 * radius;
 
 		return true;
 	}
 	void planeEngines::updateParticle(particle& p)
 	{
 		float t = (world.time() - p.startTime) * p.invLife;
-		p.pos += p.velocity * world.time.length() / 1000;
+		p.pos += p.velocity * radius * world.time.length() / 1000;
 		p.ang += p.angularSpeed * world.time.length() / 1000;
 
-
 		p.a = t < 0.1 ? t*10.0 : 1.0 - (t-0.1)/0.9;
-		p.size = (1.0 - 0.25*t) * 0.8;
+		p.size = (1.0 - 0.25*t) * 0.8  * radius;
 	}
 	void planeEngines::render()
 	{

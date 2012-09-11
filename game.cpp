@@ -11,14 +11,14 @@ SettingsManager& settings = SettingsManager::getInstance();
 Game* game = new Game;
 
 objId bullets;
-planeType defaultPlane;
 
 bool Game::init()
 {
+//////////////////////////////////////////////Wait to Enter Full Screen///////////////////////////////////////////////////////////////////////////////
 #if defined(WINDOWS) && defined(_DEBUG)
 	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
 #endif
-
+/////////////////////////////////////////////Check for Required Files/////////////////////////////////////////////////////////////////////////////////
 	if(!fileManager.directoryExists("media"))
 	{
 #ifdef WINDOWS
@@ -40,11 +40,12 @@ bool Game::init()
 #endif
 		return false;
 	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	string appData = fileManager.getAppDataDirectory();
 	if(!fileManager.fileExists(appData + "settings.ini"))
 	{
 		shared_ptr<FileManager::iniFile> settingsFile(new FileManager::iniFile(appData + "settings.ini"));
-		settingsFile->bindings["graphics"]["maxFrameRate"] = "60.0";
+		settingsFile->bindings["graphics"]["refreshRate"] = "75";
 #ifdef WINDOWS
 		settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(GetSystemMetrics(SM_CXSCREEN));
 		settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(GetSystemMetrics(SM_CYSCREEN));
@@ -55,22 +56,20 @@ bool Game::init()
 #endif
 		settingsFile->bindings["graphics"]["samples"] = "4";
 		settingsFile->bindings["graphics"]["gamma"] = "1.0";
+		settingsFile->bindings["graphics"]["VSync"]="enabled";
+		settingsFile->bindings["graphics"]["fullscreen"] = "true";
+		settingsFile->bindings["graphics"]["textureCompression"]="enabled";
 		if(!fileManager.writeIniFile(settingsFile))
 			debugBreak();
 	}
-
 	shared_ptr<FileManager::textFile> shortcut(new FileManager::textFile("media/settings.ini.url"));
 	shortcut->contents = string("[InternetShortcut]\r\nURL=") + appData + "settings.ini\r\nIconIndex=0\r\nIconFile=" + appData + "settings.ini\r\n";
 	fileManager.writeTextFile(shortcut);
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	auto s = fileManager.loadIniFile(appData + "settings.ini");
 	settings.load(s->bindings);
-
-	maxFrameRate = settings.get<float>("graphics", "maxFrameRate");
-
-	
-
+	/////////////////////Screen Resolution/////////////////////////
 	Vec2u r, rWanted;
 #ifdef WINDOWS
 	r.x = GetSystemMetrics(SM_CXSCREEN);
@@ -82,47 +81,46 @@ bool Game::init()
 	rWanted.x = settings.get<int>("graphics","resolutionX");
 	rWanted.y = settings.get<int>("graphics","resolutionY");
 
-	auto resolutions = graphics->getSupportedResolutions();
-	for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
+	auto displayModes = graphics->getSupportedDisplayModes();
+	for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
 	{
-		if(*i == rWanted)
+		if(i->resolution == rWanted)
 		{
 			r = rWanted;
 		}
 	}
 	if(r.x == 0 || r.y == 0) //if we failed to get the resolution we wanted and we don't know the screen resolution
 	{
-		for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
+		for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
 		{
-			if((*i).y > r.y || ((*i).y == r.y && (*i).x > r.x)) //pick the highest vertical resolution
+			if(i->resolution.y > r.y || (i->resolution.y == r.y && i->resolution.x > r.x)) //pick the highest vertical resolution
 			{
-				r = *i;
+				r = i->resolution;
 			}
 		}		
 	}
-
+	/////////////////////Gamma/////////////////////////////////////
 	float gamma = settings.get<float>("graphics","gamma");
 	if(gamma > 0.5 && gamma < 5.0)
 		graphics->setGamma(gamma);
 
+	/////////////////////Multisampling/////////////////////////////
 	unsigned int maxSamples = settings.get<unsigned int>("graphics","samples");
 
-	// Create Our OpenGL Window
-	if (!graphics->createWindow("FighterPilot",r,maxSamples))
+	/////////////////////Texture Compression/////////////////////////////
+	graphics->setTextureCompression(settings.get<string>("graphics", "textureCompression")=="enabled");
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (!graphics->createWindow("FighterPilot",r,maxSamples, (settings.get<string>("graphics","fullscreen")=="true")))
 	{
 		cout << "create windows failed";
 		return false;
 	}
-	
-	graphics->setVSync(maxFrameRate <= 75.0);
 
-//	ShowHideTaskBar(false);
-//////
+	graphics->setRefreshRate(settings.get<unsigned int>("graphics", "refreshRate"));
+	graphics->setVSync(settings.get<string>("graphics", "VSync")=="enabled");
 
 	menuManager.setMenu(new gui::loading);
-
-//	controlManager.addController(shared_ptr<controller>(new controller(0)));
-//	controlManager.addController(shared_ptr<controller>(new controller(1)));
 
 	return true;
 }

@@ -132,6 +132,10 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 				return 0;
 			}
 			break;
+		case WM_PAINT:
+			if(!game->active)
+				game->needsRedraw=true;
+			break;
 	}
 
 	// Pass All Unhandled Messages To DefWindowProc
@@ -257,7 +261,7 @@ int main(int argc, const char* argv[])
 	//	cmdLineStr = cmdLineStr.substr(0,cmdLineStr.find_last_of("\\/"));
 	//	SetCurrentDirectoryA(cmdLineStr.c_str());
 	//}
-	
+
 #if defined(WINDOWS)
     string cmdLineString(lpCmdLine);
 	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);	
@@ -321,8 +325,10 @@ int main(int argc, const char* argv[])
 		{
 			game->update();
 			
-			if(game->active)
+			if(game->active || game->needsRedraw)
 			{
+				game->needsRedraw = false;
+
 				graphics->render();
 
 				///timing code
@@ -331,7 +337,7 @@ int main(int argc, const char* argv[])
 				do{
 					time = GetTime();
 				}while(time < nextUpdate - swapTime);
-				nextUpdate = 1000.0/game->maxFrameRate + GetTime();
+				nextUpdate = 2.0 + GetTime(); //limits frame rate to 500 fps
 				time = GetTime();
 				//end timing code
 

@@ -2,8 +2,7 @@
 class objectList
 {
 protected:
-	map<objId,shared_ptr<object>>		mObjects;
-
+	map<objId,shared_ptr<object>>			mObjects;
 	map<objectType, map<objId,shared_ptr<object>>> mObjectTypes;
 
 	void clearObjects();

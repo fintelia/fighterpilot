@@ -1,5 +1,5 @@
 
-uniform vec4 color;
+uniform vec4 color = vec4(1,1,1,1);
 varying vec2 texCoord;
 
 void main()

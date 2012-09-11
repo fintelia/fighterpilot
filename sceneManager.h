@@ -74,6 +74,7 @@ public:
 
 	void resetMeshInstances();
 	void renderScene(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);
+	void renderSceneTransparency(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);
 	void endRender();
 
 	void bindLights(shared_ptr<GraphicsManager::shader> shader);

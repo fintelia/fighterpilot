@@ -7,30 +7,66 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(sPos, sRot, Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100),cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED)
+nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED)
 {
+	lastPosition = position = sPos;
+	lastRotation = rotation = sRot;
 	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
-}
 
+	initArmaments();
+
+	double altitude = world.altitude(position);
+	if(altitude < 35)
+		position.y -= altitude - 35;
+
+
+	Vec3f f = (rotation * Vec3f(0,0,1)).normalize();
+	Vec3f u = (rotation * Vec3f(0,1,0)).normalize();
+	if(f.magnitudeSquared() < 0.001)
+	{
+		rotation = Quat4f();
+		climb = 0;
+		direction = 0;
+	}
+	else if(abs(f.y) > 0.999)
+	{
+		climb = PI/2 * abs(f.y)/f.y;
+		direction = PI+atan2(u.x,u.z);
+	}
+	else//only condition that *should* happen
+	{
+		direction = atan2(f.x,f.z);
+		climb = atan2(f.y,sqrt(f.x*f.x+f.z*f.z));
+	}
+	roll = 0;
+	speed=300.0;
+
+	controled=false;
+	maneuver=0;
+	death = DEATH_NONE;
+	health = 100.0;
+	respawning=false;
+	shotsFired = 0;
+
+	target=0;
+	targetLocked=false;
+
+	smoothCamera(); //set up the camera
+	observer.lastFrame = observer.currentFrame;
+}
 void nPlane::init()
 {
 	auto& engines = objectInfo.planeStats(type).engines;
 	for(auto i=engines.begin(); i!=engines.end(); i++)
 	{
-		particleManager.addEmitter(new particle::planeEngines, id, *i);
-//		engineLights.push_back(sceneManager.genPointLight());
+		particle::planeEngines* e = new particle::planeEngines;
+		particleManager.addEmitter(e, id, i->offset);
+		e->setPositionAndRadius(position, i->radius);
 	}
-
-//	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(7.0, 0, -4));
-//	particleManager.addEmitter(new particle::planeContrail, id, Vec3f(-7.0, 0, -4));
 
 	smokeTrail = shared_ptr<particle::smokeTrail>(new particle::smokeTrail);
 	particleManager.addEmitter(smokeTrail, id);
 	smokeTrail->setActive(false);
-
-	spawn();
-	//position.x += 850;
-	//position.z -= 1000;
 }
 void nPlane::updateSimulation(double time, double ms)
 {
@@ -766,6 +802,18 @@ void nPlane::findTarget()
 			targetFound = true;
 		}
 	}
+	auto ships = world(SHIP);
+	for(auto i = ships.begin(); i != ships.end();i++)
+	{
+		distSquared = position.distanceSquared((*i).second->position);
+		if(!i->second->dead && team != i->second->team && (!targetFound || distSquared < minDistSquared))
+		{
+			ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			minDistSquared = distSquared;
+			target = i->second->id;
+			targetFound = true;
+		}
+	}
 	targetLocked = targetFound && (ang < PI/6 && minDistSquared < 2000 * 2000);
 }
 void nPlane::shootMissile()
@@ -798,6 +846,16 @@ void nPlane::shootMissile()
 		}
 		auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 		for(auto i = AAA.begin(); i != AAA.end();i++)
+		{
+			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
+			if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
+			{
+				minAng = ang;
+				pId = i->second->id;
+			}
+		}
+		auto ships = world(SHIP);
+		for(auto i = ships.begin(); i != ships.end();i++)
 		{
 			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
 			if(!i->second->dead && team != i->second->team && ang < minAng && position.distanceSquared((*i).second->position) < 2000 * 2000)
@@ -888,56 +946,4 @@ void nPlane::initArmaments()
 	machineGun.rechargeTime	= machineGun.rechargeLeft	= 450.0;
 	machineGun.coolDown		= machineGun.coolDownLeft	= 26.0;
 	machineGun.firing									= false;
-}
-void nPlane::spawn()
-{
-	initArmaments();
-	position = startPos;
-	rotation = startRot;
-
-	double altitude = world.altitude(position);
-	if(altitude < 35)
-		position.y -= altitude - 35;
-
-
-	Vec3f f = (rotation * Vec3f(0,0,1)).normalize();
-	Vec3f u = (rotation * Vec3f(0,1,0)).normalize();
-	if(f.magnitudeSquared() < 0.001)
-	{
-		rotation = Quat4f();
-		climb = 0;
-		direction = 0;
-	}
-	else if(abs(f.y) > 0.999)
-	{
-		climb = PI/2 * abs(f.y)/f.y;
-		direction = PI+atan2(u.x,u.z);
-	}
-	else//only condition that *should* happen
-	{
-		direction = atan2(f.x,f.z);
-		climb = atan2(f.y,sqrt(f.x*f.x+f.z*f.z));
-	}
-	roll = 0;
-	speed=300.0;
-
-	dead = false;
-	controled=false;
-	maneuver=0;
-	death = DEATH_NONE;
-	health=maxHealth;
-	//updateAll(controlState());
-
-	//planePath.currentPoint(position,rotation);
-
-	respawning=false;
-	shotsFired = 0;
-
-	target=0;
-	targetLocked=false;
-
-	smoothCamera(); //set up the camera
-
-//	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(7,0,-5)));
-//	particleManager.addEmitter(new particle::planeContrail(id, Vec3f(-7,0,-5)));
 }

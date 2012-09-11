@@ -1,33 +1,33 @@
 namespace gui
 {
 
-class newObject: public popup
-{
-public:
-	newObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
-	~newObject(){}
-	int update(){return 0;}
-	void render(){}
-	int getObjectType(){return type;}
-	int getObjectTeam(){return team;}
-protected:
-	int type;
-	int team;
-};
-class objectProperties: public popup
-{
-protected:
-	LevelFile::Object* object;
-	vector<int> typeOptions;
-public:
-	objectProperties():object(NULL){}
-	~objectProperties(){}
-
-	bool init(LevelFile::Object* obj);
-
-	int update();
-	void render();
-};
+//class newObject: public popup
+//{
+//public:
+//	newObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
+//	~newObject(){}
+//	int update(){return 0;}
+//	void render(){}
+//	int getObjectType(){return type;}
+//	int getObjectTeam(){return team;}
+//protected:
+//	int type;
+//	int team;
+//};
+//class objectProperties: public popup
+//{
+//protected:
+//	LevelFile::Object* object;
+//	vector<objectType> typeOptions;
+//public:
+//	objectProperties():object(NULL){}
+//	~objectProperties(){}
+//
+//	bool init(LevelFile::Object* obj);
+//
+//	int update();
+//	void render();
+//};
 class inGame: public popup
 {
 public:
@@ -45,7 +45,8 @@ class levelEditor: public screen
 {
 private:
 	shared_ptr<GraphicsManager::View> view;
-	
+	shared_ptr<GraphicsManager::View> objectPreviewView;
+
 	LevelFile levelFile;
 	shared_ptr<GraphicsManager::vertexBuffer> terrainVertexBuffer;
 	shared_ptr<GraphicsManager::indexBuffer> terrainIndexBuffer;
@@ -55,7 +56,7 @@ private:
 	unsigned int numTerrainSkirtVertices;
 	bool terrainValid;
 
-
+	vector<objectType> typeOptions;
 
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS} lastTab;
 
@@ -63,21 +64,19 @@ private:
 	bool awaitingMapSave;
 	bool awaitingLevelFile;
 	bool awaitingLevelSave;
-	bool awaitingNewObject;
+	//bool awaitingNewObject;
 
-	int newObjectType;
+	int selectedObject;
+	bool placingNewObject;
 
 	bool newRegionRadius;
 	Vec2f newRegionCenter;
 
 	map<int,Circle<float>> objectCircles;
 
-	Quat4f rot;
 	Vec3f center;
-	//editLevel* level;
-	//float maxHeight;
-	//float minHeight;
-	float scrollVal;
+	float fovy;
+
 	float objPlacementAlt;
 
 	Vec3f orthoCenter;
@@ -86,7 +85,7 @@ private:
 
 public:
 	
-	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),awaitingNewObject(false),newObjectType(0),newRegionRadius(false),center(0,0,0), scrollVal(0.0), objPlacementAlt(10.0){}
+	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),selectedObject(-1),placingNewObject(false),newRegionRadius(false),center(0,0,0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
 	int update();
@@ -101,9 +100,11 @@ public:
 
 private:
 	float getHeight(unsigned int x, unsigned int z) const;
+	float getInterpolatedHeight(float x, float y) const;
 	void setHeight(unsigned int x, unsigned int z, float height) const;
 	void increaseHeight(unsigned x, unsigned int z, float increase) const;
 	Vec3f getNormal(unsigned int x, unsigned int z) const;
+	Vec3f getInterpolatedNormal(float x, float y) const;
 
 	void setMinMaxHeights();
 
@@ -117,11 +118,11 @@ private:
 	void resetView();
 	void fromFile(string filename);
 
-	void addObject(int type, int team, float x, float y);
 	void updateObjectCircles();
 
 	void renderTerrain(bool drawWater, float scale, float seaLevelOffset);
 
+	void renderObjectPreview();
 	Rect orthoView();
 };
 class chooseMode: public screen
@@ -156,9 +157,22 @@ protected:
 class options: public screen
 {
 private:
-	float initialGamma;
-	int initialResolutionChoice;
+	struct OptionState
+	{
+		int fullscreenChoice;
+		int refreshRateChoice;
+		int resolutionChoice;
+		int samplesChoice;
 
+		float gamma;
+		bool vSync;
+		bool textureCompression;
+	}initialState;
+
+	GraphicsManager::displayMode currentDisplayMode;
+	set<GraphicsManager::displayMode> displayModes;
+
+	int lastResolutionChoice;
 	vector<Vec2u> resolutionChoices;
 	shared_ptr<FileManager::iniFile> settingsFile;
 public:
@@ -219,6 +233,7 @@ protected:
 	float countdown;
 	bool restart;
 	bool levelup;
+	bool victory;
 
 #ifdef _DEBUG
 	bool slow;
