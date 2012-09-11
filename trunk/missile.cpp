@@ -18,8 +18,10 @@
 //		}
 //	}
 //}
-missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner):object(sPos, sRot, Type), life(15.0), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)
+missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner):object(Type), life(15.0), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)
 {
+	lastPosition = position = sPos;
+	lastRotation = rotation = sRot;
 	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 }
 
@@ -51,18 +53,44 @@ void missile::updateSimulation(double time, double ms)
 	}
 	lastPosition = position;
 	lastRotation = rotation;
+
 	/////////////////follow target////////////////////
 	nPlane* enemy = (nPlane*)world[target].get();
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead && engineStarted)
 	{
 		destVec = (enemy->position - position).normalize();
+
+		if(enemy->type & PLANE)
+		{
+			Vec3f r = enemy->position - position;
+			Vec3f v = enemy->rotation * Vec3f(0,0,enemy->speed);
+		
+			float a = v.dot(v) - 1180.0*1180.0;
+			float b = 2.0 * v.dot(r);
+			float c = r.dot(r);
+
+			if(b*b - 4.0*a*c >= 0.0)
+			{
+				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+
+				if(t <= 0.0) //doen't seem to happen...
+				{
+					t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+				}
+
+				destVec = (enemy->position + v * t - position).normalize();
+			}
+		}
+
+
+
 		Vec3f fwd = rotation * Vec3f(0,0,1);
 
 		Angle angle = acosA(destVec.dot(fwd));
-
+	
 		Quat4f targetRot(destVec);
-
+	
 		if( angle > PI*3/4)
 		{
 			target = 0;
@@ -73,12 +101,21 @@ void missile::updateSimulation(double time, double ms)
 			rotation = slerp(rotation,targetRot,(float)turnRate/angle);
 		}
 
+
+		//Vec3f newLineOfSight = (rotation.conjugate() * destVec).normalize();
+		//Vec3f deltaLOS = newLineOfSight - lineOfSight;
+		//float angle = newLineOfSight.dot(lineOfSight) / 1000.0 * world.time.length() * 1.0;
+		//Vec3f axis = lineOfSight.cross(newLineOfSight);
+		//rotation = rotation * Quat4f(axis, angle);
+
+		//lineOfSight = newLineOfSight;
 	}
 	else if(enemy != NULL && enemy->dead)
 	{
 		particleManager.addEmitter(new particle::explosionSmoke(),position,2.0);
 		life = 0.0;
 	}
+
 	//////////////////Movement//////////////
 	if(!engineStarted && time - launchTime >= 150.0)
 		engineStarted = true;
@@ -104,9 +141,12 @@ void missile::updateSimulation(double time, double ms)
 		meshInstance.reset();
 	}
 }
-void SAMmissile::init()
+SAMmissile::SAMmissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target): missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target)
 {
 	minAngle = 2.0*PI;
+}
+void SAMmissile::init()
+{
 	particleManager.addEmitter(new particle::contrail(),id);
 	particleManager.addEmitter(new particle::contrailSmall(),id,Vec3f(0,0,-5.0));
 }
@@ -120,13 +160,36 @@ void SAMmissile::updateSimulation(double time, double ms)
 	if(enemy != NULL && !enemy->dead)
 	{
 		destVec = (enemy->position - position).normalize();
-		Vec3f fwd = rotation * Vec3f(0,0,1);
 
+		if(enemy->type & PLANE)
+		{
+			Vec3f r = enemy->position - position;
+			Vec3f v = enemy->rotation * Vec3f(0,0,enemy->speed);
+		
+			float a = v.dot(v) - 1180.0*1180.0;
+			float b = 2.0 * v.dot(r);
+			float c = r.dot(r);
+
+			if(b*b - 4.0*a*c >= 0.0)
+			{
+				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+
+				if(t <= 0.0) //doen't seem to happen...
+				{
+					t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+				}
+
+				destVec = (enemy->position + v * t - position).normalize();
+			}
+		}
+
+		Vec3f fwd = rotation * Vec3f(0,0,1);
+		
 		float angle = acos(destVec.dot(fwd));
 		Quat4f targetRot(destVec);
-
+		
 		minAngle = min(angle,minAngle);
-
+		
 		if(angle > PI*3/4 || angle > minAngle + PI/12)
 		{
 			target = 0;

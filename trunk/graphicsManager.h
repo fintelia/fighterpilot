@@ -177,6 +177,8 @@ public:
 	public:
 		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, RGB=3, RGBA=4, RGB16, RGBA16, RGB16F, RGBA16F};
 	protected:
+		friend class GraphicsManager;
+		static bool compression;
 		Format format;
 	public:
 		texture():format(NONE){}
@@ -256,100 +258,117 @@ public:
 
 		virtual ~shader(){if(boundShader==this)boundShader=nullptr;}
 	};
+
+	struct displayMode
+	{
+		Vec2u resolution;
+		unsigned int refreshRate;
+		bool operator< (const displayMode& other)const{return resolution.x < other.resolution.x || (resolution.x == other.resolution.x && resolution.y < other.resolution.y) || (resolution.x == other.resolution.x && resolution.y == other.resolution.y && refreshRate < other.refreshRate);}
+	};
 private:
 	gID currentId;
 
 protected:
-	gID idGen(){return ++currentId;}
 
-	vector<weak_ptr<View>> views;
-	shared_ptr<View> currentView;
-
-	float fps;
-
-	float currentGamma;
-
-	bool stereo;
+	//stereoscopic 3D
+	enum StereoMode{STEREO_NONE,STEREO_ANAGLYPH, STEREO_3D} stereoMode;
 	bool leftEye;
 	float interOcularDistance;
 
+	//views
+	vector<weak_ptr<View>> views;
+	shared_ptr<View> currentView;
+
+	//generic renderer state
+	float fps;
+	bool vSync;
+	float currentGamma;
+	bool textureCompression;
+
+	//global light
 	Vec3f lightPosition;
 
+	//private functions
 	GraphicsManager();
-	shader* getBoundShader(){return shader::boundShader;}
 	virtual ~GraphicsManager(){}
+	shader* getBoundShader();
 public:
-	virtual bool drawOverlay(Rect4f r, string tex="")=0;
-	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
-	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
 
-	virtual void drawText(string text, Vec2f pos, string font)=0;
-	virtual void drawText(string text, Rect rect, string font)=0;
-	virtual Vec2f getTextSize(string text, string font)=0;
-
-	virtual void drawText(string text, Vec2f pos){drawText(text, pos, "default font");}
-	virtual void drawText(string text, Rect rect){drawText(text, rect, "default font");}
-	virtual Vec2f getTextSize(string text){return getTextSize(text, "default font");}
-
+	//public renderer functions
 	virtual void resize(int w, int h)=0;//not really used that much but...
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
-	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)=0;
-	virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
+	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen)=0;
+	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
 	virtual void bindRenderTarget(RenderTarget t)=0;
 	virtual void renderFBO(RenderTarget src)=0;
 
+	//draw functions
 	virtual void drawLine(Vec3f start, Vec3f end)=0;
 	virtual void drawSphere(Vec3f position, float radius)=0;
 	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
 
-	//virtual void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
-	//virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)=0;
+	//draw overlay functions
+	virtual bool drawOverlay(Rect4f r, string tex="")=0;
+	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
+	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
 
-	//virtual void drawModel(string model, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(model,position,rotation,Vec3f(scale,scale,scale));}
-	//virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, float scale=1.0)	{drawModel(objectTypeString(t),position,rotation,Vec3f(scale,scale,scale));}
-	//virtual void drawModel(objectType t, Vec3f position, Quat4f rotation, Vec3f scale)		{drawModel(objectTypeString(t),position,rotation,scale);}
-	//virtual void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, float scale=1.0)		{drawModelCustomShader(model, position, rotation, Vec3f(1.0,1.0,1.0));}
+	//draw text functions
+	virtual void drawText(string text, Vec2f pos, string font)=0;
+	virtual void drawText(string text, Rect rect, string font)=0;
+	virtual Vec2f getTextSize(string text, string font)=0;
+	virtual void drawText(string text, Vec2f pos){drawText(text, pos, "default font");}
+	virtual void drawText(string text, Rect rect){drawText(text, rect, "default font");}
+	virtual Vec2f getTextSize(string text){return getTextSize(text, "default font");}
 
+	//gen* functions
 	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage)=0;
 	virtual shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage)=0;
-
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
 	virtual shared_ptr<textureCube> genTextureCube()=0;
 	virtual shared_ptr<shader> genShader()=0;
-
 	virtual shared_ptr<View> genView();
 
+	//get functions
+	float	getGamma()const;
+	Vec3f	getLightPosition()const;
+	bool	getTextureCompression()const;
+	bool	getVSync()const;
+
+	//virtual get functions
+	virtual bool				getFullscreen()const=0;
+	virtual int					getMultisampling()const=0;
+	virtual displayMode			getCurrentDisplayMode()const=0;	
+	virtual set<displayMode>	getSupportedDisplayModes()const=0;
+
+	//virtual set functions
+	virtual void setAlphaToCoverage(bool enabled)=0;
+	virtual void setBlendMode(BlendMode blend)=0;
 	virtual void setColor(float r, float g, float b, float a)=0;
 	virtual void setColorMask(bool mask)=0;
 	virtual void setDepthMask(bool mask)=0;
 	virtual void setDepthTest(bool enabled)=0;
-	virtual void setBlendMode(BlendMode blend)=0;
-	virtual void setAlphaToCoverage(bool enabled)=0;
-	virtual void setWireFrame(bool enabled)=0;
-	void setColor(float r, float g, float b){setColor(r,g,b,1.0);}
-	void setLightPosition(Vec3f position){lightPosition = position;}
-
+	virtual void setRefreshRate(unsigned int rate)=0;
 	virtual void setVSync(bool enabled)=0;
+	virtual void setWireFrame(bool enabled)=0;
 
-	Vec3f getLightPosition(){return lightPosition;}
+	//set functions
+	void setColor(float r, float g, float b);
+	void setInterOcularDistance(float d);
+	void setLightPosition(Vec3f position);
+	void setStereoMode(StereoMode s);
+	void setTextureCompression(bool enabled);
 
-	float getGamma(){return currentGamma;}
-	virtual bool getMultisampling()=0;
-
-	void useAnagricStereo(bool b){stereo = b;}
-	void setInterOcularDistance(float d){interOcularDistance = d;}
-
-	virtual set<Vec2u> getSupportedResolutions()=0;
-
+	//generic OS functions
 	virtual void flashTaskBar(int times, int length=0)=0;
 	virtual void minimizeWindow()=0;
 
+	//debug function
 	virtual void checkErrors()=0;
 };
 
@@ -373,7 +392,6 @@ protected:
 
 	struct FBO{
 		unsigned int color;
-		//unsigned int normals;
 		unsigned int depth;
 		unsigned int fboID;
 		bool colorBound;
@@ -387,6 +405,7 @@ protected:
 	Rect viewConstraint;
 
 	bool multisampling;
+	bool isFullscreen;
 
 	int samples;
 	RenderTarget renderTarget;
@@ -522,8 +541,8 @@ public:
 
 		string getErrorStrings();
 	};
-	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples);
-	bool changeResolution(Vec2i resolution, unsigned int maxSamples);
+	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen);
+	//bool changeResolution(Vec2i resolution, unsigned int maxSamples);
 	void destroyWindow();
 
 	void resize(int w, int h);
@@ -552,23 +571,28 @@ public:
 	shared_ptr<textureCube> genTextureCube();
 	shared_ptr<shader> genShader();
 
-	void setGamma(float gamma);
-	void setColor(float r, float g, float b, float a);
-	void setColorMask(bool mask);
-	void setDepthMask(bool mask);
-	void setDepthTest(bool enabled);
+	void setAlphaToCoverage(bool enabled);
 	void setBlendMode(BlendMode blend);
 	void setClientState(unsigned int index, bool state);
+	void setColor(float r, float g, float b, float a);
+	void setColorMask(bool mask);
+	void setGamma(float gamma);
+	void setDepthMask(bool mask);
+	void setDepthTest(bool enabled);
+	void setRefreshRate(unsigned int rate);
 	void setVSync(bool enabled);
-	void setAlphaToCoverage(bool enabled);
 	void setWireFrame(bool enabled);
 
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);
 	Vec2f getTextSize(string text, string font);
 
-	set<Vec2u> getSupportedResolutions();
-	bool getMultisampling(){return multisampling;}
+	bool				getFullscreen()const{return isFullscreen;}
+	int					getMultisampling()const{return multisampling ? samples : 0;}
+	displayMode			getCurrentDisplayMode()const;	
+	set<displayMode>	getSupportedDisplayModes()const;
+
+
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 

@@ -899,6 +899,7 @@ void OpenGLgraphics::minimizeWindow()
 }
 OpenGLgraphics::OpenGLgraphics():highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
+	vSync = false;
 #ifdef _DEBUG
 	errorGlowEndTime = 0;
 #endif
@@ -1080,6 +1081,7 @@ void OpenGLgraphics::setClientState(unsigned int index, bool state)
 }
 void OpenGLgraphics::setVSync(bool enabled)
 {
+	vSync = enabled;
 #ifdef WINDOWS
 	if(WGLEW_EXT_swap_control)// wglSwapIntervalEXT)
 		wglSwapIntervalEXT(enabled ? 1 : 0);//turn on/off vsync (0 = off and 1 = on)
@@ -1463,10 +1465,10 @@ void OpenGLgraphics::render()
 	//glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 ////////////////////////////////////3D RENDERING/////////////////////////////////////
 	Vec3f cameraOffset;
-	for(int eye=0; eye<(stereo?2:1); eye++)
+	for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
 	{
 		//set up stereo
-		if(stereo && eye==0)
+		if(stereoMode==STEREO_ANAGLYPH && eye==0)
 		{
 			leftEye = true;
 			redChannelMask = true;
@@ -1475,7 +1477,7 @@ void OpenGLgraphics::render()
 			glColorMask(true,false,false,true);
 			cameraOffset = Vec3f(-interOcularDistance/2,0,0);
 		}
-		else if(stereo && eye==1)
+		else if(stereoMode==STEREO_ANAGLYPH && eye==1)
 		{
 			leftEye = false;
 			redChannelMask = false;
@@ -1486,6 +1488,17 @@ void OpenGLgraphics::render()
 
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
+
+		//if(stereoMode==STEREO_3D && eye==0)
+		//{
+		//	cameraOffset = Vec3f(-interOcularDistance/2,0,0);
+		//}
+		//else if(stereoMode==STEREO_3D && eye==1)
+		//{
+		//	cameraOffset = Vec3f(interOcularDistance/2,0,0);
+		//	glClear(GL_DEPTH_BUFFER_BIT);
+		//}
+
 		//render scene
 		for(auto i = views.begin(); i != views.end();)
 		{
@@ -1497,10 +1510,10 @@ void OpenGLgraphics::render()
 			{
 				auto model = shaders("model");
 				currentView = shared_ptr<View>(*i);
-				glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+				glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 
-				if(highResScreenshot)	currentView->constrainView(viewConstraint);
-				else if(stereo)			currentView->shiftCamera(cameraOffset);
+				if(highResScreenshot)				currentView->constrainView(viewConstraint);
+				else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
 
 				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				model->setUniformMatrix("modelTransform", Mat4f());
@@ -1518,8 +1531,8 @@ void OpenGLgraphics::render()
 				//drawOverlay(Rect::CWH(0.25,0.25,0.1,0.1), "grass");
 
 
-				if(highResScreenshot)	currentView->constrainView(Rect::XYXY(0,0,1,1));
-				else if(stereo)			currentView->shiftCamera(Vec3f(0,0,0));
+				if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
+				else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
 
 				i++;
 			}
@@ -1566,15 +1579,15 @@ void OpenGLgraphics::render()
 				currentView = shared_ptr<View>(*i);
 				if(currentView->renderParticles())
 				{
-					glViewport(currentView->viewport().x * sh, currentView->viewport().y * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 
-					if(highResScreenshot)	currentView->constrainView(viewConstraint);
-					else if(stereo)			currentView->shiftCamera(cameraOffset);
+					if(highResScreenshot)				currentView->constrainView(viewConstraint);
+					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
 
 					particleManager.render(currentView);
 
-					if(highResScreenshot)	currentView->constrainView(Rect::XYXY(0,0,1,1));
-					else if(stereo)			currentView->shiftCamera(Vec3f(0,0,0));
+					if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
+					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
 				}
 				i++;
 			}
@@ -1584,7 +1597,7 @@ void OpenGLgraphics::render()
 	glDisable(GL_DEPTH_TEST);
 
 	currentView.reset(); //set the current view to null
-	if(stereo)
+	if(stereoMode==STEREO_ANAGLYPH)
 	{
 		redChannelMask = true;
 		greenChannelMask = true;
@@ -1715,9 +1728,9 @@ void OpenGLgraphics::destroyWindow()
 #ifdef WINDOWS
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 #endif
-bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples)
+bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen)
 {
-	bool fullscreenflag=true;
+	bool fullscreenflag=fullscreen;
 
 #if defined(WINDOWS)
 	static bool arbMultisampleSupported=false;
@@ -1828,6 +1841,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		MessageBox(NULL,L"Can't Create A GL Device Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
+
 	if(!arbMultisampleSupported)
 	{
 		if (!(PixelFormat=ChoosePixelFormat(context->hDC,&pfd)))	// Did Windows Find A Matching Pixel Format?
@@ -1847,9 +1861,13 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		MessageBox(NULL,L"Can't Set The PixelFormat.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
+	DescribePixelFormat(context->hDC, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+	if(pfd.dwFlags & PFD_STEREO)
+	{
+		stereoMode = STEREO_3D;
+	}
 
-
-	if (!(context->hRC=wglCreateContext(context->hDC)))				// Are We Able To Get A Rendering Context?
+	if(!(context->hRC=wglCreateContext(context->hDC)))				// Are We Able To Get A Rendering Context?
 	{
 		destroyWindow();								// Reset The Display
 		MessageBox(NULL,L"Can't Create A GL Rendering Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
@@ -1863,6 +1881,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		MessageBox(NULL,L"Can't Activate The GL Rendering Context.",L"ERROR",MB_OK|MB_ICONEXCLAMATION);
 		return false;								// Return false
 	}
+
 #elif defined(LINUX)
 	fullscreenflag = false;
 	sw = screenResolution.x = 1024;
@@ -2067,11 +2086,13 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;
 	}
 
-	if(game->hasCommandLineOption("--stereo"))
+	if(game->hasCommandLineOption("--stereo") && stereoMode == STEREO_NONE)
 	{
-		useAnagricStereo(true);
+		stereoMode = STEREO_ANAGLYPH;
 		setInterOcularDistance(0.25);
 	}
+
+	isFullscreen = fullscreenflag;
 
 	overlayVBO = genVertexBuffer(vertexBuffer::STREAM);
 	overlayVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2,	0);
@@ -2084,34 +2105,46 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	return true;
 }
-bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples) // may invalidate OpenGL function pointers?
+//bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples) // may invalidate OpenGL function pointers?
+//{
+//	if(isFullscreen)
+//	{
+//		#if defined(WINDOWS)
+//			DEVMODE dmScreenSettings;										// Device Mode
+//			memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
+//			dmScreenSettings.dmSize			= sizeof(dmScreenSettings);		// Size Of The Devmode Structure
+//			dmScreenSettings.dmPelsWidth	= resolution.x;					// Selected Screen Width
+//			dmScreenSettings.dmPelsHeight	= resolution.y;					// Selected Screen Height
+//			dmScreenSettings.dmBitsPerPel	= 32;							// Selected Bits Per Pixel
+//			dmScreenSettings.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
+//
+//			if(ChangeDisplaySettings(&dmScreenSettings,CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
+//			{
+//				SetWindowPos(context->hWnd,0,0,0,resolution.x,resolution.y,0);
+//				resize(resolution.x,resolution.y);
+//				destroyFBOs();
+//				initFBOs(maxSamples);
+//				resize(resolution.x, resolution.y);
+//				return true;
+//			}
+//		#elif defined(LINUX)
+//			//TODO: add window resize code
+//		#endif
+//	}
+//	else
+//	{
+//		#if defined(WINDOWS)
+//			SetWindowPos(context->hWnd,0,0,0,resolution.x,resolution.y,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+//		#elif defined(LINUX)
+//			//TODO: add window resize code
+//		#endif
+//	}
+//	return false;
+//}
+set<GraphicsManager::displayMode> OpenGLgraphics::getSupportedDisplayModes()const
 {
-#if defined(WINDOWS)
-	DEVMODE dmScreenSettings;										// Device Mode
-	memset(&dmScreenSettings,0,sizeof(dmScreenSettings));			// Makes Sure Memory's Cleared
-	dmScreenSettings.dmSize			= sizeof(dmScreenSettings);		// Size Of The Devmode Structure
-	dmScreenSettings.dmPelsWidth	= resolution.x;					// Selected Screen Width
-	dmScreenSettings.dmPelsHeight	= resolution.y;					// Selected Screen Height
-	dmScreenSettings.dmBitsPerPel	= 32;							// Selected Bits Per Pixel
-	dmScreenSettings.dmFields=DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
-
-	if(ChangeDisplaySettings(&dmScreenSettings,CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL)
-	{
-		SetWindowPos(context->hWnd,0,0,0,resolution.x,resolution.y,0);
-		resize(resolution.x,resolution.y);
-		destroyFBOs();
-		initFBOs(maxSamples);
-		resize(resolution.x, resolution.y);
-		return true;
-	}
-#elif defined(LINUX)
-	//TODO: add window resize code
-#endif
-	return false;
-}
-set<Vec2u> OpenGLgraphics::getSupportedResolutions()
-{
-	set<Vec2u> s;
+	displayMode tmpDM;
+	set<displayMode> s;
 #if defined(WINDOWS)
 	int i=0;
 	DEVMODE d;
@@ -2121,7 +2154,9 @@ set<Vec2u> OpenGLgraphics::getSupportedResolutions()
 
 	while(EnumDisplaySettings(nullptr, i++, &d))
 	{
-		s.insert(Vec2u(d.dmPelsWidth, d.dmPelsHeight));
+		tmpDM.resolution = Vec2u(d.dmPelsWidth, d.dmPelsHeight);
+		tmpDM.refreshRate = d.dmDisplayFrequency;
+		s.insert(tmpDM);
 	}
 
 #elif defined(LINUX)
@@ -2145,7 +2180,43 @@ void OpenGLgraphics::swapBuffers()
 	glXSwapBuffers(x11_display, x11_window);
 #endif
 }
-
+GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
+{
+	DEVMODE d;
+	if(EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&d))
+	{
+		displayMode dm;
+		if(isFullscreen)
+		{
+			dm.resolution = Vec2u(d.dmPelsWidth, d.dmPelsHeight);
+		}
+		else
+		{
+			dm.resolution = Vec2u(sw,sh);
+		}
+		dm.refreshRate = d.dmDisplayFrequency;
+		return dm;
+	}
+	else
+	{
+		displayMode dm;
+		dm.resolution = Vec2u(0, 0);
+		dm.refreshRate = 0;
+		return dm;
+	}
+}
+void OpenGLgraphics::setRefreshRate(unsigned int rate)
+{
+	if(isFullscreen)
+	{
+		DEVMODE d;
+		if(EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&d))
+		{
+			d.dmDisplayFrequency = rate;
+			ChangeDisplaySettingsEx(NULL, &d, NULL, CDS_FULLSCREEN, NULL);
+		}
+	}
+}
 void OpenGLgraphics::takeScreenshot()
 {
 	world.time.pause();

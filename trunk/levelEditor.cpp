@@ -5,12 +5,15 @@ namespace gui{
 
 bool levelEditor::init()
 {
-	defaultPlane = objectInfo.typeFromString("F22");
-
 	view = graphics->genView();
 	view->viewport(0,0, sAspect,1.0);
 	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	view->setRenderFunc(std::bind(&levelEditor::render3D, this, std::placeholders::_1));
+
+	objectPreviewView = graphics->genView();
+	objectPreviewView->viewport(0.0,0.0, 0.260,0.195);
+	objectPreviewView->perspective(60.0, 1.0, 0.1, 10000.0);
+	objectPreviewView->setRenderFunc(std::bind(&levelEditor::renderObjectPreview, this));
 
 	//terrain
 	buttons["dSquare"]		= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
@@ -31,10 +34,29 @@ bool levelEditor::init()
 	toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"desert",black,white));
 
 	//objects
-	buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
-	buttons["addAAgun"]		= new button(0.005,0.040,0.25,0.030,"new AA gun",lightGreen,white);
-	buttons["addSAMbattery"]= new button(0.005,0.075,0.25,0.030,"new SAM Battery",lightGreen,white);
-	buttons["addFlakCannon"]= new button(0.005,0.110,0.25,0.030,"new Flak Cannon",lightGreen,white);
+	//buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
+	//buttons["addAAgun"]		= new button(0.005,0.040,0.25,0.030,"new AA gun",lightGreen,white);
+	//buttons["addSAMbattery"]	= new button(0.005,0.075,0.25,0.030,"new SAM Battery",lightGreen,white);
+	//buttons["addFlakCannon"]	= new button(0.005,0.110,0.25,0.030,"new Flak Cannon",lightGreen,white);
+	//buttons["addShip"]		= new button(0.005,0.145,0.25,0.030,"new Ship",lightGreen,white);
+	buttons["createObject"]		= new button(0.005,0.895,0.25,0.060,"Create Object",darkGreen,white);
+	buttons["deleteObject"]		= new button(0.005,0.895,0.25,0.060,"Delete Object",Color3(0.5,0,0),black);
+	buttons["cancelObject"]		= new button(0.005,0.895,0.25,0.060,"Cancel",Color3(0.7,0.7,0.7),black);
+
+
+	typeOptions = objectInfo.getPlaceableObjects();
+	listBoxes["object type"] = new listBox(0.005,0.195,0.25,objectInfo.textName(objectInfo.getDefaultPlane()),black);
+	for(auto i=typeOptions.begin(); i!=typeOptions.end(); i++)
+	{
+		listBoxes["object type"]->addOption(objectInfo.textName(*i));
+	}
+
+	listBoxes["object team"] = new listBox(0.005,0.230,0.25,"Team 1",black);
+	listBoxes["object team"]->addOption("Team 1");
+	listBoxes["object team"]->addOption("Team 2");
+	listBoxes["object team"]->addOption("Team 3");
+	listBoxes["object team"]->addOption("Team 4");
+
 
 	//settings
 	//v.clear();
@@ -74,7 +96,6 @@ bool levelEditor::init()
 	//level = new editLevel;
 
 	LOD = 1;
-	scrollVal=0.0;
 	//level->newGround(129,129);
 	levelFile.heights = new float[((257-1)*LOD+1)*((257-1)*LOD+1)];
 	levelFile.info.mapResolution.x = (257-1)*LOD+1;
@@ -147,11 +168,11 @@ void levelEditor::operator() (popup* p)
 		levelFile.saveZIP(f); // we do not apply the sea level adjustment into account!!!
 		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
-	else if(awaitingNewObject)
-	{
-		awaitingNewObject = false;
-		newObjectType=((newObject*)p)->getObjectType();
-	}
+	//else if(awaitingNewObject)
+	//{
+	//	awaitingNewObject = false;
+	//	newObjectType=((newObject*)p)->getObjectType();
+	//}
 	//else if(...)
 	//   .
 	//   .
@@ -221,33 +242,86 @@ int levelEditor::update()
 	}
 	else if(getTab() == OBJECTS)
 	{
-		if(buttons["addPlane"]->checkChanged())
+		//if(buttons["addPlane"]->checkChanged())
+		//{
+		//	awaitingNewObject=true;
+		//	popup* p = new newObject;
+		//	p->callback = (functor<void,popup*>*)this;
+		//	menuManager.setPopup(p);
+		//}
+		//else if(buttons["addAAgun"]->checkChanged())
+		//{
+		//	awaitingNewObject=true;
+		//	popup* p = new newObject(AA_GUN);
+		//	p->callback = (functor<void,popup*>*)this;
+		//	menuManager.setPopup(p);
+		//}
+		//else if(buttons["addSAMbattery"]->checkChanged())
+		//{
+		//	awaitingNewObject=true;
+		//	popup* p = new newObject(SAM_BATTERY);
+		//	p->callback = (functor<void,popup*>*)this;
+		//	menuManager.setPopup(p);
+		//}
+		//else if(buttons["addFlakCannon"]->checkChanged())
+		//{
+		//	awaitingNewObject=true;
+		//	popup* p = new newObject(FLAK_CANNON);
+		//	p->callback = (functor<void,popup*>*)this;
+		//	menuManager.setPopup(p);
+		//}
+		//else if(buttons["addShip"]->checkChanged())
+		//{
+		//	awaitingNewObject=true;
+		//	popup* p = new newObject(objectInfo.typeFromString("BATTLESHIP_1"));
+		//	p->callback = (functor<void,popup*>*)this;
+		//	menuManager.setPopup(p);
+		//}
+		if(buttons["createObject"]->checkChanged())
 		{
-			awaitingNewObject=true;
-			popup* p = new newObject;
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
+			LevelFile::Object l;
+			l.type = typeOptions[listBoxes["object type"]->getOptionNumber()];
+			l.team = listBoxes["object team"]->getOptionNumber()+1;
+			l.startloc = Vec3f(center.x,objPlacementAlt,center.z);
+			selectedObject = levelFile.objects.size();
+			levelFile.objects.push_back(l);
+			placingNewObject = true;
+			objPlacementAlt = (l.type & SHIP) ? 10.0 : levelFile.info.maxHeight+10.0;
+			buttons["createObject"]->setVisibility(false);
+			buttons["deleteObject"]->setVisibility(false);
+			buttons["cancelObject"]->setVisibility(true);
 		}
-		else if(buttons["addAAgun"]->checkChanged())
+		else if(buttons["deleteObject"]->checkChanged() || buttons["cancelObject"]->checkChanged())
 		{
-			awaitingNewObject=true;
-			popup* p = new newObject(AA_GUN);
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
+			if(selectedObject < levelFile.objects.size())
+			{
+				levelFile.objects.erase(levelFile.objects.begin()+selectedObject);
+			}
+			placingNewObject = false;
+			selectedObject = -1;
+			buttons["createObject"]->setVisibility(true);
+			buttons["cancelObject"]->setVisibility(false);
+			buttons["deleteObject"]->setVisibility(false);
 		}
-		else if(buttons["addSAMbattery"]->checkChanged())
+
+		if(selectedObject >= 0 && selectedObject < levelFile.objects.size())
 		{
-			awaitingNewObject=true;
-			popup* p = new newObject(SAM_BATTERY);
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
-		}
-		else if(buttons["addFlakCannon"]->checkChanged())
-		{
-			awaitingNewObject=true;
-			popup* p = new newObject(FLAK_CANNON);
-			p->callback = (functor<void,popup*>*)this;
-			menuManager.setPopup(p);
+			if(placingNewObject)
+			{
+				Vec2f cursorPos = input.getMousePos();
+				if(cursorPos.x > 0.260 && cursorPos.y < 0.960)
+				{
+					Vec3f P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+					Vec3f P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+					Vec3f dir = P0-P1;
+					if(abs(dir.y) >= 0.001)
+					{
+						levelFile.objects[selectedObject].startloc = P1 + dir*(objPlacementAlt-P1.y)/dir.y;
+					}
+				}
+			}
+			levelFile.objects[selectedObject].type = typeOptions[listBoxes["object type"]->getOptionNumber()];
+			levelFile.objects[selectedObject].team = listBoxes["object team"]->getOptionNumber()+1;
 		}
 	}
 	else if(getTab() == REGIONS)
@@ -271,10 +345,18 @@ int levelEditor::update()
 		}
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
-			buttons["addPlane"]->setVisibility(newTab==OBJECTS);
-			buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
-			buttons["addSAMbattery"]->setVisibility(newTab==OBJECTS);
-			buttons["addFlakCannon"]->setVisibility(newTab==OBJECTS);
+			//buttons["addPlane"]->setVisibility(newTab==OBJECTS);
+			//buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
+			//buttons["addSAMbattery"]->setVisibility(newTab==OBJECTS);
+			//buttons["addFlakCannon"]->setVisibility(newTab==OBJECTS);
+			//buttons["addShip"]->setVisibility(newTab==OBJECTS);
+			buttons["createObject"]->setVisibility(newTab==OBJECTS);
+			buttons["deleteObject"]->setVisibility(false);
+			buttons["cancelObject"]->setVisibility(false);
+			listBoxes["object type"]->setVisibility(newTab==OBJECTS);
+			listBoxes["object team"]->setVisibility(newTab==OBJECTS);
+			if(lastTab == OBJECTS) view->viewport(0,0, sAspect, 1.0);
+			if(newTab == OBJECTS) view->viewport(0.260,0, sAspect-0.260, 0.960);
 		}
 		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{
@@ -300,10 +382,16 @@ int levelEditor::update()
 	}
 	else if(!input.getMouseState(MIDDLE_BUTTON).down && (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
-		if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.y < 2.0/sh)			center -= rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.y > 1.0-2.0/sh)		center += rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		//if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		//if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		//if(p.y < 2.0/sh)			center -= rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		//if(p.y > 1.0-2.0/sh)		center += rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * pow(1.1f,-scrollVal);
+		if(p.x < 2.0/sh)			center += Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * fovy/80.0;
+		if(p.x > sAspect-2.0/sh)	center -= Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * fovy/80.0;
+		if(p.y < 2.0/sh)			center += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * fovy/80.0;
+		if(p.y > 1.0-2.0/sh)		center -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000 * fovy/80.0;
+		center.x = clamp(center.x, 0.0, levelFile.info.mapSize.x);
+		center.z = clamp(center.z, 0.0, levelFile.info.mapSize.y);
 	}
 
 	return 7;
@@ -316,15 +404,31 @@ bool levelEditor::mouse(mouseButton button, bool down)
 	{
 		if(getTab() == OBJECTS && down)
 		{
-			if(newObjectType != 0)
+			if(placingNewObject && p.x > 0.260 && p.y < 0.960)
 			{
-				static int teamNum=0;
-				addObject(newObjectType, teamNum, p.x, p.y);
-				newObjectType = 0;
-				teamNum++;
-				return true;
+				Vec3f P0 = view->unProject(Vec3f(p.x,p.y,0.0));
+				Vec3f P1 = view->unProject(Vec3f(p.x,p.y,1.0));
+				Vec3f dir = P0-P1;
+				if(abs(dir.y) >= 0.001)
+				{
+					levelFile.objects[selectedObject].startloc = P1 + dir*(objPlacementAlt-P1.y)/dir.y;
+				}
+				if(levelFile.objects[selectedObject].type & ANTI_AIRCRAFT_ARTILLARY)
+				{
+					levelFile.objects[selectedObject].startloc.y = getInterpolatedHeight(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z);
+					levelFile.objects[selectedObject].startRot = Quat4f(Vec3f(0,1,0),getInterpolatedNormal(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z));
+				}
+				else if(levelFile.objects[selectedObject].type & SHIP)
+				{
+					levelFile.objects[selectedObject].startloc.y = 10.0;
+				}
+				selectedObject = -1;
+				placingNewObject = false;
+				buttons["createObject"]->setVisibility(true);
+				buttons["cancelObject"]->setVisibility(false);
+				buttons["deleteObject"]->setVisibility(false);
 			}
-			else if(!objectCircles.empty())
+			else if(!objectCircles.empty() && p.x > 0.260 && p.y < 0.960)
 			{
 				float minDist;
 				map<int,Circle<float>>::iterator closestCircle = objectCircles.end();
@@ -341,10 +445,35 @@ bool levelEditor::mouse(mouseButton button, bool down)
 				if(closestCircle != objectCircles.end())
 				{
 					//object found
-					auto* m = new objectProperties();
-					m->init(&levelFile.objects[closestCircle->first]);
-					menuManager.setPopup(m);
+					//auto* m = new objectProperties();
+					//m->init(&levelFile.objects[closestCircle->first]);
+					//menuManager.setPopup(m);
+					selectedObject = closestCircle->first;
+					int typeNum=-1;
+					for(int i=0; i<typeOptions.size(); i++)
+					{
+						if(typeOptions[i]==levelFile.objects[selectedObject].type)
+							typeNum = i;
+					}
+					if(typeNum == -1)
+					{
+						listBoxes["object type"]->addOption(objectInfo.typeString(levelFile.objects[selectedObject].type));
+						typeOptions.push_back(levelFile.objects[selectedObject].type);
+						typeNum = typeOptions.size()-1;
+					}
+					listBoxes["object type"]->setOption(typeNum);
+					listBoxes["object team"]->setOption(levelFile.objects[selectedObject].team-1);
+					buttons["createObject"]->setVisibility(false);
+					buttons["cancelObject"]->setVisibility(false);
+					buttons["deleteObject"]->setVisibility(true);
 					return true;
+				}
+				else
+				{
+					selectedObject = -1;
+					buttons["createObject"]->setVisibility(true);
+					buttons["cancelObject"]->setVisibility(false);
+					buttons["deleteObject"]->setVisibility(false);
 				}
 				return false;
 			}
@@ -376,22 +505,22 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			}
 		}
 	}
-	else if(button == MIDDLE_BUTTON)
-	{
-		if(!down)
-		{
-			Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
-			if(oldP == p)
-				return true;
+	//else if(button == MIDDLE_BUTTON)
+	//{
+	//	if(!down)
+	//	{
+	//		Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
+	//		if(oldP == p)
+	//			return true;
 
-			Vec3f xAxis = rot * Vec3f(-1,0,0);
+	//		Vec3f xAxis = rot * Vec3f(-1,0,0);
 
-			Vec3f axis = xAxis * (p.y-oldP.y) + Vec3f(0,-1,0) * (p.x-oldP.x);
-			Angle ang = oldP.distance(p);
-			rot = Quat4f(axis,ang) * rot;
-			return true;
-		}
-	}
+	//		Vec3f axis = xAxis * (p.y-oldP.y) + Vec3f(0,-1,0) * (p.x-oldP.x);
+	//		Angle ang = oldP.distance(p);
+	//		rot = Quat4f(axis,ang) * rot;
+	//		return true;
+	//	}
+	//}
 
 	return false;
 }
@@ -400,7 +529,8 @@ bool levelEditor::scroll(float rotations)
 	if(getTab() == REGIONS)
 		orthoScale = clamp(orthoScale + rotations,-8,8);
 	else
-		scrollVal = clamp(scrollVal + rotations,-8,25);
+		fovy = clamp(fovy - rotations*3.0,80.0,2.0);
+		//scrollVal = clamp(scrollVal + rotations,-8,25);
 	return true;
 }
 int levelEditor::getShader()
@@ -417,7 +547,7 @@ levelEditor::Tab levelEditor::getTab()
 }
 void levelEditor::resetView()
 {
-	rot = Quat4f(Vec3f(1,0,0),1.0);
+	fovy = 80.0;
 	center = Vec3f(levelFile.info.mapSize.x/2,levelFile.info.minHeight,levelFile.info.mapSize.y/2);
 
 	orthoCenter = Vec3f(levelFile.info.mapSize.x/2,levelFile.info.minHeight,levelFile.info.mapSize.y/2);
@@ -429,25 +559,24 @@ void levelEditor::updateObjectCircles()
 	int n=0;
 	for(auto i = levelFile.objects.begin(); i!= levelFile.objects.end(); i++, n++)
 	{
-		Vec2f s;
+		Vec3f s;
 		float r;
 
 		auto obj = objectInfo[i->type];//dataManager.getModel(i->type);
 		if(!obj)
 		{
 			r = 0.006;
-			s = view->project(i->startloc);
+			s = view->project3(i->startloc);
 		}
 		else
 		{
+			float scale = i->type & SHIP ? 1.0 : 10.0;
 			Sphere<float> sphere = obj->mesh->getBoundingSphere();
-			s = view->project(i->startloc + i->startRot * sphere.center*10);
-			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*10);
-			r = max(0.004f,s.distance(t));
-
-
+			s = view->project3(i->startloc + i->startRot * sphere.center*scale);
+			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*scale);
+			r = max(0.004f,sqrt((s.x-t.x)*(s.x-t.x)+(s.y-t.y)*(s.y-t.y)));
 		}
-		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r)
+		if(/*frustum.sphereInFrustum(i->startloc,r)!=FrustumG::OUTSIDE &&*/ s.x > -r && s.x < sAspect+r && s.y > -r && s.y < 1.0+r && s.z > 0.0)
 		{
 			objectCircles[n] = Circle<float>(Vec2f(s.x,s.y),r);
 		}
@@ -506,7 +635,46 @@ Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 
 	return Vec3f(Cy - Ay, 200.0, Dy - By).normalize(); //y value should be changed to calculate the true normal6
 }
+float levelEditor::getInterpolatedHeight(float x, float y) const
+{
+	x *= levelFile.info.mapResolution.x / levelFile.info.mapSize.x;
+	y *= levelFile.info.mapResolution.y / levelFile.info.mapSize.y;
 
+	if(x-floor(x)+y-floor(y)<1.0)
+	{
+		float A = getHeight(floor(x),floor(y));
+		float B = getHeight(floor(x),floor(y+1));
+		float D = getHeight(floor(x+1),floor(y));
+		return lerp(lerp(A,B,y-floor(y)),D,x-floor(x));
+	}
+	else
+	{
+		float B = getHeight(floor(x),floor(y+1));
+		float C = getHeight(floor(x+1),floor(y+1));
+		float D = getHeight(floor(x+1),floor(y));
+		return lerp(lerp(B,C,x-floor(x)),D,1.0-(y-floor(y)));
+	}
+}
+Vec3f levelEditor::getInterpolatedNormal(float x, float y) const
+{
+	x *= levelFile.info.mapResolution.x / levelFile.info.mapSize.x;
+	y *= levelFile.info.mapResolution.y / levelFile.info.mapSize.y;
+
+	if(x-floor(x)+y-floor(y)<1.0)
+	{
+		Vec3f A = getNormal(floor(x),floor(y));
+		Vec3f B = getNormal(floor(x),floor(y+1));
+		Vec3f D = getNormal(floor(x+1),floor(y));
+		return lerp(lerp(A,B,y-floor(y)),D,x-floor(x));
+	}
+	else
+	{
+		Vec3f B = getNormal(floor(x),floor(y+1));
+		Vec3f C = getNormal(floor(x+1),floor(y+1));
+		Vec3f D = getNormal(floor(x+1),floor(y));
+		return lerp(lerp(B,C,x-floor(x)),D,1.0-(y-floor(y)));
+	}
+}
 void levelEditor::setMinMaxHeights()
 {
 	levelFile.info.maxHeight = getHeight(0,0) + 0.001;
@@ -844,23 +1012,6 @@ void levelEditor::smooth(int a)
 	delete[] smoothed;
 	terrainValid=false;
 }
-void levelEditor::addObject(int type, int team, float x, float y)//in screen coordinates
-{
-	Vec2f cursorPos = input.getMousePos();
-	Vec3f P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
-	Vec3f P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
-	Vec3f dir = P0-P1;
-
-	if(abs(dir.y) < 0.001) return;
-	Vec3f val = P1 + dir*(levelFile.info.maxHeight+objPlacementAlt-P1.y)/dir.y;
-
-	LevelFile::Object o;
-	o.type=type;
-	o.team=team;
-	o.startloc=val;
-	o.startRot=Quat4f();
-	levelFile.objects.push_back(o);
-}
 Rect levelEditor::orthoView()
 {
 	Vec2f gSize = levelFile.info.mapSize * 1.2 * pow(1.3f,-orthoScale);
@@ -911,33 +1062,37 @@ void levelEditor::render3D(unsigned int v)
 	}
 	else
 	{
-		view->perspective(80.0, (double)sw / ((double)sh),10.0, 500000.0);
+		view->perspective(fovy, (double)sw / ((double)sh),100.0, 500000.0);
 
 		Vec3f e,c,u;
 		c = center;
-		if(input.getMouseState(MIDDLE_BUTTON).down)
-		{
-			
-			Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
-			Vec2f newP = input.getMousePos();
-			
-			Vec3f xAxis = rot * Vec3f(-1,0,0);
-
-			Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-			Angle ang = oldP.distance(newP);
-
-			Quat4f tmpRot;
-			if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
-			else			tmpRot = rot;
-
-			e = c + tmpRot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
-			u = tmpRot * Vec3f(0,0,-1);
-		}
-		else
-		{
-			e = c + rot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
-			u = rot * Vec3f(0,0,-1);
-		}
+		//if(input.getMouseState(MIDDLE_BUTTON).down)
+		//{
+		//	
+		//	Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
+		//	Vec2f newP = input.getMousePos();
+		//	
+		//	Vec3f xAxis = rot * Vec3f(-1,0,0);
+		//
+		//	Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
+		//	Angle ang = oldP.distance(newP);
+		//
+		//	Quat4f tmpRot;
+		//	if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
+		//	else			tmpRot = rot;
+		//
+		//	e = c + tmpRot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
+		//	u = tmpRot * Vec3f(0,0,-1);
+		//}
+		//else
+		//{
+		//	e = c + rot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
+		//	u = rot * Vec3f(0,0,-1);
+		//}
+		float mSize = max(levelFile.info.mapSize.x, levelFile.info.mapSize.y);
+		float heightRange = levelFile.info.maxHeight-levelFile.info.minHeight;
+		e = center + Vec3f(0,heightRange + 0.65*mSize, -0.45*mSize);
+		u = Vec3f(0,1,0);
 		view->lookAt(e,c,u);
 
 		graphics->setLightPosition(Vec3f(30, 70, 40));
@@ -962,53 +1117,54 @@ void levelEditor::render3D(unsigned int v)
 			auto obj = objectInfo[i->type];
 			if(obj)
 			{
-				sceneManager.drawMesh(view, obj->mesh, Mat4f(i->startRot,i->startloc,10.0));
+				float scale = i->type & SHIP ? 1.0 : 10.0;
+				sceneManager.drawMesh(view, obj->mesh, Mat4f(i->startRot,i->startloc,scale));
 			}
 		}
 
-		if(newObjectType != 0)
-		{
-			////////////////////////////////draw object//////////////////////////////////
+		//if(placingNewObject)
+		//{
+		//	////////////////////////////////draw object//////////////////////////////////
 
-			Vec2f cursorPos = input.getMousePos();
-			Vec3d P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
-			Vec3d P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
-			Vec3d dir = P0-P1;
+		//	Vec2f cursorPos = input.getMousePos();
+		//	Vec3d P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
+		//	Vec3d P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
+		//	Vec3d dir = P0-P1;
 
-			if(abs(dir.y) < 0.001) return;
-			Vec3d val = P1 + dir*(levelFile.info.maxHeight+objPlacementAlt-P1.y)/dir.y;
-			
-			auto obj = objectInfo[newObjectType];
-			if(obj)
-			{
-				sceneManager.drawMesh(view, obj->mesh, Mat4f(Quat4f(),Vec3f(val),10.0));
-			}
-			////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
-			//glDepthMask(false);
-			//glColor4f(0.1,0.3,1.0,0.3);
+		//	if(abs(dir.y) < 0.001) return;
+		//	Vec3d val = P1 + dir*(levelFile.info.maxHeight+objPlacementAlt-P1.y)/dir.y;
+		//	
+		//	auto obj = objectInfo[levelFile.oib];
+		//	if(obj)
+		//	{
+		//		sceneManager.drawMesh(view, obj->mesh, Mat4f(Quat4f(),Vec3f(val),10.0));
+		//	}
+		//	////////////////////////////////draw grid////////////////////////////////// --- SHOULD BE REWRITTEN
+		//	//glDepthMask(false);
+		//	//glColor4f(0.1,0.3,1.0,0.3);
 
-			//graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
-			//					Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
-			//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
-			//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
+		//	//graphics->drawQuad(	Vec3f(0,						maxHeight+objPlacementAlt,	0),
+		//	//					Vec3f(0,						maxHeight+objPlacementAlt,	level->ground()->sizeZ()),
+		//	//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	0),
+		//	//					Vec3f(level->ground()->sizeX(),	maxHeight+objPlacementAlt,	level->ground()->sizeZ()));
 
-			//glColor4f(0.3,0.5,1.0,0.2);
-			//for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
-			//{
-			//	graphics->drawLine(Vec3f(f,maxHeight+10,0), Vec3f(f,maxHeight+10,level->ground()->sizeZ()));
-			//	//glVertex3f(f,maxHeight+10,0);
-			//	//glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
-			//}
-			//for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
-			//{
-			//	graphics->drawLine(Vec3f(0,maxHeight+10,f), Vec3f(level->ground()->sizeX(),maxHeight+10,f));
-			//	//glVertex3f(0,maxHeight+10,f);
-			//	//glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
-			//}
-			//glColor3f(1,1,1);
-			//glDepthMask(true);
-			////////////////////////////////end grid///////////////////////////////////
-		}
+		//	//glColor4f(0.3,0.5,1.0,0.2);
+		//	//for(float f=0.0; f<level->ground()->sizeX() + 0.001; f+=level->ground()->sizeX() / 32.0)
+		//	//{
+		//	//	graphics->drawLine(Vec3f(f,maxHeight+10,0), Vec3f(f,maxHeight+10,level->ground()->sizeZ()));
+		//	//	//glVertex3f(f,maxHeight+10,0);
+		//	//	//glVertex3f(f,maxHeight+10,level->ground()->sizeZ());
+		//	//}
+		//	//for(float f=0.0; f<level->ground()->sizeZ() + 0.001; f+=level->ground()->sizeZ() / 32.0)
+		//	//{
+		//	//	graphics->drawLine(Vec3f(0,maxHeight+10,f), Vec3f(level->ground()->sizeX(),maxHeight+10,f));
+		//	//	//glVertex3f(0,maxHeight+10,f);
+		//	//	//glVertex3f(level->ground()->sizeX(),maxHeight+10,f);
+		//	//}
+		//	//glColor3f(1,1,1);
+		//	//glDepthMask(true);
+		//	////////////////////////////////end grid///////////////////////////////////
+		//}
 
 		//glDisable(GL_DEPTH_TEST);
 
@@ -1059,9 +1215,17 @@ void levelEditor::render()
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
-			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y,	i->second.radius*2, i->second.radius*2));
+			if(i->first == selectedObject)
+				graphics->setColor(0.0,1.0,0.0);
+			else
+				graphics->setColor(1.0,1.0,1.0);
+			graphics->drawOverlay(Rect::CWH(i->second.center.x, i->second.center.y, i->second.radius*2, i->second.radius*2));
 		}
 		shaders.bind("ortho");
+
+		graphics->setColor(0.35,0.35,0.35);
+		graphics->drawOverlay(Rect::XYXY(0.0, 0.195, 0.260, 1.0),"white");
+		graphics->setColor(1.0,1.0,1.0);
 	}
 
 	if(getTab() == REGIONS)
@@ -1069,7 +1233,7 @@ void levelEditor::render()
 		Rect viewRect = orthoView();
 
 		shaders.bind("circle shader");
-
+		graphics->setColor(1.0,1.0,1.0);
 		for(auto i = levelFile.regions.begin(); i != levelFile.regions.end(); i++)
 		{
 			Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
@@ -1079,6 +1243,9 @@ void levelEditor::render()
 
 		shaders.bind("ortho");
 	}
+	graphics->setColor(0.2,0.2,0.2);
+	graphics->drawOverlay(Rect::XYXY(0.0,0.960, sAspect, 1.0),"white");
+	graphics->setColor(1.0,1.0,1.0);
 }
 void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffset)
 {
@@ -1335,5 +1502,28 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//	dataManager.setUniformMatrix("modelTransform", Mat4f());
 	//}
 	//glPopMatrix();
+}
+void levelEditor::renderObjectPreview()
+{
+	if(getTab() == OBJECTS)
+	{
+		graphics->setDepthTest(false);
+		auto ortho = shaders.bind("ortho");
+		ortho->setUniform1f("sAspect", 1.333);
+		graphics->setColor(0.35,0.35,0.35);
+		graphics->drawOverlay(Rect::XYXY(0.0, 0.0, 1.333, 1.0),"white");
+		graphics->setColor(1.0,1.0,1.0);
+		graphics->drawOverlay(Rect::XYXY(0.04, 0.04, 1.333-0.04, 0.96),"white");
+		ortho->setUniform1f("sAspect", sAspect);
+		graphics->setDepthTest(true);
+
+		objectPreviewView->lookAt(Vec3f(0,2,0), Vec3f(0,0,0), Vec3f(0,0,1));
+		auto obj = objectInfo[typeOptions[listBoxes["object type"]->getOptionNumber()]];
+		if(obj)
+		{
+			Sphere<float> sphere = obj->mesh->getBoundingSphere();
+			sceneManager.drawMesh(objectPreviewView, obj->mesh, Mat4f(Quat4f(),-sphere.center/sphere.radius,1.0/sphere.radius));
+		}
+	}
 }
 }

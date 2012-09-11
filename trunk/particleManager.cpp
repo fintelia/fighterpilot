@@ -330,12 +330,19 @@ void manager::addEmitter(shared_ptr<emitter> e, Vec3f position, float radius)
 }
 void manager::addEmitter(shared_ptr<emitter> e, int parent, Vec3f offset)
 {
-	emitters.push_back(e);
-
-	auto mesh = world[parent]->meshInstance;
-	e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, mesh ? mesh->getBoundingSphere().radius : 0.0);
-	e->setParent(parent, offset);
-	e->init();
+	auto parentPtr = world[parent];
+	if(parentPtr)
+	{
+		emitters.push_back(e);
+		auto mesh = world[parent]->meshInstance;
+		e->setPositionAndRadius(world[parent]->position + world[parent]->rotation * offset, mesh ? mesh->getBoundingSphere().radius : 0.0);
+		e->setParent(parent, offset);
+		e->init();
+	}
+	else
+	{
+		debugBreak();
+	}
 }
 void manager::update()
 {

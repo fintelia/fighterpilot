@@ -120,7 +120,7 @@ public:
 	virtual ~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, int foliageAmount=0, unsigned int LOD=1);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
-
+	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
 
 	const Circle<float>& bounds() const{return mBounds;}

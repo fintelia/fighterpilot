@@ -161,6 +161,7 @@
     <ClCompile Include="random.cpp" />
     <ClCompile Include="sceneManager.cpp" />
     <ClCompile Include="settings.cpp" />
+    <ClCompile Include="ship.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splash2.cpp" />
@@ -208,6 +209,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="sceneManager.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="ship.h" />
     <ClInclude Include="terrain.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
@@ -238,7 +240,7 @@
     <None Include="media\island.frag" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
-    <None Include="media\modelData.txt" />
+    <None Include="media\objectData.xml" />
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
     <None Include="media\ocean preview.frag" />

@@ -1185,6 +1185,12 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 		bool operator< (const vertexIndices& v)const{return v.position != position ? v.position < position : (v.texCoord != texCoord ? v.texCoord < texCoord : v.normal < normal);}
 		vertexIndices(unsigned int p, unsigned int t, unsigned int n): position(p), texCoord(t), normal(n){}
 	};
+
+	auto safeStr = [](const char* c)->const char*
+	{
+		return c ? c : "";
+	};
+
 ////////////////////variables///////////////////////////
 	if(data.size == 0 || data.contents == nullptr)
 	{
@@ -1285,6 +1291,75 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 /////////////////////////new mtl////////////////////////////
 	if(mtlFilename != "")
 	{
+		auto parseTexLine = [](char* line, Vec2f& scale, bool& tile)->string
+		{
+			if(!line) return "";
+			string file;
+			scale = Vec2f(1.0, 1.0);
+			tile = true;
+			char* c = strtok(line," ");
+			do{
+				if(strcmp(c,"-blenu") == 0)
+				{
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-blenv") == 0)
+				{
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-boost") == 0)
+				{
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-cc") == 0)
+				{
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c, "-clamp") == 0)
+				{
+					if(strcmp(strtok(NULL, " "),"on") == 0) 
+						tile = false;
+				}
+				else if(strcmp(c,"-mm") == 0)
+				{
+					strtok(NULL, " ");
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-o") == 0)
+				{
+					strtok(NULL, " ");
+					strtok(NULL, " ");
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c, "-s") == 0)
+				{
+					scale.x = lexical_cast<float>(strtok(NULL, " "));
+					scale.y = lexical_cast<float>(strtok(NULL, " "));
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-t") == 0)
+				{
+					strtok(NULL, " ");
+					strtok(NULL, " ");
+					strtok(NULL, " ");
+				}
+				else if(strcmp(c,"-texres") == 0)
+				{
+					strtok(NULL, " ");
+				}
+				else if(file == "")
+				{
+					file += c;
+				}
+				else
+				{
+					file += " ";
+					file += c;
+				}
+			}while((c=strtok(NULL, " ")));
+			return file;
+		};
+
 		auto mtlFile = loadTextFile(directory(f->filename) + mtlFilename);
 
 		dataStream.clear();
@@ -1310,7 +1385,7 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 					mMtl.tex.reset();
 					mMtl.normalMap.reset();
 					mMtl.specularMap.reset();
-					mtlName = strtok(NULL, " #\n");
+					mtlName = safeStr(strtok(NULL, " #\n"));
 					mMtl.diffuse = white;
 					mMtl.specular = black;
 					mMtl.hardness = 40.0;
@@ -1318,23 +1393,29 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 				}
 				else if(strcmp(token, "map_Kd") == 0 && state == READING_MTL)
 				{
-					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					bool tile;
+					Vec2f scale;
+					string filename = directory(f->filename) + parseTexLine(strtok(NULL, "#\n"), scale, tile);
 					mMtl.tex = loadTextureFile(filename);
 				}
 				else if(strcmp(token, "map_Ns") == 0 && state == READING_MTL)
 				{
-					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					bool tile;
+					Vec2f scale;
+					string filename = directory(f->filename) + parseTexLine(strtok(NULL, "#\n"), scale, tile);
 					mMtl.specularMap = loadTextureFile(filename);
 				}
 				else if(strcmp(token, "map_bump") == 0 && state == READING_MTL)
 				{
-					string filename = directory(f->filename) + strtok(NULL, "#\n");
+					bool tile;
+					Vec2f scale;
+					string filename = directory(f->filename) + parseTexLine(strtok(NULL, "#\n"), scale, tile);
 					mMtl.normalMap = loadTextureFile(filename);
 				}
 				else if(strcmp(token, "Kd") == 0 && state == READING_MTL)
 				{
 					float r,g,b;
-					if(sscanf(strtok(NULL, "#\n"), "%f%f%f", &r,&g,&b) == 3)
+					if(sscanf(safeStr(strtok(NULL, "#\n")), "%f%f%f", &r,&g,&b) == 3)
 					{
 						mMtl.diffuse = Color4(r,g,b,mMtl.diffuse.a);
 					}
@@ -1342,23 +1423,23 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 				else if(strcmp(token, "Ks") == 0 && state == READING_MTL)
 				{
 					float r,g,b;
-					if(sscanf(strtok(NULL, "#\n"), "%f%f%f", &r,&g,&b) == 3)
+					if(sscanf(safeStr(strtok(NULL, "#\n")), "%f%f%f", &r,&g,&b) == 3)
 					{
 						mMtl.specular = Color3(r,g,b);
 					}
 				}
 				else if(strcmp(token, "Ns") == 0 && state == READING_MTL)
 				{
-					sscanf(strtok(NULL, "#\n"), "%f", &mMtl.hardness);
+					sscanf(safeStr(strtok(NULL, "#\n")), "%f", &mMtl.hardness);
 				}
 				else if(strcmp(token, "d") == 0 && state == READING_MTL)
 				{
-					sscanf(strtok(NULL, "#\n"), "%f", &mMtl.diffuse.a);
+					sscanf(safeStr(strtok(NULL, "#\n")), "%f", &mMtl.diffuse.a);
 				}
 				else if(strcmp(token, "Tr") == 0 && state == READING_MTL)
 				{
 					float Tr;
-					if(sscanf(strtok(NULL, "#\n"), "%f", &Tr))
+					if(sscanf(safeStr(strtok(NULL, "#\n")), "%f", &Tr))
 					{
 						mMtl.diffuse.a = 1.0 - Tr;
 					}
@@ -1408,24 +1489,24 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 
 		if(strcmp(token, "v") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.x);
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.y);
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.z);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.x);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.y);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.z);
 			tmpVec3.x = -tmpVec3.x;
 			vertices.push_back(tmpVec3);
 		}
 		else if(strcmp(token, "vt") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &tmpVec2.x);
-			sscanf(strtok(NULL, " "), "%f", &tmpVec2.y);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec2.x);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec2.y);
 			tmpVec2.y = 1.0f - tmpVec2.y;
 			texCoords.push_back(tmpVec2);
 		}
 		else if(strcmp(token, "vn") == 0)
 		{
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.x);
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.y);
-			sscanf(strtok(NULL, " "), "%f", &tmpVec3.z);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.x);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.y);
+			sscanf(safeStr(strtok(NULL, " ")), "%f", &tmpVec3.z);
 			normals.push_back(tmpVec3.normalize());
 		}
 		else if(strcmp(token, "f") == 0)
@@ -1435,7 +1516,7 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 			for(i = 0; i<3; i++) //should check for faces that do not include both a vertex, normal and position
 			{
 				token = strtok(NULL, " \t");
-				sscanf(token, "%d/%d/%d", &v, &t, &n);
+				sscanf(safeStr(token), "%d/%d/%d", &v, &t, &n);
 
 				tmpFace.n[i] = n;
 				tmpFace.t[i] = t;
@@ -1446,8 +1527,8 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 		}
 		else if(strcmp(token, "usemtl") == 0)
 		{
-			string name=strtok(NULL, " ");
-			if(name.size()!=0)
+			string name=safeStr(strtok(NULL, " "));
+			if(name != "")
 			{
 				auto n = mtlNames.find(name);
 				if(n != mtlNames.end())

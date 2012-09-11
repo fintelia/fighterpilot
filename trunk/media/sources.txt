@@ -117,6 +117,9 @@ ________________________________________________________________________________
 													MODELS
 _________________________________________________________________________________________________________________________
 
+f22.obj
+	http://www.turbosquid.com/FullPreview/Index.cfm/ID/247738
+
 SAM.obj (and related files)
 	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
 	adjusted in scale and changed texture format
@@ -151,6 +154,10 @@ bunker.obj (and related files)
 	model created in blender
 	texture from http://www.polygonblog.com/seamless-texture/ (free for both personal and commercial projects)
 	
+ship.obj (and related files)
+	model modified version of http://artist-3d.com/free_3d_models/dnm/model_disp.php?uid=152
+	steel texture from http://hhh316.deviantart.com/art/Seamless-metal-texture-smooth-164165216
+	grate texture created in GIMP (Jonathan)
 _________________________________________________________________________________________________________________________
 
 													FONTS

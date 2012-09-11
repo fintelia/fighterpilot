@@ -125,8 +125,8 @@ class Game
 public:
 	vector<string> commandLineOptions;
 	bool active;
+	bool needsRedraw;
 	bool done;
-	float maxFrameRate;
 
 	bool hasCommandLineOption(string option)
 	{
@@ -135,7 +135,7 @@ public:
 		return false;
 	}
 
-	Game():active(true), done(false){}
+	Game():active(true), done(false), needsRedraw(false){}
 	virtual bool init();
 	virtual void update();
 };

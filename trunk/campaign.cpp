@@ -2,7 +2,7 @@
 #include "game.h"
 
 namespace gui{
-campaign::campaign(shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false)
+campaign::campaign(shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
 #ifdef _DEBUG
 	,slow(false)
 #endif
@@ -89,7 +89,7 @@ int campaign::update()
 		if(countdown<=0)
 		{
 			string nLevel = level->info.nextLevel;
-			if(nLevel == "") nLevel="media/map file.lvl";
+			//if(nLevel == "") nLevel="media/map file.lvl";
 
 			shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadZIP(nLevel))
@@ -104,6 +104,14 @@ int campaign::update()
 		if(countdown<=0)
 		{
 			menuManager.setMenu(new gui::campaign(level));
+		}
+	}
+	else if(victory)
+	{
+		countdown-=world.time.length();
+		if(countdown<=0)
+		{
+			menuManager.setMenu(new gui::chooseMode());
 		}
 	}
 	else
@@ -122,9 +130,14 @@ int campaign::update()
 				enemies_left++;
 		}
 
-		if(enemies_left == 0)
+		if(enemies_left == 0 && level->info.nextLevel != "")
 		{
 			levelup=true;
+			countdown=1000;
+		}
+		else if(enemies_left == 0)
+		{
+			victory=true;
 			countdown=1000;
 		}
 		else if(players[0]->getObject()->dead)
@@ -166,7 +179,7 @@ void campaign::render()
 		targeter(0.5*sAspect, 0.5, 0.08, -p->roll);
 		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
 
-		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/p->maxHealth,true);
+		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/100.0,true);
 
 		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
 		//altitudeMeter(456,533,520,597,p.altitude);
@@ -185,6 +198,33 @@ void campaign::render()
 				if(p->targetLocked)		graphics->setColor(1,0,0);
 				else					graphics->setColor(0,0,1);
 				graphics->drawOverlay(Rect::CWH(view->project(world[p->target]->position), Vec2f(0.02,0.02)));
+				
+
+
+				if(world[p->target]->type & PLANE && p->position.distanceSquared(world[p->target]->position) <= 2000.0*2000.0)
+				{
+					auto targetPtr = dynamic_pointer_cast<nPlane>(world[p->target]);
+					float s = 1000; //speed of bullets
+					Vec3f r = targetPtr->position - p->position;
+					Vec3f v = targetPtr->rotation * Vec3f(0,0,targetPtr->speed);
+		
+					float a = v.dot(v) - s*s;
+					float b = 2.0 * v.dot(r);
+					float c = r.dot(r);
+		
+					if(b*b - 4.0*a*c >= 0.0)
+					{
+						float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		
+						if(t <= 0.0) //can only happen when plane is flying faster than bullets
+						{
+							t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+						}
+		
+						graphics->setColor(1,1,1,0.3);
+						graphics->drawOverlay(Rect::CWH(view->project(targetPtr->position + v * t), Vec2f(0.015,0.015)));
+					}
+				}
 				graphics->setColor(1,1,1);
 				shaders.bind("ortho");
 			}
@@ -204,6 +244,8 @@ void campaign::render()
 				else					graphics->setColor(0,0,1);
 				graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
 				graphics->setColor(1,1,1);
+
+
 			}
 		}
 	}
@@ -212,7 +254,12 @@ void campaign::render()
 	if(levelup)
 	{
 		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
-		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, sAspect*v, v), "next level");
+		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "next level");
+	}
+	if(victory)
+	{
+		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "victory");
 	}
 }
 
@@ -229,6 +276,13 @@ void campaign::render3D(unsigned int v)
 		sceneManager.renderScene(view, players[v]->getObject()->meshInstance);
 	else
 		sceneManager.renderScene(view);
+
+	world.renderFoliage(view);
+
+	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+		sceneManager.renderSceneTransparency(view, players[v]->getObject()->meshInstance);
+	else
+		sceneManager.renderSceneTransparency(view);
 
 	//graphics->setDepthTest(false);
 	//graphics->setColor(1,0,0,1);

@@ -1,6 +1,5 @@
 
 #include "engine.h"
-
 objId objectList::newObject(object* newObj)
 {
 	if(newObj != nullptr)
@@ -12,6 +11,7 @@ objId objectList::newObject(object* newObj)
 		mObjectTypes[ptr->type & MAJOR_OBJECT_TYPE][ptr->id] = ptr;
 
 		ptr->init();
+
 		return ptr->id;
 	}
 	return 0;

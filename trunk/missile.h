@@ -14,7 +14,6 @@ public:
 
 	missileBase(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner);
 
-	virtual void init(){}
 	virtual void updateSimulation(double time, double ms)=0;
 	void updateFrame(float interpolation) const;
 };
@@ -30,6 +29,7 @@ public:
 	//float acceleration;
 
 	//int owner;
+
 	double launchTime;
 
 	bool engineStarted;
@@ -39,6 +39,8 @@ public:
 	missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target);
 	void updateSimulation(double time, double ms);
 	//void updateFrame(float interpolation) const;
+
+	unsigned int getSize()const{return sizeof(*this);}
 };
 
 class SAMmissile: public missileBase
@@ -48,8 +50,7 @@ protected:
 public:
 	int target;
 
-	SAMmissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target): missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target){}
-	
 	void init();
+	SAMmissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target);
 	void updateSimulation(double time, double ms);
 };

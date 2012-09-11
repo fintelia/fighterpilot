@@ -67,7 +67,7 @@ bool LevelFile::saveZIP(string filename)
 	for(auto i = objects.begin(); i != objects.end(); i++)
 	{
 		objectsFile->contents += "object\n{\n";
-		objectsFile->contents += string("\ttype=") + objectTypeString(i->type) + "\n";
+		objectsFile->contents += string("\ttype=") + objectInfo.typeString(i->type) + "\n";
 		objectsFile->contents += string("\tteam=") + lexical_cast<string>(i->team) + "\n";
 		objectsFile->contents += string("\tspawnPos=(") + lexical_cast<string>(i->startloc.x) + "," + lexical_cast<string>(i->startloc.y) + "," + lexical_cast<string>(i->startloc.z) + ")\n";
 		objectsFile->contents += "}\n";
@@ -279,7 +279,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 	{
 		if(i->type == PLAYER_PLANE && players.numPlayers() < humanPlayers)
 		{
-			auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.typeFromString("MIRAGE"), i->team));
+			auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team));
 			players.addHumanPlayer(id);
 		}
 	}
@@ -290,7 +290,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			if(players.numPlayers() < humanPlayers) //if the number of objects marked PLAYER_PLANE is less than the number of human players
 			{
-				auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.typeFromString("MIRAGE"), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
+				auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
 				players.addHumanPlayer(id);
 			}
 			else
@@ -310,6 +310,10 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		else if(i->type == FLAK_CANNON)
 		{
 			world.newObject(new flakCannon(i->startloc, i->startRot, i->type, i->team));
+		}
+		else if(i->type & SHIP)
+		{
+			world.newObject(new ship(i->startloc, i->startRot, i->type, i->team));
 		}
 	}
 	world.time.reset();

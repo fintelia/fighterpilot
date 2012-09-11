@@ -13,6 +13,8 @@ void manager::render()
 	{
 		menu->render();
 
+
+
 		for(auto e = menu->labels.begin(); e != menu->labels.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -46,7 +48,12 @@ void manager::render()
 		}
 		for(auto e = menu->listBoxes.begin(); e != menu->listBoxes.end(); e++)
 		{
-			if(e->second != NULL && e->second->getVisibility())
+			if(e->second != NULL && e->second->getVisibility() && !e->second->hasFocus())
+				e->second->render();
+		}
+		for(auto e = menu->listBoxes.begin(); e != menu->listBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility() && e->second->hasFocus())
 				e->second->render();
 		}
 	}
@@ -87,7 +94,12 @@ void manager::render()
 		}
 		for(auto e = (*i)->listBoxes.begin(); e != (*i)->listBoxes.end(); e++)
 		{
-			if(e->second != NULL && e->second->getVisibility())
+			if(e->second != NULL && e->second->getVisibility() && !e->second->hasFocus())
+				e->second->render();
+		}
+		for(auto e = (*i)->listBoxes.begin(); e != (*i)->listBoxes.end(); e++)
+		{
+			if(e->second != NULL && e->second->getVisibility() && e->second->hasFocus())
 				e->second->render();
 		}
 	}
@@ -277,7 +289,7 @@ void elementContainer::inputCallback(InputManager::callBack* callback)
 		{
 			if(focus != nullptr)
 			{
-				if(focus->inElement(call->pos))
+				if(focus->getVisibility() && focus->getElementState() && focus->inElement(call->pos))
 				{
 					issueInputCallback(callback,focus);
 					return;
@@ -1058,7 +1070,7 @@ void listBox::gainFocus()
 	focus = true;
 	shape.h = 30.0/1024*(1 + options.size());
 }
-void listBox::looseFocus()
+void listBox::loseFocus()
 {
 	shape.h = 30.0/1024;
 	focus = false;
@@ -1078,6 +1090,7 @@ bool listBox::mouseUpL(float X, float Y)
 			int n = (Y-(shape.y+30.0/1024)) / (30.0/1024);
 			text = options[n];
 			optionNum = n;
+			loseFocus();
 			return true;
 		}
 		else
@@ -1089,6 +1102,9 @@ bool listBox::mouseUpL(float X, float Y)
 }
 void listBox::render()
 {
+	if(optionNum >= 0 && optionNum < options.size())
+		text = options[optionNum];
+
 	graphics->setColor(0.3,0.3,0.3);
 	graphics->drawOverlay(Rect::XYWH(shape.x-1.0/1280,shape.y-1.0/1024,shape.w+2.0/1280,0.0313),"white");
 

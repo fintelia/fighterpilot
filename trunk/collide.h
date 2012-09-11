@@ -70,6 +70,22 @@ private:
 	};
 	map<objectType, shared_ptr<collisionBounds>> objectBounds;
 
+	//closest point
+	Vec3f cpPlanePoint(Plane<float> plane, Vec3f point) const;
+	Vec3f cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const;
+	Vec3f cpTrianglePoint(Vec3f t1, Vec3f t2, Vec3f t3, Vec3f point) const;
+
+	//distance
+	float squareDistanceSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point)const;
+	float squareDistanceSegmentSegment(Vec3f s1_initial, Vec3f s1_final, Vec3f s2_initial, Vec3f s2_final, Vec3f& s1_closest, Vec3f& s2_closest) const;
+
+	//tests
+	bool sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float> s2, Vec3f v2) const;
+	bool testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float> plane, Vec3f& intersectionPoint) const;
+	bool testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& intersectionPoint) const;
+	bool testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const;
+	//bool testLineTriangle(Vec3f lStart, Vec3f lEnd, Vec3f t1, Vec3f t2, Vec3f t3, Vec3f& intersectionPoint) const;
+
 	Vec3f closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const;
 	bool sphereTriangleCollision(const triangle& a, const Mat4f& m, const Sphere<float>& s) const;
 	//Vec3f linePlaneCollision(const Vec3f& a, const Vec3f& b, const triangle& tri1) const;
@@ -79,37 +95,13 @@ private:
 	bool triangleCollision(const triangle& tri1, const triangle& tri2) const;
 	bool triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const;
 
+	//bool triangleSweptSphere(const triangle& a, const Mat4f& m, const Sphere<float>& s, Vec3f sphereInitial, Vec3f sphereFinal, float radius)const;
 
 public:
-	//class physicsInstance
-	//{
-	//	shared_ptr<collisionBounds> bounds;
-	//
-	//	Quat4f rotation;
-	//	Vec3f position;
-	//
-	//	friend class PhysicsManager;
-	//public:
-	//	physicsInstance(shared_ptr<collisionBounds> b, Vec3f pos, Quat4f rot): bounds(b), rotation(rot), position(pos){}
-	//
-	//	void update(const Vec3f& pos){position=pos;}
-	//	void update(const Vec3f& pos, const Quat4f& rot){position=pos; rotation=rot;}
-	//};
-	//shared_ptr<physicsInstance> newPhysicsInstance(objectType t, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
-
 	void setCollsionBounds(objectType type, Sphere<float> s);
 	void setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices);
 
-	//void findPolygonRadius(triangle& tri);
 	bool groundCollsion(shared_ptr<object> o1) const;
-	//bool boundingCollision(const triangle& tri1, const triangle& tri2) const;
-	//bool operator() (const triangleList& t1, const triangleList& t2) const;
-	//bool operator() (const triangleList& t1, Vec3f center, float radius) const;
-	//bool operator() (const triangleList& t1, Vec3f lineStart, Vec3f lineEnd) const;
-
-	//bool operator() (objectType t1, objectType t2) const;
-	//bool operator() (objectType t1, Vec3f center, float radius) const;
-
 	bool operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const;
 	bool operator() (shared_ptr<object> o1, shared_ptr<object> o2) const;
 

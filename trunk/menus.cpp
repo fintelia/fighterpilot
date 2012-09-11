@@ -3,90 +3,6 @@
 namespace gui{
 // ______________________________________________________________________________________________________________________________
 // | 																															|
-// | 													gui::objectProperties													|
-// |____________________________________________________________________________________________________________________________|
-//
-bool objectProperties::init(LevelFile::Object* obj)
-{
-	if(obj == NULL)
-		return false;
-
-	object = obj;
-
-
-	buttons["Ok"]		= new button(0.5*sAspect+0.244, 0.681, 0.098, 0.039, "Ok",lightGray);
-	buttons["Cancel"]	= new button(0.5*sAspect+0.146, 0.681, 0.098, 0.039, "Cancel",lightGray);
-
-	labels["x location"]	= new label(0.5*sAspect-0.205,0.5-0.015,"X location:");
-	labels["z location"]	= new label(0.5*sAspect-0.205,0.5+0.024,"Y location:");
-	labels["y location"]	= new label(0.5*sAspect-0.205,0.5+0.063,"Z location:");
-
-	textBoxes["x location"]	= new numericTextBox(0.5*sAspect-0.098,0.5-0.015,0.098,floor(object->startloc.x+0.5),black);
-	textBoxes["y location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.024,0.098,floor(object->startloc.y+0.5),black);
-	textBoxes["z location"]	= new numericTextBox(0.5*sAspect-0.098,0.5+0.063,0.098,floor(object->startloc.z+0.5),black);
-
-//	checkBoxes["control"]	= new checkBox(0.5*sAspect+0.098,0.5+0.049,"player controlled",(object->controlType & PLAYER_HUMAN)!=0,black);
-//	checkBoxes["respawn"]	= new checkBox(0.5*sAspect+0.098,0.5+0.078,"respawn when destroyed\n(comming soon)",false,black);
-
-	listBox* l = new listBox(0.5*sAspect + 0.098,0.5-0.015,0.098,"team " + lexical_cast<string>(object->team+1),black);
-	l->addOption("team 1");
-	l->addOption("team 2");
-	l->addOption("team 3");
-	l->addOption("team 4");
-	listBoxes["team"] = l;
-
-	string ptype = objectInfo.typeString(object->type);
-
-	l = new listBox(0.5*sAspect+0.244,0.5-0.015,0.098,ptype,black);
-	l->addOption("f16");			typeOptions.push_back(objectInfo.typeFromString("F16"));		if(ptype == "F16")			l->setOption(0);
-	l->addOption("f18");			typeOptions.push_back(objectInfo.typeFromString("F18"));		if(ptype == "F18")			l->setOption(1);
-	l->addOption("f22");			typeOptions.push_back(objectInfo.typeFromString("F22"));		if(ptype == "F22")			l->setOption(2);
-	l->addOption("UAV");			typeOptions.push_back(objectInfo.typeFromString("UAV"));		if(ptype == "UAV")			l->setOption(3);
-	l->addOption("b2");				typeOptions.push_back(objectInfo.typeFromString("B2"));			if(ptype == "B2")			l->setOption(4);
-	l->addOption("mirage");			typeOptions.push_back(objectInfo.typeFromString("MIRAGE"));		if(ptype == "MIRAGE")		l->setOption(5);
-	l->addOption("j37");			typeOptions.push_back(objectInfo.typeFromString("J37"));		if(ptype == "J37")			l->setOption(6);
-	l->addOption("<player>");		typeOptions.push_back(PLAYER_PLANE);							if(ptype == "PLAYER_PLANE")	l->setOption(7);
-	listBoxes["type"] = l;
-
-	return true;
-}
-int objectProperties::update()
-{
-	if(buttons["Ok"]->checkChanged())
-	{
-		try{
-			Vec3f v(lexical_cast<float>(textBoxes["x location"]->getText()),
-					lexical_cast<float>(textBoxes["y location"]->getText()),
-					lexical_cast<float>(textBoxes["z location"]->getText()));
-
-			object->startloc = v;
-			object->team = listBoxes["team"]->getOptionNumber();
-
-			//int ptype = listBoxes["type"]->getOptionNumber();
-			object->type = typeOptions[listBoxes["type"]->getOptionNumber()];
-
-//			object->controlType = checkBoxes["control"]->getChecked() ? PLAYER_HUMAN : PLAYER_COMPUTER;
-		}
-		catch(...)
-		{
-			messageBox("object position invalid");
-			return 0;
-		}
-
-		done = true;
-	}
-	else if(buttons["Cancel"]->checkChanged())
-	{
-		done = true;
-	}
-	return 0;
-}
-void objectProperties::render()
-{
-	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
-}
-// ______________________________________________________________________________________________________________________________
-// | 																															|
 // | 													gui::inGame										            			|
 // |____________________________________________________________________________________________________________________________|
 //
@@ -292,6 +208,7 @@ bool chooseMap::init()
 	//		mapChoices.push_back(itr->path().leaf().generic_string());
 	//	}
 	//}
+	mapChoices.push_back("media/simpleCampaign");
 	currentChoice = 0;
 	return true;
 }
@@ -327,36 +244,94 @@ bool chooseMap::keyDown(int vkey)
 //
 bool options::init()
 {
-	auto resolutions = graphics->getSupportedResolutions();
+	initialState.fullscreenChoice = graphics->getFullscreen() ? 0 : 1;
+	initialState.gamma = graphics->getGamma();
+
+	initialState.refreshRateChoice = -1;
+	initialState.resolutionChoice = -1;
+
+	unsigned int nSamples = graphics->getMultisampling();
+	if(nSamples==0 || nSamples==1)	initialState.samplesChoice=0;
+	else if(nSamples == 2)			initialState.samplesChoice=1;
+	else if(nSamples == 4)			initialState.samplesChoice=2;
+	else if(nSamples == 8)			initialState.samplesChoice=3;
+	else if(nSamples == 16)			initialState.samplesChoice=4;
+
+	initialState.vSync = graphics->getVSync();
+	initialState.textureCompression = graphics->getTextureCompression();
+
+
 
 	string appData = fileManager.getAppDataDirectory();
 	settingsFile = fileManager.loadIniFile(appData + "settings.ini");
 	
-	initialGamma = graphics->getGamma();
-	initialResolutionChoice = -1;
+	labels["display mode"] = new label(0.34*sAspect-graphics->getTextSize("Display Mode: ").x,0.275, "Display Mode: ");
+	listBoxes["display mode"] = new listBox(0.34*sAspect,0.275,0.150,/*initialState.fullscreenChoice==0 ? "Fullscreen" : "Windowed"*/"Fullscreen", black);
+	listBoxes["display mode"]->addOption("Fullscreen");
+	//listBoxes["display mode"]->addOption("Windowed");
 
-	listBoxes["resolution"] = new listBox(0.4*sAspect,0.3,0.150,lexical_cast<string>(sw) + "x" + lexical_cast<string>(sh),black);
+	labels["resolution"] = new label(0.34*sAspect-graphics->getTextSize("Resolution: ").x,0.315, "Resolution: ");
+	listBoxes["resolution"] = new listBox(0.34*sAspect,0.315,0.150,lexical_cast<string>(sw) + "x" + lexical_cast<string>(sh),black);
+
+	set<Vec2u> resolutions;
+	currentDisplayMode = graphics->getCurrentDisplayMode();
+	displayModes = graphics->getSupportedDisplayModes();
+	for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
+	{
+		if(i->resolution.x >= 800 && i->resolution.y >= 600)
+		{
+			resolutions.insert(i->resolution);
+		}
+	}
 	for(auto i=resolutions.begin(); i!=resolutions.end(); i++)
 	{
-		if(i->x >= 800 && i->y >= 600)
-		{
-			listBoxes["resolution"]->addOption(lexical_cast<string>(i->x) + "x" + lexical_cast<string>(i->y));
-		
-			resolutionChoices.push_back(*i);
-			if(i->x == sw && i->y == sh)
-			{
-				initialResolutionChoice = resolutionChoices.size()-1;
-			}
+		resolutionChoices.push_back(*i);
+		listBoxes["resolution"]->addOption(lexical_cast<string>(i->x) + "x" + lexical_cast<string>(i->y));
+		if(i->x == sw && i->y == sh)
+		{		
+			initialState.resolutionChoice = resolutionChoices.size()-1;
 		}
 	}
 
+
+	labels["multisampling"] = new label(0.34*sAspect-graphics->getTextSize("Multisampling: ").x,0.355, "Multisampling: ");
+	listBoxes["multisampling"] = new listBox(0.34*sAspect,0.355,0.150,initialState.samplesChoice==0 ? "Disabled" : lexical_cast<string>(1<<initialState.samplesChoice)+"X", black);
+	listBoxes["multisampling"]->addOption("Disabled");
+	listBoxes["multisampling"]->addOption("2X");
+	listBoxes["multisampling"]->addOption("4X");
+	listBoxes["multisampling"]->addOption("8X");
+	listBoxes["multisampling"]->addOption("16X");
+
+	labels["vSync"] = new label(0.34*sAspect-graphics->getTextSize("Vertical Sync: ").x,0.395, "Vertical Sync: ");
+	checkBoxes["vSync"] = new checkBox(0.34*sAspect, 0.395, "",initialState.vSync);
+
+
+	labels["renderVersion"] = new label(0.64*sAspect-graphics->getTextSize("Render Version: ").x,0.275, "Render Version: ");
+	listBoxes["renderVersion"] = new listBox(0.64*sAspect,0.275,0.150,"OpenGL 2", black);
+	listBoxes["renderVersion"]->addOption("OpenGL 2");
+	//listBoxes["renderVersion"]->addOption("OpenGL 3");
+
+	labels["refreshRate"] = new label(0.64*sAspect-graphics->getTextSize("Refresh Rate: ").x,0.315, "Refresh Rate: ");
+	listBoxes["refreshRate"] = new listBox(0.64*sAspect,0.315,0.150,lexical_cast<string>(currentDisplayMode.refreshRate) + " Hz", black);
+	for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
+	{
+		if(i->resolution.x == currentDisplayMode.resolution.x && i->resolution.y == currentDisplayMode.resolution.y)
+			listBoxes["refreshRate"]->addOption(lexical_cast<string>(i->refreshRate) + " Hz");
+	}
+
+	labels["textureCompression"] = new label(0.64*sAspect-graphics->getTextSize("Texture Compression: ").x,0.355, "Texture Compression: ");
+	listBoxes["textureCompression"] = new listBox(0.64*sAspect,0.355,0.150,initialState.textureCompression ? "Enabled" : "Disabled", black);
+	listBoxes["textureCompression"]->addOption("Enabled");
+	listBoxes["textureCompression"]->addOption("Disabled");
+
 	labels["gamma"] = new label(0.3*sAspect, 0.7, "brightness:");
 	sliders["gamma"] = new slider(0.4*sAspect, 0.7, 0.100, 0.03,3.0,1.0); 
-	sliders["gamma"]->setValue(initialGamma);
+	sliders["gamma"]->setValue(initialState.gamma);
 
-	buttons["save"] = new button(0.9*sAspect-0.11, 0.71, 0.100, 0.030, "Save", lightGray);
-	buttons["cancel"] = new button(0.9*sAspect-0.22, 0.71, 0.100, 0.030, "Cancel", lightGray);
+	buttons["save"] = new button(0.85*sAspect-0.11, 0.71, 0.100, 0.030, "Save", lightGray);
+	buttons["cancel"] = new button(0.85*sAspect-0.22, 0.71, 0.100, 0.030, "Cancel", lightGray);
 
+	lastResolutionChoice = initialState.resolutionChoice;
 
 	return true;
 }
@@ -364,18 +339,68 @@ int options::update()
 {
 	graphics->setGamma(sliders["gamma"]->getValue());
 
+	if(lastResolutionChoice != listBoxes["resolution"]->getOptionNumber())
+	{
+		listBoxes["refreshRate"]->clearOptions();
+		for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
+		{
+			if(i->resolution.x == currentDisplayMode.resolution.x && i->resolution.y == currentDisplayMode.resolution.y)
+			{
+				listBoxes["refreshRate"]->addOption(lexical_cast<string>(i->refreshRate) + " Hz");
+				if(i->refreshRate == currentDisplayMode.refreshRate)
+					listBoxes["refreshRate"]->setOption(listBoxes["refreshRate"]->getNumOptions()-1);
+			}
+		}
+		if(listBoxes["refreshRate"]->getOptionNumber() == -1)
+			listBoxes["refreshRate"]->setOption(0);
+
+		lastResolutionChoice = listBoxes["resolution"]->getOptionNumber();
+	}
+
 	if(buttons["save"]->checkChanged())
 	{
 		bool needRestart = false;
 
-		if(initialResolutionChoice != listBoxes["resolution"]->getOptionNumber())
+		//////////////////fullscreen//////////////////////////////
+		if(initialState.fullscreenChoice != listBoxes["display mode"]->getOptionNumber())
+		{
+			settingsFile->bindings["graphics"]["fullscreen"] = (listBoxes["display mode"]->getOptionNumber()==0) ? "true" : "false";
+			needRestart = true;
+		}
+		//////////////////refreshRate//////////////////////////////
+		if(initialState.refreshRateChoice != listBoxes["display mode"]->getOptionNumber() && initialState.refreshRateChoice != -1)
+		{
+			settingsFile->bindings["graphics"]["refreshRate"] = listBoxes["display mode"]->getOptionNumber()==0 ? "60" : "75";
+			graphics->setRefreshRate(listBoxes["display mode"]->getOptionNumber()==0 ? 60 : 75);
+		}
+		//////////////////resolution//////////////////////////////
+		if(initialState.resolutionChoice != listBoxes["resolution"]->getOptionNumber() && initialState.resolutionChoice != -1)
 		{
 			settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(resolutionChoices[listBoxes["resolution"]->getOptionNumber()].x);
 			settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(resolutionChoices[listBoxes["resolution"]->getOptionNumber()].y);
 			needRestart = true;
 		}
-
+		//////////////////multisampling//////////////////////////////
+		if(initialState.samplesChoice != listBoxes["multisampling"]->getOptionNumber())
+		{
+			settingsFile->bindings["graphics"]["samples"] = listBoxes["display mode"]->getOptionNumber()==0 ? 0 : (1<<listBoxes["display mode"]->getOptionNumber());
+			needRestart = true;
+		}
+		//////////////////texture compression//////////////////////////////
+		if(initialState.textureCompression != (listBoxes["textureCompression"]->getOptionNumber()==0))
+		{
+			settingsFile->bindings["graphics"]["textureCompression"] = listBoxes["textureCompression"]->getOptionNumber()==0 ? "enabled" : "disabled";
+			needRestart = true;
+		}
+		//////////////////gamma//////////////////////////////
 		settingsFile->bindings["graphics"]["gamma"] = lexical_cast<string>(sliders["gamma"]->getValue());
+		//////////////////vSync//////////////////////////////
+		if(initialState.vSync != checkBoxes["vSync"]->getChecked())
+		{
+			settingsFile->bindings["graphics"]["vSync"] = checkBoxes["vSync"]->getChecked() ? "enabled" : "disabled";
+			graphics->setVSync(checkBoxes["vSync"]->getChecked());
+		}
+		/////////////////////////////////////////////////////
 		fileManager.writeIniFile(settingsFile);
 
 		menuManager.setMenu(new chooseMode);
@@ -386,40 +411,37 @@ int options::update()
 	}
 	else if(buttons["cancel"]->checkChanged())
 	{
-		graphics->setGamma(initialGamma);
+		graphics->setGamma(initialState.gamma);
 		menuManager.setMenu(new chooseMode);
 	}
-
-	
-
 	return true;
 }
 void options::render()
 {
 	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
-	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
+	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.7*sAspect,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
 
-	graphics->setColor(0.00,0.00,0.00);	graphics->drawOverlay(Rect::XYXY(0.200*sAspect,0.47,0.225*sAspect,0.53),"white");
-	graphics->setColor(0.05,0.05,0.05);	graphics->drawOverlay(Rect::XYXY(0.225*sAspect,0.47,0.250*sAspect,0.53),"white");
-	graphics->setColor(0.10,0.10,0.10);	graphics->drawOverlay(Rect::XYXY(0.250*sAspect,0.47,0.275*sAspect,0.53),"white");
-	graphics->setColor(0.15,0.15,0.15);	graphics->drawOverlay(Rect::XYXY(0.275*sAspect,0.47,0.300*sAspect,0.53),"white");
-	graphics->setColor(0.20,0.20,0.20);	graphics->drawOverlay(Rect::XYXY(0.300*sAspect,0.47,0.325*sAspect,0.53),"white");
-	graphics->setColor(0.25,0.25,0.25);	graphics->drawOverlay(Rect::XYXY(0.325*sAspect,0.47,0.350*sAspect,0.53),"white");
-	graphics->setColor(0.30,0.30,0.30);	graphics->drawOverlay(Rect::XYXY(0.350*sAspect,0.47,0.375*sAspect,0.53),"white");
-	graphics->setColor(0.35,0.35,0.35);	graphics->drawOverlay(Rect::XYXY(0.375*sAspect,0.47,0.400*sAspect,0.53),"white");
-	graphics->setColor(0.40,0.40,0.40);	graphics->drawOverlay(Rect::XYXY(0.400*sAspect,0.47,0.425*sAspect,0.53),"white");
-	graphics->setColor(0.45,0.45,0.45);	graphics->drawOverlay(Rect::XYXY(0.425*sAspect,0.47,0.450*sAspect,0.53),"white");
-	graphics->setColor(0.50,0.50,0.50);	graphics->drawOverlay(Rect::XYXY(0.450*sAspect,0.47,0.475*sAspect,0.53),"white");
-	graphics->setColor(0.55,0.55,0.55);	graphics->drawOverlay(Rect::XYXY(0.475*sAspect,0.47,0.500*sAspect,0.53),"white");
-	graphics->setColor(0.60,0.60,0.60);	graphics->drawOverlay(Rect::XYXY(0.500*sAspect,0.47,0.525*sAspect,0.53),"white");
-	graphics->setColor(0.65,0.65,0.65);	graphics->drawOverlay(Rect::XYXY(0.525*sAspect,0.47,0.550*sAspect,0.53),"white");
-	graphics->setColor(0.70,0.70,0.70);	graphics->drawOverlay(Rect::XYXY(0.550*sAspect,0.47,0.575*sAspect,0.53),"white");
-	graphics->setColor(0.75,0.75,0.75);	graphics->drawOverlay(Rect::XYXY(0.575*sAspect,0.47,0.600*sAspect,0.53),"white");
-	graphics->setColor(0.80,0.80,0.80);	graphics->drawOverlay(Rect::XYXY(0.600*sAspect,0.47,0.625*sAspect,0.53),"white");
-	graphics->setColor(0.85,0.85,0.85);	graphics->drawOverlay(Rect::XYXY(0.625*sAspect,0.47,0.650*sAspect,0.53),"white");
-	graphics->setColor(0.90,0.90,0.90);	graphics->drawOverlay(Rect::XYXY(0.650*sAspect,0.47,0.675*sAspect,0.53),"white");
-	graphics->setColor(0.95,0.95,0.95);	graphics->drawOverlay(Rect::XYXY(0.675*sAspect,0.47,0.700*sAspect,0.53),"white");
-	graphics->setColor(1.00,1.00,1.00);	graphics->drawOverlay(Rect::XYXY(0.700*sAspect,0.47,0.725*sAspect,0.53),"white");
+	graphics->setColor(0.00,0.00,0.00);	graphics->drawOverlay(Rect::XYXY(0.2375*sAspect,0.47,0.2625*sAspect,0.53),"white");
+	graphics->setColor(0.05,0.05,0.05);	graphics->drawOverlay(Rect::XYXY(0.2625*sAspect,0.47,0.2875*sAspect,0.53),"white");
+	graphics->setColor(0.10,0.10,0.10);	graphics->drawOverlay(Rect::XYXY(0.2875*sAspect,0.47,0.3125*sAspect,0.53),"white");
+	graphics->setColor(0.15,0.15,0.15);	graphics->drawOverlay(Rect::XYXY(0.3125*sAspect,0.47,0.3375*sAspect,0.53),"white");
+	graphics->setColor(0.20,0.20,0.20);	graphics->drawOverlay(Rect::XYXY(0.3375*sAspect,0.47,0.3625*sAspect,0.53),"white");
+	graphics->setColor(0.25,0.25,0.25);	graphics->drawOverlay(Rect::XYXY(0.3625*sAspect,0.47,0.3875*sAspect,0.53),"white");
+	graphics->setColor(0.30,0.30,0.30);	graphics->drawOverlay(Rect::XYXY(0.3875*sAspect,0.47,0.4125*sAspect,0.53),"white");
+	graphics->setColor(0.35,0.35,0.35);	graphics->drawOverlay(Rect::XYXY(0.4125*sAspect,0.47,0.4375*sAspect,0.53),"white");
+	graphics->setColor(0.40,0.40,0.40);	graphics->drawOverlay(Rect::XYXY(0.4375*sAspect,0.47,0.4625*sAspect,0.53),"white");
+	graphics->setColor(0.45,0.45,0.45);	graphics->drawOverlay(Rect::XYXY(0.4625*sAspect,0.47,0.4875*sAspect,0.53),"white");
+	graphics->setColor(0.50,0.50,0.50);	graphics->drawOverlay(Rect::XYXY(0.4875*sAspect,0.47,0.5125*sAspect,0.53),"white");
+	graphics->setColor(0.55,0.55,0.55);	graphics->drawOverlay(Rect::XYXY(0.5125*sAspect,0.47,0.5375*sAspect,0.53),"white");
+	graphics->setColor(0.60,0.60,0.60);	graphics->drawOverlay(Rect::XYXY(0.5375*sAspect,0.47,0.5625*sAspect,0.53),"white");
+	graphics->setColor(0.65,0.65,0.65);	graphics->drawOverlay(Rect::XYXY(0.5625*sAspect,0.47,0.5875*sAspect,0.53),"white");
+	graphics->setColor(0.70,0.70,0.70);	graphics->drawOverlay(Rect::XYXY(0.5875*sAspect,0.47,0.6125*sAspect,0.53),"white");
+	graphics->setColor(0.75,0.75,0.75);	graphics->drawOverlay(Rect::XYXY(0.6125*sAspect,0.47,0.6375*sAspect,0.53),"white");
+	graphics->setColor(0.80,0.80,0.80);	graphics->drawOverlay(Rect::XYXY(0.6375*sAspect,0.47,0.6625*sAspect,0.53),"white");
+	graphics->setColor(0.85,0.85,0.85);	graphics->drawOverlay(Rect::XYXY(0.6625*sAspect,0.47,0.6875*sAspect,0.53),"white");
+	graphics->setColor(0.90,0.90,0.90);	graphics->drawOverlay(Rect::XYXY(0.6875*sAspect,0.47,0.7125*sAspect,0.53),"white");
+	graphics->setColor(0.95,0.95,0.95);	graphics->drawOverlay(Rect::XYXY(0.7125*sAspect,0.47,0.7375*sAspect,0.53),"white");
+	graphics->setColor(1.00,1.00,1.00);	graphics->drawOverlay(Rect::XYXY(0.7375*sAspect,0.47,0.7625*sAspect,0.53),"white");
 
 	menuManager.drawCursor();
 }

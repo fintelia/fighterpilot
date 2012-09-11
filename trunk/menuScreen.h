@@ -171,6 +171,7 @@ public:
 
 	void addOption(string option);
 	void setOption(unsigned int oNum){optionNum = clamp(oNum,0,options.size()-1);}
+	void clearOptions(){options.clear(); optionNum=-1;}
 
 	int getNumOptions(){return options.size();}
 
@@ -178,7 +179,7 @@ public:
 	bool mouseUpL(float X, float Y);
 
 	void gainFocus();
-	void looseFocus();
+	void loseFocus();
 
 	void render();
 

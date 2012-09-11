@@ -1,8 +1,10 @@
 
 #include "game.h"
 
-bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):object(sPos, sRot, Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
+bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner):object(Type), launchTime(world.time()), velocity(sRot * Vec3f(0,0,speed)-Vec3f(0,30,0)), owner(Owner)
 {
+	lastPosition = position = sPos;
+	lastRotation = rotation = sRot;
 	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 }
 void bomb::updateSimulation(double time, double ms)
@@ -10,7 +12,8 @@ void bomb::updateSimulation(double time, double ms)
 	lastPosition = position;
 	lastRotation = rotation;
 
-	position = startPos + velocity * (time-launchTime)/1000 + Vec3f(0,-9.81*20.0,0) * (time-launchTime) * (time-launchTime) / 1000000;
+	velocity.y -= 9.81 * 20.0 * ms/1000.0;
+	position += velocity * ms/1000.0;
 
 	float alt = world.altitude(position);
 	if(alt < 0.0)

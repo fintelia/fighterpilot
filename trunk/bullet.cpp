@@ -10,7 +10,7 @@ bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time(
 
 }
 
-bulletCloud::bulletCloud(): object(Vec3f(), Quat4f(), BULLET_CLOUD)
+bulletCloud::bulletCloud(): object(BULLET_CLOUD)
 {
 	
 }
