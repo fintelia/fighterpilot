@@ -15,10 +15,7 @@
 	<planes default="MIRAGE">
 		<plane name="F16" model="media/f16/f16.obj" cameraDistance="25.0" placeable="true">
 			<g_offset x="0.0" y="-0.6" z="0.0" />
-			<e_offset x="0.0" y="-0.35" z="-5.1" radius="0.75" mirror="true" />
-		</plane>
-		<plane name="F18" model="media/f18hornet.obj">
-			<g_offset x="0.0" y="-0.1" z="0.0" />
+			<e_offset x="0.0" y="0.125" z="-3.5" radius="0.75" mirror="true" />
 		</plane>
 		<plane name="F22" model="media/f22.obj" placeable="true">
 			<g_offset x="-3.0" y="0.0" z="-1.0" />
@@ -30,7 +27,7 @@
 		</plane>
 		<plane name="MIRAGE" textName="Mirage" model="media/mirage/mirage.obj" cameraDistance="20.0" collisionMesh="media/mirage/mirageCollision.obj" placeable="true">
 			<g_offset x="0.0" y="0.0" z="0.0" />
-			<e_offset x="0.0" y="0.25" z="-3.4" mirror="true" />
+			<e_offset x="0.0" y="0.25" z="-3.35" radius="0.8" mirror="true" />
 			<w_offset weapon="MIRAGE_missile1" x="0.8" y="-0.5" z="0.5" mirror="true" />
 			<w_offset weapon="MIRAGE_missile1" x="0.8" y="-0.5" z="-2.5" mirror="true" />
 			<w_offset weapon="MIRAGE_missile2" x="3.05" y="-0.55" z="-2.4" mirror="true" />
@@ -60,6 +57,6 @@
 		</flakCannon>
 	</AAA>
 	<ships>
-		<ship name="BATTLESHIP_1" textName="Battleship" model="media/ship/ship2.obj" collisionMesh="media/ship/ship collide.obj" placeable="true"/>
+		<ship name="BATTLESHIP_1" textName="Battleship" model="media/ship/ship2.obj" collisionMesh="media/ship/ship collide.obj"/>
 	</ships>
 </objects>

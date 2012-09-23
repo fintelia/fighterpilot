@@ -377,7 +377,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	{
 		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-		if(GLEW_EXT_texture_compression_s3tc)
+		if(GLEW_EXT_texture_compression_s3tc && compression)
 		{
 			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
@@ -1468,7 +1468,7 @@ void OpenGLgraphics::render()
 	for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
 	{
 		//set up stereo
-		if(stereoMode==STEREO_ANAGLYPH && eye==0)
+		if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==0)
 		{
 			leftEye = true;
 			redChannelMask = true;
@@ -1477,7 +1477,7 @@ void OpenGLgraphics::render()
 			glColorMask(true,false,false,true);
 			cameraOffset = Vec3f(-interOcularDistance/2,0,0);
 		}
-		else if(stereoMode==STEREO_ANAGLYPH && eye==1)
+		else if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==1)
 		{
 			leftEye = false;
 			redChannelMask = false;

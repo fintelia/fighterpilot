@@ -19,15 +19,12 @@ dialog box.png -- created in Photoshop (Nicholas)
 dialogBack.png -- created in GIMP (Jonathan)
 entry bar.png -- created in Photoshop (Nicholas)
 errorGlow.png -- ceated in GIMP (Jonathan)
-f16texture.png -- ???
-f18hornet_Cylinder.png -- created in GIMP (Jonathan)
-f22.png -- ???
+f22.png -- created in Photoshop (Nicholas)
 file viewer.png -- created in Photoshop (Nicholas)
 fire.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
 fire2.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
 flash.png -- created in GIMP (Jonathan)
 glow.png -- created in Photoshop (Nicholas)
-grass.png -- ???
 grass3.png -- created in GIMP from grass2.png (Jonathan)
 hardNoiseDOT3.png -- created in GIMP and SSbump Generator (Jonathan)
 health bar.png -- created in Photoshop (Nicholas)
@@ -46,8 +43,7 @@ progress back.png -- created in Photoshop (Nicholas)
 progress front.png -- created in Photoshop (Nicholas)
 radar_frame.png -- created in Photoshop (Nicholas)
 radar2.png -- created in Photoshop (Nicholas)
-rock.png -- ???
-sand.png -- ???
+sand.png -- created in Photoshop (Nicholas)
 slider bar.png -- created in Photoshop (Nicholas)
 slider.png -- created in Photoshop (Nicholas)
 smoke.png -- ceated in GIMP (Jonathan)
@@ -76,13 +72,15 @@ grass2_normals.png
 	Height Scale = 3.0
 	mixed with blurred copy (radius = 3.0, 50% transparency)
 	
-grass_normals.png
-	grass.png -> SSbump Generator
-	Height Scale = 15.0
-	
 dialogBack.png
 	difference clouds (XY size: 3, level: 5, tileable: true)
 	transparency 85% to blend with white background
+	
+rock.png
+	by Jockum Skoglund
+	Online at: http://forums.epicgames.com/threads/506748-My-skies-and-and-cliff-textures-%28large-images 
+	In GIMP, adjusted gamma to 0.30
+	note: normal map ia also available
 	
 smokeShape.png
 	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
@@ -131,10 +129,6 @@ spitfire.obj (and related files)
 betty.obj (and related files)
 	http://www.gfx-3d-model.com/2009/01/mitsubishi-g4m2a-betty-aircraft-model/
 	Centered and scaled by 0.05
-
-f18.obj (and related files)
-	http://www.gfx-3d-model.com/2008/08/f-18-lowpoly/
-	removed landing gear
 	
 f16.obj (and related files)
 	http://www.gfx-3d-model.com/2008/08/f-16-falcon/#more-691

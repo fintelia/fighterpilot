@@ -136,6 +136,7 @@
     <ClCompile Include="explosionSmoke.cpp" />
     <ClCompile Include="explosionSparks.cpp" />
     <ClCompile Include="fileManager.cpp" />
+    <ClCompile Include="fireball.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="gameMath.cpp" />
     <ClCompile Include="glew.c" />
@@ -240,7 +241,9 @@
     <None Include="media\island.frag" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
-    <None Include="media\objectData.xml" />
+    <None Include="media\objectData.xml">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="media\ocean.frag" />
     <None Include="media\ocean.vert" />
     <None Include="media\ocean preview.frag" />

@@ -213,7 +213,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 
 		for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 		{
-			if(material->diffuse.a)
+			if(material->diffuse.a < 0.999)
 			{
 				if(material->tex)
 					material->tex->bind(0);

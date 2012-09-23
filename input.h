@@ -23,6 +23,10 @@ protected:
 	{
 	private:
 		XINPUT_STATE* state;
+		double leftPressLength;
+		double rightPressLength;
+		double upPressLength;
+		double downPressLength;
 		friend class InputManager;
 		
 	public:

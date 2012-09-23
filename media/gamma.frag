@@ -11,7 +11,7 @@ void main()
 	//t *= (1.0 + L/1.1) / (L+1.0);
 	//gl_FragColor = vec4(pow(t,vec3(g,g,g)),1.0);
 
-	vec3 color = texture2D(tex,texCoord).rgb;
+	vec3 color = texture2D(tex,texCoord).rgb; 
 	color = pow(color,vec3(g,g,g));
 	gl_FragColor = vec4(color,1.0);
 }

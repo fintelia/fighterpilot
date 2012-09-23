@@ -161,7 +161,25 @@ bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 					(points[0].y > 1.0 && points[1].y > 1.0 && points[2].y > 1.0 && points[3].y > 1.0 && points[4].y > 1.0 && points[5].y > 1.0 && points[6].y > 1.0 && points[7].y > 1.0) ||
 					(points[0].z > 1.0 && points[1].z > 1.0 && points[2].z > 1.0 && points[3].z > 1.0 && points[4].z > 1.0 && points[5].z > 1.0 && points[6].z > 1.0 && points[7].z > 1.0));
 
-	return result;
+
+	bool result2 = true;
+	for(int p = 0; p < 6; ++p)
+	{
+		if(	(mClipPlanes[p].normal.x * b.minXYZ.x + mClipPlanes[p].normal.y * b.minXYZ.y + mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x + mClipPlanes[p].normal.y * b.minXYZ.y + mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x + mClipPlanes[p].normal.y * b.maxXYZ.y + mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.minXYZ.x + mClipPlanes[p].normal.y * b.maxXYZ.y + mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x + mClipPlanes[p].normal.y * b.minXYZ.y + mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x + mClipPlanes[p].normal.y * b.minXYZ.y + mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x + mClipPlanes[p].normal.y * b.maxXYZ.y + mClipPlanes[p].normal.z * b.minXYZ.z < -mClipPlanes[p].d) &&
+			(mClipPlanes[p].normal.x * b.maxXYZ.x + mClipPlanes[p].normal.y * b.maxXYZ.y + mClipPlanes[p].normal.z * b.maxXYZ.z < -mClipPlanes[p].d))
+		{
+			result2 = false;
+			break;
+		}
+	}
+
+	return result || result2; //since neither method always works, return whether either believes that AABB to in inside the frustum
 }
 void GraphicsManager::View::shiftCamera(Vec3f shift)
 {

@@ -56,7 +56,7 @@ InputManager::xboxControllerState::xboxControllerState():
 #else
                     state(nullptr),
 #endif
-                    connected(false),deadZone(0.15)
+                    leftPressLength(0.0), rightPressLength(0.0), upPressLength(0.0), downPressLength(0.0), connected(false),deadZone(0.15)
 {
 
 #ifdef DIRECT_INPUT
@@ -202,6 +202,12 @@ const InputManager::joystickControllerState* InputManager::getJoystick(unsigned 
 }
 void InputManager::update()
 {
+	double time = GetTime();
+	static double lastUpdateTime = time;
+
+	double updateLength = clamp(time - lastUpdateTime, 0.0, 100.0); //make sure update length is between 0 ms and 100 ms
+	lastUpdateTime = time;
+
 	static char newKeyStates[256];
 	memset(newKeyStates, 0, 256);
 #if defined WINDOWS
@@ -254,30 +260,89 @@ void InputManager::update()
 #endif
 
 #ifdef XINPUT
-	if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT)) || // KEYSTATE_CURRENT actually reflects the old state (we are about to update it)
-		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
-		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
-		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
-		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_LEFT))
-			sendCallbacks(new menuKeystroke(MENU_LEFT));
-	if(((newKeyStates[VK_RIGHT] & 0x80) && !(keys[VK_RIGHT] & KEYSTATE_CURRENT)) || 
-		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
-		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
-		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
-		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_RIGHT))
-			sendCallbacks(new menuKeystroke(MENU_RIGHT));
-	if(((newKeyStates[VK_UP] & 0x80) && !(keys[VK_UP] & KEYSTATE_CURRENT)) || 
-		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_UP) ||
-		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_UP) ||
-		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_UP) ||
-		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_UP))
-			sendCallbacks(new menuKeystroke(MENU_UP));
-	if(((newKeyStates[VK_DOWN] & 0x80) && !(keys[VK_DOWN] & KEYSTATE_CURRENT)) || 
-		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
-		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
-		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
-		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_DOWN))
-			sendCallbacks(new menuKeystroke(MENU_DOWN));
+	for(int i=0;i<4;i++)
+	{
+		if(xboxControllers[i].connected)
+		{
+			if(xboxControllers[i].state->Gamepad.sThumbLX < -32768/2)
+			{
+				xboxControllers[i].leftPressLength += updateLength;
+				xboxControllers[i].rightPressLength = 0;
+			}
+			else if(xboxControllers[i].state->Gamepad.sThumbLX > 32767/2)
+			{
+				xboxControllers[i].leftPressLength = 0;
+				xboxControllers[i].rightPressLength += updateLength;
+			}
+			else
+			{
+				xboxControllers[i].leftPressLength = 0;
+				xboxControllers[i].rightPressLength = 0;
+			}
+
+			if(xboxControllers[i].state->Gamepad.sThumbLY < -32768/2)
+			{
+				xboxControllers[i].downPressLength += updateLength;
+				xboxControllers[i].upPressLength = 0;
+			}
+			else if(xboxControllers[i].state->Gamepad.sThumbLY > 32767/2)
+			{
+				xboxControllers[i].downPressLength = 0;
+				xboxControllers[i].upPressLength += updateLength;
+			}
+			else
+			{
+				xboxControllers[i].downPressLength = 0;
+				xboxControllers[i].upPressLength = 0;
+			}
+
+			if(xboxControllers[i].leftPressLength >= 5.0)
+			{
+				sendCallbacks(new menuKeystroke(MENU_LEFT));
+				xboxControllers[i].leftPressLength = -395.0;
+			}
+			if(xboxControllers[i].rightPressLength >= 5.0)
+			{
+				sendCallbacks(new menuKeystroke(MENU_RIGHT));
+				xboxControllers[i].rightPressLength = -395.0;
+			}
+			if(xboxControllers[i].upPressLength >= 5.0)
+			{
+				sendCallbacks(new menuKeystroke(MENU_UP));
+				xboxControllers[i].upPressLength = -395.0;
+			}
+			if(xboxControllers[i].downPressLength >= 5.0)
+			{
+				sendCallbacks(new menuKeystroke(MENU_DOWN));
+				xboxControllers[i].downPressLength = -395.0;
+			}
+		}
+	}
+
+	//if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT)) || // KEYSTATE_CURRENT actually reflects the old state (we are about to update it)
+	//	xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
+	//	xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
+	//	xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_LEFT) ||
+	//	xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_LEFT) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_LEFT))
+	//		sendCallbacks(new menuKeystroke(MENU_LEFT));
+	//if(((newKeyStates[VK_RIGHT] & 0x80) && !(keys[VK_RIGHT] & KEYSTATE_CURRENT)) || 
+	//	xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
+	//	xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
+	//	xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_RIGHT) ||
+	//	xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_RIGHT) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_RIGHT))
+	//		sendCallbacks(new menuKeystroke(MENU_RIGHT));
+	//if(((newKeyStates[VK_UP] & 0x80) && !(keys[VK_UP] & KEYSTATE_CURRENT)) || 
+	//	xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_UP) ||
+	//	xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_UP) ||
+	//	xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_UP) ||
+	//	xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_UP) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_UP))
+	//		sendCallbacks(new menuKeystroke(MENU_UP));
+	//if(((newKeyStates[VK_DOWN] & 0x80) && !(keys[VK_DOWN] & KEYSTATE_CURRENT)) || 
+	//	xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
+	//	xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
+	//	xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_DPAD_DOWN) ||
+	//	xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_DPAD_DOWN) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_DPAD_DOWN))
+	//		sendCallbacks(new menuKeystroke(MENU_DOWN));
 
 	if(((newKeyStates[VK_SPACE] & 0x80) && !(keys[VK_SPACE] & KEYSTATE_CURRENT)) || 
 		((newKeyStates[VK_RETURN] & 0x80) && !(keys[VK_RETURN] & KEYSTATE_CURRENT)) || 

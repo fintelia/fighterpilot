@@ -385,7 +385,7 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 	}
 	auto Pred = [view](shared_ptr<emitter> e1, shared_ptr<emitter> e2)
 	{
-		return view->project3(e1->position).z > view->project3(e2->position).z;
+		return view->project3(e1->position).z < view->project3(e2->position).z;
 	};
 
 	sort(emitters.begin(), emitters.end(), Pred);

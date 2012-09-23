@@ -137,6 +137,18 @@ void missile::updateSimulation(double time, double ms)
 	life-=ms/1000;
 	if(life < 0.0 || world.altitude(position) < 0.0)
 	{
+		if(enemy != NULL && !enemy->dead && !(enemy->type & PLANE) && position.distance(enemy->position+enemy->rotation*enemy->meshInstance->getBoundingSphere().center) < 30.0)
+		{
+			enemy->loseHealth(105);
+			if(enemy->dead)
+			{
+				if(players.numPlayers() >= 1 && owner==players[0]->objectNum()) players[0]->addKill();
+				if(players.numPlayers() >= 2 && owner==players[1]->objectNum()) players[1]->addKill();
+			}
+
+		}
+		particleManager.addEmitter(new particle::explosion(),position,5.0);
+		particleManager.addEmitter(new particle::groundExplosionFlash(),position,5.0);
 		awaitingDelete = true;
 		meshInstance.reset();
 	}

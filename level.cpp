@@ -288,7 +288,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 	{
 		if(i->type & PLANE && i->type != PLAYER_PLANE)
 		{
-			if(players.numPlayers() < humanPlayers) //if the number of objects marked PLAYER_PLANE is less than the number of human players
+			if(players.numPlayers() == 0) //if the number of objects marked PLAYER_PLANE is less than the number of human players
 			{
 				auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
 				players.addHumanPlayer(id);
@@ -316,7 +316,38 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 			world.newObject(new ship(i->startloc, i->startRot, i->type, i->team));
 		}
 	}
+
+	if(players.numPlayers() > 0 && players.numPlayers() < humanPlayers) //add additional human players if necessary
+	{
+		for(int i=players.numPlayers(); i<humanPlayers; i++)
+		{
+			object* ally = players[players.numPlayers()-1]->getObject();
+			auto id = world.newObject(new nPlane(ally->position+ally->rotation * Vec3f(-75, 0, -50), ally->rotation, ally->type, ally->team));
+			players.addHumanPlayer(id);
+		}
+	}
+
 	world.time.reset();
+}
+bool LevelFile::checkValid()
+{
+	if(objects.size() == 0)
+	{
+		messageBox("Error: no objects found");
+		return false;
+	}
+
+	bool playerObjectFound = false;
+	for(auto i = objects.begin(); i != objects.end(); i++)
+	{
+		playerObjectFound = playerObjectFound || (i->type & PLANE);
+	}
+	if(!playerObjectFound)
+	{
+		messageBox("Error: No player object found");
+		return false;
+	}
+	return true;
 }
 LevelFile::LevelFile(): heights(nullptr)
 {

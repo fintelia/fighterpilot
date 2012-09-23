@@ -1,9 +1,9 @@
 # Blender MTL File: 'None'
 # Material Count: 3
-newmtl body_f16_fuse.jpg
-Ns 40.0
+newmtl Body
+Ns 37.254902
 Ka 0.000000 0.000000 0.000000
-Kd 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
 Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
@@ -11,21 +11,21 @@ illum 2
 map_Kd f16_fuse.png
 
 
-newmtl cockpit_f16_Cpit.jpg
-Ns 40.0
+newmtl Cockpit
+Ns 37.254902
 Ka 0.000000 0.000000 0.000000
-Kd 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
 Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
-illum 1
+illum 2
 map_Kd f16_Cpit.png
 
 
-newmtl glass_A10_glass.jpg
-Ns 40.0
+newmtl Glass
+Ns 37.254902
 Ka 0.000000 0.000000 0.000000
-Kd 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 Ni 1.000000
 d 0.400000

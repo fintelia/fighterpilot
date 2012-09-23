@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	smokeTrail::smokeTrail(): emitter("smoke", 30, 120.0)
+	smokeTrail::smokeTrail(): emitter("smoke", 64, 160.0)
 	{
 
 	}
@@ -28,7 +28,7 @@ namespace particle
 		p.velocity = random3<float>() * speed();
 		p.pos = currentPosition + random3<float>()*spread() + p.velocity * extraTime/1000.0;
 
-		p.size = 1.0;
+		p.size = 3.5;
 
 		float e = world.elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
@@ -51,13 +51,17 @@ namespace particle
 		if(t<0.2)
 		{
 			p.a = 0.5;//(t * 5.0)*(t * 5.0);
-			p.size = 1.0 + 4.0*(t*5.0);
+			p.size = 3.5 + 4.0*(t*5.0);
+			float i = min(t*50.0,1.0);
+			p.r = i*color.r + (1.0-i)*1.0;
+			p.g = i*color.b + (1.0-i)*0.48;
+			p.b = i*color.g + (1.0-i)*0.17;
 		}
 		else
 		{
 			t = (t-0.01)/0.99;
 			p.a = 0.5 * (1.0 - t);
-			p.size = lerp(5.0, 10.0, t);
+			p.size = lerp(7.5, 15.0, t);
 			//p.pos.y += world.time.length()/100;
 		}
 	}
