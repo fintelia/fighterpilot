@@ -41,15 +41,15 @@ namespace particle
 		p.ang += p.angularSpeed * world.time.length()/1000.0;
 		p.pos.y += world.time.length()/100;
 		float t = (world.time() - p.startTime);
-		if(t < 100.0)
+		if(t < 300.0)
 		{
-			p.a = t / 100.0;
+			p.a = t / 300.0 * 0.75;
 			p.size = 10.0;
 		}
 		else
 		{
-			p.a = 1.0 - (t-100.0) / 6900;
-			p.size = 10.0 + 15.0 * (t-100.0) / 6900;
+			p.a = (1.0 - (t-300.0) / 6700) * 0.75;
+			p.size = 10.0 + 15.0 * (t-300.0) / 6700;
 		}
 	}
 }

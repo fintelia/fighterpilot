@@ -45,18 +45,26 @@ bool Game::init()
 	if(!fileManager.fileExists(appData + "settings.ini"))
 	{
 		shared_ptr<FileManager::iniFile> settingsFile(new FileManager::iniFile(appData + "settings.ini"));
-		settingsFile->bindings["graphics"]["refreshRate"] = "75";
+
 #ifdef WINDOWS
+		DEVMODE devMode;
+		devMode.dmSize = sizeof(DEVMODE);
+		devMode.dmDriverExtra = 0;
+
 		settingsFile->bindings["graphics"]["resolutionX"] = lexical_cast<string>(GetSystemMetrics(SM_CXSCREEN));
 		settingsFile->bindings["graphics"]["resolutionY"] = lexical_cast<string>(GetSystemMetrics(SM_CYSCREEN));
+		if(EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&devMode))
+			settingsFile->bindings["graphics"]["refreshRate"] = devMode.dmDisplayFrequency;
+		else
+			settingsFile->bindings["graphics"]["refreshRate"] = "60";
 #else
 		settingsFile->bindings["graphics"]["resolutionX"] = "0";
 		settingsFile->bindings["graphics"]["resolutionY"] = "0";
-
+		settingsFile->bindings["graphics"]["refreshRate"] = "60";
 #endif
 		settingsFile->bindings["graphics"]["samples"] = "4";
 		settingsFile->bindings["graphics"]["gamma"] = "1.0";
-		settingsFile->bindings["graphics"]["VSync"]="enabled";
+		settingsFile->bindings["graphics"]["vSync"]="enabled";
 		settingsFile->bindings["graphics"]["fullscreen"] = "true";
 		settingsFile->bindings["graphics"]["textureCompression"]="enabled";
 		if(!fileManager.writeIniFile(settingsFile))
@@ -118,7 +126,7 @@ bool Game::init()
 	}
 
 	graphics->setRefreshRate(settings.get<unsigned int>("graphics", "refreshRate"));
-	graphics->setVSync(settings.get<string>("graphics", "VSync")=="enabled");
+	graphics->setVSync(settings.get<string>("graphics", "vSync")=="enabled");
 
 	menuManager.setMenu(new gui::loading);
 

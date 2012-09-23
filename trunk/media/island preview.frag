@@ -35,9 +35,12 @@ void main()
 
 	float height = minHeight + groundTexVal.a * heightRange;
 
+	if(height < -0.001)
+		discard;
+
 	vec3 TexValues;
-	if(height<6.0)			TexValues = vec3(0.0,1.0,0.0);
-	else if(height<26.0)	TexValues = vec3(0.0,1.0-(height-6.0)/20.0,(height-6.0)/20.0);
+	if(height<12.0)			TexValues = vec3(0.0,1.0,0.0);
+	else if(height<36.0)	TexValues = vec3(0.0,1.0-(height-12.0)/24.0,(height-12.0)/24.0);
 	else					TexValues = vec3(0.0,0.0,1.0);
 
 	//if(r<TexValues[0]) r=0.0;

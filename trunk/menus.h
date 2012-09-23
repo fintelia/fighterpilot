@@ -160,9 +160,10 @@ private:
 	struct OptionState
 	{
 		int fullscreenChoice;
-		int refreshRateChoice;
 		int resolutionChoice;
 		int samplesChoice;
+
+		unsigned int refreshRate;
 
 		float gamma;
 		bool vSync;
@@ -174,6 +175,7 @@ private:
 
 	int lastResolutionChoice;
 	vector<Vec2u> resolutionChoices;
+	vector<unsigned int> refreshRates;
 	shared_ptr<FileManager::iniFile> settingsFile;
 public:
 	bool init();
@@ -218,6 +220,11 @@ public:
 class splitScreen: public dogFight
 {
 protected:
+	enum GameType{COOPERATIVE, PLAYER_VS_PLAYER}gameType;
+	float countdown;
+	bool restart;
+	bool levelup;
+	bool victory;
 	shared_ptr<GraphicsManager::View> views[2];
 
 public:

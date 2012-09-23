@@ -342,6 +342,9 @@
     <ClCompile Include="ship.cpp">
       <Filter>Source Files\GAME\objects\ship</Filter>
     </ClCompile>
+    <ClCompile Include="fireball.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">

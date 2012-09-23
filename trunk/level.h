@@ -71,6 +71,8 @@ struct LevelFile
 	bool parseObjectFile(shared_ptr<FileManager::textFile> f);
 	void initializeWorld(unsigned int humanPlayers);//creates objects stored in level file
 
+	bool checkValid();
+
 	LevelFile();
 	~LevelFile();
 };

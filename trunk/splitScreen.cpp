@@ -3,7 +3,7 @@
 #include "game.h"
 
 namespace gui{
-splitScreen::splitScreen(shared_ptr<LevelFile> lvl): dogFight(lvl)
+splitScreen::splitScreen(shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
 {
 	views[0] = graphics->genView();
 	views[0]->viewport(0, 0.0, sAspect, 0.5);
@@ -21,6 +21,12 @@ bool splitScreen::init()
 {
 	world.create();
 	level->initializeWorld(2);
+
+	if(players[0]->getObject()->team == players[1]->getObject()->team)
+		gameType = COOPERATIVE;
+	else
+		gameType = PLAYER_VS_PLAYER;
+
 	return true;
 }
 int splitScreen::update()
@@ -44,6 +50,8 @@ int splitScreen::update()
 		input.up(VK_ESCAPE);
 	}
 
+	checkCollisions();
+
 #ifdef _DEBUG
 	//slow down the game speed to 10%
 	if(input.getKey(0x54))
@@ -61,9 +69,85 @@ int splitScreen::update()
 #endif
 	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
 	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
+	if(gameType == COOPERATIVE)
+	{
+		if(levelup)
+		{
+			countdown-=world.time.length();
+			if(countdown<=0)
+			{
+				string nLevel = level->info.nextLevel;
+				//if(nLevel == "") nLevel="media/map file.lvl";
 
-	checkCollisions();
+				shared_ptr<LevelFile> l(new LevelFile);
+				if(l->loadZIP(nLevel))
+				{
+					menuManager.setMenu(new gui::splitScreen(l));
+				}
+			}
+		}
+		else if(restart)
+		{
+			countdown-=world.time.length();
+			if(countdown<=0)
+			{
+				menuManager.setMenu(new gui::splitScreen(level));
+			}
+		}
+		else if(victory)
+		{
+			countdown-=world.time.length();
+			if(countdown<=0)
+			{
+				menuManager.setMenu(new gui::chooseMode());
+			}
+		}
+		else
+		{
+			int enemies_left=0;
+			auto planes = world(PLANE);
+			auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+			for(auto i = planes.begin(); i != planes.end();i++)
+			{
+				if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
+					enemies_left++;
+			}
+			for(auto i = AAA.begin(); i != AAA.end();i++)
+			{
+				if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
+					enemies_left++;
+			}
 
+			if(enemies_left == 0 && level->info.nextLevel != "")
+			{
+				levelup=true;
+				countdown=1000;
+			}
+			else if(enemies_left == 0)
+			{
+				victory=true;
+				countdown=1000;
+			}
+			else if(players[0]->getObject()->dead && players[1]->getObject()->dead)
+			{
+				restart=true;
+				countdown=5000;
+			}
+		}
+	}
+	else if(gameType == PLAYER_VS_PLAYER) //should be like cooperative victory instead of just a messageBox
+	{
+		if(players[1]->getObject()->dead)
+		{
+			menuManager.setMenu(new gui::chooseMode());	
+			messageBox("Player 1 Wins!");
+		}
+		else if(players[0]->getObject()->dead)
+		{
+			menuManager.setMenu(new gui::chooseMode());
+			messageBox("Player 2 Wins!");
+		}
+	}
 	return 7;
 }
 void splitScreen::render()
@@ -139,6 +223,16 @@ void splitScreen::render()
 	//		radar(sAspect-0.11, 0.389+0.5*acplayer, 0.094, 0.094, false, p);	
 	//		healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
 		}
+	}
+	if(levelup)
+	{
+		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "next level");
+	}
+	if(victory)
+	{
+		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
+		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "victory");
 	}
 }
 void splitScreen::render3D(unsigned int v)

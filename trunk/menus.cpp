@@ -122,7 +122,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_RETURN);
 
 		shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadZIP("media/simpleCampaign/mission1.lvl"))
+		if(l->loadZIP("media/simpleCampaign/mission1.lvl") && l->checkValid())
 		{
 			menuManager.setMenu(new gui::campaign(l));
 		}
@@ -133,7 +133,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_RETURN);
 
 		shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadZIP("media/map file.lvl"))
+		if(l->loadZIP("media/simpleCampaign/mission1.lvl") && l->checkValid())
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
 		}
@@ -177,7 +177,7 @@ void chooseMode::operator() (popup* p)
 
 
 			shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadZIP(((openFile*)p)->getFile()))
+			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
 			{
 				menuManager.setMenu(new gui::campaign(l));
 			}
@@ -189,7 +189,7 @@ void chooseMode::operator() (popup* p)
 			input.up(VK_RETURN);
 
 			shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadZIP(((openFile*)p)->getFile()))
+			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
 			{
 				menuManager.setMenu(new gui::splitScreen(l));
 			}
@@ -247,7 +247,6 @@ bool options::init()
 	initialState.fullscreenChoice = graphics->getFullscreen() ? 0 : 1;
 	initialState.gamma = graphics->getGamma();
 
-	initialState.refreshRateChoice = -1;
 	initialState.resolutionChoice = -1;
 
 	unsigned int nSamples = graphics->getMultisampling();
@@ -292,6 +291,7 @@ bool options::init()
 			initialState.resolutionChoice = resolutionChoices.size()-1;
 		}
 	}
+	initialState.refreshRate = currentDisplayMode.refreshRate;
 
 
 	labels["multisampling"] = new label(0.34*sAspect-graphics->getTextSize("Multisampling: ").x,0.355, "Multisampling: ");
@@ -299,8 +299,8 @@ bool options::init()
 	listBoxes["multisampling"]->addOption("Disabled");
 	listBoxes["multisampling"]->addOption("2X");
 	listBoxes["multisampling"]->addOption("4X");
-	listBoxes["multisampling"]->addOption("8X");
-	listBoxes["multisampling"]->addOption("16X");
+	//listBoxes["multisampling"]->addOption("8X");			//even though these modes may work, they can also cause FighterPilot
+	//listBoxes["multisampling"]->addOption("16X");			//to use up all the graphics memory and crash.
 
 	labels["vSync"] = new label(0.34*sAspect-graphics->getTextSize("Vertical Sync: ").x,0.395, "Vertical Sync: ");
 	checkBoxes["vSync"] = new checkBox(0.34*sAspect, 0.395, "",initialState.vSync);
@@ -316,7 +316,10 @@ bool options::init()
 	for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
 	{
 		if(i->resolution.x == currentDisplayMode.resolution.x && i->resolution.y == currentDisplayMode.resolution.y)
+		{
 			listBoxes["refreshRate"]->addOption(lexical_cast<string>(i->refreshRate) + " Hz");
+			refreshRates.push_back(i->refreshRate);
+		}
 	}
 
 	labels["textureCompression"] = new label(0.64*sAspect-graphics->getTextSize("Texture Compression: ").x,0.355, "Texture Compression: ");
@@ -341,12 +344,14 @@ int options::update()
 
 	if(lastResolutionChoice != listBoxes["resolution"]->getOptionNumber())
 	{
+		refreshRates.clear();
 		listBoxes["refreshRate"]->clearOptions();
 		for(auto i=displayModes.begin(); i!=displayModes.end(); i++)
 		{
 			if(i->resolution.x == currentDisplayMode.resolution.x && i->resolution.y == currentDisplayMode.resolution.y)
 			{
 				listBoxes["refreshRate"]->addOption(lexical_cast<string>(i->refreshRate) + " Hz");
+				refreshRates.push_back(i->refreshRate);
 				if(i->refreshRate == currentDisplayMode.refreshRate)
 					listBoxes["refreshRate"]->setOption(listBoxes["refreshRate"]->getNumOptions()-1);
 			}
@@ -368,10 +373,11 @@ int options::update()
 			needRestart = true;
 		}
 		//////////////////refreshRate//////////////////////////////
-		if(initialState.refreshRateChoice != listBoxes["display mode"]->getOptionNumber() && initialState.refreshRateChoice != -1)
+		unsigned int rate = refreshRates[listBoxes["refreshRate"]->getOptionNumber()];
+		if(initialState.refreshRate != rate)
 		{
-			settingsFile->bindings["graphics"]["refreshRate"] = listBoxes["display mode"]->getOptionNumber()==0 ? "60" : "75";
-			graphics->setRefreshRate(listBoxes["display mode"]->getOptionNumber()==0 ? 60 : 75);
+			settingsFile->bindings["graphics"]["refreshRate"] = lexical_cast<string>(rate);
+			graphics->setRefreshRate(rate);
 		}
 		//////////////////resolution//////////////////////////////
 		if(initialState.resolutionChoice != listBoxes["resolution"]->getOptionNumber() && initialState.resolutionChoice != -1)
@@ -383,7 +389,7 @@ int options::update()
 		//////////////////multisampling//////////////////////////////
 		if(initialState.samplesChoice != listBoxes["multisampling"]->getOptionNumber())
 		{
-			settingsFile->bindings["graphics"]["samples"] = listBoxes["display mode"]->getOptionNumber()==0 ? 0 : (1<<listBoxes["display mode"]->getOptionNumber());
+			settingsFile->bindings["graphics"]["samples"] = lexical_cast<string>(listBoxes["multisampling"]->getOptionNumber()==0 ? 0 : (1<<listBoxes["multisampling"]->getOptionNumber()));
 			needRestart = true;
 		}
 		//////////////////texture compression//////////////////////////////

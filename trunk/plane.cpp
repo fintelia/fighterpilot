@@ -390,6 +390,7 @@ void nPlane::updateSimulation(double time, double ms)
 		{
 			rotation = slerp(rotation, Quat4f(Vec3f(0,-1,0)), 1.0-pow(0.5, world.time.length()/1000));
 			position += rotation * Vec3f(0,0,1) * 200.0 * (ms/1000);
+			smoothCamera();
 		}
 		else
 		{
@@ -721,21 +722,23 @@ void nPlane::die(deathType d)
 
 	if(d == DEATH_NONE)
 	{
-		if(controlType == CONTROL_TYPE_AI)
+	//	if(controlType == CONTROL_TYPE_AI)
 		{
 			death = DEATH_TRAILING_SMOKE;
 		
 			smokeTrail->setActive(true);
 			smokeTrail->setColor(Color(0.05,0.05,0.05));
 		
+			particleManager.addEmitter(new particle::fireball(), id);
+
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
 			//particleManager.addEmitter(new particle::debrisSmokeTrail(), position, 1.0);
 		}
-		else
-		{
-			death = DEATH_EXPLOSION;
-		}
+	//	else
+	//	{
+	//		death = DEATH_EXPLOSION;
+	//	}
 
 		particleManager.addEmitter(new particle::explosion(),id);
 		particleManager.addEmitter(new particle::explosionSmoke(),id);
@@ -745,10 +748,11 @@ void nPlane::die(deathType d)
 	}
 	else if(d == DEATH_HIT_GROUND)
 	{
-		//position.y -= world.altitude(position);
+		position.y -= world.altitude(position);
 		//particleManager.addEmitter(new particle::blackSmoke(id));
 
-		death = DEATH_EXPLOSION;
+		death = DEATH_HIT_GROUND;
+		particleManager.addEmitter(new particle::blackSmoke(),id);
 		particleManager.addEmitter(new particle::explosion(),id);
 		particleManager.addEmitter(new particle::groundExplosionFlash(),id);
 		cameraShake = 1.0;
