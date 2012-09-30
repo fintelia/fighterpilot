@@ -147,8 +147,11 @@ void missile::updateSimulation(double time, double ms)
 			}
 
 		}
-		particleManager.addEmitter(new particle::explosion(),position,5.0);
-		particleManager.addEmitter(new particle::groundExplosionFlash(),position,5.0);
+		if(world.isLand(position.x, position.z))
+		{
+			particleManager.addEmitter(new particle::explosion(),position,5.0);
+			particleManager.addEmitter(new particle::groundExplosionFlash(),position,5.0);
+		}
 		awaitingDelete = true;
 		meshInstance.reset();
 	}

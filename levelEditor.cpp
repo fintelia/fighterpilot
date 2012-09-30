@@ -178,7 +178,7 @@ void levelEditor::operator() (popup* p)
 	//   .
 	//   .
 }
-int levelEditor::update()
+void levelEditor::updateFrame()
 {
 	if(buttons["load"]->checkChanged())
 	{
@@ -199,7 +199,7 @@ int levelEditor::update()
 	else if(buttons["exit"]->checkChanged())
 	{
 		menuManager.setMenu(new gui::chooseMode);
-		return 0;
+		return;
 	}
 	else if(getTab() == TERRAIN)
 	{
@@ -393,8 +393,6 @@ int levelEditor::update()
 		center.x = clamp(center.x, 0.0, levelFile.info.mapSize.x);
 		center.z = clamp(center.z, 0.0, levelFile.info.mapSize.y);
 	}
-
-	return 7;
 }
 bool levelEditor::mouse(mouseButton button, bool down)
 {

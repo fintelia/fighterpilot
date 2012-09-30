@@ -2182,6 +2182,7 @@ void OpenGLgraphics::swapBuffers()
 }
 GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 {
+#ifdef WINDOWS
 	DEVMODE d;
 	if(EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&d))
 	{
@@ -2198,6 +2199,7 @@ GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 		return dm;
 	}
 	else
+#endif
 	{
 		displayMode dm;
 		dm.resolution = Vec2u(0, 0);

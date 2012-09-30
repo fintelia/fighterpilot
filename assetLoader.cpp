@@ -56,6 +56,16 @@ bool AssetLoader::loadAssetList()
 					string filename = getAttribute(textureElement, "file");
 					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
 
+					if(game->isWideScreen())
+					{
+						string wideFileName = getAttribute(textureElement, "fileWide");
+						if(wideFileName != "")
+						{
+							filename = wideFileName;
+						}
+					}
+
+
 					if(tmpAssetFile->name == "" || filename == "")
 					{
 						debugBreak();

@@ -34,7 +34,7 @@ public:
 	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
 	inGame();
 	~inGame(){}
-	int update(){return 30;}
+	void update(){}
 	void render();
 	bool menuKey(int mkey);
 	bool keyDown(int vkey);
@@ -88,7 +88,7 @@ public:
 	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),selectedObject(-1),placingNewObject(false),newRegionRadius(false),center(0,0,0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
-	int update();
+	void updateFrame();
 	void render();
 	void render3D(unsigned int view);
 
@@ -132,7 +132,6 @@ public:
 	chooseMode():activeChoice(SINGLE_PLAYER){}
 	~chooseMode(){}
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
-	int update(){return 30;}
 	void render();
 	bool keyDown(int vkey);
 	bool menuKey(int mkey);
@@ -147,7 +146,6 @@ public:
 	chooseMap():currentChoice(0){}
 	~chooseMap(){}
 	bool init();
-	int update(){return 30;}
 	void render();
 	bool keyDown(int vkey);
 protected:
@@ -179,7 +177,7 @@ private:
 	shared_ptr<FileManager::iniFile> settingsFile;
 public:
 	bool init();
-	int update();
+	void updateFrame();
 	void render();
 private:
 
@@ -189,7 +187,7 @@ class loading:public screen
 public:
 	loading();
 	bool init();
-	int update();
+	void updateFrame();
 	void render();
 protected:
 	float progress;
@@ -215,7 +213,7 @@ public:
 	void drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c);
 	void drawScene(shared_ptr<GraphicsManager::View> view, int acplayer);
 
-	void checkCollisions();
+	void updateSimulation();
 };
 class splitScreen: public dogFight
 {
@@ -230,7 +228,7 @@ protected:
 public:
 	splitScreen(shared_ptr<LevelFile> lvl);
 	bool init();
-	int update();
+	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
 };
@@ -250,7 +248,7 @@ protected:
 public:
 	campaign(shared_ptr<LevelFile> lvl);
 	bool init();
-	int update();
+	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
 };

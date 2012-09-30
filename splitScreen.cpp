@@ -29,7 +29,7 @@ bool splitScreen::init()
 
 	return true;
 }
-int splitScreen::update()
+void splitScreen::updateFrame()
 {
 	//set camera position
 	for(int i=0; i<2; i++)
@@ -49,8 +49,6 @@ int splitScreen::update()
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);
 	}
-
-	checkCollisions();
 
 #ifdef _DEBUG
 	//slow down the game speed to 10%
@@ -148,7 +146,6 @@ int splitScreen::update()
 			messageBox("Player 2 Wins!");
 		}
 	}
-	return 7;
 }
 void splitScreen::render()
 {

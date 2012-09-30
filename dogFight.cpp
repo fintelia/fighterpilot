@@ -227,7 +227,7 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 
 	graphics->checkErrors(); //calls debugBreak() if openGL has previously encountered an error (can be placed after any line to pinpoint the error)
 }
-void dogFight::checkCollisions()
+void dogFight::updateSimulation()
 {
 	auto planes = world(PLANE);
 	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);

@@ -59,7 +59,7 @@ namespace particle
 		}
 		else
 		{
-			t = (t-0.01)/0.99;
+			t = (t-0.2)/0.8;
 			p.a = 0.5 * (1.0 - t);
 			p.size = lerp(7.5, 15.0, t);
 			//p.pos.y += world.time.length()/100;
