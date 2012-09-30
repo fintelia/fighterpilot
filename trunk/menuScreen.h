@@ -263,7 +263,7 @@ public:
 	popup(): callback(NULL), done(false){}
 	virtual ~popup(){}
 
-	virtual int update()=0;
+	virtual void update()=0;
 	virtual void render()=0;
 
 	virtual bool mouseL(bool down, float x, float y){return false;}
@@ -290,7 +290,7 @@ public:
 	bool init();
 	bool init(string ExtFilter);
 	bool init(set<string> ExtFilters);
-	int update();
+	void update();
 	void render();
 
 	void refreshView();
@@ -350,7 +350,7 @@ public:
 
 	bool init(string t);
 	bool init(string t, vector<string> buttons);
-	int update(){return 0;}
+	void update(){}
 	void render();
 
 	bool mouseL(bool down, float x, float y);
@@ -372,7 +372,10 @@ public:
 	screen(){}
 	virtual ~screen(){}
 	virtual bool init()=0;
-	virtual int update()=0;
+
+	virtual void updateFrame(){}
+	virtual void updateSimulation(){}
+
 	virtual void render()=0;
 	virtual void render3D(unsigned int view){}
 	///////////////////////////////////////////
@@ -402,7 +405,10 @@ public:
 	bool setPopup(popup* p){if(p != NULL)popups.push_back(shared_ptr<popup>(p));return p!=NULL;}
 
 	void shutdown();
-	int update();
+
+	void updateFrame();
+	void updateSimulation();
+
 	void render();
 	void render3D(unsigned int view);
 

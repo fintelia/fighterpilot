@@ -673,10 +673,14 @@ bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) c
 	{
 		Sphere<float> s1 = b1->second->sphere;
 		Sphere<float> s2 = b2->second->sphere;
-		s1.center = o1->rotation * s1.center + o1->position;
-		s2.center = o2->rotation * s2.center + o2->position;
+		s1.center = o1->lastRotation * s1.center + o1->lastPosition;
+		s2.center = o2->lastRotation * s2.center + o2->lastPosition;
 
-		return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
+		Vec3f s1_newCenter = o1->rotation * s1.center + o1->position;
+		Vec3f s2_newCenter = o2->rotation * s2.center + o2->position;
+
+		return sweptSphereSphere(s1, s1_newCenter - s1.center, s2, s2_newCenter - s2.center);
+		//return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
 	}
 	else if(b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::SPHERE || b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH)
 	{

@@ -263,3 +263,11 @@ double GameTime::getSpeed() const
 {
 	return timeSpeed;
 }
+double GameTime::getUpdateLength() const
+{
+	return updateLength;
+}
+void GameTime::setUpdateLength(double length)
+{
+	updateLength = length;
+}

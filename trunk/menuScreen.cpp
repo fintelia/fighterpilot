@@ -124,7 +124,7 @@ void manager::render3D(unsigned int view)
 		menu->render3D(view);
 	}
 }
-int manager::update()
+void manager::updateFrame()
 {
 	if(!popups.empty())
 	{
@@ -140,9 +140,15 @@ int manager::update()
 	}
 	else if(menu != nullptr)
 	{
-		menu->update();
+		menu->updateFrame();
 	}
-	return 0;
+}
+void manager::updateSimulation()
+{
+	if(popups.empty() && menu != nullptr)
+	{
+		menu->updateSimulation();
+	}
 }
 void manager::shutdown()
 {
@@ -406,7 +412,7 @@ void openFile::refreshView()
 
 	scroll = 0.0;
 }
-int openFile::update()
+void openFile::update()
 {
 #if defined WINDOWS
 	if(buttons["desktop"]->checkChanged())
@@ -417,7 +423,6 @@ int openFile::update()
 			directory = aFolder;
 			refreshView();
 		}
-		return 0;
 	}
 	else if(buttons["myDocuments"]->checkChanged())
 	{
@@ -427,7 +432,6 @@ int openFile::update()
 			directory = aFolder;
 			refreshView();
 		}
-		return 0;
 	}
 	else if(buttons["myComputer"]->checkChanged())
 	{
@@ -437,7 +441,6 @@ int openFile::update()
 			directory = aFolder;
 			refreshView();
 		}
-		return 0;
 	}
 	else if(buttons["myNetwork"]->checkChanged())
 	{
@@ -447,7 +450,6 @@ int openFile::update()
 			directory = aFolder;
 			refreshView();
 		}
-		return 0;
 	}
 #elif defined LINUX
 	//TODO: add support for default directories on linux
@@ -471,7 +473,6 @@ int openFile::update()
 	//		return 0;
 	//	}
 	//}
-	return 0;
 }
 void openFile::render()
 {

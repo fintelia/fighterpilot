@@ -26,21 +26,7 @@ bool Game::init()
 #endif
 		return false;
 	}
-	else if(!assetLoader.loadAssetList())
-	{
-#ifdef WINDOWS
-		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
-#endif
-		return false;
-	}
-	else if(!objectInfo.loadObjectData())
-	{
-#ifdef WINDOWS
-		MessageBox(NULL,L"Error reading media/objectData.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
-#endif
-		return false;
-	}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////load settings///////////////////////////////////////////////////////////////////////////////////
 	string appData = fileManager.getAppDataDirectory();
 	if(!fileManager.fileExists(appData + "settings.ini"))
 	{
@@ -74,7 +60,7 @@ bool Game::init()
 	shortcut->contents = string("[InternetShortcut]\r\nURL=") + appData + "settings.ini\r\nIconIndex=0\r\nIconFile=" + appData + "settings.ini\r\n";
 	fileManager.writeTextFile(shortcut);
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////apply settings///////////////////////////////////////////////////////////////////////////////////
 	auto s = fileManager.loadIniFile(appData + "settings.ini");
 	settings.load(s->bindings);
 	/////////////////////Screen Resolution/////////////////////////
@@ -105,8 +91,12 @@ bool Game::init()
 			{
 				r = i->resolution;
 			}
-		}		
+		}
 	}
+	////////////////////
+	sw = r.x;
+	sh = r.y;
+	sAspect = ((float)sw)/sh;
 	/////////////////////Gamma/////////////////////////////////////
 	float gamma = settings.get<float>("graphics","gamma");
 	if(gamma > 0.5 && gamma < 5.0)
@@ -118,7 +108,22 @@ bool Game::init()
 	/////////////////////Texture Compression/////////////////////////////
 	graphics->setTextureCompression(settings.get<string>("graphics", "textureCompression")=="enabled");
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////load asset list and object data///////////////////////////////////////////////////////////////////////////
+	if(!assetLoader.loadAssetList())
+	{
+#ifdef WINDOWS
+		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+#endif
+		return false;
+	}
+	else if(!objectInfo.loadObjectData())
+	{
+#ifdef WINDOWS
+		MessageBox(NULL,L"Error reading media/objectData.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+#endif
+		return false;
+	}
+//////////////////////////////////////////////////////create window///////////////////////////////////////////////////////////////////////////////////
 	if (!graphics->createWindow("FighterPilot",r,maxSamples, (settings.get<string>("graphics","fullscreen")=="true")))
 	{
 		cout << "create windows failed";
@@ -135,29 +140,24 @@ bool Game::init()
 
 void Game::update()
 {
-
-	/*                 COLLISION CHECKING GOES HERE						*/
-
 	int n=0;
 	input.update();
 	while(world.time.needsUpdate())
 	{
-		n++;
-
 		world.time.nextUpdate();
 
 		players.update();
 		world.simulationUpdate();
 		particleManager.update();
+		menuManager.updateSimulation();
 
-		if(n==10)
+		if(++n==20)
 		{
-			//we can no-longer keep up with the simulation
-			break;
+			break;//we can no-longer keep up with the simulation
 		}
 	}
 
 	world.time.nextFrame();	
 	world.frameUpdate();
-	menuManager.update();
+	menuManager.updateFrame();
 }

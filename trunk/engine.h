@@ -134,7 +134,10 @@ public:
 			if(*i == option) return true;
 		return false;
 	}
-
+	bool isWideScreen()
+	{
+		return abs(sAspect-16.0/9.0) < abs(sAspect-4.0/3.0);//return whether the aspect ration is closer to 4:3 or 16:9
+	}
 	Game():active(true), done(false), needsRedraw(false){}
 	virtual bool init();
 	virtual void update();

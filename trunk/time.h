@@ -47,5 +47,5 @@ public:
 	double interpolate() const;
 	double getSpeed() const;
 	double getUpdateLength() const;
-	double setUpdateLength(double length);
+	void setUpdateLength(double length);
 };

@@ -338,7 +338,7 @@ bool options::init()
 
 	return true;
 }
-int options::update()
+void options::updateFrame()
 {
 	graphics->setGamma(sliders["gamma"]->getValue());
 
@@ -420,7 +420,6 @@ int options::update()
 		graphics->setGamma(initialState.gamma);
 		menuManager.setMenu(new chooseMode);
 	}
-	return true;
 }
 void options::render()
 {
@@ -465,7 +464,7 @@ bool loading::init()
 	progress = 0.0f;
 	return true;
 }
-int loading::update()
+void loading::updateFrame()
 {
 	static double loadStartTime = GetTime();
 
@@ -509,8 +508,6 @@ int loading::update()
 		shaders.writeErrorLog("media/shaderErrors.txt");
 		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 	}
-	
-	return 30;
 }
 void loading::render()
 {

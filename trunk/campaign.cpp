@@ -22,7 +22,7 @@ bool campaign::init()
 	level->initializeWorld(1);
 	return true;
 }
-int campaign::update()
+void campaign::updateFrame()
 {
 	//static double timeSinceSkyUpdate = 0;
 	//ephemeris.setTime(world.time()/3000, 1, 1, 2000.0);
@@ -57,8 +57,6 @@ int campaign::update()
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);
 	}
-	//check for collisions between objects
-	checkCollisions();
 
 #ifdef _DEBUG
 	//slow down game speed to 10%
@@ -163,7 +161,6 @@ int campaign::update()
 	//	levelup=true;//newLevel(level+1);
 	//	countdown=1000;
 	//}
-	return 30;
 }
 void campaign::render()
 {

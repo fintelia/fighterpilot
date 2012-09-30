@@ -48,7 +48,6 @@ private:
 
 	queue<shared_ptr<assetFile>> assetFiles;
 	queue<shared_ptr<assetFile>> assetFilesPreload;
-
 public:
 	static AssetLoader& getInstance()
 	{
