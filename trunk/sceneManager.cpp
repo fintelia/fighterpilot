@@ -192,6 +192,8 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 
 	shared_ptr<meshInstance> i;
 	
+	graphics->setDepthMask(false);
+
 	auto model = shaders.bind("model");
 	model->setUniform1i("tex",0);
 	model->setUniform1i("specularMap",1);
@@ -246,7 +248,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 			}
 		}
 	}
-		
+	graphics->setDepthMask(true);
 	//if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
 	//if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 }

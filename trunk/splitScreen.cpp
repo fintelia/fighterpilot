@@ -163,57 +163,68 @@ void splitScreen::render()
 		{
 			if(p->target != 0 && world[p->target] != nullptr)
 			{
-				Vec3f proj = (views[acplayer]->projectionMatrix() * views[acplayer]->modelViewMatrix()) * world[p->target]->position;
-				if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
+				auto targetPtr = world[p->target];
+				if(targetPtr && targetPtr->meshInstance != nullptr)
 				{
-					shaders.bind("circle shader");
-					if(p->targetLocked)		graphics->setColor(1,0,0);
-					else					graphics->setColor(0,0,1);
-					graphics->drawOverlay(Rect::CWH(views[acplayer]->project(world[p->target]->position), Vec2f(0.02,0.02)));
+					float interpolate = world.time.interpolate();
+					Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
+					Quat4f planeRot = slerp(p->lastRotation, p->rotation, interpolate);
+					Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
+					Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
 
-					if(world[p->target]->type & PLANE && p->position.distanceSquared(world[p->target]->position) <= 2000.0*2000.0)
+					Vec3f targetOffset = -targetRot * targetPtr->meshInstance->getBoundingSphere().center;
+					Vec3f proj = (views[acplayer]->projectionMatrix() * views[acplayer]->modelViewMatrix()) * (targetPos+targetOffset);
+					if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 					{
-						auto targetPtr = dynamic_pointer_cast<nPlane>(world[p->target]);
-						float s = 1000; //speed of bullets
-						Vec3f r = targetPtr->position - p->position;
-						Vec3f v = targetPtr->rotation * Vec3f(0,0,targetPtr->speed);
-		
-						float a = v.dot(v) - s*s;
-						float b = 2.0 * v.dot(r);
-						float c = r.dot(r);
-		
-						if(b*b - 4.0*a*c >= 0.0)
+						shaders.bind("circle shader");
+						if(p->targetLocked)		graphics->setColor(1,0,0);
+						else					graphics->setColor(0,0,1);
+						graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
+
+						if(targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
 						{
-							float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+							auto targetPlanePtr = dynamic_pointer_cast<nPlane>(targetPtr);
+							float s = 1000; //speed of bullets
+							Vec3f r = (targetPos+targetOffset) - planePos;
+							Vec3f v = targetRot * Vec3f(0,0,targetPlanePtr->speed);
 		
-							if(t <= 0.0) //can only happen when plane is flying faster than bullets
+							float a = v.dot(v) - s*s;
+							float b = 2.0 * v.dot(r);
+							float c = r.dot(r);
+		
+							if(b*b - 4.0*a*c >= 0.0)
 							{
-								t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-							}
+								float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
 		
-							graphics->setColor(1,1,1,0.3);
-							graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPtr->position + v * t), Vec2f(0.015,0.015)));
+								if(t <= 0.0) //can only happen when plane is flying faster than bullets
+								{
+									t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+								}
+		
+								graphics->setColor(1,1,1,0.3);
+								graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
+							}
 						}
+						graphics->setColor(1,1,1);
+						shaders.bind("ortho");
 					}
-					graphics->setColor(1,1,1);
-					shaders.bind("ortho");
-				}
-				else
-				{
-					Vec3f fwd = views[acplayer]->camera().fwd;
-					Vec3f up = views[acplayer]->camera().up;
-					Vec3f right = views[acplayer]->camera().right;
-					Vec3f direction = (world[p->target]->position - p->position).normalize();
-					Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
-					Vec2f screenDirection(projectedDirection.dot(right), projectedDirection.dot(up));
-					screenDirection = screenDirection.normalize();
-					Angle ang = atan2A(screenDirection.y,screenDirection.x);
-					screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
-					screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95) * 0.5 + 0.5 * acplayer;
-					if(p->targetLocked)		graphics->setColor(1,0,0);
-					else					graphics->setColor(0,0,1);
-					graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
-					graphics->setColor(1,1,1);
+					else
+					{
+						Vec3f fwd = views[acplayer]->camera().fwd;
+						Vec3f up = views[acplayer]->camera().up;
+						Vec3f right = views[acplayer]->camera().right;
+						Vec3f direction = (targetPos - planePos).normalize();
+						Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
+						Vec2f screenDirection(projectedDirection.dot(right)*0.5, projectedDirection.dot(up));
+						screenDirection = screenDirection.normalize();
+						Angle ang = atan2A(screenDirection.y,screenDirection.x);
+						screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
+						screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95) * 0.5 + 0.5 * acplayer;
+						if(p->targetLocked)		graphics->setColor(1,0,0);
+						else					graphics->setColor(0,0,1);
+						graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
+						graphics->setColor(1,1,1);
+					}
 				}
 			}
 

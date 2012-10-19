@@ -67,11 +67,17 @@ public:
 
 //		iniFile(): file("",INI){}
 		iniFile(string fName): file(fName,INI_FILE){}
-		template<class T> void readValue (string section, string name, T& val, T defaultVal = T())
+		template<class T> void readValue(string section, string name, T& val, T defaultVal = T())
 		{
 			auto sec = bindings.find(section);			if(sec == bindings.end()) {val = defaultVal; return;}
 			auto itt = sec->second.find(name);			if(itt == sec->second.end()) {val = defaultVal; return;}
 			val = lexical_cast<T>(itt->second);
+		}
+		template<class T> T getValue(string section, string name, T defaultVal = T())
+		{
+			auto sec = bindings.find(section);			if(sec == bindings.end()) return defaultVal;
+			auto itt = sec->second.find(name);			if(itt == sec->second.end()) return defaultVal;
+			return lexical_cast<T>(itt->second);
 		}
 	};	
 	struct zipFile: public file

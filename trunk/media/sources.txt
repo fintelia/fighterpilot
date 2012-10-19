@@ -152,6 +152,10 @@ ship.obj (and related files)
 	model modified version of http://artist-3d.com/free_3d_models/dnm/model_disp.php?uid=152
 	steel texture from http://hhh316.deviantart.com/art/Seamless-metal-texture-smooth-164165216
 	grate texture created in GIMP (Jonathan)
+	
+tree.obj (and related files)
+	originally from 0 A.D
+	converted using pmd2collada_v3 to .dae, then with blender to .obj
 _________________________________________________________________________________________________________________________
 
 													FONTS

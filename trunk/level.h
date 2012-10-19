@@ -1,10 +1,6 @@
 
 struct LevelFile
 {
-	struct Header{
-		__int64 magicNumber;
-		unsigned int version;
-	};
 	struct Info{//V1
 		TerrainType		shaderType;
 		Vec2f			mapSize;
@@ -59,13 +55,12 @@ struct LevelFile
 		}
 	};
 
-	Header			header;
 	Info			info;
 	vector<Object>	objects;
 	vector<Region>	regions;
 	float*			heights;
 
-	bool saveZIP(string filename);
+	bool saveZIP(string filename, float heightScale, float seaLevelOffset);
 	bool loadZIP(string filename);
 
 	bool parseObjectFile(shared_ptr<FileManager::textFile> f);

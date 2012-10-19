@@ -3,7 +3,7 @@
 
 namespace particle
 {
-	planeEngines::planeEngines(): relativeEmitter("contrail", 48, 15.0, true)
+	planeEngines::planeEngines(): relativeEmitter("contrail", 48, 12.0, true)
 	{
 
 	}

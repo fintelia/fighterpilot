@@ -169,6 +169,9 @@
     <Filter Include="Source Files\GAME\objects\ship">
       <UniqueIdentifier>{08639322-847c-49fd-b873-4b0d9ef72dff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\motion blur">
+      <UniqueIdentifier>{06241e9d-9e89-4d88-9b20-a95b5797f252}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -608,6 +611,12 @@
       <Filter>shaders\cirrusCloud</Filter>
     </None>
     <None Include="media\objectData.xml" />
+    <None Include="media\motion blur.frag">
+      <Filter>shaders\motion blur</Filter>
+    </None>
+    <None Include="media\motion blur.vert">
+      <Filter>shaders\motion blur</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

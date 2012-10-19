@@ -73,6 +73,7 @@ public:
 ///////////camera view/////////////
 	vector<cameraState> cameraStates;
 	Quat4f cameraRotation;
+	Vec3f cameraOffset;
 	objectCamera observer;
 	float cameraShake;
 

@@ -1163,7 +1163,7 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 {
 	auto f = dataManager.getFont(font);
 
-	if(f == NULL)
+	if(f != NULL)
 	{
 		f->texture->bind();
 
@@ -1174,26 +1174,38 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 			if(*i == '\n')
 			{
 				charPos.x = rect.x;
-				charPos.y += f->height;
+				charPos.y += f->height / 1024.0;
+			}
+			else if(*i == '\t')
+			{
+				charPos.x = std::ceil(charPos.x * 32.0 + 0.001) / 32.0;
 			}
 			else if(f->characters.count(*i) != 0 && rect.inRect(charPos))
 			{
 				auto& c = f->characters.find(*i)->second;
 
-				charRect.x = charPos.x + c.xOffset;
-				charRect.y = charPos.y + c.yOffset;
-				charRect.w = c.width;
-				charRect.h = c.height;
+				charRect.x = charPos.x + c.xOffset / 1024.0;
+				charRect.y = charPos.y + c.yOffset / 1024.0;
+				charRect.w = c.width / 1024.0;
+				charRect.h = c.height / 1024.0;
 
 				Rect UV = c.UV;
 				if(charRect.x < rect.x + rect.w && charRect.y < rect.y + rect.h)
 				{
-					if(charRect.x + charRect.w > rect.x + rect.w)	UV.w *= ((rect.x + rect.w) - charRect.x) / charRect.w;
-					if(charRect.y + charRect.h > rect.y + rect.h)	UV.h *= ((rect.y + rect.h) - charRect.y) / charRect.h;
+					if(charRect.x + charRect.w > rect.x + rect.w)
+					{
+						UV.w *= ((rect.x + rect.w) - charRect.x) / charRect.w;
+						charRect.w -= (charRect.x + charRect.w) - (rect.x + rect.w);
+					}
+					if(charRect.y + charRect.h > rect.y + rect.h)
+					{
+						UV.h *= ((rect.y + rect.h) - charRect.y) / charRect.h;
+						charRect.h -= (charRect.y + charRect.h) - (rect.y + rect.h);
+					}
 
 					drawPartialOverlay(charRect, UV);
 				}
-				charPos.x += c.xAdvance;
+				charPos.x += c.xAdvance / 1024.0;
 			}
 		}
 	}
@@ -1294,7 +1306,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_FLOAT, NULL);
 
 		//glGenTextures(1, &FBOs[i].normals);
 		//glBindTexture(GL_TEXTURE_2D, FBOs[i].normals);
@@ -1605,6 +1617,76 @@ void OpenGLgraphics::render()
 		glColorMask(true,true,true,true);
 	}
 	sceneManager.endRender(); //do some post render cleanup
+
+//////////////////////////////////Blit Framebuffer///////////////////////////////
+	if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
+		glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	}
+	else if(multisampling)
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+	}
+////////////////////////////////////Motion Blur//////////////////////////////////
+	//glActiveTexture(GL_TEXTURE0);	glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+	//glActiveTexture(GL_TEXTURE1);	glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
+	//
+	//bindRenderTarget(RT_FBO_1);
+	//
+	//auto motionBlur = shaders.bind("motion blur shader");
+	//if(motionBlur)
+	//{
+	//	motionBlur->setUniform1i("colorTexture", 0);
+	//	motionBlur->setUniform1i("depthTexture", 1);
+	//	for(auto i = views.begin(); i != views.end();)
+	//	{
+	//		if(i->expired()) //check if the view no longer exists (just to be safe)
+	//		{
+	//			i = views.erase(i);
+	//		}
+	//		else
+	//		{
+	//			currentView = shared_ptr<View>(*i);
+	//			Mat4f viewProjectionInverseMatrix;
+	//			(currentView->projectionMatrix() * currentView->modelViewMatrix()).inverse(viewProjectionInverseMatrix);
+	//
+	//			motionBlur->setUniformMatrix("viewProjectionInverseMatrix", viewProjectionInverseMatrix);
+	//			motionBlur->setUniformMatrix("previousViewProjectionMatrix", currentView->projectionMatrix() * currentView->lastModelViewMatrix());
+	//
+	//			glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+	//			drawPartialOverlay(Rect::XYWH(currentView->viewport().x/sAspect*2.0-1.0,currentView->viewport().y*2.0-1.0,currentView->viewport().width/sAspect*2.0,currentView->viewport().height*2.0), 
+	//								Rect::XYWH(currentView->viewport().x/sAspect,currentView->viewport().y,currentView->viewport().width/sAspect,currentView->viewport().height));
+	//			i++;
+	//		}
+	//	}
+	//	currentView.reset(); //set the current view to null
+	//}
+
+///////////////////////////////////////Post Processing//////////////////////////////////
+	bindRenderTarget(RT_SCREEN);
+	//glClearColor(0.0,0.0,0.0,1.0f);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, FBOs[1].color);
+	glGenerateMipmapEXT(GL_TEXTURE_2D);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	auto gamma = shaders.bind("gamma shader");
+	gamma->setUniform1f("gamma",currentGamma);
+	gamma->setUniform1i("tex",0);
+	renderFBO(RT_FBO_0);
 /////////////////////////////////////START 2D////////////////////////////////////
 	glViewport(0,0,sw,sh);
 	if(!highResScreenshot)
@@ -1628,35 +1710,6 @@ void OpenGLgraphics::render()
 			}
 		#endif
 	}
-///////////////////////////////////////Post Processing//////////////////////////////////
-	if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
-		glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	}
-	else if(multisampling)
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
-	}
-
-	bindRenderTarget(RT_SCREEN);
-	//glClearColor(0.0,0.0,0.0,1.0f);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	auto gamma = shaders.bind("gamma shader");
-	gamma->setUniform1f("gamma",currentGamma);
-	gamma->setUniform1i("tex",0);
-	renderFBO(RT_FBO_0);
 ///////////////////////////////////////////////////////////////////////////////////////
 
 	checkErrors();

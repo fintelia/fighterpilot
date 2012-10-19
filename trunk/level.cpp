@@ -4,7 +4,7 @@ LevelFile::Object::Object():type(0), team(NEUTRAL), startloc(), startRot()
 {
 
 }
-bool LevelFile::saveZIP(string filename)
+bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset)
 {
 	//check that basic level data is valid
 	if(heights == nullptr || info.mapResolution.x == 0 || info.mapResolution.y == 0)
@@ -50,8 +50,8 @@ bool LevelFile::saveZIP(string filename)
 	//place information about our level in attributes.ini
 	attributesFile->bindings["heightmap"]["resolutionX"] = lexical_cast<string>(width);
 	attributesFile->bindings["heightmap"]["resolutionY"] = lexical_cast<string>(height);
-	attributesFile->bindings["heightmap"]["minHeight"] = lexical_cast<string>(minHeight);
-	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(maxHeight);
+	attributesFile->bindings["heightmap"]["minHeight"] = lexical_cast<string>(-seaLevelOffset*(maxHeight-minHeight)*heightScale);
+	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(-seaLevelOffset*(maxHeight-minHeight)*heightScale + (maxHeight-minHeight)*heightScale);
 	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info.mapSize.x);
 	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info.mapSize.y);
 	attributesFile->bindings["heightmap"]["foliageAmount"] = lexical_cast<string>(info.foliageAmount);
@@ -59,10 +59,11 @@ bool LevelFile::saveZIP(string filename)
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
 
-	if(info.shaderType == TERRAIN_ISLAND)		attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
-	else if(info.shaderType == TERRAIN_SNOW)	attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
-	else if(info.shaderType == TERRAIN_DESERT)	attributesFile->bindings["shaders"]["shaderType"] = "DESERT";
-	else										attributesFile->bindings["shaders"]["shaderType"] = "NONE";
+	if(info.shaderType == TERRAIN_ISLAND)			attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
+	else if(info.shaderType == TERRAIN_MOUNTAINS)	attributesFile->bindings["shaders"]["shaderType"] = "MOUNTAINS";
+	else if(info.shaderType == TERRAIN_SNOW)		attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
+	else if(info.shaderType == TERRAIN_DESERT)		attributesFile->bindings["shaders"]["shaderType"] = "DESERT";
+	else											attributesFile->bindings["shaders"]["shaderType"] = "NONE";
 
 	for(auto i = objects.begin(); i != objects.end(); i++)
 	{
@@ -94,8 +95,14 @@ bool LevelFile::loadZIP(string filename)
 	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
 	shared_ptr<FileManager::textFile> objectsFile(dynamic_pointer_cast<FileManager::textFile>(oFile->second));
 
+	if(attributesFile->getValue<int>("heightmap", "resolutionX") <= 0 || attributesFile->getValue<int>("heightmap", "resolutionY") <= 0)
+		return false;
+
 	delete[] heights;
 	heights = nullptr;
+	objects.clear();
+	regions.clear();
+	info = Info();
 
 	attributesFile->readValue("heightmap", "resolutionX", info.mapResolution.x);
 	attributesFile->readValue("heightmap", "resolutionY", info.mapResolution.y);
@@ -111,16 +118,12 @@ bool LevelFile::loadZIP(string filename)
 
 	string sType;
 	attributesFile->readValue("shaders", "shaderType", sType);
-	if(sType == "ISLAND")		info.shaderType = TERRAIN_ISLAND;
-	else if(sType == "GRASS")	info.shaderType = TERRAIN_ISLAND;
-	else if(sType == "SNOW")	info.shaderType = TERRAIN_SNOW;
-	else if(sType == "DESERT")	info.shaderType = TERRAIN_DESERT;
-	else						info.shaderType = TERRAIN_ISLAND; //grass is default
+	if(sType == "ISLAND")			info.shaderType = TERRAIN_ISLAND;
+	else if(sType == "MOUNTAINS")	info.shaderType = TERRAIN_MOUNTAINS;
+	else if(sType == "SNOW")		info.shaderType = TERRAIN_SNOW;
+	else if(sType == "DESERT")		info.shaderType = TERRAIN_DESERT;
+	else							info.shaderType = TERRAIN_ISLAND; //grass is default
 
-	if(info.mapResolution.x == 0 || info.mapResolution.y == 0)
-	{
-		return false;
-	}
 	heights = new float[info.mapResolution.x * info.mapResolution.y];
 	memset(heights, 0, info.mapResolution.x * info.mapResolution.y * sizeof(float));
 	for(int i = 0; i < info.mapResolution.x * info.mapResolution.y && i * 2 < rawFile->size; i++)
@@ -224,7 +227,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 				else if(readSubString("\tteam="))
 				{
 					string s = readLine();
-					object->team = lexical_cast<int>(s) - 1;
+					object->team = lexical_cast<int>(s);
 				}
 				else if(readSubString("\tspawnPos="))
 				{
@@ -351,8 +354,7 @@ bool LevelFile::checkValid()
 }
 LevelFile::LevelFile(): heights(nullptr)
 {
-	header.magicNumber = 0;
-	header.version = 0;
+
 }
 LevelFile::~LevelFile()
 {

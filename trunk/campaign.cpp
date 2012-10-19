@@ -191,21 +191,27 @@ void campaign::render()
 			auto targetPtr = world[p->target];
 			if(targetPtr && targetPtr->meshInstance != nullptr)
 			{
-				Vec3f targetOffset = -targetPtr->rotation * targetPtr->meshInstance->getBoundingSphere().center;
-				Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * (targetPtr->position+targetOffset);
+				float interpolate = world.time.interpolate();
+				Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
+				Quat4f planeRot = slerp(p->lastRotation, p->rotation, interpolate);
+				Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
+				Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
+
+				Vec3f targetOffset = -targetRot * targetPtr->meshInstance->getBoundingSphere().center;
+				Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * (targetPos+targetOffset);
 				if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 				{
 					shaders.bind("circle shader");
 					if(p->targetLocked)		graphics->setColor(1,0,0);
 					else					graphics->setColor(0,0,1);
-					graphics->drawOverlay(Rect::CWH(view->project(targetPtr->position+targetOffset), Vec2f(0.02,0.02)));
+					graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
 
-					if(targetPtr->type & PLANE && p->position.distanceSquared(targetPtr->position+targetOffset) <= 2000.0*2000.0)
+					if(targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
 					{
 						auto targetPlanePtr = dynamic_pointer_cast<nPlane>(targetPtr);
 						float s = 1000; //speed of bullets
-						Vec3f r = (targetPlanePtr->position+targetOffset) - p->position;
-						Vec3f v = targetPlanePtr->rotation * Vec3f(0,0,targetPlanePtr->speed);
+						Vec3f r = (targetPos+targetOffset) - planePos;
+						Vec3f v = targetRot * Vec3f(0,0,targetPlanePtr->speed);
 		
 						float a = v.dot(v) - s*s;
 						float b = 2.0 * v.dot(r);
@@ -221,7 +227,7 @@ void campaign::render()
 							}
 		
 							graphics->setColor(1,1,1,0.3);
-							graphics->drawOverlay(Rect::CWH(view->project(targetPtr->position+targetOffset + v * t), Vec2f(0.015,0.015)));
+							graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
 						}
 					}
 					graphics->setColor(1,1,1);
@@ -232,7 +238,7 @@ void campaign::render()
 					Vec3f fwd = view->camera().fwd;
 					Vec3f up = view->camera().up;
 					Vec3f right = view->camera().right;
-					Vec3f direction = (targetPtr->position - p->position).normalize();
+					Vec3f direction = (targetPos - planePos).normalize();
 					Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
 					Vec2f screenDirection(projectedDirection.dot(right), projectedDirection.dot(up));
 					screenDirection = screenDirection.normalize();

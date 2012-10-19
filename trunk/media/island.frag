@@ -50,6 +50,9 @@ void main()
 	color = mix(texture2D(sand,position.xz*0.0003), texture2D(grass,position.xz*0.00125), g);
 	
 	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
+
+
+	color.rgb *= 1.0 - 0.6*clamp((height - 37.0)*0.2, 0.0, 1.0);
 	//color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 	
 	vec3 normal = n;//normalize( mat3(n,t,-b)*mix(vec3(0,0,1), texture2D(grass_normals, position.xz*0.00125).xyz*2.0 - 1.0, g*g*g));
