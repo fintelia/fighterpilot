@@ -178,9 +178,20 @@ private:
 public:
 	bool init();
 	void updateFrame();
+	bool keyDown(int vkey);
 	void render();
 private:
 
+};
+class help: public screen
+{
+private:
+	string helpText;
+public:
+	bool init();
+	void render();
+	void updateFrame();
+	bool keyDown(int vkey);
 };
 class loading:public screen
 {

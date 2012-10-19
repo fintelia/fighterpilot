@@ -1,5 +1,5 @@
 
-enum TerrainType{TERRAIN_ISLAND, TERRAIN_SNOW, TERRAIN_DESERT};
+enum TerrainType{TERRAIN_ISLAND, TERRAIN_MOUNTAINS, TERRAIN_SNOW, TERRAIN_DESERT};
 
 class TerrainPatch
 {
@@ -91,7 +91,15 @@ protected:
 	
 	shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
 	shared_ptr<GraphicsManager::indexBuffer> foliageIBO;
-	vector<Vec3f> trees;
+	//vector<Vec3f> trees;
+	struct plant
+	{
+		Vec3f location;
+		float depth;
+		plant(Vec3f l):location(l){}
+	};
+	mutable vector<plant> trees;
+
 	//struct plant
 	//{
 	//	Vec3f location;

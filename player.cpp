@@ -368,14 +368,42 @@ void AIplayer::update()
 		Vec3f direction = t->position-p->position;
 		Vec3f velocity = p->rotation * Vec3f(0,0,1);
 		Angle ang = acosA(velocity.dot(direction.normalize()));
-		float distance = direction.magnitude();
-		flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<nPlane>(t)->speed));
+		float distance = direction.magnitude();	
+		
+		//if(t->type & PLANE)
+		//{
+		//	Vec3f r = t->position - p->position;
+		//	Vec3f v = t->rotation * Vec3f(0,0,static_pointer_cast<nPlane>(t)->speed);
+		//
+		//	float a = v.dot(v) - p->speed*p->speed;
+		//	float b = 2.0 * v.dot(r);
+		//	float c = r.dot(r);
+		//
+		//	if(b*b - 4.0*a*c >= 0.0)
+		//	{
+		//		float time = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//
+		//		if(time <= 0.0) //doen't seem to happen...
+		//		{
+		//			time = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//		}
+		//
+		//		flyTowardsPoint(p, t->position + v * time);
+		//	}
+		//}
+		//else
+		{
+			flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<nPlane>(t)->speed));
+		}
 
 		if(distance > 2000.0)
 		{
 			p->controls.accelerate = 1.0;
 		}
-
+		else
+		{
+			p->controls.accelerate = 0.0;
+		}
 		/*if(distance < 3000.0 && ang < PI/6 && missileCountDown < 0)
 		{
 			missileCountDown = 30000.0;

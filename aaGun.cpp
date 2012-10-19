@@ -9,7 +9,7 @@ void antiAircraftArtilleryBase::die()
 {
 	dead = true;
 	particleManager.addEmitter(new particle::explosion(),id);
-	particleManager.addEmitter(new particle::explosionFlash(),id);
+	particleManager.addEmitter(new particle::groundExplosionFlash(),id);
 	particleManager.addEmitter(new particle::blackSmoke(),id);
 }
 void antiAircraftArtilleryBase::loseHealth(float healthLoss)

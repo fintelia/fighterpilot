@@ -156,6 +156,10 @@ bool chooseMode::keyDown(int vkey)
 	{
 		game->done = true;//end the program
 	}
+	else if(vkey==VK_F1)
+	{
+		menuManager.setMenu(new gui::help);
+	}
 	else if(vkey==VK_F3)
 	{
 		menuManager.setMenu(new gui::options);
@@ -449,6 +453,53 @@ void options::render()
 	graphics->setColor(1.00,1.00,1.00);	graphics->drawOverlay(Rect::XYXY(0.7375*sAspect,0.47,0.7625*sAspect,0.53),"white");
 
 	menuManager.drawCursor();
+}
+bool options::keyDown(int vkey)
+{
+	if(vkey==VK_ESCAPE)
+	{
+		graphics->setGamma(initialState.gamma);
+		menuManager.setMenu(new chooseMode);
+		return true;
+	}
+	return false;
+}
+// ______________________________________________________________________________________________________________________________
+// | 																															|
+// | 													gui::help											            		|
+// |____________________________________________________________________________________________________________________________|
+//
+bool help::init()
+{
+	buttons["OK"] = new button(0.9*sAspect-0.11, 0.81, 0.100, 0.030, "OK", lightGray);
+	auto f = fileManager.loadTextFile("media/help.txt");
+	helpText = f->contents;
+	return true;
+}
+void help::render()
+{
+	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.7),Rect::XYWH(0,0,0.9,0.7),"dialog back");
+
+	graphics->drawText(helpText,Rect::CWH(sAspect/2,0.5,0.8*sAspect-0.1,0.6));
+
+	menuManager.drawCursor();
+}
+void help::updateFrame()
+{
+	if(buttons["OK"]->checkChanged())
+	{
+		menuManager.setMenu(new chooseMode);
+	}
+}
+bool help::keyDown(int vkey)
+{
+	if(vkey==VK_ESCAPE)
+	{
+		menuManager.setMenu(new chooseMode);
+		return true;
+	}
+	return false;
 }
 // ______________________________________________________________________________________________________________________________
 // | 																															|

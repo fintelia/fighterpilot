@@ -38,7 +38,7 @@ namespace particle
 			{
 				vertices[vNum*4 + n].r = 1.0;
 				vertices[vNum*4 + n].g = 1.0;
-				vertices[vNum*4 + n].b = 1.0;
+				vertices[vNum*4 + n].b = 0.4;
 				vertices[vNum*4 + n].a = 1.0;
 			}
 

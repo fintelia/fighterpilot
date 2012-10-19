@@ -551,7 +551,7 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 		float y = cubeMap[i + 2];
 
 
-		cubeMap[i + 1] = 0.75 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
+		cubeMap[i + 1] = 0.65 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
 		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
 
 		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
@@ -682,6 +682,7 @@ void Terrain::generateOceanTexture()
 }
 void Terrain::generateFoliage(int count)
 {
+	count *= 4;
 	vector<texturedVertex3D> vertices;
 	texturedVertex3D tmpVerts[16];
 	Vec3f position;
@@ -723,14 +724,15 @@ void Terrain::generateFoliage(int count)
 		position.z = terrainPosition.z + random<float>(terrainScale.z);
 		position.y = elevation(position.x, position.z);
 
-		if(position.y > 40.0)
+		//float ny = terrainNormal(position.x,position.z).y;
+		if(position.y > 40.0 /*&& ny < 0.998 &&  ny > 0.989*/)
 		{
-			trees.push_back(position);
+			trees.push_back(plant(position));
 
 			n = random<float>(1.0) < 0.5 ? 0 : 8;
 
 			dir = random2<float>();
-			float s = 4.0 + random<float>(4.0) + random<float>(4.0);
+			float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4;
 			tmpVerts[n+0].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
 			tmpVerts[n+1].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
 			tmpVerts[n+2].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
@@ -900,16 +902,24 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	if(!waterPlane)
 	{
-	//	graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,0,eye.z),Quat4f(),Vec3f(radius,-radius,radius));
+		sceneManager.drawMeshCustomShader(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), Vec3f(radius,-radius,radius)), sky);
 	}
-	//shaders.bind("ortho");
-	//Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 3000000.0);
-	//if(sunPos.z > 0)
+
+	//Vec3f sunDirection = (graphics->getLightPosition()+eye).normalize();
+	//Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 300000.0);
+	//if(sunPos.z < 1.0)
 	//{
-	//	Angle rotateAng = acosA(view->camera().up.dot(Vec3f(0,1,0)));
-	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.45,0.45), rotateAng, "sun"); //doesn't work right in 2 player
+	//	shaders.bind("ortho");
+	//
+	//	Vec3f sunUp = sunDirection.cross(Vec3f(0,0,1));	//sun cannot be (0,0,1) at!!!
+	//	float up = view->camera().up.dot(sunUp);
+	//	float right = view->camera().right.dot(sunUp);
+
+	//	Angle rotateAng = atan2A(up,right);
+	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.25,0.25), rotateAng, "sun"); //sun get stretched in split screen mode...
 	//}
-//	if(waterPlane)
+
+	if(waterPlane)
 	{
 		auto ocean = shaders.bind("ocean");
 
@@ -962,6 +972,49 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		islandShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
 
 		sceneManager.bindLights(islandShader);
+
+		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+		{
+			(*i)->render(view);
+		}
+	}
+	else if(shaderType == TERRAIN_MOUNTAINS)
+	{
+		auto mountainShader = shaders.bind("mountain terrain");
+		dataManager.bind("sand",2);
+		dataManager.bind("grass",3);
+		dataManager.bind("rock",4);
+		dataManager.bind("LCnoise",5);
+		dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
+		dataManager.bind("noise",7);
+
+		mountainShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		mountainShader->setUniformMatrix("modelTransform",	Mat4f());
+		mountainShader->setUniform1f("time",				world.time());
+		mountainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
+		mountainShader->setUniform3f("eyePos",				view->camera().eye);
+		mountainShader->setUniform3f("invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+		mountainShader->setUniform1f("minHeight",			terrainPosition.y);
+		mountainShader->setUniform1f("heightRange",			terrainScale.y);
+		
+
+
+		mountainShader->setUniform1i("sky",			0);
+		mountainShader->setUniform1i("sand",		2);
+		mountainShader->setUniform1i("grass",		3);
+		mountainShader->setUniform1i("rock",		4);
+		mountainShader->setUniform1i("LCnoise",		5);
+		mountainShader->setUniform1i("groundTex",	1);
+		mountainShader->setUniform1i("grass_normals", 6);
+		mountainShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
+
+		sceneManager.bindLights(mountainShader);
+
+		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+		{
+			mountainShader->setUniform2f("invTerrainResolution",	1.0/(*i)->width, 1.0/(*i)->height);
+			(*i)->render(view);
+		}
 	}
 	else if(shaderType == TERRAIN_SNOW)
 	{
@@ -983,6 +1036,11 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		snowShader->setUniform1i("snow_normals",	4);
 
 		sceneManager.bindLights(snowShader);
+
+		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+		{
+			(*i)->render(view);
+		}
 	}
 	else if(shaderType == TERRAIN_DESERT)
 	{
@@ -1008,11 +1066,13 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		desertShader->setUniform1i("noiseTex",	5);
 
 		sceneManager.bindLights(desertShader);
+
+		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+		{
+			(*i)->render(view);
+		}
 	}
-	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-	{
-		(*i)->render(view);
-	}
+
 	shaders.bind("model");
 	if(waterPlane)
 	{
@@ -1043,7 +1103,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		//graphics->setAlphaToCoverage(false);
 	
-	
+
 
 	//graphics->setDepthMask(false);
 	//dataManager.bind("cirrus cloud shader");
@@ -1055,9 +1115,13 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 }
 void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 {
+	//for(auto i=trees.begin(); i!=trees.end(); i++)
+	//{
+	//	sceneManager.drawMesh(view, dataManager.getModel("tree model"), Mat4f(Quat4f(),i->location));
+	//}
 	dataManager.bind("tree");
 	skyTexture->bind(1);
-
+	
 	auto alphaTreesShader = shaders.bind("trees alpha test shader");
 	alphaTreesShader->setUniform1i("tex", 0);
 	alphaTreesShader->setUniform1i("sky", 1);
@@ -1075,6 +1139,7 @@ void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 	graphics->setDepthMask(true);
+	
 }
 shared_ptr<TerrainPage> Terrain::getPage(Vec2f position) const
 {

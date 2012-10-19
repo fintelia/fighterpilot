@@ -73,8 +73,8 @@ namespace particle
 		p.ang += p.angularSpeed * world.time.length() / 1000.0;
 
 		float e = world.elevation(p.pos.x,p.pos.z);
-		if(p.pos.y - p.size < e)
-			p.pos.y = e + p.size;
+		if(p.pos.y /*- p.size*/ < e)
+			p.pos.y = e /*+ p.size*/;
 
 		if(t<0.05)
 		{

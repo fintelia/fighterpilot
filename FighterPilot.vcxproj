@@ -241,6 +241,8 @@
     <None Include="media\island.frag" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
+    <None Include="media\motion blur.frag" />
+    <None Include="media\motion blur.vert" />
     <None Include="media\objectData.xml">
       <SubType>Designer</SubType>
     </None>

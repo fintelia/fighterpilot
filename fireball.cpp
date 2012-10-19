@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	fireball::fireball(): emitter("smoke2", 32, 300.0, true)
+	fireball::fireball(): emitter("smoke2", 32, 200.0, true)
 	{
 
 	}

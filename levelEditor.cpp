@@ -32,20 +32,16 @@ bool levelEditor::init()
 	toggles["shaders"]->addButton(new button(0.005,0.005,0.15,0.030,"island",black,white));
 	toggles["shaders"]->addButton(new button(0.005,0.040,0.15,0.030,"snow",black,white));
 	toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"desert",black,white));
+	//toggles["shaders"]->addButton(new button(0.005,0.0.110,0.15,0.030,"mountains",black,white));
 
-	//objects
-	//buttons["addPlane"]		= new button(0.005,0.005,0.25,0.030,"new plane",lightGreen,white);
-	//buttons["addAAgun"]		= new button(0.005,0.040,0.25,0.030,"new AA gun",lightGreen,white);
-	//buttons["addSAMbattery"]	= new button(0.005,0.075,0.25,0.030,"new SAM Battery",lightGreen,white);
-	//buttons["addFlakCannon"]	= new button(0.005,0.110,0.25,0.030,"new Flak Cannon",lightGreen,white);
-	//buttons["addShip"]		= new button(0.005,0.145,0.25,0.030,"new Ship",lightGreen,white);
 	buttons["createObject"]		= new button(0.005,0.895,0.25,0.060,"Create Object",darkGreen,white);
 	buttons["deleteObject"]		= new button(0.005,0.895,0.25,0.060,"Delete Object",Color3(0.5,0,0),black);
 	buttons["cancelObject"]		= new button(0.005,0.895,0.25,0.060,"Cancel",Color3(0.7,0.7,0.7),black);
 
 
 	typeOptions = objectInfo.getPlaceableObjects();
-	listBoxes["object type"] = new listBox(0.005,0.195,0.25,objectInfo.textName(objectInfo.getDefaultPlane()),black);
+	typeOptions.insert(typeOptions.begin(), PLAYER_PLANE);
+	listBoxes["object type"] = new listBox(0.005,0.195,0.25,objectInfo.textName(PLAYER_PLANE),black);
 	for(auto i=typeOptions.begin(); i!=typeOptions.end(); i++)
 	{
 		listBoxes["object type"]->addOption(objectInfo.textName(*i));
@@ -58,54 +54,18 @@ bool levelEditor::init()
 	listBoxes["object team"]->addOption("Team 4");
 
 
-	//settings
-	//v.clear();
-	//v.push_back(new button(120,5,100,30,"respawn",black,white));
-	//v.push_back(new button(225,5,100,30,"restart",black,white));
-	//v.push_back(new button(330,5,100,30,"die",black,white));
-	//toggles["onHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,5,"player hit:"));
-
-	//v.clear();
-	//v.push_back(new button(120,45,100,30,"respawn",black,white));
-	//v.push_back(new button(225,45,100,30,"restart",black,white));
-	//v.push_back(new button(330,45,100,30,"die",black,white));
-	//toggles["onAIHit"]		= new toggle(v,darkBlue,lightBlue,new label(5,45,"AI hit:"));
-
-	//v.clear();
-	//v.push_back(new button(120,85,100,30,"ffa",black,white));
-	//v.push_back(new button(225,85,100,30,"teams",black,white));
-	//v.push_back(new button(330,85,100,30,"player vs",black,white));
-	//toggles["gameType"]	= new toggle(v,darkBlue,lightBlue,new label(5,85,"game type:"));
-
-	//v.clear();
-	//v.push_back(new button(120,125,100,30,"water",black,white));
-	//v.push_back(new button(225,125,100,30,"land",black,white));
-	//toggles["mapType"]	= new toggle(v,darkBlue,lightBlue,new label(5,125,"map type:"));
-
-	//v.clear();
-	//v.push_back(new button(120,165,100,30,"rock",black,white));
-	//v.push_back(new button(225,165,100,30,"sand",black,white));
-	//toggles["seaFloorType"]	= new toggle(v,darkBlue,lightBlue,new label(5,165,"sea floor:"));
-
 	toggles["tabs"]	= new toggle(vector<button*>(),Color(0.5,0.5,0.5),Color(0.8,0.8,0.8),NULL,0);
 	toggles["tabs"]->addButton(new button(0.005,0.965,0.15,0.030,"Terrain",black,white));
 	toggles["tabs"]->addButton(new button(0.157,0.965,0.15,0.030,"Objects",black,white));
-	toggles["tabs"]->addButton(new button(0.310,0.965,0.15,0.030,"Regions",black,white));
-
-	//if(level != NULL) delete level;
-	//level = new editLevel;
+	//toggles["tabs"]->addButton(new button(0.310,0.965,0.15,0.030,"Regions",black,white));
 
 	LOD = 1;
-	//level->newGround(129,129);
 	levelFile.heights = new float[((257-1)*LOD+1)*((257-1)*LOD+1)];
 	levelFile.info.mapResolution.x = (257-1)*LOD+1;
 	levelFile.info.mapResolution.y = (257-1)*LOD+1;
 	diamondSquare(0.17,0.5,4);
 	levelFile.info.mapSize.x = 25700;
 	levelFile.info.mapSize.y = 25700;
-
-
-	//smooth(1);
 
 	resetView();
 
@@ -156,7 +116,9 @@ void levelEditor::operator() (popup* p)
 
 		LOD = levelFile.info.LOD;
 
-		sliders["sea level"]->setValue(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight));
+		sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight),0.0,1.0));
+
+
 		resetView();
 		terrainValid=false;
 	}
@@ -165,7 +127,7 @@ void levelEditor::operator() (popup* p)
 		awaitingLevelSave=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
-		levelFile.saveZIP(f); // we do not apply the sea level adjustment into account!!!
+		levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue());
 		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
 	//else if(awaitingNewObject)
@@ -214,7 +176,7 @@ void levelEditor::updateFrame()
 		else if(buttons["fromFile"]->checkChanged())
 		{
 			set<string> s;
-			s.insert(".bmp");
+			s.insert(".png");
 			s.insert(".bil");
 
 			awaitingMapFile = true;
@@ -223,14 +185,14 @@ void levelEditor::updateFrame()
 			((openFile*)p)->init(s);
 			menuManager.setPopup(p);
 		}
-		else if(buttons["exportBMP"]->checkChanged())
-		{
-			awaitingMapSave = true;
-			popup* p = new saveFile;
-			p->callback = (functor<void,popup*>*)this;
-			((saveFile*)p)->init(".bmp");
-			menuManager.setPopup(p);
-		}
+		//else if(buttons["exportBMP"]->checkChanged())
+		//{
+		//	awaitingMapSave = true;
+		//	popup* p = new saveFile;
+		//	p->callback = (functor<void,popup*>*)this;
+		//	((saveFile*)p)->init(".bmp");
+		//	menuManager.setPopup(p);
+		//}
 		//else if(buttons["newShader"]->checkChanged())
 		//{
 		//	awaitingShaderFile=true;
@@ -626,8 +588,8 @@ Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 	}
 #endif
 
-	float Cy = (z < levelFile.info.mapResolution.x-1)	? (levelFile.heights[x+(z+1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
-	float Ay = (x < levelFile.info.mapResolution.y-1)	? (levelFile.heights[(x+1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
+	float Cy = (z < levelFile.info.mapResolution.y-1)	? (levelFile.heights[x+(z+1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
+	float Ay = (x < levelFile.info.mapResolution.x-1)	? (levelFile.heights[(x+1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float Dy = (z > 0)									? (levelFile.heights[x+(z-1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float By = (x > 0)									? (levelFile.heights[(x-1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 
@@ -862,11 +824,12 @@ void levelEditor::faultLine()
 void levelEditor::fromFile(string filename)
 {
 	string ext = fileManager.extension(filename);
-	if(ext == ".bmp")
+	if(ext == ".png")
 	{
-		auto image = fileManager.loadBmpFile(filename);
+		auto image = fileManager.loadPngFile(filename);
 		if(image->valid() && image->width > 0 && image->height > 0)
 		{
+			delete[] levelFile.heights;
 			levelFile.heights = new float[image->width * image->height];
 			levelFile.info.mapResolution.x = image->width;
 			levelFile.info.mapResolution.y = image->height;
@@ -878,6 +841,7 @@ void levelEditor::fromFile(string filename)
 			}
 
 			LOD = 1;
+			terrainValid=false;
 			setMinMaxHeights();
 			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 			sliders["sea level"]->setValue(0.333);
@@ -1030,6 +994,7 @@ void levelEditor::render3D(unsigned int v)
 		if(toggles["shaders"]->getValue() == 0) levelFile.info.shaderType = TERRAIN_ISLAND;
 		else if(toggles["shaders"]->getValue() == 1) levelFile.info.shaderType = TERRAIN_SNOW;
 		else if(toggles["shaders"]->getValue() == 2) levelFile.info.shaderType = TERRAIN_DESERT;
+		else if(toggles["shaders"]->getValue() == 3) levelFile.info.shaderType = TERRAIN_MOUNTAINS;
 		else levelFile.info.shaderType = TERRAIN_ISLAND;
 
 		bool w = getShader() != 1;
@@ -1098,6 +1063,7 @@ void levelEditor::render3D(unsigned int v)
 		if(toggles["shaders"]->getValue() == 0) levelFile.info.shaderType = TERRAIN_ISLAND;
 		else if(toggles["shaders"]->getValue() == 1) levelFile.info.shaderType = TERRAIN_SNOW;
 		else if(toggles["shaders"]->getValue() == 2) levelFile.info.shaderType = TERRAIN_DESERT;
+		else if(toggles["shaders"]->getValue() == 3) levelFile.info.shaderType = TERRAIN_MOUNTAINS;
 		else levelFile.info.shaderType = TERRAIN_ISLAND;
 
 		bool w = getShader() != 1;
@@ -1329,6 +1295,44 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			else											dataManager.bind("grass preview terrain");*/
 
 			auto shader = shaders.bind("island preview terrain");
+			//dataManager.bind("island preview terrain");
+			shader->bind();
+
+			dataManager.bind("sand",0);
+			dataManager.bind("grass",1);
+			dataManager.bind("rock",2);
+			dataManager.bind("LCnoise",3);
+			groundTex->bind(4);
+			
+
+			shader->setUniform1f("heightScale",	scale);
+			shader->setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform1f("heightRange", (levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
+			shader->setUniform3f("invScale", 1.0/(levelFile.info.mapSize.x),1.0/((levelFile.info.maxHeight-levelFile.info.minHeight)*scale),1.0/(levelFile.info.mapSize.y));
+
+			Mat4f cameraProjectionMat = view->projectionMatrix() * view->modelViewMatrix();
+			shader->setUniformMatrix("cameraProjection", cameraProjectionMat);
+			shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
+
+			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
+			shader->setUniform3f("sunPosition", graphics->getLightPosition());
+			shader->setUniform3f("eyePos",		view->camera().eye);
+			shader->setUniform1f("time",		world.time());
+			shader->setUniform1i("sand",		0);
+			shader->setUniform1i("grass",		1);
+			shader->setUniform1i("rock",		2);
+			shader->setUniform1i("LCnoise",		3);
+			shader->setUniform1i("groundTex",	4);
+			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
+
+			shaders.bind("model");
+		}
+		else if(levelFile.info.shaderType == TERRAIN_MOUNTAINS)
+		{
+			/*if(levelFile.info.shaderType == TERRAIN_ISLAND)	dataManager.bind("island preview terrain");
+			else											dataManager.bind("grass preview terrain");*/
+
+			auto shader = shaders.bind("mountain preview terrain");
 			//dataManager.bind("island preview terrain");
 			shader->bind();
 

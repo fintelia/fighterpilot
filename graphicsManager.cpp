@@ -30,23 +30,10 @@ Vec2f GraphicsManager::View::project(Vec3f p)
 	Vec3f projected = mProjectionMat * mModelViewMat * p;
 	return Vec2f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5));
 }
-Vec3f GraphicsManager::View::project3(Vec3f p)
+Vec3f GraphicsManager::View::project3(Vec3f p) //z=0: far plane, z=1: near plane, z>1: behind camera
 {
-	//p -= mCamera.eye;
-	//
-	//Vec3f f = mCamera.fwd;
-	//Vec3f UP = mCamera.up;
-	//
-	//Vec3f s = (f.cross(UP)).normalize();
-	//Vec3f u = (s.cross(f)).normalize();
-	//
-	//float F = 1.0/tan((mProjection.fovy*PI/180.0) / 2.0);
-	//
-	//Vec3f v = Vec3f(s.dot(p)*F/mProjection.aspect,   -u.dot(p)*F,   f.dot(p)*(mProjection.zNear+mProjection.zFar)-2.0*mProjection.zNear*mProjection.zFar) / (f.dot(p));
-	//
-	//return Vec3f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0, (v.z + 1.0) / 2.0);
 	Vec3f projected = mProjectionMat * mModelViewMat * p;
-	return Vec3f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5), 1.0-projected.z);
+	return Vec3f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5), (projected.z+1.0)/2.0);
 }
 Vec3f GraphicsManager::View::unProject(Vec3f p)// from x=0 to sAspect && y=0 to 1 && z from 0 to 1
 {
@@ -101,7 +88,6 @@ void GraphicsManager::View::ortho(float left, float right, float bottom, float t
 void GraphicsManager::View::lookAt(Vec3f eye, Vec3f center, Vec3f up)
 {
 	up = up.normalize();
-
 	Vec3f f = (center-eye).normalize();
 	Vec3f s = (f.cross(up)).normalize();
 	Vec3f u = s.cross(f);

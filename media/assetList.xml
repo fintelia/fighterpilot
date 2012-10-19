@@ -60,7 +60,7 @@
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
     <texture name="layers"                    file="media/layers.png"                 tileable="true"/>    
-    <texture name="bullet"                    file="media/bullet.png" />
+    <texture name="bullet"                    file="media/bullet3.png" />
     <texture name="sun"                       file="media/sun.png" />
     <texture name="tree"                      file="media/tree2.png" />
     
@@ -76,7 +76,7 @@
     <!-- loading screen -->
     <shader name="ortho"                     vertex="media/ortho.vert"             fragment="media/ortho.frag"   preload="true" sAspect="true" />
     <shader name="gamma shader"              vertex="media/gamma.vert"             fragment="media/gamma.frag"   preload="true" />
-
+    
     <!-- HUD-->
     <shader name="radar plane shader"        vertex="media/radarPlane.vert"        fragment="media/radarPlane.frag"    sAspect="true" />
     <shader name="radar"                     vertex="media/radar.vert"             fragment="media/radar.frag"         sAspect="true" />
@@ -86,6 +86,7 @@
     <shader name="circle shader"             vertex="media/circle.vert"            fragment="media/circle.frag"        sAspect="true" />
 
     <!-- general -->
+
     <shader name="particle shader"           vertex="media/particle.vert"          fragment="media/particle.frag" />
     <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
 
@@ -99,11 +100,13 @@
     
     <!-- terrain -->
     <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />
+    <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
     <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
     <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />
 
     <!-- terrain preview -->
     <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />
+    <shader name="mountain preview terrain"  vertex="media/terrain.vert"           fragment="media/grass preview.frag" />
     <shader name="desert preview terrain"    vertex="media/terrain.vert"           fragment="media/desert preview.frag" />
     <shader name="snow preview terrain"      vertex="media/terrain.vert"           fragment="media/snow preview.frag" />
     <shader name="ocean preview"             vertex="media/ocean preview.vert"     fragment="media/ocean preview.frag" />
@@ -113,7 +116,8 @@
     <model name="sky dome"              file="media/dome.obj" />
     <model name="cylinder"              file="media/cylinder.obj" />
     <model name="disk"                  file="media/disk.obj" />    
-    <model name="sphere" file="media/sphere.obj" />
+    <model name="sphere"                file="media/sphere.obj" />
+  <!--  <model name="tree model"            file="media/tree/tree.obj" /> -->
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>
