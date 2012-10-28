@@ -222,6 +222,9 @@
     <None Include="media\assetList.xml">
       <SubType>Designer</SubType>
     </None>
+    <None Include="media\blur.vert" />
+    <None Include="media\blurX.frag" />
+    <None Include="media\blurY.frag" />
     <None Include="media\circle.frag" />
     <None Include="media\circle.vert" />
     <None Include="media\cirrusCloud.frag" />
@@ -230,6 +233,9 @@
     <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
+    <None Include="media\gammaBloom.frag" />
+    <None Include="media\gammaNight.frag" />
+    <None Include="media\gammaNightVision.frag" />
     <None Include="media\grass preview.frag" />
     <None Include="media\grass.frag" />
     <None Include="media\health.frag" />

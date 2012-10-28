@@ -107,6 +107,9 @@ private:
 	};
 	map<int,controlMapping> controls;
 
+#ifdef XINPUT
+	map<int,controlMapping> xBoxControls;
+#endif
 
 public:
 	bool	firstPersonView;

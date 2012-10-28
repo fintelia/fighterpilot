@@ -79,7 +79,7 @@
 //			{
 //				cout << line << endl;
 //				debugBreak();//boost type conversion failed
-//				closingMessage(string("Error reading '") + filename + "'. Fighter-Pilot will now close.","Error");
+//				closingMessage(string("Error reading '") + filename + "'. FighterPilot will now close.","Error");
 //				return;
 //			}
 //		}
@@ -88,7 +88,7 @@
 //	else 
 //	{
 //		debugBreak();//could not open model data file
-//		closingMessage(string("'") + filename + "' not found. Fighter-Pilot will now close.","Missing File");
+//		closingMessage(string("'") + filename + "' not found. FighterPilot will now close.","Missing File");
 //	}
 //}
 void SettingsManager::load(const map<string,map<string,string>>& m)

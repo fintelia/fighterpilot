@@ -1045,10 +1045,10 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	else if(shaderType == TERRAIN_DESERT)
 	{
 		auto desertShader = shaders.bind("desert terrain");
-		dataManager.bind("desertSand",2);
-		dataManager.bind("LCnoise",4);
-		dataManager.bind("sand", 3);
 
+		dataManager.bind("desertSand",2);
+		dataManager.bind("sand", 3);
+		dataManager.bind("LCnoise",4);
 		dataManager.bind("noise",5);
 
 		desertShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());

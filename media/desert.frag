@@ -38,7 +38,7 @@ void main()
 //	{
 //		NdotL += clamp(/* (dot(normal,normalize(lightDir[i]))*0.5+0.5) **/ lightStrength[i] * (50.0-distance(position,lightPosition[i]))*0.02,0.0,1.0);
 //	}
-	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir)),0.0);//*0.5+0.5;
+	vec3 light = vec3(1,1,0.7) * pow(max(dot(n,normalize(sunDir)),0.0),2.0);//*0.5+0.5;
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
@@ -55,6 +55,8 @@ void main()
 
 	vec3 eyeDirection = position.xyz-eyePos;
 
+	//color *= 0.4 + 0.6*n.y;
+
 	////////////////////////draw grid////////////////////////
 	//vec2 px = position.xz/200.0;
 	//vec2 fx = abs(fract(px) - 0.5)*10.0;
@@ -63,5 +65,5 @@ void main()
 	//color.rgb = vec3(0,0,clamp(i+0.1,0.1,1.0));
 	/////////////////////////////////////////////////////////
 
-	gl_FragColor = vec4(mix(color*(light*0.7+0.3), textureCube(sky, vec3(eyeDirection.x,0,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
+	gl_FragColor = vec4(mix(color*light, textureCube(sky, vec3(eyeDirection.x,0,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
 }

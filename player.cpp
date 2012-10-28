@@ -1,131 +1,7 @@
 
 
 #include "game.h"
-//#include <Windows.h>
-#ifdef XINPUT
-//#include <Xinput.h>
-#endif
-//
-//playerControls::playerControls(int p)//default controls for player p
-//{
-//	#ifdef XINPUT
-//		if(input.getXboxController(p-1).connected)
-//		{
-//			c[CON_CLIMB]=nControl		(XINPUT_THUMB_LY +	XBOX_GAMEPAD_OFFSET[p-1], nControl::NEGATIVE);
-//			c[CON_DIVE]=nControl		(XINPUT_THUMB_LY +	XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//			c[CON_LEFT]=nControl		(XINPUT_THUMB_LX +	XBOX_GAMEPAD_OFFSET[p-1], nControl::NEGATIVE);
-//			c[CON_RIGHT]=nControl		(XINPUT_THUMB_LX +	XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//			c[CON_ACCEL]=nControl		(XINPUT_THUMB_RY +	XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//			c[CON_BRAKE]=nControl		(XINPUT_THUMB_RY +	XBOX_GAMEPAD_OFFSET[p-1], nControl::NEGATIVE);
-//			c[CON_SHOOT]=nControl		(XINPUT_RIGHT_TRIGGER + XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//			c[CON_MISSILE]=nControl		(XINPUT_LEFT_TRIGGER + XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//			c[CON_BOMB]=nControl		(XINPUT_LEFT_SHOULDER + XBOX_GAMEPAD_OFFSET[p-1], nControl::POSITIVE);
-//		}
-//		else
-//	#endif
-//	if(p==1)
-//	{
-//		c[CON_CLIMB]=nControl(VK_DOWN);
-//		c[CON_DIVE]=nControl(VK_UP);
-//		c[CON_LEFT]=nControl(VK_LEFT);
-//		c[CON_RIGHT]=nControl(VK_RIGHT);
-//		c[CON_ACCEL]=nControl(VK_NUMPAD5);
-//		c[CON_BRAKE]=nControl(VK_NUMPAD2);
-//		c[CON_SHOOT]=nControl(VK_NUMPAD0);
-//		c[CON_MISSILE]=nControl(VK_NUMPAD9);
-//		c[CON_BOMB]=nControl(VK_NUMPAD8);
-//	}
-//	else if(p==2)
-//	{
-//		c[CON_CLIMB]=nControl(0x57);	//U
-//		c[CON_DIVE]=nControl(0x53);		//J
-//		c[CON_LEFT]=nControl(0x41);		//A
-//		c[CON_RIGHT]=nControl(0x44);	//D
-//		c[CON_ACCEL]=nControl(0x55);	//W
-//		c[CON_BRAKE]=nControl(0x4A);	//S
-//		c[CON_SHOOT]=nControl(0x20);	//SPACE
-//		c[CON_MISSILE]=nControl(0x42);	//B
-//		c[CON_BOMB]=nControl(0x56);		//V
-//	}
-//}
-//nControl playerControls::getCotrol(int con)
-//{
-//
-//	if(con>=0 && con<8)
-//		return c[con];
-//	else
-//	{
-//		return nControl();
-//	}
-//}
-//void playerControls::setControl(int con,nControl k)
-//{
-//	if(con>=0 && con<8)
-//		c[con]=k;
-//}
-//float playerControls::operator[](int index) {
-//	return c[index]();
-//}
-//
 
-
-//humanPlayer::controlMapping::controlMapping(int playerNum)
-//{
-//#ifdef XINPUT
-//	if(input.getXboxController(playerNum).connected)
-//	{
-//		type = XBOX_CONTROLLER;
-//		mControllerNum = playerNum;
-//		mappings[CON_CLIMB]		= mapping(XINPUT_THUMB_LY,mapping::AXIS_POSITIVE);
-//		mappings[CON_DIVE]		= mapping(XINPUT_THUMB_LY,mapping::AXIS_NEGATIVE);
-//		mappings[CON_LEFT]		= mapping(XINPUT_THUMB_LX,mapping::AXIS_POSITIVE);
-//		mappings[CON_RIGHT]		= mapping(XINPUT_THUMB_LX,mapping::AXIS_NEGATIVE);
-//		mappings[CON_ACCEL]		= mapping(XINPUT_THUMB_RY,mapping::AXIS_POSITIVE);
-//		mappings[CON_BRAKE]		= mapping(XINPUT_THUMB_RY,mapping::AXIS_NEGATIVE);
-//		mappings[CON_SHOOT]		= mapping(XINPUT_RIGHT_TRIGGER,mapping::AXIS);
-//		mappings[CON_MISSILE]	= mapping(XINPUT_LEFT_TRIGGER,mapping::AXIS);
-//		mappings[CON_BOMB]		= mapping(XINPUT_LEFT_SHOULDER,mapping::BUTTON);
-//	}else
-//#endif
-//	if(playerNum == 0)
-//	{
-//		type = KEYBOARD;
-//		mControllerNum = 0;
-//
-//		mappings[CON_CLIMB]		= mapping(VK_DOWN);
-//		mappings[CON_DIVE]		= mapping(VK_UP);
-//		mappings[CON_LEFT]		= mapping(VK_LEFT);
-//		mappings[CON_RIGHT]		= mapping(VK_RIGHT);
-//		mappings[CON_ACCEL]		= mapping(VK_NUMPAD5);
-//		mappings[CON_BRAKE]		= mapping(VK_NUMPAD2);
-//		mappings[CON_SHOOT]		= mapping(VK_NUMPAD0);
-//		mappings[CON_MISSILE]	= mapping(VK_NUMPAD9);
-//		mappings[CON_BOMB]		= mapping(VK_NUMPAD8);
-//	}
-//	else if(playerNum == 1)
-//	{
-//		type = KEYBOARD;
-//		mControllerNum = 0;
-//		mappings[CON_CLIMB]		= mapping(0x57);  //U
-//		mappings[CON_DIVE]		= mapping(0x53);  //J
-//		mappings[CON_LEFT]		= mapping(0x41);  //A
-//		mappings[CON_RIGHT]		= mapping(0x44);  //D
-//		mappings[CON_ACCEL]		= mapping(0x55);  //W
-//		mappings[CON_BRAKE]		= mapping(0x4A);  //S
-//		mappings[CON_SHOOT]		= mapping(0x20);  //SPACE
-//		mappings[CON_MISSILE]	= mapping(0x42);  //B
-//		mappings[CON_BOMB]		= mapping(0x56);  //V
-//	}
-//	else
-//	{
-//		debugBreak();
-//		type = NONE;
-//		mControllerNum = 0;
-//		for(int i=0;i<9;i++)
-//			mappings[i] = mapping();
-//
-//	}
-//}
 float humanPlayer::controlMapping::operator() ()
 {
 	if(type == KEY)
@@ -171,23 +47,32 @@ object* player::getObject()
 humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, objectId), mPlayerNum(playerNumber), firstPersonView(false)
 {
 #ifdef XINPUT
-	if(input.getXboxController(mPlayerNum).connected)
-	{
-		controls[CON_CLIMB]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
-		controls[CON_DIVE]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_POSITIVE,mPlayerNum);
+	xBoxControls[CON_CLIMB]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_DIVE]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_POSITIVE,mPlayerNum);
 
-		controls[CON_LEFT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_NEGATIVE,mPlayerNum);
-		controls[CON_RIGHT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_POSITIVE,mPlayerNum);
+	xBoxControls[CON_LEFT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_RIGHT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_POSITIVE,mPlayerNum);
 
-		controls[CON_ACCEL]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_POSITIVE,mPlayerNum);
-		controls[CON_BRAKE]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_ACCEL]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_POSITIVE,mPlayerNum);
+	xBoxControls[CON_BRAKE]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
 
-		controls[CON_SHOOT]		= controlMapping(XINPUT_RIGHT_TRIGGER,controlMapping::AXIS,mPlayerNum);
-		controls[CON_MISSILE]	= controlMapping(XINPUT_LEFT_TRIGGER,controlMapping::AXIS,mPlayerNum);
-		controls[CON_BOMB]		= controlMapping(XINPUT_LEFT_SHOULDER,controlMapping::BUTTON,mPlayerNum);
-	}else
+	xBoxControls[CON_SHOOT]		= controlMapping(XINPUT_RIGHT_TRIGGER,controlMapping::AXIS,mPlayerNum);
+	xBoxControls[CON_MISSILE]	= controlMapping(XINPUT_LEFT_TRIGGER,controlMapping::AXIS,mPlayerNum);
+	xBoxControls[CON_BOMB]		= controlMapping(XINPUT_LEFT_SHOULDER,controlMapping::BUTTON,mPlayerNum);
 #endif
 	if(mPlayerNum == 0)
+	{
+		controls[CON_CLIMB]		= controlMapping('S');
+		controls[CON_DIVE]		= controlMapping('W');
+		controls[CON_LEFT]		= controlMapping('A');
+		controls[CON_RIGHT]		= controlMapping('D');
+		controls[CON_ACCEL]		= controlMapping('U');
+		controls[CON_BRAKE]		= controlMapping('J');
+		controls[CON_SHOOT]		= controlMapping(VK_SHIFT);
+		controls[CON_MISSILE]	= controlMapping(VK_SPACE);
+		controls[CON_BOMB]		= controlMapping('F');
+	}
+	else if(mPlayerNum == 1)
 	{
 		controls[CON_CLIMB]		= controlMapping(VK_DOWN);
 		controls[CON_DIVE]		= controlMapping(VK_UP);
@@ -198,18 +83,6 @@ humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, o
 		controls[CON_SHOOT]		= controlMapping(VK_NUMPAD0);
 		controls[CON_MISSILE]	= controlMapping(VK_NUMPAD9);
 		controls[CON_BOMB]		= controlMapping(VK_NUMPAD8);
-	}
-	else if(mPlayerNum == 1)
-	{
-		controls[CON_CLIMB]		= controlMapping(0x53);  //S
-		controls[CON_DIVE]		= controlMapping(0x57);  //W
-		controls[CON_LEFT]		= controlMapping(0x41);  //A
-		controls[CON_RIGHT]		= controlMapping(0x44);  //D
-		controls[CON_ACCEL]		= controlMapping(0x55);  //U
-		controls[CON_BRAKE]		= controlMapping(0x4A);  //J
-		controls[CON_SHOOT]		= controlMapping(0x20);  //SPACE
-		controls[CON_MISSILE]	= controlMapping(0x42);  //B
-		controls[CON_BOMB]		= controlMapping(0x56);  //V
 	}
 	else
 	{
@@ -239,20 +112,29 @@ void humanPlayer::update()
 {
 	//setObject(3);
 
+	auto maxControlVal = [this](int n) -> float
+	{
+#ifdef XINPUT
+		return max(controls[n](),xBoxControls[n]());
+#else
+		return controls[n]();
+#endif
+	};
+
 	object* o = getObject();
 	if(o != nullptr && o->type & PLANE)
 	{
 		nPlane* p = (nPlane*)o;
 
-		p->controls.accelerate	= controls[CON_ACCEL]();
-		p->controls.brake		= controls[CON_BRAKE]();
-		p->controls.climb		= controls[CON_CLIMB]();
-		p->controls.dive		= controls[CON_DIVE]();
-		p->controls.left		= controls[CON_LEFT]();
-		p->controls.right		= controls[CON_RIGHT]();
-		p->controls.shoot1		= controls[CON_SHOOT]() > 0.75;
-		p->controls.shoot2		= controls[CON_MISSILE]() > 0.75;
-		p->controls.shoot3		= controls[CON_BOMB]() > 0.75;
+		p->controls.accelerate	= lerp(p->controls.accelerate, maxControlVal(CON_ACCEL), 0.07);
+		p->controls.brake		= lerp(p->controls.brake, maxControlVal(CON_BRAKE), 0.07);
+		p->controls.climb		= lerp(p->controls.climb, maxControlVal(CON_CLIMB), 0.07);
+		p->controls.dive		= lerp(p->controls.dive, maxControlVal(CON_DIVE), 0.07);
+		p->controls.left		= lerp(p->controls.left, maxControlVal(CON_LEFT), 0.07);
+		p->controls.right		= lerp(p->controls.right, maxControlVal(CON_RIGHT), 0.07);
+		p->controls.shoot1		= maxControlVal(CON_SHOOT) > 0.75;
+		p->controls.shoot2		= maxControlVal(CON_MISSILE) > 0.75;
+		p->controls.shoot3		= maxControlVal(CON_BOMB) > 0.75;
 	}
 }
 void humanPlayer::setVibrate(float amount)

@@ -58,6 +58,7 @@ bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset
 	attributesFile->bindings["heightmap"]["LOD"] = lexical_cast<string>(info.LOD);
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
+	attributesFile->bindings["level"]["night"] = info.night ? "true" : "false";
 
 	if(info.shaderType == TERRAIN_ISLAND)			attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
 	else if(info.shaderType == TERRAIN_MOUNTAINS)	attributesFile->bindings["shaders"]["shaderType"] = "MOUNTAINS";
@@ -114,6 +115,7 @@ bool LevelFile::loadZIP(string filename)
 	attributesFile->readValue<unsigned int>("heightmap", "LOD", info.LOD, 1);
 	attributesFile->readValue("level", "nextLevel", info.nextLevel);
 
+	info.night = attributesFile->getValue<string>("level","night","false") == "true";
 
 
 	string sType;

@@ -43,6 +43,7 @@ public:
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
 	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE, PREMULTIPLIED_ALPHA};
 
+	class shader;
 	class View
 	{
 	private:
@@ -85,13 +86,17 @@ public:
 
 		Plane<float> mClipPlanes[6];
 
-		bool mRenderParticles;
+		
 
 		int mRenderFuncParam;
 		std::function<void(int)> mRenderFunc;
 
 		Vec3f cameraShift;
 		Mat4f completeProjectionMat;
+
+		bool mBlurStage;
+		bool mRenderParticles;
+		shared_ptr<GraphicsManager::shader> mPostProcessShader;
 	public:
 		View();
 		Vec2f project(Vec3f p);
@@ -119,6 +124,12 @@ public:
 
 		bool renderParticles(){return mRenderParticles;}
 		void renderParticles(bool b){mRenderParticles=b;}
+
+		bool blurStage(){return mBlurStage;}
+		void blurStage(bool b){mBlurStage=b;}
+
+		shared_ptr<GraphicsManager::shader> postProcessShader(){return mPostProcessShader;}
+		void postProcessShader(shared_ptr<GraphicsManager::shader> b){mPostProcessShader=b;}
 
 		void shiftCamera(Vec3f shift);
 		void constrainView(Rect4f bounds);
@@ -288,6 +299,7 @@ protected:
 	//global light
 	Vec3f lightPosition;
 
+
 	//private functions
 	GraphicsManager();
 	virtual ~GraphicsManager(){}
@@ -400,6 +412,7 @@ protected:
 		FBO():color(0), depth(0), fboID(0),colorBound(true),depthBound(true){}
 	}FBOs[2], multisampleFBO;
 
+	unsigned int blurTexture;
 
 	bool highResScreenshot;
 	Rect viewConstraint;

@@ -147,7 +147,7 @@ void missile::updateSimulation(double time, double ms)
 			}
 
 		}
-		if(world.isLand(position.x, position.z))
+		if(world.altitude(position) < 0.0 && world.isLand(position.x, position.z))
 		{
 			particleManager.addEmitter(new particle::explosion(),position,5.0);
 			particleManager.addEmitter(new particle::groundExplosionFlash(),position,5.0);
@@ -211,7 +211,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 		}
 		else if(angle > 0.01)// we don't want to (or need to) divide by zero
 		{
-			rotation = slerp(rotation,targetRot,(float)((PI * 2.5 * ms/1000)/angle));
+			rotation = slerp(rotation,targetRot,(float)((PI * 0.9 * ms/1000)/angle));
 		}
 	}
 	else if(enemy != NULL && enemy->dead)
@@ -220,7 +220,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 		life = 0.0;
 	}
 	//////////////////Movement//////////////
-	speed = min(speed + acceleration*(ms/1000), 700.0);
+	speed = min(speed + acceleration*(ms/1000), 500.0);
 	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;

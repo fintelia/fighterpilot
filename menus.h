@@ -152,7 +152,7 @@ protected:
 	vector<string> mapChoices;
 	int currentChoice;
 };
-class options: public screen
+class options: public popup
 {
 private:
 	struct OptionState
@@ -177,7 +177,7 @@ private:
 	shared_ptr<FileManager::iniFile> settingsFile;
 public:
 	bool init();
-	void updateFrame();
+	void update();
 	bool keyDown(int vkey);
 	void render();
 private:

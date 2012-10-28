@@ -897,7 +897,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
+OpenGLgraphics::OpenGLgraphics():blurTexture(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -1306,7 +1306,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_FLOAT, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		//glGenTextures(1, &FBOs[i].normals);
 		//glBindTexture(GL_TEXTURE_2D, FBOs[i].normals);
@@ -1401,6 +1401,15 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	else		
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
+	glGenTextures(1, &blurTexture);
+	glBindTexture(GL_TEXTURE_2D, blurTexture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+
 	return true;
 }
 void OpenGLgraphics::destroyFBOs()
@@ -1409,7 +1418,7 @@ void OpenGLgraphics::destroyFBOs()
 	if(FBOs[0].depth != 0)		glDeleteTextures(1, &FBOs[0].depth);
 	if(FBOs[1].color != 0)		glDeleteTextures(1, &FBOs[1].color);
 	if(FBOs[1].depth != 0)		glDeleteTextures(1, &FBOs[1].depth);
-
+	if(blurTexture != 0)		glDeleteTextures(1, &blurTexture);
 	if(openGL3 || GLEW_ARB_framebuffer_object)
 	{
 		if(FBOs[0].fboID != 0)		glDeleteFramebuffers(1, &FBOs[0].fboID);
@@ -1433,7 +1442,7 @@ void OpenGLgraphics::destroyFBOs()
 		}
 	}
 
-
+	glDeleteTextures(1, &blurTexture);
 
 }
 void OpenGLgraphics::resize(int w, int h)
@@ -1521,11 +1530,34 @@ void OpenGLgraphics::render()
 			else
 			{
 				auto model = shaders("model");
-				currentView = shared_ptr<View>(*i);
-				glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+				currentView = shared_ptr<View>(*(i++));
 
-				if(highResScreenshot)				currentView->constrainView(viewConstraint);
-				else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+				if(highResScreenshot)
+				{
+					Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+					
+					viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
+					viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
+					viewport.w = viewport.w / viewConstraint.w;
+					viewport.h = viewport.h / viewConstraint.h;
+					
+					glViewport(	clamp(viewport.x,0.0,1.0)*sw, 
+								clamp(viewport.y,0.0,1.0)*sh, 
+								clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0))*sw, 
+								clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0))*sh);
+
+					Rect projConstraint;
+					projConstraint.x = (clamp(viewport.x, 0.0, 1.0) - viewport.x) / viewport.w;
+					projConstraint.y = (clamp(viewport.y, 0.0, 1.0) - viewport.y) / viewport.h;
+					projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
+					projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
+					currentView->constrainView(projConstraint);
+				}
+				else
+				{
+					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+					if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+				}
 
 				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				model->setUniformMatrix("modelTransform", Mat4f());
@@ -1534,19 +1566,8 @@ void OpenGLgraphics::render()
 
 				currentView->render();
 
-				//dataManager.setUniformMatrix("cameraProjection",Mat4f());
-				//dataManager.setUniformMatrix("modelTransform", Mat4f());
-				//drawTriangle(Vec3f(0,0,0), Vec3f(0.5,0.4,0.0), Vec3f(0,0.4,0.0));
-
-				//dataManager.bind("ortho");
-				//dataManager.setUniform4f("color",white);
-				//drawOverlay(Rect::CWH(0.25,0.25,0.1,0.1), "grass");
-
-
 				if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
 				else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
-
-				i++;
 			}
 		}
 
@@ -1588,20 +1609,43 @@ void OpenGLgraphics::render()
 			}
 			else
 			{
-				currentView = shared_ptr<View>(*i);
+				currentView = shared_ptr<View>(*(i++));
 				if(currentView->renderParticles())
 				{
 					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-
-					if(highResScreenshot)				currentView->constrainView(viewConstraint);
-					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
-
+		
+					if(highResScreenshot)
+					{
+						Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+					
+						viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
+						viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
+						viewport.w = viewport.w / viewConstraint.w;
+						viewport.h = viewport.h / viewConstraint.h;
+					
+						glViewport(	clamp(viewport.x,0.0,1.0)*sw, 
+									clamp(viewport.y,0.0,1.0)*sh, 
+									clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0))*sw, 
+									clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0))*sh);
+		
+						Rect projConstraint;
+						projConstraint.x = (clamp(viewport.x, 0.0, 1.0) - viewport.x) / viewport.w;
+						projConstraint.y = (clamp(viewport.y, 0.0, 1.0) - viewport.y) / viewport.h;
+						projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
+						projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
+						currentView->constrainView(projConstraint);
+					}
+					else
+					{
+						glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+						if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+					}
+		
 					particleManager.render(currentView);
-
+		
 					if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
 					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
 				}
-				i++;
 			}
 		}
 	}
@@ -1675,33 +1719,120 @@ void OpenGLgraphics::render()
 	//}
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
-	bindRenderTarget(RT_SCREEN);
-	//glClearColor(0.0,0.0,0.0,1.0f);
+
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//glGenerateMipmapEXT(GL_TEXTURE_2D);
+
+	glViewport(0,0,sw,sh);
+	//bindRenderTarget(RT_SCREEN);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, FBOs[1].color);
-	glGenerateMipmapEXT(GL_TEXTURE_2D);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	auto gamma = shaders.bind("gamma shader");
-	gamma->setUniform1f("gamma",currentGamma);
-	gamma->setUniform1i("tex",0);
-	renderFBO(RT_FBO_0);
+	int n=0;
+	for(auto i = views.begin(); i != views.end();)
+	{
+		if(i->expired()) //if the view no longer exists
+		{
+			i = views.erase(i);
+		}
+		else
+		{
+			n++;
+			currentView = shared_ptr<View>(*(i++));
+			Rect overlayRect, textureRect;
+
+			if(highResScreenshot)
+			{
+				Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (currentView->viewport().y), currentView->viewport().width / sAspect, currentView->viewport().height);
+				viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
+				viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
+				viewport.w = viewport.w / viewConstraint.w;
+				viewport.h = viewport.h / viewConstraint.h;
+				
+				textureRect = Rect::XYWH(clamp(viewport.x,0.0,1.0), clamp(viewport.y,0.0,1.0), clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0)), clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0)));
+			}
+			else
+			{
+				textureRect = Rect::XYWH(currentView->viewport().x/sAspect,1.0-currentView->viewport().y-currentView->viewport().height,currentView->viewport().width/sAspect,currentView->viewport().height);
+			}
+			overlayRect.x = textureRect.x * 2.0 - 1.0;
+			overlayRect.y = textureRect.y * 2.0 - 1.0;
+			overlayRect.w = textureRect.w * 2.0;
+			overlayRect.h = textureRect.h * 2.0;
+
+			if(currentView->postProcessShader() && overlayRect.w*overlayRect.h > 0.0)
+			{
+				if(currentView->blurStage())
+				{
+					auto blurX = shaders("blurX");
+					auto blurY = shaders("blurY");
+					if(blurX && blurY)
+					{
+						bindRenderTarget(RT_FBO_1);
+
+						blurX->bind();
+						blurX->setUniform1i("tex",0);
+						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+						drawPartialOverlay(overlayRect, textureRect);
+						glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
+
+						blurY->bind();
+						blurY->setUniform1i("tex",0);
+						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, FBOs[1].color);
+						drawPartialOverlay(overlayRect, textureRect);
+						glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
+
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, blurTexture);
+					}
+					else
+					{
+						debugBreak();
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, 0);
+					}
+				}
+
+				bindRenderTarget(RT_SCREEN);
+				currentView->postProcessShader()->bind();
+				currentView->postProcessShader()->setUniform1f("gamma",currentGamma);
+				currentView->postProcessShader()->setUniform1i("tex",0);
+				currentView->postProcessShader()->setUniform1i("noiseTex",2);
+				dataManager.bind("LCnoise",2);
+				currentView->postProcessShader()->setUniform1f("time",world.time());
+				if(currentView->blurStage())
+				{
+					currentView->postProcessShader()->setUniform1i("blurTex",1);
+				}
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+				drawPartialOverlay(overlayRect, textureRect);
+	
+			}
+		}
+	}
+	currentView = nullptr;
 /////////////////////////////////////START 2D////////////////////////////////////
-	glViewport(0,0,sw,sh);
 	if(!highResScreenshot)
 	{
+		bindRenderTarget(RT_SCREEN);
+
 		auto ortho = shaders.bind("ortho");
 		ortho->setUniform4f("color",white);
 		menuManager.render();
 
 		#ifdef _DEBUG
-			if(fps<59.0)ortho->setUniform4f("color",red);
-			else ortho->setUniform4f("color",black);
-			graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
-			ortho->setUniform4f("color",white);
+		//	if(fps<59.0)ortho->setUniform4f("color",red);
+		//	else ortho->setUniform4f("color",black);
+		//	graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
+		//	ortho->setUniform4f("color",white);
 			Profiler.draw();
-
+		
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
 			{
 				setColor(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0));
@@ -2312,7 +2443,7 @@ void OpenGLgraphics::takeScreenshot()
 
 			world.frameUpdate();
 			render();
-
+			bindRenderTarget(RT_SCREEN);
 			glPixelStorei(GL_PACK_ALIGNMENT, 1);
 			glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, tileContents);
 

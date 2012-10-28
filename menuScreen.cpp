@@ -168,7 +168,16 @@ void manager::setMenu(screen* m)
 	if(m != nullptr)
 		m->init();
 }
-
+bool manager::setPopup(popup* p)
+{
+	if(p != NULL)
+	{
+		popups.push_back(shared_ptr<popup>(p));
+		p->init();
+		return true;
+	}
+	return false;
+}
 void manager::inputCallback(InputManager::callBack* callback)
 {
 	if(callback->type == KEY_STROKE)
@@ -1346,9 +1355,21 @@ void slider::setMaxValue(float m)
 }
 void messageBox(string text)
 {
-	gui::messageBox_c* m = new gui::messageBox_c;
-	m->init(text);
-	menuManager.setPopup(m);
+	if(!dataManager.assetLoaded("default font"))
+	{
+#ifdef WINDOWS
+		MessageBoxA(NULL,text.c_str(),"FighterPilot",MB_ICONERROR);
+#else
+		cout << text << endl;
+		//TODO: add support for linux "message boxes"
+#endif
+	}
+	else
+	{
+		gui::messageBox_c* m = new gui::messageBox_c;
+		m->init(text);
+		menuManager.setPopup(m);
+	}
 }
 void closingMessage(string text,string title)
 {

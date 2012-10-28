@@ -224,7 +224,7 @@ void outOfMemory()
 	delete[] emergencyMemory; //free up enough memory to ensure that we can successfully display an error message
 	emergencyMemory = nullptr;
 #ifdef WINDOWS
-	MessageBox(NULL,L"Out of Memory. Fighter-Pilot must now close.",L"Error",MB_ICONEXCLAMATION|MB_SYSTEMMODAL);
+	MessageBox(NULL,L"Out of Memory. FighterPilot must now close.",L"Error",MB_ICONEXCLAMATION|MB_SYSTEMMODAL);
 #endif
 	exit(EXIT_FAILURE);
 } 

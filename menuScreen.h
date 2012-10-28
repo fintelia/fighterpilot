@@ -255,6 +255,9 @@ protected:
 	bool issueInputCallback(InputManager::callBack* callback, element* e);
 
 	elementContainer():focus(NULL){}
+public:
+	virtual bool init(){return true;}
+
 };
 
 class popup: public elementContainer
@@ -371,7 +374,6 @@ class screen: public elementContainer, functor<void,popup*>
 public:
 	screen(){}
 	virtual ~screen(){}
-	virtual bool init()=0;
 
 	virtual void updateFrame(){}
 	virtual void updateSimulation(){}
@@ -402,7 +404,7 @@ public:
 	}
 
 	void setMenu(screen* m);
-	bool setPopup(popup* p){if(p != NULL)popups.push_back(shared_ptr<popup>(p));return p!=NULL;}
+	bool setPopup(popup* p);
 
 	void shutdown();
 

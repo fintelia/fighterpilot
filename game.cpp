@@ -16,13 +16,13 @@ bool Game::init()
 {
 //////////////////////////////////////////////Wait to Enter Full Screen///////////////////////////////////////////////////////////////////////////////
 #if defined(WINDOWS) && defined(_DEBUG)
-	MessageBox(NULL,L"Fighter-Pilot is Currently Running in Debug Mode. Click OK to Proceed.",L"Fighter Pilot",0);
+	MessageBox(NULL,L"FighterPilot is Currently Running in Debug Mode. Click OK to Proceed.",L"FighterPilot",0);
 #endif
 /////////////////////////////////////////////Check for Required Files/////////////////////////////////////////////////////////////////////////////////
 	if(!fileManager.directoryExists("media"))
 	{
 #ifdef WINDOWS
-		MessageBox(NULL,L"Media folder not found. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+		MessageBox(NULL,L"Media folder not found. FighterPilot will now close.", L"Error",MB_ICONERROR);
 #endif
 		return false;
 	}
@@ -112,14 +112,14 @@ bool Game::init()
 	if(!assetLoader.loadAssetList())
 	{
 #ifdef WINDOWS
-		MessageBox(NULL,L"Error reading media/assetList.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+		MessageBox(NULL,L"Error reading media/assetList.xml. FighterPilot will now close.", L"Error",MB_ICONERROR);
 #endif
 		return false;
 	}
 	else if(!objectInfo.loadObjectData())
 	{
 #ifdef WINDOWS
-		MessageBox(NULL,L"Error reading media/objectData.xml. Fighter-Pilot will now close.", L"Error",MB_ICONERROR);
+		MessageBox(NULL,L"Error reading media/objectData.xml. FighterPilot will now close.", L"Error",MB_ICONERROR);
 #endif
 		return false;
 	}
@@ -156,7 +156,6 @@ void Game::update()
 			break;//we can no-longer keep up with the simulation
 		}
 	}
-
 	world.time.nextFrame();	
 	world.frameUpdate();
 	menuManager.updateFrame();

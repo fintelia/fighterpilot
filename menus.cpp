@@ -47,7 +47,7 @@ bool inGame::menuKey(int mkey)
 	}
 	else if(mkey == MENU_ENTER && activeChoice == OPTIONS)
 	{
-		//
+		menuManager.setPopup(new gui::options);
 	}
 	else if(mkey == MENU_ENTER && activeChoice == QUIT)
 	{
@@ -162,7 +162,7 @@ bool chooseMode::keyDown(int vkey)
 	}
 	else if(vkey==VK_F3)
 	{
-		menuManager.setMenu(new gui::options);
+		menuManager.setPopup(new gui::options);
 	}
 	else
 	{
@@ -342,7 +342,7 @@ bool options::init()
 
 	return true;
 }
-void options::updateFrame()
+void options::update()
 {
 	graphics->setGamma(sliders["gamma"]->getValue());
 
@@ -413,7 +413,8 @@ void options::updateFrame()
 		/////////////////////////////////////////////////////
 		fileManager.writeIniFile(settingsFile);
 
-		menuManager.setMenu(new chooseMode);
+		//menuManager.setMenu(new chooseMode);
+		done = true;
 		if(needRestart)
 		{
 			messageBox("Some changes will not take effect until you restart FighterPilot.");
@@ -422,35 +423,37 @@ void options::updateFrame()
 	else if(buttons["cancel"]->checkChanged())
 	{
 		graphics->setGamma(initialState.gamma);
-		menuManager.setMenu(new chooseMode);
+		//menuManager.setMenu(new chooseMode);
+		done = true;
 	}
 }
 void options::render()
 {
-	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	//graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.7*sAspect,0.5),Rect::XYWH(0,0,0.8,0.5),"dialog back");
 
-	graphics->setColor(0.00,0.00,0.00);	graphics->drawOverlay(Rect::XYXY(0.2375*sAspect,0.47,0.2625*sAspect,0.53),"white");
-	graphics->setColor(0.05,0.05,0.05);	graphics->drawOverlay(Rect::XYXY(0.2625*sAspect,0.47,0.2875*sAspect,0.53),"white");
-	graphics->setColor(0.10,0.10,0.10);	graphics->drawOverlay(Rect::XYXY(0.2875*sAspect,0.47,0.3125*sAspect,0.53),"white");
-	graphics->setColor(0.15,0.15,0.15);	graphics->drawOverlay(Rect::XYXY(0.3125*sAspect,0.47,0.3375*sAspect,0.53),"white");
-	graphics->setColor(0.20,0.20,0.20);	graphics->drawOverlay(Rect::XYXY(0.3375*sAspect,0.47,0.3625*sAspect,0.53),"white");
-	graphics->setColor(0.25,0.25,0.25);	graphics->drawOverlay(Rect::XYXY(0.3625*sAspect,0.47,0.3875*sAspect,0.53),"white");
-	graphics->setColor(0.30,0.30,0.30);	graphics->drawOverlay(Rect::XYXY(0.3875*sAspect,0.47,0.4125*sAspect,0.53),"white");
-	graphics->setColor(0.35,0.35,0.35);	graphics->drawOverlay(Rect::XYXY(0.4125*sAspect,0.47,0.4375*sAspect,0.53),"white");
-	graphics->setColor(0.40,0.40,0.40);	graphics->drawOverlay(Rect::XYXY(0.4375*sAspect,0.47,0.4625*sAspect,0.53),"white");
-	graphics->setColor(0.45,0.45,0.45);	graphics->drawOverlay(Rect::XYXY(0.4625*sAspect,0.47,0.4875*sAspect,0.53),"white");
-	graphics->setColor(0.50,0.50,0.50);	graphics->drawOverlay(Rect::XYXY(0.4875*sAspect,0.47,0.5125*sAspect,0.53),"white");
-	graphics->setColor(0.55,0.55,0.55);	graphics->drawOverlay(Rect::XYXY(0.5125*sAspect,0.47,0.5375*sAspect,0.53),"white");
-	graphics->setColor(0.60,0.60,0.60);	graphics->drawOverlay(Rect::XYXY(0.5375*sAspect,0.47,0.5625*sAspect,0.53),"white");
-	graphics->setColor(0.65,0.65,0.65);	graphics->drawOverlay(Rect::XYXY(0.5625*sAspect,0.47,0.5875*sAspect,0.53),"white");
-	graphics->setColor(0.70,0.70,0.70);	graphics->drawOverlay(Rect::XYXY(0.5875*sAspect,0.47,0.6125*sAspect,0.53),"white");
-	graphics->setColor(0.75,0.75,0.75);	graphics->drawOverlay(Rect::XYXY(0.6125*sAspect,0.47,0.6375*sAspect,0.53),"white");
-	graphics->setColor(0.80,0.80,0.80);	graphics->drawOverlay(Rect::XYXY(0.6375*sAspect,0.47,0.6625*sAspect,0.53),"white");
-	graphics->setColor(0.85,0.85,0.85);	graphics->drawOverlay(Rect::XYXY(0.6625*sAspect,0.47,0.6875*sAspect,0.53),"white");
-	graphics->setColor(0.90,0.90,0.90);	graphics->drawOverlay(Rect::XYXY(0.6875*sAspect,0.47,0.7125*sAspect,0.53),"white");
-	graphics->setColor(0.95,0.95,0.95);	graphics->drawOverlay(Rect::XYXY(0.7125*sAspect,0.47,0.7375*sAspect,0.53),"white");
-	graphics->setColor(1.00,1.00,1.00);	graphics->drawOverlay(Rect::XYXY(0.7375*sAspect,0.47,0.7625*sAspect,0.53),"white");
+	float f;
+	f = std::pow(0.00f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.2375*sAspect,0.47,0.2625*sAspect,0.53),"white");
+	f = std::pow(0.05f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.2625*sAspect,0.47,0.2875*sAspect,0.53),"white");
+	f = std::pow(0.10f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.2875*sAspect,0.47,0.3125*sAspect,0.53),"white");
+	f = std::pow(0.15f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.3125*sAspect,0.47,0.3375*sAspect,0.53),"white");
+	f = std::pow(0.20f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.3375*sAspect,0.47,0.3625*sAspect,0.53),"white");
+	f = std::pow(0.25f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.3625*sAspect,0.47,0.3875*sAspect,0.53),"white");
+	f = std::pow(0.30f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.3875*sAspect,0.47,0.4125*sAspect,0.53),"white");
+	f = std::pow(0.35f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.4125*sAspect,0.47,0.4375*sAspect,0.53),"white");
+	f = std::pow(0.40f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.4375*sAspect,0.47,0.4625*sAspect,0.53),"white");
+	f = std::pow(0.45f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.4625*sAspect,0.47,0.4875*sAspect,0.53),"white");
+	f = std::pow(0.50f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.4875*sAspect,0.47,0.5125*sAspect,0.53),"white");
+	f = std::pow(0.55f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.5125*sAspect,0.47,0.5375*sAspect,0.53),"white");
+	f = std::pow(0.60f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.5375*sAspect,0.47,0.5625*sAspect,0.53),"white");
+	f = std::pow(0.65f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.5625*sAspect,0.47,0.5875*sAspect,0.53),"white");
+	f = std::pow(0.70f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.5875*sAspect,0.47,0.6125*sAspect,0.53),"white");
+	f = std::pow(0.75f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.6125*sAspect,0.47,0.6375*sAspect,0.53),"white");
+	f = std::pow(0.80f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.6375*sAspect,0.47,0.6625*sAspect,0.53),"white");
+	f = std::pow(0.85f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.6625*sAspect,0.47,0.6875*sAspect,0.53),"white");
+	f = std::pow(0.90f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.6875*sAspect,0.47,0.7125*sAspect,0.53),"white");
+	f = std::pow(0.95f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.7125*sAspect,0.47,0.7375*sAspect,0.53),"white");
+	f = std::pow(1.00f, sliders["gamma"]->getValue()); graphics->setColor(f,f,f);	graphics->drawOverlay(Rect::XYXY(0.7375*sAspect,0.47,0.7625*sAspect,0.53),"white");
 
 	menuManager.drawCursor();
 }
@@ -459,7 +462,8 @@ bool options::keyDown(int vkey)
 	if(vkey==VK_ESCAPE)
 	{
 		graphics->setGamma(initialState.gamma);
-		menuManager.setMenu(new chooseMode);
+		done = true;
+		//menuManager.setMenu(new chooseMode);
 		return true;
 	}
 	return false;
@@ -523,17 +527,7 @@ void loading::updateFrame()
 	if(toLoad)
 	{
 		assetLoader.loadAsset(); // does preload if this is the first time it is called
-
-		//settings.load("media/modelData.txt");
-
-		//dataManager.registerAsset("menu background", "media/menu/menu background.png");
-		//dataManager.registerAsset("progress back", "media/progress back.png");
-		//dataManager.registerAsset("progress front", "media/progress front.png");
-		//dataManager.registerShader("ortho", "media/ortho.vert", "media/ortho.frag");
-		//dataManager.registerShader("gamma shader", "media/gamma.vert", "media/gamma.frag");
 		toLoad=false;
-
-		//messageBox("hello, this is a test."); //for testing fonts
 	}
 	
 	static int totalAssets = -1;
