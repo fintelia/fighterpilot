@@ -502,88 +502,10 @@ void nPlane::updateFrame(float interpolation) const
 }
 void nPlane::smoothCamera()
 {
-	if(!cameraStates.empty() && cameraStates.front().time < world.time() - 300)
-	{
-		auto i = cameraStates.begin();
-		while(i+1 != cameraStates.end() && (i+1)->time  < world.time() - 300)
-			i++;
-
-		if(i != cameraStates.begin())
-			cameraStates.erase(cameraStates.begin(),i);
-	}
-
-	cameraState a;
-	a.angle = direction;// * Quat4f(Vec3f(-1,0,0),Angle(PI * 0.9));
- 	a.time = world.time();
-	a.position = position;
-	a.velocity = rotation * Vec3f(0,0,speed);
-
-	if(!cameraStates.empty())
-	{
-		while(abs(cameraStates.back().angle - a.angle) > abs(cameraStates.back().angle - (a.angle+PI*2)))	a.angle += PI*2;
-		while(abs(cameraStates.back().angle - a.angle) > abs(cameraStates.back().angle - (a.angle-PI*2)))	a.angle -= PI*2;
-	}
-	if(cameraStates.empty() || cameraStates.back().time < a.time)
-		cameraStates.push_back(a);
-
-	float ang=0.0;
-	Vec3f vel;
-	Vec3f pos;
-	//float dt;
-	//float t;
-	if(cameraStates.size() > 1)
-	{
-		for(auto i = cameraStates.begin(); i+1 != cameraStates.end(); i++)
-		{
-			ang += (i->angle + (i+1)->angle) * ((i+1)->time - i->time) / 2;
-			pos += (i->position + (i+1)->position) * ((i+1)->time - i->time) / 2;
-			vel += (i->velocity + (i+1)->velocity) * ((i+1)->time - i->time) / 2;
-			//dir += (i->rot * Vec3f(0,0,1) + (i+1)->rot * Vec3f(0,0,1)) * ((i+1)->time - i->time) / 2;
-			//v += (i->rot * Vec3f(0,0.385,-0.923) + (i+1)->rot * Vec3f(0,0.385,-0.923)) * ((i+1)->time - i->time) / 2;
-		}
-		ang /= world.time() - cameraStates.front().time;
-		pos /= world.time() - cameraStates.front().time;
-		vel /= world.time() - cameraStates.front().time;
-		//dt = (world.time() - cameraStates.front().time)/2000;
-		//dir = dir / (world.time() - cameraStates.front().time);
-		//v = v / (world.time() - cameraStates.front().time);
-	}
-	else
-	{
-		ang = a.angle;
-		pos = a.position;
-		vel = a.velocity;
-		//dt = 0.0;
-		//dir = a.rot * Vec3f(0,0,1);
-		//v = a.rot * Vec3f(0,0.385,-0.923);
-	}
-
-
-	//observer.currentFrame.eye = /*pos + vel*dt*/position - Vec3f(sin(ang), -0.60, cos(ang)) * 35.0;
-	//observer.currentFrame.center = /*pos + vel*dt*/position + Vec3f(sin(ang), 0.0, cos(ang)) * 35.0;
-	//observer.currentFrame.up = Vec3f(0,1,0);
-
-
-	/*cameraRotations.push_back(rotation);
-	if(cameraRotations.size() > 15)
-		cameraRotations.erase(cameraRotations.begin());
-
-	Quat4f rot;
-	for(auto i=cameraRotations.begin(); i!=cameraRotations.end(); i++)
-	{
-		rot = rot + (*i).normalize();
-	}
-	rot = rot.normalize();*/
+	Vec3f shake = random3<float>() * cameraShake * 3.0;
+	float cameraDistance = objectInfo.planeStats(type).cameraDistance + 8.0 * max(0.0,pow((speed-300.0)/300.0,3.0));
 
 	cameraRotation = slerp(cameraRotation, rotation, 0.07);
-
-	Vec3f shake = random3<float>() * cameraShake * 3.0;
-
-	float cameraDistance = objectInfo.planeStats(type).cameraDistance + 8.0 * max(0.0,pow((speed-300.0)/300.0,3.0));
-	//observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
-	//observer.currentFrame.eye		= position - cameraRotation * Vec3f(0,-sin(15.0*PI/180)*cameraDistance,cos(15.0*PI/180)*cameraDistance);
-	//observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
-
 	cameraOffset = lerp(cameraOffset, (cameraRotation * Vec3f(0,sin(15.0*PI/180),-cos(15.0*PI/180))), 0.14);
 
 	observer.currentFrame.center	= position + cameraRotation * Vec3f(0,0,40.0) + shake;
@@ -787,7 +709,7 @@ void nPlane::die(deathType d)
 	else if(d == DEATH_HIT_WATER)
 	{
 		death = DEATH_HIT_WATER;
-		Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
+		Vec3f splashPos = lerp(lastPosition, position, lastPosition.y/(lastPosition.y - position.y));
 		particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
 		particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
 
@@ -798,6 +720,8 @@ void nPlane::die(deathType d)
 		observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
 		observer.currentFrame.center = splashPos + vel2D * 45.0;
 		observer.currentFrame.up = Vec3f(0,1,0);
+
+		cameraShake = 0.7;
 	}
 	//smokeTrail->setVisible(false);
 }
@@ -949,7 +873,7 @@ void nPlane::initArmaments()
 	{
 		a.type = hardpoints[i].mType;
 		a.offset = hardpoints[i].offset;
-		a.meshInstance = sceneManager.newMeshInstance(objectInfo[a.type]->mesh, position + rotation * a.offset, rotation);
+		a.meshInstance = sceneManager.newChildMeshInstance(objectInfo[a.type]->mesh, meshInstance, position + rotation * a.offset, rotation);
 		if(hardpoints[i].mType & MISSILE)
 		{
 			rockets.ammoRounds.push_back(a);

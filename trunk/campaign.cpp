@@ -20,6 +20,17 @@ bool campaign::init()
 {
 	world.create();
 	level->initializeWorld(1);
+
+	if(level->info.night)
+	{
+		view->blurStage(true);
+		view->postProcessShader(shaders("gamma night"));
+	}
+	else
+	{
+		view->blurStage(false);
+		view->postProcessShader(shaders("gamma bloom"));
+	}
 	return true;
 }
 void campaign::updateFrame()
@@ -38,13 +49,6 @@ void campaign::updateFrame()
 
 	//auto& controller = input.getXboxController(0);
 
-	//set camera position
-	nPlane* p=(nPlane*)players[0]->getObject();
-	auto camera = players[0]->getCamera(p->controled || p->dead);
-	view->lookAt(camera.eye, camera.center, camera.up);
-
-	players[0]->setVibrate(p->cameraShake);
-
 	//check whether to toggle first person view
 	if(input.getKey(VK_F1))
 	{
@@ -57,6 +61,25 @@ void campaign::updateFrame()
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);
 	}
+
+	//set camera position
+	nPlane* p=(nPlane*)players[0]->getObject();
+	auto camera = players[0]->getCamera(p->controled || p->dead);
+	view->lookAt(camera.eye, camera.center, camera.up);
+	if(level->info.night)
+	{
+		if(players[0]->firstPersonView && !p->controled && !p->dead)
+		{
+			view->blurStage(false);
+			view->postProcessShader(shaders("gamma night vision"));
+		}
+		else
+		{
+			view->blurStage(true);
+			view->postProcessShader(shaders("gamma night"));
+		}
+	}
+	players[0]->setVibrate(p->cameraShake);
 
 #ifdef _DEBUG
 	//slow down game speed to 10%
@@ -144,23 +167,6 @@ void campaign::updateFrame()
 			countdown=5000;
 		}
 	}
-
-
-
-	//((plane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
-
-
-
-	//if(settings.ON_HIT==RESTART && world.objectList[players[0].objectNum()]->dead)
-	//{
-	//	//need to add code to restart the level
-	//	return 30;
-	//}
-	//if((100-enemies_left*100/settings.ENEMY_PLANES>=settings.KILL_PERCENT_NEEDED || input.getKey(0x4E)) && (levelNum<TOTAL_LEVELS && !levelup))
-	//{
-	//	levelup=true;//newLevel(level+1);
-	//	countdown=1000;
-	//}
 }
 void campaign::render()
 {
@@ -168,18 +174,12 @@ void campaign::render()
 
 	if(players[0]->firstPersonView && !p->controled && !p->dead)
 	{
-	//	planeIdBoxes(p,0,0,sw,sh);
-	//	dataManager.bind("ortho");
 		graphics->drawOverlay(Rect::XYXY(0,0.0,sAspect,1.0),"cockpit square");
-	//	dataManager.unbindShader();
 
 		targeter(0.5*sAspect, 0.5, 0.08, -p->roll);
 		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
 
 		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/100.0,true);
-
-		//speedMeter(280,533,344,597,p.accel.magnitude()*30.5+212);
-		//altitudeMeter(456,533,520,597,p.altitude);
 	}
 	else if(!p->dead  && !p->controled)
 	{
@@ -202,8 +202,16 @@ void campaign::render()
 				if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 				{
 					shaders.bind("circle shader");
-					if(p->targetLocked)		graphics->setColor(1,0,0);
-					else					graphics->setColor(0,0,1);
+					if(level->info.night)
+					{
+						if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
+						else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+					}
+					else
+					{
+						if(p->targetLocked)		graphics->setColor(1,0,0);
+						else					graphics->setColor(0,0,1);
+					}
 					graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
 
 					if(targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
@@ -226,7 +234,8 @@ void campaign::render()
 								t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
 							}
 		
-							graphics->setColor(1,1,1,0.3);
+							if(level->info.night)	graphics->setColor(0.4,0.4,0.4,0.3);
+							else					graphics->setColor(1,1,1,0.3);
 							graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
 						}
 					}
@@ -245,8 +254,16 @@ void campaign::render()
 					Angle ang = atan2A(screenDirection.y,screenDirection.x);
 					screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
 					screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95);
-					if(p->targetLocked)		graphics->setColor(1,0,0);
-					else					graphics->setColor(0,0,1);
+					if(level->info.night)
+					{
+						if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
+						else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+					}
+					else
+					{
+						if(p->targetLocked)		graphics->setColor(1,0,0);
+						else					graphics->setColor(0,0,1);
+					}
 					graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
 					graphics->setColor(1,1,1);
 				}
@@ -268,31 +285,18 @@ void campaign::render()
 
 void campaign::render3D(unsigned int v)
 {
-	//if(firstFrame)
-	//{
-	//	firstFrame = false;
-	//	return;
-	//}
-
 	drawScene(view, 0);
 	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+	{
 		sceneManager.renderScene(view, players[v]->getObject()->meshInstance);
-	else
-		sceneManager.renderScene(view);
-
-	world.renderFoliage(view);
-
-	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+		world.renderFoliage(view);
 		sceneManager.renderSceneTransparency(view, players[v]->getObject()->meshInstance);
+	}
 	else
+	{
+		sceneManager.renderScene(view);
+		world.renderFoliage(view);
 		sceneManager.renderSceneTransparency(view);
-
-	//graphics->setDepthTest(false);
-	//graphics->setColor(1,0,0,1);
-	//dataManager.bind("model");
-	//dataManager.bind("white");
-	//dataManager.setUniformMatrix("modelTransform", Mat4f());
-	//graphics->drawTriangle(Vec3f(0,0,0), Vec3f(100000,0,100000), Vec3f(50000,1000,50000));
-	//graphics->setDepthTest(true);
+	}
 }
 }

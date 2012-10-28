@@ -10,6 +10,9 @@ bool levelEditor::init()
 	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	view->setRenderFunc(std::bind(&levelEditor::render3D, this, std::placeholders::_1));
 
+	view->blurStage(false);
+	view->postProcessShader(shaders("gamma"));
+
 	objectPreviewView = graphics->genView();
 	objectPreviewView->viewport(0.0,0.0, 0.260,0.195);
 	objectPreviewView->perspective(60.0, 1.0, 0.1, 10000.0);
@@ -1078,7 +1081,7 @@ void levelEditor::render3D(unsigned int v)
 	{
 		for(auto i = levelFile.objects.begin(); i != levelFile.objects.end(); i++)
 		{
-			auto obj = objectInfo[i->type];
+			auto obj = i->type != PLAYER_PLANE ? objectInfo[i->type] : objectInfo[objectInfo.getDefaultPlane()];
 			if(obj)
 			{
 				float scale = i->type & SHIP ? 1.0 : 10.0;
@@ -1370,9 +1373,12 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			auto shader = shaders.bind("desert preview terrain");
 			//dataManager.bind("desert preview terrain");
 
-			dataManager.bind("sand",0);
-			dataManager.bind("LCnoise",1);
-			groundTex->bind(2);
+			dataManager.bind("desertSand",0);
+			dataManager.bind("sand", 1);
+			dataManager.bind("LCnoise",2);
+			groundTex->bind(3);
+
+
 
 			shader->setUniform1f("heightScale",	scale);
 			shader->setUniform1f("minHeight", -seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight)*scale);
@@ -1387,8 +1393,9 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform3f("sunPosition", graphics->getLightPosition());
 			shader->setUniform3f("eyePos",		view->camera().eye);
 			shader->setUniform1i("sand",		0);
-			shader->setUniform1i("LCnoise",		1);
-			shader->setUniform1i("groundTex",	2);
+			shader->setUniform1i("sand2",		1);
+			shader->setUniform1i("LCnoise",		2);
+			shader->setUniform1i("groundTex",	3);
 			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
 
 			shaders.bind("model");
@@ -1520,7 +1527,9 @@ void levelEditor::renderObjectPreview()
 		graphics->setDepthTest(true);
 
 		objectPreviewView->lookAt(Vec3f(0,2,0), Vec3f(0,0,0), Vec3f(0,0,1));
-		auto obj = objectInfo[typeOptions[listBoxes["object type"]->getOptionNumber()]];
+		
+		objectType objType = typeOptions[listBoxes["object type"]->getOptionNumber()];
+		auto obj = objectInfo[objType != PLAYER_PLANE ? objType : objectInfo.getDefaultPlane()];
 		if(obj)
 		{
 			Sphere<float> sphere = obj->mesh->getBoundingSphere();

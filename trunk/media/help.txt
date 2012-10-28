@@ -9,16 +9,16 @@ Esc or Alt-F4	Exit
 The flight controls are as follows:
 
 							Player 1 Controls		Player 2 Controls
-Accelerate					Up Arrow				W Key
-Brake						Down Arrow			S Key
-Turn Left					Left Arrow			A Key
-Turn Right					Right Arrow			D Key
-Climb						Numpad 5				U Key
-Dive							Numpad 2				J Key
-Cannon						Numpad 0				Space Key
-Fire Missiles				Numpad 9				B Key
-Drop bombs				Numpad 8				V Key
+Climb						S Key					Down Arrow
+Dive							W Key					Up Arrow
+Turn Left					A Key					Left Arrow
+Turn Right					D Key					Right Arrow
+Accelerate					U Key					Numpad 5
+Brake						J Key					Numpad 2
+Cannon						Shift					Numpad 0
+Fire Missiles				Space					Numpad 9
+Drop bombs				F Key					Numpad 8
 Toggle First Person			F1						F2
 
 *Note: If an Xbox 360 controller is present, it will
-be used instead of keyboard controls for the active player.
+be used in addition to keyboard controls for the active player.

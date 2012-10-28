@@ -172,6 +172,9 @@
     <Filter Include="shaders\motion blur">
       <UniqueIdentifier>{06241e9d-9e89-4d88-9b20-a95b5797f252}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\blur">
+      <UniqueIdentifier>{de8f5794-b162-4dbe-8b1c-dca0ccd57af8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -616,6 +619,24 @@
     </None>
     <None Include="media\motion blur.vert">
       <Filter>shaders\motion blur</Filter>
+    </None>
+    <None Include="media\blur.vert">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\blurX.frag">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\blurY.frag">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\gammaBloom.frag">
+      <Filter>shaders\gamma correction</Filter>
+    </None>
+    <None Include="media\gammaNight.frag">
+      <Filter>shaders\gamma correction</Filter>
+    </None>
+    <None Include="media\gammaNightVision.frag">
+      <Filter>shaders\gamma correction</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

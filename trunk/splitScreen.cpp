@@ -22,6 +22,21 @@ bool splitScreen::init()
 	world.create();
 	level->initializeWorld(2);
 
+	if(level->info.night)
+	{
+		views[0]->blurStage(true);
+		views[0]->postProcessShader(shaders("gamma night"));
+		views[1]->blurStage(true);
+		views[1]->postProcessShader(shaders("gamma night"));
+	}
+	else
+	{
+		views[0]->blurStage(false);
+		views[0]->postProcessShader(shaders("gamma bloom"));
+		views[1]->blurStage(false);
+		views[1]->postProcessShader(shaders("gamma bloom"));
+	}
+
 	if(players[0]->getObject()->team == players[1]->getObject()->team)
 		gameType = COOPERATIVE;
 	else
@@ -31,14 +46,6 @@ bool splitScreen::init()
 }
 void splitScreen::updateFrame()
 {
-	//set camera position
-	for(int i=0; i<2; i++)
-	{
-		nPlane* p=(nPlane*)players[i]->getObject();
-		auto camera = players[i]->getCamera(p->controled || p->dead);
-		views[i]->lookAt(camera.eye, camera.center, camera.up);
-	}
-
 	//check whether to toggle first person views
 	if(input.getKey(VK_F1))	{	players[0]->toggleFirstPerson(); input.up(VK_F1);}
 	if(input.getKey(VK_F2))	{	players[1]->toggleFirstPerson(); input.up(VK_F2);}
@@ -48,6 +55,27 @@ void splitScreen::updateFrame()
 	{
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);
+	}
+
+	//set camera position
+	for(int i=0; i<2; i++)
+	{
+		nPlane* p=(nPlane*)players[i]->getObject();
+		auto camera = players[i]->getCamera(p->controled || p->dead);
+		views[i]->lookAt(camera.eye, camera.center, camera.up);
+		if(level->info.night)
+		{
+			if(players[i]->firstPersonView && !p->controled && !p->dead)
+			{
+				views[i]->blurStage(false);
+				views[i]->postProcessShader(shaders("gamma night vision"));
+			}
+			else
+			{
+				views[i]->blurStage(true);
+				views[i]->postProcessShader(shaders("gamma night"));
+			}
+		}
 	}
 
 #ifdef _DEBUG
@@ -152,14 +180,14 @@ void splitScreen::render()
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
 		nPlane* p=(nPlane*)players[acplayer]->getObject();
-		if(players[acplayer]->firstPersonView && !p->controled)
+		if(players[acplayer]->firstPersonView && !p->controled && !p->dead)
 		{
 			graphics->drawOverlay(Rect::XYXY(0,0.5*acplayer,sAspect,0.5*(acplayer+1)),"cockpit");
 			targeter(sAspect*0.5,0.25+0.5*acplayer,0.049,-p->roll);
 			radar(0.222 * sAspect, 0.437+0.5*acplayer, 0.1, -0.1, true, p);
 			healthBar(0.175*sAspect, 0.6-0.5*acplayer, 0.25*sAspect, 0.333, p->health/100.0,true);
 		}
-		else if(!p->dead)
+		else if(!p->dead && !p->controled)
 		{
 			if(p->target != 0 && world[p->target] != nullptr)
 			{
@@ -177,8 +205,16 @@ void splitScreen::render()
 					if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 					{
 						shaders.bind("circle shader");
-						if(p->targetLocked)		graphics->setColor(1,0,0);
-						else					graphics->setColor(0,0,1);
+						if(level->info.night)
+						{
+							if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
+							else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+						}
+						else
+						{
+							if(p->targetLocked)		graphics->setColor(1,0,0);
+							else					graphics->setColor(0,0,1);
+						}
 						graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
 
 						if(targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
@@ -201,7 +237,8 @@ void splitScreen::render()
 									t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
 								}
 		
-								graphics->setColor(1,1,1,0.3);
+								if(level->info.night)	graphics->setColor(0.4,0.4,0.4,0.3);
+								else					graphics->setColor(1,1,1,0.3);
 								graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
 							}
 						}
@@ -220,8 +257,16 @@ void splitScreen::render()
 						Angle ang = atan2A(screenDirection.y,screenDirection.x);
 						screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
 						screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95) * 0.5 + 0.5 * acplayer;
-						if(p->targetLocked)		graphics->setColor(1,0,0);
-						else					graphics->setColor(0,0,1);
+						if(level->info.night)
+						{
+							if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
+							else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+						}
+						else
+						{
+							if(p->targetLocked)		graphics->setColor(1,0,0);
+							else					graphics->setColor(0,0,1);
+						}
 						graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
 						graphics->setColor(1,1,1);
 					}

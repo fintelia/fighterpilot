@@ -45,6 +45,16 @@ shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(shared_ptr<
 	}
 	return shared_ptr<meshInstance>();
 }
+shared_ptr<SceneManager::meshInstance> SceneManager::newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Vec3f position, Quat4f rotation)
+{
+	if(meshPtr)
+	{
+		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,position,rotation,parent));
+		nMeshInstances[meshPtr->meshID].push_back(ptr);
+		return ptr;
+	}
+	return shared_ptr<meshInstance>();
+}
 shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::modelFile> modelFile)
 {
 	if(modelFile && modelFile->valid())
@@ -168,10 +178,14 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 					for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
 					{
 						i = instance->lock();
-						if(i != firstPersonObject && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
+						if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 						{
 							model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
 							material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+						}
+						else
+						{
+							int m=4;
 						}
 						i.reset();
 					}
@@ -238,7 +252,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 				for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
 				{
 					i = instance->lock();
-					if(i != firstPersonObject && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
+					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
 						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
 						material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);

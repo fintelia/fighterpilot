@@ -21,5 +21,5 @@ void main()
 	normal = normalize(normal);
 	float NdotL = dot(normal,normalize(sunDir));
 
-	gl_FragColor = vec4(texture2D(snow,position.xz*0.0002).rgb * (0.85 + 0.15*NdotL)* 0.7, 1.0);
+	gl_FragColor = vec4(texture2D(snow,position.xz*0.0002).rgb * (0.85 + 0.15*NdotL), 1.0);
 }
