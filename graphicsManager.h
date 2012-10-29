@@ -413,6 +413,7 @@ protected:
 	}FBOs[2], multisampleFBO;
 
 	unsigned int blurTexture;
+	unsigned int blurTexture2;
 
 	bool highResScreenshot;
 	Rect viewConstraint;

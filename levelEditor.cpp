@@ -9,14 +9,14 @@ bool levelEditor::init()
 	view->viewport(0,0, sAspect,1.0);
 	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
 	view->setRenderFunc(std::bind(&levelEditor::render3D, this, std::placeholders::_1));
-
-	view->blurStage(false);
 	view->postProcessShader(shaders("gamma"));
 
 	objectPreviewView = graphics->genView();
 	objectPreviewView->viewport(0.0,0.0, 0.260,0.195);
 	objectPreviewView->perspective(60.0, 1.0, 0.1, 10000.0);
 	objectPreviewView->setRenderFunc(std::bind(&levelEditor::renderObjectPreview, this));
+	objectPreviewView->postProcessShader(shaders("gamma"));
+
 
 	//terrain
 	buttons["dSquare"]		= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
@@ -121,6 +121,10 @@ void levelEditor::operator() (popup* p)
 
 		sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight),0.0,1.0));
 
+		if(levelFile.info.shaderType == TERRAIN_ISLAND) toggles["shaders"]->setValue(0);
+		else if(levelFile.info.shaderType == TERRAIN_SNOW) toggles["shaders"]->setValue(1);
+		else if(levelFile.info.shaderType == TERRAIN_DESERT) toggles["shaders"]->setValue(2);
+		else if(levelFile.info.shaderType == TERRAIN_MOUNTAINS) toggles["shaders"]->setValue(3);
 
 		resetView();
 		terrainValid=false;

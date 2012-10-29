@@ -897,7 +897,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():blurTexture(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
+OpenGLgraphics::OpenGLgraphics():blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -1307,6 +1307,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 		//glGenTextures(1, &FBOs[i].normals);
 		//glBindTexture(GL_TEXTURE_2D, FBOs[i].normals);
@@ -1407,8 +1408,15 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
+	glGenTextures(1, &blurTexture2);
+	glBindTexture(GL_TEXTURE_2D, blurTexture2);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 	return true;
 }
@@ -1419,6 +1427,8 @@ void OpenGLgraphics::destroyFBOs()
 	if(FBOs[1].color != 0)		glDeleteTextures(1, &FBOs[1].color);
 	if(FBOs[1].depth != 0)		glDeleteTextures(1, &FBOs[1].depth);
 	if(blurTexture != 0)		glDeleteTextures(1, &blurTexture);
+	if(blurTexture2 != 0)		glDeleteTextures(1, &blurTexture2);
+
 	if(openGL3 || GLEW_ARB_framebuffer_object)
 	{
 		if(FBOs[0].fboID != 0)		glDeleteFramebuffers(1, &FBOs[0].fboID);
@@ -1441,9 +1451,6 @@ void OpenGLgraphics::destroyFBOs()
 			if(multisampleFBO.depth != 0)	glDeleteRenderbuffersEXT(1, &multisampleFBO.depth);
 		}
 	}
-
-	glDeleteTextures(1, &blurTexture);
-
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -1719,7 +1726,6 @@ void OpenGLgraphics::render()
 	//}
 
 ///////////////////////////////////////Post Processing//////////////////////////////////
-
 	//glActiveTexture(GL_TEXTURE0);
 	//glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
 	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -1769,26 +1775,38 @@ void OpenGLgraphics::render()
 					auto blurY = shaders("blurY");
 					if(blurX && blurY)
 					{
-						bindRenderTarget(RT_FBO_1);
+						glViewport(0,0,sw/2,sh/2);
 
+						glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+						glGenerateMipmapEXT(GL_TEXTURE_2D);
+
+						bindRenderTarget(RT_FBO_1);
 						blurX->bind();
 						blurX->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
 						glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
+						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
+
 						drawPartialOverlay(overlayRect, textureRect);
-						glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
-						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 
 						blurY->bind();
 						blurY->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, FBOs[1].color);
+						glBindTexture(GL_TEXTURE_2D, blurTexture2);
+						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
+						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
+
 						drawPartialOverlay(overlayRect, textureRect);
-						glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
-						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
+
 
 						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, blurTexture);
+						glBindTexture(GL_TEXTURE_2D, blurTexture);//bind the blur texture
+
+						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
+						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
+						glViewport(0,0,sw,sh);
 					}
 					else
 					{

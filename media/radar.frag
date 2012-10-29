@@ -6,6 +6,8 @@ varying vec2 texCoord;
 //uniform vec2 mapCenter;
 //uniform float mapRadius;
 
+uniform vec3 HUD_color_back=vec3(0.11,0.35,0.52);
+uniform vec3 HUD_color=vec3(0.19,0.58,0.87);
 
 void main()
 {
@@ -43,7 +45,7 @@ void main()
 	//vec4 backColor=vec4(0.05,0.25+0.2*texCoord.y,0.04, clamp(-40.0*radius+40.0,0.0,1.0));//green
 	//vec4 backColor=vec4(0.14,0.37,0.58, clamp(-40.0*radius+40.0,0.0,1.0)*(1.0-0.6*radius)*(1.0-0.6*radius));
 	if(radius>1.0) discard;
-	vec4 backColor=mix(vec4(0.11,0.35,0.52,1.0),vec4(0.11,0.35,0.52,0.3),radius/1.25);
+	//vec4 backColor=vec4(HUD_color_back,1.0-radius/1.25);//mix(vec4(0.11,0.35,0.52,1.0),vec4(0.11,0.35,0.52,0.3),radius/1.25);
 
 	if(abs(loc.y)<0.003)	intensity=1.0;
 	if(abs(loc.y)<0.006)	intensity=max(intensity, 1.0-(abs(loc.y)-0.003)/0.006);
@@ -63,5 +65,5 @@ void main()
 		//intensity = 1.0;
 
 	//color=vec4(  vec3(0.05,0.79,0.04)*intensity + texture2D(radarTexture,texCoord).rgb*(1.0-intensity),    texture2D(radarTexture,texCoord).a);
-	gl_FragColor = vec4(mix(backColor.rgb,vec3(0.19,0.58,0.87),intensity),backColor.a);//green": (0.05,0.79,0.04); blue: 
+	gl_FragColor = vec4(mix(HUD_color_back,HUD_color,intensity),1.0-radius/1.25);//green": (0.05,0.79,0.04); blue: 
 }

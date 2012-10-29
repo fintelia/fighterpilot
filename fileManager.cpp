@@ -1241,8 +1241,6 @@ void FileManager::parseObjFile(shared_ptr<modelFile> f, fileContents data)
 	//	file=file.substr(0,i+1);
 	string mtlFilename;
 
-	unsigned int position;
-
 	char* token;
 	char line[256];
 
