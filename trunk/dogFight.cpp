@@ -28,6 +28,8 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 		auto healthShader = shaders.bind("health");
 		healthShader->setUniform1f("health",health);
 		healthShader->setUniform1f("angle",1.24f);
+		healthShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
+		healthShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.15, 0.7, 0.25) : Vec3f(0.19,0.58,0.78));
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		shaders.bind("ortho");
 	}
@@ -53,7 +55,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 	{
 		auto radarShader = shaders.bind("radar");
 		radarShader->setUniform1f("radarAng", radarAng);
-
+		//radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.1, 0.95, 0.2) : Vec3f(0.05,0.79,0.04));
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
 		Vec3f nC((x+width/2),(y+height/2),0);
@@ -62,6 +64,9 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		dataManager.bind("radar plane shader");
 		radarShader->setUniform2f("center",nC.x,nC.y);
 		radarShader->setUniform1f("radius",radius);
+		radarShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
+		radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.15, 0.75, 0.25) : Vec3f(0.19,0.58,0.87));
+
 		graphics->setColor(0.19,0.58,0.87);
 
 		Vec3f n;

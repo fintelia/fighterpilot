@@ -14,7 +14,8 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, 
 	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 
 
-	cameraOffset = cameraRotation * Vec3f(0,sin(15.0*PI/180),-cos(15.0*PI/180));
+	cameraRotation = rotation;
+	cameraOffset = rotation * Vec3f(0,sin(15.0*PI/180),-cos(15.0*PI/180));
 
 	initArmaments();
 

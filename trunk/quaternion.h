@@ -20,26 +20,6 @@ public:
 		y = vn.y;
 		z = vn.z;
 	}
-	Quaternion(Angle yaw, Angle pitch, Angle roll)
-	{
-		yaw		/= 2.0;
-		pitch	/= 2.0;
-		roll	/= 2.0;
-
- 		T siny = sin(yaw);
-		T sinp = sin(pitch);
-		T sinr = sin(roll);
-		T cosy = cos(yaw);
-		T cosp = cos(pitch);
-		T cosr = cos(roll);
- 
-		x = sinr * cosp * cosy - cosr * sinp * siny;
-		y = cosr * sinp * cosy + sinr * cosp * siny;
-		z = cosr * cosp * siny - sinr * sinp * cosy;
-		w = cosr * cosp * cosy + sinr * sinp * siny;
- 
-		normalize();
-	}
 	Quaternion(Vector3<T> v)
 	{
 		v.z += 1.0;

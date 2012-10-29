@@ -204,8 +204,8 @@ void campaign::render()
 					shaders.bind("circle shader");
 					if(level->info.night)
 					{
-						if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
-						else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+						if(p->targetLocked)		graphics->setColor(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989);
+						else					graphics->setColor(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140);
 					}
 					else
 					{
@@ -256,8 +256,8 @@ void campaign::render()
 					screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95);
 					if(level->info.night)
 					{
-						if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
-						else					graphics->setColor(0.36*0.1140,0.36*0.1140,0.04+0.36*0.1140);
+						if(p->targetLocked)		graphics->setColor(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989);
+						else					graphics->setColor(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140);
 					}
 					else
 					{

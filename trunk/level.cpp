@@ -133,7 +133,11 @@ bool LevelFile::loadZIP(string filename)
 		heights[i] = info.minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info.maxHeight - info.minHeight) / USHRT_MAX;
 	}
 
-	parseObjectFile(objectsFile);
+	if(!parseObjectFile(objectsFile))
+	{
+		messageBox("Failed to parse objects file!");
+		return false;
+	}
 
 	return true;
 }
@@ -198,7 +202,7 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 	//	++pos;
 	//}
 
-	//try
+	try
 	{
 		pos = 0;
 		enum {SEARHING,PARSING_OBJECT}state = SEARHING;
@@ -236,6 +240,12 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 					string s = readLine();
 					object->startloc = lexical_cast<Vec3f>(s);
 				}
+				else if(readSubString("\tspawnAngle="))
+				{
+					string s = readLine();
+					Angle angle = lexical_cast<float>(s) * PI / 180.0;
+					object->startRot = Quat4f(Vec3f(0,1,0),angle);
+				}
 				else if(readSubString("}\n"))
 				{
 					state = SEARHING;
@@ -248,11 +258,11 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 		}
 		return true;
 	}
-	//catch(...)
-	//{
-	//	debugBreak();
-	//	return false;
-	//}
+	catch(...)
+	{
+		debugBreak();
+		return false;
+	}
 }
 void LevelFile::initializeWorld(unsigned int humanPlayers)
 {
