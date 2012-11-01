@@ -226,21 +226,35 @@ void InputManager::update()
 	char newKeycodes[32];
 	XQueryKeymap(x11_display, newKeycodes);
 	
-	newKeyStates[VK_LEFT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Left)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Left) % 8)) 	? 0x80 : 0;
-	newKeyStates[VK_RIGHT] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Right)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Right) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_UP] = 		newKeycodes[XKeysymToKeycode(x11_display,XK_Up)/8] 		& (1<<(XKeysymToKeycode(x11_display,XK_Up) % 8)) 	? 0x80 : 0;
-	newKeyStates[VK_DOWN] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Down)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_Down) % 8)) 	? 0x80 : 0;
-	newKeyStates[VK_SPACE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_space)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_space) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_RETURN] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Return)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Return) % 8))? 0x80 : 0;
-	newKeyStates[VK_ESCAPE] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_Escape)/8]	& (1<<(XKeysymToKeycode(x11_display,XK_Escape) % 8))? 0x80 : 0;	
+	auto checkKeysym = [newKeycodes, x11_display](int sym)->char
+	{
+		return newKeycodes[XKeysymToKeycode(x11_display,sym)/8] 	& (1<<(XKeysymToKeycode(x11_display,sym) % 8)) 	? 0x80 : 0;
+	};
+	
+	for(char c='A'; c <= 'Z'; c++)
+		newKeyStates[c] = checkKeysym(c);
 
-	//keypad should also include key syms for when num lock is not on
-	newKeyStates[VK_NUMPAD0] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_0)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_0) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_NUMPAD2] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_2)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_2) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_NUMPAD5] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_5)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_5) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_NUMPAD8] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_8)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_8) % 8)) ? 0x80 : 0;
-	newKeyStates[VK_NUMPAD9] = 	newKeycodes[XKeysymToKeycode(x11_display,XK_KP_9)/8] 	& (1<<(XKeysymToKeycode(x11_display,XK_KP_9) % 8)) ? 0x80 : 0;
+	for(char c=0; c < 24; c++)
+		newKeyStates[VK_F1+c] = checkKeysym(XK_F1+c);
+	
+	for(char c=0; c <= 9; c++)//keypad should also include key syms for when num lock is not on
+		newKeyStates[VK_NUMPAD0+c] = checkKeysym(XK_KP_0+c);
+	
+	newKeyStates[VK_LSHIFT] = checkKeysym(XK_Shift_L);
+	newKeyStates[VK_RSHIFT] = checkKeysym(XK_Shift_R);
+	newKeyStates[VK_SHIFT] = checkKeysym(XK_Shift_L) | checkKeysym(XK_Shift_R);
 
+	newKeyStates[VK_LCONTROL] = checkKeysym(XK_Control_L);
+	newKeyStates[VK_RCONTROL] = checkKeysym(XK_Control_R);
+	newKeyStates[VK_CONTROL] = checkKeysym(XK_Control_L) | checkKeysym(XK_Control_R);
+	
+	newKeyStates[VK_LEFT] =		checkKeysym(XK_Left);
+	newKeyStates[VK_RIGHT] =	checkKeysym(XK_Right);
+	newKeyStates[VK_UP] =		checkKeysym(XK_Up);
+	newKeyStates[VK_DOWN] =		checkKeysym(XK_Down);
+	newKeyStates[VK_SPACE] =	checkKeysym(XK_space);
+	newKeyStates[VK_RETURN] =	checkKeysym(XK_Return);
+	newKeyStates[VK_ESCAPE] =	checkKeysym(XK_Escape);	
 #endif
 
 #ifdef XINPUT
