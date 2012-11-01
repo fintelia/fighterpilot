@@ -2086,9 +2086,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 #elif defined(LINUX)
 	fullscreenflag = false;
-	sw = screenResolution.x = 1024;
-	sh = screenResolution.y = 786;
-	sAspect = ((float)sw)/sh;
+	//sw = screenResolution.x = 1024;
+	//sh = screenResolution.y = 786;
+	//sAspect = ((float)sw)/sh;
 	
 	
 	context->fullscreen = fullscreenflag;
@@ -2368,7 +2368,9 @@ set<GraphicsManager::displayMode> OpenGLgraphics::getSupportedDisplayModes()cons
 
 	for(int i = 0; i < numModes; i++)
 	{
-		s.insert(Vec2u(modes[i]->hdisplay, modes[i]->vdisplay));
+		tmpDM.resolution = Vec2u(modes[i]->hdisplay, modes[i]->vdisplay);
+		tmpDM.refreshRate = (modes[i]->dotclock * 1000 ) / (modes[i]->htotal * modes[i]->vtotal);
+		s.insert(tmpDM);
 	}
 	free(modes);
 #endif
@@ -2384,7 +2386,7 @@ void OpenGLgraphics::swapBuffers()
 }
 GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 {
-#ifdef WINDOWS
+#if defined(WINDOWS)
 	DEVMODE d;
 	if(EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&d))
 	{
@@ -2401,6 +2403,17 @@ GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 		return dm;
 	}
 	else
+#elif defined(LINUX)
+	{
+		displayMode dm;	
+		int dotclock;
+		XF86VidModeModeLine modeLine;
+		XF86VidModeGetModeLine(x11_display, x11_screen, &dotclock, &modeLine);
+		
+		dm.resolution = Vec2u(modeLine.hdisplay, modeLine.vdisplay);
+		dm.refreshRate = (dotclock * 1000 ) / (modeLine.htotal * modeLine.vtotal);
+		return dm;
+	}
 #endif
 	{
 		displayMode dm;
@@ -2411,6 +2424,7 @@ GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 }
 void OpenGLgraphics::setRefreshRate(unsigned int rate)
 {
+#ifdef WINDOWS
 	if(isFullscreen)
 	{
 		DEVMODE d;
@@ -2420,6 +2434,9 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 			ChangeDisplaySettingsEx(NULL, &d, NULL, CDS_FULLSCREEN, NULL);
 		}
 	}
+#else
+	//TODO: add support for changing refresh rate under linux
+#endif
 }
 void OpenGLgraphics::takeScreenshot()
 {

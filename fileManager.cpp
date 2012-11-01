@@ -256,7 +256,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 #elif defined(LINUX)
 	string FileManager::getAppDataDirectory()
 	{
-		return "";
+		return "./";
 	}
 	bool FileManager::fileExists(string filename)
 	{

@@ -35,7 +35,7 @@ public:
 	cameraPtr			firstPerson;
 	cameraPtr			thirdPerson;
 
-	object(objectType Type, int Team=NEUTRAL): /*startPos(sPos), startRot(sRot),*/ team(Team), type(Type), id(++currentId),/*position(sPos), rotation(sRot),*/ dead(false), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}
+	object(objectType Type, int Team=NEUTRAL): type(Type), team(Team),  id(++currentId), dead(false), awaitingDelete(false),firstPerson(nullptr),thirdPerson(nullptr){}
 	virtual void init(){}
 	virtual ~object(){}
 	virtual void draw(){}
