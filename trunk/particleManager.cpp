@@ -201,13 +201,14 @@ void emitter::render()
 			}
 
 			quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);// Changes should be so rare (never?) that static is still the best option 
-			quadIBO->setData(iboContents, IBOnumQuads*6);
+			quadIBO->setData(iboContents, GraphicsManager::TRIANGLES, IBOnumQuads*6);
 
 			delete[] iboContents;
 		}
 
 		dataManager.bind(texture);
-		quadIBO->drawBufferSegment(GraphicsManager::TRIANGLES, VBO, min(vNum*6, IBOnumQuads*6));
+		quadIBO->bindBuffer(VBO);
+		quadIBO->drawBufferX(min(vNum*6, IBOnumQuads*6));
 	}
 }
 void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
@@ -317,7 +318,7 @@ void manager::init()
 	}
 
 	emitter::quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-	emitter::quadIBO->setData(iboContents, numQuads*6);
+	emitter::quadIBO->setData(iboContents, GraphicsManager::TRIANGLES, numQuads*6);
 	emitter::IBOnumQuads = numQuads;
 
 	delete[] iboContents;

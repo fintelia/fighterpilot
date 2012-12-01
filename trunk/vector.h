@@ -100,6 +100,11 @@ Vector2<T> operator*(const Vector2<T> v, U scale)
 {
 	return Vector2<T>(v.x * scale, v.y * scale);
 }
+template <class T, class U>
+Vector2<T> operator*(U scale, const Vector2<T> v)
+{
+	return Vector2<T>(v.x * scale, v.y * scale);
+}
 
 template <class T> Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t)
 {
@@ -205,7 +210,11 @@ Vector3<T> operator*(const Vector3<T>& v, U scale)
 {
 	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
 }
-
+template <class T, class U>
+Vector3<T> operator*(U scale, const Vector3<T>& v)
+{
+	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
+}
 template <class T> Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T t)
 {
 	if (t <= (T)0.0)	return v1;

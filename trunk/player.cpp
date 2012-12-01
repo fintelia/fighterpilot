@@ -9,31 +9,56 @@ float humanPlayer::controlMapping::operator() ()
 		return input.getKey(m) ? 1.0 : 0.0;
 	}
 #ifdef XINPUT
-	else if(type == BUTTON)
+	else if(type == XBOX_BUTTON)
 	{
 		return input.getXboxController(controllerNum).getButton(m) ? 1.0 : 0.0;
 	}
-	else if(type == AXIS)
+	else if(type == XBOX_AXIS)
 	{
 		return input.getXboxController(controllerNum).getAxis(m);
 	}
-	else if(type == AXIS_POSITIVE)
+	else if(type == XBOX_AXIS_POSITIVE)
 	{
 		return max(0.0, input.getXboxController(controllerNum).getAxis(m));
 	}
-	else if(type == AXIS_NEGATIVE)
+	else if(type == XBOX_AXIS_NEGATIVE)
 	{
 		return -min(0.0, input.getXboxController(controllerNum).getAxis(m));
 	}
 #endif
-
+#ifdef DIRECT_INPUT
+	else if(type == DI_BUTTON)
+	{
+		if(input.getDirectInputController(controllerNum))
+			return input.getDirectInputController(controllerNum)->getButton(m) ? 1.0 : 0.0;
+		return 0.0;
+	}
+	else if(type == DI_AXIS)
+	{
+		if(input.getDirectInputController(controllerNum))
+			return input.getDirectInputController(controllerNum)->getAxis(m);
+		return 0.0;
+	}
+	else if(type == DI_AXIS_POSITIVE)
+	{
+		if(input.getDirectInputController(controllerNum))
+			return max(0.0, input.getDirectInputController(controllerNum)->getAxis(m));
+		return 0.0;
+	}
+	else if(type == DI_AXIS_NEGATIVE)
+	{
+		if(input.getDirectInputController(controllerNum))
+			return -min(0.0, input.getDirectInputController(controllerNum)->getAxis(m));
+		return 0.0;
+	}
+#endif
 	debugBreak();
 	return 0.0;
 }
 
-object* player::getObject()
+shared_ptr<plane> player::getObject()
 {
-	return world[mObjectNum].get();
+	return dynamic_pointer_cast<plane>(world[mObjectNum]);
 }
 ////
 //void AIcontrol::update()
@@ -47,18 +72,33 @@ object* player::getObject()
 humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, objectId), mPlayerNum(playerNumber), firstPersonView(false)
 {
 #ifdef XINPUT
-	xBoxControls[CON_CLIMB]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
-	xBoxControls[CON_DIVE]		= controlMapping(XINPUT_THUMB_LY,controlMapping::AXIS_POSITIVE,mPlayerNum);
+	xBoxControls[CON_CLIMB]		= controlMapping(XINPUT_THUMB_LY,controlMapping::XBOX_AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_DIVE]		= controlMapping(XINPUT_THUMB_LY,controlMapping::XBOX_AXIS_POSITIVE,mPlayerNum);
 
-	xBoxControls[CON_LEFT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_NEGATIVE,mPlayerNum);
-	xBoxControls[CON_RIGHT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::AXIS_POSITIVE,mPlayerNum);
+	xBoxControls[CON_LEFT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::XBOX_AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_RIGHT]		= controlMapping(XINPUT_THUMB_LX,controlMapping::XBOX_AXIS_POSITIVE,mPlayerNum);
 
-	xBoxControls[CON_ACCEL]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_POSITIVE,mPlayerNum);
-	xBoxControls[CON_BRAKE]		= controlMapping(XINPUT_THUMB_RY,controlMapping::AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_ACCEL]		= controlMapping(XINPUT_THUMB_RY,controlMapping::XBOX_AXIS_NEGATIVE,mPlayerNum);
+	xBoxControls[CON_BRAKE]		= controlMapping(XINPUT_THUMB_RY,controlMapping::XBOX_AXIS_POSITIVE,mPlayerNum);
 
-	xBoxControls[CON_SHOOT]		= controlMapping(XINPUT_RIGHT_TRIGGER,controlMapping::AXIS,mPlayerNum);
-	xBoxControls[CON_MISSILE]	= controlMapping(XINPUT_LEFT_TRIGGER,controlMapping::AXIS,mPlayerNum);
-	xBoxControls[CON_BOMB]		= controlMapping(XINPUT_LEFT_SHOULDER,controlMapping::BUTTON,mPlayerNum);
+	xBoxControls[CON_SHOOT]		= controlMapping(XINPUT_RIGHT_TRIGGER,controlMapping::XBOX_AXIS,mPlayerNum);
+	xBoxControls[CON_MISSILE]	= controlMapping(XINPUT_LEFT_TRIGGER,controlMapping::XBOX_AXIS,mPlayerNum);
+	xBoxControls[CON_BOMB]		= controlMapping(XINPUT_LEFT_SHOULDER,controlMapping::XBOX_BUTTON,mPlayerNum);
+#endif
+
+#ifdef DIRECT_INPUT
+	directInputControls[CON_CLIMB]		= controlMapping(1,controlMapping::DI_AXIS_POSITIVE,mPlayerNum);
+	directInputControls[CON_DIVE]		= controlMapping(1,controlMapping::DI_AXIS_NEGATIVE,mPlayerNum);
+
+	directInputControls[CON_LEFT]		= controlMapping(0,controlMapping::DI_AXIS_NEGATIVE,mPlayerNum);
+	directInputControls[CON_RIGHT]		= controlMapping(0,controlMapping::DI_AXIS_POSITIVE,mPlayerNum);
+
+	directInputControls[CON_ACCEL]		= controlMapping(2,controlMapping::DI_AXIS_NEGATIVE,mPlayerNum);
+	directInputControls[CON_BRAKE]		= controlMapping(2,controlMapping::DI_AXIS_POSITIVE,mPlayerNum);
+
+	directInputControls[CON_SHOOT]		= controlMapping(1,controlMapping::DI_BUTTON,mPlayerNum);
+	directInputControls[CON_MISSILE]	= controlMapping(0,controlMapping::DI_BUTTON,mPlayerNum);
+	directInputControls[CON_BOMB]		= controlMapping(3,controlMapping::DI_BUTTON,mPlayerNum);
 #endif
 	if(mPlayerNum == 0)
 	{
@@ -95,14 +135,14 @@ humanPlayer::humanPlayer(int playerNumber, int objectId): player(PLAYER_HUMAN, o
 void humanPlayer::setObject(int objectId)
 {
 	mObjectNum = objectId;
-	object* o = getObject();
+	auto o = getObject();
 	o->firstPerson = &firstPerson;
 	o->thirdPerson = &thirdPerson;
 }
 humanPlayer::~humanPlayer()
 {
-	object* o = getObject();
-	if(o != nullptr)
+	auto o = getObject();
+	if(o)
 	{
 		o->firstPerson = nullptr;
 		o->thirdPerson = nullptr;
@@ -114,18 +154,20 @@ void humanPlayer::update()
 
 	auto maxControlVal = [this](int n) -> float
 	{
-#ifdef XINPUT
+#if defined(XINPUT) && defined(DIRECT_INPUT)
+		return max(controls[n](),max(xBoxControls[n](),directInputControls[n]()));
+#elif defined(XINPUT)
 		return max(controls[n](),xBoxControls[n]());
+#elif defined(DIRECT_INPUT)
+		return max(controls[n](),directInputControls[n]());
 #else
 		return controls[n]();
 #endif
 	};
 
-	object* o = getObject();
-	if(o != nullptr && o->type & PLANE)
+	auto p = getObject();
+	if(p)
 	{
-		nPlane* p = (nPlane*)o;
-
 		p->controls.accelerate	= lerp(p->controls.accelerate, maxControlVal(CON_ACCEL), 0.07);
 		p->controls.brake		= lerp(p->controls.brake, maxControlVal(CON_BRAKE), 0.07);
 		p->controls.climb		= lerp(p->controls.climb, maxControlVal(CON_CLIMB), 0.07);
@@ -149,11 +191,10 @@ const camera& humanPlayer::getCamera(bool forceThirdPerson) const
 }
 AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),missileCountDown(0.0),target(0),destination(0,0,0), state(STATE_NONE)
 {
-	object* o = getObject();
-	if(o != nullptr && o->type & PLANE)
+	auto p = getObject();
+	if(p)
 	{
-		nPlane* p = (nPlane*)o;
-		p->controlType = nPlane::CONTROL_TYPE_AI;
+		p->controlType = plane::CONTROL_TYPE_AI;
 	}
 }
 void AIplayer::startPatrol()
@@ -169,7 +210,7 @@ void AIplayer::startHunt(int targetID)
 	huntEndTime = world.time() + random<double>(1000,3000);
 	state = STATE_HUNTING;
 }
-void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
+void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest)
 {
 	//Vec3f velocity = p->rotation * Vec3f(0,0,1);
 	Vec3f destVector = dest - p->position;
@@ -190,13 +231,12 @@ void AIplayer::flyTowardsPoint(nPlane* p, Vec3f dest)
 }
 void AIplayer::update()
 {
-	object* o = getObject();
-	if(o == nullptr || !(o->type & PLANE))
+	shared_ptr<plane> p = getObject();
+	if(!p)
 	{
 		debugBreak();
 		return;
 	}
-	nPlane* p = (nPlane*)o;
 
 	missileCountDown -= world.time.length();
 	if(state == STATE_NONE)
@@ -207,7 +247,7 @@ void AIplayer::update()
 	{
 		//graphics->drawLine(o->position, destination);
 		//Profiler.setOutput(lexical_cast<string>(o->id) + " distance", sqrt((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z)));
-		if((destination.x - o->position.x) * (destination.x - o->position.x) + (destination.z - o->position.z) * (destination.z - o->position.z) < 1000.0 * 1000.0)
+		if((destination.x - p->position.x) * (destination.x - p->position.x) + (destination.z - p->position.z) * (destination.z - p->position.z) < 1000.0 * 1000.0)
 		{
 			startPatrol();
 		}
@@ -260,22 +300,15 @@ void AIplayer::update()
 		//	float a = v.dot(v) - p->speed*p->speed;
 		//	float b = 2.0 * v.dot(r);
 		//	float c = r.dot(r);
-		//
-		//	if(b*b - 4.0*a*c >= 0.0)
+		//	float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//	if(b*b - 4.0*a*c >= 0.0 && t >= 0.0)
 		//	{
-		//		float time = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-		//
-		//		if(time <= 0.0) //doen't seem to happen...
-		//		{
-		//			time = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-		//		}
-		//
-		//		flyTowardsPoint(p, t->position + v * time);
+		//		flyTowardsPoint(p, t->position + v * t);
 		//	}
 		//}
 		//else
 		{
-			flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<nPlane>(t)->speed));
+			flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<plane>(t)->speed));
 		}
 
 		if(distance > 2000.0)

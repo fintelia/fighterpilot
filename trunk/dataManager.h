@@ -107,7 +107,7 @@ public:
 
 	void addTexture(string name, shared_ptr<GraphicsManager::texture> tex);
 //	void addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
-	void addModel(string name, string OBJfile);
+	void addModel(string name, shared_ptr<FileManager::modelFile> model);
 	void addFont(string name, shared_ptr<FileManager::textFile> f);
 
 //	void writeErrorLog(string filename);

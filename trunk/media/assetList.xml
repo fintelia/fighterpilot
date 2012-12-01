@@ -102,6 +102,7 @@
     <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
     <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
     <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
+    <shader name="trees3D shader"            vertex="media/tree3d.vert"            fragment="media/tree3d.frag" />
     <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
     <shader name="cirrus cloud shader"       vertex="media/cirrusCloud.vert"       fragment="media/cirrusCloud.frag" />
     
@@ -124,7 +125,9 @@
     <model name="cylinder"              file="media/cylinder.obj" />
     <model name="disk"                  file="media/disk.obj" />    
     <model name="sphere"                file="media/sphere.obj" />
-  <!--  <model name="tree model"            file="media/tree/tree.obj" /> -->
+    <model name="tree model"            file="media/tree2/tree.obj" />
+    <model name="tree leaves"            file="media/tree2/leaves.obj" />
+    <model name="tree trunk"            file="media/tree2/trunk.obj" />
   </models>
   <fonts>
     <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>

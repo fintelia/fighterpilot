@@ -172,6 +172,8 @@ public:
 	virtual void operator() (B b)=0;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+string toString(const wchar_t* str, unsigned int maxLength);
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class T, unsigned int totalSize>
 class slidingList
 {
@@ -229,5 +231,118 @@ public:
 	void reset()
 	{
 		count = 0;
+	}
+};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class T>
+class quadTree
+{
+public:
+	struct node
+	{
+		/* layout: (N=neighbor, C=child)
+		 __________|__________|__________
+		|          |          |          |
+		|          |    N1    |          |
+		|__________|__________|__________|
+		|          | C3 | C2  |          |    y+
+		|    N2    |____|_____|    N0    |    |
+		|          | C0 | C1  |          |    |
+		|__________|____|_____|__________|    |______ x+ 
+		|          |          |          |
+		|          |    N3    |          |
+		|__________|__________|__________|	*/
+		node* children[4];
+		node* neighbors[4];
+		node* parent;
+		unsigned int x;
+		unsigned int y;
+		unsigned int level;
+		T element;
+	};
+
+private:
+	node* mTrunk;
+	unsigned int mDepth;
+	unsigned int numNodes;
+
+	unsigned int levelOffset(unsigned int level)
+	{
+		static unsigned int lookupTable[] = {0U, 1U, 5U, 21U, 85U, 341U, 1365U, 5461U, 21845U, 87381U, 349525U, 1398101U, 5592405U, 22369621U, 89478485U, 357913941U};
+		return lookupTable[level]; //no error checking!!!
+	}
+
+public:
+	unsigned int depth()
+	{
+		return mDepth;
+	}
+	unsigned int getSideLength(unsigned int depth)
+	{
+		return 1 << depth;
+	}
+	node* trunk()
+	{
+		return mTrunk;
+	}
+	node* getNode(unsigned int level, unsigned int x, unsigned int y)
+	{
+		if(level >= mDepth || x >= 1 << (2*level) || y >= 1 << (2*level)) 
+			return nullptr;
+
+		return mTrunk + levelOffset(level) + x + y*(1<<level);
+	}
+	quadTree(unsigned int depth): mDepth(depth)
+	{
+		if(depth >= 16)
+		{
+			debugBreak();
+			mDepth = 15;
+		}
+
+		unsigned int numNodes = 0;
+		for(int i=0; i<=depth; i++)
+		{
+			numNodes += 1 << (2*i);
+		}
+
+		mTrunk = new node[numNodes];
+
+		node* n;
+		for(int d = 0; d < mDepth; d++)
+		{
+			unsigned int sideLength = getSideLength(d);
+			for(int x=0; x < sideLength; x++)
+			{
+				for(int y=0; y < sideLength; y++)
+				{
+					n = getNode(d,x,y);
+					n->parent = d != 0 ? getNode(d-1,x/2,y/2) : nullptr;
+					n->neighbors[0] = x < sideLength-1	? getNode(d,x+1,y) : nullptr;
+					n->neighbors[1] = y < sideLength-1	? getNode(d,x,y+1) : nullptr;
+					n->neighbors[2] = x > 0				? getNode(d,x-1,y) : nullptr;
+					n->neighbors[3] = y > 0				? getNode(d,x,y-1) : nullptr;
+
+					n->x = x;
+					n->y = y;
+					n->level = d;
+
+					if(d < mDepth-1)
+					{
+						n->children[0] = getNode(d+1, x*2,		y*2);
+						n->children[1] = getNode(d+1, x*2+1,	y*2);
+						n->children[2] = getNode(d+1, x*2+1,	y*2+1);
+						n->children[3] = getNode(d+1, x*2,		y*2+1);
+					}
+					else
+					{
+						n->children[0] = nullptr;
+						n->children[1] = nullptr;
+						n->children[2] = nullptr;
+						n->children[3] = nullptr;
+					}
+				}
+			}
+		}
 	}
 };

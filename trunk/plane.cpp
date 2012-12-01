@@ -2,17 +2,18 @@
 
 #include "game.h"
 
-//nPlane::nPlane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
+//plane::plane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 //{
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED)
+plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED),firstPerson(nullptr),thirdPerson(nullptr)
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
 	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
 
+	debugAssert(meshInstance);
 
 	cameraRotation = rotation;
 	cameraOffset = rotation * Vec3f(0,sin(15.0*PI/180),-cos(15.0*PI/180));
@@ -46,10 +47,8 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, 
 	speed=300.0;
 
 	controled=false;
-	maneuver=0;
 	death = DEATH_NONE;
 	health = 100.0;
-	respawning=false;
 	shotsFired = 0;
 
 	target=0;
@@ -58,7 +57,7 @@ nPlane::nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, 
 	smoothCamera(); //set up the camera
 	observer.lastFrame = observer.currentFrame;
 }
-void nPlane::init()
+void plane::init()
 {
 	auto& engines = objectInfo.planeStats(type).engines;
 	for(auto i=engines.begin(); i!=engines.end(); i++)
@@ -72,7 +71,7 @@ void nPlane::init()
 	particleManager.addEmitter(smokeTrail, id);
 	smokeTrail->setActive(false);
 }
-void nPlane::updateSimulation(double time, double ms)
+void plane::updateSimulation(double time, double ms)
 {
 	//control->update();
 	//controlState controller=control->getControlState();
@@ -115,8 +114,6 @@ void nPlane::updateSimulation(double time, double ms)
 				autoPilotUpdate(ms);
 			else
 				controled=false;
-
-			altitude=world.altitude(position);
 		}
 		else
 		{
@@ -191,7 +188,6 @@ void nPlane::updateSimulation(double time, double ms)
 						roll = min(0.0, roll.getAngle()-PI*2 + (ms/1000));
 				}
 
-
 				climb += (1.0*controls.climb*(ms/1000) - 1.0*controls.dive*(ms/1000)) * cos(roll);
 
 			}
@@ -217,25 +213,8 @@ void nPlane::updateSimulation(double time, double ms)
 			else if(controlType == CONTROL_TYPE_AI)
 			{
 				roll += 1.5*(controls.right-controls.left)*(ms/1000);
-				//direction -= Lift / (mass*0.2*speed) * sin(roll)/cos(climb) * (controls.climb - controls.dive) * (ms/1000);
 				climb += (controls.climb - controls.dive) * (ms/1000) * cos(roll);
 			}
-
-			//climb -= (L * cos(roll) / (m*speed) - 9.8*cos(climb)/speed) * (ms/1000) -
-			//			(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * cos(roll);
-
-
-			//if(roll.inRange(-PI/2 - 0.001, PI/2 + 0.001))
-			//	roll = roll - abs(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * sin(roll);
-			//else
-			//	roll = roll + abs(1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000)) * sin(roll);
-
-
-			//direction -= (0.3*controller.climb*(ms/1000) - 0.3*controller.dive*(ms/1000))*sin(roll);
-			//turn  = clamp(turn  + 1.5*controller.right*(ms/1000) - 1.5*controller.left*(ms/1000),-1.0,1.0);
-			//climb = clamp(climb + (1.0*controller.climb*(ms/1000) - 1.0*controller.dive*(ms/1000))*cos(turn),-PI/3,PI/4);
-			//direction -= turn*ms/3000.0;//needs to be adjusted to be continious
-			//speed += 9.8 * (ms/1000) * -sin(climb);//gravity
 
 			if(controlType == CONTROL_TYPE_SIMPLE || controlType == CONTROL_TYPE_AI)
 			{
@@ -315,12 +294,6 @@ void nPlane::updateSimulation(double time, double ms)
 				}
 			}
 
-			//planePath.currentPoint(position,rotation);
-
-			smoothCamera();
-
-
-
 			Vec2f positionXZ(position.x,position.z);
 			Vec2f mapCenter = world.bounds().center;
 			float r = world.bounds().radius;
@@ -328,46 +301,13 @@ void nPlane::updateSimulation(double time, double ms)
 			{
 				returnToBattle();
 			}
-
-			altitude=world.altitude(position);
-		//	if(altitude < 0.0)
-		//	{
-		//		die(world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER);
-				//if(death == DEATH_HIT_GROUND)
-				//{
-				//	position.y -= altitude;
-
-				//	//particleManager.addEmitter(new particle::blackSmoke(id));
-
-				//	death = DEATH_EXPLOSION;
-				//	particleManager.addEmitter(new particle::explosion(),id);
-				//	particleManager.addEmitter(new particle::groundExplosionFlash(),id);
-				//	cameraShake = 1.0;
-				//}
-				//else if(death == DEATH_HIT_WATER)
-				//{
-				//	Vec3f splashPos = position * lastPosition.y / (lastPosition.y - position.y) - lastPosition * position.y / (lastPosition.y - position.y);
-				//	particleManager.addEmitter(new particle::splash(),splashPos, 10.0);
-				//	particleManager.addEmitter(new particle::splash2(),splashPos, 10.0);
-
-				//	Vec3f vel2D = rotation * Vec3f(0,0,1);
-				//	vel2D.y=0;
-				//	vel2D = vel2D.normalize();
-
-				//	observer.currentFrame.eye = splashPos - Vec3f(vel2D.x, -0.60, vel2D.z)*45.0;
-				//	observer.currentFrame.center = splashPos + vel2D * 45.0;
-				//	observer.currentFrame.up = Vec3f(0,1,0);
-				//}
-				//die();
-		//	}
+			smoothCamera();
 		}
-
-		targeter = rotation * Vec3f(0,0,1);
+		altitude=world.altitude(position);
 		findTarget();
 	}//end if(!dead)
 	if(dead) //if we were, or are now dead
 	{
-		
 		altitude = world.altitude(position);
 		speed += 9.8 * (ms/1000) * -sin(climb); //gravity
 
@@ -375,24 +315,13 @@ void nPlane::updateSimulation(double time, double ms)
 		{
 
 		}
-		else if(death == DEATH_HIT_WATER)
-		{
-			//rotation = Quat4f(0,0,0,1);
-			//rotation = Quat4f(Vec3f(0,0,1),turn) * rotation;
-			//rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-			//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
-			//position += rotation * Vec3f(0,0,1) * (ms/1000);
-
-			position.y -= 10.0 * (ms/1000);
-		}
 		else if(death == DEATH_EXPLOSION)
 		{
-			//rotation = Quat4f(0,0,0,1);
-			//rotation = Quat4f(Vec3f(0,0,1),roll) * rotation;
-			//rotation = Quat4f(Vec3f(1,0,0),-climb) * rotation;
-			//rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
-			//position += rotation * Vec3f(0,0,1) * speed * (ms/1000) * 0.1;
+		}
+		else if(death == DEATH_HIT_WATER)
+		{
+			position.y -= 10.0 * (ms/1000);
 		}
 		else if(death == DEATH_TRAILING_SMOKE)
 		{
@@ -408,15 +337,6 @@ void nPlane::updateSimulation(double time, double ms)
 			rotation = Quat4f(Vec3f(0,1,0),direction) * rotation;
 
 			position += rotation * Vec3f(0,0,1) * speed * (ms/1000);
-
-			//int sgn=roll/abs(roll);
-			//turn-=0.1*(ms/1000)*sgn;
-			//if(turn/abs(turn)!=sgn)
-			//	turn=0;
-
-			//climb -= 0.3 * (ms/1000);
-			//if(climb < -PI/2)
-			//	climb = -PI/2;
 
 			Vec3f vel2D = rotation * Vec3f(0,0,1);
 			vel2D.y=0;
@@ -455,7 +375,7 @@ void nPlane::updateSimulation(double time, double ms)
 		}
 	}
 }
-void nPlane::updateFrame(float interpolation) const
+void plane::updateFrame(float interpolation) const
 {
 	//float oldInterpolation = interpolation - 16.67 / world.time.getUpdateLength(); //what interpolation would have been one frame ago
 
@@ -501,7 +421,7 @@ void nPlane::updateFrame(float interpolation) const
 		//thirdPerson->oldUp		= lerp(observer.lastFrame.up, observer.currentFrame.up, oldInterpolation);
 	}
 }
-void nPlane::smoothCamera()
+void plane::smoothCamera()
 {
 	Vec3f shake = random3<float>() * cameraShake * 3.0;
 	float cameraDistance = objectInfo.planeStats(type).cameraDistance + 8.0 * max(0.0,pow((speed-300.0)/300.0,3.0));
@@ -513,10 +433,9 @@ void nPlane::smoothCamera()
 	observer.currentFrame.eye		= position + cameraOffset * cameraDistance;
 	observer.currentFrame.up		= cameraRotation * Vec3f(0,1,0);
 }
-void nPlane::autoPilotUpdate(float value)
+void plane::autoPilotUpdate(float value)
 {
-	wayPoint w1;
-	wayPoint w2;
+	wayPoint w[4];
 	double time=world.time();
 	float t;
 	if(time>(wayPoints.back()).time)
@@ -545,24 +464,28 @@ void nPlane::autoPilotUpdate(float value)
 	{
 		if(wayPoints[i-1].time<time && wayPoints[i].time>time)
 		{
-			w1=wayPoints[i-1];
-			w2=wayPoints[i];
+			w[0] = i>1 ? wayPoints[i-2] : wayPoints[i-1];
+			w[1] = wayPoints[i-1];
+			w[2] = wayPoints[i];
+			w[3] = i<wayPoints.size()-1 ? wayPoints[i+1] : wayPoints[i];
 		}
 	}
 
-	t=1.0-(w2.time-time)/(w2.time-w1.time);
+	t=1.0-(w[2].time-time)/(w[2].time-w[1].time);
 
-	position = w1.position*(1.0-t)+w2.position*t;
-	rotation = slerp(w1.rotation,w2.rotation,t);
+	position = catmullRomInterpolate(w[0].position, w[1].position, w[2].position, w[3].position, t);
+	rotation = slerp(w[1].rotation,w[2].rotation,t);
+
 	observer.currentFrame.center.x = position.x;
 	observer.currentFrame.center.z = position.z;
+
 	//Vec3f fwd = rotation * Vec3f(0,0,1);
 	//direction =	atan2A(fwd.x,fwd.z);
 	//climb =		asin(fwd.y/fwd.magnitude());
 	//turn =		0;
 
 }
-void nPlane::exitAutoPilot()
+void plane::exitAutoPilot()
 {
 	wayPoint w1;
 	wayPoint w2;
@@ -614,7 +537,7 @@ void nPlane::exitAutoPilot()
 	controled=false;
 	wayPoints.clear();
 }
-void nPlane::returnToBattle()//needs to be adjusted for initial speed
+void plane::returnToBattle()//needs to be adjusted for initial speed
 {
 	cameraStates.clear();
 	wayPoints.clear();
@@ -633,14 +556,15 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 	observer.currentFrame.center = Vec3f(position.x + fwd.x*35, position.y, position.z + fwd.z*35);
 	observer.currentFrame.up = Vec3f(0,1,0);
 
-	wayPoints.push_back(wayPoint(time,				position,								rotation								));
-	wayPoints.push_back(wayPoint(time+3000.0,		position+newFwd*2500,					newRot									));
-	wayPoints.push_back(wayPoint(time+3610.0,		position+newFwd*2875+Vec3f(0,375,0),	newRot * Quat4f(Vec3f(-1,0,0),PI*0.25)	));
-	wayPoints.push_back(wayPoint(time+4220.0,		position+newFwd*2500+Vec3f(0,750,0),	newRot * Quat4f(Vec3f(-1,0,0),PI*0.5)	));
-	wayPoints.push_back(wayPoint(time+4460.0,		position+newFwd*2309+Vec3f(0,588,0),	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
-	wayPoints.push_back(wayPoint(time+5300.0,		position+newFwd*1743+Vec3f(0,176,0),	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
-	wayPoints.push_back(wayPoint(time+5660.0,		position+newFwd*1500,					newRot * Quat4f(Vec3f(-1,0,0),PI)		));
-	wayPoints.push_back(wayPoint(time+7000.0,		position-newFwd*55,						newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
+	float scale = 0.6;
+	wayPoints.push_back(wayPoint(time,					position,											rotation								));
+	wayPoints.push_back(wayPoint(time+3000.0*scale,		position+newFwd*scale*2500,							newRot									));
+	wayPoints.push_back(wayPoint(time+3610.0*scale,		position+newFwd*scale*2875+Vec3f(0,375,0)*scale,	newRot * Quat4f(Vec3f(-1,0,0),PI*0.25)	));
+	wayPoints.push_back(wayPoint(time+4220.0*scale,		position+newFwd*scale*2500+Vec3f(0,750,0)*scale,	newRot * Quat4f(Vec3f(-1,0,0),PI*0.5)	));
+	wayPoints.push_back(wayPoint(time+4460.0*scale,		position+newFwd*scale*2309+Vec3f(0,588,0)*scale,	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
+	wayPoints.push_back(wayPoint(time+5300.0*scale,		position+newFwd*scale*1743+Vec3f(0,176,0)*scale,	newRot * Quat4f(Vec3f(-1,0,0),3.7699)	));
+	wayPoints.push_back(wayPoint(time+5660.0*scale,		position+newFwd*scale*1500,							newRot * Quat4f(Vec3f(-1,0,0),PI)		));
+	wayPoints.push_back(wayPoint(time+7000.0*scale,		position-newFwd*scale*55,							newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 
 	////wayPoints.push_back(wayPoint(time+7000.0,	pos,
 	////							0,				acceleration,
@@ -649,7 +573,7 @@ void nPlane::returnToBattle()//needs to be adjusted for initial speed
 
 }
 
-void nPlane::die(deathType d)
+void plane::die(deathType d)
 {
 	if(dead) //if we are already dead
 		return;
@@ -662,11 +586,6 @@ void nPlane::die(deathType d)
 	{
 		exitAutoPilot();
 	}
-
-	if(!respawning)
-		respawnTime=world.time()+5000;
-	respawning=true;
-
 
 
 	if(d == DEATH_NONE)
@@ -726,7 +645,7 @@ void nPlane::die(deathType d)
 	}
 	//smokeTrail->setVisible(false);
 }
-void nPlane::findTarget()
+void plane::findTarget()
 {
 	target = 0;
 	//Angle minAng =PI/3;
@@ -772,7 +691,7 @@ void nPlane::findTarget()
 	}
 	targetLocked = targetFound && (ang < PI/6 && minDistSquared < 2000 * 2000);
 }
-void nPlane::shootMissile()
+void plane::shootMissile()
 {
 	if(rockets.coolDownLeft>0 || rockets.left<=0 || controled)
 		return;
@@ -831,7 +750,7 @@ void nPlane::shootMissile()
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
-void nPlane::dropBomb()
+void plane::dropBomb()
 {
 	if(bombs.coolDownLeft>0 || bombs.roundsLeft<=0 || controled)
 		return;
@@ -847,7 +766,7 @@ void nPlane::dropBomb()
 	bombs.coolDownLeft += bombs.coolDown;
 	bombs.roundsLeft--;
 }
-void nPlane::loseHealth(float healthLoss)
+void plane::loseHealth(float healthLoss)
 {
 	//smokeTrail->setActive(true);
 	//float c = max(0.5 * floor(health/maxHealth * 4.0) / 4.0, 0.0);
@@ -866,7 +785,7 @@ void nPlane::loseHealth(float healthLoss)
 		cameraShake = min(healthLoss / 30.0, 1.0);
 	}
 }
-void nPlane::initArmaments()
+void plane::initArmaments()
 {
 	armament::ammo a;
 	auto& hardpoints = objectInfo.planeStats(type).hardpoints;

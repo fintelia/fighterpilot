@@ -146,6 +146,7 @@ public:
 	Vector3<T> maxXYZ;
 	BoundingBox(): minXYZ(0,0,0), maxXYZ(0,0,0) {}
 	BoundingBox(Vector3<T> MinXYZ, Vector3<T> MaxXYZ): minXYZ(MinXYZ), maxXYZ(MaxXYZ) {}
+	bool rayIntersection(Vec3f rayOrigin, Vec3f rayDirection)const;
 };
 
 template <class T>
@@ -253,6 +254,24 @@ template <class T, class U, class V>
 T lerp(T a, U b, V t)
 {
 	return a+(b-a)*t;
+}
+
+template <class T, class U>
+T bezierInterpolate(T P0, T P1, T P2, T P3, U t)
+{
+	return	P0 * (1.0 - t) * (1.0 - t) * (1.0 - t) + P1 * 3.0 * (1.0 - t) * (1.0 - t) * t + P2 * 3.0 * (1.0 - t) * t * t + P3 * t * t * t;
+}
+
+template <class T, class U>
+T catmullRomInterpolate(T P0, T P1, T P2, T P3, U t)
+{
+	return (P1 * 2.0 + (-P0+P2) * t + (P0*2.0 - P1*5.0 + P2*4.0 - P3) * t*t + (-P0 + P1*3.0 - P2*3.0 + P3) * t*t*t) * 0.5;
+}
+
+template <class T, class U>
+T catmullRomDerivative(T P0, T P1, T P2, T P3, U t)
+{
+	return	((-P0+P2) + (P0*2.0 - P1*5.0 + P2*4.0 - P3) * 2.0*t + (-P0 + P1*3.0 - P2*3.0 + P3) * 3.0*t*t) * 0.5;
 }
 
 template <class T,class U,class V>

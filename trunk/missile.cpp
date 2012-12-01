@@ -1,23 +1,6 @@
 
 #include "game.h"
-//
-//void missile::findTarget()
-//{
-//	Vec3f enemy;
-//	Angle ang=0.5;
-//
-//	const map<objId,nPlane*>& planes = world.planes();
-//
-//	for(auto i = planes.begin(); i != planes.end();i++)
-//	{
-//		enemy=(*i).second->position;
-//		if(acosA( velocity.normalize().dot( (enemy-position).normalize() )) < ang && /*dist(pos,enemy)<life*speed*0.4 &&*/ (*i).second->team!=team && !(*i).second->dead)
-//		{
-//			ang=acos( velocity.normalize().dot( (enemy-position).normalize() ));
-//			target=(*i).first;
-//		}
-//	}
-//}
+
 missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner):object(Type), life(15.0), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)
 {
 	lastPosition = position = sPos;
@@ -55,7 +38,7 @@ void missile::updateSimulation(double time, double ms)
 	lastRotation = rotation;
 
 	/////////////////follow target////////////////////
-	nPlane* enemy = (nPlane*)world[target].get();
+	auto enemy = world[target];
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead && engineStarted)
 	{
@@ -64,21 +47,15 @@ void missile::updateSimulation(double time, double ms)
 		if(enemy->type & PLANE)
 		{
 			Vec3f r = enemy->position - position;
-			Vec3f v = enemy->rotation * Vec3f(0,0,enemy->speed);
+			Vec3f v = enemy->rotation * Vec3f(0,0,dynamic_pointer_cast<plane>(enemy)->speed);
 		
 			float a = v.dot(v) - 1180.0*1180.0;
 			float b = 2.0 * v.dot(r);
 			float c = r.dot(r);
+			float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
 
-			if(b*b - 4.0*a*c >= 0.0)
+			if(b*b - 4.0*a*c >= 0.0 && t >= 0.0)
 			{
-				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-
-				if(t <= 0.0) //doen't seem to happen...
-				{
-					t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-				}
-
 				destVec = (enemy->position + v * t - position).normalize();
 			}
 		}
@@ -170,7 +147,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 	lastPosition = position;
 	lastRotation = rotation;
 	/////////////////follow target////////////////////
-	nPlane* enemy = (nPlane*)world[target].get();
+	auto enemy = world[target];
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead)
 	{
@@ -179,21 +156,15 @@ void SAMmissile::updateSimulation(double time, double ms)
 		if(enemy->type & PLANE)
 		{
 			Vec3f r = enemy->position - position;
-			Vec3f v = enemy->rotation * Vec3f(0,0,enemy->speed);
+			Vec3f v = enemy->rotation * Vec3f(0,0,dynamic_pointer_cast<plane>(enemy)->speed);
 		
 			float a = v.dot(v) - 1180.0*1180.0;
 			float b = 2.0 * v.dot(r);
 			float c = r.dot(r);
+			float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
 
-			if(b*b - 4.0*a*c >= 0.0)
+			if(b*b - 4.0*a*c >= 0.0 && t >= 0.0)
 			{
-				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-
-				if(t <= 0.0) //doen't seem to happen...
-				{
-					t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-				}
-
 				destVec = (enemy->position + v * t - position).normalize();
 			}
 		}

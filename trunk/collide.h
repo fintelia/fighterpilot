@@ -1,12 +1,12 @@
 
 class object;
 
-class PhysicsManager
+class CollisionManager
 {
 public:
-	static PhysicsManager& getInstance()
+	static CollisionManager& getInstance()
 	{
-		static PhysicsManager* pInstance = new PhysicsManager();
+		static CollisionManager* pInstance = new CollisionManager();
 		return *pInstance;
 	}
 	struct triangle
@@ -44,8 +44,8 @@ public:
 	//};
 
 private:
-	PhysicsManager(){}
-	~PhysicsManager(){}
+	CollisionManager(){}
+	~CollisionManager(){}
 
 	struct collisionBounds
 	{
@@ -110,4 +110,4 @@ private:
 	//map<majorObjectType, vector<std::weak_ptr<physicsInstance>>> physicsInstances;
 };
 //typedef shared_ptr<PhysicsManager::physicsInstance> physicsInstancePtr;
-extern PhysicsManager& physics;
+extern CollisionManager& collisionManager;

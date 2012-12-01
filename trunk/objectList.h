@@ -10,7 +10,6 @@ protected:
 	void objectsFrameUpdate(double interpolation);
 public:
 	objId newObject(object* newObj);
-	void deleteObject(objId id);
 
 	shared_ptr<object> operator[] (objId id) const;
 	const map<objId,shared_ptr<object>>& operator() (objectType t);

@@ -23,7 +23,7 @@ void SceneManager::meshInstance::setRenderFlag(bool b)
 }
 Sphere<float> SceneManager::meshInstance::getBoundingSphere()
 {
-	return sceneManager.meshes[meshID]->getBoundingSphere();
+	return sceneManager.meshes[meshID]->boundingSphere;
 }
 //void SceneManager::meshInstance::setDeleteFlag(bool b)
 //{
@@ -76,39 +76,42 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 			mat.specular = i->specular;
 			mat.hardness = i->hardness;
 
-			if(i->tex)			debugAssert(i->tex->valid());
-			if(i->normalMap)	debugAssert(i->normalMap->valid());
-			if(i->specularMap)	debugAssert(i->specularMap->valid());
+			mat.tex			= dataManager.getTexture(i->textureMap_filename);
+			mat.normalMap	= dataManager.getTexture(i->normalMap_filename);
+			mat.specularMap	= dataManager.getTexture(i->specularMap_filename);
+			//if(i->tex)			debugAssert(i->tex->valid());
+			//if(i->normalMap)	debugAssert(i->normalMap->valid());
+			//if(i->specularMap)	debugAssert(i->specularMap->valid());
 
-			if(i->tex && i->tex->valid())
-			{
-				mat.tex = graphics->genTexture2D();
-				mat.tex->setData(i->tex->width, i->tex->height, (GraphicsManager::texture::Format)i->tex->channels, i->tex->contents,true);
-			}
-			else
-			{
-				mat.tex = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("white"));
-			}
-			if(i->normalMap && i->normalMap->valid())
-			{
-				mat.normalMap = graphics->genTexture2D();
-				mat.normalMap->setData(i->normalMap->width, i->normalMap->height, (GraphicsManager::texture::Format)i->normalMap->channels, i->normalMap->contents,true);
-			}
-			else
-			{
-				mat.normalMap = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("default normals"));
-			}
-			if(i->specularMap && i->specularMap->valid())
-			{
-				mat.specularMap = graphics->genTexture2D();
-				mat.specularMap->setData(i->specularMap->width, i->specularMap->height, (GraphicsManager::texture::Format)i->specularMap->channels, i->specularMap->contents,true);
-			}
-			else
-			{
-				mat.specularMap = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("white"));
-			}
+			//if(i->tex && i->tex->valid())
+			//{
+			//	mat.tex = graphics->genTexture2D();
+			//	mat.tex->setData(i->tex->width, i->tex->height, (GraphicsManager::texture::Format)i->tex->channels, i->tex->contents,true);
+			//}
+			//else
+			//{
+			//	mat.tex = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("white"));
+			//}
+			//if(i->normalMap && i->normalMap->valid())
+			//{
+			//	mat.normalMap = graphics->genTexture2D();
+			//	mat.normalMap->setData(i->normalMap->width, i->normalMap->height, (GraphicsManager::texture::Format)i->normalMap->channels, i->normalMap->contents,true);
+			//}
+			//else
+			//{
+			//	mat.normalMap = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("default normals"));
+			//}
+			//if(i->specularMap && i->specularMap->valid())
+			//{
+			//	mat.specularMap = graphics->genTexture2D();
+			//	mat.specularMap->setData(i->specularMap->width, i->specularMap->height, (GraphicsManager::texture::Format)i->specularMap->channels, i->specularMap->contents,true);
+			//}
+			//else
+			//{
+			//	mat.specularMap = static_pointer_cast<GraphicsManager::texture2D>(dataManager.getTexture("white"));
+			//}
 			mat.indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-			mat.indexBuffer->setData(!i->indices.empty() ? &i->indices[0] : nullptr, i->indices.size());
+			mat.indexBuffer->setData(!i->indices.empty() ? &i->indices[0] : nullptr, GraphicsManager::TRIANGLES, i->indices.size());
 			nMesh->materials.push_back(mat);
 		}
 		nMesh->meshID = meshes.size();
@@ -153,6 +156,8 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 			if(!meshPtr)
 				continue;
 
+			if(!meshPtr->materials.empty())
+				meshPtr->VBO->bindBuffer();
 			for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 			{
 				if(/*(*/material->diffuse.a > 0.999/* && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1)*/)
@@ -175,13 +180,15 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 					model->setUniform3f("specular", material->specular);
 					model->setUniform1f("hardness", material->hardness);
  
+					if(!meshType->second.empty())
+						material->indexBuffer->bindBuffer();
 					for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
 					{
 						i = instance->lock();
 						if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 						{
 							model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
-							material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+							material->indexBuffer->drawBufferX();
 						}
 						else
 						{
@@ -227,6 +234,8 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 		if(!meshPtr)
 			continue;
 
+		if(!meshPtr->materials.empty())
+			meshPtr->VBO->bindBuffer();
 		for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 		{
 			if(material->diffuse.a < 0.999)
@@ -249,13 +258,15 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 				model->setUniform3f("specular", material->specular);
 				model->setUniform1f("hardness", material->hardness);
  
+				if(!meshType->second.empty())
+					material->indexBuffer->bindBuffer();
 				for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
 				{
 					i = instance->lock();
 					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
 						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
-						material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+						material->indexBuffer->drawBufferX();
 					}
 					i.reset();
 				}
@@ -332,7 +343,7 @@ void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<m
 {
 	if(!view || !meshPtr)
 	{
-		debugBreak();
+	//	debugBreak();
 		return;
 	}
 
@@ -343,21 +354,24 @@ void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<m
 	model->setUniform1i("numLights", 1);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+
+	meshPtr->VBO->bindBuffer();
 	for(int pass = 0; pass <= 1; pass++)
 	{
 		for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 		{
+			material->indexBuffer->bindBuffer();
 			if((material->diffuse.a > 0.999 && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1))
 			{
-				material->tex->bind(0);
-				material->specularMap->bind(1);
-				material->normalMap->bind(2);
+				if(material->tex)			material->tex->bind(0);
+				if(material->specularMap)	material->specularMap->bind(1);
+				if(material->normalMap)		material->normalMap->bind(2);
 				model->setUniform4f("diffuse", material->diffuse);
 				model->setUniform3f("specular", material->specular);
 				model->setUniform1f("hardness", material->hardness);
  
 				model->setUniformMatrix("modelTransform", transformation);
-				material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+				material->indexBuffer->drawBufferX();
 			}
 		}
 		
@@ -374,10 +388,13 @@ void SceneManager::drawMeshCustomShader(shared_ptr<GraphicsManager::View> view, 
 	}
 	shader->bind();
 	shader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+
+	meshPtr->VBO->bindBuffer();
 	for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 	{
 		shader->setUniformMatrix("modelTransform", transformation);
-		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, meshPtr->VBO);
+		material->indexBuffer->bindBuffer();
+		material->indexBuffer->drawBufferX();
 	}
 }
 shared_ptr<SceneManager::pointLight> SceneManager::genPointLight()

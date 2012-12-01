@@ -3,7 +3,7 @@ class FileManager
 {
 public:	
 	enum FileType{NO_FILE_TYPE, BINARY_FILE,TEXT_FILE,INI_FILE,ZIP_FILE,TEXTURE_FILE,MODEL_FILE};
-	enum FileFormat{NO_FILE_FORMAT, BIN, TXT, INI, ZIP, BMP, PNG, TGA, OBJ};
+	enum FileFormat{NO_FILE_FORMAT, BIN, TXT, INI, ZIP, BMP, PNG, TGA, OBJ, MESH};
 	static FileManager& getInstance()
 	{
 		static FileManager* pInstance = new FileManager();
@@ -15,58 +15,63 @@ public:
 		unsigned long size;
 		fileContents():contents(nullptr), size(0){}
 	};
-	struct writeFile
-	{
-		string filename;
-		fileContents contents;
-	};
-
 	class file
 	{
 	private:
 		bool mComplete;
 		bool mValid;
 		bool writeFile;
-		void completeLoad(bool s){mValid = s;mComplete=true;}
+		void completeLoad(bool s);
 		friend class FileManager;
 
 	public:
-		string filename;
-		FileType type;
+		const FileType type;
 		FileFormat format;
+		string filename;
 
 		bool valid(){return mComplete && mValid;}
 		bool invalid(){return mComplete && !mValid;}
 		bool complete(){return mComplete;}
-
 		virtual ~file(){}
 
-//		file(Type t):mComplete(false),mValid(false), type(t){}
-//		file(Type t,string fName):mComplete(false),mValid(false), filename(fName),type(t){}
-		file(string fName,FileType t, FileFormat f=NO_FILE_FORMAT):mComplete(false),mValid(false),writeFile(false), filename(fName),type(t),format(f){}
+	protected:
+		file(FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f){}
+		file(string fName, FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f), filename(fName){}
+
+		friend class FileManager;
+		virtual void parseFile(fileContents data)=0;
+		virtual fileContents serializeFile()=0;
 	};
 	struct binaryFile: public file
 	{
 		unsigned int size;
 		unsigned char* contents;
 
-//		binaryFile():file("",BINARY),size(0),contents(nullptr){}
-		binaryFile(string fName):file(fName,BINARY_FILE),size(0),contents(nullptr){}
+		binaryFile():file(BINARY_FILE,BIN),size(0),contents(nullptr){}
+		binaryFile(string fName):file(fName,BINARY_FILE,BIN),size(0),contents(nullptr){}
 		~binaryFile(){delete[] contents;}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
 	};
 	struct textFile: public file
 	{
 		string contents;
 
-//		textFile():file("",TEXT){}
-		textFile(string fName):file(fName,TEXT_FILE){}
+		textFile():file(TEXT_FILE,TXT){}
+		textFile(string fName):file(fName,TEXT_FILE,TXT){}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
 	};
 	struct iniFile: public file
 	{
 		map<string,map<string, string>> bindings;
 
-//		iniFile(): file("",INI){}
-		iniFile(string fName): file(fName,INI_FILE){}
+		iniFile(): file(INI_FILE,INI){}
+		iniFile(string fName): file(fName,INI_FILE,INI){}
 		template<class T> void readValue(string section, string name, T& val, T defaultVal = T())
 		{
 			auto sec = bindings.find(section);			if(sec == bindings.end()) {val = defaultVal; return;}
@@ -79,42 +84,50 @@ public:
 			auto itt = sec->second.find(name);			if(itt == sec->second.end()) return defaultVal;
 			return lexical_cast<T>(itt->second);
 		}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
 	};	
 	struct zipFile: public file
 	{
 		map<string,shared_ptr<file>> files;
 
-		zipFile(string fName): file(fName,ZIP_FILE){}
+		zipFile(): file(ZIP_FILE,ZIP){}
+		zipFile(string fName): file(fName,ZIP_FILE,ZIP){}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
 	};
 	struct textureFile: public file
 	{
 		char channels;
 		unsigned int width;
 		unsigned int height;
-		unsigned char* contents;
+		unsigned char* contents; // contents is in BGR(A) order
+		GraphicsManager::texture::Format textureFormat;
 
-		textureFile(string fName, FileFormat fmt):file(fName, TEXTURE_FILE, fmt),channels(0),width(0),height(0),contents(nullptr){}
+
+		textureFile():file(TEXTURE_FILE,NO_FILE_FORMAT),channels(0),width(0),height(0),contents(nullptr),textureFormat(GraphicsManager::texture::NONE){}
+		textureFile(string fName,FileFormat format):file(fName,TEXTURE_FILE,format),channels(0),width(0),height(0),contents(nullptr),textureFormat(GraphicsManager::texture::NONE){}
 		~textureFile(){delete[] contents;}
-	};
-	struct bmpFile: public textureFile
-	{
-		bmpFile(string fName):textureFile(fName, BMP){}
-	};
-	struct pngFile: public textureFile
-	{
-		pngFile(string fName):textureFile(fName, PNG){}
-	};
-	struct tgaFile: public textureFile
-	{
-		tgaFile(string fName):textureFile(fName, TGA){}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
 	};
 	struct modelFile: public file
 	{
 		struct material
 		{
-			shared_ptr<textureFile> tex;
-			shared_ptr<textureFile> specularMap;
-			shared_ptr<textureFile> normalMap;
+		//	shared_ptr<textureFile> tex;
+		//	shared_ptr<textureFile> specularMap;
+		//	shared_ptr<textureFile> normalMap;
+			string textureMap_filename;
+			string specularMap_filename;
+			string normalMap_filename;
+
 			Color4 diffuse;
 			Color3 specular;
 			float hardness;
@@ -124,29 +137,85 @@ public:
 		vector<normalMappedVertex3D> vertices;
 		vector<material> materials;
 		Sphere<float> boundingSphere;
-		modelFile(string fName, FileFormat fmt): file(fName, MODEL_FILE, fmt){}
-	};
-	struct objFile: public modelFile
-	{
-		objFile(string fName):modelFile(fName, OBJ){}
-	};
-	shared_ptr<binaryFile> loadBinaryFile(string filename, bool asinc = false);
-	shared_ptr<textFile> loadTextFile(string filename, bool asinc = false);
-	shared_ptr<iniFile> loadIniFile(string filename, bool asinc = false);
-	shared_ptr<zipFile> loadZipFile(string filename, bool asinc = false);
-	shared_ptr<textureFile> loadTextureFile(string filename, bool asinc = false);
-	shared_ptr<textureFile> loadBmpFile(string filename, bool asinc = false);
-	shared_ptr<textureFile> loadTgaFile(string filename, bool asinc = false);
-	shared_ptr<textureFile> loadPngFile(string filename, bool asinc = false);
-	shared_ptr<modelFile> loadObjFile(string filename, bool asinc = false);
 
-	bool writeBinaryFile(shared_ptr<binaryFile> f, bool asinc = false);
-	bool writeTextFile(shared_ptr<textFile> f, bool asinc = false);
-	bool writeIniFile(shared_ptr<iniFile> f, bool asinc = false);
-	bool writeZipFile(shared_ptr<zipFile> f, bool asinc = false);
-	bool writeBmpFile(shared_ptr<textureFile> f, bool asinc = false);
-	bool writeTgaFile(shared_ptr<textureFile> f, bool asinc = false);
-	bool writePngFile(shared_ptr<textureFile> f, bool asinc = false);
+		modelFile(): file(MODEL_FILE,NO_FILE_FORMAT){}
+		modelFile(string fName,FileFormat format): file(fName,MODEL_FILE,format){}
+	private:
+		friend class FileManager;
+		void parseFile(fileContents data);
+		fileContents serializeFile();
+	};
+
+	template<class T> shared_ptr<T> loadFile(string filename, bool async=false)
+	{
+		static_assert(std::is_base_of<file,T>::value, "Type T must derive from FileManager::file");
+		
+		shared_ptr<T> f(new T());
+		f->filename = filename;
+
+		if(async)
+		{
+			fileQueueMutex.lock();
+			fileQueue.push(f);
+			fileQueueMutex.unlock();
+		}
+		else
+		{
+			fileContents data = fileManager.loadFileContents(filename);
+			f->parseFile(data);
+			delete[] data.contents;
+		}
+		return f;
+	}
+	template<class T> bool writeFile(shared_ptr<T> f, bool async=false)
+	{
+		static_assert(std::is_base_of<file,T>::value, "Type T must derive from FileManager::file");
+		if(async)
+		{
+			fileQueueMutex.lock();
+			fileWriteQueue.push(f);
+			fileQueueMutex.unlock();
+			return true;
+		}
+		else
+		{
+			return writeFileContents(f->filename, f->serializeFile());
+		}
+	}
+	//shared_ptr<binaryFile> loadBinaryFile(string filename, bool async = false);
+	//shared_ptr<textFile> loadTextFile(string filename, bool async = false);
+	//shared_ptr<iniFile> loadIniFile(string filename, bool async = false);
+	//shared_ptr<zipFile> loadZipFile(string filename, bool async = false);
+	//shared_ptr<textureFile> loadTextureFile(string filename, bool async = false);
+	//shared_ptr<textureFile> loadBmpFile(string filename, bool async = false);
+	//shared_ptr<textureFile> loadTgaFile(string filename, bool async = false);
+	//shared_ptr<textureFile> loadPngFile(string filename, bool async = false);
+	//shared_ptr<modelFile> loadMeshFile(string filename, bool async = false);
+	//shared_ptr<modelFile> loadObjFile(string filename, bool async = false);
+
+	//bool writeBinaryFile(shared_ptr<binaryFile> f, bool async = false);
+	//bool writeTextFile(shared_ptr<textFile> f, bool async = false);
+	//bool writeIniFile(shared_ptr<iniFile> f, bool async = false);
+	//bool writeZipFile(shared_ptr<zipFile> f, bool async = false);
+	//bool writeBmpFile(shared_ptr<textureFile> f, bool async = false);
+	//bool writeTgaFile(shared_ptr<textureFile> f, bool async = false);
+	//bool writePngFile(shared_ptr<textureFile> f, bool async = false);
+	//bool writeMeshFile(shared_ptr<modelFile> f, bool async = false);					//uses custom format
+
+	//template<typename T> shared_ptr<T> loadFile(string filename, bool async);
+	//template<> shared_ptr<binaryFile>	loadFile<binaryFile>(string filename, bool async);
+	//template<> shared_ptr<textFile>	loadFile<textFile>(string filename, bool async);
+	//template<> shared_ptr<iniFile>	loadFile<iniFile>(string filename, bool async);
+	//template<> shared_ptr<zipFile>	loadFile<zipFile>(string filename, bool async);
+//	template<> shared_ptr<textureFile>	loadFile<textureFile>(string filename, bool async);
+//	template<> shared_ptr<modelFile>	loadFile<modelFile>(string filename, bool async);
+
+	//template<class T> shared_ptr<T>		loadFile(string filename){return loadFile<T>(filename, false);}
+
+	//shared_ptr<file> loadFile(string filename, bool async=false);
+	//bool writeFile(shared_ptr<file> f, bool async, string ext);
+	//bool writeFile(shared_ptr<file> f, bool async=false);
+
 
 	string filename(string filename);
 	string extension(string filename);
@@ -166,20 +235,44 @@ public:
 
 	void shutdown();
 private:
-	template<class T> T readAs(void* c)
-	{
-		return *((T*)c);
-	}
-	template<class T>void writeAs(void* c, const T& value)
-	{
-		memcpy(c, &value, sizeof(T));
-	}
-	template<class T>void writeAs(vector<unsigned char>& vec, const T& value)
-	{
-		vec.reserve(vec.size() + sizeof(T));
-		vec.insert(vec.end(), (unsigned char*)&value, (unsigned char*)&value + sizeof(T));
-	}
+	queue<shared_ptr<file>> fileQueue;
+	queue<shared_ptr<file>> fileWriteQueue;
+	mutex fileQueueMutex;
+	bool terminateFlag;	
+
+	shared_ptr<file> parseFile(string filename, fileContents data);
+
+	fileContents loadFileContents(string filename);
+	bool writeFileContents(string filename, fileContents contents); //delete[]'s contents after writing!!!
+	//bool writeFileContents(string filename, shared_ptr<file> f, bool async);
+
+	//shared_ptr<file> parseFile(string filename, fileContents data);
+	//fileContents serializeFile(shared_ptr<file> f);
+
+	//void parseBinaryFile(shared_ptr<binaryFile> f, fileContents data);
+	//void parseTextFile(shared_ptr<textFile> f, fileContents data);
+	//void parseIniFile(shared_ptr<iniFile> f, fileContents data);
+	//void parseZipFile(shared_ptr<zipFile> f, fileContents data);
+	//void parseBmpFile(shared_ptr<textureFile> f, fileContents data);
+	//void parseTgaFile(shared_ptr<textureFile> f, fileContents data);
+	//void parsePngFile(shared_ptr<textureFile> f, fileContents data);
+	//void parseObjFile(shared_ptr<modelFile> f, fileContents data);
+	//void parseMeshFile(shared_ptr<modelFile> f, fileContents data);
+
+	//fileContents serializeBinaryFile(shared_ptr<binaryFile> f);
+	//fileContents serializeTextFile(shared_ptr<textFile> f);
+	//fileContents serializeIniFile(shared_ptr<iniFile> f);
+	//fileContents serializeZipFile(shared_ptr<zipFile> f);
+	//fileContents serializeBmpFile(shared_ptr<textureFile> f);
+	//fileContents serializeTgaFile(shared_ptr<textureFile> f);
+	//fileContents serializePngFile(shared_ptr<textureFile> f);
+	//fileContents serializeMeshFile(shared_ptr<modelFile> f);
+
+	FileManager();
+	~FileManager(){}
+
 	void workerThread();
+
 #if defined(WINDOWS)
 	static void startWorkerThread(void* pThis)
 	{
@@ -192,39 +285,6 @@ private:
 		return nullptr;
 	}
 #endif 
-
-
-	fileContents loadFileContents(string filename);
-	bool writeFileContents(string filename, fileContents contents); //deletes contents after writing!!!
-	bool writeFileContents(string filename, shared_ptr<file> f, bool async);
-
-	shared_ptr<file> parseFile(string filename, fileContents data);
-	fileContents serializeFile(shared_ptr<file> f);
-
-	void parseBinaryFile(shared_ptr<binaryFile> f, fileContents data);
-	void parseTextFile(shared_ptr<textFile> f, fileContents data);
-	void parseIniFile(shared_ptr<iniFile> f, fileContents data);
-	void parseZipFile(shared_ptr<zipFile> f, fileContents data);
-	void parseBmpFile(shared_ptr<textureFile> f, fileContents data);
-	void parseTgaFile(shared_ptr<textureFile> f, fileContents data);
-	void parsePngFile(shared_ptr<textureFile> f, fileContents data);
-	void parseObjFile(shared_ptr<modelFile> f, fileContents data);
-
-	fileContents serializeBinaryFile(shared_ptr<binaryFile> f);
-	fileContents serializeTextFile(shared_ptr<textFile> f);
-	fileContents serializeIniFile(shared_ptr<iniFile> f);
-	fileContents serializeZipFile(shared_ptr<zipFile> f);
-	fileContents serializeBmpFile(shared_ptr<textureFile> f);
-	fileContents serializeTgaFile(shared_ptr<textureFile> f);
-	fileContents serializePngFile(shared_ptr<textureFile> f);
-
-	FileManager();
-	~FileManager(){}
-
-	queue<shared_ptr<file>> fileQueue;
-	queue<shared_ptr<file>> fileWriteQueue;
-	mutex fileQueueMutex;
-	bool terminateFlag;
 };
 
 extern FileManager& fileManager;

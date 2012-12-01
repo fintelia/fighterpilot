@@ -68,7 +68,7 @@ DataManager::fontAsset* DataManager::registerFont(shared_ptr<FileManager::textFi
 
 
 
-	shared_ptr<FileManager::textureFile> texFile = fileManager.loadTextureFile(texPath);
+	shared_ptr<FileManager::textureFile> texFile = fileManager.loadFile<FileManager::textureFile>(texPath);
 	if(!texFile->valid())
 	{
 		delete [] fontChars;
@@ -107,8 +107,8 @@ DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::
 	GraphicsManager::texture::Format format;
 	if(f->channels == 1)		format = GraphicsManager::texture::LUMINANCE;
 	else if(f->channels == 2)	format = GraphicsManager::texture::LUMINANCE_ALPHA;
-	else if(f->channels == 3)	format = GraphicsManager::texture::RGB;
-	else if(f->channels == 4)	format = GraphicsManager::texture::RGBA;
+	else if(f->channels == 3)	format = GraphicsManager::texture::BGR;
+	else if(f->channels == 4)	format = GraphicsManager::texture::BGRA;
 	else{
 		debugBreak();
 		return nullptr;
@@ -162,11 +162,11 @@ void DataManager::addTexture(string name, shared_ptr<GraphicsManager::texture> t
 //		assets[name] = shared_ptr<asset>(a);
 //	}
 //}
-void DataManager::addModel(string name, string OBJfile)
+void DataManager::addModel(string name, shared_ptr<FileManager::modelFile> model)
 {
 	modelAsset* modelPtr = new modelAsset;
 	modelPtr->type = asset::MODEL;
-	modelPtr->mesh = sceneManager.createMesh(fileManager.loadObjFile(OBJfile));
+	modelPtr->mesh = sceneManager.createMesh(model);
 	assets[name] = shared_ptr<asset>(modelPtr);
 
 	//auto modelPtr = registerOBJ(OBJfile);
@@ -397,6 +397,7 @@ shared_ptr<GraphicsManager::shader> ShaderManager::bind(string name)
 		s->second->shader->bind();
 		return s->second->shader;
 	}
+	debugBreak();
 	return nullptr;
 }
 shared_ptr<GraphicsManager::shader> ShaderManager::operator() (string name)
@@ -404,6 +405,7 @@ shared_ptr<GraphicsManager::shader> ShaderManager::operator() (string name)
 	auto s = shaderAssets.find(name);
 	if(s != shaderAssets.end())
 		return s->second->shader;
+	debugBreak();
 	return nullptr;
 }
 void ShaderManager::add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
@@ -430,7 +432,7 @@ void ShaderManager::writeErrorLog(string filename)
 			file->contents += error + "\n";
 		}
 	}
-	fileManager.writeTextFile(file, true);
+	fileManager.writeFile(file, true);
 }
 void ShaderManager::shutdown()
 {
