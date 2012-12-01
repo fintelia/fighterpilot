@@ -42,42 +42,27 @@ bool ObjectInfo::loadObjectData(string filename)
 		XMLElement* weaponElement = node->ToElement();
 		while(weaponElement != nullptr)
 		{
-			if(strcmp(weaponElement->Value(), "missile") == 0)
+			shared_ptr<objectData> obj(new objectData);
+			if(strcmp(weaponElement->Value(), "missile") == 0 && ++missileCount <= MINOR_OBJECT_TYPE)
 			{
-				string cmName = getAttribute(weaponElement, "collisionMesh");
-				string mName = getAttribute(weaponElement, "model");
-
-				if(++missileCount > MINOR_OBJECT_TYPE)	//to many missiles
-				{
-					debugBreak();
-					continue;
-				}
-				
-				shared_ptr<objectData> obj(new objectData);
-				obj->type = MISSILE + missileCount;		
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(weaponElement, "name");
-				objectMap[obj->type] = obj;	
+				obj->type = MISSILE + missileCount;	
 			}
-			else if(strcmp(weaponElement->Value(), "bomb") == 0)
+			else if(strcmp(weaponElement->Value(), "bomb") == 0 && ++bombCount <= MINOR_OBJECT_TYPE)
 			{
-				string cmName = getAttribute(weaponElement, "collisionMesh");
-				string mName = getAttribute(weaponElement, "model");
-
-				if(++bombCount > MINOR_OBJECT_TYPE)	//to many bombs
-				{
-					debugBreak();
-					continue;
-				}
-
-				shared_ptr<objectData> obj(new objectData);
 				obj->type = BOMB + bombCount;
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(weaponElement, "name");
-				objectMap[obj->type] = obj;
 			}
+			else
+			{
+				debugBreak(); //unrecongized type, or too many objects for selected type
+				continue;
+			}
+			obj->name = getAttribute(weaponElement, "name");
+			obj->meshFilename = getAttribute(weaponElement, "model");
+			if(obj->meshFilename != "")				assetLoader.addModel(obj->meshFilename);
+			obj->collisionMeshFilename = getAttribute(weaponElement, "collisionMesh");
+			if(obj->collisionMeshFilename != "")	assetLoader.addCollisionMesh(obj->collisionMeshFilename, obj->type);
+			objectMap[obj->type] = obj;
+
 			weaponElement = weaponElement->NextSiblingElement();
 		}
 	}
@@ -86,51 +71,38 @@ bool ObjectInfo::loadObjectData(string filename)
 		XMLElement* aaaElement = node->ToElement();
 		while(aaaElement != nullptr)
 		{
+			shared_ptr<objectData> obj(new objectData);
 			if(strcmp(aaaElement->Value(), "SAM") == 0)
 			{
-				string cmName = getAttribute(aaaElement, "collisionMesh");
-				string mName = getAttribute(aaaElement, "model");
-
-				shared_ptr<objectData> obj(new objectData);
-				obj->type = SAM_BATTERY;	
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(aaaElement, "name");
-				obj->textName = getAttribute(aaaElement, "textName");
-				objectMap[obj->type] = obj;	
-				if(getAttribute(aaaElement,"placeable") == "true")
-					placeableObjects.push_back(obj->type);
+				obj->type = SAM_BATTERY;				
 			}
 			else if(strcmp(aaaElement->Value(), "AAgun") == 0)
 			{
-				string cmName = getAttribute(aaaElement, "collisionMesh");
-				string mName = getAttribute(aaaElement, "model");
-
-				shared_ptr<objectData> obj(new objectData);
 				obj->type = AA_GUN;
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(aaaElement, "name");
-				obj->textName = getAttribute(aaaElement, "textName");
-				objectMap[obj->type] = obj;	
-				if(getAttribute(aaaElement,"placeable") == "true")
-					placeableObjects.push_back(obj->type);
 			}
 			else if(strcmp(aaaElement->Value(), "flakCannon") == 0)
 			{
-				string cmName = getAttribute(aaaElement, "collisionMesh");
-				string mName = getAttribute(aaaElement, "model");
-
-				shared_ptr<objectData> obj(new objectData);
 				obj->type = FLAK_CANNON;
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(aaaElement, "name");
-				obj->textName = getAttribute(aaaElement, "textName");
-				objectMap[obj->type] = obj;	
-				if(getAttribute(aaaElement,"placeable") == "true")
-					placeableObjects.push_back(obj->type);
 			}
+			else
+			{
+				debugBreak(); //unrecongized type
+				continue;
+			}
+
+			obj->meshFilename = getAttribute(aaaElement, "model");
+			if(obj->meshFilename != "")				assetLoader.addModel(obj->meshFilename);
+			obj->collisionMeshFilename = getAttribute(aaaElement, "collisionMesh");
+			if(obj->collisionMeshFilename != "")	assetLoader.addCollisionMesh(obj->collisionMeshFilename, obj->type);
+
+			obj->name = getAttribute(aaaElement, "name");
+			obj->textName = getAttribute(aaaElement, "textName");
+			objectMap[obj->type] = obj;	
+			if(getAttribute(aaaElement,"placeable") == "true")
+			{
+				placeableObjects.push_back(obj->type);
+			}
+
 			aaaElement = aaaElement->NextSiblingElement();
 		}
 	}
@@ -139,27 +111,30 @@ bool ObjectInfo::loadObjectData(string filename)
 		XMLElement* shipElement = node->ToElement();
 		while(shipElement != nullptr)
 		{
-			if(strcmp(shipElement->Value(), "ship") == 0)
+			shared_ptr<objectData> obj(new objectData);
+			if(strcmp(shipElement->Value(), "ship") == 0 && ++shipCount <= MINOR_OBJECT_TYPE)
 			{
-				if(++shipCount > MINOR_OBJECT_TYPE)	//to many bombs
-				{
-					debugBreak();
-					continue;
-				}
-
-				string cmName = getAttribute(shipElement, "collisionMesh");
-				string mName = getAttribute(shipElement, "model");
-
-				shared_ptr<objectData> obj(new objectData);
-				obj->type = SHIP + shipCount;	
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
-				obj->name = getAttribute(shipElement, "name");
-				obj->textName = getAttribute(shipElement, "textName");
-				objectMap[obj->type] = obj;	
-				if(getAttribute(shipElement,"placeable") == "true")
-					placeableObjects.push_back(obj->type);
+				obj->type = SHIP + shipCount;
 			}
+			else
+			{
+				debugBreak();
+				continue;
+			}
+
+			obj->meshFilename = getAttribute(shipElement, "model");
+			if(obj->meshFilename != "")				assetLoader.addModel(obj->meshFilename);
+			obj->collisionMeshFilename = getAttribute(shipElement, "collisionMesh");
+			if(obj->collisionMeshFilename != "")	assetLoader.addCollisionMesh(obj->collisionMeshFilename, obj->type);
+
+			obj->name = getAttribute(shipElement, "name");
+			obj->textName = getAttribute(shipElement, "textName");
+			objectMap[obj->type] = obj;	
+			if(getAttribute(shipElement,"placeable") == "true")
+			{
+				placeableObjects.push_back(obj->type);
+			}
+
 			shipElement = shipElement->NextSiblingElement();
 		}
 	}
@@ -175,14 +150,15 @@ bool ObjectInfo::loadObjectData(string filename)
 					debugBreak();
 					continue;
 				}
-
-				string cmName = getAttribute(planeElement, "collisionMesh");
-				string mName = getAttribute(planeElement, "model");
-
 				shared_ptr<planeObjectData> obj(new planeObjectData);
+
 				obj->type = PLANE + planeCount;
-				obj->collisionMeshFile = cmName != "" ? fileManager.loadObjFile(cmName, true) : nullptr;
-				obj->meshFile = mName != "" ? fileManager.loadObjFile(mName, true) : nullptr;
+				obj->meshFilename = getAttribute(planeElement, "model");
+				if(obj->meshFilename != "")				assetLoader.addModel(obj->meshFilename);
+				obj->collisionMeshFilename = getAttribute(planeElement, "collisionMesh");
+				if(obj->collisionMeshFilename != "")	assetLoader.addCollisionMesh(obj->collisionMeshFilename, obj->type);
+
+
 				obj->name = getAttribute(planeElement, "name");
 				obj->textName = getAttribute(planeElement, "textName");
 
@@ -236,7 +212,9 @@ bool ObjectInfo::loadObjectData(string filename)
 
 				objectMap[obj->type] = obj;	
 				if(getAttribute(planeElement,"placeable") == "true")
+				{
 					placeableObjects.push_back(obj->type);
+				}
 			}
 			planeElement = planeElement->NextSiblingElement();
 		}
@@ -256,61 +234,16 @@ bool ObjectInfo::loadObjectData(string filename)
 	}
 	return true;
 }
-int ObjectInfo::loadObjectMeshes()
+void ObjectInfo::linkObjectMeshes()
 {
-	int numLeft=0;
-	bool timeUp=false;
-	double startTime = GetTime();
 	for(auto i = objectMap.begin(); i != objectMap.end(); i++)
 	{
-		if(i->second->meshFile)
+		if(i->second->meshFilename != "")
 		{
-			if(!i->second->meshFile->complete() || timeUp)
-			{
-				numLeft++;
-			}
-			else if(i->second->meshFile->valid())
-			{
-				i->second->mesh = sceneManager.createMesh(i->second->meshFile);
-				i->second->meshFile.reset();
-				physics.setCollsionBounds(i->first, i->second->mesh->getBoundingSphere());
-				if(GetTime() - startTime > 33.3)
-					timeUp = true;
-			}
-			else
-			{
-				debugBreak();
-				i->second->meshFile.reset();
-			}
-		}
-
-		if(i->second->collisionMeshFile)
-		{
-			if(!i->second->collisionMeshFile->complete() || timeUp)
-			{
-				numLeft++;
-			}
-			else if(i->second->collisionMeshFile->valid())
-			{
-				if(!i->second->collisionMeshFile->materials.empty())
-				{
-					vector<Vec3f> vertices;
-					for(auto v=i->second->collisionMeshFile->vertices.begin(); v!=i->second->collisionMeshFile->vertices.end(); v++)
-						vertices.push_back(v->position);
-					physics.setCollsionBounds(i->first, i->second->collisionMeshFile->boundingSphere, vertices, i->second->collisionMeshFile->materials[0].indices);
-				}
-				i->second->collisionMeshFile.reset();
-				if(GetTime() - startTime > 33.3)
-					timeUp = true;
-			}
-			else
-			{
-				debugBreak();
-				i->second->collisionMeshFile.reset();
-			}
+			i->second->mesh = dataManager.getModel(i->second->meshFilename);
+			collisionManager.setCollsionBounds(i->first, i->second->mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
 		}
 	}
-	return numLeft;
 }
 objectType ObjectInfo::typeFromString(string s)
 {

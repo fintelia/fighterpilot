@@ -266,7 +266,7 @@ bool options::init()
 
 
 	string appData = fileManager.getAppDataDirectory();
-	settingsFile = fileManager.loadIniFile(appData + "settings.ini");
+	settingsFile = fileManager.loadFile<FileManager::iniFile>(appData + "settings.ini");
 	
 	labels["display mode"] = new label(0.34*sAspect-graphics->getTextSize("Display Mode: ").x,0.275, "Display Mode: ");
 	listBoxes["display mode"] = new listBox(0.34*sAspect,0.275,0.150,/*initialState.fullscreenChoice==0 ? "Fullscreen" : "Windowed"*/"Fullscreen", black);
@@ -411,7 +411,7 @@ void options::update()
 			graphics->setVSync(checkBoxes["vSync"]->getChecked());
 		}
 		/////////////////////////////////////////////////////
-		fileManager.writeIniFile(settingsFile);
+		fileManager.writeFile(settingsFile);
 
 		//menuManager.setMenu(new chooseMode);
 		done = true;
@@ -476,7 +476,7 @@ bool options::keyDown(int vkey)
 bool help::init()
 {
 	buttons["OK"] = new button(0.9*sAspect-0.11, 0.81, 0.100, 0.030, "OK", lightGray);
-	auto f = fileManager.loadTextFile("media/help.txt");
+	auto f = fileManager.loadFile<FileManager::textFile>("media/help.txt");
 	helpText = f->contents;
 	return true;
 }
@@ -523,35 +523,41 @@ void loading::updateFrame()
 {
 	static double loadStartTime = GetTime();
 
-	static bool toLoad = true;
-	if(toLoad)
+
+	static bool loadedObjectData = false;
+	if(!loadedObjectData)
 	{
-		assetLoader.loadAsset(); // does preload if this is the first time it is called
-		toLoad=false;
+		//assetLoader.loadAssetList();
+		//assetLoader.loadAsset(); // does preload if this is the first time it is called
+		objectInfo.loadObjectData();
+		loadedObjectData = true;
+	}
+	else if(!loadedObjectData)
+	{
+		return;
 	}
 	
 	static int totalAssets = -1;
-	static int totalObjectMeshes = -1;
-	static vector<double> times;
+	int assetsLeft;
 
-	if(totalObjectMeshes == -1) totalObjectMeshes = objectInfo.loadObjectMeshes();
+	double startTime = GetTime();
+	while(GetTime() - startTime < 10.0)
+		assetsLeft = assetLoader.loadAsset();
 
-	int assetsLeft = assetLoader.loadAsset();
-	int objectMeshesLeft = totalObjectMeshes;
-
-	if(totalAssets == -1) totalAssets = assetsLeft+1;
-
-	if(assetsLeft == 0)
-		objectMeshesLeft = objectInfo.loadObjectMeshes();
-	
-
-	//graphics->minimizeWindow();
-	//MessageBox(NULL,(wstring(L"loaded asset #") + lexical_cast<wstring>(totalAssets - assetsLeft)).c_str(),L"",0);
-	progress = 1.0-static_cast<float>(assetsLeft+objectMeshesLeft)/(totalAssets+totalObjectMeshes);
-	if(assetsLeft == 0 && objectMeshesLeft == 0)
+	if(totalAssets == -1)
 	{
+		totalAssets = assetsLeft;
+	}
+	progress = max(progress, 1.0-static_cast<float>(assetsLeft)/totalAssets);
+	if(assetsLeft == 0)
+	{
+		objectInfo.linkObjectMeshes();
+		assetLoader.saveAssetZip();
 		shaders.writeErrorLog("media/shaderErrors.txt");
 		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
+
+		double t = GetTime() - loadStartTime;
+		t = GetTime();
 	}
 }
 void loading::render()

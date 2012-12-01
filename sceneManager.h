@@ -4,25 +4,20 @@ class SceneManager
 public:
 	class mesh
 	{
+	public:
 		struct material{
-			shared_ptr<GraphicsManager::texture2D> tex;
-			shared_ptr<GraphicsManager::texture2D> specularMap;
-			shared_ptr<GraphicsManager::texture2D> normalMap;
+			shared_ptr<GraphicsManager::texture> tex;
+			shared_ptr<GraphicsManager::texture> specularMap;
+			shared_ptr<GraphicsManager::texture> normalMap;
 			Color4 diffuse;
 			Color3 specular;
 			float hardness;
 			shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
 		};
-
 		vector<material> materials;
 		shared_ptr<GraphicsManager::vertexBuffer> VBO;
 		Sphere<float> boundingSphere;
 		unsigned int meshID;
-
-		friend class SceneManager;
-
-	public:
-		Sphere<float> getBoundingSphere() {return boundingSphere;}
 	};
 	class meshInstance
 	{

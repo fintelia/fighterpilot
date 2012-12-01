@@ -1,6 +1,7 @@
 
 struct _XINPUT_STATE;
 typedef _XINPUT_STATE XINPUT_STATE;
+struct IDirectInputDevice8W;
 
 class InputManager
 {
@@ -16,8 +17,9 @@ protected:
 	class gamepadState
 	{
 	public:
-		virtual bool getButton(int b) const=0;
-		virtual float getAxis(int a) const=0;
+		virtual bool getButton(unsigned int button) const=0;
+		virtual double getAxis(unsigned int axis) const=0;
+		virtual ~gamepadState(){}
 	};
 	class xboxControllerState: public gamepadState
 	{
@@ -31,30 +33,49 @@ protected:
 		
 	public:
 		bool connected;
-		float deadZone;
+		double deadZone;
 
-		bool getButton(int b) const;
-		float getAxis(int a) const;
+		bool getButton(unsigned int button) const;
+		double getAxis(unsigned int axis)const;
 
 		xboxControllerState();
 		~xboxControllerState();
 	} xboxControllers[4];
-	class joystickControllerState: public gamepadState
+	class directInputControllerState: public gamepadState
 	{
 	private:
+		friend class InputManager;
+		IDirectInputDevice8W* devicePtr;
+		string name;
+
+		struct axis{
+			long minValue;
+			long maxValue;
+			long rawValue;
+			double value;
+		}axisX, axisY, axisZ;
+
+		vector<bool> buttons;
+		void acquireController();
+		bool updateController();
+		void release();
 
 	public:
+		double deadZone;
 
-		bool getButton(int b) const{return false;}
-		float getAxis(int a) const{return 0;}
-		joystickControllerState();
-		~joystickControllerState(){}
+		bool getButton(unsigned int button) const;
+		double getAxis(unsigned int axis)const;
+
+		string getName(){return name;}
+
+		directInputControllerState(IDirectInputDevice8W* ptr, string n);
 	};
-	vector<joystickControllerState> joysticks;
+	vector<directInputControllerState> directInputControllers;
 
 	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
 	mutex  inputMutex;
+
 public:
 	struct callBack
 	{
@@ -93,28 +114,29 @@ public:
 		return *pInstance;
 	}
 #ifdef WINDOWS
-	virtual void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
+	void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
 #endif
 	void sendCallbacks(callBack* c);
 	
 	int lastKey;
 	int tPresses;
-	virtual void down(int k);
-	virtual void up(int k);
-	virtual void joystick(unsigned int buttonMask,int x,int y,int z){}
-	virtual void update();
-	virtual bool getKey(int key);
-	virtual const mouseButtonState& getMouseState(mouseButton m);
-	virtual const xboxControllerState& getXboxController(unsigned char controllerNum);
-	virtual const joystickControllerState* getJoystick(unsigned int joystickNum);
-	virtual unsigned int getNumJoysticks(){return joysticks.size();}
-	virtual float operator() (int key);
-	virtual Vec2f getMousePos(){return mousePos;}
-	virtual void checkNewHardware();//scan for new hardware
-	virtual void setVibration(int controllerNum, float amount);
+	void down(int k);
+	void up(int k);
+	void joystick(unsigned int buttonMask,int x,int y,int z){}
+	void update();
+	bool getKey(int key);
+	const mouseButtonState& getMouseState(mouseButton m);
+	const xboxControllerState& getXboxController(unsigned char controllerNum);
+	const directInputControllerState* getDirectInputController(unsigned int controllerNum);
+	unsigned int getNumDirectInputControllers(){return directInputControllers.size();}
+	void addDirectInputDevice(IDirectInputDevice8W* devicePtr, string name);
+	float operator() (int key);
+	Vec2f getMousePos(){return mousePos;}
+	void checkNewHardware();//scan for new hardware
+	void setVibration(int controllerNum, float amount);
 
-	InputManager();
-	~InputManager();
+	void initialize();
+	void shutdown();
  };
 extern InputManager& input;
 

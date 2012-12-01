@@ -83,7 +83,7 @@ public:
 //	const camera& getCamera() const {return firstPersonView ? firstPerson : thirdPerson;}
 
 
-	object* getObject();
+	shared_ptr<plane> getObject();
 	virtual void update()=0;
 
 	player(playerType t, int oNum):mObjectNum(oNum),mKills(0),type(t){}
@@ -96,7 +96,7 @@ private:
 	int	mPlayerNum;
 
 	struct controlMapping{
-		enum Type{NONE, KEY, BUTTON,AXIS,AXIS_POSITIVE,AXIS_NEGATIVE}type;
+		enum Type{NONE, KEY, XBOX_BUTTON,XBOX_AXIS,XBOX_AXIS_POSITIVE,XBOX_AXIS_NEGATIVE,DI_BUTTON,DI_AXIS,DI_AXIS_POSITIVE,DI_AXIS_NEGATIVE}type;
 		int controllerNum;
 		int m;
 
@@ -109,6 +109,10 @@ private:
 
 #ifdef XINPUT
 	map<int,controlMapping> xBoxControls;
+#endif
+
+#ifdef DIRECT_INPUT
+	map<int,controlMapping> directInputControls;
 #endif
 
 public:
@@ -143,7 +147,7 @@ public:
 	void startPatrol();
 	void startHunt(int targetID);
 
-	void flyTowardsPoint(nPlane* p, Vec3f dest);
+	void flyTowardsPoint(shared_ptr<plane> p, Vec3f dest);
 
 	AIplayer(int oNum);
 	void update();

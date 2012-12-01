@@ -1,4 +1,9 @@
 
+#ifdef WINDOWS
+	struct HWND__;
+	typedef struct HWND__* HWND;
+#endif
+
 struct texturedVertex2D
 {
 	Vec2f position;
@@ -39,7 +44,7 @@ class GraphicsManager
 {
 public:
 	typedef unsigned long gID;
-	enum RenderTarget{RT_FBO_0,RT_FBO_1,RT_MULTISAMPLE_FBO,RT_SCREEN};
+	enum RenderTarget{RT_FBO, RT_MULTISAMPLE_FBO, RT_SCREEN, RT_TEXTURE};
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
 	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE, PREMULTIPLIED_ALPHA};
 
@@ -91,11 +96,13 @@ public:
 		int mRenderFuncParam;
 		std::function<void(int)> mRenderFunc;
 
+		int mTransparentRenderFuncParam;
+		std::function<void(int)> mTransparentRenderFunc; //gets access to depth buffer FBO
+
 		Vec3f cameraShift;
 		Mat4f completeProjectionMat;
 
 		bool mBlurStage;
-		bool mRenderParticles;
 		shared_ptr<GraphicsManager::shader> mPostProcessShader;
 	public:
 		View();
@@ -116,14 +123,16 @@ public:
 		const Mat4f& modelViewMatrix(){return mModelViewMat;}
 
 		void setRenderFunc(std::function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
+		void setTransparentRenderFunc(std::function<void(int)> f, int param=0){mTransparentRenderFunc = f; mTransparentRenderFuncParam = param;}
+
+		bool transparentRenderFunc(){return mTransparentRenderFunc;}
 
 		bool sphereInFrustum(Sphere<float> s);
 		bool boundingBoxInFrustum(BoundingBox<float> b);
 
 		void render(){if(mRenderFunc)mRenderFunc(mRenderFuncParam);}
+		void renderTransparent(){if(mTransparentRenderFunc)mTransparentRenderFunc(mTransparentRenderFuncParam);}
 
-		bool renderParticles(){return mRenderParticles;}
-		void renderParticles(bool b){mRenderParticles=b;}
 
 		bool blurStage(){return mBlurStage;}
 		void blurStage(bool b){mBlurStage=b;}
@@ -153,18 +162,20 @@ public:
 
 		vertexBuffer(UsageFrequency u): totalVertexSize(0), totalSize(0), usageFrequency(u){}
 
-		virtual void bindBuffer(unsigned int offset){}
-		virtual void bindBuffer(){bindBuffer(0);}
+
 
 	public:
 		unsigned int getNumVertices(){return totalSize / totalVertexSize;}
 		friend class GraphicsManager::indexBuffer;
 		virtual ~vertexBuffer(){}
 
+		virtual void bindBuffer(unsigned int offset)=0;
+		void bindBuffer(){bindBuffer(0);}
+
 		virtual void setTotalVertexSize(unsigned int size){totalVertexSize = size;}
 		virtual void addVertexAttribute(VertexAttribute attrib, unsigned int offset);
 		virtual void setVertexData(unsigned int size, void* data)=0;
-		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
+		virtual void drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 	};
 	class indexBuffer
 	{
@@ -173,20 +184,25 @@ public:
 	protected:
 		UsageFrequency usageFrequency;
 		indexBuffer(UsageFrequency u): usageFrequency(u){}
-		void bindVertexBuffer(shared_ptr<vertexBuffer> b,unsigned int offset=0){b->bindBuffer(offset);}
 	public:
 		virtual ~indexBuffer(){}
-		virtual void setData(unsigned char* data, unsigned int count)=0;
-		virtual void setData(unsigned short* data, unsigned int count)=0;
-		virtual void setData(unsigned int* data, unsigned int count)=0;
-		virtual void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset)=0;
-		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer){drawBuffer(primitive, buffer, 0);}
-		virtual void drawBufferSegment(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int numIndicies)=0;
+
+		virtual void setData(unsigned char* data, Primitive primitive, unsigned int count)=0;
+		virtual void setData(unsigned short* data, Primitive primitive, unsigned int count)=0;
+		virtual void setData(unsigned int* data, Primitive primitive, unsigned int count)=0;
+
+		virtual void bindBuffer()=0;
+		virtual void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset)=0;
+		void bindBuffer(shared_ptr<vertexBuffer> buffer){bindBuffer(buffer,0);}
+
+		virtual void drawBufferX()=0;
+		virtual void drawBufferX(unsigned int numIndicies)=0;
+
 	};
 	class texture
 	{
 	public:
-		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, RGB=3, RGBA=4, RGB16, RGBA16, RGB16F, RGBA16F};
+		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB16, RGBA16, RGB16F, RGBA16F};
 	protected:
 		friend class GraphicsManager;
 		static bool compression;
@@ -202,7 +218,11 @@ public:
 		unsigned int height;
 		texture2D():width(0),height(0){}
 	public:
+		unsigned int getWidth(){return width;}
+		unsigned int getHeight(){return height;}
 		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)=0;
+		virtual void generateMipmaps()=0;
+		virtual unsigned char* getData()=0;
 		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false);}
 	};
 	class texture3D: public texture
@@ -231,8 +251,8 @@ public:
 		friend class GraphicsManager;
 		static shader* boundShader;
 	public:
-		virtual bool init(const char* vert, const char* frag, const char* geometry)=0;
-		bool init(const char* vert, const char* frag){return init(vert, frag, nullptr);}
+		virtual bool init4(const char* vert, const char* geometry, const char* frag)=0;
+		virtual bool init(const char* vert, const char* frag)=0;
 
 		virtual void bind()=0;
 
@@ -315,8 +335,11 @@ public:
 	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
-	virtual void bindRenderTarget(RenderTarget t)=0;
-	virtual void renderFBO(RenderTarget src)=0;
+	virtual void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture)=0;
+	void startRenderToTexture(shared_ptr<texture2D> texture){startRenderToTexture(texture,nullptr);}
+	virtual void endRenderToTexture()=0;
+	//virtual void bindRenderTarget(RenderTarget t)=0;
+	//virtual void renderFBO(RenderTarget src)=0;
 
 	//draw functions
 	virtual void drawLine(Vec3f start, Vec3f end)=0;
@@ -357,6 +380,7 @@ public:
 	virtual int					getMultisampling()const=0;
 	virtual displayMode			getCurrentDisplayMode()const=0;	
 	virtual set<displayMode>	getSupportedDisplayModes()const=0;
+	virtual bool				hasShaderModel4()const=0;
 
 	//virtual set functions
 	virtual void setAlphaToCoverage(bool enabled)=0;
@@ -368,6 +392,9 @@ public:
 	virtual void setRefreshRate(unsigned int rate)=0;
 	virtual void setVSync(bool enabled)=0;
 	virtual void setWireFrame(bool enabled)=0;
+	virtual void setRenderBufferTexture(shared_ptr<texture2D> tex)=0;
+	virtual void setDepthBufferTexture(shared_ptr<texture2D> tex)=0;
+	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 
 	//set functions
 	void setColor(float r, float g, float b);
@@ -382,6 +409,10 @@ public:
 
 	//debug function
 	virtual void checkErrors()=0;
+
+#ifdef WINDOWS
+	virtual HWND getWindowHWND()=0;
+#endif
 };
 
 #ifdef OPENGL
@@ -402,15 +433,19 @@ protected:
 	shared_ptr<vertexBuffer> shapesVBO;
 
 
-	struct FBO{
-		unsigned int color;
-		unsigned int depth;
-		unsigned int fboID;
-		bool colorBound;
-		bool depthBound;
+	unsigned int renderTexture;
+	unsigned int depthTexture;
+	unsigned int multisampleRenderBuffer;
+	unsigned int multisampleDepthBuffer;
 
-		FBO():color(0), depth(0), fboID(0),colorBound(true),depthBound(true){}
-	}FBOs[2], multisampleFBO;
+	RenderTarget colorTarget;
+	RenderTarget depthTarget;
+	bool multisampleFboBound;
+
+	bool renderingToTexture;
+
+	unsigned int fboID;
+	unsigned int multisampleFboID;
 
 	unsigned int blurTexture;
 	unsigned int blurTexture2;
@@ -447,8 +482,8 @@ protected:
 	bool initFBOs(unsigned int maxSamples);
 	void destroyFBOs();
 
-	void bindRenderTarget(RenderTarget t);
-	void renderFBO(RenderTarget src);
+	//void bindRenderTarget(RenderTarget t);
+	//void renderFBO(RenderTarget src);
 
 public:
 	class vertexBufferGL: public GraphicsManager::vertexBuffer
@@ -463,35 +498,43 @@ public:
 		~vertexBufferGL();
 		void setVertexData(unsigned int size, void* data);
 
-		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+		void drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count);
 	};
 	class indexBufferGL: public GraphicsManager::indexBuffer
 	{
 	private:
 		unsigned int bufferID;
 		unsigned int dataCount;
-		enum DataType{NO_TYPE,UCHAR,USHORT,UINT}dataType;
+		unsigned int dataType;		//GLenum
+		unsigned int primitiveType;	//GLenum
 #ifdef _DEBUG
 		unsigned int maxIndex;
+		bool vboToSmallForMaxIndex;
 #endif
 	public:
 		indexBufferGL(UsageFrequency u);
 		~indexBufferGL();
-		void setData(unsigned char* data, unsigned int count);
-		void setData(unsigned short* data, unsigned int count);
-		void setData(unsigned int* data, unsigned int count);
+		void setData(unsigned char* data, Primitive primitive, unsigned int count);
+		void setData(unsigned short* data, Primitive primitive, unsigned int count);
+		void setData(unsigned int* data, Primitive primitive, unsigned int count);
 
-		void drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset);
-		void drawBufferSegment(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int numIndicies);
+		void bindBuffer();
+		void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset);
+
+		void drawBufferX();
+		void drawBufferX(unsigned int numIndicies);
 	};
 	class texture2DGL: public GraphicsManager::texture2D
 	{
 	private:
 		unsigned int textureID;
 	public:
+		friend class OpenGLgraphics;
 		texture2DGL();
 		~texture2DGL();
 		void bind(unsigned int textureUnit);
+		void generateMipmaps();
+		unsigned char* getData();
 		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable);
 	};
 	class texture3DGL: public GraphicsManager::texture3D
@@ -499,6 +542,7 @@ public:
 	private:
 		unsigned int textureID;
 	public:
+		friend class OpenGLgraphics;
 		texture3DGL();
 		~texture3DGL();
 		void bind(unsigned int textureUnit);
@@ -509,6 +553,7 @@ public:
 	private:
 		unsigned int textureID;
 	public:
+		friend class OpenGLgraphics;
 		textureCubeGL();
 		~textureCubeGL();
 		void bind(unsigned int textureUnit);
@@ -518,6 +563,7 @@ public:
 	{
 	private:
 		string fragErrorLog;
+		string geomErrorLog;
 		string vertErrorLog;
 		string linkErrorLog;
 
@@ -525,13 +571,15 @@ public:
 		map<string, int> uniforms;
 		map<string, int> attributes;
 		int getUniformLocation(string uniform);
+		bool compileShader(unsigned int sId, const char* src, string& errorLog);
 	public:
 		shaderGL(): shaderId(0){}
 		~shaderGL();
 
 		void bind();
 
-		bool init(const char* vert, const char* frag, const char* geometry);
+		bool init4(const char* vert, const char* geometry, const char* frag);
+		bool init(const char* vert, const char* frag);
 
 		void setUniform1f(string name, float v0);
 		void setUniform2f(string name, float v0, float v1);
@@ -566,6 +614,9 @@ public:
 	void swapBuffers();
 	void takeScreenshot();
 
+	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture);
+	void endRenderToTexture();
+
 	void drawLine(Vec3f start, Vec3f end);
 	void drawSphere(Vec3f position, float radius);
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
@@ -597,6 +648,10 @@ public:
 	void setVSync(bool enabled);
 	void setWireFrame(bool enabled);
 
+	void setRenderBufferTexture(shared_ptr<texture2D> tex);
+	void setDepthBufferTexture(shared_ptr<texture2D> tex);
+	void bindRenderTarget(RenderTarget rTarget);
+
 	void drawText(string text, Vec2f pos, string font);
 	void drawText(string text, Rect rect, string font);
 	Vec2f getTextSize(string text, string font);
@@ -605,12 +660,18 @@ public:
 	int					getMultisampling()const{return multisampling ? samples : 0;}
 	displayMode			getCurrentDisplayMode()const;	
 	set<displayMode>	getSupportedDisplayModes()const;
-
+	bool				hasShaderModel4()const;
 
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 
+
+
 	void checkErrors();
+
+#ifdef WINDOWS
+	HWND getWindowHWND();
+#endif
 };
 #endif
 

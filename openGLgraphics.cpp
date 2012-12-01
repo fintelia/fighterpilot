@@ -29,6 +29,7 @@
 //GL_EXT_framebuffer_multisample (optional)
 //WGL_EXT_swap_control (optional)
 
+
 bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
 bool openGL3=false;
 
@@ -170,26 +171,26 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 		//}
 	}
 }
-void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)
+void OpenGLgraphics::vertexBufferGL::drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count)
 {
-	if(count == 0)
-		return;
-
-	vertexBuffer::bindBuffer();
-	if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
-	else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
-	else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
-	else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
-	else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
-	else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
-	else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
-	else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
-	else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
-	else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	if(count != 0)
+	{
+		//vertexBuffer::bindBuffer();
+		if(primitive == POINTS)					glDrawArrays(GL_POINTS,			bufferOffset, count);
+		else if(primitive == LINES)				glDrawArrays(GL_LINES,			bufferOffset, count);
+		else if(primitive == LINE_STRIP)		glDrawArrays(GL_LINE_STRIP,		bufferOffset, count);
+		else if(primitive == LINE_LOOP)			glDrawArrays(GL_LINE_LOOP,		bufferOffset, count);
+		else if(primitive == TRIANGLES)			glDrawArrays(GL_TRIANGLES,		bufferOffset, count);
+		else if(primitive == TRIANGLE_STRIP)	glDrawArrays(GL_TRIANGLE_STRIP,	bufferOffset, count);
+		else if(primitive == TRIANGLE_FAN)		glDrawArrays(GL_TRIANGLE_FAN,	bufferOffset, count);
+		else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
+		else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
+		else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	}
 }
-OpenGLgraphics::indexBufferGL::indexBufferGL(UsageFrequency u): indexBuffer(u), bufferID(0), dataCount(0), dataType(NO_TYPE)
+OpenGLgraphics::indexBufferGL::indexBufferGL(UsageFrequency u): indexBuffer(u), bufferID(0), dataCount(0), dataType(0)
 #ifdef _DEBUG
-	, maxIndex(0)
+	, maxIndex(0), vboToSmallForMaxIndex(false)
 #endif
 {
 	glGenBuffers(1, &bufferID);
@@ -198,9 +199,9 @@ OpenGLgraphics::indexBufferGL::~indexBufferGL()
 {
 	glDeleteBuffers(1, &bufferID);
 }
-void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, unsigned int count)
+void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, Primitive primitive, unsigned int count)
 {
-	dataType = UCHAR;
+	dataType = GL_UNSIGNED_BYTE;
 	dataCount = count;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
@@ -217,12 +218,24 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, unsigned int co
 	}
 #endif
 }
-void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, unsigned int count)
+void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, Primitive primitive, unsigned int count)
 {
-	static_assert(sizeof(unsigned short) == 2, "unsigned short must have size of 2 bytes");
+	static_assert(sizeof(unsigned short) == 2, "unsigned short assumed to have size of 2 bytes");
 	
-	dataType = USHORT;
+	dataType = GL_UNSIGNED_SHORT;
 	dataCount = count;
+
+	if(primitive == POINTS)					primitiveType = GL_POINTS;
+	else if(primitive == LINES)				primitiveType = GL_LINES;
+	else if(primitive == LINE_STRIP)		primitiveType = GL_LINE_STRIP;
+	else if(primitive == LINE_LOOP)			primitiveType = GL_LINE_LOOP;
+	else if(primitive == TRIANGLES)			primitiveType = GL_TRIANGLES;
+	else if(primitive == TRIANGLE_STRIP)	primitiveType = GL_TRIANGLE_STRIP;
+	else if(primitive == TRIANGLE_FAN)		primitiveType = GL_TRIANGLE_FAN;
+	else if(primitive == QUADS)				primitiveType = GL_QUADS;
+	else if(primitive == QUAD_STRIP)		primitiveType = GL_QUAD_STRIP;
+	else if(primitive == POLYGON)			primitiveType = GL_POLYGON;
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_DYNAMIC_DRAW);
@@ -238,17 +251,30 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, unsigned int c
 	}
 #endif
 }
-void OpenGLgraphics::indexBufferGL::setData(unsigned int* data, unsigned int count)
+void OpenGLgraphics::indexBufferGL::setData(unsigned int* data, Primitive primitive, unsigned int count)
 {
-	static_assert(sizeof(unsigned int) == 4, "unsigned int must have size of 4 bytes");
-	
-	dataType = UINT;
+
+	static_assert(sizeof(unsigned int) == 4, "unsigned int assumed to have size of 4 bytes");
+
 	dataCount = count;
+	dataType = GL_UNSIGNED_INT;
+
+	if(primitive == POINTS)					primitiveType = GL_POINTS;
+	else if(primitive == LINES)				primitiveType = GL_LINES;
+	else if(primitive == LINE_STRIP)		primitiveType = GL_LINE_STRIP;
+	else if(primitive == LINE_LOOP)			primitiveType = GL_LINE_LOOP;
+	else if(primitive == TRIANGLES)			primitiveType = GL_TRIANGLES;
+	else if(primitive == TRIANGLE_STRIP)	primitiveType = GL_TRIANGLE_STRIP;
+	else if(primitive == TRIANGLE_FAN)		primitiveType = GL_TRIANGLE_FAN;
+	else if(primitive == QUADS)				primitiveType = GL_QUADS;
+	else if(primitive == QUAD_STRIP)		primitiveType = GL_QUAD_STRIP;
+	else if(primitive == POLYGON)			primitiveType = GL_POLYGON;
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*4, data, GL_STREAM_DRAW);
-	else cout << "useageFrequency not set: ";
+	else debugBreak()//useageFrequency not set
 	
 #ifdef _DEBUG
 	maxIndex = 0;
@@ -259,65 +285,51 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned int* data, unsigned int cou
 	}
 #endif
 }
-void OpenGLgraphics::indexBufferGL::drawBuffer(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int offset)
+void OpenGLgraphics::indexBufferGL::bindBuffer() //vertex buffer MUST be bound seperately!!!
 {
-	if(dataCount == 0 || dataType == NO_TYPE)
-		return;
-
 #ifdef _DEBUG
-	if(buffer->getNumVertices() < maxIndex)
-	{
-		debugBreak();
-		cout << "vertex index exceeds vertex count!!!" << endl;
-	}
+	vboToSmallForMaxIndex = false;
 #endif
 
-	GLenum type = UINT;//just to be safe
-	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
-	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
-	else if(dataType == UINT) type = GL_UNSIGNED_INT;
-	else cout << "indexBuffer datatype not set" << endl;
-	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
-	bindVertexBuffer(buffer, offset);
-
-	if(primitive == POINTS)					glDrawElements(GL_POINTS,			dataCount, type, 0);
-	else if(primitive == LINES)				glDrawElements(GL_LINES,			dataCount, type, 0);
-	else if(primitive == LINE_STRIP)		glDrawElements(GL_LINE_STRIP,		dataCount, type, 0);
-	else if(primitive == LINE_LOOP)			glDrawElements(GL_LINE_LOOP,		dataCount, type, 0);
-	else if(primitive == TRIANGLES)			glDrawElements(GL_TRIANGLES,		dataCount, type, 0);
-	else if(primitive == TRIANGLE_STRIP)	glDrawElements(GL_TRIANGLE_STRIP,	dataCount, type, 0);
-	else if(primitive == TRIANGLE_FAN)		glDrawElements(GL_TRIANGLE_FAN,		dataCount, type, 0);
-	else if(primitive == QUADS)				glDrawElements(GL_QUADS,			dataCount, type, 0);
-	else if(primitive == QUAD_STRIP)		glDrawElements(GL_QUAD_STRIP,		dataCount, type, 0);
-	else if(primitive == POLYGON)			glDrawElements(GL_POLYGON,			dataCount, type, 0);
 }
-void OpenGLgraphics::indexBufferGL::drawBufferSegment(Primitive primitive, shared_ptr<vertexBuffer> buffer, unsigned int numIndicies)
+void OpenGLgraphics::indexBufferGL::bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset)
 {
-	if(dataCount == 0 || numIndicies == 0 || dataType == NO_TYPE)
+#ifdef _DEBUG
+	vboToSmallForMaxIndex = buffer->getNumVertices() <= maxIndex;
+#endif
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
+	buffer->bindBuffer(vertexBufferOffset);
+}
+void OpenGLgraphics::indexBufferGL::drawBufferX()
+{
+	debugAssert(!vboToSmallForMaxIndex);
+	debugAssert(dataType == GL_UNSIGNED_BYTE || dataType == GL_UNSIGNED_SHORT || dataType == GL_UNSIGNED_INT);
+	debugAssert(primitiveType == GL_POINTS		 || primitiveType == GL_LINES		|| primitiveType == GL_LINE_STRIP		||
+				primitiveType == GL_LINE_LOOP	 || primitiveType == GL_TRIANGLES	|| primitiveType == GL_TRIANGLE_STRIP	||
+				primitiveType == GL_TRIANGLE_FAN || primitiveType == GL_QUADS		|| primitiveType == GL_QUAD_STRIP);
+
+	if(dataCount != 0)
+	{
+		glDrawElements(primitiveType, dataCount, dataType, 0);
+	}
+}
+void OpenGLgraphics::indexBufferGL::drawBufferX(unsigned int numIndicies)
+{
+	if(dataCount == 0 || numIndicies == 0)
 		return;
 
-	numIndicies = min(dataCount, numIndicies);
+	debugAssert(dataType == GL_UNSIGNED_BYTE || dataType == GL_UNSIGNED_SHORT || dataType == GL_UNSIGNED_INT);
+	debugAssert(primitiveType == GL_POINTS		 || primitiveType == GL_LINES		|| primitiveType == GL_LINE_STRIP		||
+				primitiveType == GL_LINE_LOOP	 || primitiveType == GL_TRIANGLES	|| primitiveType == GL_TRIANGLE_STRIP	||
+				primitiveType == GL_TRIANGLE_FAN || primitiveType == GL_QUADS		|| primitiveType == GL_QUAD_STRIP);
+	debugAssert(numIndicies != 0);
 
-	GLenum type = UINT;//just to be safe
-	if(dataType == UCHAR) type = GL_UNSIGNED_BYTE;
-	else if(dataType == USHORT) type = GL_UNSIGNED_SHORT;
-	else if(dataType == UINT) type = GL_UNSIGNED_INT;
-	else cout << "indexBuffer datatype not set" << endl;
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
-	bindVertexBuffer(buffer, 0);
-
-	if(primitive == POINTS)					glDrawElements(GL_POINTS,			numIndicies, type, 0);
-	else if(primitive == LINES)				glDrawElements(GL_LINES,			numIndicies, type, 0);
-	else if(primitive == LINE_STRIP)		glDrawElements(GL_LINE_STRIP,		numIndicies, type, 0);
-	else if(primitive == LINE_LOOP)			glDrawElements(GL_LINE_LOOP,		numIndicies, type, 0);
-	else if(primitive == TRIANGLES)			glDrawElements(GL_TRIANGLES,		numIndicies, type, 0);
-	else if(primitive == TRIANGLE_STRIP)	glDrawElements(GL_TRIANGLE_STRIP,	numIndicies, type, 0);
-	else if(primitive == TRIANGLE_FAN)		glDrawElements(GL_TRIANGLE_FAN,		numIndicies, type, 0);
-	else if(primitive == QUADS)				glDrawElements(GL_QUADS,			numIndicies, type, 0);
-	else if(primitive == QUAD_STRIP)		glDrawElements(GL_QUAD_STRIP,		numIndicies, type, 0);
-	else if(primitive == POLYGON)			glDrawElements(GL_POLYGON,			numIndicies, type, 0);
+	if(dataCount != 0)
+	{
+		glDrawElements(primitiveType, min(dataCount,numIndicies), dataType, 0);
+	}
 }
 OpenGLgraphics::texture2DGL::texture2DGL()
 {
@@ -332,9 +344,17 @@ void OpenGLgraphics::texture2DGL::bind(unsigned int textureUnit)
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 }
+void OpenGLgraphics::texture2DGL::generateMipmaps()
+{
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	if(openGL3)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	else
+		glGenerateMipmapEXT(GL_TEXTURE_2D);
+}
 void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -350,7 +370,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, NPOT ? GL_LINEAR : GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 	if(tileable)
 	{
@@ -366,8 +386,8 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	int depth;
 	if(format == LUMINANCE)				depth = 1;
 	else if(format == LUMINANCE_ALPHA)	depth = 2;
-	else if(format == RGB)				depth = 3;
-	else if(format == RGBA)				depth = 4;
+	else if(format == BGR)				depth = 3;
+	else if(format == BGRA)				depth = 4;
 	else if(format == RGB16)			depth = 6;
 	else if(format == RGBA16)			depth = 8;
 	else if(format == RGB16)			depth = 6;
@@ -381,8 +401,8 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		{
 			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
@@ -392,8 +412,8 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		{
 			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
@@ -413,13 +433,65 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	{
 		if(format == LUMINANCE)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-		else if(format == RGB)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if(format == RGBA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
+		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
 		else if(format == RGB16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16, GL_UNSIGNED_SHORT, data);
 		else if(format == RGBA16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16, GL_UNSIGNED_SHORT, data);
 		else if(format == RGB16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16F, GL_FLOAT, data);
 		else if(format == RGBA16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16F, GL_FLOAT, data);
 	}
+}
+unsigned char* OpenGLgraphics::texture2DGL::getData()
+{
+
+	GLenum fmt;
+	unsigned int bytesPerPixel;
+	if(format == LUMINANCE)
+	{
+		fmt = GL_LUMINANCE;
+		bytesPerPixel=1;
+	}
+	else if(format == LUMINANCE_ALPHA)
+	{
+		fmt = GL_LUMINANCE_ALPHA;
+		bytesPerPixel=2;
+	}
+	else if(format == BGR)
+	{
+		fmt = GL_BGR;
+		bytesPerPixel=3;
+	}
+	else if(format == BGRA)
+	{
+		fmt = GL_BGRA;
+		bytesPerPixel=4;
+	}
+	else if(format == RGB16)
+	{
+		fmt = GL_RGB16;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16)
+	{
+		fmt = GL_RGBA16;
+		bytesPerPixel=8;
+	}
+	else if(format == RGB16F)
+	{
+		fmt = GL_RGB16F;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16F)
+	{
+		fmt = GL_RGBA16F;
+		bytesPerPixel=8;
+	}
+	else debugBreak();
+
+	unsigned char* data = new unsigned char[width*height*bytesPerPixel];
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glGetTexImage(GL_TEXTURE_2D, 0, fmt, GL_UNSIGNED_BYTE, data);
+	return data;
 }
 OpenGLgraphics::texture3DGL::texture3DGL()
 {
@@ -436,7 +508,7 @@ void OpenGLgraphics::texture3DGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -450,8 +522,8 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 	glBindTexture(GL_TEXTURE_3D, textureID);
 	if(format == LUMINANCE)				glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 	else if(format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-	else if(format == RGB)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else if(format == RGBA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	else if(format == BGR)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	else if(format == BGRA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
 	else if(format == RGB16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16, width, height, depth, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 	else if(format == RGBA16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 	else if(format == RGB16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
@@ -494,7 +566,7 @@ void OpenGLgraphics::textureCubeGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -523,23 +595,23 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 4);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 5);
 	}
-	else if(format == RGB)
+	else if(format == BGR)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 1);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 2);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 3);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 4);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 5);
 	}
-	else if(format == RGBA)
+	else if(format == BGRA)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 1);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 2);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 3);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
 	}
 	else if(format == RGB16)
 	{
@@ -609,7 +681,23 @@ void OpenGLgraphics::shaderGL::bind()
 	boundShader = this;
 	glUseProgram(shaderId);
 }
-bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const char* geometry)
+bool OpenGLgraphics::shaderGL::compileShader(GLuint sId, const char* src, string& errorLog)
+{
+	glShaderSource(sId, 1, &src, NULL);
+	glCompileShader(sId);
+
+	int length, success, i;
+	glGetShaderiv(sId, GL_INFO_LOG_LENGTH, &length);
+
+	char* str=new char[length];
+	glGetShaderInfoLog(sId,length,&i,str);
+	errorLog = string(str);
+	delete[] str;
+	//check for successful load
+	glGetShaderiv(sId,GL_COMPILE_STATUS,&success);
+	return success;
+}
+bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 {
 	if(shaderId != 0)
 		glDeleteProgram(shaderId);
@@ -617,11 +705,13 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 	GLuint v = glCreateShader(GL_VERTEX_SHADER);
 	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
 
+	string vertString;
+	string fragString;
 
 	if(openGL3)
 	{
-		string vertString = string("#version 130\n")+vert;
-		string fragString = string("#version 130\nout vec4 _FragColor;\n")+frag;
+		vertString = string("#version 130\n")+vert;
+		fragString = string("#version 130\nout vec4 _FragColor;\n")+frag;
 
 		boost::replace_all(vertString, "\t", " ");
 		boost::replace_all(vertString, "attribute ", "in ");
@@ -634,50 +724,16 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 		boost::replace_all(fragString, "texture2D", "texture");
 		boost::replace_all(fragString, "texture3D", "texture");
 		boost::replace_all(fragString, "textureCube", "texture");
-
-		const char* vertexSource = vertString.c_str();
-		const char* fragmentSource = fragString.c_str();
-
-		glShaderSource(v, 1, &vertexSource, NULL);
-		glShaderSource(f, 1, &fragmentSource, NULL);
 	}
 	else
 	{
-		static const char* versionMacro = "#version 120\n";
-		const char* vertexSource[] = {versionMacro, vert};
-		const char* fragmentSource[] = {versionMacro, frag};
-		glShaderSource(v, 2, vertexSource, NULL);
-		glShaderSource(f, 2, fragmentSource, NULL);
+		vertString = string("#version 120\n")+vert;
+		fragString = string("#version 120\n")+frag;
 	}
-
-	glCompileShader(v);
-	glCompileShader(f);
 
 	int i, length, success;//used whenever a pointer to int is required
 
-	//get vertex shader errors
-	glGetShaderiv(v, GL_INFO_LOG_LENGTH, &length);
-	char* cv=new char[length];
-	glGetShaderInfoLog(v,length,&i,cv);
-	vertErrorLog = string(cv);
-	delete[] cv;
-
-
-	//get fragment shader errors
-	glGetShaderiv(f,GL_INFO_LOG_LENGTH,&length);
-	char* cf=new char[length];
-	glGetShaderInfoLog(f,length,&i,cf);
-	fragErrorLog = string(cf);
-	delete[] cf;
-
-
-	glGetShaderiv(v,GL_COMPILE_STATUS,&success);
-	if(!success)
-	{
-		return false;
-	}
-	glGetShaderiv(f,GL_COMPILE_STATUS,&success);
-	if(!success)
+	if(!compileShader(v, vertString.c_str(), vertErrorLog) || !compileShader(f, fragString.c_str(), fragErrorLog))
 	{
 		return false;
 	}
@@ -723,6 +779,74 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag, const ch
 
 	return true;
 }
+bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, const char* fragment)
+{
+	if(!openGL3)
+	{
+		vertErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
+		fragErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
+		geomErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
+		linkErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
+		return false;
+	}
+
+	if(shaderId != 0)
+	{
+		glDeleteProgram(shaderId);
+	}
+
+	GLuint v = glCreateShader(GL_VERTEX_SHADER);
+	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint g = geometry ? glCreateShader(GL_GEOMETRY_SHADER) : 0;
+	int i, length, success;//used whenever a pointer to int is required
+
+	if(!compileShader(v, vertex, vertErrorLog) || !compileShader(f, fragment, fragErrorLog) || (geometry && !compileShader(g, geometry, geomErrorLog)))
+	{
+		return false;
+	}
+
+	shaderId = glCreateProgram();
+	glAttachShader(shaderId,f);
+	glAttachShader(shaderId,v);
+	if(geometry)
+	{
+		glAttachShader(shaderId,g);
+	}
+
+	glBindAttribLocation(shaderId, 0, "Position2");
+	glBindAttribLocation(shaderId, 1, "Position");
+	glBindAttribLocation(shaderId, 2, "TexCoord");
+	glBindAttribLocation(shaderId, 3, "Normal");
+	glBindAttribLocation(shaderId, 4, "Color3");
+	glBindAttribLocation(shaderId, 5, "Color4");
+	glBindAttribLocation(shaderId, 6, "Tangent");
+	glBindAttribLocation(shaderId, 7, "GenericFloat");
+	glLinkProgram(shaderId);
+
+
+	//get shader link errors
+	glGetProgramiv(shaderId,GL_INFO_LOG_LENGTH,&length);
+	char* str=new char[length];
+	glGetProgramInfoLog(shaderId,length,&i,str);
+	linkErrorLog = string(str);
+	delete[] str;
+
+	glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+	if(!success)
+	{
+		return false;
+	}
+
+	glUseProgram(0);
+	glDeleteShader(f); // we no longer need these shaders individually, although they
+	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+	if(geometry)
+	{
+		glDeleteShader(g);
+	}
+
+	return true;
+}
 string OpenGLgraphics::shaderGL::getErrorStrings()
 {
 	//string str;
@@ -756,38 +880,11 @@ string OpenGLgraphics::shaderGL::getErrorStrings()
 	//delete[] attribName;
 	//return str;
 
-	if(vertErrorLog != "" && fragErrorLog != "" && linkErrorLog != "")
-	{
-		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog + "link:" + linkErrorLog;
-	}
-	else if(vertErrorLog != "" && fragErrorLog != "")
-	{
-		return string("vert:") + vertErrorLog + "frag:" + fragErrorLog;
-	}
-	else if(vertErrorLog != "" && linkErrorLog != "")
-	{
-		return string("vert:") + vertErrorLog + string("link:") + linkErrorLog;
-	}
-	else if(vertErrorLog != "")
-	{
-		return string("vert:") + vertErrorLog;
-	}
-	else if(fragErrorLog != "" && linkErrorLog != "")
-	{
-		return string("frag:") + fragErrorLog + string("link:") + linkErrorLog;
-	}
-	else if(fragErrorLog != "")
-	{
-		return string("frag:") + fragErrorLog;
-	}
-	else if(linkErrorLog != "")
-	{
-		return string("link:") + linkErrorLog;
-	}
-	else
-	{
-		return "";
-	}
+	if(vertErrorLog != "") vertErrorLog = string("vert:") + vertErrorLog;
+	if(geomErrorLog != "") geomErrorLog = string("geom:") + geomErrorLog;
+	if(fragErrorLog != "") fragErrorLog = string("frag:") + fragErrorLog;
+	if(linkErrorLog != "") linkErrorLog = string("link:") + linkErrorLog;
+	return vertErrorLog + geomErrorLog + fragErrorLog + linkErrorLog;
 }
 void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
 {
@@ -897,7 +994,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
+OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -925,7 +1022,8 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 	overlay[3].texCoord = Vec2f(0.0,0.0);
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
-	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
+	overlayVBO->bindBuffer();
+	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -946,7 +1044,8 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 	overlay[3].texCoord = Vec2f(0.0,1.0);
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
-	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
+	overlayVBO->bindBuffer();
+	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -965,7 +1064,8 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 	overlay[3].texCoord = Vec2f(t.x,		t.y+t.h);
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
-	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
+	overlayVBO->bindBuffer();
+	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -1234,74 +1334,190 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 	//else
 	//	return textSize;
 }
-void OpenGLgraphics::bindRenderTarget(RenderTarget t)
+//void OpenGLgraphics::bindRenderTarget(RenderTarget t)
+//{
+//	renderTarget = t;
+//	if(openGL3)
+//	{
+//		if(t == RT_FBO_0)					glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0].fboID);
+//		else if(t == RT_FBO_1)				glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1].fboID);
+//		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
+//		else if(t == RT_SCREEN)				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//		else debugBreak();
+//	}
+//	else
+//	{
+//		if(t == RT_FBO_0)					glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
+//		else if(t == RT_FBO_1)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
+//		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+//		else if(t == RT_SCREEN)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+//		else debugBreak();
+//	}
+//}
+//void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
+//{
+//	int bufferNum;
+//	if(src == RT_FBO_0)			bufferNum = 0;
+//	else if(src == RT_FBO_1)	bufferNum = 1;
+//	else return;
+//
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].color);
+//
+//	//glActiveTexture(GL_TEXTURE1);
+//	//glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].normals);
+//	//glActiveTexture(GL_TEXTURE0);
+//
+//	glViewport(0,0,sw,sh);
+//	drawOverlay(Rect::XYXY(-1,-1,1,1));
+//}
+void OpenGLgraphics::setRenderBufferTexture(shared_ptr<texture2D> tex)
 {
-	renderTarget = t;
+	if(!tex)
+		return;
+
 	if(openGL3)
 	{
-		if(t == RT_FBO_0)					glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0].fboID);
-		else if(t == RT_FBO_1)				glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1].fboID);
-		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
-		else if(t == RT_SCREEN)				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//if(multisampleFboBound)
+		//{
+			glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+		//	multisampleFboBound=false;
+		//}
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dynamic_pointer_cast<texture2DGL>(tex)->textureID, 0);
+	}
+	else
+	{
+		//if(multisampleFboBound)
+		//{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+		//	multisampleFboBound=false;
+		//}
+		//tex->bind();
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dynamic_pointer_cast<texture2DGL>(tex)->width, dynamic_pointer_cast<texture2DGL>(tex)->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+
+		//glBindTexture(GL_TEXTURE_2D, 0);
+
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, dynamic_pointer_cast<texture2DGL>(tex)->textureID, 0);
+		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(tex)->width/2, dynamic_pointer_cast<texture2DGL>(tex)->height);
+	}
+	colorTarget = RT_TEXTURE;
+
+	GLenum status = false ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
+#ifdef WINDOWS
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
+	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#endif
+}
+void OpenGLgraphics::setDepthBufferTexture(shared_ptr<texture2D> tex)
+{
+
+	if(openGL3)
+	{
+		//if(multisampleFboBound)
+		//{
+		//	glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+		//	multisampleFboBound=false;
+		//}
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex ? dynamic_pointer_cast<texture2DGL>(tex)->textureID : 0, 0);
+	}
+	else
+	{
+		//if(multisampleFboBound)
+		//{
+		//	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+		//	multisampleFboBound=false;
+		//}
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, tex ? dynamic_pointer_cast<texture2DGL>(tex)->textureID : 0, 0);
+	}
+	depthTarget = RT_TEXTURE;
+
+	GLenum status = false ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
+#ifdef WINDOWS
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
+	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#endif
+}
+void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
+{
+	if(openGL3)
+	{
+		if(rTarget == RT_FBO)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+			colorTarget = depthTarget = RT_FBO;
+		}
+		else if(rTarget == RT_MULTISAMPLE_FBO)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+			colorTarget = depthTarget = RT_MULTISAMPLE_FBO;
+		}
+		else if(rTarget == RT_SCREEN)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			colorTarget = depthTarget = RT_SCREEN;
+		}
 		else debugBreak();
 	}
 	else
 	{
-		if(t == RT_FBO_0)					glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
-		else if(t == RT_FBO_1)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
-		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		else if(t == RT_SCREEN)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		if(rTarget == RT_FBO)
+		{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
+			colorTarget = depthTarget = RT_FBO;
+		}
+		else if(rTarget == RT_MULTISAMPLE_FBO)
+		{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
+			colorTarget = depthTarget = RT_MULTISAMPLE_FBO;
+		}
+		else if(rTarget == RT_SCREEN)
+		{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+			colorTarget = depthTarget = RT_SCREEN;
+		}
 		else debugBreak();
 	}
-}
-void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
-{
-	int bufferNum;
-	if(src == RT_FBO_0)			bufferNum = 0;
-	else if(src == RT_FBO_1)	bufferNum = 1;
-	else return;
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].color);
-
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].normals);
-	//glActiveTexture(GL_TEXTURE0);
-
-	glViewport(0,0,sw,sh);
-	drawOverlay(Rect::XYXY(-1,-1,1,1));
+	
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
 	bool gl3FBOs = openGL3 || GLEW_ARB_framebuffer_object;
-	//////////////////////////////////////////////////////////////////////////////////////
-	auto checkForFBOErrors = [gl3FBOs]()-> bool
-	{
-		GLenum status = gl3FBOs ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-		if(status == GL_FRAMEBUFFER_COMPLETE)							return true;
-#ifdef WINDOWS
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-		else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
-		else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
-#endif
-		return false;
-	};
 	/////////////////////////////////////////////////////////////////////////////////////
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
 	samples = samples >= maxSamples ? maxSamples : samples;
 	multisampling = (GLEW_EXT_framebuffer_multisample || gl3FBOs) && samples > 1;
 	//////////////////////////////////////////////////////////////////////////////////////
-	for(int i = 0; i < 2; i++)
-	{
-		glGenTextures(1, &FBOs[i].color);
-		glBindTexture(GL_TEXTURE_2D, FBOs[i].color);
+	//for(int i = 0; i < 2; i++)
+	//{
+		glGenTextures(1, &renderTexture);
+		glBindTexture(GL_TEXTURE_2D, renderTexture);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1309,93 +1525,78 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 			glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		//glGenTextures(1, &FBOs[i].normals);
-		//glBindTexture(GL_TEXTURE_2D, FBOs[i].normals);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-
-		glGenTextures(1, &FBOs[i].depth);
-		glBindTexture(GL_TEXTURE_2D, FBOs[i].depth);
+		glGenTextures(1, &depthTexture);
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT24, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-
-		if(gl3FBOs)
-		{
-			glGenFramebuffers(1, &FBOs[i].fboID);
-			glBindFramebuffer(GL_FRAMEBUFFER, FBOs[i].fboID);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[i].color, 0);
-			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, FBOs[i].normals, 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, FBOs[i].depth, 0);
-		}
-		else
-		{
-			glGenFramebuffersEXT(1, &FBOs[i].fboID);
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[i].fboID);
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, FBOs[i].color, 0);
-			//glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, FBOs[i].normals, 0);
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, FBOs[i].depth, 0);
-		}
-
-		if(!checkForFBOErrors())
-			return false;
-	}
+	//}
 	//////////////////////////////////////////////////////////////////////////////////////
+
+	glGenFramebuffers(1, &fboID);
+	if(gl3FBOs)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+	}
+	else
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
+	}
+
 	if(multisampling)
 	{
+		glGenFramebuffers(1, &multisampleFboID);
 		if(gl3FBOs)
 		{
-			glGenRenderbuffers(1, &multisampleFBO.color);
-			glBindRenderbuffer(GL_RENDERBUFFER, multisampleFBO.color);
+			glGenRenderbuffers(1, &multisampleRenderBuffer);
+			glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
 			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA, sw, sh);
 
-			glGenRenderbuffers(1, &multisampleFBO.depth);
-			glBindRenderbuffer(GL_RENDERBUFFER, multisampleFBO.depth);
+			glGenRenderbuffers(1, &multisampleDepthBuffer);
+			glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
 			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
 
-			glGenFramebuffers(1, &multisampleFBO.fboID);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleFBO.color);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleFBO.depth);
-
-			checkErrors();
-			if(!checkForFBOErrors())
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				return false;
-			}
+			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
 		}
 		else
 		{
-			glGenRenderbuffersEXT(1, &multisampleFBO.color);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.color);
+			glGenRenderbuffersEXT(1, &multisampleRenderBuffer);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleRenderBuffer);
 			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
 
-			glGenRenderbuffersEXT(1, &multisampleFBO.depth);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleFBO.depth);
+			glGenRenderbuffersEXT(1, &multisampleDepthBuffer);
+			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleDepthBuffer);
 			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
 
-			glGenFramebuffersEXT(1, &multisampleFBO.fboID);
-
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.color);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleFBO.depth);
-
-			checkErrors();
-			if(!checkForFBOErrors())
-			{
-				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-				return false;
-			}
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleRenderBuffer);
+			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleDepthBuffer);
 		}
 	}
+	
+	GLenum status = gl3FBOs ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
+#ifdef WINDOWS
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
+	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#endif
 
 	if(gl3FBOs)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1422,34 +1623,24 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 }
 void OpenGLgraphics::destroyFBOs()
 {
-	if(FBOs[0].color != 0)		glDeleteTextures(1, &FBOs[0].color);
-	if(FBOs[0].depth != 0)		glDeleteTextures(1, &FBOs[0].depth);
-	if(FBOs[1].color != 0)		glDeleteTextures(1, &FBOs[1].color);
-	if(FBOs[1].depth != 0)		glDeleteTextures(1, &FBOs[1].depth);
-	if(blurTexture != 0)		glDeleteTextures(1, &blurTexture);
-	if(blurTexture2 != 0)		glDeleteTextures(1, &blurTexture2);
+	if(renderTexture != 0)		glDeleteTextures(1, &renderTexture);
+	if(depthTexture != 0)		glDeleteTextures(1, &depthTexture);
+	if(blurTexture != 0)			glDeleteTextures(1, &blurTexture);
+	if(blurTexture2 != 0)			glDeleteTextures(1, &blurTexture2);
 
 	if(openGL3 || GLEW_ARB_framebuffer_object)
 	{
-		if(FBOs[0].fboID != 0)		glDeleteFramebuffers(1, &FBOs[0].fboID);
-		if(FBOs[1].fboID != 0)		glDeleteFramebuffers(1, &FBOs[1].fboID);
-		if(multisampling)
-		{
-			if(multisampleFBO.fboID != 0)	glDeleteFramebuffers(1, &multisampleFBO.fboID);
-			if(multisampleFBO.color != 0)	glDeleteRenderbuffers(1, &multisampleFBO.color);
-			if(multisampleFBO.depth != 0)	glDeleteRenderbuffers(1, &multisampleFBO.depth);
-		}
+		if(fboID != 0)						glDeleteFramebuffers(1, &fboID);
+		if(multisampleFboID != 0)			glDeleteFramebuffers(1, &multisampleFboID);
+		if(multisampleRenderBuffer != 0)	glDeleteRenderbuffers(1, &multisampleRenderBuffer);
+		if(multisampleDepthBuffer != 0)		glDeleteRenderbuffers(1, &multisampleDepthBuffer);
 	}
 	else
 	{
-		if(FBOs[0].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[0].fboID);
-		if(FBOs[1].fboID != 0)		glDeleteFramebuffersEXT(1, &FBOs[1].fboID);
-		if(multisampling)
-		{
-			if(multisampleFBO.fboID != 0)	glDeleteFramebuffersEXT(1, &multisampleFBO.fboID);
-			if(multisampleFBO.color != 0)	glDeleteRenderbuffersEXT(1, &multisampleFBO.color);
-			if(multisampleFBO.depth != 0)	glDeleteRenderbuffersEXT(1, &multisampleFBO.depth);
-		}
+		if(fboID != 0)						glDeleteFramebuffersEXT(1, &fboID);
+		if(multisampleFboID != 0)			glDeleteFramebuffersEXT(1, &multisampleFboID);
+		if(multisampleRenderBuffer != 0)	glDeleteRenderbuffersEXT(1, &multisampleRenderBuffer);
+		if(multisampleDepthBuffer != 0)		glDeleteRenderbuffersEXT(1, &multisampleDepthBuffer);
 	}
 }
 void OpenGLgraphics::resize(int w, int h)
@@ -1480,7 +1671,11 @@ void OpenGLgraphics::render()
 	fps= ((double)frameTimes.size()) /  totalTime;
 
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	bindRenderTarget(multisampling ? RT_MULTISAMPLE_FBO : RT_FBO_0);
+	bindRenderTarget(RT_FBO);
+	if(multisampling)
+	{
+		bindRenderTarget(RT_MULTISAMPLE_FBO);
+	}
 	setDepthMask(true);
 	setColorMask(true);
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
@@ -1582,22 +1777,22 @@ void OpenGLgraphics::render()
 		if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
 			glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
+			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
 		}
 		else if(multisampling)
 		{
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
+			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
 			glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
 		}
 		else
 		{
@@ -1605,9 +1800,8 @@ void OpenGLgraphics::render()
 		}
 		glDisable(GL_DEPTH_TEST);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
-
-		//render particles
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		
 		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //check if the view no longer exists (just to be safe)
@@ -1617,7 +1811,7 @@ void OpenGLgraphics::render()
 			else
 			{
 				currentView = shared_ptr<View>(*(i++));
-				if(currentView->renderParticles())
+				if(currentView->transparentRenderFunc())
 				{
 					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 		
@@ -1648,7 +1842,7 @@ void OpenGLgraphics::render()
 						if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
 					}
 		
-					particleManager.render(currentView);
+					currentView->renderTransparent();
 		
 					if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
 					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
@@ -1673,8 +1867,8 @@ void OpenGLgraphics::render()
 	if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFBO.fboID);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, FBOs[0].fboID);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
 		glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -1683,8 +1877,8 @@ void OpenGLgraphics::render()
 	else if(multisampling)
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FBOs[0].fboID);
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
 		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
@@ -1777,19 +1971,18 @@ void OpenGLgraphics::render()
 					{
 						glViewport(0,0,sw/2,sh/2);
 
-						glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
-						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-						glGenerateMipmapEXT(GL_TEXTURE_2D);
 
-						bindRenderTarget(RT_FBO_1);
+
 						blurX->bind();
 						blurX->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+						glBindTexture(GL_TEXTURE_2D, renderTexture);
+						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+						glGenerateMipmapEXT(GL_TEXTURE_2D);
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
-
 						drawPartialOverlay(overlayRect, textureRect);
+
 
 						blurY->bind();
 						blurY->setUniform1i("tex",0);
@@ -1797,15 +1990,14 @@ void OpenGLgraphics::render()
 						glBindTexture(GL_TEXTURE_2D, blurTexture2);
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
-
 						drawPartialOverlay(overlayRect, textureRect);
 
 
 						glActiveTexture(GL_TEXTURE1);
 						glBindTexture(GL_TEXTURE_2D, blurTexture);//bind the blur texture
 
-						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
-						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBOs[1].color, 0);
+						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
 						glViewport(0,0,sw,sh);
 					}
 					else
@@ -1828,13 +2020,13 @@ void OpenGLgraphics::render()
 					currentView->postProcessShader()->setUniform1i("blurTex",1);
 				}
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
+				glBindTexture(GL_TEXTURE_2D, renderTexture);
 				drawPartialOverlay(overlayRect, textureRect);
-	
 			}
 		}
 	}
 	currentView = nullptr;
+
 /////////////////////////////////////START 2D////////////////////////////////////
 	if(!highResScreenshot)
 	{
@@ -2182,50 +2374,33 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
 	GLenum err = glewInit();
-	if(GLEW_OK != err)
-	{
-		destroyWindow();
-		string s = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
-#ifdef WINDOWS
-		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
-#endif
-		return false;
-	}
-	else if(!GLEW_VERSION_2_1)
+
+
+	string errorString;
+	if(GLEW_OK != err)						errorString = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
+	else if(!GLEW_VERSION_2_1)				errorString = "Your version of OpenGL must be at least 2.1: Please update your graphics drivers";
+	else if(!GLEW_EXT_framebuffer_object)	errorString = "Your graphics card must support GL_EXT_framebuffer_object: Please update your graphics drivers.";
+//	else if(!GLEW_ARB_vertex_array_object)	errorString = "Your graphics card must support ARB_vertex_array_object: Please update your graphics drivers.";
+
+	if(errorString != "")
 	{
 		destroyWindow();
 		const char* version = (const char*)glGetString(GL_VERSION);
 		const char* renderer = (const char*)glGetString(GL_RENDERER);
 		const char* vender = (const char*)glGetString(GL_VENDOR);
 
-		string s("Your version of OpenGL must be at least 2.1");
-		if(version) s += string("\n   OpenGL version: ") + version;
-		if(renderer) s += string("\n   Renderer: ") + renderer;
-		if(vender) s += string("\n   Vender: ") + vender;
+		if(version) errorString += string("\n   OpenGL version: ") + version;
+		if(renderer) errorString += string("\n   Renderer: ") + renderer;
+		if(vender) errorString += string("\n   Vender: ") + vender;
 #ifdef WINDOWS
-		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
+		MessageBoxA(NULL, errorString.c_str(),"ERROR",MB_OK);
 #endif
 		return false;
 	}
-	else if(!GL_EXT_framebuffer_object)
-	{
-		destroyWindow();
-		const char* version = (const char*)glGetString(GL_VERSION);
-		const char* renderer = (const char*)glGetString(GL_RENDERER);
-		const char* vender = (const char*)glGetString(GL_VENDOR);
 
-		string s("Your graphics card must support GL_EXT_framebuffer_object");
-		if(version) s += string("\n   OpenGL version: ") + version;
-		if(renderer) s += string("\n   Renderer: ") + renderer;
-		if(vender) s += string("\n   Vender: ") + vender;
-#ifdef WINDOWS
-		MessageBoxA(NULL, s.c_str(),"ERROR",MB_OK);
-#endif
-		return false;
-	}
 
 #if defined(WINDOWS)
-	if(game->hasCommandLineOption("--opengl3") && wglCreateContextAttribsARB)
+	if(/*game->hasCommandLineOption("--opengl3") &&*/ wglCreateContextAttribsARB)
 	{
 		int attribs[] =
 		{
@@ -2276,6 +2451,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(0.47f,0.57f,0.63f,1.0f);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	if(gl2Hacks)
 	{
@@ -2384,6 +2560,10 @@ void OpenGLgraphics::swapBuffers()
 	glXSwapBuffers(x11_display, x11_window);
 #endif
 }
+bool OpenGLgraphics::hasShaderModel4()const
+{
+	return openGL3;
+}
 GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 {
 #if defined(WINDOWS)
@@ -2444,7 +2624,7 @@ void OpenGLgraphics::takeScreenshot()
 #ifdef WINDOWS
 	SYSTEMTIME sTime;
 	GetLocalTime(&sTime);
-
+	 
 	string filename = "screen shots/FighterPilot ";
 	filename += lexical_cast<string>(sTime.wYear) + "-" + lexical_cast<string>(sTime.wMonth) + "-" +
 				lexical_cast<string>(sTime.wDay) + " " + lexical_cast<string>(sTime.wHour+1) + "-" +
@@ -2460,7 +2640,7 @@ void OpenGLgraphics::takeScreenshot()
 	highResScreenshot = true;
 	const int TILES=4;
 
-	shared_ptr<FileManager::textureFile> file(new FileManager::pngFile(filename));
+	shared_ptr<FileManager::textureFile> file(new FileManager::textureFile(filename,FileManager::PNG));
 	file->channels = 3;
 	file->width = sw*TILES;
 	file->height = sh*TILES;
@@ -2479,8 +2659,7 @@ void OpenGLgraphics::takeScreenshot()
 			world.frameUpdate();
 			render();
 			bindRenderTarget(RT_SCREEN);
-			glPixelStorei(GL_PACK_ALIGNMENT, 1);
-			glReadPixels(0, 0, sw, sh, GL_RGB, GL_UNSIGNED_BYTE, tileContents);
+			glReadPixels(0, 0, sw, sh, GL_BGR, GL_UNSIGNED_BYTE, tileContents);
 
 			for(int row=0;row<sh;row++)
 			{
@@ -2491,7 +2670,7 @@ void OpenGLgraphics::takeScreenshot()
 
 	delete[] tileContents;
 
-	fileManager.writePngFile(file,true);
+	fileManager.writeFile(file,true);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
 	world.time.unpause();
@@ -2507,7 +2686,8 @@ void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 	shapes3D[1].position = end;
 
 	shapesVBO->setVertexData(2*sizeof(vertex3D), shapes3D);
-	shapesVBO->drawBuffer(LINES,0,2);
+	shapesVBO->bindBuffer();
+	shapesVBO->drawBufferX(LINES,0,2);
 }
 void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 {
@@ -2516,7 +2696,8 @@ void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 	shapes3D[2].position = p3;
 
 	shapesVBO->setVertexData(3*sizeof(vertex3D), shapes3D);
-	shapesVBO->drawBuffer(TRIANGLES,0,3);
+	shapesVBO->bindBuffer();
+	shapesVBO->drawBufferX(TRIANGLES,0,3);
 }
 void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 {
@@ -2526,99 +2707,9 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 	shapes3D[3].position = p4;
 
 	shapesVBO->setVertexData(4*sizeof(vertex3D), shapes3D);
-	shapesVBO->drawBuffer(TRIANGLE_FAN,0,4);
+	shapesVBO->bindBuffer();
+	shapesVBO->drawBufferX(TRIANGLE_FAN,0,4);
 }
-//void OpenGLgraphics::drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale)
-//{
-//	if(!currentView)
-//		return;
-//
-//	auto m = dataManager.getModel(model);
-//
-//	float s;
-//	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
-//		s = scale.x;
-//	else if(abs(scale.y) >= abs(scale.z))
-//		s = scale.y;
-//	else
-//		s = scale.z;
-//
-//	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
-//		return;
-//
-//	dataManager.bind("white");
-//	dataManager.bind("model");
-//	dataManager.setUniform1i("tex",0);
-//	dataManager.setUniform3f("lightPosition", getLightPosition());
-//	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-//
-//	bool dMask = true;
-//	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
-//	{
-//		dataManager.bind(material->tex == "" ? "white" : material->tex);
-//
-//		dataManager.setUniform4f("diffuse", material->diffuse);
-//		dataManager.setUniform3f("specular", material->specular);
-//		dataManager.setUniform1f("hardness", material->hardness);
-//
-//		if(material->diffuse.a > 0.999 && !dMask)
-//		{
-//			dMask = true;
-//			glDepthMask(true);
-//		}
-//		else if(material->diffuse.a <= 0.999 && dMask)
-//		{
-//			dMask = false;
-//			glDepthMask(false);
-//		}
-//		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
-//	}
-//
-//	if(!dMask)	glDepthMask(true);
-//
-//	dataManager.setUniform4f("color", 1,1,1,1);
-//}
-//void OpenGLgraphics::drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale)
-//{
-//	if(!currentView)
-//		return;
-//
-//	auto m = dataManager.getModel(model);
-//	float s;
-//	if(abs(scale.x) >= abs(scale.y) && abs(scale.x) >= abs(scale.z))
-//		s = scale.x;
-//	else if(abs(scale.y) >= abs(scale.z))
-//		s = scale.y;
-//	else
-//		s = scale.z;
-//	if(m == nullptr || !currentView->sphereInFrustum(m->boundingSphere * s + position))
-//		return;
-//	Mat4f cameraProjectionMat = currentView->projectionMatrix() * currentView->modelViewMatrix();
-//	dataManager.setUniformMatrix("cameraProjection",cameraProjectionMat);
-//
-//	dataManager.setUniformMatrix("modelTransform", Mat4f(rotation, position, scale));
-//
-//	bool dMask = true;
-//	for(auto material = m->materials.begin(); material!=m->materials.end(); material++)
-//	{
-//		dataManager.setUniform4f("diffuse", material->diffuse);
-//		dataManager.setUniform3f("specular", material->specular);
-//		dataManager.setUniform1f("hardness", material->hardness);
-//
-//		if(material->diffuse.a > 0.999 && !dMask)
-//		{
-//			dMask = true;
-//			setDepthMask(true);
-//		}
-//		else if(material->diffuse.a <= 0.999 && dMask)
-//		{
-//			dMask = false;
-//			setDepthMask(false);
-//		}
-//		material->indexBuffer->drawBuffer(GraphicsManager::TRIANGLES, m->VBO);
-//	}
-//	if(!dMask)	glDepthMask(true);
-//}
 void OpenGLgraphics::checkErrors()
 {
 #ifdef _DEBUG
@@ -2631,5 +2722,37 @@ void OpenGLgraphics::checkErrors()
 	}
 #endif
 }
+void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture)
+{
+	if(!texture)
+		return;
 
+	setRenderBufferTexture(texture);
+	glViewport(0, 0, texture->getWidth(), texture->getHeight());
+
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+	if(!depthTexture)
+	{
+		setDepthBufferTexture(nullptr);
+	}
+	else if((texture->getWidth() == depthTexture->getWidth() && texture->getHeight() == depthTexture->getHeight()))
+	{
+		setDepthBufferTexture(depthTexture);
+	}
+	else
+	{
+		setDepthBufferTexture(nullptr);
+		debugBreak(); //textures are different sizes!!!
+	}
+}
+void OpenGLgraphics::endRenderToTexture()
+{	
+	setBlendMode(GraphicsManager::TRANSPARENCY);
+	bindRenderTarget(RT_FBO);
+}
+HWND OpenGLgraphics::getWindowHWND()
+{
+	return context->hWnd;
+}
 #endif /*OPENGL*/

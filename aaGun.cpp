@@ -79,7 +79,7 @@ void AAgun::updateSimulation(double time, double ms)
 		nDistSquared = n->second->position.distanceSquared(position);
 		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = static_pointer_cast<nPlane>(n->second);
+			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
@@ -89,7 +89,7 @@ void AAgun::updateSimulation(double time, double ms)
 		auto targetPtr = target.lock();
 		targeter = (targetPtr->position - position).normalize();
 
-		/////////////find position and time that plane and bullet would be at the same location (makes AA guns too good)
+		/////////////find position and time that plane and bullet would be at the same location (makes AA guns too good!!!)
 		//float s = 1000; //speed of bullets
 		//Vec3f r = targetPtr->position - position;
 		//Vec3f v = targetPtr->rotation * Vec3f(0,0,targetPtr->speed);
@@ -97,16 +97,9 @@ void AAgun::updateSimulation(double time, double ms)
 		//float a = v.dot(v) - s*s;
 		//float b = 2.0 * v.dot(r);
 		//float c = r.dot(r);
-		//
-		//if(b*b - 4.0*a*c >= 0.0)
+		//float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+		//if(b*b - 4.0*a*c >= 0.0 && t >= 0.0)
 		//{
-		//	float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-		//
-		//	if(t <= 0.0) //doen't seem to happen...
-		//	{
-		//		t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-		//	}
-		//
 		//	targeter = (targetPtr->position + v * t - position).normalize();
 		//}
 		////////////////////////////////////////////////////////////////////////////
@@ -162,7 +155,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 		nDistSquared = n->second->position.distanceSquared(position);
 		if(!n->second->dead && n->second->team != team && nDistSquared < 3000 * 3000 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = static_pointer_cast<nPlane>(n->second);
+			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
@@ -209,7 +202,7 @@ void flakCannon::updateSimulation(double time, double ms)
 		nDistSquared = n->second->position.distanceSquared(position);
 		if(!n->second->dead && n->second->team != team && nDistSquared < 2200 * 2200 && (target.expired() || nDistSquared < lDistSquared))
 		{
-			target = static_pointer_cast<nPlane>(n->second);
+			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;
 		}
 	}
@@ -229,7 +222,7 @@ void flakCannon::updateSimulation(double time, double ms)
 	missileCoolDown -= ms;
 	if(missileCoolDown <= 0.0 && !target.expired())
 	{
-		shared_ptr<nPlane> planePtr = target.lock();
+		shared_ptr<plane> planePtr = target.lock();
 
 		missileCoolDown = random<float>(1900, 2200);
 		Vec3f t = random3<float>();

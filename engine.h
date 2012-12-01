@@ -4,12 +4,12 @@
 
     #define VISUAL_STUDIO
 
-    #pragma warning( disable : 4305)
-    #pragma warning( disable : 4244)
-    #pragma warning( disable : 4018)
-    #pragma warning( disable : 4250)
-    #pragma warning( disable : 4996)
-    #pragma warning( disable : 4204)
+    #pragma warning (disable : 4305)
+    #pragma warning (disable : 4244)
+    #pragma warning (disable : 4018)
+    #pragma warning (disable : 4250)
+    #pragma warning (disable : 4996)
+    #pragma warning (disable : 4204)
 
     #pragma comment (linker, "/SUBSYSTEM:WINDOWS")
     #pragma comment (linker, "/ENTRY:WinMainCRTStartup")
@@ -22,8 +22,11 @@
 
 	#pragma comment (lib,"xinput")
 
+	#pragma comment (lib, "dinput8.lib")
+	#pragma comment (lib, "dxguid.lib")
+
 	#define XINPUT
-	//#define DIRECT_INPUT //still need to write most of the code for directInput
+	#define DIRECT_INPUT //still need to write most of the code for directInput
 
 #elif defined __GNUG__
 
@@ -46,6 +49,7 @@ typedef void* HANDLE;
 #include <map>
 #include <stack>
 #include <queue>
+#include <deque>
 #include <set>
 #include <string>
 #include <sstream>
@@ -65,6 +69,7 @@ using std::vector;
 using std::map;
 using std::set;
 using std::queue;
+using std::deque;
 using std::shared_ptr;
 using std::weak_ptr;
 using std::dynamic_pointer_cast;

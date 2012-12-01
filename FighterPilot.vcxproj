@@ -43,6 +43,7 @@
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
     <IncludePath>C:\Program Files\boost_1_50_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -138,10 +139,9 @@
     <ClCompile Include="fileManager.cpp" />
     <ClCompile Include="fireball.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="gameMath.cpp" />
     <ClCompile Include="glew.c" />
     <ClCompile Include="graphicsManager.cpp" />
-    <ClCompile Include="groundExposionFlash.cpp" />
+    <ClCompile Include="groundExplosionFlash.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="level.cpp" />
     <ClCompile Include="levelEditor.cpp" />
@@ -273,6 +273,8 @@
     <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
     <None Include="media\terrain.vert" />
+    <None Include="media\tree3d.frag" />
+    <None Include="media\tree3d.vert" />
     <None Include="media\trees.frag" />
     <None Include="media\trees.vert" />
     <None Include="media\treesAlphaTest.frag" />

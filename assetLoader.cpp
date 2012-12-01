@@ -74,13 +74,15 @@ bool AssetLoader::loadAssetList()
 
 					if(getAttribute(textureElement,"preload") == "true")
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
-						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						tmpAssetFile->filename = filename;
+						assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 					else
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
-						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						tmpAssetFile->filename = filename;
+						assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 
 				}
@@ -99,13 +101,15 @@ bool AssetLoader::loadAssetList()
 
 					if(getAttribute(textureElement,"preload") == "true")
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
-						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						tmpAssetFile->filename = filename;
+						assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 					else
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
-						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						tmpAssetFile->filename = filename;
+						assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 				}
 				else if(strcmp(textureElement->Value(), "textureCube") == 0)
@@ -122,13 +126,15 @@ bool AssetLoader::loadAssetList()
 
 					if(getAttribute(textureElement,"preload") == "true")
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
-						assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,false);
+						tmpAssetFile->filename = filename;
+						assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 					else
 					{
-						tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
-						assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+						//tmpAssetFile->file = fileManager.loadTextureFile(filename,true);
+						tmpAssetFile->filename = filename;
+						assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 					}
 				}
 				textureElement = textureElement->NextSiblingElement();
@@ -155,6 +161,10 @@ bool AssetLoader::loadAssetList()
 				tmpAssetFile->name = getAttribute(shaderElement, "name");
 				string vertFilename = getAttribute(shaderElement, "vertex");
 				string fragFilename = getAttribute(shaderElement, "fragment");
+				string vert3Filename = getAttribute(shaderElement, "vertex3");	
+				string frag3Filename = getAttribute(shaderElement, "geometry3");
+				string geom3Filename = getAttribute(shaderElement, "fragment3");
+
 				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
 
 				if(tmpAssetFile->name == "" || vertFilename == "" || fragFilename == "")
@@ -165,15 +175,25 @@ bool AssetLoader::loadAssetList()
 
 				if(getAttribute(shaderElement,"preload") == "true")
 				{
-					tmpAssetFile->vertFile = fileManager.loadTextFile(vertFilename,false);
-					tmpAssetFile->fragFile = fileManager.loadTextFile(fragFilename,false);
-					assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+					tmpAssetFile->vertFile = fileManager.loadFile<FileManager::textFile>(vertFilename);
+					tmpAssetFile->fragFile = fileManager.loadFile<FileManager::textFile>(fragFilename);
+
+					tmpAssetFile->vert3File = vert3Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert3Filename) : nullptr;
+					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename) : nullptr;
+					tmpAssetFile->frag3File = frag3Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag3Filename) : nullptr;
+
+					assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
 				else
 				{
-					tmpAssetFile->vertFile = fileManager.loadTextFile(vertFilename,true);
-					tmpAssetFile->fragFile = fileManager.loadTextFile(fragFilename,true);
-					assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+					tmpAssetFile->vertFile = fileManager.loadFile<FileManager::textFile>(vertFilename,true);
+					tmpAssetFile->fragFile = fileManager.loadFile<FileManager::textFile>(fragFilename,true);
+
+					tmpAssetFile->vert3File = vert3Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert3Filename, true) : nullptr;
+					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename, true) : nullptr;
+					tmpAssetFile->frag3File = frag3Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag3Filename, true) : nullptr;
+
+					assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
 				shaderElement = shaderElement->NextSiblingElement();
 			}
@@ -205,7 +225,7 @@ bool AssetLoader::loadAssetList()
 					continue;
 				}
 
-				assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+				assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 
 				modelElement = modelElement->NextSiblingElement();
 			}
@@ -239,13 +259,13 @@ bool AssetLoader::loadAssetList()
 
 				if(getAttribute(assetElement,"preload") == "true")
 				{
-					tmpAssetFile->file = fileManager.loadTextFile(filename,false);
-					assetFilesPreload.push(shared_ptr<assetFile>(tmpAssetFile));
+					tmpAssetFile->file = fileManager.loadFile<FileManager::textFile>(filename,false);
+					assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
 				else
 				{
-					tmpAssetFile->file = fileManager.loadTextFile(filename,true);
-					assetFiles.push(shared_ptr<assetFile>(tmpAssetFile));
+					tmpAssetFile->file = fileManager.loadFile<FileManager::textFile>(filename,true);
+					assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
 
 				assetElement = assetElement->NextSiblingElement();
@@ -253,6 +273,38 @@ bool AssetLoader::loadAssetList()
 		}
 	}
 
+	double t = GetTime();
+	assetsZipFile = fileManager.loadFile<FileManager::zipFile>("media/assets.zip");//shared_ptr<FileManager::zipFile>(new FileManager::zipFile("media/assets.zip"));
+	t = GetTime()-t;
+	t = GetTime();
+	for(auto i=assetsZipFile->files.begin(); i!=assetsZipFile->files.end(); i++)
+	{
+		if(i->second->type == FileManager::MODEL_FILE)
+		{
+			shared_ptr<FileManager::modelFile> model = dynamic_pointer_cast<FileManager::modelFile>(i->second);
+			for(auto m=model->materials.begin(); m != model->materials.end(); m++)
+			{
+				if(m->textureMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->textureMap_filename;
+					assetFiles.push_back(shared_ptr<assetFile>(tmpTextureFile));
+				}
+				if(m->specularMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->specularMap_filename;
+					assetFiles.push_back(shared_ptr<assetFile>(tmpTextureFile));
+				}
+				if(m->normalMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->normalMap_filename;
+					assetFiles.push_back(shared_ptr<assetFile>(tmpTextureFile));
+				}
+			}
+		}
+	}
 	return true;
 }
 int AssetLoader::loadAsset()
@@ -261,78 +313,70 @@ int AssetLoader::loadAsset()
 		return 0;
 
 	shared_ptr<assetFile> file;
-	bool preload;
+	bool isPreload;
 	auto pop = [this](bool p)
 	{
 		if(p)
-			assetFilesPreload.pop();
-		else assetFiles.pop();
+			assetFilesPreload.pop_front();
+		else
+			assetFiles.pop_front();
 	};
 
-	do
+	do// while(!assetFilesPreload.empty() || !assetFiles.empty())
 	{
 		////////////////////set file////////////////////////
-		file = (preload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
+		file = (isPreload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
 		////////////////////////////////////////////////////
 		if(file->getType() == assetFile::TEXTURE)
 		{
 			auto textureAsset = dynamic_pointer_cast<textureAssetFile>(file);
-			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
-			{
-				break;
-			}
-			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			shared_ptr<FileManager::textureFile> texFile = loadTexture(textureAsset->filename);
+			if(texFile && texFile->valid())
 			{
 				auto texture = graphics->genTexture2D();
-				texture->setData(textureAsset->file->width, textureAsset->file->height, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+				texture->setData(texFile->width, texFile->height, ((GraphicsManager::texture::Format)texFile->channels), texFile->contents, textureAsset->tileable);
 				dataManager.addTexture(textureAsset->name, texture);
 			}
 			else
 			{
 				debugBreak(); //file failed to load properly
-				cout << textureAsset->file->filename << " failed to load properly" << endl;
+				cout << textureAsset->filename << " failed to load properly" << endl;
 			}
-			pop(preload);
+			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::TEXTURE_3D)
 		{
 			auto textureAsset = dynamic_pointer_cast<texture3AssetFile>(file);
-			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
-			{
-				break;
-			}
-			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			shared_ptr<FileManager::textureFile> texFile = loadTexture(textureAsset->filename);
+			if(texFile && texFile->valid())
 			{
 				auto texture = graphics->genTexture3D();
-				texture->setData(textureAsset->file->width, textureAsset->file->height/textureAsset->depth, textureAsset->depth, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents, textureAsset->tileable);
+				texture->setData(texFile->width, texFile->height/textureAsset->depth, textureAsset->depth, ((GraphicsManager::texture::Format)texFile->channels), texFile->contents, textureAsset->tileable);
 				dataManager.addTexture(textureAsset->name, texture);
 			}
 			else
 			{
 				debugBreak(); //file failed to load properly
-				cout << textureAsset->file->filename << " failed to load properly" << endl;
+				cout << textureAsset->filename << " failed to load properly" << endl;
 			}
-			pop(preload);
+			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::TEXTURE_CUBE)
 		{
 			auto textureAsset = dynamic_pointer_cast<textureCubeAssetFile>(file);
-			if(!textureAsset->file->complete()) //if the file is not loaded yet break out of the loop
-			{
-				break;
-			}
-			else if(textureAsset->file->valid()) //if the file loaded properly, initialize the texture
+			shared_ptr<FileManager::textureFile> texFile = loadTexture(textureAsset->filename);
+			if(texFile && texFile->valid())
 			{
 				auto texture = graphics->genTextureCube();
-				texture->setData(textureAsset->file->width, textureAsset->file->height/6, ((GraphicsManager::texture::Format)textureAsset->file->channels), textureAsset->file->contents);
+				texture->setData(texFile->width, texFile->height/6, ((GraphicsManager::texture::Format)texFile->channels), texFile->contents);
 				dataManager.addTexture(textureAsset->name, texture);
 			}
 			else
 			{
 				debugBreak(); //file failed to load properly
-				cout << textureAsset->file->filename << " failed to load properly" << endl;
+				cout << textureAsset->filename << " failed to load properly" << endl;
 			}
-			pop(preload);
+			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::SHADER)
 		{
@@ -345,23 +389,34 @@ int AssetLoader::loadAsset()
 			{
 				auto shader = graphics->genShader();
 
-				if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
+				if(graphics->hasShaderModel4() && shaderAsset->vert3File && shaderAsset->frag3File)
 				{
-	#ifdef _DEBUG
-					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
-	#endif
+					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File->contents.c_str(), shaderAsset->frag3File->contents.c_str()))
+					{
+#ifdef _DEBUG
+						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+#endif
+					}
 				}
+				else
+				{
+					if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
+					{
+#ifdef _DEBUG
+						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+#endif
+					}
+				}
+
 
 				if(shaderAsset->use_sAspect)
 				{
 					shader->setUniform1f("sAspect",sAspect);
 					shaders.add(shaderAsset->name, shader, true);
-					//dataManager.addShader(shaderAsset->name, shader, true);
 				}
 				else
 				{
 					shaders.add(shaderAsset->name, shader, false);
-					//dataManager.addShader(shaderAsset->name, shader, false);
 				}
 			}
 			else
@@ -372,15 +427,41 @@ int AssetLoader::loadAsset()
 				if(!shaderAsset->fragFile->valid())
 					cout << shaderAsset->fragFile->filename << " failed to load properly" << endl;				
 			}
-			pop(preload);
+			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::MODEL)
 		{
+			pop(isPreload);	//must pop assetFile from deque before we load it, so its textures can be safely pushed on the front
 			auto modelAsset = dynamic_pointer_cast<modelAssetFile>(file);
-			dataManager.addModel(modelAsset->name, modelAsset->filename);
-			pop(preload);
 
-			break;
+			loadedModel l;
+			l.model = loadModel(modelAsset->filename, true);
+			l.name = modelAsset->name;
+
+			if(l.model->valid())
+			{
+				modelsToRegister.push_back(l);
+			}
+			//	dataManager.addModel(modelAsset->name, model);
+			debugAssert(l.model->valid());
+		}
+		else if(file->getType() == assetFile::COLLISION_MESH)
+		{
+
+			auto modelAsset = dynamic_pointer_cast<collisionMeshAssetFile>(file);
+			shared_ptr<FileManager::modelFile> collisionMesh = loadModel(modelAsset->filename, false);
+			if(collisionMesh->valid())
+			{
+				if(!collisionMesh->materials.empty())
+				{
+					vector<Vec3f> vertices;
+					for(auto v=collisionMesh->vertices.begin(); v!=collisionMesh->vertices.end(); v++)
+						vertices.push_back(v->position);
+					collisionManager.setCollsionBounds(modelAsset->objType, collisionMesh->boundingSphere, vertices, collisionMesh->materials[0].indices);
+				}
+			}
+			debugAssert(collisionMesh->valid());
+			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::FONT)
 		{
@@ -388,9 +469,126 @@ int AssetLoader::loadAsset()
 			if(!fontAsset->file->complete()) break;
 
 			dataManager.addFont(fontAsset->name, fontAsset->file);
-			pop(preload);
+			pop(isPreload);
 		}
-	}while(!assetFilesPreload.empty() && !assetFiles.empty());
+	}while(!assetFilesPreload.empty());
+
+	if(assetFilesPreload.empty() && assetFiles.empty())
+	{
+		for(auto i = modelsToRegister.begin(); i != modelsToRegister.end(); i++)
+		{
+			dataManager.addModel(i->name, i->model);
+		}
+		modelsToRegister.clear();
+	}
 
 	return assetFiles.size();
+}
+shared_ptr<FileManager::modelFile> AssetLoader::loadModel(string filename, bool loadTextures)
+{
+	//attempt to load model from assets.zip
+	if(assetsZipFile->files.find(filename+".mesh") != assetsZipFile->files.end())
+	{
+		shared_ptr<FileManager::file> filePtr = assetsZipFile->files[filename+".mesh"];
+		if(filePtr->type == FileManager::MODEL_FILE)
+		{
+			return dynamic_pointer_cast<FileManager::modelFile>(filePtr);
+		}
+	}
+
+	//if loading from assets.zip failed, load from disk instead
+	shared_ptr<FileManager::modelFile> model = fileManager.loadFile<FileManager::modelFile>(filename);
+	if(model->valid())
+	{
+		//add model to ip file for next time
+		modelsToAddToZip.push_back(model);
+
+		if(loadTextures)
+		{
+			textureAssetFile* tmpTextureFile = new textureAssetFile;
+			for(auto m=model->materials.begin(); m != model->materials.end(); m++)
+			{
+				if(m->textureMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->textureMap_filename;
+					assetFiles.push_front(shared_ptr<assetFile>(tmpTextureFile));
+				}
+				if(m->specularMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->specularMap_filename;
+					assetFiles.push_front(shared_ptr<assetFile>(tmpTextureFile));
+				}
+				if(m->normalMap_filename != "")
+				{
+					textureAssetFile* tmpTextureFile = new textureAssetFile;
+					tmpTextureFile->name = tmpTextureFile->filename = m->normalMap_filename;
+					assetFiles.push_front(shared_ptr<assetFile>(tmpTextureFile));
+				}
+			}
+		}
+	}
+	return model;
+}
+shared_ptr<FileManager::textureFile> AssetLoader::loadTexture(string filename)
+{
+	//attempt to load texture from assets.zip
+	if(assetsZipFile->files.find(filename+".tga") != assetsZipFile->files.end())
+	{
+		shared_ptr<FileManager::file> filePtr = assetsZipFile->files[filename+".tga"];
+		if(filePtr->type == FileManager::TEXTURE_FILE)
+		{
+			return dynamic_pointer_cast<FileManager::textureFile>(filePtr);
+		}
+	}
+
+	//if loading from assets.zip failed, load from disk instead
+	shared_ptr<FileManager::textureFile> texture = fileManager.loadFile<FileManager::textureFile>(filename);
+	texturesToAddToZip.push_back(texture);
+	return texture;
+}
+void AssetLoader::addModel(string filename, string name)
+{
+	shared_ptr<modelAssetFile> asset(new modelAssetFile);
+	asset->name = name;
+	asset->filename = filename;
+	assetFiles.push_back(asset);
+}
+void AssetLoader::addCollisionMesh(string filename, objectType objType)
+{
+	shared_ptr<collisionMeshAssetFile> asset(new collisionMeshAssetFile);
+	asset->filename = filename;
+	asset->objType = objType;
+	assetFiles.push_back(asset);
+}
+void AssetLoader::saveAssetZip()
+{
+#ifndef _DEBUG
+	bool zipChanged = false;
+	for(auto i=modelsToAddToZip.begin(); i != modelsToAddToZip.end(); i++)
+	{
+		if((*i)->valid())
+		{
+			(*i)->filename += ".mesh";
+			(*i)->format = FileManager::MESH;
+			assetsZipFile->files[(*i)->filename] = static_pointer_cast<FileManager::file>(*i);
+			zipChanged = true;
+		}
+	}
+	for(auto i=texturesToAddToZip.begin(); i != texturesToAddToZip.end(); i++)
+	{
+		if((*i)->valid())
+		{
+			(*i)->filename += ".tga";
+			(*i)->format = FileManager::TGA;
+			assetsZipFile->files[(*i)->filename] = static_pointer_cast<FileManager::file>(*i);
+			zipChanged = true;
+		}
+	}
+	if(zipChanged)
+	{
+		fileManager.writeFile(assetsZipFile);
+	}
+#endif
 }

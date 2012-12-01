@@ -2,7 +2,7 @@
 #include "game.h"
 
 namespace gui{
-dogFight::dogFight(shared_ptr<LevelFile> lvl): level(lvl), firstFrame(true)
+dogFight::dogFight(shared_ptr<const LevelFile> lvl): level(lvl), triggers(level->triggers)
 {
 
 }
@@ -44,10 +44,8 @@ void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 	graphics->drawRotatedOverlay(Rect::XYXY(x1,y2,x2,y2),degrees * PI/180,"tilt back");
 	graphics->drawOverlay(Rect::XYXY(x1,y2,x2,y2),"tilt front");
 }
-void dogFight::radar(float x, float y, float width, float height,bool firstPerson, nPlane* p)
+void dogFight::radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p)
 {
-	//plane p = *(plane*)planes[players[acplayer].planeNum()];
-
 	float radarAng = 45.0*world.time()/1000;
 	radarAng = (radarAng/360.0 - floor(radarAng/360.0)) * 360;
 
@@ -80,7 +78,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 				float mag = n.magnitude();
 				Angle ang = atan2A(n.x,n.z) - p->direction - 18.0 * PI/180 + PI;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = -p->direction + ((nPlane*)i->second.get())->direction - 18.0 * PI/180 + PI;
+				ang = -p->direction + dynamic_pointer_cast<plane>(i->second)->direction - 18.0 * PI/180 + PI;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
@@ -140,7 +138,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 				float mag = n.magnitude();
 				Angle ang = atan2A(n.x,n.z) + PI - p->direction;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
-				ang = -p->direction + ((nPlane*)i->second.get())->direction;
+				ang = -p->direction + dynamic_pointer_cast<plane>(i->second)->direction;
 				u = Vec3f(sin(ang),cos(ang),0);
 				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
 
@@ -154,7 +152,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
-void dogFight::planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v) //must get 'eye' location instead of plane location to work in 3rd person
+void dogFight::planeIdBoxes(shared_ptr<plane> p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v) //must get 'eye' location instead of plane location to work in 3rd person
 {
 	if(!p->dead)
 	{
@@ -204,7 +202,7 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 	double time=world.time();
 //	double interp = 1.0 - world.time.interpolate();
 
-	nPlane* p=(nPlane*)players[acplayer]->getObject();
+	auto p = players[acplayer]->getObject();
 	if(!p)
 	{
 		return;
@@ -244,15 +242,15 @@ void dogFight::updateSimulation()
 
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
-		shared_ptr<nPlane> p = dynamic_pointer_cast<nPlane>(i->second); //probably should replace all the 'i->second' with 'p'
-		float damageMultiplier = p->controlType == nPlane::CONTROL_TYPE_AI ? 1.0 : 0.25;
+		shared_ptr<plane> p = dynamic_pointer_cast<plane>(i->second); //probably should replace all the 'i->second' with 'p'
+		float damageMultiplier = p->controlType == plane::CONTROL_TYPE_AI ? 1.0 : 0.25;
 		if(!i->second->dead)
 		{
 			for(auto l=0;l<(signed int)bulletRef.size();l++)
 			{
 				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
 				{
-					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
 					{
 						i->second->loseHealth(14.4 * damageMultiplier);
 
@@ -269,7 +267,7 @@ void dogFight::updateSimulation()
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && collisionManager(i->second,l->second))
 				{
 					i->second->loseHealth(105 * damageMultiplier);
 
@@ -288,9 +286,9 @@ void dogFight::updateSimulation()
 					l->second->awaitingDelete = true;
 				}
 			}
-			if(physics.groundCollsion(i->second))
+			if(collisionManager.groundCollsion(i->second))
 			{
-				p->die(world.isLand(i->second->position.x,i->second->position.z) ? nPlane::DEATH_HIT_GROUND : nPlane::DEATH_HIT_WATER);
+				p->die(world.isLand(i->second->position.x,i->second->position.z) ? plane::DEATH_HIT_GROUND : plane::DEATH_HIT_WATER);
 			}
 		}
 	}
@@ -302,7 +300,7 @@ void dogFight::updateSimulation()
 			{
 				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
 				{
-					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
 					{
 						i->second->loseHealth(14.4);
 						if((*i).second->dead)
@@ -318,7 +316,7 @@ void dogFight::updateSimulation()
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && collisionManager(i->second,l->second))
 				{
 					i->second->loseHealth(105);
 					if((*i).second->dead)
@@ -339,7 +337,7 @@ void dogFight::updateSimulation()
 			{
 				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
 				{
-					if(physics(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
 					{
 						i->second->loseHealth(0.75);
 						if((*i).second->dead)
@@ -355,7 +353,7 @@ void dogFight::updateSimulation()
 			for(auto l=missiles.begin();l!=missiles.end();l++)
 			{
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
-				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && physics(i->second,l->second))
+				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && collisionManager(i->second,l->second))
 				{
 					Profiler.increaseCounter("hitCount");
 					i->second->loseHealth(35);
@@ -405,5 +403,94 @@ void dogFight::updateSimulation()
 	//		i->second->dead = true;
 	//	}
 	//}
+
+	int numObjects=0;
+	map<int,int> objectsPerTeam;
+
+	for(auto i = planes.begin(); i != planes.end();i++)
+	{
+		if(!(*i).second->dead)
+		{
+			numObjects++;
+
+			if(objectsPerTeam.find(i->second->team) != objectsPerTeam.end())
+				objectsPerTeam[i->second->team]++;
+			else
+				objectsPerTeam[i->second->team] = 1;
+		}
+	}
+	for(auto i = AAA.begin(); i != AAA.end();i++)
+	{
+		if(!(*i).second->dead)
+		{
+			numObjects++;
+			objectsPerTeam[i->second->team]++;
+		}
+	}
+	for(auto i = ships.begin(); i != ships.end();i++)
+	{
+		if(!(*i).second->dead)
+		{
+			numObjects++;
+			objectsPerTeam[i->second->team]++;
+		}
+	}
+
+	for(auto i = triggers.begin(); i != triggers.end();)
+	{
+		bool conditionTrue = false;
+		if(i->condition && i->condition->conditionType == LevelFile::Trigger::Condition::NUM_OBJECTS)
+		{
+			conditionTrue = i->checkComparison(numObjects);
+		}
+		else if(i->condition && i->condition->conditionType == LevelFile::Trigger::Condition::NUM_OBJECTS_ON_TEAM)
+		{
+			conditionTrue = i->checkComparison(objectsPerTeam[static_pointer_cast<LevelFile::Trigger::ConditionNumObjectsOnTeam>(i->condition)->teamNumber]);
+		}
+		else if(i->comparison == LevelFile::Trigger::ALWAYS)
+		{
+			conditionTrue = true;
+		}
+
+
+		if(conditionTrue)
+		{
+			for(auto a = i->actions.begin(); a != i->actions.end(); a++)
+			{
+				if((*a) && (*a)->actionType == LevelFile::Trigger::Action::START_PATH)
+				{
+					auto startPath = static_pointer_cast<LevelFile::Trigger::ActionStartPath>(*a);
+					shared_ptr<object> objPtr = world[startPath->objectNumber+1]; //hack since object 1 is bullet cloud!!!
+					if(objPtr && (objPtr->type & PLANE) && startPath->pathNumber > 0 && level->paths.size() >= startPath->pathNumber)
+					{
+						shared_ptr<plane> planePtr = dynamic_pointer_cast<plane>(objPtr);
+
+						Vec3f lastPoint, nextPoint;
+						auto waypoints = level->paths[startPath->pathNumber-1].waypoints;
+						for(auto w = waypoints.begin(); w != waypoints.end(); w++)
+						{
+							Vec3f lastPoint = w != waypoints.begin() ? (w-1)->position : w->position;
+							Vec3f nextPoint = w+1 != waypoints.end() ? (w+1)->position : w->position;
+							planePtr->wayPoints.push_back(plane::wayPoint(world.time() + w->time, w->position, Quat4f((nextPoint-lastPoint)*0.5)));
+						}
+						planePtr->controled = true;
+					}
+					else
+					{
+						debugBreak(); //invalid path or object number given
+					}
+				}
+			}
+
+			if(i->destroyTrigger)
+			{
+				i = triggers.erase(i);
+			}
+		}
+		else
+		{
+			i++;
+		}
+	}
 }
 }

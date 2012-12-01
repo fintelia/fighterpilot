@@ -145,3 +145,14 @@ void mutex::unlock()
 	pthread_mutex_unlock(static_cast<pthread_mutex_t*>(handle));
 }
 #endif
+
+string toString(const wchar_t* str, unsigned int maxLength)
+{
+	string out;
+	unsigned int i=0;
+	while(i < maxLength && str[i])
+	{
+		out += str[i++];
+	}
+	return out;
+}

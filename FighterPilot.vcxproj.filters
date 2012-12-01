@@ -294,9 +294,6 @@
     <ClCompile Include="openGLgraphics.cpp">
       <Filter>Source Files\ENGINE\graphicsManager</Filter>
     </ClCompile>
-    <ClCompile Include="gameMath.cpp">
-      <Filter>Source Files\ENGINE\math</Filter>
-    </ClCompile>
     <ClCompile Include="angle.cpp">
       <Filter>Source Files\ENGINE\math\angle</Filter>
     </ClCompile>
@@ -330,9 +327,6 @@
     <ClCompile Include="ephemeris.cpp">
       <Filter>Source Files\ENGINE\ephemeris</Filter>
     </ClCompile>
-    <ClCompile Include="groundExposionFlash.cpp">
-      <Filter>Source Files\GAME\particle effects</Filter>
-    </ClCompile>
     <ClCompile Include="splash2.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
@@ -349,6 +343,9 @@
       <Filter>Source Files\GAME\objects\ship</Filter>
     </ClCompile>
     <ClCompile Include="fireball.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="groundExplosionFlash.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -637,6 +634,12 @@
     </None>
     <None Include="media\gammaNightVision.frag">
       <Filter>shaders\gamma correction</Filter>
+    </None>
+    <None Include="media\tree3d.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\tree3d.vert">
+      <Filter>shaders\trees</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

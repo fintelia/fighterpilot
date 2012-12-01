@@ -7,7 +7,7 @@ protected:
 	unsigned long shotsFired;
 public:
 	Vec3f targeter;
-	weak_ptr<nPlane> target;
+	weak_ptr<plane> target;
 
 	//bool dead; (from entity)
 	float health;

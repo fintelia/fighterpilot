@@ -42,7 +42,7 @@ namespace particle
 	void fireball::update()
 	{
 		emitter::update();
-		if(world[parentObject] && world[parentObject]->type & PLANE && (dynamic_pointer_cast<nPlane>(world[parentObject])->death == nPlane::DEATH_HIT_GROUND ||dynamic_pointer_cast<nPlane>(world[parentObject])->death == nPlane::DEATH_HIT_WATER))
+		if(world[parentObject] && world[parentObject]->type & PLANE && (dynamic_pointer_cast<plane>(world[parentObject])->death == plane::DEATH_HIT_GROUND ||dynamic_pointer_cast<plane>(world[parentObject])->death == plane::DEATH_HIT_WATER))
 		{
 			particlesPerSecond = 0;
 		}

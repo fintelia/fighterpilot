@@ -8,7 +8,7 @@ GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1
 {
 
 }
-GraphicsManager::View::View(): mRenderParticles(true)
+GraphicsManager::View::View()
 {
 
 }

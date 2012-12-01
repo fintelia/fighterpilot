@@ -1,7 +1,7 @@
 
 //const unsigned long double PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208;
 
-class nPlane: public object
+class plane: public object
 {
 private:
 	double lastUpdateTime;
@@ -38,7 +38,6 @@ public:
 		float angle;
 		Vec3f position;
 		Vec3f velocity;
-		//Quat4f rot;
 	};
 	struct objectCamera //for interpolating between frames
 	{
@@ -53,7 +52,6 @@ public:
 	float altitude;
 	bool lockRollRange;
 /////////////weapons///////////////
-	Vec3f targeter;
 	armament machineGun;
 	armament rockets;
 	armament bombs;
@@ -61,13 +59,9 @@ public:
 	//bool dead; (from entity)
 	float health;
 	enum deathType{DEATH_NONE=0,DEATH_HIT_GROUND,DEATH_HIT_WATER,DEATH_EXPLOSION,DEATH_TRAILING_SMOKE,DEATH_MISSILE,DEATH_BULLETS}death;
-	bool respawning;
-	float respawnTime;
 ////////////auto-pilot/////////////
-	int maneuver;
 	bool controled;
 	vector<wayPoint> wayPoints;
-	//objectPath planePath;
 	int target;
 	bool targetLocked;
 ///////////camera view/////////////
@@ -76,7 +70,8 @@ public:
 	Vec3f cameraOffset;
 	objectCamera observer;
 	float cameraShake;
-
+	camera* firstPerson;
+	camera* thirdPerson;
 /////////////control///////////////
 	struct ControlState
 	{
@@ -107,7 +102,7 @@ public:
 	void updateSimulation(double time, double ms);
 	void updateFrame(float interpolation) const;
 
-	nPlane(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
+	plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team);
 private:
 	void smoothCamera();
 };

@@ -5,12 +5,12 @@
 //	Much of the code for PhysicsManager is from "Real-Time Collision Detection" by Christer Ericson
 //
 
-Vec3f PhysicsManager::cpPlanePoint(Plane<float> plane, Vec3f point) const
+Vec3f CollisionManager::cpPlanePoint(Plane<float> plane, Vec3f point) const
 {
 	float t = (plane.normal).dot(point) - plane.d; // t = signed distance between plane and point
 	return point - plane.normal * t;
 }
-Vec3f PhysicsManager::cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
+Vec3f CollisionManager::cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
 {
 	Vec3f s = sFinal - sInitial;
 	float t = (point-sInitial).dot(s);
@@ -34,7 +34,7 @@ Vec3f PhysicsManager::cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) 
 		}
 	}
 }
-Vec3f PhysicsManager::cpTrianglePoint(Vec3f a, Vec3f b, Vec3f c, Vec3f point) const
+Vec3f CollisionManager::cpTrianglePoint(Vec3f a, Vec3f b, Vec3f c, Vec3f point) const
 {
 	Vec3f ab = b - a;
 	Vec3f ac = c - a;
@@ -83,7 +83,7 @@ Vec3f PhysicsManager::cpTrianglePoint(Vec3f a, Vec3f b, Vec3f c, Vec3f point) co
 	float w = vc * invDenom;
 	return a + ab * v + ac * w;
 }
-float PhysicsManager::squareDistanceSegmentSegment(Vec3f s1_initial, Vec3f s1_final, Vec3f s2_initial, Vec3f s2_final, Vec3f& s1_closest, Vec3f& s2_closest) const //returns closest point on s1
+float CollisionManager::squareDistanceSegmentSegment(Vec3f s1_initial, Vec3f s1_final, Vec3f s2_initial, Vec3f s2_final, Vec3f& s1_closest, Vec3f& s2_closest) const //returns closest point on s1
 {
 	Vec3f d1 = s1_final - s1_initial;
 	Vec3f d2 = s2_final - s2_initial;
@@ -150,7 +150,7 @@ float PhysicsManager::squareDistanceSegmentSegment(Vec3f s1_initial, Vec3f s1_fi
 	s2_closest = s2_initial + d1 * t;
 	return s1_closest.distanceSquared(s2_closest);
 }
-float PhysicsManager::squareDistanceSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
+float CollisionManager::squareDistanceSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const
 {
 	Vec3f s = sFinal - sInitial;
 	Vec3f ip = point - sInitial;
@@ -164,7 +164,7 @@ float PhysicsManager::squareDistanceSegmentPoint(Vec3f sInitial, Vec3f sFinal, V
 
 	return ip.magnitudeSquared() - e * e / f;
 }
-bool PhysicsManager::sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float> s2, Vec3f v2) const
+bool CollisionManager::sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float> s2, Vec3f v2) const
 {
 	Vec3f s = s2.center - s1.center;
 	Vec3f v = v2 - v1;
@@ -188,7 +188,7 @@ bool PhysicsManager::sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float>
 	float t = (-b - sqrt(d)) / a;
 	return t <= 1.0;
 }
-bool PhysicsManager::testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float> plane, Vec3f& intersectionPoint) const
+bool CollisionManager::testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float> plane, Vec3f& intersectionPoint) const
 {
 	Vec3f s = sFinal - sInitial;
 	float t = (plane.d - (plane.normal).dot(sInitial)) / (plane.normal).dot(s);
@@ -199,7 +199,7 @@ bool PhysicsManager::testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float>
 	}
 	return false;
 }
-bool PhysicsManager::testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& intersectionPoint) const
+bool CollisionManager::testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& intersectionPoint) const
 {
 	Vec3f m = p - s.center;
 	float b = m.dot(d);
@@ -219,7 +219,7 @@ bool PhysicsManager::testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& int
 	intersectionPoint = p + d*t;
 	return true;
 }
-bool PhysicsManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const
+bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const
 {	//	"based on A Fast Triangle-Triangle Intersection Test" by Tomas Moller
 	//	http://knight.temple.edu/~lakamper/courses/cis350_2004/etc/moeller_triangle.pdf
 
@@ -296,7 +296,7 @@ bool PhysicsManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Ve
 //	intersectionPoint = t1 * u + t2 * v + t3 * w;
 //	return true;
 //}
-Vec3f PhysicsManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const //see http://pisa.ucsd.edu/cse125/2003/cse190g2/Collision.pdf
+Vec3f CollisionManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const //see http://pisa.ucsd.edu/cse125/2003/cse190g2/Collision.pdf
 {
 	// Determine t (the length of the vector from ‘a’ to ‘p’)
 	Vec3f v = (s2 - s1).normalize();
@@ -307,7 +307,7 @@ Vec3f PhysicsManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) con
 	if(t*t > d) return s2;
 	return s1 + v * t;
 }
-bool PhysicsManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat, const Sphere<float>& s) const 
+bool CollisionManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat, const Sphere<float>& s) const 
 {//see: http://realtimecollisiondetection.net/blog/?p=103
 	Vec3f a = mat * t.vertices[0] - s.center;
 	Vec3f b = mat * t.vertices[1] - s.center;
@@ -350,7 +350,7 @@ bool PhysicsManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat
 //{
 //
 //}
-bool PhysicsManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
+bool CollisionManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const Plane3f& p, Vec3f& collisionPoint) const
 {
 	//see: http://paulbourke.net/geometry/planeline/
 
@@ -383,7 +383,7 @@ bool PhysicsManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, const
 //
 //	return  (final_t >= 0) && (final_t <= 1);
 //}
-bool PhysicsManager::pointInTriangle(const triangle& tri,const Vec3f& vert) const
+bool CollisionManager::pointInTriangle(const triangle& tri,const Vec3f& vert) const
 {
 	float ang = acos((tri.vertices[0]-vert).normalize().dot((tri.vertices[0]-vert).normalize())) +
 				acos((tri.vertices[1]-vert).normalize().dot((tri.vertices[1]-vert).normalize())) +
@@ -427,7 +427,7 @@ bool PhysicsManager::pointInTriangle(const triangle& tri,const Vec3f& vert) cons
 //
 //	return false; // Default value/no collision
 //}
-bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri2) const
+bool CollisionManager::triangleCollision(const triangle& tri1, const triangle& tri2) const
 {
 	Vec3f p;
 
@@ -445,7 +445,7 @@ bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri
 
 	return false;
 }
-bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const
+bool CollisionManager::triangleCollision(const triangle& tri1, const triangle& tri2, Mat4f rot1, Mat4f rot2) const
 {
 	triangle T1 = tri1;
 	triangle T2 = tri2;
@@ -516,7 +516,7 @@ bool PhysicsManager::triangleCollision(const triangle& tri1, const triangle& tri
 //	}
 //	radius = sqrt(radiusSquared);
 //}
-void PhysicsManager::triangle::findRadius() const
+void CollisionManager::triangle::findRadius() const
 {
 	if(radiusValid) return;
 	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
@@ -622,7 +622,7 @@ void PhysicsManager::triangle::findRadius() const
 //{
 //	return operator()(*dataManager.getModel(t1)->trl, center, radius);
 //}
-bool PhysicsManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const
+bool CollisionManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const
 {
 	auto o = objectBounds.find(o1->type);
 	if(o != objectBounds.end() && o->second->type == collisionBounds::SPHERE)
@@ -660,7 +660,7 @@ bool PhysicsManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f l
 	return false;
 }
 
-bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
+bool CollisionManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
 {
 	auto b1 = objectBounds.find(o1->type);
 	auto b2 = objectBounds.find(o2->type);
@@ -740,7 +740,7 @@ bool PhysicsManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) c
 	//}
 	//return false;
 }
-bool PhysicsManager::groundCollsion(shared_ptr<object> o1) const
+bool CollisionManager::groundCollsion(shared_ptr<object> o1) const
 {
 	auto b1 = objectBounds.find(o1->type);
 	if(b1 == objectBounds.end())
@@ -767,14 +767,14 @@ bool PhysicsManager::groundCollsion(shared_ptr<object> o1) const
 	}
 	return false;
 }
-void PhysicsManager::setCollsionBounds(objectType type, Sphere<float> s)
+void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s)
 {
-	if(objectBounds.find(type) == objectBounds.end())
+	if(objectBounds.find(type) == objectBounds.end()) 
 	{
 		objectBounds[type] = shared_ptr<collisionBounds>(new collisionBounds(s));
 	}
 }
-void PhysicsManager::setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices)
+void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices)
 {
 	collisionMesh* m = new collisionMesh;
 	m->sphere = s;

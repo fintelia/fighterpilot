@@ -27,7 +27,7 @@ DataManager& dataManager = DataManager::getInstance();																		//	//
 ShaderManager& shaders = ShaderManager::getInstance();																		//	//
 AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
 WorldManager& world = WorldManager::getInstance();																			//	//
-PhysicsManager& physics = PhysicsManager::getInstance();																	//	//
+CollisionManager& collisionManager = CollisionManager::getInstance();														//	//
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																	//	//
 FileManager& fileManager = FileManager::getInstance();																		//  //
 SceneManager& sceneManager = SceneManager::getInstance();																	//  //
@@ -56,89 +56,73 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 							WPARAM	wParam,			// Additional Message Information
 							LPARAM	lParam)			// Additional Message Information
 {
-	switch (uMsg)									// Check For Windows Messages
+	if(uMsg == WM_SHOWWINDOW)
 	{
-		case WM_SHOWWINDOW:
+		if(!HIWORD(wParam))	//if we are not minimized
 		{
-			if (!HIWORD(wParam))					// Check Minimization State
-			{
-				game->active=true;					// Program Is Active
-			}
-			else
-			{
-				game->active=false;					// Program Is No Longer Active
-			}
-
-			return 0;								// Return To The Message Loop
+			game->active=true;
 		}
-
-		case WM_SYSCOMMAND:							// Intercept System Commands
+		else
 		{
-			if(wParam == SC_SCREENSAVE || wParam == SC_MONITORPOWER)// Screensaver Trying To Start or Monitor Trying To Enter Powersave?
-				return 0;											//Prevent From Happening
-			break;
+			game->active=false;
 		}
-		//case WM_MOVE:
-		//case WM_MOVING:
-		//case WM_WINDOWPOSCHANGED:
-		//case WM_WINDOWPOSCHANGING:
-		//	return 0;
-
-		case WM_CLOSE:								// Did We Receive A Close Message?
-		{
-			PostQuitMessage(0);						// Send A Quit Message
-			return 0;								// Jump Back
-		}
-		case WM_ACTIVATEAPP:
-		{
-			//bool wActive = LOWORD(wParam) != 0;
-			//bool wMinimized = HIWORD(wParam) != 0;
-			world.time.setPaused(!(wParam != 0));
-			game->active = wParam != 0;
-			return 0;
-		}
-		case WM_KEYDOWN:							// Is A Key Being Held Down?
-		case WM_KEYUP:								// Has A Key Been Released?
-		case WM_LBUTTONDOWN:
-		case WM_RBUTTONDOWN:
-		case WM_LBUTTONUP:
-		case WM_RBUTTONUP:
-		case WM_MBUTTONDOWN:
-		case WM_MBUTTONUP:
-		case WM_MOUSEWHEEL:
-			input.windowsInput(uMsg,wParam,lParam);
-			return 0;
-		case WM_ERASEBKGND:									// Check To See If Windows Is Trying To Erase The Background
-			return 0;										// either return 0 or 1, does not seem to be much of a difference...
-		case WM_SIZE:										// Resize The OpenGL Window
-			if(wParam != SIZE_MINIMIZED)
-				graphics->resize(LOWORD(lParam),HIWORD(lParam));
-			return 0;										// Jump Back
-	//	case WM_APPCOMMAND:
-	//	case WM_SYSKEYDOWN:
-		case WM_HOTKEY:
-		{
-			if(game->active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
-			{
-				graphics->takeScreenshot();
-				return 0;
-			}
-			break;
-		}
-		case WM_DEVICECHANGE:
-			if(wParam == 0x007) //DBT_DEVNODES_CHANGED
-			{
-				input.checkNewHardware();
-				return 0;
-			}
-			break;
-		case WM_PAINT:
-			if(!game->active)
-				game->needsRedraw=true;
-			break;
+		return 0;
 	}
-
-	// Pass All Unhandled Messages To DefWindowProc
+	else if(uMsg == WM_SYSCOMMAND && (wParam == SC_SCREENSAVE || wParam == SC_MONITORPOWER))
+	{
+		return 0;	// Prevent screensaver from starting or moniter from entering power save
+	}
+	else if(uMsg == WM_CLOSE)
+	{
+		PostQuitMessage(0);
+		return 0;
+	}
+	else if(uMsg == WM_ACTIVATEAPP)
+	{
+		world.time.setPaused(!(wParam != 0));
+		game->active = wParam != 0;
+		input.windowsInput(uMsg,wParam,lParam);
+		return 0;
+	}
+	else if(uMsg == WM_KEYDOWN || uMsg == WM_KEYUP || uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN || uMsg == WM_LBUTTONUP || uMsg == WM_RBUTTONUP || uMsg == WM_MBUTTONDOWN || uMsg == WM_MBUTTONUP || uMsg == WM_MOUSEWHEEL)
+	{
+		input.windowsInput(uMsg,wParam,lParam);
+		return 0;
+	}
+	else if(uMsg == WM_ERASEBKGND)
+	{
+		return 0;
+	}
+	else if(uMsg == WM_SIZE)
+	{
+		if(wParam != SIZE_MINIMIZED)
+			graphics->resize(LOWORD(lParam),HIWORD(lParam));
+		return 0;
+	}
+	else if(uMsg == WM_HOTKEY)
+	{
+		if(game->active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
+		{
+			graphics->takeScreenshot();
+			return 0;
+		}
+	}
+	else if(uMsg == WM_DEVICECHANGE)
+	{
+		if(wParam == 0x007) //DBT_DEVNODES_CHANGED
+		{
+			input.checkNewHardware();
+			return 0;
+		}
+	}
+	else if(uMsg == WM_PAINT)
+	{
+		if(!game->active)
+		{
+			game->needsRedraw=true;
+		}
+	}
+	//Pass All Unhandled Messages To DefWindowProc
 	return DefWindowProc(hWnd,uMsg,wParam,lParam);
 }
 #elif defined(LINUX)

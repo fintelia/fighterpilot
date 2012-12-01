@@ -1,0 +1,36 @@
+
+newmtl Tree
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd pine.png
+map_d pine.png
+
+
+
+newmtl Trunk
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
+map_Kd pine.png
+map_d pine.png
+
+
+newmtl Leaves
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.9900000
+illum 1
+map_Kd pineLeaves2.png
+map_d pineLeaves2.png

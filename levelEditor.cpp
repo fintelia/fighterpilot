@@ -538,7 +538,7 @@ void levelEditor::updateObjectCircles()
 		else
 		{
 			float scale = i->type & SHIP ? 1.0 : 10.0;
-			Sphere<float> sphere = obj->mesh->getBoundingSphere();
+			Sphere<float> sphere = obj->mesh->boundingSphere;
 			s = view->project3(i->startloc + i->startRot * sphere.center*scale);
 			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*scale);
 			r = max(0.004f,sqrt((s.x-t.x)*(s.x-t.x)+(s.y-t.y)*(s.y-t.y)));
@@ -833,7 +833,7 @@ void levelEditor::fromFile(string filename)
 	string ext = fileManager.extension(filename);
 	if(ext == ".png")
 	{
-		auto image = fileManager.loadPngFile(filename);
+		auto image = fileManager.loadFile<FileManager::textureFile>(filename);
 		if(image->valid() && image->width > 0 && image->height > 0)
 		{
 			delete[] levelFile.heights;
@@ -1274,7 +1274,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			terrainVertexBuffer->setTotalVertexSize(sizeof(float)*3);
 			terrainVertexBuffer->setVertexData(sizeof(float)*3*nWidth*nHeight, vertices);
 
-			terrainIndexBuffer->setData(indices, numTerrainIndices);
+			terrainIndexBuffer->setData(indices, GraphicsManager::TRIANGLES, numTerrainIndices);
 			//terrainVBO->setIndexData(sizeof(unsigned short)*numTerrainIndices, indices);
 
 
@@ -1286,13 +1286,13 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 				for(int z = 0; z < height; z++)
 				{
 					n = getNormal(x, z);
-					tex[4*(x+z*width) + 0] = static_cast<unsigned char>((n.x*0.5+0.5) * 255.0);
+					tex[4*(x+z*width) + 2] = static_cast<unsigned char>((n.x*0.5+0.5) * 255.0);
 					tex[4*(x+z*width) + 1] = static_cast<unsigned char>(n.y * 255.0);
-					tex[4*(x+z*width) + 2] = static_cast<unsigned char>((n.z*0.5+0.5) * 255.0);
+					tex[4*(x+z*width) + 0] = static_cast<unsigned char>((n.z*0.5+0.5) * 255.0);
 					tex[4*(x+z*width) + 3] = static_cast<unsigned char>((getHeight(x, z)-levelFile.info.minHeight)/(levelFile.info.maxHeight-levelFile.info.minHeight)*255.0);
 				}
 			}
-			groundTex->setData(width,height,GraphicsManager::texture::RGBA, tex);
+			groundTex->setData(width,height,GraphicsManager::texture::BGRA, tex);
 
 			terrainValid=true;
 		}
@@ -1330,7 +1330,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("rock",		2);
 			shader->setUniform1i("LCnoise",		3);
 			shader->setUniform1i("groundTex",	4);
-			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
+			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
+			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
 
 			shaders.bind("model");
 		}
@@ -1368,7 +1369,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("rock",		2);
 			shader->setUniform1i("LCnoise",		3);
 			shader->setUniform1i("groundTex",	4);
-			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
+			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
+			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
 
 			shaders.bind("model");
 		}
@@ -1400,7 +1402,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("sand2",		1);
 			shader->setUniform1i("LCnoise",		2);
 			shader->setUniform1i("groundTex",	3);
-			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
+			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
+			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
 
 			shaders.bind("model");
 		}
@@ -1427,7 +1430,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("LCnoise",		1);
 			shader->setUniform1i("groundTex",	2);
 
-			terrainIndexBuffer->drawBuffer(GraphicsManager::TRIANGLES, terrainVertexBuffer);
+			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
+			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
 
 			shaders.bind("model");
 		}
@@ -1536,7 +1540,7 @@ void levelEditor::renderObjectPreview()
 		auto obj = objectInfo[objType != PLAYER_PLANE ? objType : objectInfo.getDefaultPlane()];
 		if(obj)
 		{
-			Sphere<float> sphere = obj->mesh->getBoundingSphere();
+			Sphere<float> sphere = obj->mesh->boundingSphere;
 			sceneManager.drawMesh(objectPreviewView, obj->mesh, Mat4f(Quat4f(),-sphere.center/sphere.radius,1.0/sphere.radius));
 		}
 	}

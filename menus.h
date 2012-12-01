@@ -206,20 +206,20 @@ protected:
 class dogFight: public screen
 {
 protected:
-	shared_ptr<LevelFile> level;
-	bool firstFrame;
+	shared_ptr<const LevelFile> level;
+	vector<LevelFile::Trigger> triggers;
 
 public:
-	dogFight(shared_ptr<LevelFile> lvl);
+	dogFight(shared_ptr<const LevelFile> lvl);
 	virtual ~dogFight();
 
 	virtual bool init()=0;
 
 	void healthBar(float x, float y, float width, float height, float health, bool firstPerson);
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
-	void radar(float x, float y, float width, float height,bool firstPerson, nPlane* p);
+	void radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p);
 	void targeter(float x, float y, float apothem, Angle tilt);
-	void planeIdBoxes(nPlane* p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v);
+	void planeIdBoxes(shared_ptr<plane> p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v);
 
 	void drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c);
 	void drawScene(shared_ptr<GraphicsManager::View> view, int acplayer);
@@ -235,13 +235,13 @@ protected:
 	bool levelup;
 	bool victory;
 	shared_ptr<GraphicsManager::View> views[2];
-
 public:
-	splitScreen(shared_ptr<LevelFile> lvl);
+	splitScreen(shared_ptr<const LevelFile> lvl);
 	bool init();
 	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
+	void renderTransparency(unsigned int v);
 };
 class campaign: public dogFight
 {
@@ -257,10 +257,11 @@ protected:
 
 	shared_ptr<GraphicsManager::View> view;
 public:
-	campaign(shared_ptr<LevelFile> lvl);
+	campaign(shared_ptr<const LevelFile> lvl);
 	bool init();
 	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
+	void renderTransparency(unsigned int v);
 };
 }

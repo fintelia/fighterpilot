@@ -4,6 +4,20 @@ LevelFile::Object::Object():type(0), team(NEUTRAL), startloc(), startRot()
 {
 
 }
+bool LevelFile::Trigger::checkComparison(int value) const
+{
+	if(comparison == ALWAYS)				return true;
+	else if(comparison == NEVER)			return false;
+	else if(comparison == LESS)				return value < comparisonValue;
+	else if(comparison == LESS_EQUAL)		return value <= comparisonValue;
+	else if(comparison == EQUAL)			return value == comparisonValue;
+	else if(comparison == GREATER_EQUAL)	return value >= comparisonValue;
+	else if(comparison == GREATER)			return value > comparisonValue;
+	
+	debugBreak();
+	return false;
+}
+
 bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset)
 {
 	//check that basic level data is valid
@@ -54,7 +68,7 @@ bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset
 	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(-seaLevelOffset*(maxHeight-minHeight)*heightScale + (maxHeight-minHeight)*heightScale);
 	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info.mapSize.x);
 	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info.mapSize.y);
-	attributesFile->bindings["heightmap"]["foliageAmount"] = lexical_cast<string>(info.foliageAmount);
+	attributesFile->bindings["heightmap"]["foliageDensity"] = lexical_cast<string>(info.foliageDensity);
 	attributesFile->bindings["heightmap"]["LOD"] = lexical_cast<string>(info.LOD);
 
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
@@ -79,11 +93,11 @@ bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset
 	lvlFile->files["attributes.ini"] = attributesFile;
 	lvlFile->files["objects.txt"] = objectsFile;
 	//attempt to write the lvl file and return whether we were successful
-	return fileManager.writeZipFile(lvlFile);
+	return fileManager.writeFile(lvlFile);
 }
 bool LevelFile::loadZIP(string filename)
 {
-	auto f = fileManager.loadZipFile(filename);
+	auto f = fileManager.loadFile<FileManager::zipFile>(filename);
 
 	auto rFile = f->files.find("heightmap.raw");
 	auto aFile = f->files.find("attributes.ini");
@@ -111,7 +125,7 @@ bool LevelFile::loadZIP(string filename)
 	attributesFile->readValue("heightmap", "maxHeight", info.maxHeight);
 	attributesFile->readValue("heightmap", "sizeX", info.mapSize.x);
 	attributesFile->readValue("heightmap", "sizeZ", info.mapSize.y);
-	attributesFile->readValue("heightmap", "foliageAmount", info.foliageAmount);
+	attributesFile->readValue("heightmap", "foliageDensity", info.foliageDensity);
 	attributesFile->readValue<unsigned int>("heightmap", "LOD", info.LOD, 1);
 	attributesFile->readValue("level", "nextLevel", info.nextLevel);
 
@@ -141,7 +155,7 @@ bool LevelFile::loadZIP(string filename)
 
 	return true;
 }
-bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
+bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f) //TODO: add improved error handling and reporting
 {
 	if(!f) //make sure the file pointer is not null
 	{
@@ -151,6 +165,8 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 	string& str = f->contents;
 	int pos=0;
 	vector<Object>::iterator object=objects.end();
+	vector<Trigger>::iterator trigger=triggers.end();
+	vector<Path>::iterator path=paths.end();
 
 	auto readSubString = [str, &pos](const char* c)->bool
 	{
@@ -202,10 +218,12 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 	//	++pos;
 	//}
 
+#if !defined(_DEBUG) || !defined(VISUAL_STUDIO)
 	try
 	{
+#endif
 		pos = 0;
-		enum {SEARHING,PARSING_OBJECT}state = SEARHING;
+		enum {SEARHING,PARSING_OBJECT,PARSING_TRIGGER,PARSING_PATH}state = SEARHING;
 		while(pos < str.size())
 		{
 			if(state == SEARHING)
@@ -215,6 +233,18 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 					state = PARSING_OBJECT;
 					objects.push_back(Object());	//add a new object
 					object = (objects.end()-1);		//get an iterator to the last element
+				}
+				else if(readSubString("trigger\n{\n"))
+				{
+					state = PARSING_TRIGGER;
+					triggers.push_back(Trigger());	//add a new trigger
+					trigger = (triggers.end()-1);	//get an iterator to the last element
+				}
+				else if(readSubString("path\n{\n"))
+				{
+					state = PARSING_PATH;
+					paths.push_back(Path());	//add a new trigger
+					path = (paths.end()-1);	//get an iterator to the last element
 				}
 				else
 				{
@@ -255,16 +285,116 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f)
 					pos++; //just continue until we reach something we recognize
 				}
 			}
+			else if(state == PARSING_TRIGGER)
+			{
+				if(readSubString("\tconditionType="))
+				{
+					string s = readLine();
+	
+					vector<string> parameters;
+					int openParen=s.find_first_of('('),
+						closeParen=s.find_last_of(')');
+
+					debugAssert(openParen <= closeParen); // close parenthesis precedes open parenthesis
+					
+					string conditionName=s.substr(0,openParen);
+					
+					if(openParen != s.npos && closeParen != s.npos && openParen+1 < closeParen)
+					{
+						boost::split(parameters,s.substr(openParen+1, closeParen-openParen-1),boost::is_any_of(","));
+					}
+
+					if(conditionName == "NUM_OBJECTS")
+						trigger->condition = shared_ptr<Trigger::Condition>(new Trigger::Condition(Trigger::Condition::NUM_OBJECTS));
+					else if(conditionName == "NUM_OBJECTS_ON_TEAM")
+						trigger->condition = shared_ptr<Trigger::Condition>(new Trigger::ConditionNumObjectsOnTeam(lexical_cast<int>(parameters[0])));
+					else
+						debugBreak(); //conditionName not recognized...
+				}
+				else if(readSubString("\tconditionComparison="))
+				{
+					string s = readLine();
+					if(s == "LESS")					trigger->comparison = Trigger::LESS;
+					else if(s == "LESS_EQUAL")		trigger->comparison = Trigger::LESS_EQUAL;
+					else if(s == "EQUAL")			trigger->comparison = Trigger::EQUAL;
+					else if(s == "GREATER_EQUAL")	trigger->comparison = Trigger::GREATER_EQUAL;
+					else if(s == "GREATER")			trigger->comparison = Trigger::GREATER;
+					else if(s == "NEVER")			trigger->comparison = Trigger::NEVER;
+					else if(s == "ALWAYS")			trigger->comparison = Trigger::ALWAYS;
+					else
+					{
+						debugBreak();	//condition not recognized...
+						trigger->comparison = Trigger::NEVER;
+					}
+				}
+				else if(readSubString("\tconditionValue="))
+				{
+					string s = readLine();
+					trigger->comparisonValue = lexical_cast<int>(s);
+				}
+				else if(readSubString("\taction="))
+				{
+					string s = readLine();
+
+					vector<string> parameters;
+					int openParen=s.find_first_of('('),
+						closeParen=s.find_last_of(')');
+
+					debugAssert(openParen <= closeParen); // close parenthesis precedes open parenthesis
+					
+					string actionName=s.substr(0,openParen);
+					
+					if(openParen != s.npos && closeParen != s.npos && openParen+1 < closeParen)
+					{
+						boost::split(parameters,s.substr(openParen+1, closeParen-openParen-1),boost::is_any_of(","));
+					}
+
+					if(actionName == "START_PATH" && parameters.size() >= 2)
+						trigger->actions.push_back(shared_ptr<Trigger::Action>(new Trigger::ActionStartPath(lexical_cast<int>(parameters[0]), lexical_cast<int>(parameters[1]))));
+					else
+						debugBreak(); //unrecognized action or too few parameters
+
+				}
+				else if(readSubString("}\n"))
+				{
+					state = SEARHING;
+				}
+				else
+				{
+					pos++; //just continue until we reach something we recognize
+				}
+			}
+			else if(state == PARSING_PATH)
+			{
+				if(readSubString("\twaypoint="))
+				{
+					string s = readLine();
+					int pipe = s.find_first_of('|');
+					Vec3f position = lexical_cast<Vec3f>(s.substr(0,pipe));
+					float time = lexical_cast<float>(s.substr(pipe+1,s.npos));
+					path->waypoints.push_back(Path::waypoint(position,time));
+				}
+				else if(readSubString("}\n"))
+				{
+					state = SEARHING;
+				}
+				else
+				{
+					pos++; //just continue until we reach something we recognize
+				}
+			}
 		}
 		return true;
+#if !defined(_DEBUG) || !defined(VISUAL_STUDIO)
 	}
 	catch(...)
 	{
 		debugBreak();
 		return false;
 	}
+#endif
 }
-void LevelFile::initializeWorld(unsigned int humanPlayers)
+void LevelFile::initializeWorld(unsigned int humanPlayers) const
 {
 	players.resetPlayers();
 
@@ -284,7 +414,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 
 		unsigned short* h = new unsigned short[w*w];
 		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info.mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),info.shaderType,info.foliageAmount, info.shaderType==TERRAIN_DESERT?4:1);
+		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),info.shaderType,info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
 	}
 
 	bullets = world.newObject(new bulletCloud);
@@ -294,7 +424,7 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 	{
 		if(i->type == PLAYER_PLANE && players.numPlayers() < humanPlayers)
 		{
-			auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team));
+			auto id = world.newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team));
 			players.addHumanPlayer(id);
 		}
 	}
@@ -305,12 +435,12 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 		{
 			if(players.numPlayers() == 0) //if the number of objects marked PLAYER_PLANE is less than the number of human players
 			{
-				auto id = world.newObject(new nPlane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
+				auto id = world.newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
 				players.addHumanPlayer(id);
 			}
 			else
 			{
-				auto id = world.newObject(new nPlane(i->startloc, i->startRot, i->type, i->team)); //create AI object
+				auto id = world.newObject(new plane(i->startloc, i->startRot, i->type, i->team)); //create AI object
 				players.addAIplayer(id);
 			}
 		}
@@ -336,8 +466,8 @@ void LevelFile::initializeWorld(unsigned int humanPlayers)
 	{
 		for(int i=players.numPlayers(); i<humanPlayers; i++)
 		{
-			object* ally = players[players.numPlayers()-1]->getObject();
-			auto id = world.newObject(new nPlane(ally->position+ally->rotation * Vec3f(-75, 0, -50), ally->rotation, ally->type, ally->team));
+			shared_ptr<plane> ally = players[players.numPlayers()-1]->getObject();
+			auto id = world.newObject(new plane(ally->position+ally->rotation * Vec3f(-75, 0, -50), ally->rotation, ally->type, ally->team));
 			players.addHumanPlayer(id);
 		}
 	}

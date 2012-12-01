@@ -20,7 +20,7 @@ public:
 		y = vn.y;
 		z = vn.z;
 	}
-	Quaternion(Vector3<T> v)
+	Quaternion(Vector3<T> v)//must be normalized!!
 	{
 		v.z += 1.0;
 		v = v.normalize(); // same as: v = (Vec3f(0,0,1) + v).normalize();
@@ -30,7 +30,7 @@ public:
 		z = 0.0;
 
 	}
-	Quaternion(Vector3<T> initial, Vector3<T> final)
+	Quaternion(Vector3<T> initial, Vector3<T> final)//must be normalized!!
 	{
 		Vector3<T> H = (initial + final).normalize();
 

@@ -9,35 +9,169 @@
 	#endif
 
 	#ifdef DIRECT_INPUT
+	#define DIRECTINPUT_VERSION 0x0800
 	#include <dinput.h>
-	LPDIRECTINPUT8  directInputPtr;
+	IDirectInput8*  directInputPtr;
 
-	BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,
-										VOID* pContext )
+	#ifdef XINPUT //if both DIRECT_INPUT && XINPUT are defined
+		#include <wbemidl.h>
+		#include <oleauto.h>
+		//#include <wmsstd.h>
+
+		#define SAFE_RELEASE(x) if(x) { x->Release(); x = NULL; } 
+		//-----------------------------------------------------------------------------
+		// Enum each PNP device using WMI and check each device ID to see if it contains 
+		// "IG_" (ex. "VID_045E&PID_028E&IG_00").  If it does, then it's an XInput device
+		// Unfortunately this information can not be found by just using DirectInput 
+		// see: http://msdn.microsoft.com/en-us/library/windows/desktop/ee417014%28v=vs.85%29.aspx
+		//-----------------------------------------------------------------------------
+		BOOL IsXInputDevice( const GUID* pGuidProductFromDirectInput )
+		{
+			IWbemLocator*           pIWbemLocator  = NULL;
+			IEnumWbemClassObject*   pEnumDevices   = NULL;
+			IWbemClassObject*       pDevices[20]   = {0};
+			IWbemServices*          pIWbemServices = NULL;
+			BSTR                    bstrNamespace  = NULL;
+			BSTR                    bstrDeviceID   = NULL;
+			BSTR                    bstrClassName  = NULL;
+			DWORD                   uReturned      = 0;
+			bool                    bIsXinputDevice= false;
+			UINT                    iDevice        = 0;
+			VARIANT                 var;
+			HRESULT                 hr;
+
+			// CoInit if needed
+			hr = CoInitialize(NULL);
+			bool bCleanupCOM = SUCCEEDED(hr);
+
+			// Create WMI
+			hr = CoCreateInstance( __uuidof(WbemLocator),
+								   NULL,
+								   CLSCTX_INPROC_SERVER,
+								   __uuidof(IWbemLocator),
+								   (LPVOID*) &pIWbemLocator);
+			if( FAILED(hr) || pIWbemLocator == NULL )
+				goto LCleanup;
+
+			bstrNamespace = SysAllocString( L"\\\\.\\root\\cimv2" );if( bstrNamespace == NULL ) goto LCleanup;        
+			bstrClassName = SysAllocString( L"Win32_PNPEntity" );   if( bstrClassName == NULL ) goto LCleanup;        
+			bstrDeviceID  = SysAllocString( L"DeviceID" );          if( bstrDeviceID == NULL )  goto LCleanup;        
+    
+			// Connect to WMI 
+			hr = pIWbemLocator->ConnectServer( bstrNamespace, NULL, NULL, 0L, 
+											   0L, NULL, NULL, &pIWbemServices );
+			if( FAILED(hr) || pIWbemServices == NULL )
+				goto LCleanup;
+
+			// Switch security level to IMPERSONATE. 
+			CoSetProxyBlanket( pIWbemServices, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL, 
+							   RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE );                    
+
+			hr = pIWbemServices->CreateInstanceEnum( bstrClassName, 0, NULL, &pEnumDevices ); 
+			if( FAILED(hr) || pEnumDevices == NULL )
+				goto LCleanup;
+
+			// Loop over all devices
+			for( ;; )
+			{
+				// Get 20 at a time
+				hr = pEnumDevices->Next( 10000, 20, pDevices, &uReturned );
+				if( FAILED(hr) )
+					goto LCleanup;
+				if( uReturned == 0 )
+					break;
+
+				for( iDevice=0; iDevice<uReturned; iDevice++ )
+				{
+					// For each device, get its device ID
+					hr = pDevices[iDevice]->Get( bstrDeviceID, 0L, &var, NULL, NULL );
+					if( SUCCEEDED( hr ) && var.vt == VT_BSTR && var.bstrVal != NULL )
+					{
+						// Check if the device ID contains "IG_".  If it does, then it's an XInput device
+							// This information can not be found from DirectInput 
+						if( wcsstr( var.bstrVal, L"IG_" ) )
+						{
+							// If it does, then get the VID/PID from var.bstrVal
+							DWORD dwPid = 0, dwVid = 0;
+							WCHAR* strVid = wcsstr( var.bstrVal, L"VID_" );
+							if( strVid && swscanf( strVid, L"VID_%4X", &dwVid ) != 1 )
+								dwVid = 0;
+							WCHAR* strPid = wcsstr( var.bstrVal, L"PID_" );
+							if( strPid && swscanf( strPid, L"PID_%4X", &dwPid ) != 1 )
+								dwPid = 0;
+
+							// Compare the VID/PID to the DInput device
+							DWORD dwVidPid = MAKELONG( dwVid, dwPid );
+							if( dwVidPid == pGuidProductFromDirectInput->Data1 )
+							{
+								bIsXinputDevice = true;
+								goto LCleanup;
+							}
+						}
+					}   
+					SAFE_RELEASE( pDevices[iDevice] );
+				}
+			}
+
+		LCleanup:
+			if(bstrNamespace)
+				SysFreeString(bstrNamespace);
+			if(bstrDeviceID)
+				SysFreeString(bstrDeviceID);
+			if(bstrClassName)
+				SysFreeString(bstrClassName);
+			for( iDevice=0; iDevice<20; iDevice++ )
+				SAFE_RELEASE( pDevices[iDevice] );
+			SAFE_RELEASE( pEnumDevices );
+			SAFE_RELEASE( pIWbemLocator );
+			SAFE_RELEASE( pIWbemServices );
+
+			if( bCleanupCOM )
+				CoUninitialize();
+
+			return bIsXinputDevice;
+		}
+	#endif /* XINPUT */
+	BOOL CALLBACK EnumObjectsCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, void* directInputDevicePtr)
 	{
-		DI_ENUM_CONTEXT* pEnumContext = ( DI_ENUM_CONTEXT* )pContext;
+		if(pdidoi->dwType & DIDFT_AXIS)
+		{
+			DIPROPRANGE diprg;
+			diprg.diph.dwSize = sizeof(DIPROPRANGE);
+			diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER);
+			diprg.diph.dwHow = DIPH_BYID;
+			diprg.diph.dwObj = pdidoi->dwType; // Specify the enumerated axis
+			diprg.lMin = -32767;
+			diprg.lMax = 32767;
+
+			// Set the range for the axis
+			static_cast<IDirectInputDevice8*>(directInputDevicePtr)->SetProperty(DIPROP_RANGE, &diprg.diph);
+		}
+		return DIENUM_CONTINUE;
+	}
+	BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, void* inputManagerPtr)	//we need a pointer to input so we can call its 
+	{																									//methods, since it is still being constructed
 		HRESULT hr;
 
-		if( g_bFilterOutXinputDevices && IsXInputDevice( &pdidInstance->guidProduct ) )
+		if(IsXInputDevice(&pdidInstance->guidProduct))
 			return DIENUM_CONTINUE;
 
-		// Skip anything other than the perferred joystick device as defined by the control panel.  
-		// Instead you could store all the enumerated joysticks and let the user pick.
-		if( pEnumContext->bPreferredJoyCfgValid &&
-			!IsEqualGUID( pdidInstance->guidInstance, pEnumContext->pPreferredJoyCfg->guidInstance ) )
-			return DIENUM_CONTINUE;
+		IDirectInputDevice8* directInputDevicePtr;
+		if(!FAILED(directInputPtr->CreateDevice(pdidInstance->guidInstance,&directInputDevicePtr,NULL)))
+		{
+			if(FAILED(directInputDevicePtr->SetDataFormat(&c_dfDIJoystick2)))
+				return DIENUM_CONTINUE;
 
-		// Obtain an interface to the enumerated joystick.
-		hr = g_pDI->CreateDevice( pdidInstance->guidInstance, &g_pJoystick, NULL );
+			if(FAILED(directInputDevicePtr->SetCooperativeLevel(graphics->getWindowHWND(), DISCL_EXCLUSIVE | DISCL_FOREGROUND)))
+				return DIENUM_CONTINUE;
 
-		// If it failed, then we can't use this joystick. (Maybe the user unplugged
-		// it while we were in the middle of enumerating it.)
-		if( FAILED( hr ) )
-			return DIENUM_CONTINUE;
+			if(FAILED(directInputDevicePtr->EnumObjects(EnumObjectsCallback, (void*)directInputDevicePtr, DIDFT_ALL)))
+				return DIENUM_CONTINUE;
 
-		// Stop enumeration. Note: we're just taking the first joystick we get. You
-		// could store all the enumerated joysticks and let the user pick.
-		return DIENUM_STOP;
+			static_cast<InputManager*>(inputManagerPtr)->addDirectInputDevice(directInputDevicePtr, toString(pdidInstance->tszInstanceName,MAX_PATH));
+		}
+
+		return DIENUM_CONTINUE;
 	}
 	#endif /* DIRECT_INPUT */
 #elif defined(LINUX)
@@ -46,7 +180,7 @@
 #endif /* WINDOWS */
 
 const unsigned char KEYSTATE_CURRENT	= 0x01;
-const unsigned char KEYSTATE_LAST	= 0x02; 
+const unsigned char KEYSTATE_LAST		= 0x02; 
 const unsigned char KEYSTATE_VIRTUAL	= 0x04;
 
 
@@ -59,17 +193,6 @@ InputManager::xboxControllerState::xboxControllerState():
                     leftPressLength(0.0), rightPressLength(0.0), upPressLength(0.0), downPressLength(0.0), connected(false),deadZone(0.15)
 {
 
-#ifdef DIRECT_INPUT
-	if(!FAILED(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInputPtr, NULL)))
-	{
-		directInputPtr->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, NULL, DIEDFL_ATTACHEDONLY);
-	}
-	else
-	{
-		directInputPtr = nullptr;
-	}
-#endif
-
 }
 InputManager::xboxControllerState::~xboxControllerState()
 {
@@ -78,7 +201,7 @@ InputManager::xboxControllerState::~xboxControllerState()
 #endif
 }
 
-bool InputManager::xboxControllerState::getButton(int b) const
+bool InputManager::xboxControllerState::getButton(unsigned int b) const
 {
 #ifdef XINPUT
 	return connected && ((state->Gamepad.wButtons & b) != 0);
@@ -86,30 +209,119 @@ bool InputManager::xboxControllerState::getButton(int b) const
 	return false;
 #endif
 }
-float InputManager::xboxControllerState::getAxis(int a) const
+double InputManager::xboxControllerState::getAxis(unsigned int a) const
 {
 #ifdef XINPUT
 	if(!connected)
-		return 0.0f;
+		return 0.0;
 
-	float f = 0.0;
-	if(a == XINPUT_LEFT_TRIGGER)		f = 1.0/255 * state->Gamepad.bLeftTrigger;
-	if(a == XINPUT_RIGHT_TRIGGER)		f = 1.0/255 * state->Gamepad.bRightTrigger;
-	if(a == XINPUT_THUMB_LX)			f = 1.0/32768 * state->Gamepad.sThumbLX;
-	if(a == XINPUT_THUMB_LY)			f = 1.0/32768 * state->Gamepad.sThumbLY;
-	if(a == XINPUT_THUMB_RX)			f = 1.0/32768 * state->Gamepad.sThumbRX;
-	if(a == XINPUT_THUMB_RY)			f = 1.0/32768 * state->Gamepad.sThumbRY;
+	double d = 0.0;
+	if(a == XINPUT_LEFT_TRIGGER)		d = 1.0/255 * state->Gamepad.bLeftTrigger;
+	if(a == XINPUT_RIGHT_TRIGGER)		d = 1.0/255 * state->Gamepad.bRightTrigger;
+	if(a == XINPUT_THUMB_LX)			d = 1.0/32768 * state->Gamepad.sThumbLX;
+	if(a == XINPUT_THUMB_LY)			d = 1.0/32768 * state->Gamepad.sThumbLY;
+	if(a == XINPUT_THUMB_RX)			d = 1.0/32768 * state->Gamepad.sThumbRX;
+	if(a == XINPUT_THUMB_RY)			d = 1.0/32768 * state->Gamepad.sThumbRY;
 
 	debugAssert(deadZone > -1.0 && deadZone < 1.0);
 
-	if(f < -deadZone)
-		return (f + deadZone) / (1.0 - deadZone);
-	else if(f < deadZone)
+	if(d < -deadZone)
+		return (d + deadZone) / (1.0 - deadZone);
+	else if(d < deadZone)
 		return 0.0;
 	else
-		return (f - deadZone) / (1.0 - deadZone);
+		return (d - deadZone) / (1.0 - deadZone);
 #else
-	return 0.0f;
+	return 0.0;
+#endif
+}
+InputManager::directInputControllerState::directInputControllerState(IDirectInputDevice8W* ptr, string n): devicePtr(ptr), name(n), deadZone(0.15)
+{
+	if(devicePtr)
+	{
+		devicePtr->Acquire();
+		axisX.minValue = -32768;
+		axisX.maxValue = 32768;
+		axisY.minValue = -32768;
+		axisY.maxValue = 32768;
+		axisZ.minValue = -32768;
+		axisZ.maxValue = 32768;
+
+		DIDEVCAPS caps;
+		caps.dwSize = sizeof(DIDEVCAPS);
+		devicePtr->GetCapabilities(&caps);
+		buttons = vector<bool>(caps.dwButtons,false);
+	}
+}
+void InputManager::directInputControllerState::release()
+{
+	if(devicePtr)
+	{
+		devicePtr->Unacquire();
+		devicePtr->Release();
+	}
+}
+void InputManager::directInputControllerState::acquireController()
+{
+	if(devicePtr)
+	{
+		devicePtr->Acquire();
+	}
+}
+bool InputManager::directInputControllerState::updateController()
+{
+	if(!devicePtr)
+		return false;
+
+	//devicePtr->Acquire();
+    if(FAILED(devicePtr->Poll()))
+    {
+		devicePtr->Acquire();
+		return false;
+    }
+
+
+	DIJOYSTATE2 joystickState;
+    if(FAILED(devicePtr->GetDeviceState(sizeof(DIJOYSTATE2), &joystickState)))
+        return false;
+
+	axisX.rawValue = joystickState.lX;
+	axisY.rawValue = joystickState.lY;
+	axisZ.rawValue = joystickState.lZ;
+
+	axisX.value = static_cast<double>(axisX.rawValue) / 32767.0;
+	axisY.value = static_cast<double>(axisY.rawValue) / 32767.0;
+	axisZ.value = static_cast<double>(axisZ.rawValue) / 32767.0;
+
+	for(unsigned int i = 0; i < buttons.size() && i < 128; i++)
+	{
+		buttons[i] = joystickState.rgbButtons[i] & 0x80;
+	}
+
+	return true;
+}
+bool InputManager::directInputControllerState::getButton(unsigned int b) const
+{
+	return b < buttons.size() ? buttons[b] : false;
+}
+double InputManager::directInputControllerState::getAxis(unsigned int axis)const
+{
+#ifdef DIRECT_INPUT
+	double d = 0.0;
+	if(axis == 0)	d = axisX.value;
+	if(axis == 1)	d = axisY.value;
+	if(axis == 2)	d = axisZ.value;
+
+	debugAssert(deadZone > -1.0 && deadZone < 1.0);
+
+	if(d < -deadZone)
+		return (d + deadZone) / (1.0 - deadZone);
+	else if(d < deadZone)
+		return 0.0;
+	else
+		return (d - deadZone) / (1.0 - deadZone);
+#else
+	return 0.0;
 #endif
 }
 void InputManager::sendCallbacks(callBack* c)
@@ -155,8 +367,9 @@ void InputManager::sendCallbacks(callBack* c)
 	}
 	menuManager.inputCallback(c);
 }
-InputManager::InputManager(): tPresses(0)
+void InputManager::initialize()
 {
+	tPresses = 0;
 	for(int i=0; i<256; i++)
 	{
 		keys[i]=false;
@@ -166,10 +379,31 @@ InputManager::InputManager(): tPresses(0)
 	{
 		xboxControllers[i].connected = true;
 	}
-}
-InputManager::~InputManager()
-{
 
+#ifdef DIRECT_INPUT
+	if(!FAILED(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInputPtr, NULL)))
+	{
+		directInputPtr->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+	}
+	else
+#endif
+	{
+		directInputPtr = nullptr;
+	}
+}
+void InputManager::shutdown()
+{
+#ifdef DIRECT_INPUT
+	for(auto i = directInputControllers.begin(); i != directInputControllers.end(); i++)
+	{
+		i->release();
+	}
+
+	if(directInputPtr != NULL)
+	{
+	   static_cast<IDirectInput8*>(directInputPtr)->Release();
+	}
+#endif
 }
 void InputManager::down(int k)
 {
@@ -196,9 +430,13 @@ const InputManager::xboxControllerState& InputManager::getXboxController(unsigne
 {
 	return xboxControllers[clamp(controllerNum,0,3)];
 }
-const InputManager::joystickControllerState* InputManager::getJoystick(unsigned int joystickNum)
+const InputManager::directInputControllerState* InputManager::getDirectInputController(unsigned int joystickNum)
 {
-	return joystickNum < joysticks.size() ? &joysticks[joystickNum] : nullptr;
+	return joystickNum < directInputControllers.size() ? &directInputControllers[joystickNum] : nullptr;
+}
+void InputManager::addDirectInputDevice(IDirectInputDevice8W* devicePtr, string name)
+{
+	directInputControllers.push_back(directInputControllerState(devicePtr, name));
 }
 void InputManager::update()
 {
@@ -270,12 +508,7 @@ void InputManager::update()
 		{
 			xboxControllersConnected[i] = false;
 		}
-	}
-#endif
 
-#ifdef XINPUT
-	for(int i=0;i<4;i++)
-	{
 		if(xboxControllers[i].connected)
 		{
 			if(xboxControllers[i].state->Gamepad.sThumbLX < -32768/2)
@@ -404,6 +637,12 @@ void InputManager::update()
 	}
 #endif
 
+#ifdef DIRECT_INPUT
+	for(auto i=directInputControllers.begin(); i != directInputControllers.end(); i++)
+	{
+		i->updateController();
+	}
+#endif
 	inputMutex.unlock();
 }/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -416,7 +655,14 @@ const InputManager::mouseButtonState& InputManager::getMouseState(mouseButton m)
 #ifdef WINDOWS
 void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if(uMsg == WM_KEYDOWN)
+	if(uMsg == WM_ACTIVATEAPP)
+	{
+		for(auto i=directInputControllers.begin(); i!=directInputControllers.end(); i++)
+		{
+			i->acquireController();
+		}
+	}
+	else if(uMsg == WM_KEYDOWN)
 	{
 		if((lParam & 0x40000000)==0)//if key was not already down
 		{

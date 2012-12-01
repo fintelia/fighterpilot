@@ -22,8 +22,10 @@ public:
 	struct objectData
 	{
 	private:
-		shared_ptr<FileManager::modelFile>			meshFile;
-		shared_ptr<FileManager::modelFile>			collisionMeshFile;
+		//shared_ptr<FileManager::modelFile>			meshFile;
+		//shared_ptr<FileManager::modelFile>			collisionMeshFile;
+		string meshFilename;
+		string collisionMeshFilename;
 	public:
 		string name;
 		string textName;
@@ -64,7 +66,7 @@ public:
 		return *pInstance;
 	}
 	bool loadObjectData(string filename="media/objectData.xml");
-	int loadObjectMeshes();
+	void linkObjectMeshes();
 	objectType typeFromString(string s);
 	string typeString(objectType t);
 	string textName(objectType t);

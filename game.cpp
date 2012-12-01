@@ -53,15 +53,15 @@ bool Game::init()
 		settingsFile->bindings["graphics"]["vSync"]="enabled";
 		settingsFile->bindings["graphics"]["fullscreen"] = "true";
 		settingsFile->bindings["graphics"]["textureCompression"]="enabled";
-		if(!fileManager.writeIniFile(settingsFile))
+		if(!fileManager.writeFile(settingsFile))
 			debugBreak();
 	}
 	shared_ptr<FileManager::textFile> shortcut(new FileManager::textFile("media/settings.ini.url"));
 	shortcut->contents = string("[InternetShortcut]\r\nURL=") + appData + "settings.ini\r\nIconIndex=0\r\nIconFile=" + appData + "settings.ini\r\n";
-	fileManager.writeTextFile(shortcut);
+	fileManager.writeFile(shortcut,false);
 
 //////////////////////////////////////////////////////apply settings///////////////////////////////////////////////////////////////////////////////////
-	auto s = fileManager.loadIniFile(appData + "settings.ini");
+	auto s = fileManager.loadFile<FileManager::iniFile>(appData + "settings.ini");
 	settings.load(s->bindings);
 	/////////////////////Screen Resolution/////////////////////////
 	Vec2u r, rWanted;
@@ -116,13 +116,13 @@ bool Game::init()
 #endif
 		return false;
 	}
-	else if(!objectInfo.loadObjectData())
-	{
-#ifdef WINDOWS
-		MessageBox(NULL,L"Error reading media/objectData.xml. FighterPilot will now close.", L"Error",MB_ICONERROR);
-#endif
-		return false;
-	}
+//	else if(!objectInfo.loadObjectData())
+//	{
+//#ifdef WINDOWS
+//		MessageBox(NULL,L"Error reading media/objectData.xml. FighterPilot will now close.", L"Error",MB_ICONERROR);
+//#endif
+//		return false;
+//	}
 //////////////////////////////////////////////////////create window///////////////////////////////////////////////////////////////////////////////////
 	if (!graphics->createWindow("FighterPilot",r,maxSamples, (settings.get<string>("graphics","fullscreen")=="true")))
 	{
@@ -132,6 +132,8 @@ bool Game::init()
 
 	graphics->setRefreshRate(settings.get<unsigned int>("graphics", "refreshRate"));
 	graphics->setVSync(settings.get<string>("graphics", "vSync")=="enabled");
+
+	input.initialize();
 
 	menuManager.setMenu(new gui::loading);
 

@@ -16,16 +16,6 @@ objId objectList::newObject(object* newObj)
 	}
 	return 0;
 }
-void objectList::deleteObject(objId id)
-{
-	if(mObjects.count(id)==0) return;
-
-	objectType t = mObjects[id]->type;
-
-	mObjects.erase(id);
-	mObjectTypes[t].erase(id);
-	mObjectTypes[t & MAJOR_OBJECT_TYPE].erase(id);
-}
 void objectList::clearObjects()
 {
 	mObjects.clear();

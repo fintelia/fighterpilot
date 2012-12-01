@@ -39,7 +39,7 @@ namespace particle
 
 		if(t<0.10f)
 		{
-			p.a = t*12.0;
+			p.a = t*6.0;
 			//p.a = min(t*20.0,1.0) * 0.6;
 			p.size = 2.0;
 		}

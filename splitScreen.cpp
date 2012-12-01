@@ -3,17 +3,19 @@
 #include "game.h"
 
 namespace gui{
-splitScreen::splitScreen(shared_ptr<LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
+splitScreen::splitScreen(shared_ptr<const LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
 {
 	views[0] = graphics->genView();
 	views[0]->viewport(0, 0.0, sAspect, 0.5);
 	views[0]->perspective(40.0, (double)sw / ((double)sh/2), 1.0, 500000.0);
 	views[0]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 0);
+	views[0]->setTransparentRenderFunc(std::bind(&splitScreen::renderTransparency, this, std::placeholders::_1), 0);
 
 	views[1] = graphics->genView();
 	views[1]->viewport(0, 0.5, sAspect, 0.5);
 	views[1]->perspective(40.0, (double)sw / ((double)sh/2),1.0, 500000.0);
 	views[1]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 1);
+	views[1]->setTransparentRenderFunc(std::bind(&splitScreen::renderTransparency, this, std::placeholders::_1), 1);
 
 	graphics->setLightPosition(Vec3f(0.0, 16000.0, 10000.0));
 }
@@ -60,7 +62,7 @@ void splitScreen::updateFrame()
 	//set camera position
 	for(int i=0; i<2; i++)
 	{
-		nPlane* p=(nPlane*)players[i]->getObject();
+		shared_ptr<plane> p = players[i]->getObject();
 		auto camera = players[i]->getCamera(p->controled || p->dead);
 		views[i]->lookAt(camera.eye, camera.center, camera.up);
 		if(level->info.night)
@@ -93,8 +95,6 @@ void splitScreen::updateFrame()
 		}
 	}
 #endif
-	//((nPlane*)world.objectList[players[0].objectNum()])->setControlState(players[0].getControlState());
-	//((nPlane*)world.objectList[players[1].objectNum()])->setControlState(players[1].getControlState());
 	if(gameType == COOPERATIVE)
 	{
 		if(levelup)
@@ -179,7 +179,7 @@ void splitScreen::render()
 {
 	for(int acplayer=0; acplayer <= 1; acplayer++)
 	{
-		nPlane* p=(nPlane*)players[acplayer]->getObject();
+		shared_ptr<plane> p = players[acplayer]->getObject();
 		if(players[acplayer]->firstPersonView && !p->controled && !p->dead)
 		{
 			graphics->drawOverlay(Rect::XYXY(0,0.5*acplayer,sAspect,0.5*(acplayer+1)),"cockpit");
@@ -219,7 +219,7 @@ void splitScreen::render()
 
 						if(targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
 						{
-							auto targetPlanePtr = dynamic_pointer_cast<nPlane>(targetPtr);
+							auto targetPlanePtr = dynamic_pointer_cast<plane>(targetPtr);
 							float s = 1000; //speed of bullets
 							Vec3f r = (targetPos+targetOffset) - planePos;
 							Vec3f v = targetRot * Vec3f(0,0,targetPlanePtr->speed);
@@ -227,16 +227,9 @@ void splitScreen::render()
 							float a = v.dot(v) - s*s;
 							float b = 2.0 * v.dot(r);
 							float c = r.dot(r);
-		
-							if(b*b - 4.0*a*c >= 0.0)
+							float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+							if(b*b - 4.0*a*c >= 0.0 && t > 0.0)
 							{
-								float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-		
-								if(t <= 0.0) //can only happen when plane is flying faster than bullets
-								{
-									t = (-b + sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-								}
-		
 								if(level->info.night)	graphics->setColor(0.4,0.4,0.4,0.3);
 								else					graphics->setColor(1,1,1,0.3);
 								graphics->drawOverlay(Rect::CWH(views[acplayer]->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
@@ -300,19 +293,23 @@ void splitScreen::render3D(unsigned int v)
 //	glViewport(0, sh/2, sw, sh/2);
 //	graphics->perspective(80.0, (double)sw / ((double)sh/2),1.0, 160000.0);
 	drawScene(views[v], v);
-	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+	if(players[v]->firstPersonView && !players[v]->getObject()->controled && !players[v]->getObject()->dead)
 		sceneManager.renderScene(views[v], players[v]->getObject()->meshInstance);
 	else
 		sceneManager.renderScene(views[v]);
 
 	world.renderFoliage(views[v]);
 
-	if(players[v]->firstPersonView && !((nPlane*)players[v]->getObject())->controled && !players[v]->getObject()->dead)
+	if(players[v]->firstPersonView && !players[v]->getObject()->controled && !players[v]->getObject()->dead)
 		sceneManager.renderSceneTransparency(views[v], players[v]->getObject()->meshInstance);
 	else
 		sceneManager.renderSceneTransparency(views[v]);
 
 //	glViewport(0, 0, sw, sh/2);
 //	drawScene(1);
+}
+void splitScreen::renderTransparency(unsigned int v)
+{
+	particleManager.render(views[v]);
 }
 }
