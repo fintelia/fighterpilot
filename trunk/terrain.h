@@ -46,19 +46,20 @@ protected:
 	public:
 		struct foliagePatch
 		{
-			struct plant
-			{
-				Vec3f location;
-				float height;
-			};
+			//struct plant
+			//{
+			//	Vec3f location;
+			//	float height;
+			//	mutable float screenDepth;
+			//};
 			BoundingBox<float> bounds;
 			Vec3f center;
 			shared_ptr<GraphicsManager::indexBuffer> plantIndexBuffer;
-			vector<plant> plants;
+			//vector<plant> plants;
 			mutable enum RenderType{DONT_RENDER,RENDER_BILLBAORD,RENDER_MODEL}renderType;
 		};
 		vector<foliagePatch> foliagePatches;
-
+		unsigned int numTrees;
 
 		Vec3f minXYZ;
 		Vec3f maxXYZ;
@@ -82,12 +83,13 @@ protected:
 
 		shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
 
-		struct plant
-		{
-			Vec3f location;
-			float height;
-		};
-		vector<plant> foliage;
+		//struct plant
+		//{
+		//	Vec3f location;
+		//	float height;
+		//	mutable float screenDepth;
+		//};
+		//vector<plant> foliage;
 
 		//struct IndexBuffer
 		//{
@@ -100,7 +102,7 @@ protected:
 		Page(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale, unsigned int lod=1);
 		~Page();
 
-		void render(shared_ptr<GraphicsManager::View> view) const;
+		void render(shared_ptr<GraphicsManager::View> view, TerrainType shaderType) const;
 		void renderFoliage(shared_ptr<GraphicsManager::View> view) const;
 
 		void generateFoliage(float foliageDensity);
@@ -149,6 +151,7 @@ protected:
 
 	shared_ptr<GraphicsManager::textureCube> skyTexture;
 	shared_ptr<GraphicsManager::texture3D> oceanTexture;
+	shared_ptr<GraphicsManager::texture2D> treeTexture;
 	//unsigned int skyTextureId; //id for the sky cube-map
 	//unsigned int oceanTextureId; //id for the ocean normals cube map
 
@@ -161,12 +164,12 @@ protected:
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true){}
-	virtual ~Terrain();
+	virtual ~Terrain(){}
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, float foliageDensity=0, unsigned int LOD=1);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
-	void generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr) const;
+	void generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr);
 
 	const Circle<float>& bounds() const{return mBounds;}
 

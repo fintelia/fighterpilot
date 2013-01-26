@@ -56,6 +56,7 @@ void FileManager::shutdown()
 #elif defined(LINUX)
 	pthread_join(pWorkerThread, NULL);
 #endif
+	this->~FileManager();
 }
 void FileManager::workerThread()
 {
@@ -191,7 +192,7 @@ string FileManager::changeExtension(string filename, string newExtension)
 	bool FileManager::directoryExists(string directory)
 	{
 		DWORD d = GetFileAttributesA(directory.c_str());
-		return (d & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		return d != INVALID_FILE_ATTRIBUTES && (d & FILE_ATTRIBUTE_DIRECTORY) != 0;
 	}
 	bool FileManager::createDirectory(string directory)
 	{
@@ -208,9 +209,10 @@ string FileManager::changeExtension(string filename, string newExtension)
 	vector<string> FileManager::getAllFiles(string directory)
 	{
 		vector<string> v;
-		directory += "/*";
 		if(!directoryExists(directory))
 			return v;
+
+		directory += "/*";
 
 		HANDLE h;
 		WIN32_FIND_DATAA d;
@@ -235,9 +237,10 @@ string FileManager::changeExtension(string filename, string newExtension)
 	{
 		string s;
 		vector<string> v;
-		directory += "/*";
 		if(!directoryExists(directory))
 			return v;
+
+		directory += "/*";
 
 		HANDLE h;
 		WIN32_FIND_DATAA d;
@@ -264,9 +267,10 @@ string FileManager::changeExtension(string filename, string newExtension)
 	{
 		string s;
 		vector<string> v;
-		directory += "/*";
 		if(!directoryExists(directory))
 			return v;
+
+		directory += "/*";
 
 		HANDLE h;
 		WIN32_FIND_DATAA d;
@@ -292,9 +296,10 @@ string FileManager::changeExtension(string filename, string newExtension)
 	vector<string> FileManager::getAllDirectories(string directory)
 	{
 		vector<string> v;
-		directory += "/*";
 		if(!directoryExists(directory))
 			return v;
+
+		directory += "/*";
 
 		HANDLE h;
 		WIN32_FIND_DATAA d;
@@ -318,9 +323,10 @@ string FileManager::changeExtension(string filename, string newExtension)
 	vector<string> FileManager::getAllFilesAndDirectories(string directory)
 	{
 		vector<string> v;
-		directory += "/*";
 		if(!directoryExists(directory))
 			return v;
+
+		directory += "/*";
 
 		HANDLE h;
 		WIN32_FIND_DATAA d;
@@ -496,7 +502,7 @@ FileManager::fileContents FileManager::loadFileContents(string filename)
 shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileContents data)
 {
 	string ext = extension(filename);
-	if(readAs<unsigned int>(data.contents) == 0x04034b50) //zip file
+	if(data.contents && data.size>=4 && readAs<unsigned int>(data.contents) == 0x04034b50) //zip file
 	{
 		static int recursionLevel=0;
 		if(recursionLevel >= 8)
@@ -510,13 +516,13 @@ shared_ptr<FileManager::file> FileManager::parseFile(string filename, fileConten
 		recursionLevel--;
 		return f;
 	}
-	else if(readAs<unsigned short>(data.contents) == 0x4d42) //bmp file
+	else if(data.contents && data.size>=2 && readAs<unsigned short>(data.contents) == 0x4d42) //bmp file
 	{
 		shared_ptr<textureFile> f(new textureFile(filename,BMP));
 		f->parseFile(data);
 		return f;
 	}
-	else if(readAs<unsigned int>(data.contents) == 0x474e5089) //png file
+	else if(data.contents && data.size>=4 && readAs<unsigned int>(data.contents) == 0x474e5089) //png file
 	{
 		shared_ptr<textureFile> f(new textureFile(filename,PNG));
 		f->parseFile(data);
@@ -588,7 +594,7 @@ void FileManager::binaryFile::parseFile(fileContents data)
 }
 void FileManager::textFile::parseFile(fileContents data)
 {
-	if(data.contents != nullptr)
+	if(data.contents != nullptr || data.size == 0)
 	{
 		for(unsigned int i=0; i < data.size; i++)
 		{
@@ -1652,8 +1658,15 @@ bool FileManager::writeFileContents(string filename, fileContents contents)
 {
 	std::unique_ptr<unsigned char[]> p(contents.contents); //makes sure that memory get deleted
 
+#if defined(WINDOWS)
+	if(filename.length() >= 2 && filename[0]=='.' && filename[1]=='/')
+	{
+		filename = filename.substr(2);
+	}
+#endif
+
 	try{
-		std::ofstream fout(filename,std::ios::out|std::ios::binary|std::ios::trunc);
+		std::ofstream fout(filename,std::ios::binary);
 		if(fout.is_open())
 		{
 			fout.write((const char*)contents.contents, contents.size);

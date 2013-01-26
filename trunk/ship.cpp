@@ -5,7 +5,7 @@ ship::ship(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
 
 	dead = false;
 	health = 100.0;

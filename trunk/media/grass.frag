@@ -5,15 +5,17 @@ varying vec3 lightDirections[4];
 
 uniform float time;
 
+uniform samplerCube sky;
+uniform sampler2D groundTex;
+uniform sampler2D LCnoise;
+uniform sampler2D noiseTex;
 uniform sampler2D sand;
+uniform sampler2D sand2;
 uniform sampler2D grass;
 uniform sampler2D rock;
 uniform sampler2D snow;
-uniform sampler2D LCnoise;
-uniform sampler2D groundTex;
 uniform sampler2D grass_normals;
-uniform sampler2D noiseTex;
-uniform samplerCube sky;
+uniform sampler2D snow_normals;
 
 
 uniform vec3 lightColors[4];
@@ -22,8 +24,10 @@ uniform float lightStrengths[4];
 //uniform int numLights = 0;
 
 uniform vec3 eyePos;
-uniform vec3 invScale;
-uniform vec2 invTerrainResolution;
+
+uniform vec2 gtex_halfPixel;
+uniform vec2 gtex_origin;
+uniform vec2 gtex_invScale;
 
 uniform float minHeight;
 uniform float heightRange;
@@ -33,7 +37,7 @@ void main()
 {
 	vec4 color = vec4(1,1,1,1);
 
-	vec4 groundTexVal = texture2D(groundTex,position.xz * invScale.xz + vec2(0.5,0.5) * invTerrainResolution);
+	vec4 groundTexVal = texture2D(groundTex,gtex_halfPixel + (position.xz-gtex_origin) * gtex_invScale);
 	vec3 v = groundTexVal.xyz;
 	vec3 normal = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
 	

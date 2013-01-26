@@ -4,7 +4,12 @@
 //#include "xml/tinyxml.h"
 #include "xml/tinyxml2.h"
 
-using namespace tinyxml2;
+using namespace tinyxml2; //makes the code much more readable...
+
+void AssetLoader::setTextureCompression(bool compression)
+{
+	useTextureCompression = compression;
+}
 
 bool AssetLoader::loadAssetList()
 {
@@ -55,6 +60,7 @@ bool AssetLoader::loadAssetList()
 					tmpAssetFile->name = getAttribute(textureElement, "name");
 					string filename = getAttribute(textureElement, "file");
 					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
+					tmpAssetFile->compress = useTextureCompression;
 
 					if(game->isWideScreen())
 					{
@@ -158,21 +164,48 @@ bool AssetLoader::loadAssetList()
 			while(shaderElement != nullptr)
 			{
 				shaderAssetFile* tmpAssetFile = new shaderAssetFile;
+
+				//load file names
 				tmpAssetFile->name = getAttribute(shaderElement, "name");
 				string vertFilename = getAttribute(shaderElement, "vertex");
 				string fragFilename = getAttribute(shaderElement, "fragment");
 				string vert3Filename = getAttribute(shaderElement, "vertex3");	
-				string frag3Filename = getAttribute(shaderElement, "geometry3");
-				string geom3Filename = getAttribute(shaderElement, "fragment3");
+				string geom3Filename = getAttribute(shaderElement, "geometry3");
+				string frag3Filename = getAttribute(shaderElement, "fragment3");
 
+				//sAspect
 				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
 
-				if(tmpAssetFile->name == "" || vertFilename == "" || fragFilename == "")
+
+				///transform feedback varyings
+				tmpAssetFile->feedbackTransformVaryingsStr = getAttribute(shaderElement, "feedbackTransformVaryings");
+				int pos = tmpAssetFile->feedbackTransformVaryingsStr.find_first_not_of(';');
+				if(pos != tmpAssetFile->feedbackTransformVaryingsStr.npos)
 				{
-					debugBreak();
-					continue;
+					vector<int> positions;
+					positions.push_back(0);
+					while((pos = tmpAssetFile->feedbackTransformVaryingsStr.find(';', positions.back())) != tmpAssetFile->feedbackTransformVaryingsStr.npos)
+					{
+						if(tmpAssetFile->feedbackTransformVaryingsStr.size() > pos+1)
+							positions.push_back(pos+1);
+						tmpAssetFile->feedbackTransformVaryingsStr[pos] = '\0';
+					}
+
+					const char* c_str = tmpAssetFile->feedbackTransformVaryingsStr.c_str();
+					for(auto i = positions.begin(); i != positions.end(); i++)
+					{
+						tmpAssetFile->feedbackTransformVaryings.push_back(c_str + *i);
+					}
 				}
 
+				//check for possible errors
+		//		if(tmpAssetFile->name == "" || (vertFilename == "" && vert3Filename == "") || (fragFilename == "" && frag3Filename == "" && tmpAssetFile->feedbackTransformVaryings.empty()))
+		//		{
+		//			debugBreak();
+		//			continue;
+		//		}
+
+				//load files
 				if(getAttribute(shaderElement,"preload") == "true")
 				{
 					tmpAssetFile->vertFile = fileManager.loadFile<FileManager::textFile>(vertFilename);
@@ -334,7 +367,7 @@ int AssetLoader::loadAsset()
 			if(texFile && texFile->valid())
 			{
 				auto texture = graphics->genTexture2D();
-				texture->setData(texFile->width, texFile->height, ((GraphicsManager::texture::Format)texFile->channels), texFile->contents, textureAsset->tileable);
+				texture->setData(texFile->width, texFile->height, ((GraphicsManager::texture::Format)texFile->channels), textureAsset->tileable, textureAsset->compress, texFile->contents);
 				dataManager.addTexture(textureAsset->name, texture);
 			}
 			else
@@ -389,9 +422,18 @@ int AssetLoader::loadAsset()
 			{
 				auto shader = graphics->genShader();
 
-				if(graphics->hasShaderModel4() && shaderAsset->vert3File && shaderAsset->frag3File)
+				if(graphics->hasShaderModel4() && shaderAsset->vert3File && !shaderAsset->feedbackTransformVaryings.empty())
 				{
-					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File->contents.c_str(), shaderAsset->frag3File->contents.c_str()))
+					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, nullptr, shaderAsset->feedbackTransformVaryings))
+					{
+#ifdef _DEBUG
+						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+#endif
+					}
+				}
+				else if(graphics->hasShaderModel4() && shaderAsset->vert3File /*&& shaderAsset->frag3File*/)
+				{
+					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, shaderAsset->frag3File ? shaderAsset->frag3File->contents.c_str() : nullptr))
 					{
 #ifdef _DEBUG
 						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());

@@ -103,16 +103,32 @@ bool LevelFile::loadZIP(string filename)
 	auto aFile = f->files.find("attributes.ini");
 	auto oFile = f->files.find("objects.txt");
 
-	if(rFile == f->files.end() || aFile == f->files.end() || oFile == f->files.end())
+	if(rFile == f->files.end())
+	{
+		messageBox("heightmap.raw file not found!");
 		return false;
+	}
+
+	if(aFile == f->files.end())
+	{
+		messageBox("attributes.ini file not found!");
+		return false;
+	}
+	if(oFile == f->files.end())
+	{
+		messageBox("objects.txt file not found!");
+		return false;
+	}
 
 	shared_ptr<FileManager::binaryFile>	rawFile(dynamic_pointer_cast<FileManager::binaryFile>(rFile->second));
 	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
 	shared_ptr<FileManager::textFile> objectsFile(dynamic_pointer_cast<FileManager::textFile>(oFile->second));
 
-	if(attributesFile->getValue<int>("heightmap", "resolutionX") <= 0 || attributesFile->getValue<int>("heightmap", "resolutionY") <= 0)
+	if(attributesFile->getValue<int>("heightmap", "resolutionX") <= 2 || attributesFile->getValue<int>("heightmap", "resolutionY") <= 2)
+	{
+		messageBox("invalid heightmap size!");
 		return false;
-
+	}
 	delete[] heights;
 	heights = nullptr;
 	objects.clear();
@@ -145,6 +161,27 @@ bool LevelFile::loadZIP(string filename)
 	for(int i = 0; i < info.mapResolution.x * info.mapResolution.y && i * 2 < rawFile->size; i++)
 	{
 		heights[i] = info.minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info.maxHeight - info.minHeight) / USHRT_MAX;
+	}
+
+	if(!isPowerOfTwo(info.mapResolution.x-1) || !isPowerOfTwo(info.mapResolution.y-1)) //just pad edges of terrain if they are not 1 greater than a power of 2
+	{
+		Vec2u nResolution(uPowerOfTwo(info.mapResolution.x-1)+1, uPowerOfTwo(info.mapResolution.y-1)+1);
+		float* nHeights = new float[nResolution.x*nResolution.y];
+
+		for(int y = 0; y < nResolution.y; y++)
+		{
+			memcpy(nHeights + y * nResolution.x, heights + min(y,info.mapResolution.y-1) * info.mapResolution.x, info.mapResolution.x * sizeof(float));
+			for(int x = info.mapResolution.x; x < nResolution.x; x++)
+			{
+				nHeights[x + y * nResolution.x] = nHeights[x-1 + y * nResolution.x];
+			}
+		}
+
+		delete[] heights;
+		heights = nHeights;
+		info.mapResolution = nResolution;
+
+		messageBox(string("Terrain size was not one greater than a power of two! Terrain has been padded to ") + lexical_cast<string>(nResolution.x)+"x"+lexical_cast<string>(nResolution.y)+".");
 	}
 
 	if(!parseObjectFile(objectsFile))

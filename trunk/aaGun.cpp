@@ -25,7 +25,7 @@ antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, ob
 {
 	lastPosition = position = Vec3f(sPos.x,world.elevation(sPos.x,sPos.z),sPos.z);
 	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
 
 	target.reset();
 	health = 100.0;
@@ -77,7 +77,7 @@ void AAgun::updateSimulation(double time, double ms)
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 20000 * 20000 && (target.expired() || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && n->second->position.y - position.y > 100.0 && nDistSquared < 20000 * 20000 && (target.expired() || nDistSquared < lDistSquared))
 		{
 			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;
@@ -153,7 +153,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 3000 * 3000 && (target.expired() || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && n->second->position.y - position.y > 100.0 && nDistSquared < 3000 * 3000 && (target.expired() || nDistSquared < lDistSquared))
 		{
 			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;
@@ -200,7 +200,7 @@ void flakCannon::updateSimulation(double time, double ms)
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
-		if(!n->second->dead && n->second->team != team && nDistSquared < 2200 * 2200 && (target.expired() || nDistSquared < lDistSquared))
+		if(!n->second->dead && n->second->team != team && n->second->position.y - position.y > 100.0 && nDistSquared < 2200 * 2200 && (target.expired() || nDistSquared < lDistSquared))
 		{
 			target = static_pointer_cast<plane>(n->second);
 			lDistSquared = nDistSquared;

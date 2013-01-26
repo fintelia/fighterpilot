@@ -20,6 +20,12 @@ struct texturedVertex3D
 	Vec2f UV;
 	float padding[3];
 };
+struct texturedColoredVertex3D
+{
+	Vec3f position;
+	Vec2f UV;
+	Color3 color;
+};
 struct litVertex3D
 {
 	Vec3f position;
@@ -102,6 +108,8 @@ public:
 		Vec3f cameraShift;
 		Mat4f completeProjectionMat;
 
+		Rect mViewConstraint;
+
 		bool mBlurStage;
 		shared_ptr<GraphicsManager::shader> mPostProcessShader;
 	public:
@@ -115,12 +123,12 @@ public:
 		void ortho(float left, float right, float bottom, float top){ortho(left, right, bottom, top, 0.0, 1.0);}
 		void lookAt(Vec3f eye, Vec3f center, Vec3f up);
 
-		const Viewport& viewport(){return mViewport;}
-		const Projection& projection(){return mProjection;}
-		const Camera& camera(){return mCamera;}
-
-		const Mat4f& projectionMatrix(){return mProjectionMat;}
-		const Mat4f& modelViewMatrix(){return mModelViewMat;}
+		const Viewport& viewport()const{return mViewport;}
+		const Projection& projection()const{return mProjection;}
+		const Camera& camera()const{return mCamera;}
+		const Rect& viewConstraint()const{return mViewConstraint;}
+		const Mat4f& projectionMatrix()const{return mProjectionMat;}
+		const Mat4f& modelViewMatrix()const{return mModelViewMat;}
 
 		void setRenderFunc(std::function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
 		void setTransparentRenderFunc(std::function<void(int)> f, int param=0){mTransparentRenderFunc = f; mTransparentRenderFuncParam = param;}
@@ -172,10 +180,14 @@ public:
 		virtual void bindBuffer(unsigned int offset)=0;
 		void bindBuffer(){bindBuffer(0);}
 
+		virtual void bindTransformFeedback(GraphicsManager::Primitive primitive)=0;
+		virtual unsigned int unbindTransformFeedback()=0;
+
 		virtual void setTotalVertexSize(unsigned int size){totalVertexSize = size;}
 		virtual void addVertexAttribute(VertexAttribute attrib, unsigned int offset);
 		virtual void setVertexData(unsigned int size, void* data)=0;
-		virtual void drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
+		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
+		virtual void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances)=0;
 	};
 	class indexBuffer
 	{
@@ -195,17 +207,16 @@ public:
 		virtual void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset)=0;
 		void bindBuffer(shared_ptr<vertexBuffer> buffer){bindBuffer(buffer,0);}
 
-		virtual void drawBufferX()=0;
-		virtual void drawBufferX(unsigned int numIndicies)=0;
+		virtual void drawBuffer()=0;
+		virtual void drawBuffer(unsigned int numIndicies)=0;
 
 	};
 	class texture
 	{
 	public:
-		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB16, RGBA16, RGB16F, RGBA16F};
+		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, DEPTH};
 	protected:
 		friend class GraphicsManager;
-		static bool compression;
 		Format format;
 	public:
 		texture():format(NONE){}
@@ -220,10 +231,10 @@ public:
 	public:
 		unsigned int getWidth(){return width;}
 		unsigned int getHeight(){return height;}
-		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)=0;
+		virtual void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)=0;
 		virtual void generateMipmaps()=0;
 		virtual unsigned char* getData()=0;
-		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false);}
+		//void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false, false);}
 	};
 	class texture3D: public texture
 	{
@@ -252,8 +263,8 @@ public:
 		static shader* boundShader;
 	public:
 		virtual bool init4(const char* vert, const char* geometry, const char* frag)=0;
+		virtual bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings)=0;
 		virtual bool init(const char* vert, const char* frag)=0;
-
 		virtual void bind()=0;
 
 		virtual void setUniform1f(string name, float v0)=0;
@@ -268,6 +279,7 @@ public:
 		void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
 		void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.r,c.b);}
 		void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.r,c.b,c.a);}
+		void setUniform4f(string name, Rect r){setUniform4f(name,r.x,r.y,r.w,r.h);}
 		void setUniform2fv(string name, unsigned int n, Vec2f* v){setUniform2fv(name,n,&v->x);}
 		void setUniform3fv(string name, unsigned int n, Vec3f* v){setUniform3fv(name,n,&v->x);}
 		void setUniform3fv(string name, unsigned int n, Color3* c){setUniform3fv(name,n,&c->r);}
@@ -372,7 +384,6 @@ public:
 	//get functions
 	float	getGamma()const;
 	Vec3f	getLightPosition()const;
-	bool	getTextureCompression()const;
 	bool	getVSync()const;
 
 	//virtual get functions
@@ -392,8 +403,7 @@ public:
 	virtual void setRefreshRate(unsigned int rate)=0;
 	virtual void setVSync(bool enabled)=0;
 	virtual void setWireFrame(bool enabled)=0;
-	virtual void setRenderBufferTexture(shared_ptr<texture2D> tex)=0;
-	virtual void setDepthBufferTexture(shared_ptr<texture2D> tex)=0;
+	virtual void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth)=0;
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 
 	//set functions
@@ -401,7 +411,6 @@ public:
 	void setInterOcularDistance(float d);
 	void setLightPosition(Vec3f position);
 	void setStereoMode(StereoMode s);
-	void setTextureCompression(bool enabled);
 
 	//generic OS functions
 	virtual void flashTaskBar(int times, int length=0)=0;
@@ -440,7 +449,6 @@ protected:
 
 	RenderTarget colorTarget;
 	RenderTarget depthTarget;
-	bool multisampleFboBound;
 
 	bool renderingToTexture;
 
@@ -476,6 +484,8 @@ protected:
 	double errorGlowEndTime;
 #endif
 
+	bool openGL3;
+
 	OpenGLgraphics();
 	~OpenGLgraphics();
 
@@ -498,7 +508,11 @@ public:
 		~vertexBufferGL();
 		void setVertexData(unsigned int size, void* data);
 
-		void drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+		void bindTransformFeedback(GraphicsManager::Primitive primitive);
+		unsigned int unbindTransformFeedback();
+
+		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+		void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances);
 	};
 	class indexBufferGL: public GraphicsManager::indexBuffer
 	{
@@ -521,8 +535,8 @@ public:
 		void bindBuffer();
 		void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset);
 
-		void drawBufferX();
-		void drawBufferX(unsigned int numIndicies);
+		void drawBuffer();
+		void drawBuffer(unsigned int numIndicies);
 	};
 	class texture2DGL: public GraphicsManager::texture2D
 	{
@@ -535,7 +549,7 @@ public:
 		void bind(unsigned int textureUnit);
 		void generateMipmaps();
 		unsigned char* getData();
-		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable);
+		void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data);
 	};
 	class texture3DGL: public GraphicsManager::texture3D
 	{
@@ -579,6 +593,7 @@ public:
 		void bind();
 
 		bool init4(const char* vert, const char* geometry, const char* frag);
+		bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings);
 		bool init(const char* vert, const char* frag);
 
 		void setUniform1f(string name, float v0);
@@ -603,6 +618,14 @@ public:
 
 		string getErrorStrings();
 	};
+
+	friend class vertexBufferGL;
+	friend class indexBufferGL;
+	friend class texture2DGL;
+	friend class texture3DGL;
+	friend class textureCubeGL;
+	friend class shaderGL;
+
 	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen);
 	//bool changeResolution(Vec2i resolution, unsigned int maxSamples);
 	void destroyWindow();
@@ -648,8 +671,7 @@ public:
 	void setVSync(bool enabled);
 	void setWireFrame(bool enabled);
 
-	void setRenderBufferTexture(shared_ptr<texture2D> tex);
-	void setDepthBufferTexture(shared_ptr<texture2D> tex);
+	void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth);
 	void bindRenderTarget(RenderTarget rTarget);
 
 	void drawText(string text, Vec2f pos, string font);

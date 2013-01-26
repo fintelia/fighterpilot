@@ -106,7 +106,7 @@ bool Game::init()
 	unsigned int maxSamples = settings.get<unsigned int>("graphics","samples");
 
 	/////////////////////Texture Compression/////////////////////////////
-	graphics->setTextureCompression(settings.get<string>("graphics", "textureCompression")=="enabled");
+	assetLoader.setTextureCompression(settings.get<string>("graphics", "textureCompression")=="enabled");
 
 ////////////////////////////////////////////load asset list and object data///////////////////////////////////////////////////////////////////////////
 	if(!assetLoader.loadAssetList())

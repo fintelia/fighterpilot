@@ -9,14 +9,14 @@ namespace particle{
 shared_ptr<GraphicsManager::indexBuffer> emitter::quadIBO;
 unsigned int emitter::IBOnumQuads=0;
 
-emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), oldParticlePositions(NULL), particleFlags(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true)
+emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending, bool SparkParticles):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), oldParticlePositions(NULL), particleFlags(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true), sparkParticles(SparkParticles), vertsPerParticle(graphics->hasShaderModel4() && !SparkParticles ? 1 : 4)
 {
 	if(compacity != 0)
 	{
 		particles = new particle[compacity];
 		oldParticlePositions = new Vec3f[compacity];
 		particleFlags = new unsigned char[compacity];
-		vertices = new vertex[compacity*4];
+		vertices = new vertex[compacity*vertsPerParticle];
 	}
 	VBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
 
@@ -51,12 +51,12 @@ unsigned int emitter::addParticle(particle& p)
 		particle* tmpParticles			= new particle[tmpCompacity];
 		Vec3f* tmpOldParticlePositions	= new Vec3f[tmpCompacity];
 		unsigned char* tmpParticleFlags	= new unsigned char[tmpCompacity];
-		vertex *tmpVertices				= new vertex[tmpCompacity*4];
+		vertex *tmpVertices				= new vertex[tmpCompacity*vertsPerParticle];
 
 		memcpy(tmpParticles,particles,compacity*sizeof(particle));
 		memcpy(tmpOldParticlePositions,oldParticlePositions,compacity*sizeof(Vec3f));
 		memcpy(tmpParticleFlags,particleFlags,compacity*sizeof(unsigned char));
-		memcpy(tmpVertices,vertices,compacity*sizeof(vertex)*4);
+		memcpy(tmpVertices,vertices,compacity*sizeof(vertex)*vertsPerParticle);
 
 		delete[] particles;
 		delete[] oldParticlePositions;
@@ -146,69 +146,108 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 
 	float interpolate = world.time.interpolate();
 
-	for(pNum = 0, vNum=0; pNum < total; pNum++)
+	if(vertsPerParticle == 1)
 	{
-		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
 		{
-			for(n = 0; n<4; n++)
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 			{
-				vertices[vNum*4 + n].r = particles[pNum].r;
-				vertices[vNum*4 + n].g = particles[pNum].g;
-				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				vertices[vNum].position = lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate);
+				vertices[vNum].s = particles[pNum].size;
+				vertices[vNum].t = particles[pNum].ang;
+				vertices[vNum].r = particles[pNum].r;
+				vertices[vNum].g = particles[pNum].g;
+				vertices[vNum].b = particles[pNum].b;
+				vertices[vNum].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				vNum++;
 			}
-			sAng = sin(particles[pNum].ang);
-			cAng = cos(particles[pNum].ang);
-			u = -right * sAng + up * cAng;
-			r = right * cAng + up * sAng;
-
-			pos = lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate);
-
-			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
-			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
-
-			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
-			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
-			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
-			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
-
-			vNum++;
 		}
-	}
 
-	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+		VBO->setVertexData(sizeof(vertex)*vNum, vertices);
+	}
+	else if(vertsPerParticle == 4)
+	{
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
+		{
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+			{
+				for(n = 0; n<4; n++)
+				{
+					vertices[vNum*4 + n].r = particles[pNum].r;
+					vertices[vNum*4 + n].g = particles[pNum].g;
+					vertices[vNum*4 + n].b = particles[pNum].b;
+					vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				}
+				sAng = sin(particles[pNum].ang);
+				cAng = cos(particles[pNum].ang);
+				u = -right * sAng + up * cAng;
+				r = right * cAng + up * sAng;
+
+				pos = lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate);
+
+				vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
+				vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
+				vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
+				vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
+
+				vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+				vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+				vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+				vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
+
+				vNum++;
+			}
+		}
+
+		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+	}
+	else
+	{
+		debugBreak();
+	}
 }
 void emitter::render()
 {
 	if(vNum != 0)
 	{
-		if(IBOnumQuads > vNum)
-		{	
-			IBOnumQuads = vNum + 1024;
-			unsigned short* iboContents = new unsigned short[IBOnumQuads*6];
+		if(vertsPerParticle == 1)
+		{
+			dataManager.bind(texture);
+			VBO->bindBuffer();
+			VBO->drawBuffer(GraphicsManager::POINTS, 0, vNum);
+		}
+		else if(vertsPerParticle == 4)
+		{
+			if(IBOnumQuads < vNum)
+			{	
+				IBOnumQuads = vNum + 1024;
+				unsigned short* iboContents = new unsigned short[IBOnumQuads*6];
 
-			for(unsigned int i=0; i<IBOnumQuads; i++)
-			{
-				iboContents[i*6 + 0] = i*4 + 0;
-				iboContents[i*6 + 1] = i*4 + 1;
-				iboContents[i*6 + 2] = i*4 + 2; 
+				for(unsigned int i=0; i<IBOnumQuads; i++)
+				{
+					iboContents[i*6 + 0] = i*4 + 0;
+					iboContents[i*6 + 1] = i*4 + 1;
+					iboContents[i*6 + 2] = i*4 + 2; 
 
-				iboContents[i*6 + 3] = i*4 + 0; 
-				iboContents[i*6 + 4] = i*4 + 2;
-				iboContents[i*6 + 5] = i*4 + 3;
+					iboContents[i*6 + 3] = i*4 + 0; 
+					iboContents[i*6 + 4] = i*4 + 2;
+					iboContents[i*6 + 5] = i*4 + 3;
+				}
+
+				quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);// Changes should be so rare (never?) that static is still the best option 
+				quadIBO->setData(iboContents, GraphicsManager::TRIANGLES, IBOnumQuads*6);
+
+				delete[] iboContents;
 			}
 
-			quadIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);// Changes should be so rare (never?) that static is still the best option 
-			quadIBO->setData(iboContents, GraphicsManager::TRIANGLES, IBOnumQuads*6);
-
-			delete[] iboContents;
+			dataManager.bind(texture);
+			quadIBO->bindBuffer(VBO);
+			quadIBO->drawBuffer(min(vNum*6, IBOnumQuads*6));
 		}
-
-		dataManager.bind(texture);
-		quadIBO->bindBuffer(VBO);
-		quadIBO->drawBufferX(min(vNum*6, IBOnumQuads*6));
+		else
+		{
+			debugBreak();
+		}
 	}
 }
 void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
@@ -221,39 +260,65 @@ void relativeEmitter::prepareRender(Vec3f up, Vec3f right)
 	Vec3f interpolatedPos = lerp(lastPosition, position, interpolate);
 	Quat4f rotation = slerp(world[parentObject]->lastRotation, world[parentObject]->rotation, interpolate);
 
-	for(pNum = 0, vNum=0; pNum < total; pNum++)
+	if(vertsPerParticle == 1)
 	{
-		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
 		{
-			for(n = 0; n<4; n++)
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 			{
-				vertices[vNum*4 + n].r = particles[pNum].r;
-				vertices[vNum*4 + n].g = particles[pNum].g;
-				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				vertices[vNum].position = interpolatedPos + rotation * (parentOffset + lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate));
+				vertices[vNum].s = particles[pNum].size;
+				vertices[vNum].t = particles[pNum].ang;
+				vertices[vNum].r = particles[pNum].r;
+				vertices[vNum].g = particles[pNum].g;
+				vertices[vNum].b = particles[pNum].b;
+				vertices[vNum].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;	
+				vNum++;
 			}
-			sAng = sin(particles[pNum].ang);
-			cAng = cos(particles[pNum].ang);
-			u = -right * sAng + up * cAng;
-			r = right * cAng + up * sAng;
-
-			pos = interpolatedPos + rotation * (parentOffset + lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate));
-
-			vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
-			vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
-			vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
-
-			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
-			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
-			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
-			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
-
-			vNum++;
 		}
+	
+		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
 	}
-
-	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+	else if(vertsPerParticle == 4)
+	{
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
+		{
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+			{
+				for(n = 0; n<4; n++)
+				{
+					vertices[vNum*4 + n].r = particles[pNum].r;
+					vertices[vNum*4 + n].g = particles[pNum].g;
+					vertices[vNum*4 + n].b = particles[pNum].b;
+					vertices[vNum*4 + n].a = ((particleFlags[pNum]&FADE_IN) && !additiveBlending) ? particles[pNum].a*interpolate : particles[pNum].a;
+				}
+				sAng = sin(particles[pNum].ang);
+				cAng = cos(particles[pNum].ang);
+				u = -right * sAng + up * cAng;
+				r = right * cAng + up * sAng;
+	
+				pos = interpolatedPos + rotation * (parentOffset + lerp(oldParticlePositions[pNum], particles[pNum].pos, interpolate));
+	
+				vertices[vNum*4 + 0].position = pos + u * particles[pNum].size + r * particles[pNum].size;
+				vertices[vNum*4 + 1].position = pos + u * particles[pNum].size - r * particles[pNum].size;
+				vertices[vNum*4 + 2].position = pos - u * particles[pNum].size - r * particles[pNum].size;
+				vertices[vNum*4 + 3].position = pos - u * particles[pNum].size + r * particles[pNum].size;
+	
+				vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+				vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+				vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+				vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
+	
+				vNum++;
+			}
+		}
+	
+		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+	}
+	else
+	{
+		debugBreak();
+	}
 };
 
 
@@ -262,43 +327,69 @@ void sparkEmitter::prepareRender(Vec3f up, Vec3f right)
 	int pNum,n;
 	Vec3f start, end, dir;
 	float a1, a2, len;
-
-	for(pNum = 0, vNum=0; pNum < total; pNum++)
+	
+	if(vertsPerParticle == 1)
 	{
-		if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
 		{
-			for(n = 0; n<4; n++)
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
 			{
-				vertices[vNum*4 + n].r = particles[pNum].r;
-				vertices[vNum*4 + n].g = particles[pNum].g;
-				vertices[vNum*4 + n].b = particles[pNum].b;
-				vertices[vNum*4 + n].a = particles[pNum].a;
+				vertices[vNum].position = particles[pNum].pos;
+				vertices[vNum].s = particles[pNum].size;
+				vertices[vNum].t = particles[pNum].ang;
+				vertices[vNum].r = particles[pNum].r;
+				vertices[vNum].g = particles[pNum].g;
+				vertices[vNum].b = particles[pNum].b;
+				vertices[vNum].a = particles[pNum].a;
+				vNum++;
 			}
-
-			start = particles[pNum].pos;
-			end = particles[pNum].pos - particles[pNum].velocity.normalize()*particles[pNum].size;
-
-			dir = end - start;
-			a1 = dir.dot(up);
-			a2 = dir.dot(right);
-			len = 0.2/sqrt(a1*a1+a2*a2);
-
-			vertices[vNum*4 + 0].position = start + (right*a1 - up*a2)*len;
-			vertices[vNum*4 + 1].position = start - (right*a1 - up*a2)*len;
-			vertices[vNum*4 + 2].position = end - (right*a1 - up*a2)*len;
-			vertices[vNum*4 + 3].position = end + (right*a1 - up*a2)*len;
-
-
-			vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
-			vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
-			vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
-			vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
-
-			vNum++;
 		}
-	}
 
-	VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+		VBO->setVertexData(sizeof(vertex)*vNum, vertices);
+	}
+	else if(vertsPerParticle == 4)
+	{
+		for(pNum = 0, vNum=0; pNum < total; pNum++)
+		{
+			if((world.time() - particles[pNum].startTime) * particles[pNum].invLife < 1.0)
+			{
+				for(n = 0; n<4; n++)
+				{
+					vertices[vNum*4 + n].r = particles[pNum].r;
+					vertices[vNum*4 + n].g = particles[pNum].g;
+					vertices[vNum*4 + n].b = particles[pNum].b;
+					vertices[vNum*4 + n].a = particles[pNum].a;
+				}
+
+				start = particles[pNum].pos;
+				end = particles[pNum].pos - particles[pNum].velocity.normalize()*particles[pNum].size;
+
+				dir = end - start;
+				a1 = dir.dot(up);
+				a2 = dir.dot(right);
+				len = 0.2/sqrt(a1*a1+a2*a2);
+
+				vertices[vNum*4 + 0].position = start + (right*a1 - up*a2)*len;
+				vertices[vNum*4 + 1].position = start - (right*a1 - up*a2)*len;
+				vertices[vNum*4 + 2].position = end - (right*a1 - up*a2)*len;
+				vertices[vNum*4 + 3].position = end + (right*a1 - up*a2)*len;
+
+
+				vertices[vNum*4 + 0].s = 0.0;	vertices[vNum*4 + 0].t = 0.0;
+				vertices[vNum*4 + 1].s = 0.0;	vertices[vNum*4 + 1].t = 1.0;
+				vertices[vNum*4 + 2].s = 1.0;	vertices[vNum*4 + 2].t = 1.0;
+				vertices[vNum*4 + 3].s = 1.0;	vertices[vNum*4 + 3].t = 0.0;
+
+				vNum++;
+			}
+		}
+
+		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+	}
+	else
+	{
+		debugBreak();
+	}
 }
 
 void manager::init()
@@ -345,6 +436,7 @@ void manager::addEmitter(shared_ptr<emitter> e, int parent, Vec3f offset)
 		debugBreak();
 	}
 }
+int tParticles=0;
 void manager::update()
 {
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
@@ -365,6 +457,7 @@ void manager::update()
 			i++;
 		}
 	}
+	tParticles = totalParticles;
 }
 void manager::render(shared_ptr<GraphicsManager::View> view)
 {
@@ -391,16 +484,37 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 
 	sort(emitters.begin(), emitters.end(), Pred);
 
+	auto sparkShader = shaders.bind("spark shader");
+	sparkShader->setUniform1i("tex",0);
+	sparkShader->setUniform1i("depth",1);
+	sparkShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	sparkShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
+
 	auto particleShader = shaders.bind("particle shader");
 	particleShader->setUniform1i("tex",0);
 	particleShader->setUniform1i("depth",1);
 	particleShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	particleShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
+	if(graphics->hasShaderModel4())
+	{
+		particleShader->setUniform3f("up", up);
+		particleShader->setUniform3f("right", right);
+	}
 
-
-	
+	bool sparkBound = false;
 	for(auto i = emitters.begin(); i!=emitters.end(); i++)
 	{
+		if((*i)->sparkParticles && !sparkBound)
+		{
+			sparkBound = true;
+			sparkShader->bind();
+		}
+		else if(!(*i)->sparkParticles && sparkBound)
+		{
+			sparkBound = false;
+			particleShader->bind();
+		}
+
 		if(!(*i)->additiveBlending && (*i)->visible)
 		{
 			graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
@@ -415,9 +529,8 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 			(*i)->render();
 		}
 	}
-
-
 	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
 }
 void manager::shutdown()
 {

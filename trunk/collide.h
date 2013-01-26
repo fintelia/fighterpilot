@@ -45,7 +45,6 @@ public:
 
 private:
 	CollisionManager(){}
-	~CollisionManager(){}
 
 	struct collisionBounds
 	{
@@ -70,6 +69,8 @@ private:
 	};
 	map<objectType, shared_ptr<collisionBounds>> objectBounds;
 
+public:
+
 	//closest point
 	Vec3f cpPlanePoint(Plane<float> plane, Vec3f point) const;
 	Vec3f cpSegmentPoint(Vec3f sInitial, Vec3f sFinal, Vec3f point) const;
@@ -83,6 +84,8 @@ private:
 	bool sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<float> s2, Vec3f v2) const;
 	bool testSegmentPlane(Vec3f sInitial, Vec3f sFinal, Plane<float> plane, Vec3f& intersectionPoint) const;
 	bool testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& intersectionPoint) const;
+	bool testRayTriangle(Vec3f p, Vec3f d, Vec3f v0, Vec3f v1, Vec3f v2, Vec3f& intersectionPoint) const;
+	bool testRayAABB(Vec3f p, Vec3f d, BoundingBox<float> AABB, Vec3f& intersectionPoint);
 	bool testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const;
 	//bool testLineTriangle(Vec3f lStart, Vec3f lEnd, Vec3f t1, Vec3f t2, Vec3f t3, Vec3f& intersectionPoint) const;
 
@@ -97,7 +100,7 @@ private:
 
 	//bool triangleSweptSphere(const triangle& a, const Mat4f& m, const Sphere<float>& s, Vec3f sphereInitial, Vec3f sphereFinal, float radius)const;
 
-public:
+
 	void setCollsionBounds(objectType type, Sphere<float> s);
 	void setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices);
 

@@ -44,6 +44,13 @@ protected:
 class levelEditor: public screen
 {
 private:
+	mutable Vec2i cellFound;
+	mutable bool cellFoundValid;
+	mutable vector<Vec2i> checkedCells;
+	mutable vector<Vec2f> checkLine;
+	mutable Vec3f rStart;
+	mutable Vec3f rDirection;
+
 	shared_ptr<GraphicsManager::View> view;
 	shared_ptr<GraphicsManager::View> objectPreviewView;
 
@@ -100,11 +107,14 @@ public:
 
 private:
 	float getHeight(unsigned int x, unsigned int z) const;
-	float getInterpolatedHeight(float x, float y) const;
+	float getInterpolatedHeight(float x, float z) const;
+	float getTrueHeight(float x, float z) const;
 	void setHeight(unsigned int x, unsigned int z, float height) const;
 	void increaseHeight(unsigned x, unsigned int z, float increase) const;
 	Vec3f getNormal(unsigned int x, unsigned int z) const;
-	Vec3f getInterpolatedNormal(float x, float y) const;
+	Vec3f getInterpolatedNormal(float x, float z) const;
+	Vec3f getTrueNormal(float x, float z) const;
+	bool rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, Vec3f& collisionPoint) const;
 
 	void setMinMaxHeights();
 
@@ -112,8 +122,10 @@ private:
 	float randomDisplacement(float h1, float h2,float h3, float h4, float d);
 	void diamondSquareFill(int x1, int x2, int y1, int y2);
 	void diamondSquare(float h, float m, int subdivide);
+	void beautifyCoastline();
 	void faultLine();
-	void smooth(int a);
+	void smooth(unsigned int a);
+	void roughen(float a);
 
 	void resetView();
 	void fromFile(string filename);

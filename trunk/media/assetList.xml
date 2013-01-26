@@ -55,7 +55,9 @@
     <texture name="grass normals"             file="media/grass2_normals.png"         tileable="true" />
     <texture name="snow normals"              file="media/snow_normals.png"           tileable="true" />
     <texture name="desertSand"                file="media/desertSand.png"             tileable="true" />
+    <texture name="fractal normals"           file="media/fractalNormals.png"         tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
+
     
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
@@ -93,14 +95,18 @@
     <shader name="circle shader"             vertex="media/circle.vert"            fragment="media/circle.frag"        sAspect="true" />
 
     <!-- general -->
-
-    <shader name="particle shader"           vertex="media/particle.vert"          fragment="media/particle.frag" />
+    <shader name="particle shader"           vertex="media/particle.vert"          fragment="media/particle.frag"  vertex3="media/particle3.vert" geometry3="media/particle3.geom" fragment3="media/particle3.frag"  />   <!--  --> 
+    <shader name="spark shader"              vertex="media/spark.vert"             fragment="media/spark.frag" />
     <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
-
+    <shader name="color3D"                   vertex="media/color3D.vert"           fragment="media/color3D.frag" />
+    
     <!-- world -->
     <shader name="ocean"                     vertex="media/ocean.vert"             fragment="media/ocean.frag" />
     <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
     <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
+    <shader name="count trees"               vertex3="media/placeTrees.vert"       geometry3="media/conditionalDiscard.geom" feedbackTransformVaryings="placeHolder" />
+    <shader name="place trees"               vertex3="media/placeTrees.vert"       geometry3="media/createTree.geom" feedbackTransformVaryings="position;texCoord;color" />
+
     <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
     <shader name="trees3D shader"            vertex="media/tree3d.vert"            fragment="media/tree3d.frag" />
     <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
@@ -111,7 +117,7 @@
     <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
     <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
     <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />
-
+    
     <!-- terrain preview -->
     <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />
     <shader name="mountain preview terrain"  vertex="media/terrain.vert"           fragment="media/grass preview.frag" />

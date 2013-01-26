@@ -51,21 +51,24 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 	if(firstPerson)
 	{
+		//////////////////////////////////////////////////////////////////////////////
 		auto radarShader = shaders.bind("radar");
 		radarShader->setUniform1f("radarAng", radarAng);
 		//radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.1, 0.95, 0.2) : Vec3f(0.05,0.79,0.04));
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
+		////////////////////////////////////////////////////////////////
 		Vec3f nC((x+width/2),(y+height/2),0);
 		float radius = width/2;
 
-		dataManager.bind("radar plane shader");
-		radarShader->setUniform2f("center",nC.x,nC.y);
-		radarShader->setUniform1f("radius",radius);
-		radarShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
-		radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.15, 0.75, 0.25) : Vec3f(0.19,0.58,0.87));
+		auto radarPlaneShader = shaders.bind("radar plane shader");
+		radarPlaneShader->setUniform2f("center",nC.x,nC.y);
+		radarPlaneShader->setUniform1f("radius",radius);
+		//radarShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
+		if(level->info.night)	radarPlaneShader->setUniform4f("color", 0.15, 0.75, 0.25, 1.0);
+		else					radarPlaneShader->setUniform4f("color", 0.19, 0.58, 0.87, 1.0);
 
-		graphics->setColor(0.19,0.58,0.87);
+	//	graphics->setColor(0.19,0.58,0.87);
 
 		Vec3f n;
 		Vec3f cent, u, v;
@@ -79,15 +82,12 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 				Angle ang = atan2A(n.x,n.z) - p->direction - 18.0 * PI/180 + PI;
 				cent = Vec3f(sin(ang)*mag*radius,cos(ang)*mag*radius,0) + nC;
 				ang = -p->direction + dynamic_pointer_cast<plane>(i->second)->direction - 18.0 * PI/180 + PI;
-				u = Vec3f(sin(ang),cos(ang),0);
-				v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
-
-				graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
+				//u = Vec3f(sin(ang),cos(ang),0);
+				//v = Vec3f(sin(ang+PI/2),cos(ang+PI/2),0);
+				graphics->drawRotatedOverlay(Rect::CWH(cent.x,cent.y,0.008,0.008),ang);
+				//graphics->drawTriangle(cent + u * 0.004, cent - u * 0.004 + v * 0.003, cent - u * 0.004 - v * 0.003);
 			}
-
 		}
-
-		graphics->setColor(1,1,1);
 		dataManager.bind("ortho");
 	}
 	else
@@ -193,7 +193,7 @@ void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f cen
 	hexGrid->setUniform4f("color",c.r,c.g,c.b,c.a);
 
 	//graphics->drawModelCustomShader("cylinder", Vec3f(center), ,Vec3f(radius,height,radius));
-	sceneManager.drawMeshCustomShader(view, dataManager.getModel("cylinder"), Mat4f(Quat4f(), center, radius), hexGrid);
+	sceneManager.drawMesh(view, dataManager.getModel("cylinder"), Mat4f(Quat4f(), center, radius), hexGrid);
 	dataManager.bind("model");
 }
 void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)

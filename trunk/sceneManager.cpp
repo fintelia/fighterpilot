@@ -188,7 +188,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 						if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 						{
 							model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
-							material->indexBuffer->drawBufferX();
+							material->indexBuffer->drawBuffer();
 						}
 						else
 						{
@@ -266,7 +266,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
 						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
-						material->indexBuffer->drawBufferX();
+						material->indexBuffer->drawBuffer();
 					}
 					i.reset();
 				}
@@ -371,7 +371,7 @@ void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<m
 				model->setUniform1f("hardness", material->hardness);
  
 				model->setUniformMatrix("modelTransform", transformation);
-				material->indexBuffer->drawBufferX();
+				material->indexBuffer->drawBuffer();
 			}
 		}
 		
@@ -379,7 +379,7 @@ void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<m
 		if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
 	}
 }
-void SceneManager::drawMeshCustomShader(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader)
+void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader)
 {
 	if(!view || !meshPtr)
 	{
@@ -394,7 +394,7 @@ void SceneManager::drawMeshCustomShader(shared_ptr<GraphicsManager::View> view, 
 	{
 		shader->setUniformMatrix("modelTransform", transformation);
 		material->indexBuffer->bindBuffer();
-		material->indexBuffer->drawBufferX();
+		material->indexBuffer->drawBuffer();
 	}
 }
 shared_ptr<SceneManager::pointLight> SceneManager::genPointLight()

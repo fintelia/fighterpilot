@@ -194,9 +194,9 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 	{
 		for(int y=0; y < height; y += LOD)
 		{
-			heightMap[numHeights*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / width;
+			heightMap[numHeights*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / (width-LOD);
 			heightMap[numHeights*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX;
-			heightMap[numHeights*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / height;
+			heightMap[numHeights*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / (height-LOD);
 			numHeights++;
 		}
 	}
@@ -338,7 +338,7 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 			groundValues[(x + z * width)*4 + 3] = heights[x+z*width];
 		}
 	}
-	texture->setData(width, height, GraphicsManager::texture::RGBA16, (unsigned char*)groundValues);
+	texture->setData(width, height, GraphicsManager::texture::RGBA16, false, false, (unsigned char*)groundValues);
 	/////////////////////////////////////
 	//float sx = static_cast<float>(width-1)/width;
 	//float sz = static_cast<float>(height-1)/height;
@@ -465,27 +465,27 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 }
 void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in trees per km^2
 {
-	texturedVertex3D tmpVerts[16];
+	texturedColoredVertex3D tmpVerts[16];
 
-	tmpVerts[0].UV = Vec2f(0.0,1.0);
-	tmpVerts[1].UV = Vec2f(0.5,1.0);
-	tmpVerts[2].UV = Vec2f(0.5,0.0);
-	tmpVerts[3].UV = Vec2f(0.0,0.0);
+	tmpVerts[0].UV = Vec2f(0.0,1.0);	//Vec2f(0.0,1.0);
+	tmpVerts[1].UV = Vec2f(0.5,1.0);	//Vec2f(1.0,1.0);
+	tmpVerts[2].UV = Vec2f(0.5,0.0);	//Vec2f(1.0,0.0);
+	tmpVerts[3].UV = Vec2f(0.0,0.0);	//Vec2f(0.0,0.0);
 
-	tmpVerts[4].UV = Vec2f(0.5,1.0);
-	tmpVerts[5].UV = Vec2f(1.0,1.0);
-	tmpVerts[6].UV = Vec2f(1.0,0.0);
-	tmpVerts[7].UV = Vec2f(0.5,0.0);
+	tmpVerts[4].UV = Vec2f(0.5,1.0);	//Vec2f(0.0,1.0);
+	tmpVerts[5].UV = Vec2f(1.0,1.0);	//Vec2f(1.0,1.0);
+	tmpVerts[6].UV = Vec2f(1.0,0.0);	//Vec2f(1.0,0.0);
+	tmpVerts[7].UV = Vec2f(0.5,0.0);	//Vec2f(0.0,0.0);
 
-	tmpVerts[8].UV = Vec2f(0.5,1.0);
-	tmpVerts[9].UV = Vec2f(0.0,1.0);
-	tmpVerts[10].UV = Vec2f(0.0,0.0);
-	tmpVerts[11].UV = Vec2f(0.5,0.0);
+	tmpVerts[8].UV =  Vec2f(0.5,1.0);	//Vec2f(0.0,1.0);
+	tmpVerts[9].UV =  Vec2f(0.0,1.0);	//Vec2f(1.0,1.0);
+	tmpVerts[10].UV = Vec2f(0.0,0.0);	//Vec2f(1.0,0.0);
+	tmpVerts[11].UV = Vec2f(0.5,0.0);	//Vec2f(0.0,0.0);
 
-	tmpVerts[12].UV = Vec2f(1.0,1.0);
-	tmpVerts[13].UV = Vec2f(0.5,1.0);
-	tmpVerts[14].UV = Vec2f(0.5,0.0);
-	tmpVerts[15].UV = Vec2f(1.0,0.0);
+	tmpVerts[12].UV = Vec2f(1.0,1.0);	//Vec2f(0.0,1.0);
+	tmpVerts[13].UV = Vec2f(0.5,1.0);	//Vec2f(1.0,1.0);
+	tmpVerts[14].UV = Vec2f(0.5,0.0);	//Vec2f(1.0,0.0);
+	tmpVerts[15].UV = Vec2f(1.0,0.0);	//Vec2f(0.0,0.0);
 
 	//texturedVertex3D tmpTopVerts[4];
 	//tmpTopVerts[0].UV = Vec2f(0.0,1.0);
@@ -493,153 +493,233 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 	//tmpTopVerts[2].UV = Vec2f(0.5,0.5);
 	//tmpTopVerts[3].UV = Vec2f(0.0,0.5);
 
-	foliageDensity = min(foliageDensity, 300); //keep foliageDensity reasonable
+	foliageDensity = min(foliageDensity, 150); //keep foliageDensity reasonable
 
-	int foliagePatchesX = 4*(width/16)/LOD;
-	int foliagePatchesY = 4*(height/16)/LOD;
-	int sLength = 16;
-	float inv_sLength = 1.0f/sLength;
 
 	Vec2f			dir;
 	Vec3f			right, fwd;
 	Vec3f			position;
-	unsigned int	numPatches = foliagePatchesX * foliagePatchesY;
-	float			patchArea = (maxXYZ.x-minXYZ.x) * (maxXYZ.z-minXYZ.z);
-	float			treesPerPatch = patchArea * foliageDensity / (1000*1000) * 0.01;
+	int				foliagePatchesX = width/8;//64;//16*(width/16)/LOD;
+	int				foliagePatchesY = height/8;//64;//16*(height/16)/LOD;
+	unsigned int	numPatches = foliagePatchesX * foliagePatchesY;	
+	float			patchArea = (maxXYZ.x-minXYZ.x) * (maxXYZ.z-minXYZ.z) / numPatches;
+	float			treesPerPatch = patchArea * foliageDensity / (1000*1000) * 15.0;
+	int				sLength = ceil(1.5 * sqrt(treesPerPatch));
+	float			inv_sLength = 1.0f/sLength;
 	float			placementOdds = treesPerPatch / (sLength*sLength);
 
-	vector<texturedVertex3D> vertices;
+	const int MAX_QUADS_WITHOUT_TF = 100000 * 10000; // 100,000 quads = 50,000 trees = 400,000 vertices
+	bool hasTransformFeedback = graphics->hasShaderModel4();
+
+	vector<texturedColoredVertex3D> vertices;
 
 	double t=GetTime();
 
 	unsigned int nQuads=0;
 	unsigned int nQuadsStart=0;
 
-
-
-	foliagePatch::plant p;
+	//foliagePatch::plant p;
 	foliagePatch patch;
 
-	for(int x=0; x < foliagePatchesX; x++)
+	float normal_y;
+	if(hasTransformFeedback)
 	{
-		for(int y=0; y < foliagePatchesY; y++)
+		texture->bind();
+
+		double t = GetTime();
+
+		auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+		emptyVBO->setTotalVertexSize(0);
+		emptyVBO->setVertexData(0, nullptr);
+
+		auto counterVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+		counterVBO->setTotalVertexSize(1);
+		counterVBO->setVertexData(4 * foliagePatchesX * foliagePatchesY * sLength * sLength, nullptr);
+
+		//count the number of trees that there will be
+		auto countTreesShader = shaders.bind("count trees");
+		countTreesShader->setUniform1i("groundTex", 0);
+		countTreesShader->setUniform1i("width", foliagePatchesX * sLength);
+		countTreesShader->setUniform3f("worldOrigin", minXYZ);
+		countTreesShader->setUniform3f("worldSpacing", Vec3f((maxXYZ.x-minXYZ.x) / (foliagePatchesX*sLength), (maxXYZ.y-minXYZ.y), (maxXYZ.z-minXYZ.z) / (foliagePatchesY*sLength)));
+		countTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+		countTreesShader->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
+		countTreesShader->setUniform1f("placementOdds", placementOdds);
+
+		counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
+		emptyVBO->bindBuffer();
+		emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
+		numTrees = counterVBO->unbindTransformFeedback();
+		counterVBO.reset();
+
+		if(numTrees > 0)
 		{
-			unsigned int n = 0;
-			nQuadsStart = nQuads;
+			//prepare foliage VBO
+			foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
+			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
+			foliageVBO->setTotalVertexSize(32);
+			foliageVBO->setVertexData(32 * 12 * numTrees, nullptr);
+
+			//render trees into VBO
+			auto placeTreesShader = shaders.bind("place trees");
+			placeTreesShader->setUniform1i("groundTex", 0);
+			placeTreesShader->setUniform1i("width", foliagePatchesX*sLength);
+			placeTreesShader->setUniform3f("worldOrigin", minXYZ);
+			placeTreesShader->setUniform3f("worldSpacing", Vec3f((maxXYZ.x-minXYZ.x) / (foliagePatchesX*sLength), (maxXYZ.y-minXYZ.y), (maxXYZ.z-minXYZ.z) / (foliagePatchesY*sLength)));
+			placeTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+			placeTreesShader->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
+			placeTreesShader->setUniform1f("placementOdds", placementOdds);
 
 
+			foliageVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
+			emptyVBO->bindBuffer();
+			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
+			unsigned int n = foliageVBO->unbindTransformFeedback();
+			debugAssert(n == 4*numTrees);
 
-			for(int h=0; h<sLength; h++)
+			t = GetTime() - t;
+			t = GetTime();
+		}
+	}
+	else
+	{
+		double t = GetTime();
+
+		for(int x=0; x < foliagePatchesX && (hasTransformFeedback || nQuads < MAX_QUADS_WITHOUT_TF); x++)
+		{
+			for(int y=0; y < foliagePatchesY && (hasTransformFeedback || nQuads < MAX_QUADS_WITHOUT_TF); y++)
 			{
-				for(int k=0; k<sLength; k++)
+				unsigned int n = 0;
+				nQuadsStart = nQuads;
+
+				for(int h=0; h<sLength && nQuads < MAX_QUADS_WITHOUT_TF; h++)
 				{
-					if(random<float>() < placementOdds)
-					{	//				minX +		total width		*    ()
-						position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (random<float>(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
-						position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (random<float>(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
-						position.y = getHeight(Vec2f(position.x, position.z));
-						if(position.y > 40.0)
+					for(int k=0; k<sLength && nQuads < MAX_QUADS_WITHOUT_TF; k++)
+					{
+						if(random<float>() < placementOdds)
 						{
-							n = random<float>(1.0) < 0.5 ? 0 : 8;
+							//position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (/*random<float>*/(0.5*std::sin(10.0*x*sLength+h+11.0*y*sLength+k)+0.5)*(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
+							//position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (/*random<float>*/(0.5*std::cos(10.0*x*sLength+h+11.0*y*sLength+k)+0.5)*(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
+							position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (random<float>(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
+							position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (random<float>(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
 
-							dir = random2<float>();
-							float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4;
-							tmpVerts[n+0].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
-							tmpVerts[n+1].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
-							tmpVerts[n+2].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
-							tmpVerts[n+3].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
+							position.y = getHeight(Vec2f(position.x, position.z));
+							normal_y = getNormal(Vec2f(position.x, position.z)).y;
+							if(position.y > 40.0 && normal_y > 0.9211 && (position.y < 150.0 || normal_y < 0.98))
+							{
+								n = random<float>(1.0) < 0.5 ? 0 : 8;
 
-							swap(dir.x, dir.y);
-							dir.x = - dir.x;
-							tmpVerts[n+4].position = position + Vec3f(-2.0*dir.x, 0.0, -2.0*dir.y)*s;
-							tmpVerts[n+5].position = position + Vec3f( 2.0*dir.x, 0.0,  2.0*dir.y)*s;
-							tmpVerts[n+6].position = position + Vec3f( 2.0*dir.x, 5.0,  2.0*dir.y)*s;
-							tmpVerts[n+7].position = position + Vec3f(-2.0*dir.x, 5.0, -2.0*dir.y)*s;
+								//set all vertices to have the same color
+								tmpVerts[n+0].color = tmpVerts[n+1].color = tmpVerts[n+2].color = tmpVerts[n+3].color = 
+								tmpVerts[n+4].color = tmpVerts[n+5].color = tmpVerts[n+6].color = tmpVerts[n+7].color = 
+									Color3(random<float>(0.8,1.1), random<float>(0.8,1.1), random<float>(0.8,1.1));
 
-							//tmpTopVerts[0].position = position + Vec3f( 3.0*dir.x, 1.0,  3.0*dir.y)*s;
-							//tmpTopVerts[1].position = position + Vec3f( 3.0*dir.y, 1.0, -3.0*dir.x)*s;
-							//tmpTopVerts[2].position = position + Vec3f(-3.0*dir.x, 1.0, -3.0*dir.y)*s;
-							//tmpTopVerts[3].position = position + Vec3f(-3.0*dir.y, 1.0,  3.0*dir.x)*s;
+								dir = random2<float>();
+								float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4;
+								tmpVerts[n+0].position = position + Vec3f(-2.5*dir.x, 0.0, -2.5*dir.y)*s;	//width: 2.0 -> 2.5
+								tmpVerts[n+1].position = position + Vec3f( 2.5*dir.x, 0.0,  2.5*dir.y)*s;
+								tmpVerts[n+2].position = position + Vec3f( 2.5*dir.x, 5.0,  2.5*dir.y)*s;
+								tmpVerts[n+3].position = position + Vec3f(-2.5*dir.x, 5.0, -2.5*dir.y)*s;
 
-							vertices.push_back(tmpVerts[n+0]);
-							vertices.push_back(tmpVerts[n+1]);
-							vertices.push_back(tmpVerts[n+2]);
-							vertices.push_back(tmpVerts[n+3]);
+								swap(dir.x, dir.y);
+								dir.x = - dir.x;
+								tmpVerts[n+4].position = position + Vec3f(-2.5*dir.x, 0.0, -2.5*dir.y)*s;
+								tmpVerts[n+5].position = position + Vec3f( 2.5*dir.x, 0.0,  2.5*dir.y)*s;
+								tmpVerts[n+6].position = position + Vec3f( 2.5*dir.x, 5.0,  2.5*dir.y)*s;
+								tmpVerts[n+7].position = position + Vec3f(-2.5*dir.x, 5.0, -2.5*dir.y)*s;
 
-							vertices.push_back(tmpVerts[n+4]);
-							vertices.push_back(tmpVerts[n+5]);
-							vertices.push_back(tmpVerts[n+6]);
-							vertices.push_back(tmpVerts[n+7]);
+								//tmpTopVerts[0].position = position + Vec3f( 3.0*dir.x, 1.0,  3.0*dir.y)*s;
+								//tmpTopVerts[1].position = position + Vec3f( 3.0*dir.y, 1.0, -3.0*dir.x)*s;
+								//tmpTopVerts[2].position = position + Vec3f(-3.0*dir.x, 1.0, -3.0*dir.y)*s;
+								//tmpTopVerts[3].position = position + Vec3f(-3.0*dir.y, 1.0,  3.0*dir.x)*s;
 
-							//vertices.push_back(tmpTopVerts[0]);
-							//vertices.push_back(tmpTopVerts[1]);
-							//vertices.push_back(tmpTopVerts[2]);
-							//vertices.push_back(tmpTopVerts[3]);
+								vertices.push_back(tmpVerts[n+0]);
+								vertices.push_back(tmpVerts[n+1]);
+								vertices.push_back(tmpVerts[n+2]);
+								vertices.push_back(tmpVerts[n+3]);
 
-							foliagePatch::plant p;
-							p.location = position;
-							p.height = 5.0*s;
-							patch.plants.push_back(p);
+								vertices.push_back(tmpVerts[n+4]);
+								vertices.push_back(tmpVerts[n+5]);
+								vertices.push_back(tmpVerts[n+6]);
+								vertices.push_back(tmpVerts[n+7]);
+
+								//vertices.push_back(tmpTopVerts[0]);
+								//vertices.push_back(tmpTopVerts[1]);
+								//vertices.push_back(tmpTopVerts[2]);
+								//vertices.push_back(tmpTopVerts[3]);
+
+								//foliagePatch::plant p;
+								//p.location = position;
+								//p.height = 5.0*s;
+								//patch.plants.push_back(p);
 
 
-							nQuads += 2;
+								nQuads += 2;
+							}
 						}
 					}
 				}
-			}
 
-			if(nQuads-nQuadsStart > 0)
-			{
-				patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
-				patch.center.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (0.5+y) / foliagePatchesY;
-				patch.center.y = getHeight(Vec2f(patch.center.x,patch.center.z)) + 12.0;
-				Vec3f boundsMin = minXYZ + Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * x / foliagePatchesX, minXYZ.y, minXYZ.z + (maxXYZ.z-minXYZ.z) * y / foliagePatchesY);
-				Vec3f boundsMax = minXYZ + Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * (1.0+x) / foliagePatchesX, maxXYZ.y+24.0, minXYZ.z + (maxXYZ.z-minXYZ.z) * (1.0+y) / foliagePatchesY);
-				patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
-
-
-				patch.plantIndexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-
-				unsigned int* indices = new unsigned int[(nQuads-nQuadsStart)*6];
-				for(unsigned int i=0; i<nQuads-nQuadsStart; i++)
+				if(nQuads-nQuadsStart > 0)
 				{
-					indices[i*6+0] = (i+nQuadsStart)*4 + 0;
-					indices[i*6+1] = (i+nQuadsStart)*4 + 1;
-					indices[i*6+2] = (i+nQuadsStart)*4 + 2;
-					indices[i*6+3] = (i+nQuadsStart)*4 + 0;
-					indices[i*6+4] = (i+nQuadsStart)*4 + 2;
-					indices[i*6+5] = (i+nQuadsStart)*4 + 3;
-				}
-				patch.plantIndexBuffer->setData(indices, GraphicsManager::TRIANGLES, (nQuads-nQuadsStart)*6);	
+					patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
+					patch.center.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (0.5+y) / foliagePatchesY;
+					patch.center.y = getHeight(Vec2f(patch.center.x,patch.center.z)) + 12.0;
+					Vec3f boundsMin = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * x / foliagePatchesX, minXYZ.y, minXYZ.z + (maxXYZ.z-minXYZ.z) * y / foliagePatchesY);
+					Vec3f boundsMax = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * (1.0+x) / foliagePatchesX, maxXYZ.y+24.0, minXYZ.z + (maxXYZ.z-minXYZ.z) * (1.0+y) / foliagePatchesY);
+					patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
 
-				foliagePatches.push_back(patch);
-				patch.plants.clear();
+
+					patch.plantIndexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+
+					unsigned int* indices = new unsigned int[(nQuads-nQuadsStart)*6];
+					for(unsigned int i=0; i<nQuads-nQuadsStart; i++)
+					{
+						indices[i*6+0] = (i+nQuadsStart)*4 + 0;
+						indices[i*6+1] = (i+nQuadsStart)*4 + 1;
+						indices[i*6+2] = (i+nQuadsStart)*4 + 2;
+						indices[i*6+3] = (i+nQuadsStart)*4 + 0;
+						indices[i*6+4] = (i+nQuadsStart)*4 + 2;
+						indices[i*6+5] = (i+nQuadsStart)*4 + 3;
+					}
+					patch.plantIndexBuffer->setData(indices, GraphicsManager::TRIANGLES, (nQuads-nQuadsStart)*6);	
+
+					foliagePatches.push_back(patch);
+					//patch.plants.clear();
+				}
 			}
 		}
+
+		foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
+		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
+		foliageVBO->setTotalVertexSize(sizeof(texturedColoredVertex3D));
+		foliageVBO->setVertexData(sizeof(texturedColoredVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
+
+		if(nQuads >= MAX_QUADS_WITHOUT_TF)
+		{
+			messageBox("Warning: level contains more trees than supported by Shader Model 3 graphics cards. Some trees may be missing!");
+		}
+
+		
+		t = GetTime() - t;
+		t = GetTime();
 	}
-	t=GetTime()-t;
-	t=GetTime();
-	foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STREAM);
-	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-	foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
-	foliageVBO->setTotalVertexSize(sizeof(texturedVertex3D));
-	foliageVBO->setVertexData(sizeof(texturedVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
-
-
-	t=GetTime()-t;
-	t=GetTime();
 }
 Vec3f Terrain::Page::rasterNormal(Vec2u loc) const
 {
 	loc.x = clamp(loc.x, 0, width-1);
 	loc.y = clamp(loc.y, 0, height-1);
 
-	float By = (loc.y < height-1)	? ((float)heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
-	float Ay = (loc.x < width-1)	? ((float)heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
-	float Dy = (  loc.y > 0	)		? ((float)heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
-	float Cy = (  loc.x > 0	)		? ((float)heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width])/255.0  : 0.0f;
+	float By = (loc.y < height-1)	? heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
+	float Ay = (loc.x < width-1)	? heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
+	float Dy = (  loc.y > 0	)		? heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
+	float Cy = (  loc.x > 0	)		? heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
 
-	return Vec3f((Cy - Ay) * width / (maxXYZ.x-minXYZ.x), 2.0 /* /(maxXYZ.y-minXYZ.y)*/, (Dy - By) * height / (maxXYZ.z-minXYZ.z)).normalize();
+	return Vec3f((Cy - Ay) * width / (maxXYZ.x-minXYZ.x), 2.0 * 65536.0 / (maxXYZ.y-minXYZ.y), (Dy - By) * height / (maxXYZ.z-minXYZ.z)).normalize();
 }
 float Terrain::Page::rasterHeight(Vec2u loc) const
 {
@@ -682,8 +762,8 @@ float Terrain::Page::interpolatedHeight(Vec2f loc) const
 Vec3f Terrain::Page::getNormal(Vec2f loc) const
 {
 	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
-	loc.x *= width / (maxXYZ.x - minXYZ.x);
-	loc.y *= height / (maxXYZ.z - minXYZ.z);
+	loc.x *= static_cast<float>(width-1) / (maxXYZ.x - minXYZ.x);
+	loc.y *= static_cast<float>(height-1) / (maxXYZ.z - minXYZ.z);
 
 	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
 	{
@@ -703,8 +783,8 @@ Vec3f Terrain::Page::getNormal(Vec2f loc) const
 float Terrain::Page::getHeight(Vec2f loc) const
 {
 	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
-	loc.x *= width / (maxXYZ.x - minXYZ.x);
-	loc.y *= height / (maxXYZ.z - minXYZ.z);
+	loc.x *= static_cast<float>(width-1) / (maxXYZ.x - minXYZ.x);
+	loc.y *= static_cast<float>(height-1) / (maxXYZ.z - minXYZ.z);
 
 	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
 	{
@@ -720,8 +800,40 @@ float Terrain::Page::getHeight(Vec2f loc) const
 		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
 		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
 	}
+
+
+
+	/*
+	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
+	loc.x = clamp(loc.x * (width) / (maxXYZ.x - minXYZ.x), 0, width);
+	loc.y = clamp(loc.y * (height) / (maxXYZ.z - minXYZ.z), 0, height);
+	 
+	float A, B, C, D;
+	//  A  _____  B
+	//    |    /|
+	//	  |  /  |
+	//  D |/____| C
+
+	float x_fract = loc.x-floor(loc.x);
+	float y_fract = loc.y-floor(loc.y);
+
+	if(x_fract + y_fract < 1.0)
+	{
+		A = rasterHeight(Vec2u(floor(loc.x),floor(loc.y)));
+		B = rasterHeight(Vec2u(floor(loc.x),ceil(loc.y)));
+		D = rasterHeight(Vec2u(ceil(loc.x),floor(loc.y)));
+		C = B + D - A;
+	}
+	else
+	{
+		B = rasterHeight(Vec2u(floor(loc.x),ceil(loc.y)));
+		C = rasterHeight(Vec2u(ceil(loc.x),ceil(loc.y)));
+		D = rasterHeight(Vec2u(ceil(loc.x),floor(loc.y)));
+		A = B + D - C;
+	}
+	return lerp(lerp(A,B,x_fract), lerp(C,D,x_fract), y_fract);*/
 }
-void Terrain::Page::render(shared_ptr<GraphicsManager::View> view) const
+void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType shaderType) const
 {
 	renderQueue.clear();
 
@@ -768,7 +880,54 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view) const
 	//}
 
 	//view->lookAt(Vec3f(12900/2,15000,12900/2),Vec3f(12900/2,0,12900/2), Vec3f(0,0,1));
-	texture->bind(1);
+
+
+
+
+	shared_ptr<GraphicsManager::shader> terrainShader;
+	if(shaderType == TERRAIN_ISLAND)
+	{
+		terrainShader = shaders.bind("island terrain");
+	}
+	else if(shaderType == TERRAIN_MOUNTAINS)
+	{
+		terrainShader = shaders.bind("mountain terrain");
+	}
+	else if(shaderType == TERRAIN_SNOW)
+	{
+		terrainShader = shaders.bind("snow terrain");
+	}
+	else if(shaderType == TERRAIN_DESERT)
+	{
+		terrainShader = shaders.bind("desert terrain");
+	}
+
+	//global
+	terrainShader->setUniform1i("sky",			0); //bound by caller
+	terrainShader->setUniform1i("groundTex",	1);	texture->bind(1);
+	terrainShader->setUniform1i("LCnoise",		2);	dataManager.bind("LCnoise",2);
+	terrainShader->setUniform1i("noiseTex",		3);	dataManager.bind("noise",3);
+	terrainShader->setUniform1i("sand",			4);	dataManager.bind("sand", 4);
+	terrainShader->setUniform1i("sand2",		5);	dataManager.bind("desertSand",5);
+	terrainShader->setUniform1i("snow",			6);	dataManager.bind("snow",6);
+	terrainShader->setUniform1i("snow_normals",	7);	dataManager.bind("snow normals",7);
+	terrainShader->setUniform1i("grass",		8);	dataManager.bind("grass",8);
+	terrainShader->setUniform1i("rock",			9);	dataManager.bind("rock",9);
+	terrainShader->setUniform1i("grass_normals",10);dataManager.bind("grass normals",10); //can take 100+ ms to complete under linux?
+	terrainShader->setUniform1i("fractalNormals",11);dataManager.bind("fractal normals",11); //can take 100+ ms to complete under linux?
+
+	terrainShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	terrainShader->setUniformMatrix("modelTransform",	Mat4f());
+	terrainShader->setUniform1f("time",					world.time());
+	terrainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
+	terrainShader->setUniform3f("eyePos",				view->camera().eye);
+	terrainShader->setUniform2f("gtex_halfPixel",		0.5 / (width), 0.5 / (height));
+	terrainShader->setUniform2f("gtex_origin",			minXYZ.x, minXYZ.z);
+	terrainShader->setUniform2f("gtex_invScale",		1.0/(maxXYZ.x-minXYZ.x) * (width-1)/width, 1.0/(maxXYZ.z-minXYZ.z) * (height-1)/height);
+	terrainShader->setUniform1f("minHeight",			minXYZ.y);
+	terrainShader->setUniform1f("heightRange",			maxXYZ.y-minXYZ.y);
+	sceneManager.bindLights(terrainShader);
+
 
 	Vec3f eye;
 	unsigned int bufferOffset;
@@ -778,7 +937,7 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view) const
 		//dataManager.setUniform1f("dist", (*i)->minDistanceSquared / d);
 		bufferOffset = sizeof(float)*3 * ((*i)->y + ((*i)->x*((width-1)/LOD+1))) * (16<<(levelsDeep-(*i)->level));
 		indexBuffers[(*i)->level][(*i)->element.edgeFlags]->bindBuffer(vertexBuffer, bufferOffset);
-		indexBuffers[(*i)->level][(*i)->element.edgeFlags]->drawBufferX();
+		indexBuffers[(*i)->level][(*i)->element.edgeFlags]->drawBuffer();
 		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
@@ -803,27 +962,42 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view) const
 void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 {
 	//skyTexture->bind(1); <-- bound by caller
-	bool trees3D = false;
+	//bool trees3D = false;
 
-	float distanceSquared;
-	for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-	{
-		if(!i->plantIndexBuffer || !view->boundingBoxInFrustum(i->bounds)/* || i->center.distanceSquared(view->camera().eye) > 10000.0*10000.0*/)
-		{
-			i->renderType = foliagePatch::DONT_RENDER;
-		}
-		else if(!trees3D || i->center.distanceSquared(view->camera().eye) > 250.0*250.0)
-		{
-			i->renderType = foliagePatch::RENDER_BILLBAORD;
-		}
-		else
-		{
-			i->renderType = foliagePatch::RENDER_MODEL;
-		}
-	}
+	//static vector<foliagePatch::plant> treeModels;
+	//treeModels.clear();
+
+	//Profiler.startElement("checkDepth");
+	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
+	//{
+	//	if(!i->plantIndexBuffer || !view->boundingBoxInFrustum(i->bounds) || i->center.distanceSquared(view->camera().eye) > 10000.0*10000.0)
+	//	{
+	//		i->renderType = foliagePatch::DONT_RENDER;
+	//	}
+	//	else// if(!trees3D || i->center.distanceSquared(view->camera().eye) > 250.0*250.0)
+	//	{
+	//		i->renderType = foliagePatch::RENDER_BILLBAORD;
+	//	}
+	//	//else
+	//	//{
+	//	//	for(auto p = i->plants.begin(); p != i->plants.end(); p++)
+	//	//	{
+	//	//		(*p).screenDepth = view->project3(p->location).z;
+	//	//	}
+	//	//	treeModels.insert(treeModels.begin(), i->plants.begin(), i->plants.end());
+	//	//	i->renderType = foliagePatch::RENDER_MODEL;
+	//	//}
+	//}
+	//Profiler.endElement("checkDepth");
+	//std::sort(treeModels.begin(), treeModels.end(), [](const foliagePatch::plant& p1, const foliagePatch::plant& p2)->bool{return p1.screenDepth > p2.screenDepth;});
+
+	//graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+	
+	bool hasTransformFeedback = graphics->hasShaderModel4();
 
 
 	graphics->setDepthMask(true);
+	//world.treeTexture->bind();
 	dataManager.bind("tree");
 	auto alphaTreesShader = shaders.bind("trees alpha test shader");
 	alphaTreesShader->setUniform1i("tex", 0);
@@ -832,12 +1006,20 @@ void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	alphaTreesShader->setUniform3f("right", view->camera().right);
 	alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	foliageVBO->bindBuffer();
-	for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
+	if(hasTransformFeedback)
 	{
-		if(i->renderType == foliagePatch::RENDER_BILLBAORD)
+		foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, 0, numTrees * 12);
+	}
+	else
+	{
+		for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
 		{
-			i->plantIndexBuffer->bindBuffer();
-			i->plantIndexBuffer->drawBufferX();
+			//if(i->renderType == foliagePatch::RENDER_BILLBAORD /*|| i->renderType == foliagePatch::RENDER_MODEL*/)
+			if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 1000.0*1000.0)
+			{
+				i->plantIndexBuffer->bindBuffer();
+				i->plantIndexBuffer->drawBuffer();
+			}
 		}
 	}
 	graphics->setDepthMask(false);
@@ -847,53 +1029,75 @@ void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	treesShader->setUniform3f("eyePos", view->camera().eye);
 	treesShader->setUniform3f("right", view->camera().right);
 	treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
+	if(hasTransformFeedback)
 	{
-		if(i->renderType == foliagePatch::RENDER_BILLBAORD)
-		{
-			i->plantIndexBuffer->bindBuffer();
-			i->plantIndexBuffer->drawBufferX();
-		}
+		foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, 0, numTrees * 12);
 	}
-
-
-	auto tree3DShader = shaders("trees3D shader");
-	auto leavesMesh = dataManager.getModel("tree leaves");
-	auto trunkMesh = dataManager.getModel("tree trunk");
-	if(trees3D && tree3DShader && trunkMesh && !trunkMesh->materials.empty() && leavesMesh && !leavesMesh->materials.empty())
+	else
 	{
-		tree3DShader->bind();
-		tree3DShader->setUniform1i("tex",0);
-		trunkMesh->materials.front().tex->bind(0);
-		trunkMesh->materials.front().indexBuffer->bindBuffer(trunkMesh->VBO);
-		tree3DShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-
 		for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
 		{
-			if(i->renderType == foliagePatch::RENDER_MODEL)
+			//if(i->renderType == foliagePatch::RENDER_BILLBAORD /*|| i->renderType == foliagePatch::RENDER_MODEL*/)
+			if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
 			{
-				for(auto p = i->plants.begin(); p != i->plants.end(); p++)
-				{
-					tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
-					trunkMesh->materials.front().indexBuffer->drawBufferX();
-				}
-			}
-		}
-
-		leavesMesh->materials.front().tex->bind(0);
-		leavesMesh->materials.front().indexBuffer->bindBuffer(leavesMesh->VBO);
-		for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-		{
-			if(i->renderType == foliagePatch::RENDER_MODEL)
-			{
-				for(auto p = i->plants.begin(); p != i->plants.end(); p++)
-				{
-					tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
-					leavesMesh->materials.front().indexBuffer->drawBufferX();
-				}
+				i->plantIndexBuffer->bindBuffer();
+				i->plantIndexBuffer->drawBuffer();
 			}
 		}
 	}
+
+	//auto tree3DShader = shaders("trees3D shader");
+	//auto leavesMesh = dataManager.getModel("tree leaves");
+	//auto trunkMesh = dataManager.getModel("tree trunk");
+	//if(trees3D && tree3DShader && trunkMesh && !trunkMesh->materials.empty() && leavesMesh && !leavesMesh->materials.empty())
+	//{
+	//	tree3DShader->bind();
+	//	tree3DShader->setUniform1i("tex",0);
+	//	trunkMesh->materials.front().tex->bind(0);
+	//	trunkMesh->materials.front().indexBuffer->bindBuffer(trunkMesh->VBO);
+	//	tree3DShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	//
+	//	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
+	//	//{
+	//	//	if(i->renderType == foliagePatch::RENDER_MODEL)
+	//	//	{
+	//	//		for(auto p = i->plants.begin(); p != i->plants.end(); p++)
+	//	//		{
+	//	for(auto p = treeModels.begin(); p != treeModels.end(); p++)
+	//	{
+	//		if(view->camera().eye.distanceSquared(p->location) < 200.0*200.0)
+	//		{
+	//				tree3DShader->setUniform1f("transparency", clamp((200.0 - view->camera().eye.distance(p->location))*0.02, 0.0, 1.0));
+	//				tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
+	//				trunkMesh->materials.front().indexBuffer->drawBuffer();
+	//		}
+	//	}
+	//	//		}
+	//	//	}
+	//	//}
+	//
+	//	leavesMesh->materials.front().tex->bind(0);
+	//	leavesMesh->materials.front().indexBuffer->bindBuffer(leavesMesh->VBO);
+	//	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
+	//	//{
+	//	//	if(i->renderType == foliagePatch::RENDER_MODEL)
+	//	//	{
+	//	//		for(auto p = i->plants.begin(); p != i->plants.end(); p++)
+	//	//		{
+	//	for(auto p = treeModels.begin(); p != treeModels.end(); p++)
+	//	{
+	//		if(view->camera().eye.distanceSquared(p->location) < 200.0*200.0)
+	//		{
+	//				tree3DShader->setUniform1f("transparency", 1.0/*clamp((200.0 - view->camera().eye.distance(p->location))*0.2, 0.0, 1.0)*/);
+	//				tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
+	//				leavesMesh->materials.front().indexBuffer->drawBuffer();
+	//		}
+	//	}
+	//	//		}
+	//	//	}
+	//	//}
+	//}
+	//graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 }
 Terrain::Page::~Page()
 {
@@ -1009,57 +1213,66 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 	t = GetTime() - t;
 	t = GetTime();
 }
-void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr) const
+void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 {
-/*	const int numDirections=4;
-	for(int i=0; i <numDirections; i++)
-	{
-		shared_ptr<GraphicsManager::texture2D> tex = graphics->genTexture2D();
-		tex->setData(1024,1024,GraphicsManager::texture::BGRA, nullptr);
-		graphics->setDepthTest(false);
+	const double AOI = 45.0 * PI/180.0;
+	const int numDirections=1;
 
+	double t = GetTime();
 
-		shared_ptr<GraphicsManager::View> view(new GraphicsManager::View());
-		view->perspective(60.0,1.0,0.1,100.0);
-		view->lookAt(Vec3f(25.0*sin(2.0*PI*i/numDirections),25.0,25*cos(2.0*PI*i/numDirections)), Vec3f(0,15.0,0), Vec3f(0,1,0));
+	treeTexture = graphics->genTexture2D();
+	treeTexture->setData(512,512,GraphicsManager::texture::RGBA, false, false, nullptr);
 
+	auto depthTex = graphics->genTexture2D();
+	depthTex->setData(512,512,GraphicsManager::texture::DEPTH, false, false, nullptr);
 
+	graphics->setDepthTest(false);
 
-		graphics->startRenderToTexture(tex);
+	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 
-		graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+	shared_ptr<GraphicsManager::View> view(new GraphicsManager::View());
+	view->ortho(-15,15, -15.0*cos(AOI),15.0*cos(AOI), 0, 100);
+	view->lookAt(Vec3f(30.0*cos(AOI), 15.0+30.0*sin(AOI), 0), Vec3f(0, 15, 0), Vec3f(0,-1,0));
 
-		//for(int n=0;n<10;n++);
-		sceneManager.drawMesh(view, dataManager.getModel("tree trunk"), Mat4f(Quat4f(),Vec3f(),Vec3f(1,1,1)));
-		sceneManager.drawMesh(view, dataManager.getModel("tree leaves"), Mat4f(Quat4f(),Vec3f(),Vec3f(1,1,1)));
+	auto tree3DShader = shaders("trees3D shader");
+	auto leavesMesh = dataManager.getModel("tree leaves");
+	auto trunkMesh = dataManager.getModel("tree trunk");
+	if(tree3DShader && trunkMesh && !trunkMesh->materials.empty() && leavesMesh && !leavesMesh->materials.empty())
+	{	
 
-		tex->generateMipmaps();
-		graphics->setDepthTest(true);
+		tree3DShader->bind();
+		tree3DShader->setUniform1i("tex",0);
+		tree3DShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+		tree3DShader->setUniform1f("transparency", 0.9);
+		tree3DShader->setUniform4f("position_scale",0, 0, 0, 30.0 / 23.73);
+
+		graphics->startRenderToTexture(treeTexture, depthTex);
+		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
+		trunkMesh->materials.front().tex->bind(0);
+		trunkMesh->materials.front().indexBuffer->bindBuffer(trunkMesh->VBO);
+		trunkMesh->materials.front().indexBuffer->drawBuffer();
+
+		leavesMesh->materials.front().tex->bind(0);
+		leavesMesh->materials.front().indexBuffer->bindBuffer(leavesMesh->VBO);
+		leavesMesh->materials.front().indexBuffer->drawBuffer();
 
 		graphics->endRenderToTexture();
+	}
 
-		unsigned char* texData = tex->getData();
+	treeTexture->generateMipmaps();
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 
-		for(int x=0;x<1024;x++)
-		{
-			for(int y=0; y<1024;y++)
-			{
-				if(texData[(x+y*1024)*4+3] < 255 && texData[(x+y*1024)*4+3] != 0)
-				{
-					texData[(x+y*1024)*4+0] = static_cast<float>(texData[(x+y*1024)*4+0]*255.0) / texData[(x+y*1024)*4+3];
-					texData[(x+y*1024)*4+1] = static_cast<float>(texData[(x+y*1024)*4+1]*255.0) / texData[(x+y*1024)*4+3];
-					texData[(x+y*1024)*4+2] = static_cast<float>(texData[(x+y*1024)*4+2]*255.0) / texData[(x+y*1024)*4+3];
-				}
-			}
-		}
+	t = GetTime() - t;
+	t = GetTime();
 
-		shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile(string("../treeTexture") + lexical_cast<string>(i) + ".png",FileManager::PNG));
-		textureFile->channels = 4;
-		textureFile->contents = texData;
-		textureFile->width = 1024;
-		textureFile->height = 1024;
-		fileManager.writeFile(textureFile);
-	}*/
+	unsigned char* texData = treeTexture->getData();
+	shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../treeTexture.png",FileManager::PNG));
+	textureFile->channels = 1;
+	textureFile->contents = texData;
+	textureFile->width = 512;
+	textureFile->height = 512;
+	fileManager.writeFile(textureFile); //will delete[] texData
 }
 float cosineInterpolation(float v1, float v2, float interp)
 {
@@ -1163,14 +1376,13 @@ void Terrain::resetTerrain()
 {
 	skyTexture.reset();
 	oceanTexture.reset();
+	treeTexture.reset();
 	terrainPages.clear();
-}
-Terrain::~Terrain()
-{
-	resetTerrain();
 }
 void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, float foliageDensity, unsigned int LOD)
 {
+	debugAssert(isPowerOfTwo(patchResolution - 1));
+
 	shaderType = shader;
 	waterPlane = (shader==TERRAIN_ISLAND);
 	shared_ptr<Page> p(new Page(Heights,patchResolution,position,scale,LOD));
@@ -1183,9 +1395,9 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
 	generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8); //should actually make the sun be at the position of the light source...
-	//generateOceanTexture(); //we now load this texture from disk to reduce startup time
+	generateOceanTexture(); //we now load this texture from disk to reduce startup time
 
-	generateTreeTexture(dataManager.getModel("tree model"));
+	//generateTreeTexture(dataManager.getModel("tree model"));
 
 	graphics->checkErrors();
 
@@ -1211,10 +1423,10 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	sky->setUniform1i("noise", 1);
 	skyTexture->bind();
 	dataManager.bind("noise",1);
-	sceneManager.drawMeshCustomShader(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
+	sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
 	if(!waterPlane)
 	{
-		sceneManager.drawMeshCustomShader(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), Vec3f(radius,-radius,radius)), sky);
+		sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), Vec3f(radius,-radius,radius)), sky);
 	}
 
 	//Vec3f sunDirection = (graphics->getLightPosition()+eye).normalize();
@@ -1235,8 +1447,8 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	{
 		auto ocean = shaders.bind("ocean");
 
-		dataManager.bind("ocean normals", 1);
-		//oceanTexture->bind(1);
+		//dataManager.bind("ocean normals", 1);
+		oceanTexture->bind(1);
 
 		ocean->setUniform1i("sky",	0);
 		ocean->setUniform1i("oceanNormals",	1);
@@ -1252,7 +1464,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//graphics->setWireFrame(true);
 
 		ocean->setUniform3f("lightPosition", graphics->getLightPosition());
-		sceneManager.drawMeshCustomShader(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)), ocean);
+		sceneManager.drawMesh(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)), ocean);
 	
 		//graphics->setWireFrame(false);
 
@@ -1261,134 +1473,145 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
-	if(shaderType == TERRAIN_ISLAND)
+	//if(shaderType == TERRAIN_ISLAND)
+	//{
+	//	auto islandShader = shaders.bind("island terrain");
+	//	dataManager.bind("sand",2);
+	//	dataManager.bind("grass",3);
+	//	dataManager.bind("rock",4);
+	//	dataManager.bind("LCnoise",5);
+	//	dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
+	//	dataManager.bind("noise",7);
+
+	//	islandShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	//	islandShader->setUniformMatrix("modelTransform",	Mat4f());
+	//	islandShader->setUniform1f("time",					world.time());
+	//	islandShader->setUniform3f("lightPosition",			graphics->getLightPosition());
+	//	islandShader->setUniform3f("eyePos",				view->camera().eye);
+	//	islandShader->setUniform3f("gtex_halfPixel",		0.5 / terrainResolution.x
+	//	islandShader->setUniform3f("gtex_origin",			
+	//	islandShader->setUniform3f("gtex_invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+	//	islandShader->setUniform1f("minHeight",				terrainPosition.y);
+	//	islandShader->setUniform1f("heightRange",			terrainScale.y);
+
+	//	gtex_halfPixel;
+	//	gtex_origin;
+	//	gtex_invScale;
+
+	//	islandShader->setUniform1i("sky",			0);
+	//	islandShader->setUniform1i("sand",		2);
+	//	islandShader->setUniform1i("grass",		3);
+	//	islandShader->setUniform1i("rock",		4);
+	//	islandShader->setUniform1i("LCnoise",		5);
+	//	islandShader->setUniform1i("groundTex",	1);
+	//	islandShader->setUniform1i("grass_normals", 6);
+	//	islandShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
+
+	//	sceneManager.bindLights(islandShader);
+
+	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+	//	{
+	//		(*i)->render(view);
+	//	}
+	//}
+	//else if(shaderType == TERRAIN_MOUNTAINS)
+	//{
+	//	auto mountainShader = shaders.bind("mountain terrain");
+	//	dataManager.bind("sand",2);
+	//	dataManager.bind("grass",3);
+	//	dataManager.bind("rock",4);
+	//	dataManager.bind("LCnoise",5);
+	//	dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
+	//	dataManager.bind("noise",7);
+
+	//	mountainShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	//	mountainShader->setUniformMatrix("modelTransform",	Mat4f());
+	//	mountainShader->setUniform1f("time",				world.time());
+	//	mountainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
+	//	mountainShader->setUniform3f("eyePos",				view->camera().eye);
+	//	mountainShader->setUniform3f("invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+	//	mountainShader->setUniform1f("minHeight",			terrainPosition.y);
+	//	mountainShader->setUniform1f("heightRange",			terrainScale.y);
+	//	
+
+
+	//	mountainShader->setUniform1i("sky",			0);
+	//	mountainShader->setUniform1i("sand",		2);
+	//	mountainShader->setUniform1i("grass",		3);
+	//	mountainShader->setUniform1i("rock",		4);
+	//	mountainShader->setUniform1i("LCnoise",		5);
+	//	mountainShader->setUniform1i("groundTex",	1);
+	//	mountainShader->setUniform1i("grass_normals", 6);
+	//	mountainShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
+
+	//	sceneManager.bindLights(mountainShader);
+
+	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+	//	{
+	//		mountainShader->setUniform2f("invTerrainResolution",	1.0/(*i)->width, 1.0/(*i)->height);
+	//		(*i)->render(view);
+	//	}
+	//}
+	//else if(shaderType == TERRAIN_SNOW)
+	//{
+	//	auto snowShader = shaders.bind("snow terrain");
+	//	dataManager.bind("snow",2);
+	//	dataManager.bind("LCnoise",3);
+	//	dataManager.bind("snow normals",4);
+
+	//	snowShader->setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
+	//	snowShader->setUniform1f("minHeight",	terrainPosition.y);
+	//	snowShader->setUniform1f("XZscale",		terrainScale.x);
+	//	snowShader->setUniform1f("time",		world.time());
+
+	//	//snowShader->setUniform3f("lightPosition", graphics->getLightPosition());
+
+	//	snowShader->setUniform1i("snow",			2);
+	//	snowShader->setUniform1i("LCnoise",			3);
+	//	snowShader->setUniform1i("groundTex",		1);
+	//	snowShader->setUniform1i("snow_normals",	4);
+
+	//	sceneManager.bindLights(snowShader);
+
+	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+	//	{
+	//		(*i)->render(view);
+	//	}
+	//}
+	//else if(shaderType == TERRAIN_DESERT)
+	//{
+	//	auto desertShader = shaders.bind("desert terrain");
+
+	//	dataManager.bind("desertSand",2);
+	//	dataManager.bind("sand", 3);
+	//	dataManager.bind("LCnoise",4);
+	//	dataManager.bind("noise",5);
+
+	//	desertShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
+	//	desertShader->setUniformMatrix("modelTransform",	Mat4f());
+	//	desertShader->setUniform1f("time",					world.time());
+	//	desertShader->setUniform3f("lightPosition",			graphics->getLightPosition());
+	//	desertShader->setUniform3f("eyePos",				view->camera().eye);
+	//	desertShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
+
+	//	desertShader->setUniform1i("sky",		0);
+	//	desertShader->setUniform1i("groundTex",	1);
+	//	desertShader->setUniform1i("sand",		2);
+	//	desertShader->setUniform1i("sand2",		3);
+	//	desertShader->setUniform1i("LCnoise",	4);
+	//	desertShader->setUniform1i("noiseTex",	5);
+
+	//	sceneManager.bindLights(desertShader);
+
+	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+	//	{
+	//		(*i)->render(view);
+	//	}
+	//}
+ 
+	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
-		auto islandShader = shaders.bind("island terrain");
-		dataManager.bind("sand",2);
-		dataManager.bind("grass",3);
-		dataManager.bind("rock",4);
-		dataManager.bind("LCnoise",5);
-		dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
-		dataManager.bind("noise",7);
-
-		islandShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-		islandShader->setUniformMatrix("modelTransform",	Mat4f());
-		islandShader->setUniform1f("time",					world.time());
-		islandShader->setUniform3f("lightPosition",			graphics->getLightPosition());
-		islandShader->setUniform3f("eyePos",				view->camera().eye);
-		islandShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-		islandShader->setUniform1f("minHeight",				terrainPosition.y);
-		islandShader->setUniform1f("heightRange",			terrainScale.y);
-
-		islandShader->setUniform1i("sky",			0);
-		islandShader->setUniform1i("sand",		2);
-		islandShader->setUniform1i("grass",		3);
-		islandShader->setUniform1i("rock",		4);
-		islandShader->setUniform1i("LCnoise",		5);
-		islandShader->setUniform1i("groundTex",	1);
-		islandShader->setUniform1i("grass_normals", 6);
-		islandShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
-
-		sceneManager.bindLights(islandShader);
-
-		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-		{
-			(*i)->render(view);
-		}
-	}
-	else if(shaderType == TERRAIN_MOUNTAINS)
-	{
-		auto mountainShader = shaders.bind("mountain terrain");
-		dataManager.bind("sand",2);
-		dataManager.bind("grass",3);
-		dataManager.bind("rock",4);
-		dataManager.bind("LCnoise",5);
-		dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
-		dataManager.bind("noise",7);
-
-		mountainShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		mountainShader->setUniformMatrix("modelTransform",	Mat4f());
-		mountainShader->setUniform1f("time",				world.time());
-		mountainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
-		mountainShader->setUniform3f("eyePos",				view->camera().eye);
-		mountainShader->setUniform3f("invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-		mountainShader->setUniform1f("minHeight",			terrainPosition.y);
-		mountainShader->setUniform1f("heightRange",			terrainScale.y);
-		
-
-
-		mountainShader->setUniform1i("sky",			0);
-		mountainShader->setUniform1i("sand",		2);
-		mountainShader->setUniform1i("grass",		3);
-		mountainShader->setUniform1i("rock",		4);
-		mountainShader->setUniform1i("LCnoise",		5);
-		mountainShader->setUniform1i("groundTex",	1);
-		mountainShader->setUniform1i("grass_normals", 6);
-		mountainShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
-
-		sceneManager.bindLights(mountainShader);
-
-		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-		{
-			mountainShader->setUniform2f("invTerrainResolution",	1.0/(*i)->width, 1.0/(*i)->height);
-			(*i)->render(view);
-		}
-	}
-	else if(shaderType == TERRAIN_SNOW)
-	{
-		auto snowShader = shaders.bind("snow terrain");
-		dataManager.bind("snow",2);
-		dataManager.bind("LCnoise",3);
-		dataManager.bind("snow normals",4);
-
-		snowShader->setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
-		snowShader->setUniform1f("minHeight",	terrainPosition.y);
-		snowShader->setUniform1f("XZscale",		terrainScale.x);
-		snowShader->setUniform1f("time",		world.time());
-
-		//snowShader->setUniform3f("lightPosition", graphics->getLightPosition());
-
-		snowShader->setUniform1i("snow",			2);
-		snowShader->setUniform1i("LCnoise",			3);
-		snowShader->setUniform1i("groundTex",		1);
-		snowShader->setUniform1i("snow_normals",	4);
-
-		sceneManager.bindLights(snowShader);
-
-		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-		{
-			(*i)->render(view);
-		}
-	}
-	else if(shaderType == TERRAIN_DESERT)
-	{
-		auto desertShader = shaders.bind("desert terrain");
-
-		dataManager.bind("desertSand",2);
-		dataManager.bind("sand", 3);
-		dataManager.bind("LCnoise",4);
-		dataManager.bind("noise",5);
-
-		desertShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-		desertShader->setUniformMatrix("modelTransform",	Mat4f());
-		desertShader->setUniform1f("time",					world.time());
-		desertShader->setUniform3f("lightPosition",			graphics->getLightPosition());
-		desertShader->setUniform3f("eyePos",				view->camera().eye);
-		desertShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-
-		desertShader->setUniform1i("sky",		0);
-		desertShader->setUniform1i("groundTex",	1);
-		desertShader->setUniform1i("sand",		2);
-		desertShader->setUniform1i("sand2",		3);
-		desertShader->setUniform1i("LCnoise",	4);
-		desertShader->setUniform1i("noiseTex",	5);
-
-		sceneManager.bindLights(desertShader);
-
-		for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-		{
-			(*i)->render(view);
-		}
+		(*i)->render(view,shaderType);
 	}
 
 	shaders.bind("model");

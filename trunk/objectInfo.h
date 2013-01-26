@@ -32,7 +32,9 @@ public:
 		objectType type;
 
 		//shared_ptr<PhysicsManager::collisionBounds> collisionMesh;
-		shared_ptr<SceneManager::mesh>				mesh;
+		weak_ptr<SceneManager::mesh>				mesh;
+
+		shared_ptr<SceneManager::meshInstance> newMeshInstance(Vec3f position, Quat4f rotation);
 
 		friend class ObjectInfo;
 	};

@@ -3,7 +3,6 @@
 #include "engine.h"
 #include "objectInfo.h"
 #include "level.h"
-#include "settings.h"
 
 #include "particleEffects.h"
 

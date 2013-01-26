@@ -7,7 +7,7 @@ class profiler
 
 	map<string,int> output;
 	map<string,double> outputd;
-
+	map<string,string> outputs;
 	map<string,unsigned int> counter;
 public:
 
@@ -31,6 +31,10 @@ public:
 	{
 		outputd[n] = d;
 	}
+	inline void setOutput(string n, string s)
+	{
+		outputs[n] = s;
+	}
 	inline void increaseCounter(string n)
 	{
 		if(counter.find(n) == counter.end())
@@ -48,7 +52,7 @@ public:
 			for(auto s=i->second.begin();s!=i->second.end();s++)
 				v+=*s;
 			std::ostringstream buffer;
-			buffer << std::fixed << std::setprecision(1) << max(v/i->second.size(),0.0f);
+			buffer << std::fixed << std::setprecision(2) << max(v/i->second.size(),0.0f);
 			graphics->drawText(buffer.str(),Vec2f(0.2f,y));
 		}
 		for(auto i=output.begin();i!=output.end();i++,y+=0.02f)
@@ -63,6 +67,11 @@ public:
 			buffer << std::fixed << std::setprecision(2) << i->second;
 			graphics->drawText(buffer.str(),Vec2f(0.2f,y));
 		}
+		for(auto i=outputs.begin();i!=outputs.end();i++,y+=0.02f)
+		{
+			graphics->drawText(i->first, Vec2f(0.01f,y));
+			graphics->drawText(i->second, Vec2f(0.2f,y));
+		}
 		for(auto i=counter.begin();i!=counter.end();i++,y+=0.02)
 		{
 			graphics->drawText(i->first,Vec2f(0.01f,y));
@@ -76,6 +85,7 @@ public:
 	inline void endElement(string n){}
 	inline void setOutput(string n, int i){}
 	inline void setOutput(string n, double d){}
+	inline void setOutput(string n, string s){}
 	inline void increaseCounter(string n){}
 	inline void draw(){}
 #endif

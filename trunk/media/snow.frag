@@ -6,13 +6,21 @@ varying vec3 lightDirections[4];
 
 uniform float time;
 
-//uniform sampler2D sand;
-//uniform sampler2D grass;
-//uniform sampler2D rock;
-uniform sampler2D snow;
-uniform sampler2D LCnoise;
+uniform samplerCube sky;
 uniform sampler2D groundTex;
+uniform sampler2D LCnoise;
+uniform sampler2D noiseTex;
+uniform sampler2D sand;
+uniform sampler2D sand2;
+uniform sampler2D grass;
+uniform sampler2D rock;
+uniform sampler2D snow;
+uniform sampler2D grass_normals;
 uniform sampler2D snow_normals;
+
+uniform vec2 gtex_halfPixel;
+uniform vec2 gtex_origin;
+uniform vec2 gtex_invScale;
 
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
@@ -28,7 +36,7 @@ void main()
 	//	return;
 	//}
 
-	vec3 n = texture2D(groundTex,position.xz).xyz;
+	vec3 n = texture2D(groundTex,gtex_halfPixel + (position.xz-gtex_origin) * gtex_invScale).xyz;
 	n.x = n.x * 2.0 - 1.0;
 	n.z = n.z * 2.0 - 1.0;
 	n = normalize(n);

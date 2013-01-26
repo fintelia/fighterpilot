@@ -406,23 +406,23 @@ public:
 	void setMenu(screen* m);
 	bool setPopup(popup* p);
 
-	void shutdown();
-
 	void updateFrame();
 	void updateSimulation();
 
 	void render();
 	void render3D(unsigned int view);
 
-
 	void inputCallback(InputManager::callBack* callback);
 
 	void drawCursor(){mDrawCursor = true;}
+
+	~manager(){delete menu;}
 private:
 	vector<shared_ptr<popup>> popups;
 	screen* menu;
 
 	manager():menu(nullptr){}
+
 
 	bool mDrawCursor;
 };
