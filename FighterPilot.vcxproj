@@ -164,6 +164,7 @@
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="ship.cpp" />
     <ClCompile Include="smokeTrail.cpp" />
+    <ClCompile Include="soundManager.cpp" />
     <ClCompile Include="splash.cpp" />
     <ClCompile Include="splash2.cpp" />
     <ClCompile Include="splitScreen.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="sceneManager.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="ship.h" />
+    <ClInclude Include="soundManager.h" />
     <ClInclude Include="terrain.h" />
     <ClInclude Include="time.h" />
     <ClInclude Include="vector.h" />
@@ -229,6 +231,10 @@
     <None Include="media\circle.vert" />
     <None Include="media\cirrusCloud.frag" />
     <None Include="media\cirrusCloud.vert" />
+    <None Include="media\color3D.frag" />
+    <None Include="media\color3D.vert" />
+    <None Include="media\conditionalDiscard.geom" />
+    <None Include="media\createTree.geom" />
     <None Include="media\desert preview.frag" />
     <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />
@@ -260,6 +266,10 @@
     <None Include="media\ortho.vert" />
     <None Include="media\particle.frag" />
     <None Include="media\particle.vert" />
+    <None Include="media\particle3.frag" />
+    <None Include="media\particle3.geom" />
+    <None Include="media\particle3.vert" />
+    <None Include="media\placeTrees.vert" />
     <None Include="media\radar bounds.frag" />
     <None Include="media\radar bounds.vert" />
     <None Include="media\radar.frag" />
@@ -272,6 +282,8 @@
     <None Include="media\sky.vert" />
     <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
+    <None Include="media\spark.frag" />
+    <None Include="media\spark.vert" />
     <None Include="media\terrain.vert" />
     <None Include="media\tree3d.frag" />
     <None Include="media\tree3d.vert" />

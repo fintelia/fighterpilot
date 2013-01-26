@@ -2,13 +2,12 @@
 #include "engine.h"
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
-bool GraphicsManager::texture::compression = true;
 
 GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0)
 {
 
 }
-GraphicsManager::View::View()
+GraphicsManager::View::View(): mViewConstraint(0,0,1,1)
 {
 
 }
@@ -175,6 +174,7 @@ void GraphicsManager::View::shiftCamera(Vec3f shift)
 }
 void GraphicsManager::View::constrainView(Rect4f bounds)
 {
+	mViewConstraint = bounds;
 	if(mProjection.type == Projection::PERSPECTIVE)
 	{
 		float zNear		= mProjection.zNear;
@@ -236,10 +236,6 @@ Vec3f GraphicsManager::getLightPosition()const
 {
 	return lightPosition;
 }
-bool GraphicsManager::getTextureCompression()const
-{
-	return texture::compression;
-}
 bool GraphicsManager::getVSync()const
 {
 	return vSync;
@@ -251,10 +247,6 @@ void GraphicsManager::setColor(float r, float g, float b)
 void GraphicsManager::setLightPosition(Vec3f position)
 {
 	lightPosition = position;
-}
-void GraphicsManager::setTextureCompression(bool enabled)
-{
-	texture::compression = enabled;
 }
 void GraphicsManager::setStereoMode(StereoMode s)
 {

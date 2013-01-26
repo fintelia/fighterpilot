@@ -2,10 +2,6 @@
 #include "engine.h"
 #include "png/png.h"
 
-DataManager::~DataManager()
-{
-	shutdown();
-}
 DataManager::fontAsset* DataManager::registerFont(shared_ptr<FileManager::textFile> f) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {
 	if(f->invalid())
@@ -77,7 +73,7 @@ DataManager::fontAsset* DataManager::registerFont(shared_ptr<FileManager::textFi
 
 	fontAsset* fAsset = new fontAsset;
 	fAsset->texture = graphics->genTexture2D();
-	fAsset->texture->setData(texFile->width, texFile->height, (GraphicsManager::texture::Format)texFile->channels, texFile->contents);
+	fAsset->texture->setData(texFile->width, texFile->height, (GraphicsManager::texture::Format)texFile->channels, false, false, texFile->contents);
 	fAsset->type = asset::FONT;
 	fAsset->height = (float)info.lineHeight;
 
@@ -99,7 +95,7 @@ DataManager::fontAsset* DataManager::registerFont(shared_ptr<FileManager::textFi
 	delete [] fontChars;
 	return fAsset;
 }
-DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable)
+DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable, bool compress)
 {
 	if(!f || !f->valid())
 		return nullptr;
@@ -115,7 +111,7 @@ DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::
 	}
 
 	shared_ptr<GraphicsManager::texture2D> tex = graphics->genTexture2D();
-	tex->setData(f->width, f->height, format, f->contents, tileable);
+	tex->setData(f->width, f->height, format, tileable, compress, f->contents);
 
 	textureAsset* a = new textureAsset;
 	a->texture = tex;
@@ -383,12 +379,6 @@ bool DataManager::assetLoaded(string name)
 //	}
 //}
 
-void DataManager::shutdown()
-{
-	boundShader = "";
-	assets.clear();
-}
-
 shared_ptr<GraphicsManager::shader> ShaderManager::bind(string name)
 {
 	auto s = shaderAssets.find(name);
@@ -433,8 +423,4 @@ void ShaderManager::writeErrorLog(string filename)
 		}
 	}
 	fileManager.writeFile(file, true);
-}
-void ShaderManager::shutdown()
-{
-	shaderAssets.clear();
 }

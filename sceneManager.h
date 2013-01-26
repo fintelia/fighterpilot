@@ -29,7 +29,7 @@ public:
 
 		unsigned char flags;
 
-		weak_ptr<meshInstance> parent; //just for association right not, does not impact transformation (yet)
+		weak_ptr<meshInstance> parent; //just for association right now, does not impact transformation (yet)
 
 		friend class SceneManager;
 		meshInstance(unsigned int mID, Vec3f pos, Quat4f rot, weak_ptr<meshInstance> Parent=weak_ptr<meshInstance>()): meshID(mID), rotation(rot), position(pos), flags(0x01), parent(Parent) {}
@@ -70,7 +70,7 @@ public:
 	shared_ptr<meshInstance> newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 	//void newTemperaryMesh(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
 	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation);
-	void drawMeshCustomShader(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader);
+	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader);
 
 	void resetMeshInstances();
 	void renderScene(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);

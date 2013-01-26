@@ -20,13 +20,14 @@
     #pragma comment (lib, "libz.lib")
     #pragma comment (lib, "libpng15.lib")
 
+	#define XINPUT
 	#pragma comment (lib,"xinput")
 
-	#pragma comment (lib, "dinput8.lib")
+	//#define DIRECT_INPUT
+	//#pragma comment (lib, "dinput8.lib")
 	#pragma comment (lib, "dxguid.lib")
 
-	#define XINPUT
-	#define DIRECT_INPUT //still need to write most of the code for directInput
+	#pragma comment (lib, "dsound.lib")
 
 #elif defined __GNUG__
 
@@ -109,9 +110,11 @@ extern float sAspect;
 #include "gameMath.h"
 #include "collide.h"
 #include "random.h"
+#include "settings.h"
 #include "ephemeris.h"
 #include "controlManager.h"
 #include "graphicsManager.h"
+#include "soundManager.h"
 #include "fileManager.h"
 #include "sceneManager.h"
 #include "dataManager.h"

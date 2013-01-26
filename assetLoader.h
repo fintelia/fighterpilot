@@ -20,6 +20,9 @@ private:
 		shared_ptr<FileManager::textFile> geom3File;
 		shared_ptr<FileManager::textFile> frag3File;
 		bool use_sAspect;
+
+		string feedbackTransformVaryingsStr;
+		vector<const char*> feedbackTransformVaryings;
 	};
 	struct textureAssetFile: public assetFile{
 		assetType getType(){return TEXTURE;}
@@ -27,6 +30,7 @@ private:
 		//shared_ptr<FileManager::textureFile> file;
 		string filename;
 		bool tileable;
+		bool compress;
 	};
 	struct texture3AssetFile: public assetFile{
 		assetType getType(){return TEXTURE_3D;}
@@ -74,12 +78,17 @@ private:
 
 	shared_ptr<FileManager::modelFile> loadModel(string filename, bool loadTextures); //returns the file from assets.zip if it exists, or loads it from disk otherwise
 	shared_ptr<FileManager::textureFile> loadTexture(string filename); //returns the file from assets.zip if it exists, or loads it from disk otherwise
+
+	bool useTextureCompression;//whether compression will be used for textures loaded after this point
+
 public:
 	static AssetLoader& getInstance()
 	{
 		static AssetLoader* pInstance = new AssetLoader();
 		return *pInstance;
 	}
+
+	void setTextureCompression(bool compression);
 
 	bool loadAssetList();
 	int loadAsset(); //also does preload if not already done

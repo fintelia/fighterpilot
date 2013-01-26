@@ -31,7 +31,8 @@
 
 
 bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
-bool openGL3=false;
+
+const int TRANSFORM_FEEDBACK_QUERY_ID = 1;
 
 #if defined WINDOWS
 struct OpenGLgraphics::Context
@@ -171,7 +172,7 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 		//}
 	}
 }
-void OpenGLgraphics::vertexBufferGL::drawBufferX(Primitive primitive, unsigned int bufferOffset, unsigned int count)
+void OpenGLgraphics::vertexBufferGL::drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)
 {
 	if(count != 0)
 	{
@@ -186,6 +187,79 @@ void OpenGLgraphics::vertexBufferGL::drawBufferX(Primitive primitive, unsigned i
 		else if(primitive == QUADS)				glDrawArrays(GL_QUADS,			bufferOffset, count);
 		else if(primitive == QUAD_STRIP)		glDrawArrays(GL_QUAD_STRIP,		bufferOffset, count);
 		else if(primitive == POLYGON)			glDrawArrays(GL_POLYGON,		bufferOffset, count);
+	}
+}
+void OpenGLgraphics::vertexBufferGL::drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances)
+{
+	if(count != 0 && instances != 0)
+	{
+		if(graphics->hasShaderModel4())
+		{
+			if(primitive == POINTS)					glDrawArraysInstanced(GL_POINTS,		bufferOffset, count, instances);
+			else if(primitive == LINES)				glDrawArraysInstanced(GL_LINES,			bufferOffset, count, instances);
+			else if(primitive == LINE_STRIP)		glDrawArraysInstanced(GL_LINE_STRIP,	bufferOffset, count, instances);
+			else if(primitive == LINE_LOOP)			glDrawArraysInstanced(GL_LINE_LOOP,		bufferOffset, count, instances);
+			else if(primitive == TRIANGLES)			glDrawArraysInstanced(GL_TRIANGLES,		bufferOffset, count, instances);
+			else if(primitive == TRIANGLE_STRIP)	glDrawArraysInstanced(GL_TRIANGLE_STRIP,bufferOffset, count, instances);
+			else if(primitive == TRIANGLE_FAN)		glDrawArraysInstanced(GL_TRIANGLE_FAN,	bufferOffset, count, instances);
+			else if(primitive == QUADS)				glDrawArraysInstanced(GL_QUADS,			bufferOffset, count, instances);
+			else if(primitive == QUAD_STRIP)		glDrawArraysInstanced(GL_QUAD_STRIP,	bufferOffset, count, instances);
+			else if(primitive == POLYGON)			glDrawArraysInstanced(GL_POLYGON,		bufferOffset, count, instances);
+		}
+		else if(GLEW_EXT_draw_instanced)
+		{
+			if(primitive == POINTS)					glDrawArraysInstancedEXT(GL_POINTS,			bufferOffset, count, instances);
+			else if(primitive == LINES)				glDrawArraysInstancedEXT(GL_LINES,			bufferOffset, count, instances);
+			else if(primitive == LINE_STRIP)		glDrawArraysInstancedEXT(GL_LINE_STRIP,		bufferOffset, count, instances);
+			else if(primitive == LINE_LOOP)			glDrawArraysInstancedEXT(GL_LINE_LOOP,		bufferOffset, count, instances);
+			else if(primitive == TRIANGLES)			glDrawArraysInstancedEXT(GL_TRIANGLES,		bufferOffset, count, instances);
+			else if(primitive == TRIANGLE_STRIP)	glDrawArraysInstancedEXT(GL_TRIANGLE_STRIP,	bufferOffset, count, instances);
+			else if(primitive == TRIANGLE_FAN)		glDrawArraysInstancedEXT(GL_TRIANGLE_FAN,	bufferOffset, count, instances);
+			else if(primitive == QUADS)				glDrawArraysInstancedEXT(GL_QUADS,			bufferOffset, count, instances);
+			else if(primitive == QUAD_STRIP)		glDrawArraysInstancedEXT(GL_QUAD_STRIP,		bufferOffset, count, instances);
+			else if(primitive == POLYGON)			glDrawArraysInstancedEXT(GL_POLYGON,		bufferOffset, count, instances);
+		}
+		else
+		{
+			debugBreak();
+		}
+	}
+}
+void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Primitive primitive)
+{
+	if(graphics->hasShaderModel4())
+	{
+		glEnable(GL_RASTERIZER_DISCARD);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, TRANSFORM_FEEDBACK_QUERY_ID);
+		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
+
+		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
+		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
+		else if(primitive == TRIANGLES)	glBeginTransformFeedback(GL_TRIANGLES);
+		else debugBreak();
+	}
+	else
+	{
+		debugBreak();
+	}
+}
+unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
+{
+	if(graphics->hasShaderModel4())
+	{
+		glEndTransformFeedback();
+		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+		glDisable(GL_RASTERIZER_DISCARD);
+
+		int primitiveCount;
+		glGetQueryObjectiv(TRANSFORM_FEEDBACK_QUERY_ID, GL_QUERY_RESULT, &primitiveCount);
+
+		return primitiveCount;
+	}
+	else
+	{
+		debugBreak();
+		return 0;
 	}
 }
 OpenGLgraphics::indexBufferGL::indexBufferGL(UsageFrequency u): indexBuffer(u), bufferID(0), dataCount(0), dataType(0)
@@ -302,7 +376,7 @@ void OpenGLgraphics::indexBufferGL::bindBuffer(shared_ptr<vertexBuffer> buffer, 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferID);
 	buffer->bindBuffer(vertexBufferOffset);
 }
-void OpenGLgraphics::indexBufferGL::drawBufferX()
+void OpenGLgraphics::indexBufferGL::drawBuffer()
 {
 	debugAssert(!vboToSmallForMaxIndex);
 	debugAssert(dataType == GL_UNSIGNED_BYTE || dataType == GL_UNSIGNED_SHORT || dataType == GL_UNSIGNED_INT);
@@ -315,7 +389,7 @@ void OpenGLgraphics::indexBufferGL::drawBufferX()
 		glDrawElements(primitiveType, dataCount, dataType, 0);
 	}
 }
-void OpenGLgraphics::indexBufferGL::drawBufferX(unsigned int numIndicies)
+void OpenGLgraphics::indexBufferGL::drawBuffer(unsigned int numIndicies)
 {
 	if(dataCount == 0 || numIndicies == 0)
 		return;
@@ -347,14 +421,14 @@ void OpenGLgraphics::texture2DGL::bind(unsigned int textureUnit)
 void OpenGLgraphics::texture2DGL::generateMipmaps()
 {
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	if(openGL3)
+	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 		glGenerateMipmap(GL_TEXTURE_2D);
 	else
 		glGenerateMipmapEXT(GL_TEXTURE_2D);
 }
-void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data, bool tileable)
+void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F && f != DEPTH)
 	{
 		debugBreak();
 		return;
@@ -363,9 +437,6 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	format = f;
 	width = Width;
 	height = Height;
-
-	//extention check needed since GeForce FX graphics cards do not support NPOT textures (even though they support OpenGL 2.0)
-	bool NPOT = GLEW_ARB_texture_non_power_of_two && ((width & (width-1)) || (height & (height-1)));
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -385,6 +456,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 
 	int depth;
 	if(format == LUMINANCE)				depth = 1;
+	else if(format == DEPTH)			depth = 3;
 	else if(format == LUMINANCE_ALPHA)	depth = 2;
 	else if(format == BGR)				depth = 3;
 	else if(format == BGRA)				depth = 4;
@@ -397,16 +469,12 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	{
 		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-		if(GLEW_EXT_texture_compression_s3tc && compression)
+		if(GLEW_EXT_texture_compression_s3tc && compress && (format == BGR || format == BGRA || format == RGB || format == RGBA))
 		{
-			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+			if(format == BGR)					glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
-			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
-			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
+			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 		else
 		{
@@ -414,17 +482,20 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
 			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
+			else if(format == DEPTH)			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data);
 		}
 		if(gl2Hacks)
 		{
 			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
 		}
 
-		if(openGL3)
+		if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 			glGenerateMipmap(GL_TEXTURE_2D);
 		else
 			glGenerateMipmapEXT(GL_TEXTURE_2D);
@@ -435,15 +506,17 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
 		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
+		else if(format == RGB)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else if(format == RGBA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		else if(format == RGB16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16, GL_UNSIGNED_SHORT, data);
 		else if(format == RGBA16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16, GL_UNSIGNED_SHORT, data);
 		else if(format == RGB16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16F, GL_FLOAT, data);
 		else if(format == RGBA16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16F, GL_FLOAT, data);
+		else if(format == DEPTH)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, data);
 	}
 }
 unsigned char* OpenGLgraphics::texture2DGL::getData()
 {
-
 	GLenum fmt;
 	unsigned int bytesPerPixel;
 	if(format == LUMINANCE)
@@ -466,6 +539,16 @@ unsigned char* OpenGLgraphics::texture2DGL::getData()
 		fmt = GL_BGRA;
 		bytesPerPixel=4;
 	}
+	else if(format == RGB)
+	{
+		fmt = GL_RGB;
+		bytesPerPixel=3;
+	}
+	else if(format == RGBA)
+	{
+		fmt = GL_RGBA;
+		bytesPerPixel=4;
+	}
 	else if(format == RGB16)
 	{
 		fmt = GL_RGB16;
@@ -485,6 +568,11 @@ unsigned char* OpenGLgraphics::texture2DGL::getData()
 	{
 		fmt = GL_RGBA16F;
 		bytesPerPixel=8;
+	}
+	else if(format == DEPTH)
+	{
+		fmt = GL_DEPTH_COMPONENT;
+		bytesPerPixel=1;
 	}
 	else debugBreak();
 
@@ -508,7 +596,7 @@ void OpenGLgraphics::texture3DGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -524,12 +612,14 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 	else if(format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 	else if(format == BGR)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 	else if(format == BGRA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	else if(format == RGB)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	else if(format == RGBA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	else if(format == RGB16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16, width, height, depth, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 	else if(format == RGBA16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
 	else if(format == RGB16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
 	else if(format == RGBA16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data);
 
-	if(openGL3)
+	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 		glGenerateMipmap(GL_TEXTURE_3D);
 	else
 		glGenerateMipmapEXT(GL_TEXTURE_3D);
@@ -566,7 +656,7 @@ void OpenGLgraphics::textureCubeGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -613,6 +703,24 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
 	}
+	else if(format == RGB)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 1);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 2);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 3);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 4);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 5);
+	}
+	else if(format == RGBA)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 1);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 2);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 3);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
+	}
 	else if(format == RGB16)
 	{
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 0);
@@ -649,7 +757,7 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 4);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 5);
 	}
-	if(openGL3)
+	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	else
 		glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
@@ -695,7 +803,7 @@ bool OpenGLgraphics::shaderGL::compileShader(GLuint sId, const char* src, string
 	delete[] str;
 	//check for successful load
 	glGetShaderiv(sId,GL_COMPILE_STATUS,&success);
-	return success;
+	return success != 0;
 }
 bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 {
@@ -708,7 +816,7 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 	string vertString;
 	string fragString;
 
-	if(openGL3)
+	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 	{
 		vertString = string("#version 130\n")+vert;
 		fragString = string("#version 130\nout vec4 _FragColor;\n")+frag;
@@ -781,33 +889,40 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 }
 bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, const char* fragment)
 {
-	if(!openGL3)
+	if(!graphics->hasShaderModel4()) //means we are running OpenGL 3+
 	{
-		vertErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
-		fragErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
-		geomErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
-		linkErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.";
+		vertErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		fragErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		geomErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		linkErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
 		return false;
 	}
 
 	if(shaderId != 0)
 	{
 		glDeleteProgram(shaderId);
+		shaderId = 0;
 	}
 
-	GLuint v = glCreateShader(GL_VERTEX_SHADER);
-	GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint v = vertex ? glCreateShader(GL_VERTEX_SHADER) : 0;
+	GLuint f = fragment ? glCreateShader(GL_FRAGMENT_SHADER) : 0;
 	GLuint g = geometry ? glCreateShader(GL_GEOMETRY_SHADER) : 0;
 	int i, length, success;//used whenever a pointer to int is required
 
-	if(!compileShader(v, vertex, vertErrorLog) || !compileShader(f, fragment, fragErrorLog) || (geometry && !compileShader(g, geometry, geomErrorLog)))
+	if((vertex && !compileShader(v, vertex, vertErrorLog)) || (fragment && !compileShader(f, fragment, fragErrorLog)) || (geometry && !compileShader(g, geometry, geomErrorLog)))
 	{
 		return false;
 	}
 
 	shaderId = glCreateProgram();
-	glAttachShader(shaderId,f);
-	glAttachShader(shaderId,v);
+	if(vertex)
+	{
+		glAttachShader(shaderId,v);
+	}
+	if(fragment)
+	{
+		glAttachShader(shaderId,f);
+	}
 	if(geometry)
 	{
 		glAttachShader(shaderId,g);
@@ -821,6 +936,7 @@ bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, c
 	glBindAttribLocation(shaderId, 5, "Color4");
 	glBindAttribLocation(shaderId, 6, "Tangent");
 	glBindAttribLocation(shaderId, 7, "GenericFloat");
+
 	glLinkProgram(shaderId);
 
 
@@ -838,8 +954,107 @@ bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, c
 	}
 
 	glUseProgram(0);
-	glDeleteShader(f); // we no longer need these shaders individually, although they
-	glDeleteShader(v); // will not actually be deleted until the shader program is deleted
+
+	// we no longer need these shaders individually, although they
+	// will not actually be deleted until the shader program is deleted
+	if(vertex)
+	{
+		glDeleteShader(v);
+	}
+	if(fragment)
+	{
+		glDeleteShader(f);
+	}
+	if(geometry)
+	{
+		glDeleteShader(g);
+	}
+
+	return true;
+}
+bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, const char* fragment, vector<const char*> feedbackTransformVaryings)
+{
+	if(!graphics->hasShaderModel4()) //means we are running OpenGL 3+
+	{
+		vertErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		fragErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		geomErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		linkErrorLog = "Error: Must be running in OpenGL 3 mode to use OpenGL 3 shaders.\n";
+		return false;
+	}
+
+	if(shaderId != 0)
+	{
+		glDeleteProgram(shaderId);
+		shaderId = 0;
+	}
+
+	GLuint v = vertex ? glCreateShader(GL_VERTEX_SHADER) : 0;
+	GLuint f = fragment ? glCreateShader(GL_FRAGMENT_SHADER) : 0;
+	GLuint g = geometry ? glCreateShader(GL_GEOMETRY_SHADER) : 0;
+	int i, length, success;//used whenever a pointer to int is required
+
+	if((vertex && !compileShader(v, vertex, vertErrorLog)) || (fragment && !compileShader(f, fragment, fragErrorLog)) || (geometry && !compileShader(g, geometry, geomErrorLog)))
+	{
+		return false;
+	}
+
+	shaderId = glCreateProgram();
+	if(vertex)
+	{
+		glAttachShader(shaderId,v);
+	}
+	if(fragment)
+	{
+		glAttachShader(shaderId,f);
+	}
+	if(geometry)
+	{
+		glAttachShader(shaderId,g);
+	}
+
+	glBindAttribLocation(shaderId, 0, "Position2");
+	glBindAttribLocation(shaderId, 1, "Position");
+	glBindAttribLocation(shaderId, 2, "TexCoord");
+	glBindAttribLocation(shaderId, 3, "Normal");
+	glBindAttribLocation(shaderId, 4, "Color3");
+	glBindAttribLocation(shaderId, 5, "Color4");
+	glBindAttribLocation(shaderId, 6, "Tangent");
+	glBindAttribLocation(shaderId, 7, "GenericFloat");
+
+	if(!feedbackTransformVaryings.empty())
+	{
+		glTransformFeedbackVaryings(shaderId, feedbackTransformVaryings.size(), &feedbackTransformVaryings[0], GL_INTERLEAVED_ATTRIBS);
+	}
+
+	glLinkProgram(shaderId);
+
+
+	//get shader link errors
+	glGetProgramiv(shaderId,GL_INFO_LOG_LENGTH,&length);
+	char* str=new char[length];
+	glGetProgramInfoLog(shaderId,length,&i,str);
+	linkErrorLog = string(str);
+	delete[] str;
+
+	glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+	if(!success)
+	{
+		return false;
+	}
+
+	glUseProgram(0);
+
+	// we no longer need these shaders individually, although they
+	// will not actually be deleted until the shader program is deleted
+	if(vertex)
+	{
+		glDeleteShader(v);
+	}
+	if(fragment)
+	{
+		glDeleteShader(f);
+	}
 	if(geometry)
 	{
 		glDeleteShader(g);
@@ -994,7 +1209,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false)
+OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -1023,7 +1238,7 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
 	overlayVBO->bindBuffer();
-	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -1045,7 +1260,7 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
 	overlayVBO->bindBuffer();
-	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -1065,7 +1280,7 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 
 	overlayVBO->setVertexData(4*sizeof(texturedVertex2D), overlay);
 	overlayVBO->bindBuffer();
-	overlayVBO->drawBufferX(TRIANGLE_FAN,0,4);
+	overlayVBO->drawBuffer(TRIANGLE_FAN,0,4);
 
 	return true;
 }
@@ -1371,27 +1586,17 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 //	glViewport(0,0,sw,sh);
 //	drawOverlay(Rect::XYXY(-1,-1,1,1));
 //}
-void OpenGLgraphics::setRenderBufferTexture(shared_ptr<texture2D> tex)
+void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth)
 {
-	if(!tex)
-		return;
-
 	if(openGL3)
 	{
-		//if(multisampleFboBound)
-		//{
-			glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-		//	multisampleFboBound=false;
-		//}
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dynamic_pointer_cast<texture2DGL>(tex)->textureID, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color ? dynamic_pointer_cast<texture2DGL>(color)->textureID : 0, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth ? dynamic_pointer_cast<texture2DGL>(depth)->textureID : 0, 0);
 	}
 	else
 	{
-		//if(multisampleFboBound)
-		//{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-		//	multisampleFboBound=false;
-		//}
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
 		//tex->bind();
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -1402,52 +1607,30 @@ void OpenGLgraphics::setRenderBufferTexture(shared_ptr<texture2D> tex)
 
 		//glBindTexture(GL_TEXTURE_2D, 0);
 
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, dynamic_pointer_cast<texture2DGL>(tex)->textureID, 0);
-		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(tex)->width/2, dynamic_pointer_cast<texture2DGL>(tex)->height);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, color ? dynamic_pointer_cast<texture2DGL>(color)->textureID : 0, 0);
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depth ? dynamic_pointer_cast<texture2DGL>(depth)->textureID : 0, 0);
+
 	}
-	colorTarget = RT_TEXTURE;
-
-	GLenum status = false ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
-#ifdef WINDOWS
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
-	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
-#endif
-}
-void OpenGLgraphics::setDepthBufferTexture(shared_ptr<texture2D> tex)
-{
-
-	if(openGL3)
+	if(!color && depth)
 	{
-		//if(multisampleFboBound)
-		//{
-		//	glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-		//	multisampleFboBound=false;
-		//}
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex ? dynamic_pointer_cast<texture2DGL>(tex)->textureID : 0, 0);
+		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(depth)->width, dynamic_pointer_cast<texture2DGL>(depth)->height);
 	}
-	else
+	else if(color && !depth)
 	{
-		//if(multisampleFboBound)
-		//{
-		//	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-		//	multisampleFboBound=false;
-		//}
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, tex ? dynamic_pointer_cast<texture2DGL>(tex)->textureID : 0, 0);
+		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(color)->width, dynamic_pointer_cast<texture2DGL>(color)->height);
 	}
-	depthTarget = RT_TEXTURE;
+	else if(color && depth)
+	{
+		auto colorTex = dynamic_pointer_cast<texture2DGL>(color);
+		auto depthTex = dynamic_pointer_cast<texture2DGL>(depth);
+		debugAssert(colorTex->width == depthTex->width && colorTex->height == depthTex->height);
+		glViewport(0,0,colorTex->width, colorTex->height);
+	}
+	colorTarget = depthTarget = RT_TEXTURE;
 
-	GLenum status = false ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
-#ifdef WINDOWS
+#if defined(WINDOWS) && defined(_DEBUG)
 	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
 	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
 	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
@@ -1669,23 +1852,29 @@ void OpenGLgraphics::render()
 	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
 		totalTime+=((*i)*0.001);
 	fps= ((double)frameTimes.size()) /  totalTime;
-
+////////////////////////////////////CLEAR SCREEN//////////////////////////////////////////
+	bindRenderTarget(RT_SCREEN);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 /////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	bindRenderTarget(RT_FBO);
 	if(multisampling)
 	{
 		bindRenderTarget(RT_MULTISAMPLE_FBO);
 	}
+	else
+	{
+		bindRenderTarget(RT_FBO);
+	}
 	setDepthMask(true);
 	setColorMask(true);
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
-	//glClearColor(0.47f,0.57f,0.63f,1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//////////////////////////////////SET LIGHTING///////////////////////////////////
-	//float lightPos[4] = {lightPosition.x, lightPosition.y, lightPosition.z, 1.0};
-	//glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+//////////////////////////////////SET 2D VIEW CONSTRAINTS///////////////////////////////////
+	if(!highResScreenshot)
+	{
+		auto ortho = shaders.bind("ortho");
+		ortho->setUniform4f("viewConstraint", 0,0,1,1);
+	}
 ////////////////////////////////////3D RENDERING/////////////////////////////////////
 	Vec3f cameraOffset;
 	for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
@@ -1712,16 +1901,6 @@ void OpenGLgraphics::render()
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
 
-		//if(stereoMode==STEREO_3D && eye==0)
-		//{
-		//	cameraOffset = Vec3f(-interOcularDistance/2,0,0);
-		//}
-		//else if(stereoMode==STEREO_3D && eye==1)
-		//{
-		//	cameraOffset = Vec3f(interOcularDistance/2,0,0);
-		//	glClear(GL_DEPTH_BUFFER_BIT);
-		//}
-
 		//render scene
 		for(auto i = views.begin(); i != views.end();)
 		{
@@ -1731,7 +1910,7 @@ void OpenGLgraphics::render()
 			}
 			else
 			{
-				auto model = shaders("model");
+	
 				currentView = shared_ptr<View>(*(i++));
 
 				if(highResScreenshot)
@@ -1754,6 +1933,9 @@ void OpenGLgraphics::render()
 					projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
 					projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
 					currentView->constrainView(projConstraint);
+
+					auto ortho = shaders.bind("ortho");
+					ortho->setUniform4f("viewConstraint", projConstraint);
 				}
 				else
 				{
@@ -1761,9 +1943,9 @@ void OpenGLgraphics::render()
 					if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
 				}
 
+				auto model = shaders.bind("model");
 				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
 				model->setUniformMatrix("modelTransform", Mat4f());
-
 				model->setUniform1i("numLights",1);
 
 				currentView->render();
@@ -1835,6 +2017,9 @@ void OpenGLgraphics::render()
 						projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
 						projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
 						currentView->constrainView(projConstraint);
+
+						auto ortho = shaders.bind("ortho");
+						ortho->setUniform4f("viewConstraint", projConstraint);
 					}
 					else
 					{
@@ -1971,8 +2156,10 @@ void OpenGLgraphics::render()
 					{
 						glViewport(0,0,sw/2,sh/2);
 
-
-
+						if(openGL3)	glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+						else		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+			
+				
 						blurX->bind();
 						blurX->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
@@ -1982,8 +2169,8 @@ void OpenGLgraphics::render()
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
 						drawPartialOverlay(overlayRect, textureRect);
-
-
+				
+				
 						blurY->bind();
 						blurY->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
@@ -1991,11 +2178,11 @@ void OpenGLgraphics::render()
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 						drawPartialOverlay(overlayRect, textureRect);
-
-
+				
+				
 						glActiveTexture(GL_TEXTURE1);
 						glBindTexture(GL_TEXTURE_2D, blurTexture);//bind the blur texture
-
+				
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
 						glViewport(0,0,sw,sh);
@@ -2028,12 +2215,13 @@ void OpenGLgraphics::render()
 	currentView = nullptr;
 
 /////////////////////////////////////START 2D////////////////////////////////////
-	if(!highResScreenshot)
+	//if(!highResScreenshot)
 	{
 		bindRenderTarget(RT_SCREEN);
 
 		auto ortho = shaders.bind("ortho");
 		ortho->setUniform4f("color",white);
+		ortho->setUniform4f("viewConstraint", viewConstraint);
 		menuManager.render();
 
 		#ifdef _DEBUG
@@ -2050,6 +2238,7 @@ void OpenGLgraphics::render()
 				setColor(1,1,1,1);
 			}
 		#endif
+		ortho->setUniform4f("viewConstraint", 0,0,1,1);
 	}
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -2481,6 +2670,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	shapesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3, 0);
 	shapesVBO->setTotalVertexSize(sizeof(vertex3D));
 
+//	shader_color3D->init("uniform mat4 transformationMatrix;\n attribute vec3 Position;\nvoid main(){gl_Position = transformationMatrix * position;}", "uniform vec4 color;\nvoid main(){gl_FragColor = color;}");
+//	shader_color3D->setUniform4f("color", 0,0,0,1);
+
 	return true;
 }
 //bool OpenGLgraphics::changeResolution(Vec2i resolution, unsigned int maxSamples) // may invalidate OpenGL function pointers?
@@ -2682,25 +2874,33 @@ void OpenGLgraphics::drawSphere(Vec3f position, float radius)
 }
 void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 {
+	debugAssert(currentView);
+
 	shapes3D[0].position = start;
 	shapes3D[1].position = end;
 
 	shapesVBO->setVertexData(2*sizeof(vertex3D), shapes3D);
 	shapesVBO->bindBuffer();
-	shapesVBO->drawBufferX(LINES,0,2);
+	shapesVBO->drawBuffer(LINES,0,2);
+	
 }
 void OpenGLgraphics::drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)
 {
+	debugAssert(currentView);
+
 	shapes3D[0].position = p1;
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
 
 	shapesVBO->setVertexData(3*sizeof(vertex3D), shapes3D);
 	shapesVBO->bindBuffer();
-	shapesVBO->drawBufferX(TRIANGLES,0,3);
+	shapesVBO->drawBuffer(TRIANGLES,0,3);
+	
 }
 void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 {
+	debugAssert(currentView);
+
 	shapes3D[0].position = p1;
 	shapes3D[1].position = p2;
 	shapes3D[2].position = p3;
@@ -2708,7 +2908,7 @@ void OpenGLgraphics::drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4)
 
 	shapesVBO->setVertexData(4*sizeof(vertex3D), shapes3D);
 	shapesVBO->bindBuffer();
-	shapesVBO->drawBufferX(TRIANGLE_FAN,0,4);
+	shapesVBO->drawBuffer(TRIANGLE_FAN,0,4);
 }
 void OpenGLgraphics::checkErrors()
 {
@@ -2724,27 +2924,31 @@ void OpenGLgraphics::checkErrors()
 }
 void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture)
 {
-	if(!texture)
-		return;
+	//if(!texture)
+	//	return;
 
-	setRenderBufferTexture(texture);
-	glViewport(0, 0, texture->getWidth(), texture->getHeight());
 
-	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	setFrameBufferTextures(texture, depthTexture);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+	//setRenderBufferTexture(texture);
+	//glViewport(0, 0, texture->getWidth(), texture->getHeight());
 
-	if(!depthTexture)
-	{
-		setDepthBufferTexture(nullptr);
-	}
-	else if((texture->getWidth() == depthTexture->getWidth() && texture->getHeight() == depthTexture->getHeight()))
-	{
-		setDepthBufferTexture(depthTexture);
-	}
-	else
-	{
-		setDepthBufferTexture(nullptr);
-		debugBreak(); //textures are different sizes!!!
-	}
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+	//if(!depthTexture)
+	//{
+	//	setDepthBufferTexture(nullptr);
+	//}
+	//else if((texture->getWidth() == depthTexture->getWidth() && texture->getHeight() == depthTexture->getHeight()))
+	//{
+	//	setDepthBufferTexture(depthTexture);
+	//}
+	//else
+	//{
+	//	setDepthBufferTexture(nullptr);
+	//	debugBreak(); //textures are different sizes!!!
+	//}
 }
 void OpenGLgraphics::endRenderToTexture()
 {	

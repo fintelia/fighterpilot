@@ -261,7 +261,7 @@ bool options::init()
 	else if(nSamples == 16)			initialState.samplesChoice=4;
 
 	initialState.vSync = graphics->getVSync();
-	initialState.textureCompression = graphics->getTextureCompression();
+	initialState.textureCompression = (settings.get<string>("graphics", "textureCompression")=="enabled");
 
 
 
@@ -554,7 +554,23 @@ void loading::updateFrame()
 		objectInfo.linkObjectMeshes();
 		assetLoader.saveAssetZip();
 		shaders.writeErrorLog("media/shaderErrors.txt");
-		menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
+
+		if(!game->commandLineOptions.empty() && fileManager.fileExists(game->commandLineOptions[0]))
+		{
+			shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadZIP(game->commandLineOptions[0]) && l->checkValid())
+			{
+				menuManager.setMenu(new gui::campaign(l));
+			}
+			else
+			{
+				menuManager.setMenu(new gui::chooseMode);
+			}
+		}
+		else
+		{
+			menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
+		}
 
 		double t = GetTime() - loadStartTime;
 		t = GetTime();

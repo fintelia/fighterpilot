@@ -150,12 +150,6 @@ void manager::updateSimulation()
 		menu->updateSimulation();
 	}
 }
-void manager::shutdown()
-{
-	popups.clear();
-	if(menu == nullptr)
-		delete menu;
-}
 void manager::setMenu(screen* m)
 {
 	popups.clear();
@@ -343,9 +337,9 @@ bool openFile::init(string ExtFilter)
 	buttons["myComputer"]	= new button(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
 	buttons["myNetwork"]	= new button(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
 
+	directory=".";
 	extFilters.clear();
 	extFilters.insert(ExtFilter);
-	directory=".";
 	refreshView();
 	return true;
 }
@@ -356,8 +350,8 @@ bool openFile::init(set<string> ExtFilters)
 	buttons["myComputer"]	= new button(sw/2-405,sh/2-146,175,40,"My Computer",lightGreen,white);
 	buttons["myNetwork"]	= new button(sw/2-405,sh/2-96,175,40,"My Network",lightGreen,white);
 
-	extFilters=ExtFilters;
 	directory=".";
+	extFilters=ExtFilters;
 	refreshView();
 	return true;
 }
@@ -520,7 +514,7 @@ void openFile::fileSelected()
 	}
 	if(!fileManager.fileExists(directory + "/" + file))
 		file = "";
-
+	
 	done = true;
 }
 bool openFile::keyDown(int vkey)
@@ -608,7 +602,7 @@ bool openFile::mouseL(bool down, float x, float y)
 			{
 				if(i == clickingThumbnail && clickingThumbnail->type == thumbnail::FOLDER)
 				{
-					directory = directory + "/" + clickingThumbnail->name + "/";
+					directory = directory + "/" + clickingThumbnail->name;
 					refreshView();
 				}
 				else if(i == clickingThumbnail) // thumbnail must be some type of file
@@ -648,7 +642,7 @@ void saveFile::fileSelected()
 	}
 	if(file.find(".") == file.npos)
 		file += *extFilters.begin();
-	if(fileManager.fileExists(directory + file))//if file exists
+	if(fileManager.fileExists(directory + "/" + file))//if file exists
 	{
 		messageBox_c* m = new messageBox_c;
 		vector<string> s;
@@ -1137,9 +1131,9 @@ void listBox::render()
 	graphics->drawOverlay(Rect::XYXY(shape.x+shape.w-0.0293,shape.y,shape.x+shape.w,shape.y+0.0293),"white");
 
 	graphics->setColor(0,0,0);
-	graphics->drawTriangle(	Vec3f(shape.x+shape.w-0.0293 * 0.666,	shape.y + 0.0293 * 0.333,	0),
-							Vec3f(shape.x+shape.w-0.0293 * 0.333,	shape.y + 0.0293 * 0.333,	0),
-							Vec3f(shape.x+shape.w-0.0293 * 0.5,		shape.y + 0.0293 * 0.666,	0));
+//	graphics->drawTriangle(	Vec3f(shape.x+shape.w-0.0293 * 0.666,	shape.y + 0.0293 * 0.333,	0),
+//							Vec3f(shape.x+shape.w-0.0293 * 0.333,	shape.y + 0.0293 * 0.333,	0),
+//							Vec3f(shape.x+shape.w-0.0293 * 0.5,		shape.y + 0.0293 * 0.666,	0));
 
 	graphics->setColor(color.r,color.g,color.b);
 

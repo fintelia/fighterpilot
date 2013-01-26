@@ -11,7 +11,7 @@ plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Te
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
 
 	debugAssert(meshInstance);
 
@@ -793,7 +793,11 @@ void plane::initArmaments()
 	{
 		a.type = hardpoints[i].mType;
 		a.offset = hardpoints[i].offset;
-		a.meshInstance = sceneManager.newChildMeshInstance(objectInfo[a.type]->mesh, meshInstance, position + rotation * a.offset, rotation);
+		if(!objectInfo[a.type]->mesh.expired())
+		{
+			a.meshInstance = sceneManager.newChildMeshInstance(objectInfo[a.type]->mesh.lock(), meshInstance, position + rotation * a.offset, rotation);
+		}
+
 		if(hardpoints[i].mType & MISSILE)
 		{
 			rockets.ammoRounds.push_back(a);

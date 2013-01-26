@@ -5,7 +5,7 @@ missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot,
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
 }
 
 void missileBase::updateFrame(float interpolation) const

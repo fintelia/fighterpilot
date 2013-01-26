@@ -19,12 +19,22 @@ bool levelEditor::init()
 
 
 	//terrain
-	buttons["dSquare"]		= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
-	buttons["faultLine"]	= new button(sAspect-0.16,0.040,0.15,0.030,"fault line",lightGreen,white);
-	buttons["fromFile"]		= new button(sAspect-0.16,0.075,0.15,0.030,"from file",lightGreen,white);
-	buttons["exportBMP"]	= new button(sAspect-0.16,0.110,0.15,0.030,"export",lightGreen,white);
-	sliders["sea level"]	= new slider(sAspect-0.16,0.145,0.15,0.030,1.0,0.0);
-	sliders["height scale"] = new slider(sAspect-0.16,0.180,0.15,0.030,1.0,-1.0);sliders["height scale"]->setValue(0.0);
+	buttons["dSquare"]			= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
+	buttons["faultLine"]		= new button(sAspect-0.16,0.040,0.15,0.030,"fault line",lightGreen,white);
+	buttons["fromFile"]			= new button(sAspect-0.16,0.075,0.15,0.030,"from file",lightGreen,white);
+
+	buttons["beautify coast"]	= new button(sAspect-0.16,0.145,0.15,0.030,"beautify",lightGreen,white);
+	buttons["smooth"]			= new button(sAspect-0.16,0.180,0.15,0.030,"smooth",lightGreen,white);
+	buttons["roughen"]			= new button(sAspect-0.16,0.215,0.15,0.030,"roughen",lightGreen,white);
+	sliders["sea level"]		= new slider(sAspect-0.16,0.250,0.15,0.030,1.0,0.0);
+	sliders["height scale"]		= new slider(sAspect-0.16,0.285,0.15,0.030,1.0,-1.0);sliders["height scale"]->setValue(0.0);
+	listBoxes["LOD"]			= new listBox(sAspect-0.16,0.320,0.15,"LOD", black);
+	listBoxes["LOD"]->addOption("1");
+	listBoxes["LOD"]->addOption("2");
+	listBoxes["LOD"]->addOption("4");
+	listBoxes["LOD"]->addOption("8");
+	listBoxes["LOD"]->setOption(0);
+
 
 	buttons["load"]			= new button(sAspect-0.462,0.965,0.15,0.030,"Load",Color(0.8,0.8,0.8),white);
 	buttons["save"]			= new button(sAspect-0.310,0.965,0.15,0.030,"Save",Color(0.8,0.8,0.8),white);
@@ -118,6 +128,10 @@ void levelEditor::operator() (popup* p)
 			debugBreak();
 
 		LOD = levelFile.info.LOD;
+		listBoxes["LOD"]->setOption(0);
+		if(LOD == 2)		listBoxes["LOD"]->setOption(1);
+		else if(LOD == 4)	listBoxes["LOD"]->setOption(2);
+		else if(LOD == 8)	listBoxes["LOD"]->setOption(3);
 
 		sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight),0.0,1.0));
 
@@ -134,6 +148,7 @@ void levelEditor::operator() (popup* p)
 		awaitingLevelSave=false;
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
+		levelFile.info.LOD = 1 << listBoxes["LOD"]->getOptionNumber();
 		levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue());
 		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
@@ -191,6 +206,26 @@ void levelEditor::updateFrame()
 			p->callback = (functor<void,popup*>*)this;
 			((openFile*)p)->init(s);
 			menuManager.setPopup(p);
+		}
+		else if(buttons["beautify coast"]->checkChanged())
+		{
+			beautifyCoastline();
+		}
+		else if(buttons["smooth"]->checkChanged())
+		{
+			smooth(3);
+		}
+		else if(buttons["roughen"]->checkChanged())
+		{
+			roughen(0.003 * (levelFile.info.maxHeight - levelFile.info.minHeight));
+		}
+		else if(1 << listBoxes["LOD"]->getOptionNumber() != LOD)
+		{
+			int oldLOD = LOD;
+			LOD = 1 << listBoxes["LOD"]->getOptionNumber();
+			terrainValid=false;
+			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
+			center = Vec3f(center.x * oldLOD / LOD, center.y, center.z * oldLOD / LOD);
 		}
 		//else if(buttons["exportBMP"]->checkChanged())
 		//{
@@ -282,10 +317,18 @@ void levelEditor::updateFrame()
 				{
 					Vec3f P0 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,0.0));
 					Vec3f P1 = view->unProject(Vec3f(cursorPos.x,cursorPos.y,1.0));
-					Vec3f dir = P0-P1;
+					Vec3f dir = P1-P0;
 					if(abs(dir.y) >= 0.001)
 					{
-						levelFile.objects[selectedObject].startloc = P1 + dir*(objPlacementAlt-P1.y)/dir.y;
+						if(levelFile.objects[selectedObject].type & ANTI_AIRCRAFT_ARTILLARY)
+						{
+							if(rayHeightmapIntersection(P0, dir.normalize(), levelFile.objects[selectedObject].startloc))
+							{
+								levelFile.objects[selectedObject].startRot = Quat4f(Vec3f(0,1,0),getTrueNormal(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z));
+							}
+						}
+						else
+							levelFile.objects[selectedObject].startloc = P0 + dir*(objPlacementAlt-P0.y)/dir.y;
 					}
 				}
 			}
@@ -307,10 +350,15 @@ void levelEditor::updateFrame()
 			buttons["dSquare"]->setVisibility(newTab==TERRAIN);
 			buttons["faultLine"]->setVisibility(newTab==TERRAIN);
 			buttons["fromFile"]->setVisibility(newTab==TERRAIN);
-			buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
+			//buttons["exportBMP"]->setVisibility(newTab==TERRAIN);
+			buttons["beautify coast"]->setVisibility(newTab==TERRAIN);
+			buttons["smooth"]->setVisibility(newTab==TERRAIN);
+			buttons["roughen"]->setVisibility(newTab==TERRAIN);
 			toggles["shaders"]->setVisibility(newTab==TERRAIN);
 			sliders["sea level"]->setVisibility(newTab==TERRAIN);
 			sliders["height scale"]->setVisibility(newTab==TERRAIN);
+			listBoxes["LOD"]->setVisibility(newTab==TERRAIN);
+
 		}
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
@@ -362,6 +410,19 @@ void levelEditor::updateFrame()
 		center.x = clamp(center.x, 0.0, levelFile.info.mapSize.x);
 		center.z = clamp(center.z, 0.0, levelFile.info.mapSize.y);
 	}
+
+	debugAssert(isPowerOfTwo(levelFile.info.mapResolution.x-1) && isPowerOfTwo(levelFile.info.mapResolution.y-1));
+
+	bool orthoTerrain = (getTab() == REGIONS);
+	if(orthoTerrain)
+	{
+		Rect viewRect = orthoView();
+		view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000);
+	}
+	else
+	{
+		view->perspective(fovy, (double)sw / ((double)sh),100.0, 500000.0);
+	}
 }
 bool levelEditor::mouse(mouseButton button, bool down)
 {
@@ -375,17 +436,24 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			{
 				Vec3f P0 = view->unProject(Vec3f(p.x,p.y,0.0));
 				Vec3f P1 = view->unProject(Vec3f(p.x,p.y,1.0));
-				Vec3f dir = P0-P1;
+				Vec3f dir = P1-P0;
 				if(abs(dir.y) >= 0.001)
 				{
-					levelFile.objects[selectedObject].startloc = P1 + dir*(objPlacementAlt-P1.y)/dir.y;
+					if(levelFile.objects[selectedObject].type & ANTI_AIRCRAFT_ARTILLARY)
+					{
+						rayHeightmapIntersection(P0, dir.normalize(), levelFile.objects[selectedObject].startloc);
+						levelFile.objects[selectedObject].startRot = Quat4f(Vec3f(0,1,0),getTrueNormal(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z));
+					}
+					else
+						levelFile.objects[selectedObject].startloc = P0 + dir*(objPlacementAlt-P0.y)/dir.y;
+				//	levelFile.objects[selectedObject].startloc = P1 + dir*(objPlacementAlt-P1.y)/dir.y;
 				}
-				if(levelFile.objects[selectedObject].type & ANTI_AIRCRAFT_ARTILLARY)
+				/*if(levelFile.objects[selectedObject].type & ANTI_AIRCRAFT_ARTILLARY)
 				{
 					levelFile.objects[selectedObject].startloc.y = getInterpolatedHeight(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z);
 					levelFile.objects[selectedObject].startRot = Quat4f(Vec3f(0,1,0),getInterpolatedNormal(levelFile.objects[selectedObject].startloc.x,levelFile.objects[selectedObject].startloc.z));
 				}
-				else if(levelFile.objects[selectedObject].type & SHIP)
+				else */if(levelFile.objects[selectedObject].type & SHIP)
 				{
 					levelFile.objects[selectedObject].startloc.y = 10.0;
 				}
@@ -530,7 +598,7 @@ void levelEditor::updateObjectCircles()
 		float r;
 
 		auto obj = objectInfo[i->type];//dataManager.getModel(i->type);
-		if(!obj)
+		if(!obj || obj->mesh.expired())
 		{
 			r = 0.006;
 			s = view->project3(i->startloc);
@@ -538,7 +606,8 @@ void levelEditor::updateObjectCircles()
 		else
 		{
 			float scale = i->type & SHIP ? 1.0 : 10.0;
-			Sphere<float> sphere = obj->mesh->boundingSphere;
+
+			Sphere<float> sphere = obj->mesh.lock()->boundingSphere;
 			s = view->project3(i->startloc + i->startRot * sphere.center*scale);
 			Vec2f t = view->project(i->startloc + sphere.center + view->camera().up*sphere.radius*scale);
 			r = max(0.004f,sqrt((s.x-t.x)*(s.x-t.x)+(s.y-t.y)*(s.y-t.y)));
@@ -552,7 +621,7 @@ void levelEditor::updateObjectCircles()
 float levelEditor::getHeight(unsigned int x, unsigned int z) const
 {
 #ifdef _DEBUG
-	if(x > levelFile.info.mapResolution.x || z > levelFile.info.mapResolution.y)
+	if(x >= levelFile.info.mapResolution.x || z >= levelFile.info.mapResolution.y)
 	{
 		debugBreak();
 		return 0.0f;
@@ -564,7 +633,7 @@ float levelEditor::getHeight(unsigned int x, unsigned int z) const
 void levelEditor::setHeight(unsigned int x, unsigned int z, float height) const
 {
 #ifdef _DEBUG
-	if(x > levelFile.info.mapResolution.x || z > levelFile.info.mapResolution.y)
+	if(x >= levelFile.info.mapResolution.x || z >= levelFile.info.mapResolution.y)
 	{
 		debugBreak();
 		return;
@@ -576,7 +645,7 @@ void levelEditor::setHeight(unsigned int x, unsigned int z, float height) const
 void levelEditor::increaseHeight(unsigned x, unsigned int z, float increase) const
 {
 #ifdef _DEBUG
-	if(x > levelFile.info.mapResolution.x || z > levelFile.info.mapResolution.y)
+	if(x >= levelFile.info.mapResolution.x || z >= levelFile.info.mapResolution.y)
 	{
 		debugBreak();
 		return;
@@ -588,7 +657,7 @@ void levelEditor::increaseHeight(unsigned x, unsigned int z, float increase) con
 Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 {
 #ifdef _DEBUG
-	if(x > levelFile.info.mapResolution.x || z > levelFile.info.mapResolution.y)
+	if(x >= levelFile.info.mapResolution.x || z >= levelFile.info.mapResolution.y)
 	{
 		debugBreak();
 		return Vec3f(0,1,0);
@@ -600,47 +669,77 @@ Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 	float Dy = (z > 0)									? (levelFile.heights[x+(z-1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float By = (x > 0)									? (levelFile.heights[(x-1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 
-	return Vec3f(Cy - Ay, 200.0, Dy - By).normalize(); //y value should be changed to calculate the true normal6
+	return Vec3f((Cy - Ay) * (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x, 2.0, (Dy - By) * (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y).normalize(); //y value should be changed to calculate the true normal
 }
 float levelEditor::getInterpolatedHeight(float x, float y) const
 {
-	x *= levelFile.info.mapResolution.x / levelFile.info.mapSize.x;
-	y *= levelFile.info.mapResolution.y / levelFile.info.mapSize.y;
+	x = clamp(x * (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x, 0, (float)(levelFile.info.mapResolution.x-1));
+	y = clamp(y * (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y, 0, (float)(levelFile.info.mapResolution.y-1));
 
-	if(x-floor(x)+y-floor(y)<1.0)
+	float A, B, C, D;
+	//  A  _____  B
+	//    |    /|
+	//	  |  /  |
+	//  D |/____| C
+
+	float x_fract = x-floor(x);
+	float y_fract = y-floor(y);
+
+	if(x_fract + y_fract < 1.0)
 	{
-		float A = getHeight(floor(x),floor(y));
-		float B = getHeight(floor(x),floor(y+1));
-		float D = getHeight(floor(x+1),floor(y));
-		return lerp(lerp(A,B,y-floor(y)),D,x-floor(x));
+		A = getHeight(floor(x),floor(y));
+		B = getHeight(floor(x),ceil(y));
+		D = getHeight(ceil(x),floor(y));
+		C = B + D - A;
 	}
 	else
 	{
-		float B = getHeight(floor(x),floor(y+1));
-		float C = getHeight(floor(x+1),floor(y+1));
-		float D = getHeight(floor(x+1),floor(y));
-		return lerp(lerp(B,C,x-floor(x)),D,1.0-(y-floor(y)));
+		B = getHeight(floor(x),ceil(y));
+		C = getHeight(ceil(x),ceil(y));
+		D = getHeight(ceil(x),floor(y));
+		A = B + D - C;
 	}
+	return lerp(lerp(A,B,x_fract), lerp(C,D,x_fract), y_fract);
 }
-Vec3f levelEditor::getInterpolatedNormal(float x, float y) const
+float levelEditor::getTrueHeight(float x, float y) const
 {
-	x *= levelFile.info.mapResolution.x / levelFile.info.mapSize.x;
-	y *= levelFile.info.mapResolution.y / levelFile.info.mapSize.y;
+	return (getInterpolatedHeight(x, y)-levelFile.info.minHeight - sliders.find("sea level")->second->getValue()*(levelFile.info.maxHeight-levelFile.info.minHeight)) * pow(10.0f,sliders.find("height scale")->second->getValue());
+}
+Vec3f levelEditor::getInterpolatedNormal(float x, float z) const
+{
+	x = clamp(x * (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x, 0, (float)(levelFile.info.mapResolution.x-1));
+	z = clamp(z * (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y, 0, (float)(levelFile.info.mapResolution.y-1));
 
-	if(x-floor(x)+y-floor(y)<1.0)
+	Vec3f A, B, C, D;
+	//  A  _____  B
+	//    |    /|
+	//	  |  /  |
+	//  D |/____| C
+
+	float x_fract = x-floor(x);
+	float z_fract = z-floor(z);
+
+	if(x_fract + z_fract < 1.0)
 	{
-		Vec3f A = getNormal(floor(x),floor(y));
-		Vec3f B = getNormal(floor(x),floor(y+1));
-		Vec3f D = getNormal(floor(x+1),floor(y));
-		return lerp(lerp(A,B,y-floor(y)),D,x-floor(x));
+		A = getNormal(floor(x),floor(z));
+		B = getNormal(floor(x),ceil(z));
+		D = getNormal(ceil(x),floor(z));
+		C = B + D - A;
 	}
 	else
 	{
-		Vec3f B = getNormal(floor(x),floor(y+1));
-		Vec3f C = getNormal(floor(x+1),floor(y+1));
-		Vec3f D = getNormal(floor(x+1),floor(y));
-		return lerp(lerp(B,C,x-floor(x)),D,1.0-(y-floor(y)));
+		B = getNormal(floor(x),ceil(z));
+		C = getNormal(ceil(x),ceil(z));
+		D = getNormal(ceil(x),floor(z));
+		A = B + D - C;
 	}
+	return lerp(lerp(A,B,x_fract), lerp(C,D,x_fract), z_fract).normalize();
+}
+Vec3f levelEditor::getTrueNormal(float x, float z) const
+{
+	Vec3f normal = getInterpolatedNormal(x,z);
+	normal.y /= pow(10.0f, sliders.find("height scale")->second->getValue());
+	return normal.normalize();
 }
 void levelEditor::setMinMaxHeights()
 {
@@ -656,15 +755,181 @@ void levelEditor::setMinMaxHeights()
 		}
 	}
 }
+bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, Vec3f& collisionPoint) const//seems not to work when the view is not centered?
+{
+	Profiler.startElement("rayTest");
+	cellFoundValid = false;
+	checkedCells.clear();
+	checkLine.clear();
+
+	float invWidthScale = (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x;
+	float invHeightScale = (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y;
+
+	double yScale = pow(10.0f,sliders.find("height scale")->second->getValue());
+	double yShift = levelFile.info.minHeight + sliders.find("sea level")->second->getValue()*(levelFile.info.maxHeight-levelFile.info.minHeight);
+
+
+
+	rayStart.x *= invWidthScale;
+	//rayStart.y = rayStart.y * yScale + seaLevel*(levelFile.info.maxHeight-levelFile.info.minHeight)*yScale;
+	rayStart.z *= invHeightScale;
+
+	rayDirection.x *= invWidthScale;
+	//rayDirection.y *= yScale;
+	rayDirection.z *= invHeightScale;
+	rayDirection = rayDirection.normalize();
+
+	rStart = rayStart;
+	rDirection = rayDirection;
+
+	BoundingBox<float> AABB;
+	AABB.minXYZ = Vec3f(0,(levelFile.info.minHeight-yShift)*yScale,0);
+	AABB.maxXYZ = Vec3f(levelFile.info.mapResolution.x-1,(levelFile.info.maxHeight-yShift)*yScale,levelFile.info.mapResolution.y-1);
+
+	auto checkCell = [this,yScale,yShift,rayStart,invHeightScale,invWidthScale,rayDirection,&collisionPoint](int x, int y)->bool
+	{
+		if(x < 0 || y < 0 || x >= levelFile.info.mapResolution.x-1 || y >= levelFile.info.mapResolution.y-1)
+			return false;
+
+		checkedCells.push_back(Vec2i(x,y));
+		//double h1 = (levelFile.heights[x   + (y) * levelFile.info.mapResolution.x]	- yShift) * yScale;
+		//double h2 = (levelFile.heights[x+1 + (y) * levelFile.info.mapResolution.x]	- yShift) * yScale;
+		//double h3 = (levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]- yShift) * yScale;
+		//double hT = getTrueHeight(1.0/invWidthScale*(0.3333+x),1.0/invHeightScale*(0.3333+y));
+		//double diff = (h1 + h2 + h3) / 3.0 - hT;
+
+		Vec3f t1 = Vec3f(x,		(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		Vec3f t2 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		Vec3f t3 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+
+		Vec3f t4 = Vec3f(x+1,	(levelFile.heights[x+1   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+		Vec3f t5 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		Vec3f t6 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+
+		if(collisionManager.testRayTriangle(rayStart, rayDirection, t1,	t2, t3, collisionPoint))
+		{
+			cellFound = Vec2i(x,y);
+			cellFoundValid = true;
+			double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
+			return true;
+		}
+		if(collisionManager.testRayTriangle(rayStart, rayDirection, t4,	t5, t6, collisionPoint))
+		{
+			cellFound = Vec2i(x,y);
+			cellFoundValid = true;
+			double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
+			return true;
+		}
+		return false;
+
+		return (collisionManager.testRayTriangle(rayStart, rayDirection, Vec3f(x,	(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
+																		Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
+																		Vec3f(x,	(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),collisionPoint) ||
+				collisionManager.testRayTriangle(rayStart, rayDirection,Vec3f(x+1,	(levelFile.heights[x+1 + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),
+																		Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
+																		Vec3f(x,	(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),collisionPoint));
+	};
+	
+	if(rayStart.x < 0.0 || rayStart.x > levelFile.info.mapResolution.x-1 || rayStart.y > (levelFile.info.minHeight-yShift) * yScale || rayStart.y < (levelFile.info.maxHeight-yShift) * yScale || rayStart.z < 0.0 || rayStart.z > levelFile.info.mapResolution.y-1)
+	{
+		Vec3f aabbIntersectionPoint;
+		bool intersectsAABB = collisionManager.testRayAABB(rayStart, rayDirection, AABB, aabbIntersectionPoint);
+		if(!intersectsAABB)
+		{
+			Profiler.endElement("rayTest");
+			return false;	// returns false if the ray never intersects the AABB of terrain
+		}
+		else
+		{
+			rayStart = aabbIntersectionPoint;
+		}
+	}
+	if(rayDirection.x > -0.00001 && rayDirection.x < 0.00001 && rayDirection.z > -0.00001 && rayDirection.z < 0.00001) // ray is almost vertical
+	{																												   // (should check whether it ever passes through adjacent cells)
+		if(checkCell(floor(rayStart.x), floor(rayStart.z)))
+		{
+			collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
+			collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
+			Profiler.endElement("rayTest");
+			return true;
+		}
+		else
+		{
+			Profiler.endElement("rayTest");
+			return false;
+		}
+	}
+
+	if(abs(rayDirection.x) > abs(rayDirection.z))
+	{
+		int increment = (rayDirection.x > 0.0) ? 1 : -1;
+		double step = rayDirection.z / rayDirection.x * increment;
+		int xVal = rayStart.x;
+		double yVal = rayStart.z + (floor(rayStart.x)+0.5-rayStart.x) * step;
+
+
+
+		while(xVal >= 0 && xVal <= levelFile.info.mapResolution.x-2 && ceil(yVal-0.5) >= 0.0 && floor(yVal-0.5) <= levelFile.info.mapResolution.y-2)
+		{
+			checkLine.push_back(Vec2f(xVal, yVal));
+			if(checkCell(xVal, floor(yVal-0.5)) || checkCell(xVal, ceil(yVal-0.5)))
+			{
+				collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
+				collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
+
+				double error = collisionPoint.y - getTrueHeight(collisionPoint.x, collisionPoint.z);
+				Profiler.setOutput("raycast error", error);
+				Profiler.endElement("rayTest");
+				if(error > 3.0)
+					return true;
+				return true;
+			}
+			xVal += increment;
+			yVal += step;
+		}
+		Profiler.endElement("rayTest");
+		return false;
+	}
+	else
+	{
+		int increment = (rayDirection.z > 0.0) ? 1 : -1;
+		double step = rayDirection.x / rayDirection.z * increment;
+
+		int yVal = rayStart.z; // represents center of cell 
+		double xVal = rayStart.x + (floor(rayStart.z)+0.5-rayStart.z) * step;
+
+
+		while(ceil(xVal-0.5) >= 0.0 && floor(xVal-0.5) <= levelFile.info.mapResolution.x-2 && yVal >= 0 && yVal <= levelFile.info.mapResolution.y-2)
+		{
+			checkLine.push_back(Vec2f(xVal, yVal));
+			if(checkCell(floor(xVal-0.5), yVal) || checkCell(ceil(xVal-0.5), yVal))
+			{
+				collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
+				collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
+
+				double error = collisionPoint.y - getTrueHeight(collisionPoint.x, collisionPoint.z);
+				Profiler.setOutput("raycast error", error);
+				Profiler.endElement("rayTest");
+				if(error > 3.0)
+					return true;
+				return true;
+			}
+			yVal += increment;
+			xVal += step;
+		}
+		Profiler.endElement("rayTest");
+		return false;
+	}
+}
 float levelEditor::randomDisplacement(float h1, float h2, float d)
 {
-	d *= 65.0/LOD;
+	d *= 65.0;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + r) / 2.0;
  }
 float levelEditor::randomDisplacement(float h1, float h2,float h3, float h4, float d)
 {
-	d *= 65.0/LOD;
+	d *= 65.0;
 	float r = random(-d/2,d/2);
 	return (h1 + h2 + h3 + h4 + r) / 4.0;
 }
@@ -756,6 +1021,7 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	//}
 
 	LOD = 1;
+	listBoxes["LOD"]->setOption(0);
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.5);
@@ -763,6 +1029,39 @@ void levelEditor::diamondSquare(float h, float m, int subdivide)//mapsize must b
 	terrainValid=false;
 
 	graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
+}
+void levelEditor::beautifyCoastline()
+{
+	int x, y;
+	unsigned int length = levelFile.info.mapResolution.x;
+	unsigned int width = levelFile.info.mapResolution.y;
+
+	float heightScale = pow(10.0f,sliders["height scale"]->getValue());
+	float seaLevel = sliders["sea level"]->getValue() * (levelFile.info.maxHeight-levelFile.info.minHeight) + levelFile.info.minHeight;
+
+	float interpolateRange = 50.0;
+	float heightChange = 10.0;
+	float height;
+	for(x=0;x<length;x++)
+	{
+		for(y=0;y<width;y++)
+		{
+			height = (getHeight(x,y) - seaLevel) * heightScale;
+			if(height > interpolateRange)
+				setHeight(x,y,(height + heightChange));
+			else if(height > -interpolateRange)
+				setHeight(x,y,height + heightChange*sin(height * (PI/2)/interpolateRange));
+			else
+				setHeight(x,y,height - heightChange);
+		}
+	}
+
+	smooth(1);
+	setMinMaxHeights();
+	sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight / (levelFile.info.maxHeight-levelFile.info.minHeight), 0.0, 1.0));
+	sliders["height scale"]->setValue(0.0);
+	resetView();
+	terrainValid=false;
 }
 void levelEditor::faultLine()
 {
@@ -821,6 +1120,7 @@ void levelEditor::faultLine()
  	smooth(1);
 
 	LOD = 1;
+	listBoxes["LOD"]->setOption(0);
 	setMinMaxHeights();
 	levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 	sliders["sea level"]->setValue(0.333);
@@ -834,20 +1134,73 @@ void levelEditor::fromFile(string filename)
 	if(ext == ".png")
 	{
 		auto image = fileManager.loadFile<FileManager::textureFile>(filename);
-		if(image->valid() && image->width > 0 && image->height > 0)
+		if(!image->valid() ||  image->width == 0 || image->height == 0)
+		{
+			messageBox("ERROR: heightmap file failed to load properly.");
+		}
+		else if(image->width == 1 || image->height == 1)
+		{
+			messageBox("ERROR: heightmap file must have dimensions of at least 2x2!");
+		}
+		else if(!isPowerOfTwo(image->width-1) || !isPowerOfTwo(image->height-1))
 		{
 			delete[] levelFile.heights;
-			levelFile.heights = new float[image->width * image->height];
-			levelFile.info.mapResolution.x = image->width;
-			levelFile.info.mapResolution.y = image->height;
+			if(image->width-1)
+			{
+				int w = uPowerOfTwo(image->width-1)+1;
+				int h = uPowerOfTwo(image->height-1)+1;
+				float wScale = static_cast<float>(image->width) / w;
+				float hScale = static_cast<float>(image->height) / h;
+				levelFile.info.mapResolution.x = w;
+				levelFile.info.mapResolution.y = h;
+				levelFile.heights = new float[w * h];
 
-			for(int y = 0; y < image->height; y++) {
-				for(int x = 0; x < image->width; x++) {
-					levelFile.heights[y * image->width + x] = (unsigned char)image->contents[image->channels * (y * image->width + x)] * 10.0;
+				float heightVals[4];
+				float interp[2];
+				for(int y = 0; y < h; y++)
+				{
+					for(int x = 0; x < w; x++)
+					{
+						heightVals[0] = image->contents[image->channels * (static_cast<int>(hScale*y)     * image->width + static_cast<int>(wScale*x))    ] * 5.0;
+						heightVals[1] = image->contents[image->channels * (static_cast<int>(hScale*y)     * image->width + (static_cast<int>(wScale*x)+1))] * 5.0;
+						heightVals[2] = image->contents[image->channels * ((static_cast<int>(hScale*y)+1) * image->width + static_cast<int>(wScale*x))    ] * 5.0;
+						heightVals[3] = image->contents[image->channels * ((static_cast<int>(hScale*y)+1) * image->width + (static_cast<int>(wScale*x)+1))] * 5.0;
+						interp[0] = lerp(heightVals[0], heightVals[1], wScale*x - floor(wScale*x));
+						interp[1] = lerp(heightVals[2], heightVals[3], wScale*x - floor(wScale*x));
+						levelFile.heights[y * w + x] = lerp(interp[0],interp[1], hScale*y - floor(hScale*y));
+					}
 				}
 			}
-
 			LOD = 1;
+			listBoxes["LOD"]->setOption(0);
+			terrainValid=false;
+			setMinMaxHeights();
+			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
+			sliders["sea level"]->setValue(0.333);
+			resetView();
+			graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
+
+			messageBox("WARNING: heightmap file must have dimensions that are 1 more than a power of 2:\n(129x129, 257x257, 513x513,... ), heightmap has been resized");
+		}
+		else if(image->valid() && image->width > 0 && image->height > 0)
+		{
+			delete[] levelFile.heights;
+			if(image->width-1)
+			{
+				levelFile.heights = new float[image->width * image->height];
+				levelFile.info.mapResolution.x = image->width;
+				levelFile.info.mapResolution.y = image->height;
+
+				for(int y = 0; y < image->height; y++)
+				{
+					for(int x = 0; x < image->width; x++)
+					{
+						levelFile.heights[y * image->width + x] = (unsigned char)image->contents[image->channels * (y * image->width + x)] * 5.0;
+					}
+				}
+			}
+			LOD = 1;
+			listBoxes["LOD"]->setOption(0);
 			terrainValid=false;
 			setMinMaxHeights();
 			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
@@ -942,6 +1295,7 @@ void levelEditor::fromFile(string filename)
 		levelFile.info.mapSize.y = nColumns * 30.87 * zRes;
 
 		LOD = 1;
+		listBoxes["LOD"]->setOption(0);
 		setMinMaxHeights();
 		levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 		sliders["sea level"]->setValue(0.333);
@@ -950,8 +1304,10 @@ void levelEditor::fromFile(string filename)
 		graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 	}
 }
-void levelEditor::smooth(int a)
+void levelEditor::smooth(unsigned int a)
 {
+	int radius = a;
+
 	int w = levelFile.info.mapResolution.x;
 	int h = levelFile.info.mapResolution.y;
 	float* smoothed = new float[w*h];
@@ -965,9 +1321,9 @@ void levelEditor::smooth(int a)
 		{
 			s=0;
 			n=0;
-			for(int i = max(x-a,0); i <= min(x+a,w-1); i++)
+			for(int i = max(x-radius,0); i <= min(x+radius,w-1); i++)
 			{
-				for(int j = max(y-a,0); j <= min(y+a,h-1); j++)
+				for(int j = max(y-radius,0); j <= min(y+radius,h-1); j++)
 				{
 					s += getHeight(i,j);
 					n++;
@@ -979,6 +1335,21 @@ void levelEditor::smooth(int a)
 
 	memcpy(levelFile.heights, smoothed, w * h * sizeof(float));
 	delete[] smoothed;
+	setMinMaxHeights();
+	terrainValid=false;
+}
+void levelEditor::roughen(float a)
+{
+	float s;
+	int n;
+	for(int x=0; x < levelFile.info.mapResolution.x; x++)
+	{
+		for(int y=0; y < levelFile.info.mapResolution.y; y++)
+		{
+			increaseHeight(x, y, random(-a, a));
+		}
+	}
+	setMinMaxHeights();
 	terrainValid=false;
 }
 Rect levelEditor::orthoView()
@@ -995,7 +1366,7 @@ void levelEditor::render3D(unsigned int v)
 	if(orthoTerrain)
 	{
 		Rect viewRect = orthoView();
-		view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000);
+		//view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000); set in update frame
 		view->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
 
 		if(toggles["shaders"]->getValue() == 0) levelFile.info.shaderType = TERRAIN_ISLAND;
@@ -1007,58 +1378,14 @@ void levelEditor::render3D(unsigned int v)
 		bool w = getShader() != 1;
 
 		renderTerrain(w,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue());
-		//level->renderPreview(w,pow(10.0f,sliders["height scale"]->getValue()),sl * (maxHeight - minHeight) + minHeight);
-
-
-
-
-		//if(getTab() == REGIONS)
-		//{
-		//	dataManager.bind("circle shader");
-		//	glDisable(GL_DEPTH_TEST);
-		//	graphics->setDepthMask(false);
-		//
-		//	auto v = level->regions();
-		//	for(auto i = v.begin(); i != v.end(); i++)
-		//	{
-		//		Vec2f c((i->centerXYZ[0] - viewRect.x + orthoCenter.x)/viewRect.w*sAspect, (i->centerXYZ[2] - viewRect.y + orthoCenter.z)/viewRect.h);
-		//		Vec2f s(i->radius/viewRect.w*sAspect*2.0, i->radius/viewRect.h*2.0);
-		//		graphics->drawOverlay(Rect::CWH(c,s));
-		//	}
-		//
-		//	dataManager.unbindShader();
-		//	glEnable(GL_DEPTH_TEST);
-		//}
 	}
 	else
 	{
-		view->perspective(fovy, (double)sw / ((double)sh),100.0, 500000.0);
+		//view->perspective(fovy, (double)sw / ((double)sh),100.0, 500000.0); set in update frame
 
 		Vec3f e,c,u;
 		c = center;
-		//if(input.getMouseState(MIDDLE_BUTTON).down)
-		//{
-		//	
-		//	Vec2f oldP = input.getMouseState(MIDDLE_BUTTON).downPos;
-		//	Vec2f newP = input.getMousePos();
-		//	
-		//	Vec3f xAxis = rot * Vec3f(-1,0,0);
-		//
-		//	Vec3f axis = (xAxis * (newP.y-oldP.y) + Vec3f(0,-1,0) * (newP.x-oldP.x)).normalize();
-		//	Angle ang = oldP.distance(newP);
-		//
-		//	Quat4f tmpRot;
-		//	if(ang > 0.01)	tmpRot = Quat4f(axis,ang) * rot;
-		//	else			tmpRot = rot;
-		//
-		//	e = c + tmpRot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
-		//	u = tmpRot * Vec3f(0,0,-1);
-		//}
-		//else
-		//{
-		//	e = c + rot * Vec3f(0,0.75,0) * max(levelFile.info.mapSize.x,levelFile.info.mapSize.y) * pow(1.1f,-scrollVal);
-		//	u = rot * Vec3f(0,0,-1);
-		//}
+
 		float mSize = max(levelFile.info.mapSize.x, levelFile.info.mapSize.y);
 		float heightRange = levelFile.info.maxHeight-levelFile.info.minHeight;
 		e = center + Vec3f(0,heightRange + 0.65*mSize, -0.45*mSize);
@@ -1083,16 +1410,33 @@ void levelEditor::render3D(unsigned int v)
 
 	if(getTab() == OBJECTS)
 	{
+
 		for(auto i = levelFile.objects.begin(); i != levelFile.objects.end(); i++)
 		{
 			auto obj = i->type != PLAYER_PLANE ? objectInfo[i->type] : objectInfo[objectInfo.getDefaultPlane()];
-			if(obj)
+			if(obj && !obj->mesh.expired())
 			{
 				float scale = i->type & SHIP ? 1.0 : 10.0;
-				sceneManager.drawMesh(view, obj->mesh, Mat4f(i->startRot,i->startloc,scale));
+				sceneManager.drawMesh(view, obj->mesh.lock(), Mat4f(i->startRot,i->startloc,scale));
+
+				graphics->drawLine(i->startloc, Vec3f(i->startloc.x, getInterpolatedHeight(i->startloc.x,i->startloc.z), i->startloc.z));
 			}
 		}
 
+		dataManager.bind("white");
+		auto model = shaders.bind("model");
+		model->setUniform1i("tex", 0);
+		model->setUniform4f("diffuse", black);
+		model->setUniform3f("specular", 0,0,0);
+		model->setUniformMatrix("modelTransform", Mat4f());
+		for(auto i = levelFile.objects.begin(); i != levelFile.objects.end(); i++)
+		{
+			auto obj = i->type != PLAYER_PLANE ? objectInfo[i->type] : objectInfo[objectInfo.getDefaultPlane()];
+			if(obj && !obj->mesh.expired())
+			{
+				graphics->drawLine(i->startloc, Vec3f(i->startloc.x, getTrueHeight(i->startloc.x,i->startloc.z), i->startloc.z));
+			}
+		}
 		//if(placingNewObject)
 		//{
 		//	////////////////////////////////draw object//////////////////////////////////
@@ -1292,10 +1636,11 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 					tex[4*(x+z*width) + 3] = static_cast<unsigned char>((getHeight(x, z)-levelFile.info.minHeight)/(levelFile.info.maxHeight-levelFile.info.minHeight)*255.0);
 				}
 			}
-			groundTex->setData(width,height,GraphicsManager::texture::BGRA, tex);
+			groundTex->setData(width,height,GraphicsManager::texture::BGRA, false, false, tex);
 
 			terrainValid=true;
 		}
+		//graphics->setWireFrame(true);
 		if(levelFile.info.shaderType == TERRAIN_ISLAND)
 		{
 			/*if(levelFile.info.shaderType == TERRAIN_ISLAND)	dataManager.bind("island preview terrain");
@@ -1331,7 +1676,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("LCnoise",		3);
 			shader->setUniform1i("groundTex",	4);
 			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
-			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
+			terrainIndexBuffer->drawBuffer();
 
 			shaders.bind("model");
 		}
@@ -1370,7 +1715,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("LCnoise",		3);
 			shader->setUniform1i("groundTex",	4);
 			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
-			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
+			terrainIndexBuffer->drawBuffer();
 
 			shaders.bind("model");
 		}
@@ -1403,7 +1748,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("LCnoise",		2);
 			shader->setUniform1i("groundTex",	3);
 			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
-			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
+			terrainIndexBuffer->drawBuffer();
 
 			shaders.bind("model");
 		}
@@ -1431,7 +1776,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform1i("groundTex",	2);
 
 			terrainIndexBuffer->bindBuffer(terrainVertexBuffer);
-			terrainIndexBuffer->drawBufferX(GraphicsManager::TRIANGLES);
+			terrainIndexBuffer->drawBuffer();
 
 			shaders.bind("model");
 		}
@@ -1468,6 +1813,50 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 		shaders.bind("model");
 		//dataManager.bind("model");
 	}
+
+
+	/*  DEBUG DRAWING  */
+	graphics->setDepthTest(false);
+	float xMult = levelFile.info.mapSize.x / (levelFile.info.mapResolution.x - 1);
+	float yMult = levelFile.info.mapSize.y / (levelFile.info.mapResolution.y - 1);
+	auto color3D = shaders.bind("color3D");
+	color3D->setUniform4f("color", 0.5, 0.5, 0.5, 1.0);
+	color3D->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
+	color3D->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(0,-seaLevelOffset*(levelFile.info.maxHeight-levelFile.info.minHeight),0)*scale, Vec3f(1,scale,1)));
+	Vec3f A, B, C, D;
+	for(auto i = checkedCells.begin(); i != checkedCells.end(); i++)
+	{
+		if(!cellFoundValid || *i != cellFound)
+			color3D->setUniform4f("color", 1.0, 0.0, 0.0, 1.0);
+		else
+			color3D->setUniform4f("color", 0.0, 1.0, 0.0, 1.0);
+		A = Vec3f((i->x)*xMult,		getHeight(i->x, i->y)-levelFile.info.minHeight+1,		(i->y)*yMult);	
+		B = Vec3f((i->x+1)*xMult,	getHeight(i->x+1, i->y)-levelFile.info.minHeight+1,	(i->y)*yMult);
+		C = Vec3f((i->x+1)*xMult,	getHeight(i->x+1, i->y+1)-levelFile.info.minHeight+1,	(i->y+1)*yMult);
+		D = Vec3f((i->x)*xMult,		getHeight(i->x, i->y+1)-levelFile.info.minHeight+1,	(i->y+1)*yMult);
+		graphics->drawLine(A,B);
+		graphics->drawLine(B,C);
+		graphics->drawLine(C,D);
+		graphics->drawLine(D,A);
+	}
+	bool renderLine=false;
+	color3D->setUniform4f("color", 0.0, 0.0, 0.0, 1.0);
+	for(auto i = checkLine.begin(); i != checkLine.end() &&  i+1 != checkLine.end(); i++)
+	{
+		if(renderLine=!renderLine)
+		{
+			A = Vec3f((i->x)*xMult,		getHeight(i->x, i->y)-levelFile.info.minHeight+1,		(i->y)*yMult);	
+			B = Vec3f(((i+1)->x)*xMult,	getHeight((i+1)->x, (i+1)->y)-levelFile.info.minHeight+1,	((i+1)->y)*yMult);
+			graphics->drawLine(A,B);
+		}
+	}
+	graphics->setDepthTest(true);
+	color3D->setUniform4f("color", 0.0, 0.0, 0.0, 0.3);
+	//graphics->drawQuad(	Vec3f(rStart.x*xMult,0,rStart.z*yMult),
+	//					Vec3f(rStart.x*xMult,levelFile.info.maxHeight-levelFile.info.minHeight,rStart.z*yMult),
+	//					Vec3f((rStart.x+200000.0*rDirection.x)*xMult,levelFile.info.maxHeight-levelFile.info.minHeight,(rStart.z+200000.0*rDirection.z)*yMult),
+	//					Vec3f((rStart.x+200000.0*rDirection.x)*xMult,0,(rStart.z+200000.0*rDirection.z)*yMult));
+	/*  END DEBUG DRAWING  */
 
 	//if(levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_SNOW)
 	//{
@@ -1519,6 +1908,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//	dataManager.setUniformMatrix("modelTransform", Mat4f());
 	//}
 	//glPopMatrix();
+	//graphics->setWireFrame(false);
 }
 void levelEditor::renderObjectPreview()
 {
@@ -1527,21 +1917,22 @@ void levelEditor::renderObjectPreview()
 		graphics->setDepthTest(false);
 		auto ortho = shaders.bind("ortho");
 		ortho->setUniform1f("sAspect", 1.333);
+		//ortho->setUniform4f("viewConstraint", 0,0,1,1);
 		graphics->setColor(0.35,0.35,0.35);
 		graphics->drawOverlay(Rect::XYXY(0.0, 0.0, 1.333, 1.0),"white");
 		graphics->setColor(1.0,1.0,1.0);
 		graphics->drawOverlay(Rect::XYXY(0.04, 0.04, 1.333-0.04, 0.96),"white");
 		ortho->setUniform1f("sAspect", sAspect);
+//		ortho->setUniform4f("viewConstraint", 0,0,1,1);
 		graphics->setDepthTest(true);
-
 		objectPreviewView->lookAt(Vec3f(0,2,0), Vec3f(0,0,0), Vec3f(0,0,1));
 		
 		objectType objType = typeOptions[listBoxes["object type"]->getOptionNumber()];
 		auto obj = objectInfo[objType != PLAYER_PLANE ? objType : objectInfo.getDefaultPlane()];
-		if(obj)
+		if(obj && !obj->mesh.expired())
 		{
-			Sphere<float> sphere = obj->mesh->boundingSphere;
-			sceneManager.drawMesh(objectPreviewView, obj->mesh, Mat4f(Quat4f(),-sphere.center/sphere.radius,1.0/sphere.radius));
+			Sphere<float> sphere = obj->mesh.lock()->boundingSphere;
+			sceneManager.drawMesh(objectPreviewView, obj->mesh.lock(), Mat4f(Quat4f(),-sphere.center/sphere.radius,1.0/sphere.radius));
 		}
 	}
 }

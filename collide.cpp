@@ -219,6 +219,66 @@ bool CollisionManager::testRaySphere(Vec3f p, Vec3f d, Sphere<float> s, Vec3f& i
 	intersectionPoint = p + d*t;
 	return true;
 }
+// see:http://people.cs.clemson.edu/~dhouse/courses/881/papers/raytriangle-moeller02.pdf
+// u,v = barycentric coordinates
+// t = distance from ray origin
+bool CollisionManager::testRayTriangle(Vec3f o, Vec3f d, Vec3f v0, Vec3f v1, Vec3f v2, Vec3f& intersectionPoint) const
+{
+	Vec3f e1 = v1 - v0;
+	Vec3f e2 = v2 - v0;
+	Vec3f p = d.cross(e2);
+	float a = e1.dot(p);
+
+	if(a > -0.0001 && a < 0.0001)
+		return false;
+
+	double f = 1.0/a;
+	Vec3f s = o - v0;
+	float u = f * s.dot(p);
+
+	if(u < 0.0 || u > 1.0)
+		return false;
+
+	Vec3f q = s.cross(e1);
+	float v = f * d.dot(q);
+
+	if(v < 0.0 || u+v > 1.0)
+		return false;
+
+	//double t = f * e2.dot(q); // t is distance along ray to intesection point
+
+	intersectionPoint = v0 + e1*u + e2*v; //o + t * d;
+
+	intersectionPoint = (v2 + v1 + v0) / 3.0; //point that *should* be on the triangle
+
+	return true;
+}
+bool CollisionManager::testRayAABB(Vec3f p, Vec3f d, BoundingBox<float> AABB, Vec3f& intersectionPoint)
+{// see:http://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
+
+	debugAssert(d.magnitudeSquared() < 1.001 && d.magnitudeSquared() > 0.999);
+
+	Vec3f dirfrac = Vec3f(1.0f / d.x, 1.0f / d.y, 1.0f / d.z); 
+
+	float t1 = (AABB.minXYZ.x - p.x)*dirfrac.x;
+	float t2 = (AABB.maxXYZ.x - p.x)*dirfrac.x;
+	float t3 = (AABB.minXYZ.y - p.y)*dirfrac.y;
+	float t4 = (AABB.maxXYZ.y - p.y)*dirfrac.y;
+	float t5 = (AABB.minXYZ.z - p.z)*dirfrac.z;
+	float t6 = (AABB.maxXYZ.z - p.z)*dirfrac.z;
+
+	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+	// if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+	if (tmax < 0 || tmin > tmax)
+	{
+		return false;
+	}
+
+	intersectionPoint = p  + d * tmin;
+	return true;
+}
 bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const
 {	//	"based on A Fast Triangle-Triangle Intersection Test" by Tomas Moller
 	//	http://knight.temple.edu/~lakamper/courses/cis350_2004/etc/moeller_triangle.pdf

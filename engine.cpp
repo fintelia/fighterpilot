@@ -2,6 +2,7 @@
 #include "engine.h"
 #if defined(WINDOWS)
 	#include <Windows.h>
+	#include <direct.h>  //to change the working directory
 #elif defined(LINUX)
 	#include <X11/keysym.h>
 	#include <X11/Xlib.h>
@@ -29,6 +30,7 @@ AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
 WorldManager& world = WorldManager::getInstance();																			//	//
 CollisionManager& collisionManager = CollisionManager::getInstance();														//	//
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																	//	//
+SoundManager& soundManager = SoundManager::getInstance();																	//  //
 FileManager& fileManager = FileManager::getInstance();																		//  //
 SceneManager& sceneManager = SceneManager::getInstance();																	//  //
 																															//  //
@@ -212,6 +214,7 @@ void outOfMemory()
 #endif
 	exit(EXIT_FAILURE);
 } 
+
 //#pragma comment (lib, "Urlmon.lib")
 #ifdef WINDOWS
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
@@ -248,8 +251,41 @@ int main(int argc, const char* argv[])
 
 #if defined(WINDOWS)
     string cmdLineString(lpCmdLine);
-	boost::split(game->commandLineOptions, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);	
+	vector<string> optionsToAdd;
+	while(cmdLineString != "")
+	{
+		if(cmdLineString[0] != '"')
+		{
+			int pos = cmdLineString.find_first_of('"');
+			string substr = cmdLineString.substr(0, pos);
+			cmdLineString = cmdLineString.substr(pos+1, cmdLineString.npos);
+
+			boost::split(optionsToAdd, cmdLineString, boost::is_any_of(" "), boost::token_compress_on);	
+			game->commandLineOptions.insert(game->commandLineOptions.begin(), optionsToAdd.begin(), optionsToAdd.end());
+		}
+		else
+		{
+			int pos = cmdLineString.find_first_of('"',1);
+			string substr = cmdLineString.substr(1, pos-1);
+			cmdLineString = cmdLineString.substr(pos+1, cmdLineString.npos);
+			game->commandLineOptions.push_back(substr);
+		}
+	}
+
 	MSG	msg; // Windows Message Structure
+
+	char moduleFilename[512];
+	GetModuleFileNameA(NULL, moduleFilename, 512);
+	//MessageBoxA(nullptr, fileManager.directory(string(moduleFilename,512)).c_str(), "file name", 0);
+	chdir(fileManager.directory(string(moduleFilename,512)).c_str());
+	if(!fileManager.directoryExists("media")) //will happen when run from an IDE and we are actually inside a Debug or Release folder
+	{
+		chdir("..");
+	}
+
+	//for(auto i=game->commandLineOptions.begin(); i!= game->commandLineOptions.end(); i++)
+	//	MessageBoxA(nullptr, (string("\"") + *i + "\"").c_str(), "command line option:", 0);
+
 #elif defined(LINUX)
 	for(int i=0; i<argc; i++)
 	{
@@ -258,12 +294,12 @@ int main(int argc, const char* argv[])
 	x11_display = XOpenDisplay(0);
 	x11_screen = DefaultScreen(x11_display);
 #endif
-
 	if(!game->init())
 	{
 		return 1;
 	}
-	
+	soundManager.initialize();
+
 #ifdef LINUX
 	XSelectInput(x11_display, x11_window, ButtonPressMask|ButtonReleaseMask|StructureNotifyMask|KeyPressMask|KeyReleaseMask|KeymapStateMask);
 	Atom wmDeleteMessage=XInternAtom(x11_display, "WM_DELETE_WINDOW", true);
@@ -309,7 +345,7 @@ int main(int argc, const char* argv[])
 		{
 			game->update();
 			
-			if(game->active || game->needsRedraw)
+			if(game->active || game->needsRedraw || true)
 			{
 				game->needsRedraw = false;
 
@@ -336,9 +372,16 @@ int main(int argc, const char* argv[])
 			}
 		}
 	}
-	world.destroy();
-	menuManager.shutdown();
-	dataManager.shutdown();
+	menuManager.~manager();
+	world.~WorldManager();
+	particleManager.~manager();
+	collisionManager.~CollisionManager();
+	assetLoader.~AssetLoader();
+	dataManager.~DataManager();
+	sceneManager.~SceneManager();
+	shaders.~ShaderManager();
+	input.~InputManager();
+	soundManager.~SoundManager();
 	graphics->destroyWindow();
 	fileManager.shutdown(); //will wait for all files to be written
 	return 0;

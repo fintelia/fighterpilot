@@ -175,6 +175,12 @@
     <Filter Include="shaders\blur">
       <UniqueIdentifier>{de8f5794-b162-4dbe-8b1c-dca0ccd57af8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\color3D">
+      <UniqueIdentifier>{edaea757-5ba6-4b9a-ac0f-d4e415cc3f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\soundManager">
+      <UniqueIdentifier>{0584e232-7494-4ee1-908d-c96107ef2c6e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -348,6 +354,9 @@
     <ClCompile Include="groundExplosionFlash.cpp">
       <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
+    <ClCompile Include="soundManager.cpp">
+      <Filter>Source Files\ENGINE\soundManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quaternion.h">
@@ -476,6 +485,9 @@
     </ClInclude>
     <ClInclude Include="ship.h">
       <Filter>Source Files\GAME\objects\ship</Filter>
+    </ClInclude>
+    <ClInclude Include="soundManager.h">
+      <Filter>Source Files\ENGINE\soundManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -639,6 +651,36 @@
       <Filter>shaders\trees</Filter>
     </None>
     <None Include="media\tree3d.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\spark.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\spark.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.geom">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\color3D.frag">
+      <Filter>shaders\color3D</Filter>
+    </None>
+    <None Include="media\color3D.vert">
+      <Filter>shaders\color3D</Filter>
+    </None>
+    <None Include="media\placeTrees.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\conditionalDiscard.geom">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTree.geom">
       <Filter>shaders\trees</Filter>
     </None>
   </ItemGroup>

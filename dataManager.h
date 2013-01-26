@@ -103,7 +103,6 @@ public:
 
 //	string getBoundShader() const{return boundShader;}
 //	bool textureBound(int textureUnit = 0) {return boundTextureIds[textureUnit] != 0;}
-	void shutdown();
 
 	void addTexture(string name, shared_ptr<GraphicsManager::texture> tex);
 //	void addShader(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
@@ -118,14 +117,13 @@ private:
 	//modelAsset* registerOBJ(string filename);
 //	shaderAsset* registerShader(shared_ptr<FileManager::textFile> vert, shared_ptr<FileManager::textFile> frag, bool use_sAspect=false);
 	//bool registerTerrainShader(string name, string frag);
-	textureAsset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false);
+	textureAsset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false, bool compress=false);
 	fontAsset* registerFont(shared_ptr<FileManager::textFile> f);
 
 	//int getId(string name);
 	//int getId(objectType t);
 
 	DataManager(){}
-	~DataManager();
 };
 class ShaderManager
 {
@@ -152,8 +150,6 @@ public:
 	}
 	shared_ptr<GraphicsManager::shader> bind(string name);
 	shared_ptr<GraphicsManager::shader> operator() (string name);
-
-	void shutdown();
 
 	void add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
 	void writeErrorLog(string filename);

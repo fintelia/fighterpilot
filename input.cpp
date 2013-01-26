@@ -152,10 +152,10 @@
 	BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, void* inputManagerPtr)	//we need a pointer to input so we can call its 
 	{																									//methods, since it is still being constructed
 		HRESULT hr;
-
+#ifdef XINPUT
 		if(IsXInputDevice(&pdidInstance->guidProduct))
 			return DIENUM_CONTINUE;
-
+#endif
 		IDirectInputDevice8* directInputDevicePtr;
 		if(!FAILED(directInputPtr->CreateDevice(pdidInstance->guidInstance,&directInputDevicePtr,NULL)))
 		{
@@ -183,35 +183,22 @@ const unsigned char KEYSTATE_CURRENT	= 0x01;
 const unsigned char KEYSTATE_LAST		= 0x02; 
 const unsigned char KEYSTATE_VIRTUAL	= 0x04;
 
-
-InputManager::xboxControllerState::xboxControllerState():
 #ifdef XINPUT
-                    state(new XINPUT_STATE),
-#else
-                    state(nullptr),
-#endif
-                    leftPressLength(0.0), rightPressLength(0.0), upPressLength(0.0), downPressLength(0.0), connected(false),deadZone(0.15)
+InputManager::xboxControllerState::xboxControllerState(): state(new XINPUT_STATE), leftPressLength(0.0), rightPressLength(0.0), upPressLength(0.0), downPressLength(0.0), connected(false),deadZone(0.15)
 {
 
 }
 InputManager::xboxControllerState::~xboxControllerState()
 {
-#ifdef XINPUT
 	delete state;
-#endif
 }
 
 bool InputManager::xboxControllerState::getButton(unsigned int b) const
 {
-#ifdef XINPUT
 	return connected && ((state->Gamepad.wButtons & b) != 0);
-#else
-	return false;
-#endif
 }
 double InputManager::xboxControllerState::getAxis(unsigned int a) const
 {
-#ifdef XINPUT
 	if(!connected)
 		return 0.0;
 
@@ -231,10 +218,9 @@ double InputManager::xboxControllerState::getAxis(unsigned int a) const
 		return 0.0;
 	else
 		return (d - deadZone) / (1.0 - deadZone);
-#else
-	return 0.0;
-#endif
 }
+#endif
+#ifdef DIRECT_INPUT
 InputManager::directInputControllerState::directInputControllerState(IDirectInputDevice8W* ptr, string n): devicePtr(ptr), name(n), deadZone(0.15)
 {
 	if(devicePtr)
@@ -324,6 +310,7 @@ double InputManager::directInputControllerState::getAxis(unsigned int axis)const
 	return 0.0;
 #endif
 }
+#endif
 void InputManager::sendCallbacks(callBack* c)
 {
 	if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == LEFT_BUTTON)
@@ -375,21 +362,22 @@ void InputManager::initialize()
 		keys[i]=false;
 	}
 
+#ifdef XINPUT
 	for(int i=0; i<4; i++)
 	{
 		xboxControllers[i].connected = true;
 	}
-
+#endif
 #ifdef DIRECT_INPUT
 	if(!FAILED(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInputPtr, NULL)))
 	{
 		directInputPtr->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
 	}
 	else
-#endif
 	{
 		directInputPtr = nullptr;
 	}
+#endif
 }
 void InputManager::shutdown()
 {
@@ -426,10 +414,13 @@ bool InputManager::getKey(int key)
 	if(key>=256 || key<0) return false;
 	return (keys[key] & KEYSTATE_VIRTUAL) != 0;
 }
+#ifdef XINPUT
 const InputManager::xboxControllerState& InputManager::getXboxController(unsigned char controllerNum)
 {
 	return xboxControllers[clamp(controllerNum,0,3)];
 }
+#endif
+#ifdef DIRECT_INPUT
 const InputManager::directInputControllerState* InputManager::getDirectInputController(unsigned int joystickNum)
 {
 	return joystickNum < directInputControllers.size() ? &directInputControllers[joystickNum] : nullptr;
@@ -438,6 +429,7 @@ void InputManager::addDirectInputDevice(IDirectInputDevice8W* devicePtr, string 
 {
 	directInputControllers.push_back(directInputControllerState(devicePtr, name));
 }
+#endif
 void InputManager::update()
 {
 	double time = GetTime();
@@ -657,10 +649,12 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if(uMsg == WM_ACTIVATEAPP)
 	{
+#ifdef DIRECT_INPUT
 		for(auto i=directInputControllers.begin(); i!=directInputControllers.end(); i++)
 		{
 			i->acquireController();
 		}
+#endif
 	}
 	else if(uMsg == WM_KEYDOWN)
 	{
@@ -779,10 +773,12 @@ float InputManager::operator() (int key)
 }
 void InputManager::checkNewHardware()
 {
+#ifdef XINPUT
 	for(int i=0; i<4; i++)
 	{
 		xboxControllers[i].connected = true;
 	}
+#endif
 }
 void InputManager::setVibration(int controllerNum, float amount)
 {

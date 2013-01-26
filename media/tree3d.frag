@@ -7,7 +7,7 @@ varying vec4 position;
 //centroid varying vec3 lightDir;
 //centroid varying vec3 halfVector;
 
-uniform vec4 diffuse;
+uniform float transparency;
 //uniform vec3 specular;
 //uniform float hardness;
 
@@ -29,5 +29,6 @@ void main()
 	//
 	//Specular.a = max(Specular.r, max(Specular.g, Specular.b));
 
-	gl_FragColor = texture2D(tex,texCoord).rgba;//vec4((Diffuse + Specular).rgb,texture2D(tex,texCoord).a);
+	vec4 color = texture2D(tex,texCoord).rgba;
+	gl_FragColor = vec4(color.rgb*color.a,color.a) * transparency;//vec4((Diffuse + Specular).rgb,texture2D(tex,texCoord).a);
 }

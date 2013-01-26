@@ -6,6 +6,19 @@ using namespace tinyxml2;
 
 ObjectInfo& objectInfo = ObjectInfo::getInstance();
 
+shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Vec3f position, Quat4f rotation)
+{
+	auto mesh = objectInfo[type]->mesh;
+	if(!mesh.expired())
+	{
+		return sceneManager.newMeshInstance(mesh.lock(), position, rotation);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
 bool ObjectInfo::loadObjectData(string filename)
 {
 	auto  getAttribute = [](XMLElement* element, const char* attribute)->string
@@ -240,8 +253,9 @@ void ObjectInfo::linkObjectMeshes()
 	{
 		if(i->second->meshFilename != "")
 		{
-			i->second->mesh = dataManager.getModel(i->second->meshFilename);
-			collisionManager.setCollsionBounds(i->first, i->second->mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
+			shared_ptr<SceneManager::mesh> mesh = dataManager.getModel(i->second->meshFilename); //needed since i->second->mesh is actually a weak ptr
+			i->second->mesh = mesh;
+			collisionManager.setCollsionBounds(i->first, mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
 		}
 	}
 }

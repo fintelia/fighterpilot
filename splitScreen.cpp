@@ -53,7 +53,11 @@ void splitScreen::updateFrame()
 	if(input.getKey(VK_F2))	{	players[1]->toggleFirstPerson(); input.up(VK_F2);}
 
 	//check whether to bring up the in-game menu
-	if(input.getKey(VK_ESCAPE) || input.getXboxController(0).getButton(XINPUT_START) || input.getXboxController(1).getButton(XINPUT_START))
+	if(input.getKey(VK_ESCAPE) 
+#ifdef XINPUT
+		|| input.getXboxController(0).getButton(XINPUT_START) || input.getXboxController(1).getButton(XINPUT_START)
+#endif
+		)
 	{
 		menuManager.setPopup(new gui::inGame);
 		input.up(VK_ESCAPE);

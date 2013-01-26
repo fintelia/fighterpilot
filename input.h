@@ -21,6 +21,7 @@ protected:
 		virtual double getAxis(unsigned int axis) const=0;
 		virtual ~gamepadState(){}
 	};
+#ifdef XINPUT
 	class xboxControllerState: public gamepadState
 	{
 	private:
@@ -41,6 +42,8 @@ protected:
 		xboxControllerState();
 		~xboxControllerState();
 	} xboxControllers[4];
+#endif
+#ifdef DIRECT_INPUT
 	class directInputControllerState: public gamepadState
 	{
 	private:
@@ -71,6 +74,7 @@ protected:
 		directInputControllerState(IDirectInputDevice8W* ptr, string n);
 	};
 	vector<directInputControllerState> directInputControllers;
+#endif
 
 	unsigned char keys[256];
 	mouseButtonState leftMouse, rightMouse, middleMouse;
@@ -126,9 +130,13 @@ public:
 	void update();
 	bool getKey(int key);
 	const mouseButtonState& getMouseState(mouseButton m);
+#ifdef XINPUT
 	const xboxControllerState& getXboxController(unsigned char controllerNum);
+#endif
+#ifdef DIRECT_INPUT
 	const directInputControllerState* getDirectInputController(unsigned int controllerNum);
 	unsigned int getNumDirectInputControllers(){return directInputControllers.size();}
+#endif
 	void addDirectInputDevice(IDirectInputDevice8W* devicePtr, string name);
 	float operator() (int key);
 	Vec2f getMousePos(){return mousePos;}
@@ -140,6 +148,9 @@ public:
  };
 extern InputManager& input;
 
+//since the following symbols are #define'd in windows.h, the preprocessor
+//check is necessary to prevent compile errors.
+#ifndef VK_LBUTTON
 const int VK_LBUTTON        = 0x01;
 const int VK_RBUTTON        = 0x02;
 const int VK_CANCEL         = 0x03;
@@ -220,6 +231,7 @@ const int VK_LCONTROL       = 0xA2;
 const int VK_RCONTROL       = 0xA3;
 const int VK_LMENU          = 0xA4;
 const int VK_RMENU          = 0xA5;
+#endif
 
 const int XINPUT_LEFT_TRIGGER	= 0;
 const int XINPUT_RIGHT_TRIGGER	= 1;

@@ -5,7 +5,7 @@ bomb::bomb(bombType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, in
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = sceneManager.newMeshInstance(objectInfo[type]->mesh, position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
 }
 void bomb::updateSimulation(double time, double ms)
 {
