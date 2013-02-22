@@ -126,8 +126,9 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 //	ptr->setTemperaryFlag(true);
 //	meshInstances[model].push_back(ptr);
 //}
-void SceneManager::resetMeshInstances()
+void SceneManager::reset()
 {
+	lights.clear();
 	nMeshInstances.clear();
 }
 void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInstancePtr firstPersonObject)
@@ -145,64 +146,59 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	model->setUniform1i("normalMap",2);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	//for(int pass = 0; pass <= 1; pass++)
-	//{
-		for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
+
+	for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
+	{
+		if(meshType->second.empty())
+			continue;
+
+		auto meshPtr = meshes[meshType->first];
+		if(!meshPtr)
+			continue;
+
+		if(!meshPtr->materials.empty())
+			meshPtr->VBO->bindBuffer();
+		for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
 		{
-			if(meshType->second.empty())
-				continue;
-
-			auto meshPtr = meshes[meshType->first];
-			if(!meshPtr)
-				continue;
-
-			if(!meshPtr->materials.empty())
-				meshPtr->VBO->bindBuffer();
-			for(auto material = meshPtr->materials.begin(); material != meshPtr->materials.end(); material++)
+			if(/*(*/material->diffuse.a > 0.999/* && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1)*/)
 			{
-				if(/*(*/material->diffuse.a > 0.999/* && pass == 0) || (material->diffuse.a <= 0.999 && pass == 1)*/)
-				{
-					if(material->tex)
-						material->tex->bind(0);
-					else
-						dataManager.bind("white", 0);
+				if(material->tex)
+					material->tex->bind(0);
+				else
+					dataManager.bind("white", 0);
 
-					if(material->specularMap)
-						material->specularMap->bind(1);
-					else
-						dataManager.bind("white", 1);
+				if(material->specularMap)
+					material->specularMap->bind(1);
+				else
+					dataManager.bind("white", 1);
 
-					if(material->specularMap)
-						material->normalMap->bind(2);
-					else
-						dataManager.bind("default normals", 2);
-					model->setUniform4f("diffuse", material->diffuse);
-					model->setUniform3f("specular", material->specular);
-					model->setUniform1f("hardness", material->hardness);
+				if(material->specularMap)
+					material->normalMap->bind(2);
+				else
+					dataManager.bind("default normals", 2);
+				model->setUniform4f("diffuse", material->diffuse);
+				model->setUniform3f("specular", material->specular);
+				model->setUniform1f("hardness", material->hardness);
  
-					if(!meshType->second.empty())
-						material->indexBuffer->bindBuffer();
-					for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
+				if(!meshType->second.empty())
+					material->indexBuffer->bindBuffer();
+				for(auto instance = meshType->second.begin(); instance != meshType->second.end(); instance++)
+				{
+					i = instance->lock();
+					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
-						i = instance->lock();
-						if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
-						{
-							model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
-							material->indexBuffer->drawBuffer();
-						}
-						else
-						{
-							int m=4;
-						}
-						i.reset();
+						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
+						material->indexBuffer->drawBuffer();
 					}
+					else
+					{
+						int m=4;
+					}
+					i.reset();
 				}
 			}
 		}
-		
-	//	if(pass == 0) graphics->setDepthMask(false); // set to false after the first pass
-	//	if(pass == 1) graphics->setDepthMask(true);  // then reset to true after the second
-	//}
+	}
 }
 void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> view, meshInstancePtr firstPersonObject)
 {
@@ -298,7 +294,7 @@ void SceneManager::bindLights(shared_ptr<GraphicsManager::shader> shader)
 
 	Vec3f lightPositions[MAX_LIGHTS];
 	Color3 lightColors[MAX_LIGHTS];
-	float lightStrengths[MAX_LIGHTS];
+	float invLightStrengths[MAX_LIGHTS];
 	int numLights = min(lights.size(), MAX_LIGHTS);
 
 	for(int i=0; i<max(MAX_LIGHTS,lights.size()); i++)
@@ -307,13 +303,13 @@ void SceneManager::bindLights(shared_ptr<GraphicsManager::shader> shader)
 		{
 			debugAssert(!lights[i].expired());
 			lightPositions[i] = lights[i].lock()->position;
-			lightStrengths[i] = lights[i].lock()->strength;
+			invLightStrengths[i] = lights[i].lock()->strength > 0.0 ? 1.0 / lights[i].lock()->strength : 0.0;
 			lightColors[i] = lights[i].lock()->color;
 		}
 		else if(i < MAX_LIGHTS) // if we have space for extra lights...
 		{
 			lightPositions[i] = Vec3f(0,0,0);
-			lightStrengths[i] = 0.0;
+			invLightStrengths[i] = 0.0;
 			lightColors[i] = black;
 		}
 		else // if we already has MAX_LIGHTS number of lights...
@@ -325,7 +321,7 @@ void SceneManager::bindLights(shared_ptr<GraphicsManager::shader> shader)
 				if(abs(world.altitude(lightPositions[j])) > a)
 				{
 					lightPositions[j] = lights[i].lock()->position;
-					lightStrengths[j] = lights[i].lock()->strength;
+					invLightStrengths[j] = lights[i].lock()->strength > 0.0 ? 1.0 / lights[i].lock()->strength : 0.0;
 					lightColors[j] = lights[i].lock()->color;
 				}
 			}
@@ -335,9 +331,9 @@ void SceneManager::bindLights(shared_ptr<GraphicsManager::shader> shader)
 	shader->setUniform3f("sunPosition", graphics->getLightPosition());
 
 	//shader->setUniform1i("numLights", numLights);
-	shader->setUniform3fv("lightPositions", numLights, lightPositions);
-	shader->setUniform1fv("lightStrengths", numLights, lightStrengths);
-	shader->setUniform3fv("lightColors", numLights, lightColors);
+	shader->setUniform3fv("lightPositions", MAX_LIGHTS, lightPositions);
+	shader->setUniform1fv("invLightStrengths", MAX_LIGHTS, invLightStrengths);
+	shader->setUniform3fv("lightColors", MAX_LIGHTS, lightColors);
 }
 void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation)
 {

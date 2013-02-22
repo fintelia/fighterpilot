@@ -12,8 +12,14 @@ namespace particle
 	{
 		flash = sceneManager.genPointLight();
 		flash->position = position;
-		flash->strength = 0.0;
+		flash->strength = 0.001;
 		startTime = world.time();
+
+		float alt = world.altitude(position);
+		if(alt < 3.0*radius)
+		{
+			world.addDecal(Vec2f(position.x,position.z), 5.0*radius, 5.0*radius, "scorch");
+		}
 
 		speed =		fuzzyAttribute(1.0, 1.0);
 		spread =	fuzzyAttribute(radius/8, radius/8);
@@ -44,25 +50,27 @@ namespace particle
 	{
 		double t = (world.time() - startTime) / 1100.0;
 
+		float s;
 		if(t<0.05)
 		{
-			flash->strength = 1.0 * t * 20;
+			s = (1.0 * t * 20);
 		}
 		else if(t<0.75)
 		{
-			flash->strength = 1.0 - 0.5 * (t-0.05)/0.7;
+			s = 1.0 - 0.5 * (t-0.05)/0.7;
 		}
 		else if(t<1.0)
 		{
-			flash->strength = 0.5 - 0.5 * (t-0.75)/0.25;
+			s = 0.5 - 0.5 * (t-0.75)/0.25;
 		}
 		else
 		{
-			flash->strength = 0.0;
+			s = 0.0;
 		}
-		flash->color.r = 1.0 * flash->strength;
-		flash->color.g = 0.6 * flash->strength;
-		flash->color.b = 0.3 * flash->strength;
+		flash->color.r = 1.0 * s;
+		flash->color.g = 0.6 * s;
+		flash->color.b = 0.3 * s;
+		flash->strength = 45.0 * s;
 		emitter::update();
 	}
 	void explosion::updateParticle(particle& p)

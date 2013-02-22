@@ -49,6 +49,7 @@
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
     <IncludePath>C:\Program Files\boost_1_50_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -170,6 +171,7 @@
     <ClCompile Include="splitScreen.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="time.cpp" />
+    <ClCompile Include="tracer.cpp" />
     <ClCompile Include="worldManager.cpp" />
     <ClCompile Include="xml\tinyxml2.cpp" />
   </ItemGroup>
@@ -235,6 +237,8 @@
     <None Include="media\color3D.vert" />
     <None Include="media\conditionalDiscard.geom" />
     <None Include="media\createTree.geom" />
+    <None Include="media\createTreeTexture3.frag" />
+    <None Include="media\createTreeTexture.geom" />
     <None Include="media\desert preview.frag" />
     <None Include="media\desert.frag" />
     <None Include="media\gamma.frag" />
@@ -285,6 +289,8 @@
     <None Include="media\spark.frag" />
     <None Include="media\spark.vert" />
     <None Include="media\terrain.vert" />
+    <None Include="media\decal.frag" />
+    <None Include="media\decal.vert" />
     <None Include="media\tree3d.frag" />
     <None Include="media\tree3d.vert" />
     <None Include="media\trees.frag" />

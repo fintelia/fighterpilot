@@ -34,6 +34,15 @@ bool campaign::init()
 	}
 	return true;
 }
+bool campaign::menuKey(int mkey)
+{
+	if(mkey == MENU_BACK)
+	{
+		menuManager.setPopup(new gui::inGame);
+		return true;
+	}
+	return false;
+}
 void campaign::updateFrame()
 {
 	//static double timeSinceSkyUpdate = 0;
@@ -55,16 +64,6 @@ void campaign::updateFrame()
 	{
 		players[0]->toggleFirstPerson();
 		input.up(VK_F1);
-	}
-	//check whether to bring up the in-game menu
-	if(input.getKey(VK_ESCAPE)
-#ifdef XINPUT
-		|| input.getXboxController(0).getButton(XINPUT_START)
-#endif
-		)
-	{
-		menuManager.setPopup(new gui::inGame);
-		input.up(VK_ESCAPE);
 	}
 
 	//set camera position
@@ -184,14 +183,12 @@ void campaign::render()
 		targeter(0.5*sAspect, 0.5, 0.08, -p->roll);
 		radar(0.2 * sAspect, 0.567, 0.125, 0.125, true, p);
 
-		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/100.0,true);
+		healthBar(0.175*sAspect, 0.35, 0.25*sAspect, 0.333, p->health/100.0);
 	}
-	else if(!p->dead  && !p->controled)
+	else if(!p->dead && !p->controled)
 	{
-//		radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
-//		healthBar(0.768*sAspect, 0.042, 0.188*sAspect, 0.042, p->health/p->maxHealth,false);
-
-		if(p->target != 0)
+		//radar(sAspect-0.167, 0.833, 0.1333, 0.1333, false, p);
+		if(p->target != 0 && !graphics->isHighResScreenshot())
 		{
 			auto targetPtr = world[p->target];
 			if(targetPtr && targetPtr->meshInstance != nullptr)
@@ -206,7 +203,9 @@ void campaign::render()
 				Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * (targetPos+targetOffset);
 				if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 				{
-					shaders.bind("circle shader");
+					auto circleShader = shaders.bind("circle shader");
+					circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
+
 					if(level->info.night)
 					{
 						if(p->targetLocked)		graphics->setColor(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989);
@@ -269,12 +268,12 @@ void campaign::render()
 		}
 	}
 
-	if(levelup)
+	if(levelup && !graphics->isHighResScreenshot())
 	{
 		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "next level");
 	}
-	if(victory)
+	if(victory && !graphics->isHighResScreenshot())
 	{
 		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "victory");

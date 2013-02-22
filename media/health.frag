@@ -12,7 +12,7 @@ void main()
 
 	vec2 loc=texCoord;
 	float radius = sqrt((loc.x-0.5)*(loc.x-0.5) + (loc.y-0.5)*(loc.y-0.5));
-	float ang = atan(loc.y-0.5,loc.x-0.5);
+	float ang = -atan(loc.y-0.5,loc.x-0.5);
 	loc.x=radius*cos(ang+angle)+0.5;
 	loc.y=radius*sin(ang+angle)+0.5;
 

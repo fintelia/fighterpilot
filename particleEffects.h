@@ -67,6 +67,21 @@ public:
 	bool createParticle(particle& p, Vec3f currentPosition);
 	void updateParticle(particle& p);
 };
+class tracer: public emitter
+{
+private:
+	Vec3f velocity;
+	double endTime;
+
+public:
+	tracer();
+	void init();
+	void update();
+	void setVelocity(Vec3f vel){velocity = vel;}
+
+	bool createParticle(particle& p, Vec3f currentPosition);
+	void updateParticle(particle& p);
+};
 class contrailSmall: public emitter
 {
 public:

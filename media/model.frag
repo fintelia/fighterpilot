@@ -32,7 +32,8 @@ void main()
 	Diffuse = vec4(diffuse.rgb * texture2D(tex,texCoord).rgb  * min(NdotL+0.25,1.0),diffuse.a * texture2D(tex,texCoord).a);
 	Specular.rgb = specular * texture2D(specularMap,texCoord).rgb * min(pow(max(dot(Normal,normalize(halfVector)),0.0),hardness), 1.0);
 	
-	Specular.a = max(Specular.r, max(Specular.g, Specular.b));
+	Specular.a =  max(Specular.r, max(Specular.g, Specular.b));
 
 	gl_FragColor = Diffuse + Specular;
+
 }

@@ -939,7 +939,7 @@ void FileManager::textureFile::parseFile(fileContents data)
 				memcpy(contents + width*y, contents + position, width);
 				position += width * 3 + rowExtra;
 			}
-			textureFormat = GraphicsManager::texture::LUMINANCE;
+			textureFormat = GraphicsManager::texture::INTENSITY;
 		}
 		else if(infoHeader.bitCount == 24)
 		{
@@ -1083,7 +1083,7 @@ void FileManager::textureFile::parseFile(fileContents data)
 
 
 		//int format;
-		if(colorChannels == 1)		textureFormat = GraphicsManager::texture::LUMINANCE;
+		if(colorChannels == 1)		textureFormat = GraphicsManager::texture::INTENSITY;
 		else if(colorChannels == 2)	textureFormat = GraphicsManager::texture::LUMINANCE_ALPHA;
 		else if(colorChannels == 3) textureFormat = GraphicsManager::texture::BGR;
 		else if(colorChannels == 4) textureFormat = GraphicsManager::texture::BGRA;
@@ -1951,34 +1951,48 @@ FileManager::fileContents FileManager::textureFile::serializeFile()
 			return fileContents();
 		}
 
-		png_bytepp rows = new unsigned char*[height];
-		for(unsigned int i=0;i<height;i++) rows[i] = contents + width * channels * (height - i - 1);
+		//png_bytepp rows = new unsigned char*[height];
+		//for(unsigned int i=0;i<height;i++) rows[i] = contents + width * channels * (height - i - 1);
 
 		png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,	NULL, NULL);
 		if (!png_ptr)
 		{
-			delete[] rows;
+		//	delete[] rows;
 			return fileContents();
 		}
 		png_infop info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr || setjmp(png_jmpbuf(png_ptr)))
 		{
 			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-			delete[] rows;
+		//	delete[] rows;
 			return fileContents();
 		}
 
 		png_set_write_fn(png_ptr, (void*)&data, pngStreamWrite, pngStreamFlush);
-
+		png_set_flush(png_ptr, 32);
 		png_set_IHDR(png_ptr, info_ptr, width, height, 8, colorType, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-		png_set_rows(png_ptr,info_ptr,rows);
+		//png_set_rows(png_ptr,info_ptr,rows);
+		//png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_BGR, NULL);
 
-		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_BGR, NULL);
+		png_set_bgr(png_ptr);
+		png_write_info(png_ptr, info_ptr);
+		png_bytep row;
+
+		png_set_filter(png_ptr, 0, PNG_FILTER_PAETH);
+
+		double t = GetTime();
+		for(unsigned int i=0;i<height;i++)
+		{
+			row = contents + width * channels * (height - i - 1);
+			png_write_row(png_ptr, row);
+		}
+		t = GetTime() - t;
+		png_write_end(png_ptr, info_ptr);
 
 		if (setjmp(png_jmpbuf(png_ptr))) debugBreak();
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 
-		delete[] rows;
+		//delete[] rows;
 
 		fileContents c;
 		c.size = data.size();

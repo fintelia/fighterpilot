@@ -24,8 +24,7 @@ uniform vec2 gtex_invScale;
 
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
-uniform float lightStrengths[4];
-//uniform int numLights = 0;
+uniform float invLightStrengths[4];
 
 void main()
 {
@@ -50,7 +49,7 @@ void main()
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
-		light += lightColors[i] * clamp(lightStrengths[i] * 1000.0 / dot(lightVec,lightVec),0.0,0.5);
+		light += lightColors[i] * clamp(0.5 - length(lightVec) * invLightStrengths[i], 0.0,0.5);
 	}
 
 	float r = length(position.xz - vec2(0.5,0.5)) * 2.0;

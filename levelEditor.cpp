@@ -26,6 +26,8 @@ bool levelEditor::init()
 	buttons["beautify coast"]	= new button(sAspect-0.16,0.145,0.15,0.030,"beautify",lightGreen,white);
 	buttons["smooth"]			= new button(sAspect-0.16,0.180,0.15,0.030,"smooth",lightGreen,white);
 	buttons["roughen"]			= new button(sAspect-0.16,0.215,0.15,0.030,"roughen",lightGreen,white);
+	//buttons["erode"]			= new button(sAspect-0.16,0.250,0.15,0.030,"erode",lightGreen,white);
+
 	sliders["sea level"]		= new slider(sAspect-0.16,0.250,0.15,0.030,1.0,0.0);
 	sliders["height scale"]		= new slider(sAspect-0.16,0.285,0.15,0.030,1.0,-1.0);sliders["height scale"]->setValue(0.0);
 	listBoxes["LOD"]			= new listBox(sAspect-0.16,0.320,0.15,"LOD", black);
@@ -219,6 +221,10 @@ void levelEditor::updateFrame()
 		{
 			roughen(0.003 * (levelFile.info.maxHeight - levelFile.info.minHeight));
 		}
+		//else if(buttons["erode"]->checkChanged())
+		//{
+		//	erode(0.003 * (levelFile.info.maxHeight - levelFile.info.minHeight));
+		//}
 		else if(1 << listBoxes["LOD"]->getOptionNumber() != LOD)
 		{
 			int oldLOD = LOD;
@@ -664,12 +670,12 @@ Vec3f levelEditor::getNormal(unsigned int x, unsigned int z) const
 	}
 #endif
 
-	float Cy = (z < levelFile.info.mapResolution.y-1)	? (levelFile.heights[x+(z+1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
+	float By = (z < levelFile.info.mapResolution.y-1)	? (levelFile.heights[x+(z+1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float Ay = (x < levelFile.info.mapResolution.x-1)	? (levelFile.heights[(x+1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 	float Dy = (z > 0)									? (levelFile.heights[x+(z-1)*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
-	float By = (x > 0)									? (levelFile.heights[(x-1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
+	float Cy = (x > 0)									? (levelFile.heights[(x-1)+z*levelFile.info.mapResolution.x] - levelFile.heights[x+z*levelFile.info.mapResolution.x]) : 0.0f;
 
-	return Vec3f((Cy - Ay) * (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x, 2.0, (Dy - By) * (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y).normalize(); //y value should be changed to calculate the true normal
+	return Vec3f((Cy - Ay) * (levelFile.info.mapResolution.x-1) / levelFile.info.mapSize.x, 2.0, (Dy - By) * (levelFile.info.mapResolution.y-1) / levelFile.info.mapSize.y).normalize();
 }
 float levelEditor::getInterpolatedHeight(float x, float y) const
 {
@@ -688,18 +694,18 @@ float levelEditor::getInterpolatedHeight(float x, float y) const
 	if(x_fract + y_fract < 1.0)
 	{
 		A = getHeight(floor(x),floor(y));
-		B = getHeight(floor(x),ceil(y));
-		D = getHeight(ceil(x),floor(y));
+		B = getHeight(ceil(x),floor(y));
+		D = getHeight(floor(x),ceil(y));
 		C = B + D - A;
 	}
 	else
 	{
-		B = getHeight(floor(x),ceil(y));
+		B = getHeight(ceil(x),floor(y));
 		C = getHeight(ceil(x),ceil(y));
-		D = getHeight(ceil(x),floor(y));
+		D = getHeight(floor(x),ceil(y));
 		A = B + D - C;
 	}
-	return lerp(lerp(A,B,x_fract), lerp(C,D,x_fract), y_fract);
+	return lerp(lerp(A,B,x_fract), lerp(D,C,x_fract), y_fract);
 }
 float levelEditor::getTrueHeight(float x, float y) const
 {
@@ -757,7 +763,6 @@ void levelEditor::setMinMaxHeights()
 }
 bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, Vec3f& collisionPoint) const//seems not to work when the view is not centered?
 {
-	Profiler.startElement("rayTest");
 	cellFoundValid = false;
 	checkedCells.clear();
 	checkLine.clear();
@@ -768,14 +773,10 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 	double yScale = pow(10.0f,sliders.find("height scale")->second->getValue());
 	double yShift = levelFile.info.minHeight + sliders.find("sea level")->second->getValue()*(levelFile.info.maxHeight-levelFile.info.minHeight);
 
-
-
 	rayStart.x *= invWidthScale;
-	//rayStart.y = rayStart.y * yScale + seaLevel*(levelFile.info.maxHeight-levelFile.info.minHeight)*yScale;
 	rayStart.z *= invHeightScale;
 
 	rayDirection.x *= invWidthScale;
-	//rayDirection.y *= yScale;
 	rayDirection.z *= invHeightScale;
 	rayDirection = rayDirection.normalize();
 
@@ -786,7 +787,7 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 	AABB.minXYZ = Vec3f(0,(levelFile.info.minHeight-yShift)*yScale,0);
 	AABB.maxXYZ = Vec3f(levelFile.info.mapResolution.x-1,(levelFile.info.maxHeight-yShift)*yScale,levelFile.info.mapResolution.y-1);
 
-	auto checkCell = [this,yScale,yShift,rayStart,invHeightScale,invWidthScale,rayDirection,&collisionPoint](int x, int y)->bool
+	auto checkCell = [this,yScale,yShift,rayStart,/*invHeightScale,invWidthScale,*/rayDirection,&collisionPoint](int x, int y)->bool
 	{
 		if(x < 0 || y < 0 || x >= levelFile.info.mapResolution.x-1 || y >= levelFile.info.mapResolution.y-1)
 			return false;
@@ -798,36 +799,47 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 		//double hT = getTrueHeight(1.0/invWidthScale*(0.3333+x),1.0/invHeightScale*(0.3333+y));
 		//double diff = (h1 + h2 + h3) / 3.0 - hT;
 
-		Vec3f t1 = Vec3f(x,		(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
-		Vec3f t2 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
-		Vec3f t3 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+		//Vec3f t1 = Vec3f(x,		(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		//Vec3f t2 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		//Vec3f t3 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+		//
+		//Vec3f t4 = Vec3f(x+1,	(levelFile.heights[x+1   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
+		//Vec3f t5 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
+		//Vec3f t6 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
 
-		Vec3f t4 = Vec3f(x+1,	(levelFile.heights[x+1   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
-		Vec3f t5 = Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y);
-		Vec3f t6 = Vec3f(x,		(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1);
 
-		if(collisionManager.testRayTriangle(rayStart, rayDirection, t1,	t2, t3, collisionPoint))
-		{
-			cellFound = Vec2i(x,y);
-			cellFoundValid = true;
-			double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
-			return true;
-		}
-		if(collisionManager.testRayTriangle(rayStart, rayDirection, t4,	t5, t6, collisionPoint))
-		{
-			cellFound = Vec2i(x,y);
-			cellFoundValid = true;
-			double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
-			return true;
-		}
-		return false;
+		//float avgHeight = (t1.y + t2.y + t3.y) / 3.0;
+		//float trueAvgHeight = getTrueHeight(1.0/invWidthScale*(t1.x + t2.x + t3.x) / 3.0, 1.0/invHeightScale*(t1.z + t2.z + t3.z) / 3.0);
+		//float height_error = avgHeight - trueAvgHeight;
+		//
+		//if(collisionManager.testRayTriangle(rayStart, rayDirection, t1,	t2, t3, collisionPoint))
+		//{
+		//	cellFound = Vec2i(x,y);
+		//	cellFoundValid = true;
+		//	//double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
+		//	return true;
+		//}
+		//if(collisionManager.testRayTriangle(rayStart, rayDirection, t4,	t5, t6, collisionPoint))
+		//{
+		//	cellFound = Vec2i(x,y);
+		//	cellFoundValid = true;
+		//	//double error = collisionPoint.y - getTrueHeight(1.0/invWidthScale*(collisionPoint.x),1.0/invHeightScale*(collisionPoint.z));
+		//	return true;
+		//}
+		//return false;
 
-		return (collisionManager.testRayTriangle(rayStart, rayDirection, Vec3f(x,	(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
+		if (collisionManager.testRayTriangle(rayStart, rayDirection, Vec3f(x,	(levelFile.heights[x   + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
 																		Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
 																		Vec3f(x,	(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),collisionPoint) ||
 				collisionManager.testRayTriangle(rayStart, rayDirection,Vec3f(x+1,	(levelFile.heights[x+1 + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),
 																		Vec3f(x+1,	(levelFile.heights[x+1 + y * levelFile.info.mapResolution.x]		- yShift) * yScale,	y),
-																		Vec3f(x,	(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),collisionPoint));
+																		Vec3f(x,	(levelFile.heights[x   + (y+1) * levelFile.info.mapResolution.x]	- yShift) * yScale,	y+1),collisionPoint))
+		{
+			cellFound = Vec2i(x,y);
+			cellFoundValid = true;
+			return true;
+		}
+		return false;
 	};
 	
 	if(rayStart.x < 0.0 || rayStart.x > levelFile.info.mapResolution.x-1 || rayStart.y > (levelFile.info.minHeight-yShift) * yScale || rayStart.y < (levelFile.info.maxHeight-yShift) * yScale || rayStart.z < 0.0 || rayStart.z > levelFile.info.mapResolution.y-1)
@@ -836,7 +848,6 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 		bool intersectsAABB = collisionManager.testRayAABB(rayStart, rayDirection, AABB, aabbIntersectionPoint);
 		if(!intersectsAABB)
 		{
-			Profiler.endElement("rayTest");
 			return false;	// returns false if the ray never intersects the AABB of terrain
 		}
 		else
@@ -850,12 +861,10 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 		{
 			collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
 			collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
-			Profiler.endElement("rayTest");
 			return true;
 		}
 		else
 		{
-			Profiler.endElement("rayTest");
 			return false;
 		}
 	}
@@ -876,18 +885,11 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 			{
 				collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
 				collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
-
-				double error = collisionPoint.y - getTrueHeight(collisionPoint.x, collisionPoint.z);
-				Profiler.setOutput("raycast error", error);
-				Profiler.endElement("rayTest");
-				if(error > 3.0)
-					return true;
 				return true;
 			}
 			xVal += increment;
 			yVal += step;
 		}
-		Profiler.endElement("rayTest");
 		return false;
 	}
 	else
@@ -906,18 +908,11 @@ bool levelEditor::rayHeightmapIntersection(Vec3f rayStart, Vec3f rayDirection, V
 			{
 				collisionPoint.x = clamp(collisionPoint.x/invWidthScale, 0, levelFile.info.mapSize.x);
 				collisionPoint.z = clamp(collisionPoint.z/invHeightScale, 0, levelFile.info.mapSize.y);
-
-				double error = collisionPoint.y - getTrueHeight(collisionPoint.x, collisionPoint.z);
-				Profiler.setOutput("raycast error", error);
-				Profiler.endElement("rayTest");
-				if(error > 3.0)
-					return true;
 				return true;
 			}
 			yVal += increment;
 			xVal += step;
 		}
-		Profiler.endElement("rayTest");
 		return false;
 	}
 }
@@ -1340,8 +1335,6 @@ void levelEditor::smooth(unsigned int a)
 }
 void levelEditor::roughen(float a)
 {
-	float s;
-	int n;
 	for(int x=0; x < levelFile.info.mapResolution.x; x++)
 	{
 		for(int y=0; y < levelFile.info.mapResolution.y; y++)
@@ -1352,6 +1345,14 @@ void levelEditor::roughen(float a)
 	setMinMaxHeights();
 	terrainValid=false;
 }
+//void levelEditor::erode(int num, float amount)
+//{
+//	int x,y
+//	for(int i=0;i<num;i++)
+//	{
+//		//...
+//	}
+//}
 Rect levelEditor::orthoView()
 {
 	Vec2f gSize = levelFile.info.mapSize * 1.2 * pow(1.3f,-orthoScale);
@@ -1526,7 +1527,9 @@ void levelEditor::render()
 
 	if(getTab() == OBJECTS)
 	{
-		shaders.bind("circle shader");
+		auto circleShader = shaders.bind("circle shader");
+		circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
+
 		updateObjectCircles();
 		for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 		{
@@ -1547,7 +1550,9 @@ void levelEditor::render()
 	{
 		Rect viewRect = orthoView();
 
-		shaders.bind("circle shader");
+		auto circleShader = shaders.bind("circle shader");
+		circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
+
 		graphics->setColor(1.0,1.0,1.0);
 		for(auto i = levelFile.regions.begin(); i != levelFile.regions.end(); i++)
 		{
@@ -1815,7 +1820,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	}
 
 
-	/*  DEBUG DRAWING  */
+#ifdef _DEBUG /* DEBUG DRAWING */
 	graphics->setDepthTest(false);
 	float xMult = levelFile.info.mapSize.x / (levelFile.info.mapResolution.x - 1);
 	float yMult = levelFile.info.mapSize.y / (levelFile.info.mapResolution.y - 1);
@@ -1856,7 +1861,8 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//					Vec3f(rStart.x*xMult,levelFile.info.maxHeight-levelFile.info.minHeight,rStart.z*yMult),
 	//					Vec3f((rStart.x+200000.0*rDirection.x)*xMult,levelFile.info.maxHeight-levelFile.info.minHeight,(rStart.z+200000.0*rDirection.z)*yMult),
 	//					Vec3f((rStart.x+200000.0*rDirection.x)*xMult,0,(rStart.z+200000.0*rDirection.z)*yMult));
-	/*  END DEBUG DRAWING  */
+
+#endif /* END DEBUG DRAWING */
 
 	//if(levelFile.info.shaderType == SHADER_GRASS || levelFile.info.shaderType == SHADER_SNOW)
 	//{

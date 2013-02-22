@@ -162,4 +162,14 @@ ________________________________________________________________________________
 _________________________________________________________________________________________________________________________
 
 All fonts were created using BMFont (http://www.angelcode.com/products/bmfont/)
-	
+
+_________________________________________________________________________________________________________________________
+
+													SOUNDS
+_________________________________________________________________________________________________________________________
+
+shot1.wav -- http://www.freesound.org/people/qubodup/sounds/162402/ (converted with Audacity)
+shot2.wav -- http://www.freesound.org/people/qubodup/sounds/162401/ (converted with Audacity)
+shot3.wav -- http://www.freesound.org/people/qubodup/sounds/67595/ (converted with Audacity)
+shot4.wav -- http://www.freesound.org/people/qubodup/sounds/67596/ (converted with Audacity)
+engine.wav -- http://www.freesound.org/people/qubodup/sounds/162417/ (converted with Audacity)

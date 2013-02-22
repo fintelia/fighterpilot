@@ -57,6 +57,7 @@ public:
 private:
 	static shared_ptr<GraphicsManager::indexBuffer> quadIBO;
 	static unsigned int IBOnumQuads;
+	Vec3f lPosition; //unlike lastPosition, lPosition is only valid _inside_ emitter::update
 
 protected:
 	int parentObject;
@@ -104,7 +105,7 @@ public:
 	friend class manager;
 	emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond=0.0, bool AdditiveBlending=false, bool SparkParticles=false);
 	virtual void init(){}
-	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;radius=Radius;}
+	void setPositionAndRadius(Vec3f Position, float Radius){position=Position;lastPosition=Position;lPosition=Position;radius=Radius;}
 	void setParent(int Parent, Vec3f ParentOffset){parentObject=Parent;parentOffset=ParentOffset;}
 
 	virtual ~emitter();

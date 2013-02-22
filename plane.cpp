@@ -9,6 +9,8 @@
 //}
 plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED),firstPerson(nullptr),thirdPerson(nullptr)
 {
+	//soundManager.playSound("sound1");
+
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
 	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
@@ -44,7 +46,7 @@ plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Te
 		climb = atan2(f.y,sqrt(f.x*f.x+f.z*f.z));
 	}
 	roll = 0;
-	speed=300.0;
+	speed=400.0;
 
 	controled=false;
 	death = DEATH_NONE;
@@ -117,7 +119,7 @@ void plane::updateSimulation(double time, double ms)
 		}
 		else
 		{
-			float Thrust = 64000.0 + 144000.0f*controls.accelerate - 36000.0*controls.brake;
+			float Thrust = 108000.0f + 100000.0f*controls.accelerate - 80000.0f*controls.brake;
 			float Drag = 0.70743 * speed*speed;
 			float Lift = 14.1585 * speed*speed;
 			float mass = 29300;
@@ -126,7 +128,7 @@ void plane::updateSimulation(double time, double ms)
 			float jerk = -2.0f * (Drag/(speed*speed)) / (mass*0.1) * speed * acceleration;
 			speed = taylor<float>(ms/1000, speed, acceleration, jerk);
 
-			cameraShake = max(cameraShake, 0.025 * (controls.accelerate-controls.brake) * (speed-300.0)/300.0);
+			cameraShake = max(cameraShake, 0.025 * (controls.accelerate-controls.brake) * (speed-400.0)/200.0);
 
 			if(controlType == CONTROL_TYPE_SIMPLE)
 			{
@@ -254,14 +256,26 @@ void plane::updateSimulation(double time, double ms)
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
 
 
+
 					Angle randAng = random<float>() * PI * 2.0;
 					float randF = (random<float>(-1.0,1.0) + random<float>(-1.0,1.0))/2.0 * PI/64;
 					rot = Quat4f(Vec3f(cos(randAng),sin(randAng),0.0),randF) * rot;
 
 					shotsFired++;
 					((bulletCloud*)world[bullets].get())->addBullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown);
-	//				world.bullets.push_back(bullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown));
 					cameraShake = max(cameraShake, 0.05);
+
+				//	if(random<float>() < 0.2)
+				//		soundManager.playSound("shot1");
+				//	else if(random<float>() < 0.25)
+				//		soundManager.playSound("shot2");
+
+					if(random<float>() < 0.25)
+					{
+						auto tracer = new particle::tracer;
+						particleManager.addEmitter(tracer, position);
+						tracer->setVelocity(rot*Vec3f(0,0,1) * 2000.0);
+					}
 				}
 			}
 			if(controls.shoot2)

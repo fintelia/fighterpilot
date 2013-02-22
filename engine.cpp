@@ -307,6 +307,10 @@ int main(int argc, const char* argv[])
 	XEvent event;
 #endif
 
+	//soundManager.loadSound("sound1", "media/engine.wav", true);
+	//soundManager.loadSound("shot1", "media/shot1.wav", false);
+	//soundManager.loadSound("shot2", "media/shot2.wav", false);
+
 	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;

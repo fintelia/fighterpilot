@@ -292,6 +292,20 @@ public:
 
 		return mTrunk + levelOffset(level) + x + y*(1<<level);
 	}
+	void recursiveFuntion(node* startNode, std::function<bool(node*)> func)
+	{
+		if(startNode && func(startNode))
+		{
+			recursiveFuntion(startNode->children[0], func);
+			recursiveFuntion(startNode->children[1], func);
+			recursiveFuntion(startNode->children[2], func);
+			recursiveFuntion(startNode->children[3], func);
+		}
+	}
+	void recursiveFuntion(std::function<bool(node*)> func)
+	{
+		recursiveFuntion(mTrunk, func);
+	}
 	quadTree(unsigned int depth): mDepth(depth)
 	{
 		if(depth >= 16)

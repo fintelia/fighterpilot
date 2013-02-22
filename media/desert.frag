@@ -26,8 +26,7 @@ uniform vec3 eyePos;
 
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
-uniform float lightStrengths[4];
-//uniform int numLights = 0;
+uniform float invLightStrengths[4];
 
 uniform float dist;
 
@@ -48,11 +47,11 @@ void main()
 //	{
 //		NdotL += clamp(/* (dot(normal,normalize(lightDir[i]))*0.5+0.5) **/ lightStrength[i] * (50.0-distance(position,lightPosition[i]))*0.02,0.0,1.0);
 //	}
-	vec3 light = vec3(1,1,0.7) * (dot(n,normalize(sunDir))*0.5+0.5);
+	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))*0.5+0.5,0.0);
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
-		light += lightColors[i] * clamp(lightStrengths[i] * 1000.0 / dot(lightVec,lightVec),0.0,0.5);
+		light += lightColors[i] * clamp(0.5 - length(lightVec) * invLightStrengths[i], 0.0,0.5);
 	}
 
 	//float r = 0.0;//length(position.xz* invScale.xz - vec2(0.5,0.5)) * 2.0;

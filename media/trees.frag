@@ -22,8 +22,9 @@ void main()
 	}
 	else
 	{
+		color.a *= clamp((9500.0-distance(eyePos,position))*0.02,0.0,1.0);
 		vec3 eyeDirection = position-eyePos;
 		float eyeDist = length(eyeDirection);
-		gl_FragColor = vec4(treeColor,1.0) * color.rgba * clamp((9500.0-distance(eyePos,position))*0.002,0.0,1.0);//vec4(mix(color.rgb, textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a /* clamp((10000.0-distance(eyePos,position))*0.002,0.0,1.0)*/);
+		gl_FragColor = vec4(treeColor,1.0) * color.rgba /* clamp((9500.0-distance(eyePos,position))*0.002,0.0,1.0)*/;//vec4(mix(color.rgb, textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a /* clamp((10000.0-distance(eyePos,position))*0.002,0.0,1.0)*/);
 	}
 }

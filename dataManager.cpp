@@ -101,7 +101,7 @@ DataManager::textureAsset* DataManager::registerTexture(shared_ptr<FileManager::
 		return nullptr;
 
 	GraphicsManager::texture::Format format;
-	if(f->channels == 1)		format = GraphicsManager::texture::LUMINANCE;
+	if(f->channels == 1)		format = GraphicsManager::texture::INTENSITY;
 	else if(f->channels == 2)	format = GraphicsManager::texture::LUMINANCE_ALPHA;
 	else if(f->channels == 3)	format = GraphicsManager::texture::BGR;
 	else if(f->channels == 4)	format = GraphicsManager::texture::BGRA;

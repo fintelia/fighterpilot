@@ -20,8 +20,7 @@ uniform sampler2D snow_normals;
 
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
-uniform float lightStrengths[4];
-//uniform int numLights = 0;
+uniform float invLightStrengths[4];
 
 uniform vec3 eyePos;
 
@@ -78,7 +77,7 @@ void main()
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
-		light += lightColors[i] * clamp(lightStrengths[i] * 1000.0 / dot(lightVec,lightVec),0.0,0.5);
+		light += lightColors[i] * clamp(0.5 - length(lightVec) * invLightStrengths[i], 0.0,0.5);
 	}
 
 	float m = clamp(1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.02), 0.0,1.0);

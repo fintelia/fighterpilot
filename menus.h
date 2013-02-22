@@ -126,6 +126,7 @@ private:
 	void faultLine();
 	void smooth(unsigned int a);
 	void roughen(float a);
+	//void erode(int num, float amount);
 
 	void resetView();
 	void fromFile(string filename);
@@ -227,7 +228,7 @@ public:
 
 	virtual bool init()=0;
 
-	void healthBar(float x, float y, float width, float height, float health, bool firstPerson);
+	void healthBar(float x, float y, float width, float height, float health);
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
 	void radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p);
 	void targeter(float x, float y, float apothem, Angle tilt);
@@ -250,6 +251,7 @@ protected:
 public:
 	splitScreen(shared_ptr<const LevelFile> lvl);
 	bool init();
+	bool menuKey(int mkey);
 	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
@@ -271,6 +273,7 @@ protected:
 public:
 	campaign(shared_ptr<const LevelFile> lvl);
 	bool init();
+	bool menuKey(int mkey);
 	void updateFrame();
 	void render();
 	void render3D(unsigned int v);

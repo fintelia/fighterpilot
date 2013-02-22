@@ -10,29 +10,30 @@ dogFight::~dogFight()
 {
 	world.destroy();
 }
-void dogFight::healthBar(float x, float y, float width, float height, float health, bool firstPerson)
+void dogFight::healthBar(float x, float y, float width, float height, float health)
 {
-	if(!firstPerson)
-	{
-		graphics->setColor(1,1,1);
-
-		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
-
-		Vec2f v1 = Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*8.0);
-		Vec2f v2 = Vec2f(x + width/150*125, y + height/25*16.0);
-
-		graphics->drawOverlay(Rect::XYXY(v1, v2),"white");
-	}
-	else
-	{
+	//if(!firstPerson)
+	//{
+	//	graphics->setColor(1,1,1);
+	//
+	//	graphics->drawOverlay(Rect::XYWH(x,y,width,height),"health bar");
+	//
+	//	Vec2f v1 = Vec2f((x + width/150*14)*(1.0-health)+(x + width/150*125)*(health), y + height/25*8.0);
+	//	Vec2f v2 = Vec2f(x + width/150*125, y + height/25*16.0);
+	//
+	//	graphics->drawOverlay(Rect::XYXY(v1, v2),"white");
+	//}
+	//else
+	//{
 		auto healthShader = shaders.bind("health");
 		healthShader->setUniform1f("health",health);
 		healthShader->setUniform1f("angle",1.24f);
+		healthShader->setUniform4f("viewConstraint", graphics->getViewContraint());
 		healthShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
 		healthShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.15, 0.7, 0.25) : Vec3f(0.19,0.58,0.78));
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 		shaders.bind("ortho");
-	}
+	//}
 }
 void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 {
@@ -53,8 +54,10 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 	{
 		//////////////////////////////////////////////////////////////////////////////
 		auto radarShader = shaders.bind("radar");
+		radarShader->setUniform4f("viewConstraint", graphics->getViewContraint());
 		radarShader->setUniform1f("radarAng", radarAng);
-		//radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.1, 0.95, 0.2) : Vec3f(0.05,0.79,0.04));
+		radarShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
+		radarShader->setUniform3f("HUD_color", level->info.night ? Vec3f(0.15, 0.75, 0.25) : Vec3f(0.19, 0.58, 0.87));
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 
 		////////////////////////////////////////////////////////////////
@@ -62,6 +65,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		float radius = width/2;
 
 		auto radarPlaneShader = shaders.bind("radar plane shader");
+		radarPlaneShader->setUniform4f("viewConstraint", graphics->getViewContraint());
 		radarPlaneShader->setUniform2f("center",nC.x,nC.y);
 		radarPlaneShader->setUniform1f("radius",radius);
 		//radarShader->setUniform3f("HUD_color_back", level->info.night ? Vec3f(0.1, 0.6, 0.2) : Vec3f(0.11,0.35,0.52));
@@ -94,7 +98,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 	{
 		auto radarShader = shaders.bind("radar2");
 		dataManager.bind("radarTex",0);
-
+		radarShader->setUniform4f("viewConstraint", graphics->getViewContraint());
 		radarShader->setUniform1f("radarAng", radarAng);
 		radarShader->setUniform1i("backgroundTexture", 0);
 
@@ -102,7 +106,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 
 #ifdef RADAR_MAP_BOUNDS
-		dataManager.bind("radar bounds");
+		auto radarBoundsShader = shaders.bind("radar bounds");
 
 		Vec2f cCenter =world.bounds().center;
 		float cR = sqrt(cCenter.x*cCenter.x + cCenter.y*cCenter.y);
@@ -112,8 +116,9 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 		double cRadius = world.bounds().radius / 8000.0;
 
-		dataManager.setUniform2f("mapCenter",cCenter);
-		dataManager.setUniform1f("mapRadius",cRadius);
+		radarBoundsShader->setUniform2f("mapCenter",cCenter);
+		radarBoundsShader->setUniform1f("mapRadius",cRadius);
+		radarBoundsShader->setUniform4f("viewConstraint", graphics->getViewContraint());
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height));
 #endif
 
@@ -123,6 +128,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		float radius = width/2;
 
 		auto radarPlane = shaders.bind("radar plane shader");
+		radarPlane->setUniform4f("viewConstraint", graphics->getViewContraint());
 		radarPlane->setUniform2f("center",nC.x,nC.y);
 		radarPlane->setUniform1f("radius",radius);
 		radarPlane->setUniform1f("sAspect",sAspect);
@@ -379,28 +385,11 @@ void dogFight::updateSimulation()
 	//	bulletPosition = bulletRef[i].startPos+bulletRef[i].velocity*(world.time()-bulletRef[i].startTime)/1000;
 	//	if(world.altitude(bulletPosition) < 0.0)
 	//	{
-	//		if(!world.isLand(bulletPosition.x, bulletPosition.z))
-	//		{
-	//			particleManager.addEmitter(new particle::splash, Vec3f(bulletPosition.x, 0, bulletPosition.z), 1.0);
-	//		}
-	//		bulletRef[i].life = world.time()-bulletRef[i].startTime; //makes the bullet die at the current time
-	//	}
-	//}
-	//float altitude;
-	//for(auto i=missiles.begin();i!=missiles.end();i++)
-	//{
-	//	altitude = world.altitude(i->second->position);
-	//	if(altitude < 0.0)
-	//	{
 	//		if(world.isLand(bulletPosition.x, bulletPosition.z))
 	//		{
-	//			particleManager.addEmitter(new particle::explosion, Vec3f(i->second->position.x, i->second->position.y - altitude, i->second->position.z), 5.0);
+	//			world.addDecal(Vec2f(bulletPosition.x, bulletPosition.z), 3.0, 3.0, "scorch", 100.0); 
 	//		}
-	//		else
-	//		{
-	//			particleManager.addEmitter(new particle::splash, Vec3f(i->second->position.x, 0, i->second->position.z), 5.0);
-	//		}
-	//		i->second->dead = true;
+	//		bulletRef[i].life = world.time()-bulletRef[i].startTime; //makes the bullet die at the current time
 	//	}
 	//}
 

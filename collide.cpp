@@ -249,7 +249,19 @@ bool CollisionManager::testRayTriangle(Vec3f o, Vec3f d, Vec3f v0, Vec3f v1, Vec
 
 	intersectionPoint = v0 + e1*u + e2*v; //o + t * d;
 
-	intersectionPoint = (v2 + v1 + v0) / 3.0; //point that *should* be on the triangle
+//	Vec3f intersectionPoint2 = (v2 + v1 + v0) / 3.0; //point that *should* be on the triangle
+
+
+	//check distance to triangle plane
+	//Vec3f normal = ((v1-v0).cross(v2-v0)).normalize();
+	//float distancesToPlane[] = {normal.dot(intersectionPoint - v0),
+	//							normal.dot(intersectionPoint - v1),
+	//							normal.dot(intersectionPoint - v2),
+	//							normal.dot(intersectionPoint2 - v0),
+	//							normal.dot(intersectionPoint2 - v1),
+	//							normal.dot(intersectionPoint2 - v2)};
+	//
+	//////////////////////////////////
 
 	return true;
 }

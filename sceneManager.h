@@ -59,6 +59,7 @@ private:
 	vector<shared_ptr<mesh>> meshes;
 	vector<weak_ptr<pointLight>> lights;
 	map<unsigned int, vector<weak_ptr<meshInstance>>> nMeshInstances;
+
 public:
 	static SceneManager& getInstance()
 	{
@@ -72,7 +73,7 @@ public:
 	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation);
 	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader);
 
-	void resetMeshInstances();
+	void reset();
 	void renderScene(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);
 	void renderSceneTransparency(shared_ptr<GraphicsManager::View> view, shared_ptr<meshInstance> firstPersonObject = nullptr);
 	void endRender();
