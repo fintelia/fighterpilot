@@ -214,7 +214,7 @@ public:
 	class texture
 	{
 	public:
-		enum Format{NONE=0, LUMINANCE=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, DEPTH};
+		enum Format{NONE=0, INTENSITY=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, DEPTH};
 	protected:
 		friend class GraphicsManager;
 		Format format;
@@ -331,6 +331,9 @@ protected:
 	//global light
 	Vec3f lightPosition;
 
+	//high resolution screenshot
+	bool highResScreenshot;
+	Rect viewConstraint;
 
 	//private functions
 	GraphicsManager();
@@ -347,7 +350,8 @@ public:
 	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
-	virtual void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture)=0;
+	virtual void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture, bool clearTextures)=0;
+	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture){startRenderToTexture(texture, depthTexture, false);}
 	void startRenderToTexture(shared_ptr<texture2D> texture){startRenderToTexture(texture,nullptr);}
 	virtual void endRenderToTexture()=0;
 	//virtual void bindRenderTarget(RenderTarget t)=0;
@@ -382,9 +386,11 @@ public:
 	virtual shared_ptr<View> genView();
 
 	//get functions
-	float	getGamma()const;
-	Vec3f	getLightPosition()const;
-	bool	getVSync()const;
+	float	getGamma()const;			//gamma correction
+	Vec3f	getLightPosition()const;	//the location of the global light
+	bool	getVSync()const;			//whether vsync is enabled
+	Rect	getViewContraint()const;	//(0,0,1,1) expect when doing high resolution screenshots
+	bool	isHighResScreenshot()const;	//whether we are currently taking a high resolution screenshot
 
 	//virtual get functions
 	virtual bool				getFullscreen()const=0;
@@ -458,9 +464,6 @@ protected:
 	unsigned int blurTexture;
 	unsigned int blurTexture2;
 
-	bool highResScreenshot;
-	Rect viewConstraint;
-
 	bool multisampling;
 	bool isFullscreen;
 
@@ -491,6 +494,7 @@ protected:
 
 	bool initFBOs(unsigned int maxSamples);
 	void destroyFBOs();
+	void computeViewport(Rect& clipped_viewport, Rect& projectionConstraint);
 
 	//void bindRenderTarget(RenderTarget t);
 	//void renderFBO(RenderTarget src);
@@ -637,7 +641,7 @@ public:
 	void swapBuffers();
 	void takeScreenshot();
 
-	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture);
+	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture, bool clearTextures);
 	void endRenderToTexture();
 
 	void drawLine(Vec3f start, Vec3f end);

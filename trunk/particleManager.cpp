@@ -80,8 +80,8 @@ void emitter::update()
 	double ms = world.time.length();
 	double time = world.time();
 
-	lastPosition = position;
 
+	lastPosition = position; //lastPosition is only valid if position is not modified outside of this function!!!
 	if(parentObject != 0)
 	{
 		if(world[parentObject] == nullptr || world[parentObject]->awaitingDelete)
@@ -112,7 +112,7 @@ void emitter::update()
 
 			particle p;
 			float t = (ms-extraTime)/ms;
-			if(createParticle(p,position*t + lastPosition*(1.0-t)))
+			if(createParticle(p,position*t + lPosition*(1.0-t)))
 			{
 				pNum = addParticle(p);
 				particleFlags[pNum] |= FADE_IN;
@@ -128,7 +128,6 @@ void emitter::update()
 			liveParticles++;
 		}
 	}
-
 	for(int i=0; i < total; i++)
 	{
 		oldParticlePositions[i] = particles[i].pos;
@@ -137,6 +136,7 @@ void emitter::update()
 	{
 		updateParticle(particles[i]);
 	}
+	lPosition = position; //lPosition is only valid inside this method!!!
 }
 void emitter::prepareRender(Vec3f up, Vec3f right)
 {

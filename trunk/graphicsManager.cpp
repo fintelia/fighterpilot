@@ -3,9 +3,9 @@
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
 
-GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0)
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), highResScreenshot(false)
 {
-
+	viewConstraint = Rect::XYXY(0,0,1,1);
 }
 GraphicsManager::View::View(): mViewConstraint(0,0,1,1)
 {
@@ -27,7 +27,9 @@ Vec2f GraphicsManager::View::project(Vec3f p)
 	//
 	//return Vec2f(mViewport.x + mViewport.width * (v.x + 1.0) / 2.0, mViewport.y + mViewport.height * (v.y + 1.0) / 2.0);
 	Vec3f projected = mProjectionMat * mModelViewMat * p;
-	return Vec2f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5));
+	Vec2f r =  Vec2f(mViewport.x + mViewport.width*(projected.x*0.5+0.5), mViewport.y + mViewport.height*(0.5-projected.y*0.5));
+
+	return r;
 }
 Vec3f GraphicsManager::View::project3(Vec3f p) //z=0: far plane, z=1: near plane, z>1: behind camera
 {
@@ -239,6 +241,14 @@ Vec3f GraphicsManager::getLightPosition()const
 bool GraphicsManager::getVSync()const
 {
 	return vSync;
+}
+Rect GraphicsManager::getViewContraint()const
+{
+	return viewConstraint;
+}
+bool GraphicsManager::isHighResScreenshot()const
+{
+	return highResScreenshot;
 }
 void GraphicsManager::setColor(float r, float g, float b)
 {

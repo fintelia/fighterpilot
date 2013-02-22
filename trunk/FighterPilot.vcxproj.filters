@@ -181,6 +181,9 @@
     <Filter Include="Source Files\ENGINE\soundManager">
       <UniqueIdentifier>{0584e232-7494-4ee1-908d-c96107ef2c6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\decal">
+      <UniqueIdentifier>{0d20ccb2-ed85-4eb0-b3d2-4744a2f0f226}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -356,6 +359,9 @@
     </ClCompile>
     <ClCompile Include="soundManager.cpp">
       <Filter>Source Files\ENGINE\soundManager</Filter>
+    </ClCompile>
+    <ClCompile Include="tracer.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -682,6 +688,18 @@
     </None>
     <None Include="media\createTree.geom">
       <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTreeTexture.geom">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTreeTexture3.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\decal.frag">
+      <Filter>shaders\decal</Filter>
+    </None>
+    <None Include="media\decal.vert">
+      <Filter>shaders\decal</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

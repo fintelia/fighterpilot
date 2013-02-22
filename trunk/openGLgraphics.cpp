@@ -428,7 +428,7 @@ void OpenGLgraphics::texture2DGL::generateMipmaps()
 }
 void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F && f != DEPTH)
+	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F && f != DEPTH)
 	{
 		debugBreak();
 		return;
@@ -455,7 +455,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	}
 
 	int depth;
-	if(format == LUMINANCE)				depth = 1;
+	if(format == INTENSITY)				depth = 1;
 	else if(format == DEPTH)			depth = 3;
 	else if(format == LUMINANCE_ALPHA)	depth = 2;
 	else if(format == BGR)				depth = 3;
@@ -478,7 +478,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		}
 		else
 		{
-			if(format == LUMINANCE)				glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+			if(format == INTENSITY)				glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
@@ -502,7 +502,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 	}
 	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
 	{
-		if(format == LUMINANCE)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+		if(format == INTENSITY)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_INTENSITY, GL_UNSIGNED_BYTE, data);
 		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
 		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
@@ -519,9 +519,9 @@ unsigned char* OpenGLgraphics::texture2DGL::getData()
 {
 	GLenum fmt;
 	unsigned int bytesPerPixel;
-	if(format == LUMINANCE)
+	if(format == INTENSITY)
 	{
-		fmt = GL_LUMINANCE;
+		fmt = GL_INTENSITY;
 		bytesPerPixel=1;
 	}
 	else if(format == LUMINANCE_ALPHA)
@@ -596,7 +596,7 @@ void OpenGLgraphics::texture3DGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -608,7 +608,7 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 	depth = Depth;
 
 	glBindTexture(GL_TEXTURE_3D, textureID);
-	if(format == LUMINANCE)				glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+	if(format == INTENSITY)				glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 	else if(format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
 	else if(format == BGR)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 	else if(format == BGRA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
@@ -656,7 +656,7 @@ void OpenGLgraphics::textureCubeGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)
 {
-	if(f != LUMINANCE && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
 	{
 		debugBreak();
 		return;
@@ -667,14 +667,14 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	height = Height;
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-	if(format == LUMINANCE)
+	if(format == INTENSITY)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 0);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 1);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 2);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 3);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 4);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 5);
 	}
 	else if(format == LUMINANCE_ALPHA)
 	{
@@ -1209,13 +1209,12 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),highResScreenshot(false),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false)
+OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false)
 {
 	vSync = false;
 #ifdef _DEBUG
 	errorGlowEndTime = 0;
 #endif
-	viewConstraint = Rect::XYXY(0,0,1,1);
 	context = new Context;
 }
 OpenGLgraphics::~OpenGLgraphics()
@@ -1835,6 +1834,62 @@ void OpenGLgraphics::resize(int w, int h)
 		sAspect = ((float)sw)/sh;
 	}
 }
+void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionConstraint)
+{
+	if(highResScreenshot)
+	{
+		Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+		
+		viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
+		viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
+		viewport.w = viewport.w / viewConstraint.w;
+		viewport.h = viewport.h / viewConstraint.h;
+		
+		//glViewport(	floor(clamp(viewport.x,0.0,1.0)*sw),
+		//				floor(clamp(viewport.y,0.0,1.0)*sh),
+		//				ceil(clamp(viewport.w*sw,0.0,sw-floor(clamp(viewport.x,0.0,1.0)*sw))),
+		//				ceil(clamp(viewport.h*sh,0.0,sh-floor(clamp(viewport.y,0.0,1.0)*sh))));
+	
+		//Rect r;
+		//r.x = floor(clamp(viewport.x,0.0,1.0)*sw)/sw;
+		//r.y = floor(clamp(viewport.y,0.0,1.0)*sh)/sh;
+		//r.w = ceil(clamp(viewport.w*sw,0.0,sw-floor(clamp(viewport.x,0.0,1.0)*sw)))/sw;
+		//r.h = ceil(clamp(viewport.h*sh,0.0,sh-floor(clamp(viewport.y,0.0,1.0)*sh)))/sh;
+
+		Rect unclipped_viewport;
+		unclipped_viewport.x = floor(viewport.x*sw)/sw;
+		unclipped_viewport.y = floor(viewport.y*sh)/sh;
+		unclipped_viewport.w = ceil(viewport.w*sw)/sw;
+		unclipped_viewport.h = ceil(viewport.h*sh)/sh;
+
+		clipped_viewport.x = clamp(unclipped_viewport.x, 0.0, 1.0);
+		clipped_viewport.y = clamp(unclipped_viewport.y, 0.0, 1.0);
+		clipped_viewport.w = clamp(unclipped_viewport.w, 0.0, 1.0-unclipped_viewport.x);
+		clipped_viewport.h = clamp(unclipped_viewport.h, 0.0, 1.0-unclipped_viewport.y);
+
+		projectionConstraint.x = (clipped_viewport.x - unclipped_viewport.x) / unclipped_viewport.w;
+		projectionConstraint.y = (clipped_viewport.y - unclipped_viewport.y) / unclipped_viewport.h;
+		projectionConstraint.w = clipped_viewport.w / unclipped_viewport.w;
+		projectionConstraint.h = clipped_viewport.h / unclipped_viewport.h;
+
+		//Rect projConstraint;
+		//projConstraint.x = (clamp(viewport.x, 0.0, 1.0) - viewport.x) / viewport.w;
+		//projConstraint.y = (clamp(viewport.y, 0.0, 1.0) - viewport.y) / viewport.h;
+		//projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
+		//projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
+		//currentView->constrainView(projConstraint);
+		//
+		//auto ortho = shaders.bind("ortho");
+		//ortho->setUniform4f("viewConstraint", projConstraint);
+	}
+	else
+	{
+		//glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+		//if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+		clipped_viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+		projectionConstraint = Rect::XYWH(0,0,1,1);
+	}
+}
 void OpenGLgraphics::render()
 {
 /////////////////////////////////////START TIMING/////////////////////////////////////
@@ -1877,6 +1932,7 @@ void OpenGLgraphics::render()
 	}
 ////////////////////////////////////3D RENDERING/////////////////////////////////////
 	Vec3f cameraOffset;
+
 	for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
 	{
 		//set up stereo
@@ -1902,6 +1958,7 @@ void OpenGLgraphics::render()
 		}
 
 		//render scene
+		int num = 0;
 		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //if the view no longer exists
@@ -1910,28 +1967,18 @@ void OpenGLgraphics::render()
 			}
 			else
 			{
-	
 				currentView = shared_ptr<View>(*(i++));
 
+				Rect clipped_viewport, projConstraint;
+				computeViewport(clipped_viewport, projConstraint);
+				if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
+					continue;
+
+				glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 				if(highResScreenshot)
 				{
-					Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
-					
-					viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
-					viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
-					viewport.w = viewport.w / viewConstraint.w;
-					viewport.h = viewport.h / viewConstraint.h;
-					
-					glViewport(	clamp(viewport.x,0.0,1.0)*sw, 
-								clamp(viewport.y,0.0,1.0)*sh, 
-								clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0))*sw, 
-								clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0))*sh);
+					Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
 
-					Rect projConstraint;
-					projConstraint.x = (clamp(viewport.x, 0.0, 1.0) - viewport.x) / viewport.w;
-					projConstraint.y = (clamp(viewport.y, 0.0, 1.0) - viewport.y) / viewport.h;
-					projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
-					projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
 					currentView->constrainView(projConstraint);
 
 					auto ortho = shaders.bind("ortho");
@@ -1939,9 +1986,10 @@ void OpenGLgraphics::render()
 				}
 				else
 				{
-					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-					if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+					if((stereoMode!=STEREO_NONE))	
+						currentView->shiftCamera(cameraOffset);
 				}
+
 
 				auto model = shaders.bind("model");
 				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
@@ -1971,7 +2019,7 @@ void OpenGLgraphics::render()
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
-			glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+			glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
@@ -1997,25 +2045,16 @@ void OpenGLgraphics::render()
 				{
 					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 		
+					Rect clipped_viewport, projConstraint;
+					computeViewport(clipped_viewport, projConstraint);
+					if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
+						continue;
+
+					glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 					if(highResScreenshot)
 					{
-						Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
-					
-						viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
-						viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
-						viewport.w = viewport.w / viewConstraint.w;
-						viewport.h = viewport.h / viewConstraint.h;
-					
-						glViewport(	clamp(viewport.x,0.0,1.0)*sw, 
-									clamp(viewport.y,0.0,1.0)*sh, 
-									clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0))*sw, 
-									clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0))*sh);
-		
-						Rect projConstraint;
-						projConstraint.x = (clamp(viewport.x, 0.0, 1.0) - viewport.x) / viewport.w;
-						projConstraint.y = (clamp(viewport.y, 0.0, 1.0) - viewport.y) / viewport.h;
-						projConstraint.w = (clamp(viewport.x+viewport.w, 0.0, 1.0) - clamp(viewport.x, 0.0, 1.0)) / viewport.w;
-						projConstraint.h = (clamp(viewport.y+viewport.h, 0.0, 1.0) - clamp(viewport.y, 0.0, 1.0)) / viewport.h;
+						Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+
 						currentView->constrainView(projConstraint);
 
 						auto ortho = shaders.bind("ortho");
@@ -2023,8 +2062,8 @@ void OpenGLgraphics::render()
 					}
 					else
 					{
-						glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-						if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
+						if((stereoMode!=STEREO_NONE))	
+							currentView->shiftCamera(cameraOffset);
 					}
 		
 					currentView->renderTransparent();
@@ -2114,7 +2153,6 @@ void OpenGLgraphics::render()
 	//bindRenderTarget(RT_SCREEN);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	int n=0;
 	for(auto i = views.begin(); i != views.end();)
 	{
 		if(i->expired()) //if the view no longer exists
@@ -2123,24 +2161,10 @@ void OpenGLgraphics::render()
 		}
 		else
 		{
-			n++;
 			currentView = shared_ptr<View>(*(i++));
-			Rect overlayRect, textureRect;
 
-			if(highResScreenshot)
-			{
-				Rect viewport = Rect::XYWH(currentView->viewport().x / sAspect, (currentView->viewport().y), currentView->viewport().width / sAspect, currentView->viewport().height);
-				viewport.x = (viewport.x - viewConstraint.x) / viewConstraint.w;
-				viewport.y = (viewport.y - viewConstraint.y) / viewConstraint.h;
-				viewport.w = viewport.w / viewConstraint.w;
-				viewport.h = viewport.h / viewConstraint.h;
-				
-				textureRect = Rect::XYWH(clamp(viewport.x,0.0,1.0), clamp(viewport.y,0.0,1.0), clamp(viewport.w,0.0,1.0-clamp(viewport.x,0.0,1.0)), clamp(viewport.h,0.0,1.0-clamp(viewport.y,0.0,1.0)));
-			}
-			else
-			{
-				textureRect = Rect::XYWH(currentView->viewport().x/sAspect,1.0-currentView->viewport().y-currentView->viewport().height,currentView->viewport().width/sAspect,currentView->viewport().height);
-			}
+			Rect overlayRect, textureRect;
+			computeViewport(textureRect, Rect());
 			overlayRect.x = textureRect.x * 2.0 - 1.0;
 			overlayRect.y = textureRect.y * 2.0 - 1.0;
 			overlayRect.w = textureRect.w * 2.0;
@@ -2215,33 +2239,28 @@ void OpenGLgraphics::render()
 	currentView = nullptr;
 
 /////////////////////////////////////START 2D////////////////////////////////////
-	//if(!highResScreenshot)
-	{
-		bindRenderTarget(RT_SCREEN);
+	bindRenderTarget(RT_SCREEN);
 
-		auto ortho = shaders.bind("ortho");
-		ortho->setUniform4f("color",white);
-		ortho->setUniform4f("viewConstraint", viewConstraint);
-		menuManager.render();
+	auto ortho = shaders.bind("ortho");
+	ortho->setUniform4f("color",white);
+	ortho->setUniform4f("viewConstraint", viewConstraint);
+	menuManager.render();
 
-		#ifdef _DEBUG
-		//	if(fps<59.0)ortho->setUniform4f("color",red);
-		//	else ortho->setUniform4f("color",black);
-		//	graphics->drawText(lexical_cast<string>(floor(fps)),Vec2f(sAspect*0.5-0.5*graphics->getTextSize(lexical_cast<string>(floor(fps))).x,0.02));
-		//	ortho->setUniform4f("color",white);
+	#ifdef _DEBUG
+		if(!highResScreenshot)
+		{
 			Profiler.draw();
-		
+	
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
 			{
 				setColor(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0));
 				drawOverlay(Rect::XYXY(0,0,sAspect,1), "errorGlow");
 				setColor(1,1,1,1);
 			}
-		#endif
-		ortho->setUniform4f("viewConstraint", 0,0,1,1);
-	}
+		}
+	#endif
+	ortho->setUniform4f("viewConstraint", 0,0,1,1);
 ///////////////////////////////////////////////////////////////////////////////////////
-
 	checkErrors();
 }
 void OpenGLgraphics::destroyWindow()
@@ -2922,13 +2941,27 @@ void OpenGLgraphics::checkErrors()
 	}
 #endif
 }
-void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture)
+void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture, bool clearTextures)
 {
 	//if(!texture)
 	//	return;
 
 
 	setFrameBufferTextures(texture, depthTexture);
+	if(clearTextures && !texture && depthTexture)
+	{
+		glClear(GL_DEPTH_BUFFER_BIT);
+	}
+	else if(clearTextures && texture && !depthTexture)
+	{
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+	else if(clearTextures && texture && depthTexture)
+	{
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 	//setRenderBufferTexture(texture);

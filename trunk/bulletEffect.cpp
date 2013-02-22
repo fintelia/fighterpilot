@@ -39,7 +39,7 @@ namespace particle
 				vertices[vNum*4 + n].r = 1.0;
 				vertices[vNum*4 + n].g = 1.0;
 				vertices[vNum*4 + n].b = 0.4;
-				vertices[vNum*4 + n].a = 1.0;
+				vertices[vNum*4 + n].a = 0.5;
 			}
 
 			start = i->startPos+i->velocity*(time-i->startTime)/1000;;

@@ -13,6 +13,7 @@ void WorldManager::destroy()
 {
 	resetTerrain();
 	clearObjects();
+	sceneManager.reset();
 	particleManager.shutdown();
 }
 void WorldManager::simulationUpdate()

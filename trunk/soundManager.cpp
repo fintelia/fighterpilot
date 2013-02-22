@@ -30,13 +30,28 @@ bool SoundManager::initialize()
 
 	return true;
 }
-void SoundManager::addSound()
+void SoundManager::loadSound(string name, string filename, bool loop)
 {
-
+	auto nSound = std::make_shared<sound>();
+	nSound->filename = filename;
+	nSound->loop = loop;
+	sounds[name] = nSound;
 }
 shared_ptr<SoundManager::soundInstance> SoundManager::newSoundInstance()
 {
 	return shared_ptr<soundInstance>();
+}
+void SoundManager::playSound(string name)
+{
+	auto s = sounds.find(name);
+	if(s != sounds.end())
+	{
+		PlaySoundA(nullptr, nullptr, 0);
+		if(s->second->loop)
+			PlaySoundA(s->second->filename.c_str(), nullptr, SND_FILENAME | SND_ASYNC | SND_LOOP);
+		else
+			PlaySoundA(s->second->filename.c_str(), nullptr, SND_FILENAME | SND_ASYNC);
+	}
 }
 void SoundManager::updateFrame()
 {

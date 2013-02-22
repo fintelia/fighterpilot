@@ -55,7 +55,7 @@
     <texture name="grass normals"             file="media/grass2_normals.png"         tileable="true" />
     <texture name="snow normals"              file="media/snow_normals.png"           tileable="true" />
     <texture name="desertSand"                file="media/desertSand.png"             tileable="true" />
-    <texture name="fractal normals"           file="media/fractalNormals.png"         tileable="true" />
+    <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
 
     
@@ -65,9 +65,11 @@
     <texture name="bullet"                    file="media/bullet3.png" />
     <texture name="sun"                       file="media/sun.png" />
     <texture name="tree"                      file="media/tree2.png" />
+    <texture name="scorch"                    file="media/scorch2.png" />
     
     <!-- miscellaneous -->
     <texture name="white"                     file="media/white.png"                  tileable="true"/>
+    <texture name="black"                     file="media/black.png"                  tileable="true"/>
     <texture name="default normals"           file="media/default normals.png"        tileable="true"/>
     <texture name="next level"                file="media/nextLevel.png" />
     <texture name="victory"                   file="media/victory.png" />
@@ -99,14 +101,17 @@
     <shader name="spark shader"              vertex="media/spark.vert"             fragment="media/spark.frag" />
     <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
     <shader name="color3D"                   vertex="media/color3D.vert"           fragment="media/color3D.frag" />
-    
+
+
     <!-- world -->
     <shader name="ocean"                     vertex="media/ocean.vert"             fragment="media/ocean.frag" />
     <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
     <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
     <shader name="count trees"               vertex3="media/placeTrees.vert"       geometry3="media/conditionalDiscard.geom" feedbackTransformVaryings="placeHolder" />
     <shader name="place trees"               vertex3="media/placeTrees.vert"       geometry3="media/createTree.geom" feedbackTransformVaryings="position;texCoord;color" />
-
+    <shader name="create tree texture"       vertex3="media/placeTrees.vert"       geometry3="media/createTreeTexture.geom" fragment3="media/createTreeTexture3.frag" />
+    <shader name="decal"                     vertex="media/decal.vert"             fragment="media/decal.frag" />
+    
     <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
     <shader name="trees3D shader"            vertex="media/tree3d.vert"            fragment="media/tree3d.frag" />
     <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
@@ -132,7 +137,7 @@
     <model name="disk"                  file="media/disk.obj" />    
     <model name="sphere"                file="media/sphere.obj" />
     <model name="tree model"            file="media/tree2/tree.obj" />
-    <model name="tree leaves"            file="media/tree2/leaves.obj" />
+    <model name="tree leaves"           file="media/tree2/leaves.obj" />
     <model name="tree trunk"            file="media/tree2/trunk.obj" />
   </models>
   <fonts>

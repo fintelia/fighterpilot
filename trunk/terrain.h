@@ -55,6 +55,9 @@ protected:
 			BoundingBox<float> bounds;
 			Vec3f center;
 			shared_ptr<GraphicsManager::indexBuffer> plantIndexBuffer;
+
+			unsigned int sm4_treeVboOffset;
+			unsigned int sm4_treeVboSize;
 			//vector<plant> plants;
 			mutable enum RenderType{DONT_RENDER,RENDER_BILLBAORD,RENDER_MODEL}renderType;
 		};
@@ -82,6 +85,8 @@ protected:
 		vector<vector<shared_ptr<GraphicsManager::indexBuffer>>> indexBuffers;
 
 		shared_ptr<GraphicsManager::vertexBuffer> foliageVBO;
+
+		shared_ptr<GraphicsManager::texture2D> treeTexture;
 
 		//struct plant
 		//{
@@ -121,7 +126,17 @@ protected:
 		float rasterHeight(Vec2u loc) const;
 	};
 
+	struct decal
+	{
+		string texture;
+		shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
+		shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
+		double startTime;
+		double fadeLength;
 
+		decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo, shared_ptr<GraphicsManager::indexBuffer> ibo, double fLength);
+	};
+	vector<shared_ptr<decal>> decals;
 
 	Vec3f terrainPosition;
 	Vec3f terrainScale;
@@ -170,6 +185,8 @@ public:
 	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;
 	void generateSky(Angle theta, Angle phi, float zenithLumance);//theta = angle from up axis; phi = angle from south
 	void generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr);
+
+	void addDecal(Vec2f center, float width, float height, string texture, float fadeInLength=500.0);
 
 	const Circle<float>& bounds() const{return mBounds;}
 

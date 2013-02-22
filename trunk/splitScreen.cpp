@@ -46,22 +46,20 @@ bool splitScreen::init()
 
 	return true;
 }
+bool splitScreen::menuKey(int mkey)
+{
+	if(mkey == MENU_BACK)
+	{
+		menuManager.setPopup(new gui::inGame);
+		return true;
+	}
+	return false;
+}
 void splitScreen::updateFrame()
 {
 	//check whether to toggle first person views
 	if(input.getKey(VK_F1))	{	players[0]->toggleFirstPerson(); input.up(VK_F1);}
 	if(input.getKey(VK_F2))	{	players[1]->toggleFirstPerson(); input.up(VK_F2);}
-
-	//check whether to bring up the in-game menu
-	if(input.getKey(VK_ESCAPE) 
-#ifdef XINPUT
-		|| input.getXboxController(0).getButton(XINPUT_START) || input.getXboxController(1).getButton(XINPUT_START)
-#endif
-		)
-	{
-		menuManager.setPopup(new gui::inGame);
-		input.up(VK_ESCAPE);
-	}
 
 	//set camera position
 	for(int i=0; i<2; i++)
@@ -189,9 +187,9 @@ void splitScreen::render()
 			graphics->drawOverlay(Rect::XYXY(0,0.5*acplayer,sAspect,0.5*(acplayer+1)),"cockpit");
 			targeter(sAspect*0.5,0.25+0.5*acplayer,0.049,-p->roll);
 			radar(0.222 * sAspect, 0.437+0.5*acplayer, 0.1, -0.1, true, p);
-			healthBar(0.175*sAspect, 0.6-0.5*acplayer, 0.25*sAspect, 0.333, p->health/100.0,true);
+			healthBar(0.175*sAspect, 0.1+0.5*acplayer, 0.25*sAspect, 0.333, p->health/100.0);
 		}
-		else if(!p->dead && !p->controled)
+		else if(!p->dead && !p->controled && !graphics->isHighResScreenshot())
 		{
 			if(p->target != 0 && world[p->target] != nullptr)
 			{
@@ -208,7 +206,9 @@ void splitScreen::render()
 					Vec3f proj = (views[acplayer]->projectionMatrix() * views[acplayer]->modelViewMatrix()) * (targetPos+targetOffset);
 					if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
 					{
-						shaders.bind("circle shader");
+						auto circleShader = shaders.bind("circle shader");
+						circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
+
 						if(level->info.night)
 						{
 							if(p->targetLocked)		graphics->setColor(0.04+0.36*0.2989,0.36*0.2989,0.36*0.2989);
@@ -274,12 +274,12 @@ void splitScreen::render()
 	//		healthBar(sAspect-0.024-0.146, 0.024+0.5*acplayer, 0.146, 0.024, p->health/p->maxHealth,false);
 		}
 	}
-	if(levelup)
+	if(levelup && !graphics->isHighResScreenshot())
 	{
 		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "next level");
 	}
-	if(victory)
+	if(victory && !graphics->isHighResScreenshot())
 	{
 		float v = (countdown > 250) ? ((750-(countdown-250))/750) : (countdown/250);
 		graphics->drawOverlay(Rect::CWH(sAspect/2, 0.5, v, 0.25*v), "victory");

@@ -16,7 +16,6 @@ void main()
 	vec3 color = texture2D(tex, texCoord).rgb;
 	float i = color.r+color.g+color.b;
 	color += i*i*i * 0.05;
-
 	color = pow(color,vec3(g,g,g));
 	gl_FragColor = vec4(color,1.0);
 }

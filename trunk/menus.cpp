@@ -20,14 +20,14 @@ void inGame::render()
 }
 bool inGame::keyDown(int vkey)
 {
-	if(vkey==VK_PAUSE || vkey==VK_ESCAPE)
-	{
-		input.up(VK_PAUSE);
-		input.up(VK_ESCAPE);
-		world.time.unpause();
-		done = true;
-		return true;
-	}
+//	if(vkey==VK_PAUSE || vkey==VK_ESCAPE)
+//	{
+//		input.up(VK_PAUSE);
+//		input.up(VK_ESCAPE);
+//		world.time.unpause();
+//		done = true;
+//		return true;
+//	}
 	return false;
 }
 bool inGame::menuKey(int mkey)
@@ -36,12 +36,12 @@ bool inGame::menuKey(int mkey)
 	if(mkey==MENU_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if(mkey == MENU_ENTER && activeChoice == RESUME)
+	if(mkey == MENU_ENTER && activeChoice == RESUME || mkey == MENU_BACK)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 		input.up(VK_PAUSE);
-		input.up(VK_ESCAPE);
+	//	input.up(VK_ESCAPE);
 		world.time.unpause();
 		done = true;
 	}

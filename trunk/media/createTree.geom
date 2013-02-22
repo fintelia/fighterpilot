@@ -35,7 +35,7 @@ void main()
 
 
 
-		//TRI 1
+		//TRIANGLE STRIP 1
 		position = vertexIn[0].position + vec3(-dir.x,0,-dir.y) * size; 
 		texCoord = vec2(0,1);
 		EmitVertex();
@@ -57,7 +57,7 @@ void main()
 
 
 
-		//TRI 3		
+		//TRIANGLE STRIP 2	
 		position = vertexIn[0].position + vec3(-dir.x,0,-dir.y) * size;
 		texCoord = vec2(0.5,1);
 		EmitVertex();

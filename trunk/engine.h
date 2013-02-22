@@ -60,6 +60,7 @@ typedef void* HANDLE;
 #include <cstdarg>
 #include <iomanip>
 #include <cassert>
+#include <functional>
 //--Boost C++ Library
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>

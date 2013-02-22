@@ -17,16 +17,21 @@ uniform sampler2D snow;
 uniform sampler2D grass_normals;
 uniform sampler2D snow_normals;
 uniform sampler2D fractalNormals;
+uniform sampler2D treesTexture;
 
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
-uniform float lightStrengths[4];
+uniform float invLightStrengths[4];
 
 uniform vec3 eyePos;
 
 uniform vec2 gtex_halfPixel;
 uniform vec2 gtex_origin;
 uniform vec2 gtex_invScale;
+
+uniform vec2 ttex_halfPixel;
+uniform vec2 ttex_origin;
+uniform vec2 ttex_invScale;
 
 uniform float minHeight;
 uniform float heightRange;
@@ -50,7 +55,10 @@ void main()
 	//height += pow(texture2D(noiseTex, position.xz*0.00125).r,3.0) * 10.0 * slope;
 
 	///////////NORMAL MAPPING//////////
-	//n = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), normalize((texture2D(fractalNormals, position.xz*0.0023).xyz*2.0 - 1.0) + 0.8*(texture2D(fractalNormals, position.xz*0.000625).xyz*2.0 - 1.0)), clamp(0.1+(slopeAngle - 0.1) / 0.1, 0.0, 1.0)));
+	//n = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), normalize((texture2D(fractalNormals, position.xz*0.0023).xyz*2.0 - 1.0) + 0.8*(texture2D(fractalNormals, position.xz*0.000625).xyz*2.0 - 1.0)), clamp(0.1+2.0*(slopeAngle - 0.1) / 0.1, 0.0, 1.0)));
+	//n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize((texture2D(fractalNormals, position.xz*0.0023).xzy*2.0 - 1.0)), clamp((slopeAngle-0.4)/ 0.1, 0.0, 1.0)));
+	//slopeAngle = acos(n.y);
+	//slope = sqrt(1.0/(n.y*n.y) - 1.0);
 
 	///////////EARLY DISCARD//////////
 	if(height < -45.0)
@@ -66,31 +74,51 @@ void main()
 	//color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
 
 	//////////////ROCK/////////////////
-	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.40) / 0.10, 0.0,1.0);
-	color = mix(color, /*vec4(0.35,0.25,0.20,1.0)*/texture2D(rock,position.xz*0.00125), rAmount);
+	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.40) / 0.06, 0.0,1.0);
+	color.rgb = mix(color.rgb, vec3(0.15,0.14,0.13)*2.0/*0.5*texture2D(rock,position.xz*0.00125 * 16.0).rgb*/, rAmount); //vec4(0.35,0.25,0.20,1.0)
+	//n = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), normalize((texture2D(fractalNormals, position.xz*0.0023).xyz*2.0 - 1.0)/*+ 0.8*(texture2D(fractalNormals, position.xz*0.000625).xyz*2.0 - 1.0)*/), rAmount));
+
+	vec4 fractalColor = texture2D(fractalNormals, position.xz*0.0023);
+	color.rgb *= mix(1.0, 0.5+0.5*fractalColor.a, rAmount);
+	//vec2 offset = vec2(0,0);//(mat3(t,n,b)*normalize(position - eyePos)).xz * (texture2D(fractalNormals, position.xz*0.0023).a - 0.5) * 0.1;
+
+	vec3 positionToEye = eyePos - position;
+	vec3 positionToEye_tangentSpace = mat3(t,n,b)*positionToEye;
+	vec2 offset = -normalize(positionToEye_tangentSpace.xz) * (1.0 - fractalColor.a);
+
+	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023);
+	n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize(fractalColor.xzy*2.0 - 1.0), rAmount));
 
 	/////////LOW CONTRAST NOISE////////
 	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
 
-
-
-
 	///////////////LIGHT///////////////
-	vec3 light = vec3(1,1,0.7) * (dot(n,normalize(sunDir))*0.5+0.5);
+	vec4 treesTextureColor = texture2D(treesTexture, ttex_halfPixel + (position.xz-ttex_origin) * ttex_invScale); //tree shadows
+	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))/*0.5+0.5*/ - treesTextureColor.a*0.25, 0.0);
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
-		light += lightColors[i] * clamp(lightStrengths[i] * 1000.0 / dot(lightVec,lightVec),0.0,0.5);
+		light += lightColors[i] * clamp(0.5 - length(lightVec) * invLightStrengths[i], 0.0,0.5);
 	}
 
 	////////////WATER EFFECT///////////
-	float waterAlpha = clamp(1.0 + clamp((height)/fwidth(height),-1.0,0.0)*(0.1-(height)*0.02), 0.0,1.0);
+	//float waterAlpha = clamp(1.0 + clamp((-height)/fwidth(height),0.0,1.0)*(0.1-0.1*exp(-height*0.1)), 0.0,1.0);
+	float waterAlpha = clamp(1.0 + clamp((-height)/fwidth(height),1.0,0.0)*(height*0.03), 0.0,1.0);
+
+	//float waterDepth = -height / abs(normalize(positionToEye).y);
+	//float waterAlpha = clamp(1.0-0.1*sqrt(waterDepth), 0.0, 1.0);//clamp(1.0 + clamp((waterDepth)/fwidth(waterDepth),0.0,1.0)*(0.1-0.1*exp(-waterDepth*0.1)), 0.0,1.0);
 	light *= waterAlpha;
 	color.a *= waterAlpha;
 
+	////////////TREES TEXTURE//////////
+	//float distMult = clamp((950.0*6-distance(eyePos,position))*0.02/6,0.0,1.0);
+	//vec4 treesTextureColor = texture2D(treesTexture, ttex_halfPixel + (position.xz-ttex_origin) * ttex_invScale);
+	//color.rgb = mix(color.rgb, color.rgb*(1.0-treesTextureColor.a) + treesTextureColor.rgb*0.35, 1.0- distMult*0.5);
+	//color.rgb = color.rgb*(1.0-treesTextureColor.a*0.5);// + treesTextureColor.rgb*0.35;
+
 	////////////////FOG////////////////
 	vec3 eyeDirection = position.xyz-eyePos;
-	color = vec4(mix(color.rgb*max(light,0.7), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
+	color = vec4(mix(color.rgb*max(light,0.0), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
 
 	///////////////GRID////////////////
 	//vec2 px = position.xz/1600.0 + 0.5;
