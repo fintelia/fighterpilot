@@ -151,7 +151,6 @@
 	}
 	BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, void* inputManagerPtr)	//we need a pointer to input so we can call its 
 	{																									//methods, since it is still being constructed
-		HRESULT hr;
 #ifdef XINPUT
 		if(IsXInputDevice(&pdidInstance->guidProduct))
 			return DIENUM_CONTINUE;
@@ -281,7 +280,7 @@ bool InputManager::directInputControllerState::updateController()
 
 	for(unsigned int i = 0; i < buttons.size() && i < 128; i++)
 	{
-		buttons[i] = joystickState.rgbButtons[i] & 0x80;
+		buttons[i] = (joystickState.rgbButtons[i] & 0x80) != 0;
 	}
 
 	return true;
@@ -647,10 +646,10 @@ const InputManager::mouseButtonState& InputManager::getMouseState(mouseButton m)
 #ifdef WINDOWS
 void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if(uMsg == WM_ACTIVATEAPP)
+	if(uMsg == WM_ACTIVATEAPP && wParam)
 	{
 #ifdef DIRECT_INPUT
-		for(auto i=directInputControllers.begin(); i!=directInputControllers.end(); i++)
+		for(vector<directInputControllerState>::iterator i=directInputControllers.begin(); i!=directInputControllers.end(); i++)
 		{
 			i->acquireController();
 		}

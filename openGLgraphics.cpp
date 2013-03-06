@@ -2886,10 +2886,25 @@ void OpenGLgraphics::takeScreenshot()
 	highResScreenshot = false;
 	world.time.unpause();
 }
-void OpenGLgraphics::drawSphere(Vec3f position, float radius)
+void OpenGLgraphics::drawSphere(Vec3f position, float radius, Color4 color)
 {
-	debugBreak();
-	//drawModel("sphere", position, Quat4f(), Vec3f(radius, radius, radius));
+	if(!currentView)
+		return;
+
+	auto shader = shaders.bind("color3D");
+	if(!shader)
+		return;
+	shader->setUniform4f("color", color);
+	shader->setUniformMatrix("cameraProjection", currentView->projectionMatrix() * currentView->modelViewMatrix());
+	shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(), position, radius));
+
+	auto sphereModel = dataManager.getModel("sphere");
+	if(!sphereModel || sphereModel->materials.empty())
+		return;
+
+	sphereModel->VBO->bindBuffer();
+	sphereModel->materials.front().indexBuffer->bindBuffer();
+	sphereModel->materials.front().indexBuffer->drawBuffer();
 }
 void OpenGLgraphics::drawLine(Vec3f start, Vec3f end)
 {

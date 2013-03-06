@@ -277,8 +277,8 @@ public:
 		virtual void setUniform4fv(string name, unsigned int n, float* v)=0;
 		void setUniform2f(string name, Vec2f v){setUniform2f(name,v.x,v.y);}
 		void setUniform3f(string name, Vec3f v){setUniform3f(name,v.x,v.y,v.z);}
-		void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.r,c.b);}
-		void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.r,c.b,c.a);}
+		void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.g,c.b);}
+		void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.g,c.b,c.a);}
 		void setUniform4f(string name, Rect r){setUniform4f(name,r.x,r.y,r.w,r.h);}
 		void setUniform2fv(string name, unsigned int n, Vec2f* v){setUniform2fv(name,n,&v->x);}
 		void setUniform3fv(string name, unsigned int n, Vec3f* v){setUniform3fv(name,n,&v->x);}
@@ -359,7 +359,7 @@ public:
 
 	//draw functions
 	virtual void drawLine(Vec3f start, Vec3f end)=0;
-	virtual void drawSphere(Vec3f position, float radius)=0;
+	virtual void drawSphere(Vec3f position, float radius, Color4 color)=0;
 	virtual void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3)=0;
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
 
@@ -645,7 +645,7 @@ public:
 	void endRenderToTexture();
 
 	void drawLine(Vec3f start, Vec3f end);
-	void drawSphere(Vec3f position, float radius);
+	void drawSphere(Vec3f position, float radius, Color4 color);
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);
 	void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4);
 

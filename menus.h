@@ -124,9 +124,9 @@ private:
 	void diamondSquare(float h, float m, int subdivide);
 	void beautifyCoastline();
 	void faultLine();
-	void smooth(unsigned int a);
+	void smooth(unsigned int radius);
 	void roughen(float a);
-	//void erode(int num, float amount);
+	void erode(unsigned int radius);
 
 	void resetView();
 	void fromFile(string filename);

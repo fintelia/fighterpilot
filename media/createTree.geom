@@ -24,7 +24,7 @@ void main()
 {
 	if(vertexIn[0].shouldDiscard == 0.0)
 	{
-		float size = (1.0 + random(38.764, 72538.3787) + random(66.529, 2124.48912)) * 1.6;
+		float size = (1.0 + random(38.764, 72538.3787) + random(66.529, 2124.48912)) * 1.6 * 1.5;
 		float angle = 6.2832 * random(37.064, 77880.3935);
 
 		color.r = 0.8 + 0.3 * random(43.885, 21751.4533);

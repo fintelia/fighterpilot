@@ -72,7 +72,7 @@ void main()
 	////////////TREE CANOPY////////////
 	color.rgb *= 1.0 - 0.6 * clamp((height - 37.0)*0.2, 0.0, 1.0) * max(clamp((148.0-height)*0.2,0.0,1.0),clamp((slopeAngle - 0.1) / 0.1, 0.0, 1.0));
 	//color.a *= clamp(5.0-20.0*((position.x-0.5)*(position.x-0.5)+(position.z-0.5)*(position.z-0.5)), 0.0, 1.0);
-
+	//color.rgb *= 0.8;
 	//////////////ROCK/////////////////
 	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.40) / 0.06, 0.0,1.0);
 	color.rgb = mix(color.rgb, vec3(0.15,0.14,0.13)*2.0/*0.5*texture2D(rock,position.xz*0.00125 * 16.0).rgb*/, rAmount); //vec4(0.35,0.25,0.20,1.0)
@@ -94,7 +94,7 @@ void main()
 
 	///////////////LIGHT///////////////
 	vec4 treesTextureColor = texture2D(treesTexture, ttex_halfPixel + (position.xz-ttex_origin) * ttex_invScale); //tree shadows
-	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))/*0.5+0.5*/ - treesTextureColor.a*0.25, 0.0);
+	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))/*0.5+0.5*/ - treesTextureColor.a*0.3, 0.0);
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];

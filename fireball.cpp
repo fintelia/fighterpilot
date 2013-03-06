@@ -4,7 +4,7 @@
 
 namespace particle
 {
-	fireball::fireball(): emitter("smoke2", 32, 200.0, true)
+	fireball::fireball(): emitter("smoke2", 32, 100.0, true) //200.0 -> 100.0
 	{
 
 	}
@@ -12,7 +12,7 @@ namespace particle
 	{
 		speed =		fuzzyAttribute(0.0);
 		spread =	fuzzyAttribute(0.2, 0.2);
-		life =		fuzzyAttribute(60.0,15.0);
+		life =		fuzzyAttribute(90.0,15.0);
 	}
 	bool fireball::createParticle(particle& p, Vec3f currentPosition)
 	{
@@ -61,13 +61,13 @@ namespace particle
 		if(t<0.05)
 		{
 			p.a = t * 20.0 * 0.75 * 3.0;
-			p.size = (t / 0.05 + 1.0) * 0.5 * 0.3 * radius;
+			p.size = (t / 0.05 + 1.0) * 0.5 * 0.2 * radius;
 		}
 		else if(t<0.75)
 		{
 			t = (t-0.05)/0.7;
 			p.a = 0.75* 3.0;
-			p.size = (1.0-t) * 0.3 * radius + t * radius*0.5;		
+			p.size = (1.0-t) * 0.2 * radius + t * radius*0.3;		
 		}
 		else
 		{
@@ -78,7 +78,7 @@ namespace particle
 			p.g = 0.6*t + (1.0-t)*0.48;
 			p.b = 0.6*t + (1.0-t)*0.17;
 
-			p.size = radius*0.5;
+			p.size = radius*0.3;
 		//	p.pos.y += world.time.length()/100;
 		}
 	}
