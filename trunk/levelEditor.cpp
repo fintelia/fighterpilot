@@ -6,8 +6,8 @@ namespace gui{
 bool levelEditor::init()
 {
 	view = graphics->genView();
-	view->viewport(0,0, sAspect,1.0);
-	view->perspective(80.0, (double)sw / ((double)sh),1.0, 50000.0);
+	view->viewport(0,0, sAspect,0.960);
+	view->perspective(80.0, (double)sw / ((double)sh*0.960),1.0, 50000.0);
 	view->setRenderFunc(std::bind(&levelEditor::render3D, this, std::placeholders::_1));
 	view->postProcessShader(shaders("gamma"));
 
@@ -17,37 +17,51 @@ bool levelEditor::init()
 	objectPreviewView->setRenderFunc(std::bind(&levelEditor::renderObjectPreview, this));
 	objectPreviewView->postProcessShader(shaders("gamma"));
 
+	float leftAlign = 0.010;//sAspect-0.16;
+	float centerAlign = 0.13;//sAspect-0.085;
+	float yStart = 0.0;
+	float ySpacing = 0.035;
+	float yStartLabels = 0.010; //labels are slightly lower
+	float controlWidth = 0.240;//0.15;
+	float controlHeight = 0.030;
+	Color4 controlColor(0.8, 0.8, 0.8, 1.0);
+	Color4 controlColorDark(0.7, 0.7, 0.7, 1.0);
 
 	//terrain
-	buttons["dSquare"]			= new button(sAspect-0.16,0.005,0.15,0.030,"d-square",lightGreen,white);
-	buttons["faultLine"]		= new button(sAspect-0.16,0.040,0.15,0.030,"fault line",lightGreen,white);
-	buttons["fromFile"]			= new button(sAspect-0.16,0.075,0.15,0.030,"from file",lightGreen,white);
+	labels["create terrain"]	= new label(centerAlign - graphics->getTextSize("Create Terrain").x/2, yStartLabels, "Create Terrain");
+	buttons["dSquare"]			= new button(leftAlign, yStart + 1*ySpacing, controlWidth, controlHeight, "d-square algorithm",controlColor,white);
+	buttons["faultLine"]		= new button(leftAlign, yStart + 2*ySpacing, controlWidth, controlHeight, "fault line algorithm",controlColor,white);
+	buttons["fromFile"]			= new button(leftAlign, yStart + 3*ySpacing, controlWidth, controlHeight, "load from file",controlColor,white);
 
-	buttons["beautify coast"]	= new button(sAspect-0.16,0.145,0.15,0.030,"beautify",lightGreen,white);
-	buttons["smooth"]			= new button(sAspect-0.16,0.180,0.15,0.030,"smooth",lightGreen,white);
-	buttons["roughen"]			= new button(sAspect-0.16,0.215,0.15,0.030,"roughen",lightGreen,white);
-	//buttons["erode"]			= new button(sAspect-0.16,0.250,0.15,0.030,"erode",lightGreen,white);
+	labels["terrain shader"]	= new label(centerAlign - graphics->getTextSize("Terrain Shading").x/2, yStartLabels + 4*ySpacing, "Terrain Shading");
+	toggles["shaders"]			= new toggle(vector<button*>(),controlColorDark,controlColor,NULL,0);
+	toggles["shaders"]->addButton(new button(leftAlign, yStart + 5*ySpacing, controlWidth, controlHeight, "island",	black, white));
+	toggles["shaders"]->addButton(new button(leftAlign, yStart + 6*ySpacing, controlWidth, controlHeight, "snow",	black, white));
+	toggles["shaders"]->addButton(new button(leftAlign, yStart + 7*ySpacing, controlWidth, controlHeight, "desert",	black, white));
 
-	sliders["sea level"]		= new slider(sAspect-0.16,0.250,0.15,0.030,1.0,0.0);
-	sliders["height scale"]		= new slider(sAspect-0.16,0.285,0.15,0.030,1.0,-1.0);sliders["height scale"]->setValue(0.0);
-	listBoxes["LOD"]			= new listBox(sAspect-0.16,0.320,0.15,"LOD", black);
+	labels["tweak terrain"]		= new label(centerAlign - graphics->getTextSize("Tweak").x/2, yStartLabels + 8*ySpacing, "Tweak");
+	buttons["beautify coast"]	= new button(leftAlign,	yStart + 9*ySpacing, controlWidth, controlHeight, "beautify coastline",	controlColor, white);
+	buttons["smooth"]			= new button(leftAlign,	yStart + 10*ySpacing, controlWidth, controlHeight, "smooth terrain",	controlColor, white);
+	buttons["roughen"]			= new button(leftAlign,	yStart + 11*ySpacing, controlWidth, controlHeight, "roughen terrain",	controlColor, white);
+	buttons["erode"]			= new button(leftAlign,	yStart + 12*ySpacing, controlWidth, controlHeight, "erode terrain",		controlColor, white);
+
+	labels["ocean"]				= new label(centerAlign - graphics->getTextSize("Sea Level").x/2, yStartLabels + 13*ySpacing, "Sea Level");
+	sliders["sea level"]		= new slider(leftAlign, yStart + 14*ySpacing, controlWidth, controlHeight, 1.0,0.0);
+
+	labels["scale"]				= new label(centerAlign - graphics->getTextSize("Scale").x/2,yStartLabels + 15*ySpacing, "Scale");
+	sliders["height scale"]		= new slider(leftAlign, yStart + 16*ySpacing, controlWidth, controlHeight, 1.0,-1.0);sliders["height scale"]->setValue(0.0);
+
+	labels["LOD"]				= new label(centerAlign - graphics->getTextSize("Terrain LOD").x/2, yStartLabels + 17*ySpacing, "Terrain LOD");
+	listBoxes["LOD"]			= new listBox(leftAlign,yStart + 18*ySpacing, controlWidth, "LOD", black);
 	listBoxes["LOD"]->addOption("1");
 	listBoxes["LOD"]->addOption("2");
 	listBoxes["LOD"]->addOption("4");
 	listBoxes["LOD"]->addOption("8");
 	listBoxes["LOD"]->setOption(0);
 
-
 	buttons["load"]			= new button(sAspect-0.462,0.965,0.15,0.030,"Load",Color(0.8,0.8,0.8),white);
 	buttons["save"]			= new button(sAspect-0.310,0.965,0.15,0.030,"Save",Color(0.8,0.8,0.8),white);
 	buttons["exit"]			= new button(sAspect-0.157,0.965,0.15,0.030,"Exit",Color(0.8,0.8,0.8),white);
-
-	toggles["shaders"]		= new toggle(vector<button*>(),darkGreen,lightGreen,NULL,0);
-
-	toggles["shaders"]->addButton(new button(0.005,0.005,0.15,0.030,"island",black,white));
-	toggles["shaders"]->addButton(new button(0.005,0.040,0.15,0.030,"snow",black,white));
-	toggles["shaders"]->addButton(new button(0.005,0.075,0.15,0.030,"desert",black,white));
-	//toggles["shaders"]->addButton(new button(0.005,0.0.110,0.15,0.030,"mountains",black,white));
 
 	buttons["createObject"]		= new button(0.005,0.895,0.25,0.060,"Create Object",darkGreen,white);
 	buttons["deleteObject"]		= new button(0.005,0.895,0.25,0.060,"Delete Object",Color3(0.5,0,0),black);
@@ -151,6 +165,7 @@ void levelEditor::operator() (popup* p)
 		if(!((saveFile*)p)->validFile()) return;
 		string f=((saveFile*)p)->getFile();
 		levelFile.info.LOD = 1 << listBoxes["LOD"]->getOptionNumber();
+		levelFile.info.foliageDensity = (levelFile.info.shaderType == TERRAIN_ISLAND) ? 120 : 0;
 		levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue());
 		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
@@ -212,6 +227,7 @@ void levelEditor::updateFrame()
 		else if(buttons["beautify coast"]->checkChanged())
 		{
 			beautifyCoastline();
+
 		}
 		else if(buttons["smooth"]->checkChanged())
 		{
@@ -221,10 +237,10 @@ void levelEditor::updateFrame()
 		{
 			roughen(0.003 * (levelFile.info.maxHeight - levelFile.info.minHeight));
 		}
-		//else if(buttons["erode"]->checkChanged())
-		//{
-		//	erode(0.003 * (levelFile.info.maxHeight - levelFile.info.minHeight));
-		//}
+		else if(buttons["erode"]->checkChanged())
+		{
+			erode(3);
+		}
 		else if(1 << listBoxes["LOD"]->getOptionNumber() != LOD)
 		{
 			int oldLOD = LOD;
@@ -232,6 +248,8 @@ void levelEditor::updateFrame()
 			terrainValid=false;
 			levelFile.info.mapSize = levelFile.info.mapResolution * 100.0 / LOD;
 			center = Vec3f(center.x * oldLOD / LOD, center.y, center.z * oldLOD / LOD);
+			float newHeightScale = sliders["height scale"]->getValue() + log10((double)oldLOD / LOD);
+			sliders["height scale"]->setValue(newHeightScale);
 		}
 		//else if(buttons["exportBMP"]->checkChanged())
 		//{
@@ -252,41 +270,6 @@ void levelEditor::updateFrame()
 	}
 	else if(getTab() == OBJECTS)
 	{
-		//if(buttons["addPlane"]->checkChanged())
-		//{
-		//	awaitingNewObject=true;
-		//	popup* p = new newObject;
-		//	p->callback = (functor<void,popup*>*)this;
-		//	menuManager.setPopup(p);
-		//}
-		//else if(buttons["addAAgun"]->checkChanged())
-		//{
-		//	awaitingNewObject=true;
-		//	popup* p = new newObject(AA_GUN);
-		//	p->callback = (functor<void,popup*>*)this;
-		//	menuManager.setPopup(p);
-		//}
-		//else if(buttons["addSAMbattery"]->checkChanged())
-		//{
-		//	awaitingNewObject=true;
-		//	popup* p = new newObject(SAM_BATTERY);
-		//	p->callback = (functor<void,popup*>*)this;
-		//	menuManager.setPopup(p);
-		//}
-		//else if(buttons["addFlakCannon"]->checkChanged())
-		//{
-		//	awaitingNewObject=true;
-		//	popup* p = new newObject(FLAK_CANNON);
-		//	p->callback = (functor<void,popup*>*)this;
-		//	menuManager.setPopup(p);
-		//}
-		//else if(buttons["addShip"]->checkChanged())
-		//{
-		//	awaitingNewObject=true;
-		//	popup* p = new newObject(objectInfo.typeFromString("BATTLESHIP_1"));
-		//	p->callback = (functor<void,popup*>*)this;
-		//	menuManager.setPopup(p);
-		//}
 		if(buttons["createObject"]->checkChanged())
 		{
 			LevelFile::Object l;
@@ -365,21 +348,24 @@ void levelEditor::updateFrame()
 			sliders["height scale"]->setVisibility(newTab==TERRAIN);
 			listBoxes["LOD"]->setVisibility(newTab==TERRAIN);
 
+			labels["create terrain"]->setVisibility(newTab==TERRAIN);
+			labels["terrain shader"]->setVisibility(newTab==TERRAIN);
+			labels["tweak terrain"]->setVisibility(newTab==TERRAIN);
+			labels["ocean"]->setVisibility(newTab==TERRAIN);
+			labels["scale"]->setVisibility(newTab==TERRAIN);
+			labels["LOD"]->setVisibility(newTab==TERRAIN);
+			if(lastTab == TERRAIN && newTab != OBJECTS) view->viewport(0,0, sAspect, 0.960);
+			if(newTab == TERRAIN && lastTab != OBJECTS) view->viewport(0.260,0, sAspect-0.260, 0.960);
 		}
 		if(lastTab == OBJECTS || newTab==OBJECTS || lastTab == (Tab)-1)
 		{
-			//buttons["addPlane"]->setVisibility(newTab==OBJECTS);
-			//buttons["addAAgun"]->setVisibility(newTab==OBJECTS);
-			//buttons["addSAMbattery"]->setVisibility(newTab==OBJECTS);
-			//buttons["addFlakCannon"]->setVisibility(newTab==OBJECTS);
-			//buttons["addShip"]->setVisibility(newTab==OBJECTS);
 			buttons["createObject"]->setVisibility(newTab==OBJECTS);
 			buttons["deleteObject"]->setVisibility(false);
 			buttons["cancelObject"]->setVisibility(false);
 			listBoxes["object type"]->setVisibility(newTab==OBJECTS);
 			listBoxes["object team"]->setVisibility(newTab==OBJECTS);
-			if(lastTab == OBJECTS) view->viewport(0,0, sAspect, 1.0);
-			if(newTab == OBJECTS) view->viewport(0.260,0, sAspect-0.260, 0.960);
+			if(lastTab == OBJECTS && newTab != TERRAIN) view->viewport(0,0, sAspect, 0.960);
+			if(newTab == OBJECTS && lastTab != TERRAIN) view->viewport(0.260,0, sAspect-0.260, 0.960);
 		}
 		if(lastTab == REGIONS || newTab==REGIONS || lastTab == (Tab)-1)
 		{
@@ -403,7 +389,7 @@ void levelEditor::updateFrame()
 		if(p.y < 2.0/sh)			orthoCenter += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000;
 		if(p.y > 1.0-2.0/sh)		orthoCenter -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world.time.length() / 1000;
 	}
-	else if(!input.getMouseState(MIDDLE_BUTTON).down && (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
+	else if(/*!input.getMouseState(MIDDLE_BUTTON).down &&*/ (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
 		//if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
 		//if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world.time.length() / 1000 * pow(1.1f,-scrollVal);
@@ -425,9 +411,9 @@ void levelEditor::updateFrame()
 		Rect viewRect = orthoView();
 		view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000);
 	}
-	else
+	else if(getTab() == TERRAIN || getTab() == OBJECTS)
 	{
-		view->perspective(fovy, (double)sw / ((double)sh),100.0, 500000.0);
+		view->perspective(fovy, (sAspect-0.260) / 0.960, 100.0, 500000.0);
 	}
 }
 bool levelEditor::mouse(mouseButton button, bool down)
@@ -569,9 +555,54 @@ bool levelEditor::scroll(float rotations)
 {
 	if(getTab() == REGIONS)
 		orthoScale = clamp(orthoScale + rotations,-8,8);
-	else
+	else if(getTab() == TERRAIN || getTab() == OBJECTS)
+	{
+		float old_fovy = fovy;
 		fovy = clamp(fovy - rotations*3.0,80.0,2.0);
-		//scrollVal = clamp(scrollVal + rotations,-8,25);
+
+		Vec2f mousePos = input.getMousePos();
+		Vec2f viewSize;
+		Vec2f viewCenter;
+		//if(getTab() == TERRAIN)
+		//{
+		//	mousePos.x = clamp(mousePos.x, 0.0, sAspect);
+		//	mousePos.y = clamp(mousePos.y, 0.0, 0.960);
+		//	viewSize = Vec2f(sAspect, 0.960);
+		//	viewCenter = Vec2f(sAspect/2, 0.96/2);
+		//}
+		//else if(getTab() == OBJECTS)
+		//{
+			mousePos.x = clamp(mousePos.x, 0.260, sAspect);
+			mousePos.y = clamp(mousePos.y, 0.0, 0.960);
+			viewSize = Vec2f(sAspect - 0.260, 0.960);
+			viewCenter = Vec2f(0.260 + (sAspect - 0.260)/2, 0.96/2);
+		//}
+		Vec2f normalizedMousePos = 2.0 * (mousePos - viewCenter) / viewSize;
+		float mSize = max(levelFile.info.mapSize.x, levelFile.info.mapSize.y);
+		float heightRange = levelFile.info.maxHeight-levelFile.info.minHeight;
+		//float centerDistance = sqrt((heightRange + 0.65*mSize)*(heightRange + 0.65*mSize) + (-0.45*mSize)*(-0.45*mSize));
+		Vec3f eyeDirection = -Vec3f(0, heightRange + 0.65*mSize, -0.45*mSize);
+		Vec3f eyePosition = center - eyeDirection;
+		float centerDistance = eyeDirection.magnitude();
+		eyeDirection /= centerDistance; //normalize
+
+		Vec3f up = (eyeDirection.cross(Vec3f(0,1,0)).cross(eyeDirection) ).normalize();
+		Vec3f right = Vec3f(1,0,0);
+
+		Vec3f oldMouseRay = eyeDirection - up * normalizedMousePos.y * tan(old_fovy/2 * PI/180.0) - right * normalizedMousePos.x * viewSize.x/viewSize.y * tan(old_fovy/2 * PI/180.0);
+		Vec3f newMouseRay = eyeDirection - up * normalizedMousePos.y * tan(fovy/2 * PI/180.0) - right * normalizedMousePos.x * viewSize.x/viewSize.y * tan(fovy/2 * PI/180.0);
+
+		if(oldMouseRay.y != 0.0 && newMouseRay.y != 0.0)
+		{
+			Vec3f oldIntersection = eyePosition + oldMouseRay * (center.y-eyePosition.y) / oldMouseRay.y;
+			Vec3f newIntersection = eyePosition + newMouseRay * (center.y-eyePosition.y) / newMouseRay.y;
+			//oldIntersection.x = clamp(oldIntersection.x, 0.0, levelFile.info.mapSize.x);
+			//oldIntersection.y = clamp(oldIntersection.y, 0.0, levelFile.info.mapSize.y);	//prevents zooming to a 
+			//newIntersection.x = clamp(newIntersection.x, 0.0, levelFile.info.mapSize.x);  //position off the terrain
+			//newIntersection.y = clamp(newIntersection.y, 0.0, levelFile.info.mapSize.y);
+			center += Vec3f(oldIntersection.x - newIntersection.x, 0, oldIntersection.z - newIntersection.z);
+		}
+	}
 	return true;
 }
 int levelEditor::getShader()
@@ -1299,9 +1330,9 @@ void levelEditor::fromFile(string filename)
 		graphics->setLightPosition(Vec3f(levelFile.info.mapSize.x*0.5, levelFile.info.maxHeight+(levelFile.info.maxHeight-levelFile.info.minHeight)*3.0, levelFile.info.mapSize.y*0.5));
 	}
 }
-void levelEditor::smooth(unsigned int a)
+void levelEditor::smooth(unsigned int radius)
 {
-	int radius = a;
+	int rad = radius;
 
 	int w = levelFile.info.mapResolution.x;
 	int h = levelFile.info.mapResolution.y;
@@ -1316,9 +1347,9 @@ void levelEditor::smooth(unsigned int a)
 		{
 			s=0;
 			n=0;
-			for(int i = max(x-radius,0); i <= min(x+radius,w-1); i++)
+			for(int i = max(x-rad,0); i <= min(x+rad,w-1); i++)
 			{
-				for(int j = max(y-radius,0); j <= min(y+radius,h-1); j++)
+				for(int j = max(y-rad,0); j <= min(y+rad,h-1); j++)
 				{
 					s += getHeight(i,j);
 					n++;
@@ -1345,14 +1376,43 @@ void levelEditor::roughen(float a)
 	setMinMaxHeights();
 	terrainValid=false;
 }
-//void levelEditor::erode(int num, float amount)
-//{
-//	int x,y
-//	for(int i=0;i<num;i++)
-//	{
-//		//...
-//	}
-//}
+void levelEditor::erode(unsigned int radius)
+{
+	int rad = radius;
+
+	int w = levelFile.info.mapResolution.x;
+	int h = levelFile.info.mapResolution.y;
+	float* smoothed = new float[w*h];
+	memcpy(smoothed, levelFile.heights, w * h * sizeof(float));
+
+	float s;
+	int n;
+	for(int x=0; x < w; x++)
+	{
+		for(int y=0; y < h; y++)
+		{
+			if(getNormal(x,y).y > 0.9211)
+			{
+				s=0;
+				n=0;
+				for(int i = max(x-rad,0); i <= min(x+rad,w-1); i++)
+				{
+					for(int j = max(y-rad,0); j <= min(y+rad,h-1); j++)
+					{
+						s += getHeight(i,j);
+						n++;
+					}
+				}
+				smoothed[x+y*w] = s/n;
+			}
+		}
+	}
+
+	memcpy(levelFile.heights, smoothed, w * h * sizeof(float));
+	delete[] smoothed;
+	setMinMaxHeights();
+	terrainValid=false;
+}
 Rect levelEditor::orthoView()
 {
 	Vec2f gSize = levelFile.info.mapSize * 1.2 * pow(1.3f,-orthoScale);
@@ -1524,8 +1584,20 @@ void levelEditor::render3D(unsigned int v)
 void levelEditor::render()
 {
 	menuManager.drawCursor();
-
-	if(getTab() == OBJECTS)
+	if(getTab() == TERRAIN)
+	{
+		graphics->setColor(0.35,0.35,0.35);
+		graphics->drawOverlay(Rect::XYXY(0.0,0.0, 0.260, 1.0),"white");
+		graphics->setColor(0.55,0.55,0.55);
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 +  0*0.035, 0.255,  4*0.035),"white");	//Create
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 +  4*0.035, 0.255,  8*0.035),"white");	//Shading
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 +  8*0.035, 0.255,  13*0.035),"white");	//Tweak
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 +  14*0.035, 0.255, 15*0.035),"white");	//Sea Level
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 + 15*0.035, 0.255, 17*0.035),"white");	//Scale
+		graphics->drawOverlay(Rect::XYXY(0.005, 0.005 + 17*0.035, 0.255, 19*0.035),"white");	//Terrain LOD
+		graphics->setColor(1.0,1.0,1.0);
+	}
+	else if(getTab() == OBJECTS)
 	{
 		auto circleShader = shaders.bind("circle shader");
 		circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
@@ -1545,8 +1617,7 @@ void levelEditor::render()
 		graphics->drawOverlay(Rect::XYXY(0.0, 0.195, 0.260, 1.0),"white");
 		graphics->setColor(1.0,1.0,1.0);
 	}
-
-	if(getTab() == REGIONS)
+	else if(getTab() == REGIONS)
 	{
 		Rect viewRect = orthoView();
 
@@ -1855,6 +1926,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			graphics->drawLine(A,B);
 		}
 	}
+
 	graphics->setDepthTest(true);
 	color3D->setUniform4f("color", 0.0, 0.0, 0.0, 0.3);
 	//graphics->drawQuad(	Vec3f(rStart.x*xMult,0,rStart.z*yMult),

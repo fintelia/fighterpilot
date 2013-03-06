@@ -23,8 +23,8 @@
 	#define XINPUT
 	#pragma comment (lib,"xinput")
 
-	//#define DIRECT_INPUT
-	//#pragma comment (lib, "dinput8.lib")
+	#define DIRECT_INPUT	//can cause performance issues?
+	#pragma comment (lib, "dinput8.lib")
 	#pragma comment (lib, "dxguid.lib")
 
 	#pragma comment (lib, "dsound.lib")

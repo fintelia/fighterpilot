@@ -621,9 +621,9 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 		}
 		else
 		{
-			unsigned char texData[] = {0};
+			unsigned char texData[] = {1,1,1,1};
 			treeTexture = graphics->genTexture2D();
-			treeTexture->setData(1,1, GraphicsManager::texture::INTENSITY, false, false, texData); 
+			treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
 		}
 	}
 	else
@@ -690,7 +690,7 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 									Color3(random<float>(0.8,1.1), random<float>(0.8,1.1), random<float>(0.8,1.1));
 
 								dir = random2<float>();
-								float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4;
+								float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4 * 1.5;
 								tmpVerts[n+0].position = position + Vec3f(-2.5*dir.x, 0.0, -2.5*dir.y)*s;	//width: 2.0 -> 2.5
 								tmpVerts[n+1].position = position + Vec3f( 2.5*dir.x, 0.0,  2.5*dir.y)*s;
 								tmpVerts[n+2].position = position + Vec3f( 2.5*dir.x, 5.0,  2.5*dir.y)*s;
@@ -777,9 +777,9 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			messageBox("Warning: level contains more trees than supported by Shader Model 3 graphics cards. Some trees may be missing!");
 		}
 
-		unsigned char texData[] = {0};
+		unsigned char texData[] = {1,1,1,1};
 		treeTexture = graphics->genTexture2D();
-		treeTexture->setData(1,1, GraphicsManager::texture::INTENSITY, false, false, texData); 
+		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
 	}
 	t = GetTime() - t;
 	t = GetTime();

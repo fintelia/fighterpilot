@@ -24,16 +24,23 @@ public:
 		debugBreak();
 		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
 	}
-	Vector2 operator*(T scale) const{return Vector2(x * scale, y * scale);}
+	Vector2 operator+(T scale) const{return Vector2(x + scale, y + scale);}
+	Vector2 operator-(T scale) const{return Vector2(x - scale, y - scale);}
 	Vector2 operator/(T scale) const{return Vector2(x / scale, y / scale);}
 	Vector2 operator+(const Vector2& other) const{return Vector2(x + other.x, y + other.y);}
 	Vector2 operator-(const Vector2& other) const{return Vector2(x - other.x, y - other.y);}
+	Vector2 operator*(const Vector2& other) const{return Vector2(x * other.x, y * other.y);}
+	Vector2 operator/(const Vector2& other) const{return Vector2(x / other.x, y / other.y);}
 	Vector2 operator-() const{return Vector2(-x, -y);}
 
+	Vector2& operator+=(T scale){	return *this = (*this)+scale;}
+	Vector2& operator-=(T scale){	return *this = (*this)-scale;}
 	Vector2& operator*=(T scale){	return *this = (*this)*scale;}
 	Vector2& operator/=(T scale){	return *this = (*this)/scale;}
 	Vector2& operator+=(const Vector2 &other){return *this = (*this)+other;}
 	Vector2& operator-=(const Vector2 &other){return *this = (*this)-other;}
+	Vector2& operator*=(const Vector2 &other){return *this = (*this)*other;}
+	Vector2& operator/=(const Vector2 &other){return *this = (*this)/other;}
 
 	bool operator!=(const Vector2& other) const{return !equal(other);}
 	bool operator==(const Vector2& other) const{return equal(other);}
@@ -139,16 +146,23 @@ public:
 		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 3D vector. Index should be either 0, 1, or 2.");
 	}
 
-
-	Vector3 operator/(T scale) const{				return Vector3(x / scale, y / scale, z / scale);		}
+	Vector3 operator+(T scalar) const{				return Vector3(x + scalar, y + scalar, z + scalar);		}
+	Vector3 operator-(T scalar) const{				return Vector3(x - scalar, y - scalar, z - scalar);		}
+	Vector3 operator/(T scalar) const{				return Vector3(x / scalar, y / scalar, z / scalar);		}
 	Vector3 operator+(const Vector3 &other) const{	return Vector3(x + other.x, y + other.y, z + other.z);	}
 	Vector3 operator-(const Vector3 &other) const{	return Vector3(x - other.x, y - other.y, z - other.z);	}
+	Vector3 operator*(const Vector3 &other) const{	return Vector3(x * other.x, y * other.y, z * other.z);	}
+	Vector3 operator/(const Vector3 &other) const{	return Vector3(x / other.x, y / other.y, z / other.z);	}
 	Vector3 operator-() const{						return Vector3(-x, -y, -z);								}
 
+	Vector3& operator+=(T scale){return *this = (*this)+scale;}
+	Vector3& operator-=(T scale){return *this = (*this)-scale;}
 	Vector3& operator*=(T scale){return *this = (*this)*scale;}
 	Vector3& operator/=(T scale){return *this = (*this)/scale;}
 	Vector3& operator+=(const Vector3& other){return *this = (*this)+other;}
 	Vector3& operator-=(const Vector3& other){return *this = (*this)-other;}
+	Vector3& operator*=(const Vector3& other){return *this = (*this)*other;}
+	Vector3& operator/=(const Vector3& other){return *this = (*this)/other;}
 
 	bool operator!=(const Vector3& other) const{return !equal(other);}
 	bool operator==(const Vector3& other) const{return equal(other);}

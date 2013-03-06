@@ -58,9 +58,9 @@ void main()
 	float noiseVal = /*texture2D(LCnoise, position.xz*0.005).x +*/ texture2D(LCnoise, position.xz*0.01).x * 2.5;
 
 	vec3 color;
-	color = mix(vec3(texture2D(sand,position.xz*0.0005).rgb * (noiseVal*0.5+0.5)),
-				vec3(texture2D(sand2,position.xz*0.0005).rgb * (noiseVal*0.3+0.7)),//,clamp(15.0-15.0*r,0.0,1.0));
-				clamp(n.y*30.0, 0.0, 1.0));
+	color = mix(texture2D(sand2,position.xz*0.0005).rgb * (noiseVal*0.3+0.7) * light,
+				texture2D(sand,position.xz*0.0005).rgb * vec3(0.85,1,0.85) * (noiseVal*0.5+0.5)  * (light*0.5+0.5),
+				clamp(n.y*4.0-1.5, 0.0, 1.0));
 
 	vec3 eyeDirection = position.xyz-eyePos;
 
@@ -74,5 +74,5 @@ void main()
 	//color.rgb = vec3(0,0,clamp(i+0.1,0.1,1.0));
 	/////////////////////////////////////////////////////////
 
-	gl_FragColor = vec4(mix(color*light, textureCube(sky, vec3(eyeDirection.x,0,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
+	gl_FragColor = vec4(mix(color, textureCube(sky, vec3(eyeDirection.x,0,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
 }
