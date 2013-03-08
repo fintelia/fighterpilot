@@ -3,7 +3,7 @@
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
 
-GraphicsManager::GraphicsManager(): currentId(0), currentView(0), currentGamma(1.0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), highResScreenshot(false)
+GraphicsManager::GraphicsManager(): currentId(0), currentView(0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), currentGamma(1.0), highResScreenshot(false)
 {
 	viewConstraint = Rect::XYXY(0,0,1,1);
 }

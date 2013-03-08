@@ -754,7 +754,7 @@ bool CollisionManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2)
 		return sweptSphereSphere(s1, s1_newCenter - s1.center, s2, s2_newCenter - s2.center);
 		//return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
 	}
-	else if(b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::SPHERE || b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH)
+	else if((b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::SPHERE) || (b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH))
 	{
 		if(b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH) //make sure b1's type == MESH and b2's type == SPHERE
 			swap(b1,b2);

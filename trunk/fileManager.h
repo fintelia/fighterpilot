@@ -38,7 +38,6 @@ public:
 		file(FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f){}
 		file(string fName, FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f), filename(fName){}
 
-		friend class FileManager;
 		virtual void parseFile(fileContents data)=0;
 		virtual fileContents serializeFile()=0;
 	};
@@ -161,7 +160,7 @@ public:
 		}
 		else
 		{
-			fileContents data = fileManager.loadFileContents(filename);
+			fileContents data = loadFileContents(filename);
 			f->parseFile(data);
 			delete[] data.contents;
 		}

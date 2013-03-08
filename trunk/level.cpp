@@ -338,7 +338,8 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f) //TODO: add
 					
 					if(openParen != s.npos && closeParen != s.npos && openParen+1 < closeParen)
 					{
-						boost::split(parameters,s.substr(openParen+1, closeParen-openParen-1),boost::is_any_of(","));
+						string parametersString = s.substr(openParen+1, closeParen-openParen-1);
+						boost::split(parameters,parametersString,boost::is_any_of(","));
 					}
 
 					if(conditionName == "NUM_OBJECTS")
@@ -383,7 +384,8 @@ bool LevelFile::parseObjectFile(shared_ptr<FileManager::textFile> f) //TODO: add
 					
 					if(openParen != s.npos && closeParen != s.npos && openParen+1 < closeParen)
 					{
-						boost::split(parameters,s.substr(openParen+1, closeParen-openParen-1),boost::is_any_of(","));
+						string parametersString = s.substr(openParen+1, closeParen-openParen-1);
+						boost::split(parameters,parametersString,boost::is_any_of(","));
 					}
 
 					if(actionName == "START_PATH" && parameters.size() >= 2)

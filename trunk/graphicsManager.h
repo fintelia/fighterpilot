@@ -133,7 +133,7 @@ public:
 		void setRenderFunc(std::function<void(int)> f, int param=0){mRenderFunc = f; mRenderFuncParam = param;}
 		void setTransparentRenderFunc(std::function<void(int)> f, int param=0){mTransparentRenderFunc = f; mTransparentRenderFuncParam = param;}
 
-		bool transparentRenderFunc(){return mTransparentRenderFunc;}
+		bool transparentRenderFunc(){return mTransparentRenderFunc!=nullptr;}
 
 		bool sphereInFrustum(Sphere<float> s);
 		bool boundingBoxInFrustum(BoundingBox<float> b);

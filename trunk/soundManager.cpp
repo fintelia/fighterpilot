@@ -1,9 +1,12 @@
 
 #include "engine.h"
-#include <windows.h>
-#include <dsound.h>
 
+#ifdef WINDOWS
+	#include <windows.h>
+	#include <dsound.h>
+#endif
 
+#if defined(WINDOWS)
 bool SoundManager::initialize()
 {
 	if(FAILED(DirectSoundCreate8(NULL, (IDirectSound8**)&dsDevice, NULL)))
@@ -30,17 +33,6 @@ bool SoundManager::initialize()
 
 	return true;
 }
-void SoundManager::loadSound(string name, string filename, bool loop)
-{
-	auto nSound = std::make_shared<sound>();
-	nSound->filename = filename;
-	nSound->loop = loop;
-	sounds[name] = nSound;
-}
-shared_ptr<SoundManager::soundInstance> SoundManager::newSoundInstance()
-{
-	return shared_ptr<soundInstance>();
-}
 void SoundManager::playSound(string name)
 {
 	auto s = sounds.find(name);
@@ -53,14 +45,42 @@ void SoundManager::playSound(string name)
 			PlaySoundA(s->second->filename.c_str(), nullptr, SND_FILENAME | SND_ASYNC);
 	}
 }
-void SoundManager::updateFrame()
-{
-
-}
 SoundManager::~SoundManager()
 {
 	if(dsDevice)
 	{
 		IDirectSound_Release((IDirectSound8*)dsDevice); 
 	}
+}
+#elif defined(LINUX)
+bool SoundManager::initialize()
+{
+	//code not written...
+	return false;
+}
+void SoundManager::playSound(string name)
+{
+	//code not written...
+}
+SoundManager::~SoundManager()
+{
+	//code not written...
+}
+#endif
+
+void SoundManager::loadSound(string name, string filename, bool loop)
+{
+	auto nSound = std::make_shared<sound>();
+	nSound->filename = filename;
+	nSound->loop = loop;
+	sounds[name] = nSound;
+}
+shared_ptr<SoundManager::soundInstance> SoundManager::newSoundInstance()
+{
+	return shared_ptr<soundInstance>();
+}
+
+void SoundManager::updateFrame()
+{
+
 }

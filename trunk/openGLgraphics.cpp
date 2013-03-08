@@ -2163,8 +2163,8 @@ void OpenGLgraphics::render()
 		{
 			currentView = shared_ptr<View>(*(i++));
 
-			Rect overlayRect, textureRect;
-			computeViewport(textureRect, Rect());
+			Rect overlayRect, textureRect, projectionConstraint;
+			computeViewport(textureRect, projectionConstraint);
 			overlayRect.x = textureRect.x * 2.0 - 1.0;
 			overlayRect.y = textureRect.y * 2.0 - 1.0;
 			overlayRect.w = textureRect.w * 2.0;
@@ -3003,8 +3003,10 @@ void OpenGLgraphics::endRenderToTexture()
 	setBlendMode(GraphicsManager::TRANSPARENCY);
 	bindRenderTarget(RT_FBO);
 }
+#ifdef WINDOWS
 HWND OpenGLgraphics::getWindowHWND()
 {
 	return context->hWnd;
 }
+#endif /*WINDOWS*/
 #endif /*OPENGL*/
