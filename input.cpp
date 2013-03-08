@@ -457,15 +457,19 @@ void InputManager::update()
 	
 	auto checkKeysym = [newKeycodes, x11_display](int sym)->char
 	{
-		return newKeycodes[XKeysymToKeycode(x11_display,sym)/8] 	& (1<<(XKeysymToKeycode(x11_display,sym) % 8)) 	? 0x80 : 0;
+		int keyCode = XKeysymToKeycode(x11_display,sym);
+		return (newKeycodes[keyCode/8] & (1<<(keyCode%8)))   ?   0x80 : 0;
 	};
 	
 	for(char c='A'; c <= 'Z'; c++)
 		newKeyStates[c] = checkKeysym(c);
 
 	for(char c=0; c < 24; c++)
+	{
 		newKeyStates[VK_F1+c] = checkKeysym(XK_F1+c);
-	
+		if(newKeyStates[VK_F1+c]!=0 && c==0)
+			c=0;
+	}
 	for(char c=0; c <= 9; c++)//keypad should also include key syms for when num lock is not on
 		newKeyStates[VK_NUMPAD0+c] = checkKeysym(XK_KP_0+c);
 	

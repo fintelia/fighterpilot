@@ -150,7 +150,7 @@ void linuxEventHandler(XEvent event)
 		{
 			if(keysym >= (minSym) && keysym <= (maxSym))
 			{
-				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(maxSym)+(minVK)));
+				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK)));
 				//cout << keysym << endl;
 				return true;
 			}

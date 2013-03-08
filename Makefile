@@ -35,6 +35,9 @@ CMAKE_COMMAND = /usr/bin/cmake
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
 
+# Escaping for special characters.
+EQUALS = =
+
 # The top-level source directory on which CMake was run.
 CMAKE_SOURCE_DIR = /home/jonathan/FighterPilot
 
@@ -732,30 +735,6 @@ game.cpp.s:
 	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/game.cpp.s
 .PHONY : game.cpp.s
 
-gameMath.o: gameMath.cpp.o
-.PHONY : gameMath.o
-
-# target to build an object file
-gameMath.cpp.o:
-	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/gameMath.cpp.o
-.PHONY : gameMath.cpp.o
-
-gameMath.i: gameMath.cpp.i
-.PHONY : gameMath.i
-
-# target to preprocess a source file
-gameMath.cpp.i:
-	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/gameMath.cpp.i
-.PHONY : gameMath.cpp.i
-
-gameMath.s: gameMath.cpp.s
-.PHONY : gameMath.s
-
-# target to generate assembly for a file
-gameMath.cpp.s:
-	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/gameMath.cpp.s
-.PHONY : gameMath.cpp.s
-
 glew.o: glew.c.o
 .PHONY : glew.o
 
@@ -1332,6 +1311,30 @@ smokeTrail.cpp.s:
 	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/smokeTrail.cpp.s
 .PHONY : smokeTrail.cpp.s
 
+soundManager.o: soundManager.cpp.o
+.PHONY : soundManager.o
+
+# target to build an object file
+soundManager.cpp.o:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/soundManager.cpp.o
+.PHONY : soundManager.cpp.o
+
+soundManager.i: soundManager.cpp.i
+.PHONY : soundManager.i
+
+# target to preprocess a source file
+soundManager.cpp.i:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/soundManager.cpp.i
+.PHONY : soundManager.cpp.i
+
+soundManager.s: soundManager.cpp.s
+.PHONY : soundManager.s
+
+# target to generate assembly for a file
+soundManager.cpp.s:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/soundManager.cpp.s
+.PHONY : soundManager.cpp.s
+
 splash.o: splash.cpp.o
 .PHONY : splash.o
 
@@ -1451,6 +1454,30 @@ time.s: time.cpp.s
 time.cpp.s:
 	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/time.cpp.s
 .PHONY : time.cpp.s
+
+tracer.o: tracer.cpp.o
+.PHONY : tracer.o
+
+# target to build an object file
+tracer.cpp.o:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/tracer.cpp.o
+.PHONY : tracer.cpp.o
+
+tracer.i: tracer.cpp.i
+.PHONY : tracer.i
+
+# target to preprocess a source file
+tracer.cpp.i:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/tracer.cpp.i
+.PHONY : tracer.cpp.i
+
+tracer.s: tracer.cpp.s
+.PHONY : tracer.s
+
+# target to generate assembly for a file
+tracer.cpp.s:
+	$(MAKE) -f CMakeFiles/FighterPilot.dir/build.make CMakeFiles/FighterPilot.dir/tracer.cpp.s
+.PHONY : tracer.cpp.s
 
 worldManager.o: worldManager.cpp.o
 .PHONY : worldManager.o
@@ -1587,9 +1614,6 @@ help:
 	@echo "... game.o"
 	@echo "... game.i"
 	@echo "... game.s"
-	@echo "... gameMath.o"
-	@echo "... gameMath.i"
-	@echo "... gameMath.s"
 	@echo "... glew.o"
 	@echo "... glew.i"
 	@echo "... glew.s"
@@ -1662,6 +1686,9 @@ help:
 	@echo "... smokeTrail.o"
 	@echo "... smokeTrail.i"
 	@echo "... smokeTrail.s"
+	@echo "... soundManager.o"
+	@echo "... soundManager.i"
+	@echo "... soundManager.s"
 	@echo "... splash.o"
 	@echo "... splash.i"
 	@echo "... splash.s"
@@ -1677,6 +1704,9 @@ help:
 	@echo "... time.o"
 	@echo "... time.i"
 	@echo "... time.s"
+	@echo "... tracer.o"
+	@echo "... tracer.i"
+	@echo "... tracer.s"
 	@echo "... worldManager.o"
 	@echo "... worldManager.i"
 	@echo "... worldManager.s"
