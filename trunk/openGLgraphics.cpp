@@ -1890,6 +1890,7 @@ void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionCon
 		projectionConstraint = Rect::XYWH(0,0,1,1);
 	}
 }
+	#include <time.h>
 void OpenGLgraphics::render()
 {
 /////////////////////////////////////START TIMING/////////////////////////////////////

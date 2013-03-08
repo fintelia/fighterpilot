@@ -45,11 +45,7 @@
 	long long totalTicks()
 	{
 		timespec t;
-#ifdef _POSIX_CPUTIME
-		if(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t))
-#else
-		if(!clock_gettime(CLOCK_REALTIME, &t))
-#endif
+		if(!clock_gettime(CLOCK_MONOTONIC, &t))
 		{
 			return static_cast<long long>(t.tv_sec) * 1000000000 + t.tv_nsec;
 		}
