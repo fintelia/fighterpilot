@@ -179,7 +179,9 @@ void manager::inputCallback(InputManager::callBack* callback)
 		InputManager::keyStroke* call = (InputManager::keyStroke*)callback;
 		if(!popups.empty())
 		{
+#ifdef _DEBUG
 			int pSize = popups.size();
+#endif
 			if(!call->up && popups.back()->keyDown(call->vkey)) return;
 			if(call->up && popups.back()->keyUp(call->vkey)) return;
 
@@ -202,7 +204,9 @@ void manager::inputCallback(InputManager::callBack* callback)
 		InputManager::menuKeystroke* call = (InputManager::menuKeystroke*)callback;
 		if(!popups.empty())
 		{
+#ifdef _DEBUG
 			int pSize = popups.size();
+#endif
 			if(popups.back()->menuKey(call->mkey)) 
 				return;
 
@@ -226,7 +230,9 @@ void manager::inputCallback(InputManager::callBack* callback)
 
 		if(!popups.empty())
 		{
+#ifdef _DEBUG
 			int pSize = popups.size();
+#endif
 
 			if(call->button == LEFT_BUTTON && popups.back()->mouseL(call->down,call->pos.x,call->pos.y)) return;
 			if(call->button == RIGHT_BUTTON && popups.back()->mouseR(call->down,call->pos.x,call->pos.y)) return;

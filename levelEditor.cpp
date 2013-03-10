@@ -1426,7 +1426,7 @@ void levelEditor::render3D(unsigned int v)
 
 	if(orthoTerrain)
 	{
-		Rect viewRect = orthoView();
+		//Rect viewRect = orthoView();
 		//view->ortho(viewRect.x,viewRect.x+viewRect.w,viewRect.y,viewRect.y+viewRect.h,-10000,10000); set in update frame
 		view->lookAt(orthoCenter+Vec3f(0,10000,0),orthoCenter,Vec3f(0,0,1));
 

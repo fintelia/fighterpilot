@@ -292,10 +292,16 @@ bool CollisionManager::testRayAABB(Vec3f p, Vec3f d, BoundingBox<float> AABB, Ve
 	return true;
 }
 bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const
-{	//	"based on A Fast Triangle-Triangle Intersection Test" by Tomas Moller
+{	//	based on "A Fast Triangle-Triangle Intersection Test" by Tomas Moller
 	//	http://knight.temple.edu/~lakamper/courses/cis350_2004/etc/moeller_triangle.pdf
 
-	Vec3f N1 = (t1_b - t1_a).cross(t1_c - t1_a);
+/* NOT YET COMPLETE!!!! */
+	debugBreak();
+	return false;
+
+/*  commented out so that it is clear this never detects a collision*/
+	
+/*	Vec3f N1 = (t1_b - t1_a).cross(t1_c - t1_a);
 	Vec3f N2 = (t2_b - t2_a).cross(t2_c - t2_a);
 	float d1 = -N1.dot(t1_a);
 	float d2 = -N2.dot(t2_a);
@@ -311,6 +317,8 @@ bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, 
 	else if(dv1a == 0.0f && dv1b == 0.0f && dv1c == 0.0f)
 	{
 		//triangles are co-planar
+		debugBreak();
+		return false;
 	}
 
 	float dv2a = N1.dot(t2_a) + d1;
@@ -329,15 +337,18 @@ bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, 
 	Vec3f D = N1.cross(N2);
 	Vec3f O = (N1*(d1*N1dotN1-d2*N1dotN2) + N2*(d2*N2dotN2-d1*N1dotN2)) / (N1dotN1*N2dotN2-N1dotN2*N1dotN2);
 
-	float pa1 = D.dot(t1_a - O);
-	float pa2 = D.dot(t1_b - O);
-	float pa3 = D.dot(t1_c - O);
-	float pb1 = D.dot(t2_a - O);
-	float pb2 = D.dot(t2_b - O);
-	float pb3 = D.dot(t2_c - O);
-
 	//TODO: finish writing code...
-	return false;
+	float p1a = D.dot(t1_a - O);
+	float p1b = D.dot(t1_b - O);
+	float p1c = D.dot(t1_c - O);
+	float p2a = D.dot(t2_a - O);
+	float p2b = D.dot(t2_b - O);
+	float p2c = D.dot(t2_c - O);
+
+	//float t1 = p1a + (p1b - p1a) * d1a / (d1a - d1b); -- are these right? (Do we need to choose specific verticies...)
+	//float t2 = p2a + (p2b - p2a) * d2a / (d2a - d2b); 
+	
+	return false;*/
 }
 //bool PhysicsManager::testLineTriangle(Vec3f lStart, Vec3f lEnd, Vec3f t1, Vec3f t2, Vec3f t3, Vec3f& intersectionPoint) const
 //{									// not "double sided"?

@@ -454,17 +454,6 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 
-	int depth;
-	if(format == INTENSITY)				depth = 1;
-	else if(format == DEPTH)			depth = 3;
-	else if(format == LUMINANCE_ALPHA)	depth = 2;
-	else if(format == BGR)				depth = 3;
-	else if(format == BGRA)				depth = 4;
-	else if(format == RGB16)			depth = 6;
-	else if(format == RGBA16)			depth = 8;
-	else if(format == RGB16)			depth = 6;
-	else if(format == RGBA16)			depth = 8;
-
 	if(!gl2Hacks || GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
 	{
 		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
@@ -1959,7 +1948,6 @@ void OpenGLgraphics::render()
 		}
 
 		//render scene
-		int num = 0;
 		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //if the view no longer exists
@@ -1978,7 +1966,7 @@ void OpenGLgraphics::render()
 				glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 				if(highResScreenshot)
 				{
-					Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+					//Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
 
 					currentView->constrainView(projConstraint);
 
@@ -2054,7 +2042,7 @@ void OpenGLgraphics::render()
 					glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 					if(highResScreenshot)
 					{
-						Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
+						//Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
 
 						currentView->constrainView(projConstraint);
 
@@ -2535,6 +2523,16 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	winAttr.background_pixmap = None;
     winAttr.background_pixel = 0;
     winAttr.border_pixel = 0;
+	//winAttr.cursor = 0;
+	
+	Pixmap bm_no;
+	XColor black, dummy;
+	Colormap colormap;
+	static char blankData[] = {0,0,0,0,0,0,0,0};
+	colormap = DefaultColormap(x11_display, DefaultScreen(x11_display));
+	XAllocNamedColor(x11_display, colormap, "black", &black, &dummy);
+	bm_no = XCreateBitmapFromData(x11_display, RootWindow(x11_display, vi->screen), blankData, 8, 8);
+	winAttr.cursor = XCreatePixmapCursor(x11_display, bm_no, bm_no, &black, &black, 0, 0);
 	
 	if (fullscreenflag)
 	{
@@ -2548,7 +2546,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		/* set window attributes */
 		winAttr.override_redirect = True;
 		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |  StructureNotifyMask;
-		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect, &winAttr);
+		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect | CWCursor, &winAttr);
 		XWarpPointer(x11_display, None, x11_window, 0, 0, 0, 0, 0, 0);
 		XMapRaised(x11_display, x11_window);
 		XGrabKeyboard(x11_display, x11_window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -2558,7 +2556,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	{
 		/* create a window in window mode*/
 		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
-		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, screenResolution.x, screenResolution.y, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask, &winAttr);
+		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, screenResolution.x, screenResolution.y, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask | CWCursor, &winAttr);
 		/* only set window title and handle wm_delete_events if in windowed mode */
 		Atom wmDelete = XInternAtom(x11_display, "WM_DELETE_WINDOW", True);
 		XSetWMProtocols(x11_display, x11_window, &wmDelete, 1);

@@ -36,7 +36,7 @@ bool inGame::menuKey(int mkey)
 	if(mkey==MENU_DOWN)	activeChoice = choice(int(activeChoice)+1);
 	if(activeChoice<RESUME) activeChoice=QUIT;
 	if(activeChoice>QUIT) activeChoice=RESUME;
-	if(mkey == MENU_ENTER && activeChoice == RESUME || mkey == MENU_BACK)
+	if((mkey == MENU_ENTER && activeChoice == RESUME) || mkey == MENU_BACK)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
@@ -521,9 +521,6 @@ bool loading::init()
 }
 void loading::updateFrame()
 {
-	static double loadStartTime = GetTime();
-
-
 	static bool loadedObjectData = false;
 	if(!loadedObjectData)
 	{
@@ -571,9 +568,6 @@ void loading::updateFrame()
 		{
 			menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 		}
-
-		double t = GetTime() - loadStartTime;
-		t = GetTime();
 	}
 }
 void loading::render()

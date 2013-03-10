@@ -198,7 +198,7 @@ void splitScreen::render()
 				{
 					float interpolate = world.time.interpolate();
 					Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
-					Quat4f planeRot = slerp(p->lastRotation, p->rotation, interpolate);
+					//Quat4f planeRot = slerp(p->lastRotation, p->rotation, interpolate);
 					Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
 					Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
 

@@ -7,7 +7,7 @@
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0), controlType(CONTROL_TYPE_ADVANCED),firstPerson(nullptr),thirdPerson(nullptr)
+plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0),firstPerson(nullptr),thirdPerson(nullptr), controlType(CONTROL_TYPE_ADVANCED)
 {
 	//soundManager.playSound("sound1");
 

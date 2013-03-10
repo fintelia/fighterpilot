@@ -576,9 +576,13 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			foliageVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
 			emptyVBO->bindBuffer();
 			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
+
+#ifdef _DEBUG
 			unsigned int n = foliageVBO->unbindTransformFeedback();
 			debugAssert(n == 4*numTrees);
-
+#else
+			foliageVBO->unbindTransformFeedback();
+#endif
 
 			treeTexture = graphics->genTexture2D();
 			treeTexture->setData(4096, 4096, GraphicsManager::texture::RGBA, false, false, nullptr);
@@ -1300,8 +1304,7 @@ void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physi
 void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 {
 	const double AOI = 45.0 * PI/180.0;
-	const int numDirections=1;
-
+	
 	double t = GetTime();
 
 	treeTexture = graphics->genTexture2D();
