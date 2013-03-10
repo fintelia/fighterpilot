@@ -98,7 +98,7 @@ double GameTime::trueGameTime() const
 		}
 	}
 }
-GameTime::GameTime(): changingSpeed(false), changeTimeLeft(0.0), finalTimeSpeed(1.0), timeSpeed(1.0), paused(0), lReal(0), lGame(0.0), cReal(0), cGame(0.0), ticksPerSecond(1000),  updateStage(false), cUpdateTime(0), lUpdateTime(0), updateLength(8.33333)
+GameTime::GameTime(): timeSpeed(1.0), paused(0), lReal(0), lGame(0.0), cReal(0), cGame(0.0), changingSpeed(false), changeTimeLeft(0.0), finalTimeSpeed(1.0), ticksPerSecond(1000), updateStage(false), cUpdateTime(0), lUpdateTime(0), updateLength(8.33333)
 {
 	ticksPerSecond = getTotalTicksPerSecond();
 	lReal = cReal = totalTicks();

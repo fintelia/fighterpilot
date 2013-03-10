@@ -9,7 +9,7 @@ namespace particle{
 shared_ptr<GraphicsManager::indexBuffer> emitter::quadIBO;
 unsigned int emitter::IBOnumQuads=0;
 
-emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending, bool SparkParticles):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), oldParticlePositions(NULL), particleFlags(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), active(true), visible(true), sparkParticles(SparkParticles), vertsPerParticle(graphics->hasShaderModel4() && !SparkParticles ? 1 : 4)
+emitter::emitter(string tex, unsigned int initalCompacity, float ParticlesPerSecond, bool AdditiveBlending, bool SparkParticles):parentObject(0),parentOffset(0,0,0),texture(tex),particles(NULL), oldParticlePositions(NULL), particleFlags(NULL), vertices(NULL), compacity(initalCompacity), liveParticles(0), total(0), startTime(world.time()),extraTime(0.0),particlesPerSecond(ParticlesPerSecond), minXYZ(position),maxXYZ(position),additiveBlending(AdditiveBlending), sparkParticles(SparkParticles), vertsPerParticle(graphics->hasShaderModel4() && !SparkParticles ? 1 : 4), active(true), visible(true)
 {
 	if(compacity != 0)
 	{
@@ -78,8 +78,6 @@ unsigned int emitter::addParticle(particle& p)
 void emitter::update()
 {
 	double ms = world.time.length();
-	double time = world.time();
-
 
 	lastPosition = position; //lastPosition is only valid if position is not modified outside of this function!!!
 	if(parentObject != 0)

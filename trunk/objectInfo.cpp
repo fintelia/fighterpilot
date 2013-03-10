@@ -306,7 +306,7 @@ const ObjectInfo::planeObjectData& ObjectInfo::planeStats(objectType t)
 	if(!(t & PLANE))
 	{
 		debugBreak();
-		t = t & MINOR_OBJECT_TYPE | PLANE;
+		t = (t & MINOR_OBJECT_TYPE) | PLANE;
 	}
 	return *static_pointer_cast<planeObjectData>(objectMap[t]);
 }

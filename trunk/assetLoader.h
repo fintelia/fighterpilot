@@ -11,6 +11,7 @@ private:
 		//vector<shared_ptr<FileManager::file>> files; //for textures
 	};
 	struct shaderAssetFile: public assetFile{
+		shaderAssetFile():use_sAspect(false){}
 		assetType getType(){return SHADER;}
 
 		shared_ptr<FileManager::textFile> vertFile;
@@ -25,6 +26,7 @@ private:
 		vector<const char*> feedbackTransformVaryings;
 	};
 	struct textureAssetFile: public assetFile{
+		textureAssetFile():tileable(false), compress(false){}
 		assetType getType(){return TEXTURE;}
 
 		//shared_ptr<FileManager::textureFile> file;
@@ -33,6 +35,7 @@ private:
 		bool compress;
 	};
 	struct texture3AssetFile: public assetFile{
+		texture3AssetFile():tileable(false), depth(1){}
 		assetType getType(){return TEXTURE_3D;}
 
 		//shared_ptr<FileManager::textureFile> file;

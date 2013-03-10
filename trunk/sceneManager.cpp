@@ -190,10 +190,6 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
 						material->indexBuffer->drawBuffer();
 					}
-					else
-					{
-						int m=4;
-					}
 					i.reset();
 				}
 			}

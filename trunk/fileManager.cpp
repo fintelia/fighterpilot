@@ -713,7 +713,7 @@ void FileManager::zipFile::parseFile(fileContents data)
 		while(data.size - position > sizeof(LocalHeader) && position < data.size)
 		{
 			double t = GetTime();
-			while(readAs<unsigned int>(data.contents + position) != 0x04034b50 && position < data.size)
+			while(position+4 <= data.size && readAs<unsigned int>(data.contents + position) != 0x04034b50)
 				position++;
 
 			if(data.size - position <= sizeof(LocalHeader))
@@ -1573,6 +1573,13 @@ void FileManager::modelFile::parseFile(fileContents data)
 		float boundingSphereZ		= readAs<float>(data.contents + 17);
 		float boundingSphereRadius	= readAs<float>(data.contents + 21);
 
+		if(version != 1)
+		{
+			debugBreak();
+			completeLoad(false);
+			return;
+		}
+		
 		if(data.size < 25LL + 228LL * numMaterials + 64LL * numVertices)
 		{
 			completeLoad(false);
@@ -1593,7 +1600,7 @@ void FileManager::modelFile::parseFile(fileContents data)
 			return;
 		}
 
-		boundingSphere.center = Vec3f(boundingSphereX,boundingSphereY,boundingSphereX);
+		boundingSphere.center = Vec3f(boundingSphereX,boundingSphereY,boundingSphereZ);
 		boundingSphere.radius = boundingSphereRadius;
 
 		string textureFilename;

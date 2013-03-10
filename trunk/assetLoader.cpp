@@ -19,11 +19,11 @@ bool AssetLoader::loadAssetList()
 		string s = (c != NULL) ? string(c) : string("");
 		return s;
 	};
-	auto getIntAttribute = [](XMLElement* element, const char* attribute)->int //returns 0 on failure
-	{
-		int i;
-		return element->QueryIntAttribute(attribute, &i) == XML_SUCCESS ? i : 0;
-	};
+// 	auto getIntAttribute = [](XMLElement* element, const char* attribute)->int //returns 0 on failure
+// 	{
+// 		int i;
+// 		return element->QueryIntAttribute(attribute, &i) == XML_SUCCESS ? i : 0;
+// 	};
 
 	XMLDocument doc;
 	if(doc.LoadFile("media/assetList.xml"))
@@ -61,7 +61,7 @@ bool AssetLoader::loadAssetList()
 					string filename = getAttribute(textureElement, "file");
 					tmpAssetFile->tileable = getAttribute(textureElement,"tileable") == "true";
 					tmpAssetFile->compress = useTextureCompression;
-
+					
 					if(game->isWideScreen())
 					{
 						string wideFileName = getAttribute(textureElement, "fileWide");
@@ -542,12 +542,11 @@ shared_ptr<FileManager::modelFile> AssetLoader::loadModel(string filename, bool 
 	shared_ptr<FileManager::modelFile> model = fileManager.loadFile<FileManager::modelFile>(filename);
 	if(model->valid())
 	{
-		//add model to ip file for next time
+		//add model to zip file for next time
 		modelsToAddToZip.push_back(model);
 
 		if(loadTextures)
 		{
-			textureAssetFile* tmpTextureFile = new textureAssetFile;
 			for(auto m=model->materials.begin(); m != model->materials.end(); m++)
 			{
 				if(m->textureMap_filename != "")

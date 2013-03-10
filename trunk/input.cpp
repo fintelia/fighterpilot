@@ -431,18 +431,18 @@ void InputManager::addDirectInputDevice(IDirectInputDevice8W* devicePtr, string 
 #endif
 void InputManager::update()
 {
-	double time = GetTime();
-	static double lastUpdateTime = time;
-
-	double updateLength = clamp(time - lastUpdateTime, 0.0, 100.0); //make sure update length is between 0 ms and 100 ms
-	lastUpdateTime = time;
-
 	static char newKeyStates[256];
 	memset(newKeyStates, 0, 256);
 #if defined WINDOWS
 	POINT cursorPos;
 	GetCursorPos(&cursorPos);
 	GetKeyboardState((PBYTE)newKeyStates);
+	
+	double time = GetTime();
+	static double lastUpdateTime = time;
+	double updateLength = clamp(time - lastUpdateTime, 0.0, 100.0); //make sure update length is between 0 ms and 100 ms
+	lastUpdateTime = time;
+	
 #elif defined LINUX
 	Vec2i cursorPos;
 	Vec2i root_cursorPos;
@@ -455,22 +455,22 @@ void InputManager::update()
 	char newKeycodes[32];
 	XQueryKeymap(x11_display, newKeycodes);
 	
-	auto checkKeysym = [newKeycodes, x11_display](int sym)->char
+	auto checkKeysym = [newKeycodes](int sym)->char
 	{
 		int keyCode = XKeysymToKeycode(x11_display,sym);
 		return (newKeycodes[keyCode/8] & (1<<(keyCode%8)))   ?   0x80 : 0;
 	};
 	
-	for(char c='A'; c <= 'Z'; c++)
+	for(unsigned char c='A'; c <= 'Z'; c++)
 		newKeyStates[c] = checkKeysym(c);
 
-	for(char c=0; c < 24; c++)
+	for(unsigned char c=0; c < 24; c++)
 	{
 		newKeyStates[VK_F1+c] = checkKeysym(XK_F1+c);
 		if(newKeyStates[VK_F1+c]!=0 && c==0)
 			c=0;
 	}
-	for(char c=0; c <= 9; c++)//keypad should also include key syms for when num lock is not on
+	for(unsigned char c=0; c <= 9; c++)//keypad should also include key syms for when num lock is not on
 		newKeyStates[VK_NUMPAD0+c] = checkKeysym(XK_KP_0+c);
 	
 	newKeyStates[VK_LSHIFT] = checkKeysym(XK_Shift_L);
