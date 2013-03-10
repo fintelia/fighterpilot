@@ -343,6 +343,7 @@ void levelEditor::updateFrame()
 			buttons["beautify coast"]->setVisibility(newTab==TERRAIN);
 			buttons["smooth"]->setVisibility(newTab==TERRAIN);
 			buttons["roughen"]->setVisibility(newTab==TERRAIN);
+			buttons["erode"]->setVisibility(newTab==TERRAIN);
 			toggles["shaders"]->setVisibility(newTab==TERRAIN);
 			sliders["sea level"]->setVisibility(newTab==TERRAIN);
 			sliders["height scale"]->setVisibility(newTab==TERRAIN);
