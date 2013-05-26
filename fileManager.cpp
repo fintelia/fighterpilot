@@ -1248,6 +1248,10 @@ void FileManager::modelFile::parseFile(fileContents data)
 					{
 						strtok(NULL, " ");
 					}
+					else if(strcmp(c,"-bm") == 0)
+					{
+						strtok(NULL, " ");
+					}
 					else if(file == "")
 					{
 						file += c;
@@ -1463,31 +1467,61 @@ void FileManager::modelFile::parseFile(fileContents data)
 		}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		map<vertexIndices, unsigned int>::iterator vertexIndicesItt;
-		float inv;
+		float s1,t1,s2,t2,inv_det;
+		Vec3f Q1, Q2, T, B, T_prime, B_prime;
 		normalMappedVertex3D tmpVertex;
-		Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1);
+		Vec3f faceNormal(0,1,0), avgFaceNormal, faceTangent(0,0,1), faceBitangent(1,0,0);
 		for(int i=0; i < faces.size(); i++)
 		{
 			if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0)
 			{
 				faceNormal = (verts[faces[i].v[1]-1]-verts[faces[i].v[0]-1]).cross(verts[faces[i].v[2]-1]-verts[faces[i].v[0]-1]);
-			}
+				if(faces[i].n[0] != 0 && faces[i].n[1] != 0 && faces[i].n[2] != 0)
+				{
+					avgFaceNormal = normals[faces[i].n[0]-1] + normals[faces[i].n[1]-1] + normals[faces[i].n[2]-1];
+					if(faceNormal.dot(avgFaceNormal) < 0.0)// correct triangle winding order
+					{
+						swap(faces[i].v[0], faces[i].v[1]);
+						swap(faces[i].t[0], faces[i].t[1]);
+						swap(faces[i].n[0], faces[i].n[1]);
+					}
+				}
+			}	
+
 			if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].t[0] != 0 && faces[i].t[1] != 0 && faces[i].t[2] != 0)
-			{
-				inv = (texCoords[faces[i].t[0]-1].x * texCoords[faces[i].t[1]-1].y - texCoords[faces[i].t[1]-1].x * texCoords[faces[i].t[0]-1].y);
-				faceTangent = abs(inv) < 0.001 ? Vec3f(1,0,0).cross(faceNormal) : (verts[faces[i].v[0]-1] * texCoords[faces[i].t[1]-1].y - verts[faces[i].v[1]-1] * texCoords[faces[i].t[0]-1].y) / inv;
+			{//see: http://www.terathon.com/code/tangent.html
+
+				Q1 = verts[faces[i].v[1]-1] - verts[faces[i].v[0]-1];					
+				Q2 = verts[faces[i].v[2]-1] - verts[faces[i].v[0]-1];				
+
+				s1 = (texCoords[faces[i].t[1]-1] - texCoords[faces[i].t[0]-1]).x;
+				t1 = (texCoords[faces[i].t[1]-1] - texCoords[faces[i].t[0]-1]).y;
+				s2 = (texCoords[faces[i].t[2]-1] - texCoords[faces[i].t[0]-1]).x;
+				t2 = (texCoords[faces[i].t[2]-1] - texCoords[faces[i].t[0]-1]).y;
+
+				T, B, T_prime, B_prime;
+
+				inv_det = s1*t2 - s2*t1;
+
+				T = inv_det * ( t2 * Q1 - t1 * Q2);
+				B = inv_det * (-s1 * Q1 + s1 * Q2);
+
+				float d1 = faceNormal.dot(T);
+				float d2 = faceNormal.dot(B);
+				float d3 = (T - faceNormal.dot(T) * faceNormal).dot(B);
+				float tms = T.magnitudeSquared();
+
+				T_prime = T - faceNormal.dot(T) * faceNormal;
+				B_prime = B - faceNormal.dot(B) * faceNormal - T_prime.dot(B) * T_prime / T.magnitudeSquared();
+
+				faceTangent = T_prime;
+				faceBitangent = B_prime;
+
+				//inv = (texCoords[faces[i].t[0]-1].x * texCoords[faces[i].t[1]-1].y - texCoords[faces[i].t[1]-1].x * texCoords[faces[i].t[0]-1].y);
+				//faceTangent = abs(inv) < 0.001 ? Vec3f(1,0,0).cross(faceNormal) : (verts[faces[i].v[0]-1] * texCoords[faces[i].t[1]-1].y - verts[faces[i].v[1]-1] * texCoords[faces[i].t[0]-1].y) / inv;
 			}
 
-			if(faces[i].v[0] != 0 && faces[i].v[1] != 0 && faces[i].v[2] != 0 && faces[i].n[0] != 0 && faces[i].n[1] != 0 && faces[i].n[2] != 0)
-			{
-				avgFaceNormal = normals[faces[i].n[0]-1] + normals[faces[i].n[1]-1] + normals[faces[i].n[2]-1];
-				if(faceNormal.dot(faceNormal) < 0.0)// correct triangle winding order
-				{
-					swap(faces[i].v[0], faces[i].v[1]);
-					swap(faces[i].t[0], faces[i].t[1]);
-					swap(faces[i].n[0], faces[i].n[1]);
-				}
-			}
+
 			for(int j = 0; j < 3; j++)
 			{
 				vertexIndicesItt = indexMap.find(vertexIndices(faces[i].v[j], faces[i].t[j], faces[i].n[j]));
@@ -1500,6 +1534,7 @@ void FileManager::modelFile::parseFile(fileContents data)
 					tmpVertex.normal = (faces[i].n[j] != 0) ? normals[faces[i].n[j]-1] : faceNormal;
 					tmpVertex.UV = (faces[i].t[j] != 0) ? texCoords[faces[i].t[j]-1] : Vec2f();
 					tmpVertex.tangent = Vec3f(0,0,0);
+					tmpVertex.bitangent = Vec3f(0,0,0);
 					vertices.push_back(tmpVertex);
 				}
 				else
@@ -1510,6 +1545,10 @@ void FileManager::modelFile::parseFile(fileContents data)
 			vertices[faces[i].combinedVertices[0]].tangent += faceTangent;
 			vertices[faces[i].combinedVertices[1]].tangent += faceTangent;
 			vertices[faces[i].combinedVertices[2]].tangent += faceTangent;
+
+			vertices[faces[i].combinedVertices[0]].bitangent += faceBitangent;
+			vertices[faces[i].combinedVertices[1]].bitangent += faceBitangent;
+			vertices[faces[i].combinedVertices[2]].bitangent += faceBitangent;
 		}
 
 
@@ -1847,7 +1886,7 @@ FileManager::fileContents FileManager::textureFile::serializeFile()
 	if(format == BMP)
 	{
 		unsigned int bmp_width = width * channels;
-		unsigned int pWidth = width + 3 - ((width - 1) % 4);//padded width
+		unsigned int pWidth = bmp_width + 3 - ((bmp_width - 1) % 4);//padded width
 
 		fileContents c;
 		c.size = 54 + pWidth * height;

@@ -147,7 +147,7 @@ public:
 	void startPatrol();
 	void startHunt(int targetID);
 
-	void flyTowardsPoint(shared_ptr<plane> p, Vec3f dest);
+	void flyTowardsPoint(shared_ptr<plane> p, Vec3f dest, float strength=1.0);
 
 	AIplayer(int oNum);
 	void update();

@@ -34,7 +34,7 @@ public:
 		//shared_ptr<PhysicsManager::collisionBounds> collisionMesh;
 		weak_ptr<SceneManager::mesh>				mesh;
 
-		shared_ptr<SceneManager::meshInstance> newMeshInstance(Vec3f position, Quat4f rotation);
+		shared_ptr<SceneManager::meshInstance> newMeshInstance(Vec3f position, Quat4f rotation) const;
 
 		friend class ObjectInfo;
 	};
@@ -55,6 +55,25 @@ public:
 		vector<engine> engines;
 		float cameraDistance;
 	};
+	struct aaaObjectData: public objectData
+	{
+		struct turret
+		{
+			string meshFilename;
+			Vec3f rotationCenter;
+			weak_ptr<SceneManager::mesh> mesh;
+			shared_ptr<SceneManager::meshInstance> newMeshInstance(weak_ptr<SceneManager::meshInstance> parentMeshInstance) const;
+		};
+		struct cannon
+		{
+			string meshFilename;
+			Vec3f rotationCenter;
+			weak_ptr<SceneManager::mesh> mesh;
+			shared_ptr<SceneManager::meshInstance> newMeshInstance(weak_ptr<SceneManager::meshInstance> parentMeshInstance) const;
+		};
+		vector<turret> turrets;
+		vector<cannon> cannons;
+	};
 private:
 	planeType defaultPlane;
 
@@ -73,7 +92,8 @@ public:
 	string typeString(objectType t);
 	string textName(objectType t);
 	shared_ptr<objectData> operator[] (objectType t);
-	const planeObjectData& planeStats(objectType t);
+	shared_ptr<const ObjectInfo::planeObjectData> planeData(objectType t);
+	shared_ptr<const ObjectInfo::aaaObjectData> aaaData(objectType t);
 	planeType getDefaultPlane(){return defaultPlane;}
 	const vector<objectType>& getPlaceableObjects(){return placeableObjects;}
 };

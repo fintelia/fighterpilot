@@ -28,5 +28,5 @@ void bomb::updateSimulation(double time, double ms)
 void bomb::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-	meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation), !awaitingDelete);
+		meshInstance->update(Mat4f(slerp(lastRotation,rotation, interpolation), lerp(lastPosition,position,interpolation)), !awaitingDelete);
 }

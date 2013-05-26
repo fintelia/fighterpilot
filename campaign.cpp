@@ -13,7 +13,7 @@ campaign::campaign(shared_ptr<const LevelFile> lvl): dogFight(lvl), countdown(0.
 	view->setRenderFunc(bind(&campaign::render3D, this, std::placeholders::_1));
 	view->setTransparentRenderFunc(bind(&campaign::renderTransparency, this, std::placeholders::_1));
 	//graphics->setLightPosition(Vec3f(0.0, 1600000.0, 0.0));
-	graphics->setLightPosition(Vec3f(0.0, 160000.0, 100000.0));
+	graphics->setLightPosition(Vec3f(0.0, 100000.0, 100000.0).normalize());
 	//ephemeris.setTime(0.0, 1, 1, 2000.0);
 	//graphics->setLightPosition(ephemeris.getSunDirection() * 100000.0);
 }
@@ -65,6 +65,10 @@ void campaign::updateFrame()
 		players[0]->toggleFirstPerson();
 		input.up(VK_F1);
 	}
+
+//	graphics->setLightPosition(Vec3f(	0.0 , 10000.0* cos(world.time() *0.001 * 0.1), 
+//										100000.0 * sin(world.time() *0.001 * 0.1)));
+//	graphics->setLightPosition(Vec3f(0.0,10000.0,100000.0));
 
 	//set camera position
 	shared_ptr<plane> p=players[0]->getObject();

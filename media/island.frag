@@ -19,6 +19,8 @@ uniform sampler2D snow_normals;
 uniform sampler2D fractalNormals;
 uniform sampler2D treesTexture;
 
+uniform sampler2D grassDetail;
+
 uniform vec3 lightColors[4];
 uniform vec3 lightPositions[4];
 uniform float invLightStrengths[4];
@@ -43,7 +45,7 @@ void main()
 	/////////FRAGMENT ATRRIBUTES////////
 	vec4 groundTexVal = texture2D(groundTex,gtex_halfPixel + (position.xz-gtex_origin) * gtex_invScale);
 	vec3 v = groundTexVal.xyz;
-	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, v.z * 2.0 - 1.0));
+	vec3 n = normalize(vec3(1.0 - v.x * 2.0, v.y, 1.0 - v.z * 2.0));
 	vec3 t = normalize(cross(n, vec3(0,0,1)));
 	vec3 b = cross(n, t);
 
@@ -66,8 +68,10 @@ void main()
 
 	///////////GRASS AND SAND//////////
 	float noiseVal = texture2D(noiseTex, position.xz*0.0025).x + texture2D(LCnoise, position.xz*0.000625).x;
-	float gAmount = pow(clamp(noiseVal + (height-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
-	color = mix(texture2D(sand,position.xz*0.0003), texture2D(grass,position.xz*0.00125), gAmount);
+	//float gAmount = pow(clamp(noiseVal + (height-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
+	float gAmount = pow(clamp((noiseVal + (height-6.0)/20.0 - 1.5), 0.0, 1.0), 0.5);
+	//gAmount = 0.5-0.5*cos(gAmount * 3.141592);
+	color = mix(texture2D(sand,position.xz*0.0003), mix(vec4(1,1,1,1), texture2D(grassDetail, position.xz*0.042) * 2.0,clamp(gAmount,0.0,1.0)) * texture2D(grass,position.xz*0.00125 *4.0)/* / texture2D(grassDetail, position.xz*0.0532,3.0)*/, gAmount);
 
 	////////////TREE CANOPY////////////
 	color.rgb *= 1.0 - 0.6 * clamp((height - 37.0)*0.2, 0.0, 1.0) * max(clamp((148.0-height)*0.2,0.0,1.0),clamp((slopeAngle - 0.1) / 0.1, 0.0, 1.0));
@@ -86,20 +90,23 @@ void main()
 	vec3 positionToEye_tangentSpace = mat3(t,n,b)*positionToEye;
 	vec2 offset = -normalize(positionToEye_tangentSpace.xz) * (1.0 - fractalColor.a);
 
-	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023);
+	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023 * 0.5);
 	n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize(fractalColor.xzy*2.0 - 1.0), rAmount));
 
 	/////////LOW CONTRAST NOISE////////
-	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
+//	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
 
 	///////////////LIGHT///////////////
 	vec4 treesTextureColor = texture2D(treesTexture, ttex_halfPixel + (position.xz-ttex_origin) * ttex_invScale); //tree shadows
-	vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))/*0.5+0.5*/ - treesTextureColor.a*0.3, 0.0);
+	//vec3 light = vec3(1,1,0.7) * max(dot(n,normalize(sunDir))/*0.5+0.5*/ - treesTextureColor.a*0.3, 0.0);
+	vec3 light = vec3(1,1,0.7) * (max(dot(n,normalize(sunDir))*0.5+0.5 - treesTextureColor.a*0.3, 0.0));
+	light += 0.1 * min(pow(max(dot(n,normalize(sunHalfVector)),0.0),8.0), 1.0);
 	for(int i=0;i<4;i++)
 	{
 		vec3 lightVec = position - lightPositions[i];
 		light += lightColors[i] * clamp(0.5 - length(lightVec) * invLightStrengths[i], 0.0,0.5);
 	}
+	light = clamp(light, 0.0, 1.0);
 
 	////////////WATER EFFECT///////////
 	//float waterAlpha = clamp(1.0 + clamp((-height)/fwidth(height),0.0,1.0)*(0.1-0.1*exp(-height*0.1)), 0.0,1.0);
@@ -108,7 +115,7 @@ void main()
 	//float waterDepth = -height / abs(normalize(positionToEye).y);
 	//float waterAlpha = clamp(1.0-0.1*sqrt(waterDepth), 0.0, 1.0);//clamp(1.0 + clamp((waterDepth)/fwidth(waterDepth),0.0,1.0)*(0.1-0.1*exp(-waterDepth*0.1)), 0.0,1.0);
 	light *= waterAlpha;
-	color.a *= waterAlpha;
+	color.a = clamp(color.a*waterAlpha, 0.0, 1.0);
 
 	////////////TREES TEXTURE//////////
 	//float distMult = clamp((950.0*6-distance(eyePos,position))*0.02/6,0.0,1.0);

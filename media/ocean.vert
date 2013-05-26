@@ -3,7 +3,7 @@ varying vec2 modelPosition;	//length will be at least 0.995 (assuming disk has 6
 varying vec3 worldPosition;
 varying vec2 texCoord;
 
-varying vec3 lightDirection;
+varying vec3 sunDir, sunHalfVector;
 varying vec3 eyeDirection;
 
 uniform vec2 center;
@@ -33,7 +33,9 @@ void main()
 	vec4 modelTransformPosition = modelTransform * vec4(Position,1.0);
 	worldPosition = modelTransformPosition.xyz;
 
-	lightDirection = lightPosition - worldPosition;
+	sunHalfVector = lightPosition + worldPosition.xyz;
+	sunDir = normalize(lightPosition /*- worldPosition.xyz*/);
+
 	eyeDirection = eyePos - worldPosition;
 
 	gl_Position = cameraProjection * modelTransformPosition;

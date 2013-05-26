@@ -6,19 +6,39 @@ using namespace tinyxml2;
 
 ObjectInfo& objectInfo = ObjectInfo::getInstance();
 
-shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Vec3f position, Quat4f rotation)
+shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Vec3f position, Quat4f rotation) const
 {
-	auto mesh = objectInfo[type]->mesh;
 	if(!mesh.expired())
 	{
-		return sceneManager.newMeshInstance(mesh.lock(), position, rotation);
+		return sceneManager.newMeshInstance(mesh.lock(), Mat4f(rotation, position));
 	}
 	else
 	{
 		return nullptr;
 	}
 }
-
+shared_ptr<SceneManager::meshInstance> ObjectInfo::aaaObjectData::turret::newMeshInstance(weak_ptr<SceneManager::meshInstance> parentMeshInstance) const
+{
+	if(!mesh.expired())
+	{
+		return sceneManager.newChildMeshInstance(mesh.lock(), parentMeshInstance);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+shared_ptr<SceneManager::meshInstance> ObjectInfo::aaaObjectData::cannon::newMeshInstance(weak_ptr<SceneManager::meshInstance> parentMeshInstance) const
+{
+	if(!mesh.expired())
+	{
+		return sceneManager.newChildMeshInstance(mesh.lock(), parentMeshInstance);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
 bool ObjectInfo::loadObjectData(string filename)
 {
 	auto  getAttribute = [](XMLElement* element, const char* attribute)->string
@@ -84,7 +104,7 @@ bool ObjectInfo::loadObjectData(string filename)
 		XMLElement* aaaElement = node->ToElement();
 		while(aaaElement != nullptr)
 		{
-			shared_ptr<objectData> obj(new objectData);
+			shared_ptr<aaaObjectData> obj(new aaaObjectData);
 			if(strcmp(aaaElement->Value(), "SAM") == 0)
 			{
 				obj->type = SAM_BATTERY;				
@@ -110,6 +130,33 @@ bool ObjectInfo::loadObjectData(string filename)
 
 			obj->name = getAttribute(aaaElement, "name");
 			obj->textName = getAttribute(aaaElement, "textName");
+
+
+
+			
+			XMLElement* aaaProperties = aaaElement->FirstChildElement();
+			while(aaaProperties != nullptr)
+			{
+				if(strcmp(aaaProperties->Value(), "turret") == 0)
+				{
+					aaaObjectData::turret t;
+					t.meshFilename = getAttribute(aaaProperties, "model");
+					if(t.meshFilename != "") assetLoader.addModel(t.meshFilename);
+					t.rotationCenter = Vec3f(getFloatAttribute(aaaProperties,"rotationOffsetX"), 0, getFloatAttribute(aaaProperties,"rotationOffsetZ"));
+					obj->turrets.push_back(t);
+				}
+				else if(strcmp(aaaProperties->Value(), "cannon") == 0)
+				{
+					aaaObjectData::cannon c;
+					c.meshFilename = getAttribute(aaaProperties, "model");
+					if(c.meshFilename != "") assetLoader.addModel(c.meshFilename);
+					c.rotationCenter = Vec3f(0,getFloatAttribute(aaaProperties,"rotationOffsetY"), getFloatAttribute(aaaProperties,"rotationOffsetZ"));
+					obj->cannons.push_back(c);
+				}
+				aaaProperties = aaaProperties->NextSiblingElement();
+			}
+
+
 			objectMap[obj->type] = obj;	
 			if(getAttribute(aaaElement,"placeable") == "true")
 			{
@@ -257,6 +304,22 @@ void ObjectInfo::linkObjectMeshes()
 			i->second->mesh = mesh;
 			collisionManager.setCollsionBounds(i->first, mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
 		}
+		if(i->second->type & ANTI_AIRCRAFT_ARTILLARY)
+		{
+			auto& turrets = static_pointer_cast<aaaObjectData>(i->second)->turrets;
+			for(auto t = turrets.begin(); t != turrets.end(); t++)
+			{
+				shared_ptr<SceneManager::mesh> mesh = dataManager.getModel(t->meshFilename); //needed since i->second->mesh is actually a weak ptr
+				t->mesh = mesh;
+			}
+			auto& cannons = static_pointer_cast<aaaObjectData>(i->second)->cannons;
+			for(auto c = cannons.begin(); c != cannons.end(); c++)
+			{
+				shared_ptr<SceneManager::mesh> mesh = dataManager.getModel(c->meshFilename); //needed since i->second->mesh is actually a weak ptr
+				c->mesh = mesh;
+			}
+		}
+
 	}
 }
 objectType ObjectInfo::typeFromString(string s)
@@ -301,14 +364,23 @@ shared_ptr<ObjectInfo::objectData> ObjectInfo::operator[] (objectType t)
 	auto i = objectMap.find(t);
 	return i!=objectMap.end() ? i->second : shared_ptr<objectData>();
 }
-const ObjectInfo::planeObjectData& ObjectInfo::planeStats(objectType t)
+shared_ptr<const ObjectInfo::planeObjectData> ObjectInfo::planeData(objectType t)
 {
 	if(!(t & PLANE))
 	{
 		debugBreak();
 		t = (t & MINOR_OBJECT_TYPE) | PLANE;
 	}
-	return *static_pointer_cast<planeObjectData>(objectMap[t]);
+	return static_pointer_cast<planeObjectData>(objectMap[t]);
+}
+shared_ptr<const ObjectInfo::aaaObjectData> ObjectInfo::aaaData(objectType t)
+{
+	if(!(t & ANTI_AIRCRAFT_ARTILLARY))
+	{
+		debugBreak();
+		t = (t & MINOR_OBJECT_TYPE) | ANTI_AIRCRAFT_ARTILLARY;
+	}
+	return static_pointer_cast<aaaObjectData>(objectMap[t]);
 }
 objectType objectTypeFromString(string s)
 {

@@ -150,6 +150,7 @@ public:
 	}
 	shared_ptr<GraphicsManager::shader> bind(string name);
 	shared_ptr<GraphicsManager::shader> operator() (string name);
+	bool shaderExists(string name);
 
 	void add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
 	void writeErrorLog(string filename);

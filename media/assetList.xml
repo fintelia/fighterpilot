@@ -46,7 +46,8 @@
     <texture name="spark"                     file="media/spark.png" /> 
     
     <!-- terrain -->
-  	<texture name="grass"                     file="media/grass2.png"                 tileable="true" />
+  	<texture name="grass"                     file="media/grass2_hpf2.png"            tileable="true" />
+    <texture name="grass detail"              file="media/grassDetail.png"            tileable="true" />
     <texture name="rock"                      file="media/rock.png"                   tileable="true" />
     <texture name="sand"                      file="media/sand.png"                   tileable="true" />
     <texture name="snow"                      file="media/snow.png"                   tileable="true" />
@@ -57,7 +58,6 @@
     <texture name="desertSand"                file="media/desertSand.png"             tileable="true" />
     <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
-
     
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
@@ -85,8 +85,8 @@
     <shader name="gamma night vision"        vertex="media/gamma.vert"             fragment="media/gammaNightVision.frag"   />
 
     <!-- post process -->
-    <shader name="blurX"                     vertex="media/blur.vert"             fragment="media/blurX.frag"   />
-    <shader name="blurY"                     vertex="media/blur.vert"             fragment="media/blurY.frag"   />
+    <shader name="blurX"                     vertex="media/blur.vert"              fragment="media/blurX.frag"   />
+    <shader name="blurY"                     vertex="media/blur.vert"              fragment="media/blurY.frag"   />
     
     <!-- HUD-->
     <shader name="radar plane shader"        vertex="media/radarPlane.vert"        fragment="media/radarPlane.frag"    sAspect="true" />
@@ -101,11 +101,13 @@
     <shader name="spark shader"              vertex="media/spark.vert"             fragment="media/spark.frag" />
     <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
     <shader name="color3D"                   vertex="media/color3D.vert"           fragment="media/color3D.frag" />
-
+    <shader name="blur mipmaps"              vertex="media/blurMipmaps.vert"       fragment="media/blurMipmaps.frag" preload="true"/>
+    <shader name="hdr luminance"             vertex="media/postProcess.vert"       fragment="media/hdrLuminance.frag" preload="true"/>
 
     <!-- world -->
     <shader name="ocean"                     vertex="media/ocean.vert"             fragment="media/ocean.frag" />
     <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
+    <shader name="sky2 shader"               vertex="media/sky2.vert"              fragment="media/sky2.frag" />
     <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
     <shader name="count trees"               vertex3="media/placeTrees.vert"       geometry3="media/conditionalDiscard.geom" feedbackTransformVaryings="placeHolder" />
     <shader name="place trees"               vertex3="media/placeTrees.vert"       geometry3="media/createTree.geom" feedbackTransformVaryings="position;texCoord;color" />
@@ -118,7 +120,10 @@
     <shader name="cirrus cloud shader"       vertex="media/cirrusCloud.vert"       fragment="media/cirrusCloud.frag" />
     
     <!-- terrain -->
-    <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />
+ <!--   <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />  -->
+    <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" vertex4="media/terrain4.vert"     tessellationControl4="media/island4.tessControl"       tessellationEval4="media/island4.tessEval"      fragment4="media/island4.frag" />
+    
+    
     <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
     <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
     <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />

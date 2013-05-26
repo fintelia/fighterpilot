@@ -41,7 +41,7 @@ namespace particle
 		p.r = color.r + g;
 		p.g = color.b + g;
 		p.b = color.g + g;
-		p.a = 0.5;
+		p.a = 0.0;
 		return true;
 	}
 	void smokeTrail::updateParticle(particle& p)
@@ -50,7 +50,7 @@ namespace particle
 		float t = (world.time() - p.startTime) * p.invLife;
 		if(t<0.2)
 		{
-			p.a = 0.5;//(t * 5.0)*(t * 5.0);
+			p.a = t*5.0;//0.5;//(t * 5.0)*(t * 5.0);
 			p.size = 3.5 + 4.0*(t*5.0);
 			float i = min(t*50.0,1.0);
 			p.r = i*color.r + (1.0-i)*1.0;

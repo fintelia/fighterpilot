@@ -16,7 +16,7 @@ ship::ship(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team
 void ship::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-		meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation)/*, !dead*/);
+		meshInstance->update(Mat4f(slerp(lastRotation,rotation, interpolation), lerp(lastPosition,position,interpolation)));
 }
 void ship::updateSimulation(double time, double ms)
 {

@@ -1,15 +1,9 @@
 
 #include "engine.h"
 
-void SceneManager::meshInstance::update(const Vec3f& pos,bool render)
+void SceneManager::meshInstance::update(const Mat4f& transformation,bool render)
 {
-	position=pos;
-	setRenderFlag(render);
-}
-void SceneManager::meshInstance::update(const Vec3f& pos, const Quat4f& rot,bool render)
-{
-	position=pos;
-	rotation=rot;
+	modelTransform = transformation;
 	setRenderFlag(render);
 }
 bool SceneManager::meshInstance::renderFlag()
@@ -35,21 +29,21 @@ Sphere<float> SceneManager::meshInstance::getBoundingSphere()
 //	if(b)	flags |=  0x04;
 //	else	flags &= ~0x04;
 //}
-shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(shared_ptr<mesh> meshPtr, Vec3f position, Quat4f rotation)
+shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(shared_ptr<mesh> meshPtr, Mat4f transformation)
 {
 	if(meshPtr)
 	{
-		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,position,rotation));
+		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,transformation));
 		nMeshInstances[meshPtr->meshID].push_back(ptr);
 		return ptr;
 	}
 	return shared_ptr<meshInstance>();
 }
-shared_ptr<SceneManager::meshInstance> SceneManager::newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Vec3f position, Quat4f rotation)
+shared_ptr<SceneManager::meshInstance> SceneManager::newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Mat4f transformation)
 {
 	if(meshPtr)
 	{
-		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,position,rotation,parent));
+		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,transformation,parent));
 		nMeshInstances[meshPtr->meshID].push_back(ptr);
 		return ptr;
 	}
@@ -65,7 +59,8 @@ shared_ptr<SceneManager::mesh> SceneManager::createMesh(shared_ptr<FileManager::
 		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
 		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,		3*sizeof(float));
 		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TANGENT,		6*sizeof(float));
-		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		9*sizeof(float));
+		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::BITANGENT,	9*sizeof(float));
+		nMesh->VBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		12*sizeof(float));
 		nMesh->VBO->setTotalVertexSize(sizeof(normalMappedVertex3D));
 		nMesh->VBO->setVertexData(sizeof(normalMappedVertex3D)*modelFile->vertices.size(), !modelFile->vertices.empty() ? &modelFile->vertices[0] : NULL);
 
@@ -143,7 +138,8 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 	auto model = shaders.bind("model");
 	model->setUniform1i("tex",0);
 	model->setUniform1i("specularMap",1);
-	model->setUniform1i("normalMap",2);
+	model->setUniform1i("normalMap",2);	
+	model->setUniform3f("eyePosition", view->camera().eye);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 
@@ -187,7 +183,7 @@ void SceneManager::renderScene(shared_ptr<GraphicsManager::View> view, meshInsta
 					i = instance->lock();
 					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
-						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
+						model->setUniformMatrix("modelTransform", i->modelTransform);
 						material->indexBuffer->drawBuffer();
 					}
 					i.reset();
@@ -211,6 +207,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 	model->setUniform1i("tex",0);
 	model->setUniform1i("specularMap",1);
 	model->setUniform1i("normalMap",2);
+	model->setUniform3f("eyePosition", view->camera().eye);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	for(auto meshType=nMeshInstances.begin(); meshType!=nMeshInstances.end(); meshType++)
@@ -257,7 +254,7 @@ void SceneManager::renderSceneTransparency(shared_ptr<GraphicsManager::View> vie
 					i = instance->lock();
 					if(i != firstPersonObject && (i->parent.expired() || i->parent.lock() != firstPersonObject) && i->renderFlag() /*&& view->sphereInFrustum(modelPtr->boundingSphere + (*instance)->position)*/)
 					{
-						model->setUniformMatrix("modelTransform", Mat4f(i->rotation,i->position));
+						model->setUniformMatrix("modelTransform", i->modelTransform);
 						material->indexBuffer->drawBuffer();
 					}
 					i.reset();
@@ -344,6 +341,7 @@ void SceneManager::drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<m
 	model->setUniform1i("specularMap",1);
 	model->setUniform1i("normalMap",2);
 	model->setUniform1i("numLights", 1);
+	model->setUniform3f("eyePosition", view->camera().eye);
 	model->setUniform3f("lightPosition", graphics->getLightPosition());
 	model->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 

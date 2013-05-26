@@ -20,6 +20,12 @@ private:
 		shared_ptr<FileManager::textFile> vert3File;
 		shared_ptr<FileManager::textFile> geom3File;
 		shared_ptr<FileManager::textFile> frag3File;
+
+		shared_ptr<FileManager::textFile> vert4File;
+		shared_ptr<FileManager::textFile> geom4File;
+		shared_ptr<FileManager::textFile> frag4File;
+		shared_ptr<FileManager::textFile> tessC4File;
+		shared_ptr<FileManager::textFile> tessE4File;
 		bool use_sAspect;
 
 		string feedbackTransformVaryingsStr;

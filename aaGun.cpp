@@ -2,8 +2,29 @@
 #include "game.h"
 void antiAircraftArtilleryBase::updateFrame(float interpolation) const
 {
+	Mat4f objectTransform = Mat4f(slerp(lastRotation,rotation, interpolation), lerp(lastPosition,position,interpolation));
+
 	if(meshInstance)
-		meshInstance->update(lerp(lastPosition,position,interpolation), slerp(lastRotation,rotation, interpolation)/*, !dead*/);
+	{
+		meshInstance->update(objectTransform);
+	}
+	
+
+	if(turretMesh && !objectInfo.aaaData(type)->turrets.empty())
+	{
+		Vec3f turretRotCenter = objectInfo.aaaData(type)->turrets.front().rotationCenter;
+		Mat4f turretTransform = objectTransform;
+		if(targeter.magnitudeSquared() >= 0.001)
+			turretTransform = turretTransform * Mat4f(turretRotCenter) * Mat4f(Quat4f(Vec3f(0,0,-1), Vec3f(targeter.x,0,targeter.z).normalize())) * Mat4f(-turretRotCenter);
+		turretMesh->update(turretTransform);
+
+		if(cannonMesh && !objectInfo.aaaData(type)->turrets.empty())
+		{
+			Vec3f cannonRotCenter = objectInfo.aaaData(type)->cannons.front().rotationCenter;
+			Mat4f cannonTransform = turretTransform * Mat4f(cannonRotCenter) * Mat4f(Quat4f(Vec3f(1,0,0), asinA(targeter.normalize().y))) * Mat4f(-cannonRotCenter);
+			cannonMesh->update(cannonTransform);
+		}
+	}
 }
 void antiAircraftArtilleryBase::die()
 {
@@ -23,9 +44,23 @@ void antiAircraftArtilleryBase::loseHealth(float healthLoss)
 }
 antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
 {
+	debugAssert(objectInfo.aaaData(type));
+
 	lastPosition = position = Vec3f(sPos.x,world.elevation(sPos.x,sPos.z),sPos.z);
 	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
 	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
+
+	auto& turrets = objectInfo.aaaData(Type)->turrets;
+	if(!turrets.empty())
+	{
+		turretMesh = turrets.front().newMeshInstance(meshInstance);
+	}
+
+	auto& cannons = objectInfo.aaaData(Type)->cannons;
+	if(!cannons.empty())
+	{
+		cannonMesh = cannons.front().newMeshInstance(meshInstance);
+	}
 
 	target.reset();
 	health = 100.0;
@@ -38,6 +73,8 @@ antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, ob
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 AAgun::AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team)
 {
+
+
 	initArmaments();
 }
 void AAgun::initArmaments()
@@ -135,7 +172,7 @@ void AAgun::updateSimulation(double time, double ms)
 void SAMbattery::updateFrame(float interpolation) const
 {
 	if(meshInstance)
-		meshInstance->update(lerp(lastPosition,position,interpolation),slerp(lastRotation,rotation, interpolation));
+		meshInstance->update(Mat4f(slerp(lastRotation,rotation, interpolation),lerp(lastPosition,position,interpolation)));
 }
 void SAMbattery::updateSimulation(double time, double ms)
 {

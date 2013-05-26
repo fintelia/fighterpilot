@@ -31,7 +31,7 @@ void main()
 	gl_Position = cameraProjection * pos;
 
 	sunHalfVector = sunPosition + position.xyz;
-	sunDir = normalize(sunPosition - position.xyz);
+	sunDir = normalize(sunPosition/* - position.xyz*/);
 
 
 	lightDirections[0] = normalize(lightPositions[0] - position.xyz);

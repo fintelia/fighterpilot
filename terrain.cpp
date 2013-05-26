@@ -188,14 +188,24 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 
 	texture = graphics->genTexture2D();
 
+	//const float EARTH_RADIUS = 3.3675e6;
+	//const float EARTH_RADIUS_SQUARED = EARTH_RADIUS * EARTH_RADIUS;
+
+	//float xCenterDist;
+	//float zCenterDist;
+	//float elevationAdjust;
 	int numHeights=0;
 	float* heightMap = new float[((width-1)/LOD+1)*((height-1)/LOD+1)*3];
 	for(int x = 0; x < width; x += LOD)
 	{
 		for(int y=0; y < height; y += LOD)
 		{
+			//xCenterDist = scale.x * abs(0.5*width - x) / width;
+			//zCenterDist = scale.z * abs(0.5*height - y) / height;
+			//elevationAdjust = sqrt(EARTH_RADIUS_SQUARED - xCenterDist*xCenterDist - zCenterDist*zCenterDist) - EARTH_RADIUS;
+
 			heightMap[numHeights*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / (width-LOD);
-			heightMap[numHeights*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX;
+			heightMap[numHeights*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX/* + elevationAdjust*/;
 			heightMap[numHeights*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / (height-LOD);
 			numHeights++;
 		}
@@ -310,7 +320,7 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 			}
 
 			auto iBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-			iBuffer->setData(indices, GraphicsManager::TRIANGLES, i);
+			iBuffer->setData(indices,graphics->hasShaderModel5() ? GraphicsManager::PATCHES : GraphicsManager::TRIANGLES, i);
 			indexBuffers[d].push_back(iBuffer);
 		}
 	}
@@ -973,6 +983,7 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType s
 	terrainShader->setUniform1i("grass_normals",10);dataManager.bind("grass normals",10); //can take 100+ ms to complete under linux?
 	terrainShader->setUniform1i("fractalNormals",11);dataManager.bind("fractal normals",11); //can take 100+ ms to complete under linux?
 	terrainShader->setUniform1i("treesTexture",12);treeTexture->bind(12);
+	terrainShader->setUniform1i("grassDetail",	13);	dataManager.bind("grass detail",13);
 
 	terrainShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	terrainShader->setUniformMatrix("modelTransform",	Mat4f());
@@ -989,7 +1000,6 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType s
 	terrainShader->setUniform1f("heightRange",			maxXYZ.y-minXYZ.y);
 	sceneManager.bindLights(terrainShader);
 
-
 	Vec3f eye;
 	unsigned int bufferOffset;
 	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
@@ -1004,7 +1014,6 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType s
 		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
 		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
 	}
-
 	//graphics->setDepthTest(false);
 	//auto s = shaders.bind("model");
 	//dataManager.bind("white");
@@ -1018,7 +1027,6 @@ void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType s
 	//}
 	//graphics->setWireFrame(false);
 	//graphics->setDepthTest(true);
-
 }
 void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 {
@@ -1584,25 +1592,12 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	sky->setUniform1f("time", world.time());
 	skyTexture->bind();
 	dataManager.bind("noise",1);
-	sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
+//	sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
 	if(!waterPlane)
 	{
 		sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), Vec3f(radius,-radius,radius)), sky);
 	}
 
-	//Vec3f sunDirection = (graphics->getLightPosition()+eye).normalize();
-	//Vec3f sunPos = view->project3((graphics->getLightPosition()+eye).normalize() * 300000.0);
-	//if(sunPos.z < 1.0)
-	//{
-	//	shaders.bind("ortho");
-	//
-	//	Vec3f sunUp = sunDirection.cross(Vec3f(0,0,1));	//sun cannot be (0,0,1) at!!!
-	//	float up = view->camera().up.dot(sunUp);
-	//	float right = view->camera().right.dot(sunUp);
-
-	//	Angle rotateAng = atan2A(up,right);
-	//	graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.25,0.25), rotateAng, "sun"); //sun get stretched in split screen mode...
-	//}
 
 	if(waterPlane)
 	{
@@ -1637,7 +1632,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		ocean->setUniform2f("center",	center.x,center.z);
 		ocean->setUniform3f("eyePos", eye.x, eye.y, eye.z);
 		ocean->setUniform1f("scale", radius);
-
+		ocean->setUniform3f("sunColor", Vec3f(1.0,1.0,0.3) * max(pow(graphics->getLightPosition().normalize().y+0.05f,0.5f),0.0));
 
 
 		ocean->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
@@ -1652,6 +1647,22 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 		//graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 	}
+//	Vec3f sunDirection = (graphics->getLightPosition()+eye).normalize();
+//	Vec3f sunPos = view->project3((graphics->getLightPosition()/*+eye*/).normalize() * 300000.0);
+//	if(sunPos.z < 1.0)
+//	{
+//		shaders.bind("ortho");
+//		graphics->setColor(1,1,0.7,0.2);
+//		
+//		Vec3f sunUp = sunDirection.cross(Vec3f(0,0,1));	//sun cannot be (0,0,1) at!!!
+//		float up = view->camera().up.dot(sunUp);
+//		float right = view->camera().right.dot(sunUp);
+//
+//		Angle rotateAng = atan2A(up,right);
+//		graphics->setBlendMode(GraphicsManager::ADDITIVE);
+//		graphics->drawRotatedOverlay(Rect::CWH(sunPos.x,sunPos.y,0.25,0.25), rotateAng, "sun"); //sun get stretched in split screen mode...
+//		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+//	}
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
@@ -1842,7 +1853,26 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
 		//graphics->setAlphaToCoverage(false);
 	
+	auto skyShader = shaders.bind("sky2 shader");
 
+	Vec3f fwd = view->camera().fwd;
+	Vec3f up = view->camera().up;
+	Vec3f right = view->camera().right;
+
+	dataManager.bind("noise",0);
+	skyShader->setUniform1f("time", world.time());
+	skyShader->setUniform1i("noise", 0);
+	skyShader->setUniform3f("eye", view->camera().eye);
+	skyShader->setUniform3f("fwd", fwd);
+	skyShader->setUniform3f("up", up * tan(view->projection().fovy/2 * PI/180.0));
+	skyShader->setUniform3f("right", right * tan(view->projection().fovy/2 * PI/180.0)*view->projection().aspect);
+	skyShader->setUniform3f("lightDirection", graphics->getLightPosition().normalize());
+	skyShader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
+	skyShader->setUniform2f("mapCenter", mBounds.center.x, mBounds.center.y);
+	graphics->drawOverlay(Rect::XYWH(	-1.0 - 2.0*view->viewConstraint().x / view->viewConstraint().w, 
+										-1.0 - 2.0*view->viewConstraint().y / view->viewConstraint().h,
+										 2.0 / view->viewConstraint().w,
+										 2.0 / view->viewConstraint().h));//(view->viewport().x,view->viewport().y,view->viewport().width,view->viewport().height));
 
 	//graphics->setDepthMask(false);
 	//dataManager.bind("cirrus cloud shader");

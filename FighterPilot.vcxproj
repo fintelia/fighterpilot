@@ -227,6 +227,8 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="media\blur.vert" />
+    <None Include="media\blurMipmaps.frag" />
+    <None Include="media\blurMipmaps.vert" />
     <None Include="media\blurX.frag" />
     <None Include="media\blurY.frag" />
     <None Include="media\circle.frag" />
@@ -248,6 +250,7 @@
     <None Include="media\gammaNightVision.frag" />
     <None Include="media\grass preview.frag" />
     <None Include="media\grass.frag" />
+    <None Include="media\hdrLuminance.frag" />
     <None Include="media\health.frag" />
     <None Include="media\health.vert" />
     <None Include="media\hex grid.frag" />
@@ -274,6 +277,7 @@
     <None Include="media\particle3.geom" />
     <None Include="media\particle3.vert" />
     <None Include="media\placeTrees.vert" />
+    <None Include="media\postProcess.vert" />
     <None Include="media\radar bounds.frag" />
     <None Include="media\radar bounds.vert" />
     <None Include="media\radar.frag" />
@@ -284,6 +288,8 @@
     <None Include="media\radarPlane.vert" />
     <None Include="media\sky.frag" />
     <None Include="media\sky.vert" />
+    <None Include="media\sky2.frag" />
+    <None Include="media\sky2.vert" />
     <None Include="media\snow preview.frag" />
     <None Include="media\snow.frag" />
     <None Include="media\spark.frag" />

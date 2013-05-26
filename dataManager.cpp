@@ -398,6 +398,10 @@ shared_ptr<GraphicsManager::shader> ShaderManager::operator() (string name)
 	debugBreak();
 	return nullptr;
 }
+bool ShaderManager::shaderExists(string name)
+{
+	return shaderAssets.find(name) != shaderAssets.end();
+}
 void ShaderManager::add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect)
 {
 	if(shader)
