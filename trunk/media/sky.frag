@@ -19,6 +19,8 @@ void main()
 	//float d = texture2D(depth, invScreenDims * gl_FragCoord.xy).x;
 	//float alpha = clamp((d-0.995)*200.0,0.0,1.0);
 
+	vec3 skyColor = textureCube(tex,position).rgb;
+
 
 
 	vec2 v = vec2(texCoord.x-0.5, texCoord.y-0.5);
@@ -29,7 +31,9 @@ void main()
 							texture2D(noise, texCoord*3.0+0.00001*time*vec2(-0.362358,0.932039)).r);
 	//fract(texture2D(noise, texCoord*3.0+0.0001*time*vec2(0.732546,0.680718)).r+texture2D(noise, texCoord*3.0+0.0001*time*vec2(-0.3624,0.9320)).r);
 
-	float c = clamp((exp(randomIntensity)-1.5) * s * 0.5, 0.0, 0.6);
 
-	gl_FragColor = vec4(mix(textureCube(tex,position).rgb, vec3(0.8,0.8,0.8), c),1.0);//vec4(mix(textureCube(tex,position.xyz).rgb,vec3(1.0,1.0,1.0),c.a*0.7),1.0);
+
+	float c = clamp((exp(randomIntensity)-1.5) * s * 0.5  * (skyColor.r+skyColor.g+skyColor.b)*0.5, 0.0, 0.6);
+
+	gl_FragColor = vec4(mix(skyColor, vec3(0.8,0.8,0.8), c),1.0);//vec4(mix(textureCube(tex,position.xyz).rgb,vec3(1.0,1.0,1.0),c.a*0.7),1.0);
 }

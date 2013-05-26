@@ -9,7 +9,10 @@ public:
 	Vec3f targeter;
 	weak_ptr<plane> target;
 
-	//bool dead; (from entity)
+	shared_ptr<SceneManager::meshInstance> turretMesh;
+	shared_ptr<SceneManager::meshInstance> cannonMesh;
+
+	//bool dead; (from object)
 	float health;
 
 	void die();

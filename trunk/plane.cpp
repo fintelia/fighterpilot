@@ -61,7 +61,7 @@ plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Te
 }
 void plane::init()
 {
-	auto& engines = objectInfo.planeStats(type).engines;
+	auto& engines = objectInfo.planeData(type)->engines;
 	for(auto i=engines.begin(); i!=engines.end(); i++)
 	{
 		particle::planeEngines* e = new particle::planeEngines;
@@ -242,7 +242,7 @@ void plane::updateSimulation(double time, double ms)
 
 			if(!controls.shoot1)
 				extraShootTime=0.0;
-			else if(objectInfo.planeStats(type).machineGuns.size() > 0)
+			else if(objectInfo.planeData(type)->machineGuns.size() > 0)
 			{
 				extraShootTime+=ms;
 				while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
@@ -252,13 +252,13 @@ void plane::updateSimulation(double time, double ms)
 
 					Quat4f rot(slerp(rotation,lastRotation,(float)extraShootTime/ms));
 
-					Vec3f o=rot*(objectInfo.planeStats(type).machineGuns[shotsFired%objectInfo.planeStats(type).machineGuns.size()]);
+					Vec3f o=rot*(objectInfo.planeData(type)->machineGuns[shotsFired%objectInfo.planeData(type)->machineGuns.size()]);
 					Vec3f l=position*(1.0-extraShootTime/ms) + lastPosition*extraShootTime/ms;
 
 
 
 					Angle randAng = random<float>() * PI * 2.0;
-					float randF = (random<float>(-1.0,1.0) + random<float>(-1.0,1.0))/2.0 * PI/64;
+					float randF = (random<float>(-1.0,1.0) + random<float>(-1.0,1.0))/2.0 * (controlType == CONTROL_TYPE_AI ? PI/512 : PI/64);
 					rot = Quat4f(Vec3f(cos(randAng),sin(randAng),0.0),randF) * rot;
 
 					shotsFired++;
@@ -398,13 +398,13 @@ void plane::updateFrame(float interpolation) const
 
 
 	bool visible = !dead || death != DEATH_EXPLOSION;
-	meshInstance->update(pos, rot, visible);
+	meshInstance->update(Mat4f(rot, pos), visible);
 	int n=0;
 	for(auto i = bombs.ammoRounds.begin(); i != bombs.ammoRounds.end(); i++, n++)
-		i->meshInstance->update(pos + rot * i->offset, rot, bombs.roundsMax - bombs.roundsLeft <= n && visible);
+		i->meshInstance->update(Mat4f(rot, pos + rot * i->offset), bombs.roundsMax - bombs.roundsLeft <= n && visible);
 	n=0;
 	for(auto i = rockets.ammoRounds.begin(); i != rockets.ammoRounds.end(); i++, n++)
-		i->meshInstance->update(pos + rot * i->offset, rot, rockets.max - rockets.left <= n && visible);
+		i->meshInstance->update(Mat4f(rot, pos + rot * i->offset),  rockets.max - rockets.left <= n && visible);
 
 	//auto& engines = objectInfo.planeStats(type).engines;
 	//for(int i=0; i < engines.size(); i++)
@@ -438,7 +438,7 @@ void plane::updateFrame(float interpolation) const
 void plane::smoothCamera()
 {
 	Vec3f shake = random3<float>() * cameraShake * 3.0;
-	float cameraDistance = objectInfo.planeStats(type).cameraDistance + 8.0 * max(0.0,pow((speed-300.0)/300.0,3.0));
+	float cameraDistance = objectInfo.planeData(type)->cameraDistance + 8.0 * max(0.0,pow((speed-300.0)/300.0,3.0));
 
 	cameraRotation = slerp(cameraRotation, rotation, 0.07);
 	cameraOffset = lerp(cameraOffset, (cameraRotation * Vec3f(0,sin(15.0*PI/180),-cos(15.0*PI/180))), 0.14);
@@ -802,14 +802,14 @@ void plane::loseHealth(float healthLoss)
 void plane::initArmaments()
 {
 	armament::ammo a;
-	auto& hardpoints = objectInfo.planeStats(type).hardpoints;
+	auto& hardpoints = objectInfo.planeData(type)->hardpoints;
 	for(int i = 0; i < hardpoints.size(); i++)
 	{
 		a.type = hardpoints[i].mType;
 		a.offset = hardpoints[i].offset;
 		if(!objectInfo[a.type]->mesh.expired())
 		{
-			a.meshInstance = sceneManager.newChildMeshInstance(objectInfo[a.type]->mesh.lock(), meshInstance, position + rotation * a.offset, rotation);
+			a.meshInstance = sceneManager.newChildMeshInstance(objectInfo[a.type]->mesh.lock(), meshInstance, Mat4f(rotation, position + rotation * a.offset));
 		}
 
 		if(hardpoints[i].mType & MISSILE)

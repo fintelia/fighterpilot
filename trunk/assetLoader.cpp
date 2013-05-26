@@ -173,6 +173,11 @@ bool AssetLoader::loadAssetList()
 				string geom3Filename = getAttribute(shaderElement, "geometry3");
 				string frag3Filename = getAttribute(shaderElement, "fragment3");
 
+				string vert4Filename = getAttribute(shaderElement, "vertex4");	
+				string geom4Filename = getAttribute(shaderElement, "geometry4");
+				string frag4Filename = getAttribute(shaderElement, "fragment4");
+				string tessC4Filename = getAttribute(shaderElement, "tessellationControl4");
+				string tessE4Filename = getAttribute(shaderElement, "tessellationEval4");
 				//sAspect
 				tmpAssetFile->use_sAspect = getAttribute(shaderElement, "sAspect") == "true";
 
@@ -215,6 +220,12 @@ bool AssetLoader::loadAssetList()
 					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename) : nullptr;
 					tmpAssetFile->frag3File = frag3Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag3Filename) : nullptr;
 
+					tmpAssetFile->vert4File = vert4Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert4Filename) : nullptr;
+					tmpAssetFile->geom4File = geom4Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom4Filename) : nullptr;
+					tmpAssetFile->frag4File = frag4Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag4Filename) : nullptr;
+					tmpAssetFile->tessC4File = tessC4Filename != "" ? fileManager.loadFile<FileManager::textFile>(tessC4Filename) : nullptr;
+					tmpAssetFile->tessE4File = tessE4Filename != "" ? fileManager.loadFile<FileManager::textFile>(tessE4Filename) : nullptr;
+
 					assetFilesPreload.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
 				else
@@ -225,6 +236,12 @@ bool AssetLoader::loadAssetList()
 					tmpAssetFile->vert3File = vert3Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert3Filename, true) : nullptr;
 					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename, true) : nullptr;
 					tmpAssetFile->frag3File = frag3Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag3Filename, true) : nullptr;
+
+					tmpAssetFile->vert4File = vert4Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert4Filename) : nullptr;
+					tmpAssetFile->geom4File = geom4Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom4Filename) : nullptr;
+					tmpAssetFile->frag4File = frag4Filename != "" ? fileManager.loadFile<FileManager::textFile>(frag4Filename) : nullptr;
+					tmpAssetFile->tessC4File = tessC4Filename != "" ? fileManager.loadFile<FileManager::textFile>(tessC4Filename) : nullptr;
+					tmpAssetFile->tessE4File = tessE4Filename != "" ? fileManager.loadFile<FileManager::textFile>(tessE4Filename) : nullptr;
 
 					assetFiles.push_back(shared_ptr<assetFile>(tmpAssetFile));
 				}
@@ -368,6 +385,9 @@ int AssetLoader::loadAsset()
 			{
 				auto texture = graphics->genTexture2D();
 				texture->setData(texFile->width, texFile->height, ((GraphicsManager::texture::Format)texFile->channels), textureAsset->tileable, textureAsset->compress, texFile->contents);
+				
+		//		if(shaders.shaderExists("blur mipmaps"))
+		//			graphics->generateCustomMipmaps(texture, shaders("blur mipmaps"));
 				dataManager.addTexture(textureAsset->name, texture);
 			}
 			else
@@ -425,6 +445,15 @@ int AssetLoader::loadAsset()
 				if(graphics->hasShaderModel4() && shaderAsset->vert3File && !shaderAsset->feedbackTransformVaryings.empty())
 				{
 					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, nullptr, shaderAsset->feedbackTransformVaryings))
+					{
+#ifdef _DEBUG
+						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+#endif
+					}
+				}
+				else if(graphics->hasShaderModel5() && shaderAsset->vert4File /*&& shaderAsset->frag3File*/)
+				{
+					if(!shader->init5(shaderAsset->vert4File->contents.c_str(), shaderAsset->geom4File ? shaderAsset->geom4File->contents.c_str() : nullptr,  shaderAsset->tessC4File ? shaderAsset->tessC4File->contents.c_str() : nullptr,  shaderAsset->tessE4File ? shaderAsset->tessE4File->contents.c_str() : nullptr, shaderAsset->frag4File ? shaderAsset->frag4File->contents.c_str() : nullptr))
 					{
 #ifdef _DEBUG
 						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());

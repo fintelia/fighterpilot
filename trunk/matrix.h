@@ -133,33 +133,40 @@ public:
 			 v2, v6, v10, v14,
 			 v3, v7, v11, v15);
 	}
-	Matrix4(Quaternion<T> q)
+	Matrix4(Quaternion<T> rotation)
 	{
-		set(	1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z,		2.0*q.x*q.y - 2.0*q.z*q.w,				2.0*q.x*q.z + 2.0*q.y*q.w,			0.0,
-				2.0*q.x*q.y + 2.0*q.z*q.w,				1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z,		2.0*q.y*q.z - 2.0*q.x*q.w,			0.0,
-				2.0*q.x*q.z - 2.0*q.y*q.w,				2.0*q.y*q.z + 2.0*q.x*q.w,				1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y,	0.0,
-				0.0,									0.0,									0.0,								1.0);
+		set(	1.0 - 2.0*rotation.y*rotation.y - 2.0*rotation.z*rotation.z,		2.0*rotation.x*rotation.y - 2.0*rotation.z*rotation.w,				2.0*rotation.x*rotation.z + 2.0*rotation.y*rotation.w,			0.0,
+				2.0*rotation.x*rotation.y + 2.0*rotation.z*rotation.w,				1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.z*rotation.z,		2.0*rotation.y*rotation.z - 2.0*rotation.x*rotation.w,			0.0,
+				2.0*rotation.x*rotation.z - 2.0*rotation.y*rotation.w,				2.0*rotation.y*rotation.z + 2.0*rotation.x*rotation.w,				1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.y*rotation.y,	0.0,
+				0.0,																0.0,																0.0,															1.0);
 	}
-	Matrix4(Quaternion<T> q, Vector3<T> t)
+	Matrix4(Vector3<T> translation)
 	{
-		set(	1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z,		2.0*q.x*q.y - 2.0*q.z*q.w,				2.0*q.x*q.z + 2.0*q.y*q.w,			t.x,
-				2.0*q.x*q.y + 2.0*q.z*q.w,				1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z,		2.0*q.y*q.z - 2.0*q.x*q.w,			t.y,
-				2.0*q.x*q.z - 2.0*q.y*q.w,				2.0*q.y*q.z + 2.0*q.x*q.w,				1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y,	t.z,
-				0.0,									0.0,									0.0,								1.0);
+		set(1.0, 0.0, 0.0, translation.x,
+			0.0, 1.0, 0.0, translation.y,
+			0.0, 0.0, 1.0, translation.z,
+			0.0, 0.0, 0.0, 1.0);
 	}
-	Matrix4(Quaternion<T> q, Vector3<T> t, T s)
+	Matrix4(Quaternion<T> rotation, Vector3<T> translation)
 	{
-		set(	s*(1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z),	s*(2.0*q.x*q.y - 2.0*q.z*q.w),			s*(2.0*q.x*q.z + 2.0*q.y*q.w),		t.x,
-				s*(2.0*q.x*q.y + 2.0*q.z*q.w),			s*(1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z),	s*(2.0*q.y*q.z - 2.0*q.x*q.w),		t.y,
-				s*(2.0*q.x*q.z - 2.0*q.y*q.w),			s*(2.0*q.y*q.z + 2.0*q.x*q.w),			s*(1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y),t.z,
-				0.0,									0.0,									0.0,								1.0);
+		set(	1.0 - 2.0*rotation.y*rotation.y - 2.0*rotation.z*rotation.z,		2.0*rotation.x*rotation.y - 2.0*rotation.z*rotation.w,				2.0*rotation.x*rotation.z + 2.0*rotation.y*rotation.w,			translation.x,
+				2.0*rotation.x*rotation.y + 2.0*rotation.z*rotation.w,				1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.z*rotation.z,		2.0*rotation.y*rotation.z - 2.0*rotation.x*rotation.w,			translation.y,
+				2.0*rotation.x*rotation.z - 2.0*rotation.y*rotation.w,				2.0*rotation.y*rotation.z + 2.0*rotation.x*rotation.w,				1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.y*rotation.y,	translation.z,
+				0.0,																0.0,																0.0,															1.0);
 	}
-	Matrix4(Quaternion<T> q, Vector3<T> t, Vector3<T> s)
+	Matrix4(Quaternion<T> rotation, Vector3<T> translation, T scale)
 	{
-		set(	s.x*(1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z),	s.y*(2.0*q.x*q.y - 2.0*q.z*q.w),		s.z*(2.0*q.x*q.z + 2.0*q.y*q.w),		t.x,
-				s.x*(2.0*q.x*q.y + 2.0*q.z*q.w),		s.y*(1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z),	s.z*(2.0*q.y*q.z - 2.0*q.x*q.w),		t.y,
-				s.x*(2.0*q.x*q.z - 2.0*q.y*q.w),		s.y*(2.0*q.y*q.z + 2.0*q.x*q.w),		s.z*(1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y),	t.z,
-				0.0,									0.0,									0.0,									1.0);
+		set(	scale*(1.0 - 2.0*rotation.y*rotation.y - 2.0*rotation.z*rotation.z),	scale*(2.0*rotation.x*rotation.y - 2.0*rotation.z*rotation.w),			scale*(2.0*rotation.x*rotation.z + 2.0*rotation.y*rotation.w),		translation.x,
+				scale*(2.0*rotation.x*rotation.y + 2.0*rotation.z*rotation.w),			scale*(1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.z*rotation.z),	scale*(2.0*rotation.y*rotation.z - 2.0*rotation.x*rotation.w),		translation.y,
+				scale*(2.0*rotation.x*rotation.z - 2.0*rotation.y*rotation.w),			scale*(2.0*rotation.y*rotation.z + 2.0*rotation.x*rotation.w),			scale*(1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.y*rotation.y),translation.z,
+				0.0,																	0.0,																	0.0,																1.0);
+	}
+	Matrix4(Quaternion<T> rotation, Vector3<T> translation, Vector3<T> scale)
+	{
+		set(	scale.x*(1.0 - 2.0*rotation.y*rotation.y - 2.0*rotation.z*rotation.z),	scale.y*(2.0*rotation.x*rotation.y - 2.0*rotation.z*rotation.w),		scale.z*(2.0*rotation.x*rotation.z + 2.0*rotation.y*rotation.w),		translation.x,
+				scale.x*(2.0*rotation.x*rotation.y + 2.0*rotation.z*rotation.w),		scale.y*(1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.z*rotation.z),	scale.z*(2.0*rotation.y*rotation.z - 2.0*rotation.x*rotation.w),		translation.y,
+				scale.x*(2.0*rotation.x*rotation.z - 2.0*rotation.y*rotation.w),		scale.y*(2.0*rotation.y*rotation.z + 2.0*rotation.x*rotation.w),		scale.z*(1.0 - 2.0*rotation.x*rotation.x - 2.0*rotation.y*rotation.y),	translation.z,
+				0.0,																	0.0,																	0.0,																	1.0);
 	}
 	template <class U>
 	Matrix4(Matrix4<U> u)
@@ -219,9 +226,9 @@ public:
 	Matrix4 transpose() 
 	{
 		return Matrix4(	v[0],	v[1],	v[2],	v[3],
-							v[4],	v[5],	v[6],	v[7],
-							v[8],	v[9],	v[10],	v[11],
-							v[12],	v[13],	v[14],	v[15]);
+						v[4],	v[5],	v[6],	v[7],
+						v[8],	v[9],	v[10],	v[11],
+						v[12],	v[13],	v[14],	v[15]);
 	}
 
 	T minor(unsigned char element) const
@@ -262,6 +269,10 @@ public:
 		output = output * (1.0 / det);
 		return true;
 	}
+	Matrix4& operator+=(const Matrix4& other){return *this = (*this)+other;}
+	Matrix4& operator-=(const Matrix4& other){return *this = (*this)-other;}
+	Matrix4& operator*=(const Matrix4& other){return *this = (*this)*other;}
+	Matrix4& operator/=(const Matrix4& other){return *this = (*this)/other;}
 };
 
 typedef Matrix4<double> Mat4d;

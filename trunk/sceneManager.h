@@ -24,21 +24,22 @@ public:
 		//string modelName;
 		unsigned int meshID;
 
-		Quat4f rotation;
-		Vec3f position;
+		Mat4f modelTransform;
+
+		//Quat4f rotation;
+		//Vec3f position;
 
 		unsigned char flags;
 
 		weak_ptr<meshInstance> parent; //just for association right now, does not impact transformation (yet)
 
 		friend class SceneManager;
-		meshInstance(unsigned int mID, Vec3f pos, Quat4f rot, weak_ptr<meshInstance> Parent=weak_ptr<meshInstance>()): meshID(mID), rotation(rot), position(pos), flags(0x01), parent(Parent) {}
+		meshInstance(unsigned int mID, const Mat4f& transformation, weak_ptr<meshInstance> Parent=weak_ptr<meshInstance>()): meshID(mID), modelTransform(transformation), flags(0x01), parent(Parent) {}
 
 
 
 	public:
-		void update(const Vec3f& pos,bool render=true);
-		void update(const Vec3f& pos, const Quat4f& rot,bool render=true);
+		void update(const Mat4f& transformation,bool render=true);
 
 		Sphere<float> getBoundingSphere();
 
@@ -67,9 +68,8 @@ public:
 		return *pInstance;
 	}
 	shared_ptr<mesh> createMesh(shared_ptr<FileManager::modelFile> modelFile);
-	shared_ptr<meshInstance> newMeshInstance(shared_ptr<mesh> meshPtr, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
-	shared_ptr<meshInstance> newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
-	//void newTemperaryMesh(string model, Vec3f position=Vec3f(), Quat4f rotation=Quat4f());
+	shared_ptr<meshInstance> newMeshInstance(shared_ptr<mesh> meshPtr, Mat4f transformation=Mat4f());
+	shared_ptr<meshInstance> newChildMeshInstance(shared_ptr<mesh> meshPtr, weak_ptr<meshInstance> parent, Mat4f transformation=Mat4f());
 	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation);
 	void drawMesh(shared_ptr<GraphicsManager::View> view, shared_ptr<mesh> meshPtr, Mat4f transformation, shared_ptr<GraphicsManager::shader> shader);
 

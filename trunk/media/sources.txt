@@ -60,6 +60,7 @@ tilt.png -- created in Photoshop (Nicholas)
 tree2.png -- created same way as tree.png
 white.png -- ceated in GIMP (Jonathan)
 lava.png -- combined (additive blend) the abient and diffuse textures from: http://nobiax.deviantart.com/art/Free-3D-textures-pack-15-244701195
+grassDetail.png -- http://www.brusheezy.com/textures/20185-seamless-green-grass-textures
 
 grass2.png
 	"Just Add Bison" Genetica viewer
@@ -157,6 +158,11 @@ ship.obj (and related files)
 tree.obj (and related files)
 	originally from 0 A.D
 	converted using pmd2collada_v3 to .dae, then with blender to .obj
+	
+APC_hull.obj, APC_turret.obj, APC_cannon.obj (and related files)
+	from: http://animium.com/2012/11/armored-personnel-carrier-3d-mode/
+	split into seperate models so it could be animated.
+	
 _________________________________________________________________________________________________________________________
 
 													FONTS

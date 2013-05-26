@@ -210,8 +210,10 @@ void AIplayer::startHunt(int targetID)
 	huntEndTime = world.time() + random<double>(1000,3000);
 	state = STATE_HUNTING;
 }
-void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest)
+void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest, float strength)
 {
+	strength = clamp(strength, -1.0, 1.0); //1 = fly towards point, -1 = fly away
+
 	//Vec3f velocity = p->rotation * Vec3f(0,0,1);
 	Vec3f destVector = dest - p->position;
 	Vec3f destDirection = destVector.normalize();
@@ -219,15 +221,15 @@ void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest)
 	float diffAng = Angle(atan2(destDirection.x, destDirection.z) - p->direction).radians_plusMinusPI();
 	float diffClimb = Angle(atan2(destVector.y, sqrt(destVector.x*destVector.x+destVector.z*destVector.z)) - p->climb).radians_plusMinusPI();
 
-	p->direction += clamp(diffAng,1.2,-1.2) * world.time.length()/1000.0;
-	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0;
+	p->direction += clamp(diffAng,1.2,-1.2) * world.time.length()/1000.0 * strength;
+	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0 * strength;
 
 	float rollError = (diffAng*0.5 + p->roll.radians_plusMinusPI()) / (PI/2);
 
 	p->controls.climb		= 0.0;
 	p->controls.dive		= 0.0;
-	p->controls.left		= clamp(rollError,0.0,1.0);
-	p->controls.right		= clamp(-rollError,0.0,1.0);
+	p->controls.left		= clamp(rollError*strength,0.0,1.0);
+	p->controls.right		= clamp(-rollError*strength,0.0,1.0);
 }
 void AIplayer::update()
 {
@@ -307,18 +309,19 @@ void AIplayer::update()
 		//	}
 		//}
 		//else
-		{
-			flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<plane>(t)->speed));
-		}
+		//{
+			float strength = 40.0 / pow(distance, 0.5f) - 4000.0 / pow(distance, 1.5f);
+			flyTowardsPoint(p, t->position + t->rotation * Vec3f(0,0,max(distance-2000.0,0.0) / p->speed * dynamic_pointer_cast<plane>(t)->speed), strength);
+		//}
 
-		if(distance > 2000.0)
-		{
+	//	if(distance > 2000.0)
+	//	{
 			p->controls.accelerate = 1.0;
-		}
-		else
-		{
-			p->controls.accelerate = 0.0;
-		}
+	//	}
+	//	else
+	//	{
+	//		p->controls.accelerate = 0.0;
+	//	}
 		/*if(distance < 3000.0 && ang < PI/6 && missileCountDown < 0)
 		{
 			missileCountDown = 30000.0;

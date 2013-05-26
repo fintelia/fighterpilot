@@ -32,6 +32,9 @@ public:
 	}
 	Quaternion(Vector3<T> initial, Vector3<T> final)//must be normalized!!
 	{
+		debugAssert(abs(initial.magnitudeSquared() - 1.0) < 0.001);
+		debugAssert(abs(final.magnitudeSquared() - 1.0) < 0.001);
+
 		Vector3<T> H = (initial + final).normalize();
 
 		w = initial.dot(H);

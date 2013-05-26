@@ -33,9 +33,6 @@
     <Filter Include="shaders\hex grid">
       <UniqueIdentifier>{2f2f3799-4fac-4cb0-8d80-f2511f1a5b8b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\gamma correction">
-      <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\sky">
       <UniqueIdentifier>{b6730312-4e6c-4673-9ad2-fa955511cf4d}</UniqueIdentifier>
     </Filter>
@@ -183,6 +180,12 @@
     </Filter>
     <Filter Include="shaders\decal">
       <UniqueIdentifier>{0d20ccb2-ed85-4eb0-b3d2-4744a2f0f226}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\blur mipmaps">
+      <UniqueIdentifier>{8a112f01-e33f-4c66-af9d-70f53ce645b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\post processing">
+      <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -537,10 +540,10 @@
       <Filter>shaders\hex grid</Filter>
     </None>
     <None Include="media\gamma.frag">
-      <Filter>shaders\gamma correction</Filter>
+      <Filter>shaders\post processing</Filter>
     </None>
     <None Include="media\gamma.vert">
-      <Filter>shaders\gamma correction</Filter>
+      <Filter>shaders\post processing</Filter>
     </None>
     <None Include="media\radar.frag">
       <Filter>shaders\radar\3rd person</Filter>
@@ -645,13 +648,13 @@
       <Filter>shaders\blur</Filter>
     </None>
     <None Include="media\gammaBloom.frag">
-      <Filter>shaders\gamma correction</Filter>
+      <Filter>shaders\post processing</Filter>
     </None>
     <None Include="media\gammaNight.frag">
-      <Filter>shaders\gamma correction</Filter>
+      <Filter>shaders\post processing</Filter>
     </None>
     <None Include="media\gammaNightVision.frag">
-      <Filter>shaders\gamma correction</Filter>
+      <Filter>shaders\post processing</Filter>
     </None>
     <None Include="media\tree3d.frag">
       <Filter>shaders\trees</Filter>
@@ -700,6 +703,24 @@
     </None>
     <None Include="media\decal.vert">
       <Filter>shaders\decal</Filter>
+    </None>
+    <None Include="media\blurMipmaps.frag">
+      <Filter>shaders\blur mipmaps</Filter>
+    </None>
+    <None Include="media\blurMipmaps.vert">
+      <Filter>shaders\blur mipmaps</Filter>
+    </None>
+    <None Include="media\sky2.frag">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\sky2.vert">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\hdrLuminance.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\postProcess.vert">
+      <Filter>shaders\post processing</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

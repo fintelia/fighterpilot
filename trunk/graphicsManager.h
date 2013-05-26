@@ -43,15 +43,16 @@ struct normalMappedVertex3D
 	Vec3f position;
 	Vec3f normal;
 	Vec3f tangent;
+	Vec3f bitangent;
 	Vec2f UV;
-	float padding[5];
+	float padding[2];
 };
 class GraphicsManager
 {
 public:
 	typedef unsigned long gID;
 	enum RenderTarget{RT_FBO, RT_MULTISAMPLE_FBO, RT_SCREEN, RT_TEXTURE};
-	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON};
+	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON, PATCHES};
 	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, ADDITIVE, PREMULTIPLIED_ALPHA};
 
 	class shader;
@@ -156,7 +157,7 @@ public:
 	{
 	public:
 		enum UsageFrequency{STATIC,DYNAMIC,STREAM};
-		enum VertexAttribute{POSITION2=0,POSITION3=1,TEXCOORD=2,NORMAL=3,COLOR3=4, COLOR4=5, TANGENT=6, GENERIC_FLOAT=7};
+		enum VertexAttribute{POSITION2=0,POSITION3=1,TEXCOORD=2,NORMAL=3,COLOR3=4, COLOR4=5, TANGENT=6, BITANGENT=7, GENERIC_FLOAT=8};
 	protected:
 		unsigned int totalVertexSize;
 
@@ -233,7 +234,8 @@ public:
 		unsigned int getHeight(){return height;}
 		virtual void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)=0;
 		virtual void generateMipmaps()=0;
-		virtual unsigned char* getData()=0;
+		virtual unsigned char* getData(unsigned int level)=0;
+		unsigned char* getData(){return getData(0);}
 		//void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false, false);}
 	};
 	class texture3D: public texture
@@ -262,6 +264,7 @@ public:
 		friend class GraphicsManager;
 		static shader* boundShader;
 	public:
+		virtual bool init5(const char* vert, const char* geometry, const char* tessellationControl, const char* tessellationEvaluation, const char* frag)=0;
 		virtual bool init4(const char* vert, const char* geometry, const char* frag)=0;
 		virtual bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings)=0;
 		virtual bool init(const char* vert, const char* frag)=0;
@@ -350,10 +353,13 @@ public:
 	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
-	virtual void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture, bool clearTextures)=0;
-	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture){startRenderToTexture(texture, depthTexture, false);}
-	void startRenderToTexture(shared_ptr<texture2D> texture){startRenderToTexture(texture,nullptr);}
+	virtual void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures)=0;
+	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level){startRenderToTexture(texture, texture_level, depthTexture, depth_level, false);}
+	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture){startRenderToTexture(texture, 0, depthTexture, 0, false);}
+	void startRenderToTexture(shared_ptr<texture2D> texture,unsigned int texture_level){startRenderToTexture(texture,texture_level,nullptr,0,false);}
+	void startRenderToTexture(shared_ptr<texture2D> texture){startRenderToTexture(texture,0,nullptr,0,false);}
 	virtual void endRenderToTexture()=0;
+	virtual void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s)=0;
 	//virtual void bindRenderTarget(RenderTarget t)=0;
 	//virtual void renderFBO(RenderTarget src)=0;
 
@@ -398,6 +404,7 @@ public:
 	virtual displayMode			getCurrentDisplayMode()const=0;	
 	virtual set<displayMode>	getSupportedDisplayModes()const=0;
 	virtual bool				hasShaderModel4()const=0;
+	virtual bool				hasShaderModel5()const=0;
 
 	//virtual set functions
 	virtual void setAlphaToCoverage(bool enabled)=0;
@@ -409,7 +416,8 @@ public:
 	virtual void setRefreshRate(unsigned int rate)=0;
 	virtual void setVSync(bool enabled)=0;
 	virtual void setWireFrame(bool enabled)=0;
-	virtual void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth)=0;
+	virtual void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)=0;
+	void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth){setFrameBufferTextures(color,0,depth,0);}
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 
 	//set functions
@@ -552,7 +560,7 @@ public:
 		~texture2DGL();
 		void bind(unsigned int textureUnit);
 		void generateMipmaps();
-		unsigned char* getData();
+		unsigned char* getData(unsigned int level);
 		void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data);
 	};
 	class texture3DGL: public GraphicsManager::texture3D
@@ -596,6 +604,7 @@ public:
 
 		void bind();
 
+		bool init5(const char* vert, const char* geometry, const char* tessellationControl, const char* tessellationEvaluation, const char* frag);
 		bool init4(const char* vert, const char* geometry, const char* frag);
 		bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings);
 		bool init(const char* vert, const char* frag);
@@ -641,8 +650,10 @@ public:
 	void swapBuffers();
 	void takeScreenshot();
 
-	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture, bool clearTextures);
+	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures);
 	void endRenderToTexture();
+
+	void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s);
 
 	void drawLine(Vec3f start, Vec3f end);
 	void drawSphere(Vec3f position, float radius, Color4 color);
@@ -675,7 +686,7 @@ public:
 	void setVSync(bool enabled);
 	void setWireFrame(bool enabled);
 
-	void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth);
+	void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
 	void bindRenderTarget(RenderTarget rTarget);
 
 	void drawText(string text, Vec2f pos, string font);
@@ -687,7 +698,7 @@ public:
 	displayMode			getCurrentDisplayMode()const;	
 	set<displayMode>	getSupportedDisplayModes()const;
 	bool				hasShaderModel4()const;
-
+	bool				hasShaderModel5()const;
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 
