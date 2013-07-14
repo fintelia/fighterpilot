@@ -148,6 +148,7 @@ public:
 
 	Vector3 operator+(T scalar) const{				return Vector3(x + scalar, y + scalar, z + scalar);		}
 	Vector3 operator-(T scalar) const{				return Vector3(x - scalar, y - scalar, z - scalar);		}
+	Vector3 operator*(T scalar) const{				return Vector3(x * scalar, y * scalar, z * scalar);		}
 	Vector3 operator/(T scalar) const{				return Vector3(x / scalar, y / scalar, z / scalar);		}
 	Vector3 operator+(const Vector3 &other) const{	return Vector3(x + other.x, y + other.y, z + other.z);	}
 	Vector3 operator-(const Vector3 &other) const{	return Vector3(x - other.x, y - other.y, z - other.z);	}
@@ -219,13 +220,8 @@ public:
 typedef Vector3<float>		Vec3f;
 typedef Vector3<double>		Vec3d;
 
-template <class T, class U>
-Vector3<T> operator*(const Vector3<T>& v, U scale)
-{
-	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
-}
-template <class T, class U>
-Vector3<T> operator*(U scale, const Vector3<T>& v)
+template <class T>
+Vector3<T> operator*(T scale, const Vector3<T>& v)
 {
 	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
 }

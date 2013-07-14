@@ -46,22 +46,22 @@ namespace particle
 	}
 	void smokeTrail::updateParticle(particle& p)
 	{
-		p.pos += p.velocity * world.time.length()/1000.0;
+		p.pos += p.velocity * world.time.length() * bullet::bulletSpeed;
 		float t = (world.time() - p.startTime) * p.invLife;
-		if(t<0.2)
+		if(t<0.2f)
 		{
-			p.a = t*5.0;//0.5;//(t * 5.0)*(t * 5.0);
-			p.size = 3.5 + 4.0*(t*5.0);
-			float i = min(t*50.0,1.0);
-			p.r = i*color.r + (1.0-i)*1.0;
-			p.g = i*color.b + (1.0-i)*0.48;
-			p.b = i*color.g + (1.0-i)*0.17;
+			p.a = t*5.0f;//0.5;//(t * 5.0)*(t * 5.0);
+			p.size = 3.5f + 4.0f*(t*5.0f);
+			float i = min(t*50.0f,1.0f);
+			p.r = i*color.r + (1.0f-i)*1.0f;
+			p.g = i*color.b + (1.0f-i)*0.48f;
+			p.b = i*color.g + (1.0f-i)*0.17f;
 		}
 		else
 		{
-			t = (t-0.2)/0.8;
-			p.a = 0.5 * (1.0 - t);
-			p.size = lerp(7.5, 35.0, t*t);
+			t = (t-0.2f) * 1.25f;
+			p.a = 0.5f * (1.0f - t);
+			p.size = lerp(7.5f, 35.0f, t*t);
 			//p.pos.y += world.time.length()/100;
 		}
 	}

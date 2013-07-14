@@ -129,9 +129,6 @@ void emitter::update()
 	for(int i=0; i < total; i++)
 	{
 		oldParticlePositions[i] = particles[i].pos;
-	}
-	for(int i=0; i < total; i++)
-	{
 		updateParticle(particles[i]);
 	}
 	lPosition = position; //lPosition is only valid inside this method!!!

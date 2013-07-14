@@ -6,11 +6,22 @@ using namespace tinyxml2;
 
 ObjectInfo& objectInfo = ObjectInfo::getInstance();
 
-shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Vec3f position, Quat4f rotation) const
+shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Mat4f transformation) const
 {
 	if(!mesh.expired())
 	{
-		return sceneManager.newMeshInstance(mesh.lock(), Mat4f(rotation, position));
+		return sceneManager.newMeshInstance(mesh.lock(), transformation);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+shared_ptr<CollisionManager::collisionInstance> ObjectInfo::objectData::newCollisionInstance(Mat4f transformation) const
+{
+	if(!collisionMesh.expired())
+	{
+		return collisionManager.newCollisionInstance(collisionMesh.lock(), transformation);
 	}
 	else
 	{
@@ -150,7 +161,7 @@ bool ObjectInfo::loadObjectData(string filename)
 					aaaObjectData::cannon c;
 					c.meshFilename = getAttribute(aaaProperties, "model");
 					if(c.meshFilename != "") assetLoader.addModel(c.meshFilename);
-					c.rotationCenter = Vec3f(0,getFloatAttribute(aaaProperties,"rotationOffsetY"), getFloatAttribute(aaaProperties,"rotationOffsetZ"));
+					c.rotationCenter = Vec3f(getFloatAttribute(aaaProperties,"rotationOffsetX"),getFloatAttribute(aaaProperties,"rotationOffsetY"), getFloatAttribute(aaaProperties,"rotationOffsetZ"));
 					obj->cannons.push_back(c);
 				}
 				aaaProperties = aaaProperties->NextSiblingElement();
@@ -298,11 +309,21 @@ void ObjectInfo::linkObjectMeshes()
 {
 	for(auto i = objectMap.begin(); i != objectMap.end(); i++)
 	{
+		if(i->second->collisionMeshFilename != "")
+		{
+		//	shared_ptr<CollisionManager::collisionBounds> mesh  //needed since i->second->mesh is actually a weak ptr
+			i->second->collisionMesh = dataManager.getCollisionBounds(i->second->collisionMeshFilename);
+		}
 		if(i->second->meshFilename != "")
 		{
 			shared_ptr<SceneManager::mesh> mesh = dataManager.getModel(i->second->meshFilename); //needed since i->second->mesh is actually a weak ptr
 			i->second->mesh = mesh;
-			collisionManager.setCollsionBounds(i->first, mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
+			if(i->second->collisionMesh.expired())
+			{
+				dataManager.addCollisionBounds(i->second->meshFilename + "_boundingSphere", mesh->boundingSphere);
+				i->second->collisionMesh = dataManager.getCollisionBounds(i->second->meshFilename + "_boundingSphere");
+			}
+			//collisionManager.setCollsionBounds(i->first, mesh->boundingSphere); //only changes bounding volume if a collision mesh was not loaded
 		}
 		if(i->second->type & ANTI_AIRCRAFT_ARTILLARY)
 		{
@@ -319,7 +340,6 @@ void ObjectInfo::linkObjectMeshes()
 				c->mesh = mesh;
 			}
 		}
-
 	}
 }
 objectType ObjectInfo::typeFromString(string s)

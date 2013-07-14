@@ -8,7 +8,7 @@ const float delta = 1e-6;
 
 void main()
 {
-	vec3 color = texture(tex, texCoord).xyz;
+	vec3 color = texture2D(tex, texCoord).xyz;
 	float luminance = dot(color, vec3(0.2125, 0.7154, 0.0721));
 	float logLuminance = log(delta + luminance);
 	gl_FragColor = vec4(logLuminance, logLuminance, 0.0, 0.0); //we could have the first channel stores max luminance during a minification process

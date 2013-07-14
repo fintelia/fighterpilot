@@ -17,23 +17,13 @@ void SceneManager::meshInstance::setRenderFlag(bool b)
 }
 Sphere<float> SceneManager::meshInstance::getBoundingSphere()
 {
-	return sceneManager.meshes[meshID]->boundingSphere;
+	return (!meshPtr.expired()) ? meshPtr.lock()->boundingSphere  : Sphere<float>(Vec3f(0,0,0), 0);
 }
-//void SceneManager::meshInstance::setDeleteFlag(bool b)
-//{
-//	if(b)	flags |=  0x02;
-//	else	flags &= ~0x02;
-//}
-//void SceneManager::meshInstance::setTemperaryFlag(bool b)
-//{
-//	if(b)	flags |=  0x04;
-//	else	flags &= ~0x04;
-//}
 shared_ptr<SceneManager::meshInstance> SceneManager::newMeshInstance(shared_ptr<mesh> meshPtr, Mat4f transformation)
 {
 	if(meshPtr)
 	{
-		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,transformation));
+		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr,transformation));
 		nMeshInstances[meshPtr->meshID].push_back(ptr);
 		return ptr;
 	}
@@ -43,7 +33,7 @@ shared_ptr<SceneManager::meshInstance> SceneManager::newChildMeshInstance(shared
 {
 	if(meshPtr)
 	{
-		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr->meshID,transformation,parent));
+		shared_ptr<meshInstance> ptr(new meshInstance(meshPtr,transformation,parent));
 		nMeshInstances[meshPtr->meshID].push_back(ptr);
 		return ptr;
 	}

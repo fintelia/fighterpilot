@@ -22,52 +22,39 @@ public:
 		triangle(Vec3f a,Vec3f b,Vec3f c):radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=a;vertices[1]=b;vertices[2]=c;findRadius();}
 		triangle():radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=vertices[1]=vertices[2]=Vec3f(0,0,0);}
 	};
-	//class triangleList
-	//{
-	//private:
-	//	triangle* triangles;
-	//	unsigned int numTriangles;
-
-	//	Vec3f center;
-	//	float radius;
-
-	//	triangleList(const triangleList&);
-	//	triangleList* operator=(const triangleList&);
-	//public:
-	//	Vec3f getCenter(){return center;}
-	//	float getRadius(){return radius;}
-	//	Vec3f getRandomVertex();
-	//	triangleList(Vec3f* vertices, unsigned int* faces, unsigned int nVertices, unsigned int nFaces);
-	//	triangleList(): triangles(0), numTriangles(0), center(0,0,0), radius(-999999999.9f) {}
-	//	~triangleList(){if(triangles) delete[] triangles;}
-	//	friend class CollisionChecker;
-	//};
-
-private:
-	CollisionManager(){}
-
-	struct collisionBounds
+	class collisionBounds
 	{
 	public:
-		enum Type{SPHERE,MESH}type;
+		const enum Type{SPHERE,MESH}type;
 		Sphere<float> sphere;
 		collisionBounds(Sphere<float> s):type(SPHERE),sphere(s){}
 		virtual ~collisionBounds(){}
 	protected:
 		collisionBounds(Type t):type(t){}
 	};
-	//struct collisionSphere: public collisionBounds
-	//{
-	//	collisionSphere():collisionBounds(SPHERE){}
-	//	collisionSphere(Sphere<float> s):collisionBounds(SPHERE),sphere(s){}
-	//};
-	struct collisionMesh: public collisionBounds
+	class collisionMesh: public collisionBounds
 	{
+	public:
 		vector<Vec3f> vertices;
 		vector<triangle> triangles;
 		collisionMesh():collisionBounds(MESH){}
 	};
-	map<objectType, shared_ptr<collisionBounds>> objectBounds;
+	class collisionInstance
+	{
+	private:
+		weak_ptr<collisionBounds> collisionBoundsPtr;
+		Mat4f transformationMatrix;
+		Mat4f lastTransformationMatrix;
+
+		friend class CollisionManager;
+		collisionInstance(shared_ptr<collisionBounds> boundsPtr, Mat4f transformation): collisionBoundsPtr(boundsPtr), transformationMatrix(transformation), lastTransformationMatrix(transformation) {}
+
+	public:
+		void update(const Mat4f& transformation, const Mat4f& lastTransformation);
+		Sphere<float> boundingSphere() const; //does not factor in scale!
+	};
+private:
+	CollisionManager(){}
 
 public:
 
@@ -88,6 +75,7 @@ public:
 	bool testRayAABB(Vec3f p, Vec3f d, BoundingBox<float> AABB, Vec3f& intersectionPoint);
 	bool testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, Vec3f t2_a, Vec3f t2_b, Vec3f t2_c) const;
 	//bool testLineTriangle(Vec3f lStart, Vec3f lEnd, Vec3f t1, Vec3f t2, Vec3f t3, Vec3f& intersectionPoint) const;
+	bool testSphereSegment(Sphere<float> sphere, Vec3f lineStart, Vec3f lineEnd) const;
 
 	Vec3f closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const;
 	bool sphereTriangleCollision(const triangle& a, const Mat4f& m, const Sphere<float>& s) const;
@@ -101,16 +89,21 @@ public:
 	//bool triangleSweptSphere(const triangle& a, const Mat4f& m, const Sphere<float>& s, Vec3f sphereInitial, Vec3f sphereFinal, float radius)const;
 
 
-	void setCollsionBounds(objectType type, Sphere<float> s);
-	void setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices);
+	//void setCollsionBounds(objectType type, Sphere<float> s);
+	//void setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices);
+	//shared_ptr<const collisionBounds> getCollisionBoundsPtr(objectType type) const;
 
 	bool groundCollsion(shared_ptr<object> o1) const;
 	bool operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const;
 	bool operator() (shared_ptr<object> o1, shared_ptr<object> o2) const;
+
+	shared_ptr<collisionInstance> newCollisionInstance(shared_ptr<collisionBounds> collisionBoundsPtr, Mat4f transformation=Mat4f());
 
 private:
 	//friend class physicsInstance;
 	//map<majorObjectType, vector<std::weak_ptr<physicsInstance>>> physicsInstances;
 };
 //typedef shared_ptr<PhysicsManager::physicsInstance> physicsInstancePtr;
+typedef shared_ptr<CollisionManager::collisionInstance> collisionBoundsPtr;
 extern CollisionManager& collisionManager;
+

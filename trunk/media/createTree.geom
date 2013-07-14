@@ -17,7 +17,7 @@ out vec3 color;
 
 float random(float c1, float c2)
 {
-	return fract(sin(c1*(vertexIn[0].vertexID)) * c2);
+	return fract(cos(sin(c1*(vertexIn[0].vertexID)) * c2));
 }
 
 void main()
@@ -27,9 +27,9 @@ void main()
 		float size = (1.0 + random(38.764, 72538.3787) + random(66.529, 2124.48912)) * 1.6 * 1.5;
 		float angle = 6.2832 * random(37.064, 77880.3935);
 
-		color.r = 0.8 + 0.3 * random(43.885, 21751.4533);
-		color.g = 0.8 + 0.3 * random(50.780, 94699.9964);
-		color.b = 0.8 + 0.3 * random(57.329, 49563.7059);
+		color.r = 0.7 + 0.5 * random(43.885, 21751.4533);
+		color.g = 0.7 + 0.5 * random(50.780, 94699.9964);
+		color.b = 0.7 + 0.5 * random(57.329, 49563.7059);
 
 		vec2 dir = vec2(cos(angle), sin(angle)) * 2.5;
 

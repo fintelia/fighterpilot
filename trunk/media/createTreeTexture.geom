@@ -20,7 +20,7 @@ uniform vec2 transform;
 
 float random(float c1, float c2)
 {
-	return fract(sin(c1*(vertexIn[0].vertexID)) * c2);
+	return fract(cos(sin(c1*(vertexIn[0].vertexID)) * c2));
 }
 
 void main()

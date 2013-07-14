@@ -1,8 +1,25 @@
 
 #include "engine.h"
 
+void CollisionManager::collisionInstance::update(const Mat4f& transformation, const Mat4f& lastTransformation)
+{
+	transformationMatrix = transformation;
+	lastTransformationMatrix = lastTransformation;
+}
+Sphere<float> CollisionManager::collisionInstance::boundingSphere() const
+{
+	if(!collisionBoundsPtr.expired())
+	{
+		auto& s = collisionBoundsPtr.lock()->sphere;
+		return Sphere<float>(transformationMatrix * s.center, s.radius);
+	}
+	else
+	{
+		return Sphere<float>();
+	}
+}
 //
-//	Much of the code for PhysicsManager is from "Real-Time Collision Detection" by Christer Ericson
+//	Much of the code for CollisionManager is from "Real-Time Collision Detection" by Christer Ericson
 //
 
 Vec3f CollisionManager::cpPlanePoint(Plane<float> plane, Vec3f point) const
@@ -379,6 +396,20 @@ bool CollisionManager::testTriangleTriangle(Vec3f t1_a, Vec3f t1_b, Vec3f t1_c, 
 //	intersectionPoint = t1 * u + t2 * v + t3 * w;
 //	return true;
 //}
+bool CollisionManager::testSphereSegment(Sphere<float> sphere, Vec3f lineStart, Vec3f lineEnd) const
+{
+	//early detection
+	//double d1 = sphere.center.distanceSquared(lineStart);
+	//double d2 = sphere.center.distanceSquared(lineEnd);
+ 	//if(d1 < sphere.radius*sphere.radius || d2 < sphere.radius*sphere.radius)
+	//	return true;
+
+	//fallback
+	Vec3f lineEndMinusStart = lineEnd - lineStart;
+	float u = (sphere.center - lineStart).dot(lineEndMinusStart) / (lineEndMinusStart).dot(lineEndMinusStart);
+	//if(u < 0.0 || u > 1.0) return false;
+	return u > 0.0 && u < 1.0 && sphere.center.distanceSquared(lineStart+lineEndMinusStart*u) < sphere.radius*sphere.radius;
+}
 Vec3f CollisionManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) const //see http://pisa.ucsd.edu/cse125/2003/cse190g2/Collision.pdf
 {
 	// Determine t (the length of the vector from ‘a’ to ‘p’)
@@ -707,11 +738,16 @@ void CollisionManager::triangle::findRadius() const
 //}
 bool CollisionManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f lineEnd) const
 {
-	auto o = objectBounds.find(o1->type);
-	if(o != objectBounds.end() && o->second->type == collisionBounds::SPHERE)
+	if(!o1 || !o1->collisionInstance || o1->collisionInstance->collisionBoundsPtr.expired())
+		return false;
+
+
+	auto instance = o1->collisionInstance;
+	auto bounds = o1->collisionInstance->collisionBoundsPtr.lock();
+	if(bounds->type == collisionBounds::SPHERE)
 	{
-		Sphere<float> sphere = o->second->sphere;
-		sphere.center = o1->rotation * sphere.center + o1->position;
+		Sphere<float> sphere = bounds->sphere;
+		sphere.center = instance->transformationMatrix * sphere.center;
 
 		//early detection
 		double d1 = sphere.center.distanceSquared(lineStart);
@@ -720,14 +756,15 @@ bool CollisionManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f
 			return true;
 
 		//fallback
-		float u = (sphere.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+		Vec3f lineEndMinusStart = lineEnd - lineStart;
+		float u = (sphere.center - lineStart).dot(lineEndMinusStart) / (lineEndMinusStart).dot(lineEndMinusStart);
 		if(u < 0.0 || u > 1.0) return false;
-		return sphere.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < sphere.radius*sphere.radius;
+		return sphere.center.distanceSquared(lineStart+lineEndMinusStart*u) < sphere.radius*sphere.radius;
 	}
-	else if(o != objectBounds.end() && o->second->type == collisionBounds::MESH) //right now just uses boundin sphere
+	else if(bounds->type == collisionBounds::MESH) //right now just uses bounding sphere
 	{
-		Sphere<float> sphere = o->second->sphere;
-		sphere.center = o1->rotation * sphere.center + o1->position;
+		Sphere<float> sphere = bounds->sphere;
+		sphere.center = instance->transformationMatrix * sphere.center;
 
 		//early detection
 		double d1 = sphere.center.distanceSquared(lineStart);
@@ -736,135 +773,120 @@ bool CollisionManager::operator() (shared_ptr<object> o1, Vec3f lineStart, Vec3f
 			return true;
 
 		//fallback
-		float u = (sphere.center - lineStart).dot(lineEnd - lineStart) / (lineEnd - lineStart).dot(lineEnd - lineStart);
+		Vec3f lineEndMinusStart = lineEnd - lineStart;
+		float u = (sphere.center - lineStart).dot(lineEndMinusStart) / (lineEndMinusStart).dot(lineEndMinusStart);
 		if(u < 0.0 || u > 1.0) return false;
-		return sphere.center.distanceSquared(lineStart+(lineEnd-lineStart)*u) < sphere.radius*sphere.radius;
+		return sphere.center.distanceSquared(lineStart+lineEndMinusStart*u) < sphere.radius*sphere.radius;
+	}
+	else
+	{
+		debugBreak();
 	}
 	return false;
 }
 
 bool CollisionManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2) const
 {
-	auto b1 = objectBounds.find(o1->type);
-	auto b2 = objectBounds.find(o2->type);
-
-	if(b1 == objectBounds.end() || b2 == objectBounds.end())
-	{
+	if(!o1 || !o2 || !o1->collisionInstance || !o2->collisionInstance || o1->collisionInstance->collisionBoundsPtr.expired() || o2->collisionInstance->collisionBoundsPtr.expired())
 		return false;
-	}
-	else if(b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::SPHERE)
-	{
-		Sphere<float> s1 = b1->second->sphere;
-		Sphere<float> s2 = b2->second->sphere;
-		s1.center = o1->lastRotation * s1.center + o1->lastPosition;
-		s2.center = o2->lastRotation * s2.center + o2->lastPosition;
 
-		Vec3f s1_newCenter = o1->rotation * s1.center + o1->position;
-		Vec3f s2_newCenter = o2->rotation * s2.center + o2->position;
+	auto instance1 = o1->collisionInstance;
+	auto instance2 = o2->collisionInstance;
+
+	auto bounds1 = o1->collisionInstance->collisionBoundsPtr.lock();
+	auto bounds2 = o1->collisionInstance->collisionBoundsPtr.lock();
+
+	if(bounds1->type == collisionBounds::SPHERE && bounds2->type == collisionBounds::SPHERE)
+	{
+		Sphere<float> s1 = bounds1->sphere;
+		Sphere<float> s2 = bounds2->sphere;
+		s1.center = instance1->transformationMatrix * s1.center;
+		s2.center = instance2->transformationMatrix * s2.center;
+
+		Vec3f s1_newCenter = instance1->lastTransformationMatrix * s1.center;
+		Vec3f s2_newCenter = instance1->lastTransformationMatrix * s2.center;
 
 		return sweptSphereSphere(s1, s1_newCenter - s1.center, s2, s2_newCenter - s2.center);
 		//return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
 	}
-	else if((b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::SPHERE) || (b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH))
+	else if((bounds1->type == collisionBounds::MESH && bounds2->type == collisionBounds::SPHERE) || (bounds1->type == collisionBounds::SPHERE && bounds2->type == collisionBounds::MESH))
 	{
-		if(b1->second->type == collisionBounds::SPHERE && b2->second->type == collisionBounds::MESH) //make sure b1's type == MESH and b2's type == SPHERE
-			swap(b1,b2);
+		if(bounds1->type == collisionBounds::SPHERE && bounds2->type == collisionBounds::MESH) //make sure b1's type == MESH and b2's type == SPHERE
+			swap(bounds1,bounds2);
 
-		Sphere<float> s1 = b1->second->sphere;
-		Sphere<float> s2 = b2->second->sphere;
+		Sphere<float> s1 = bounds1->sphere;
+		Sphere<float> s2 = bounds2->sphere;
 		s1.center = o1->rotation * s1.center + o1->position;
 		s2.center = o2->rotation * s2.center + o2->position;
 		if((s1.center).distanceSquared(s2.center) > (s1.radius+s2.radius)*(s1.radius+s2.radius))
 			return false;
 
 		Mat4f mat1(o1->rotation, o1->position);
-		auto m = static_pointer_cast<collisionMesh>(b1->second);
+		auto m = static_pointer_cast<const collisionMesh>(bounds1);
 		for(auto i = m->triangles.begin(); i != m->triangles.end(); i++)
 		{
 			if(sphereTriangleCollision(*i, mat1, s2))
 				return true;
 		}
 	}
-	else if(b1->second->type == collisionBounds::MESH && b2->second->type == collisionBounds::MESH)
+	else if(bounds1->type == collisionBounds::MESH && bounds2->type == collisionBounds::MESH)
 	{
 		debugBreak(); // code not yet written!!!
 	}
 	return false;
-	//auto tr1 = dataManager.getModel(o1->type)->trl;
-	//auto tr2 = dataManager.getModel(o2->type)->trl;
-	//
-	//Mat4f mat1(o1->rotation, o1->position);
-	//Mat4f mat2(o2->rotation, o2->position);
-	//
-	////Vec3f _center1 = o1->position + o1->rotation * tr1->center;
-	////Vec3f _center2 = o2->position + o2->rotation * tr2->center;
-	//
-	//Vec3f center1 = mat1 * tr1->center;
-	//Vec3f center2 = mat1 * tr2->center;
-	//
-	//if(center1.distanceSquared(center2) < (tr1->radius+tr2->radius)*(tr1->radius+tr2->radius))
-	//{
-	//	int i1;
-	//	//int i2;
-	//	for(i1=0; i1 < tr1->numTriangles; i1++)
-	//	{
-	//		if((mat1*tr1->triangles[i1].center).distanceSquared(center2) < (tr1->triangles[i1].radius+tr2->radius)*(tr1->triangles[i1].radius+tr2->radius))
-	//		{
-	//		//	for(i2 = 0; i2 < tr2->numTriangles; i2++)
-	//		//	{
-	//		//		if((mat1*tr1->triangles[i1].center).distanceSquared(mat2*tr2->triangles[i2].center) <= (tr1->triangles[i1].radius+tr2->triangles[i2].radius)*(tr1->triangles[i1].radius+tr2->triangles[i2].radius))
-	//		//		{
-	//		//			if(triangleCollision(tr1->triangles[i1],tr2->triangles[i2], mat1, mat2))
-	//						return true;
-	//		//		}
-	//		//	}
-	//		}
-	//	}
-	//}
-	//return false;
 }
 bool CollisionManager::groundCollsion(shared_ptr<object> o1) const
 {
-	auto b1 = objectBounds.find(o1->type);
-	if(b1 == objectBounds.end())
-	{
+	if(!o1 || !o1->collisionInstance || o1->collisionInstance->collisionBoundsPtr.expired())
 		return false;
-	}
-	else if(b1->second->type == collisionBounds::SPHERE)
+
+
+	auto instance = o1->collisionInstance;
+	auto bounds = o1->collisionInstance->collisionBoundsPtr.lock();
+
+	if(bounds->type == collisionBounds::SPHERE)
 	{
-		Sphere<float> s1 = b1->second->sphere;
-		s1.center = o1->rotation * s1.center + o1->position;
+		Sphere<float> s1 = bounds->sphere;
+		s1.center = instance->transformationMatrix * s1.center;
 
 		return world.altitude(s1.center) <= s1.radius;
 	}
-	else if(b1->second->type == collisionBounds::MESH)
+	else if(bounds->type == collisionBounds::MESH)
 	{
-		Mat4f mat1(o1->rotation, o1->position);
-		shared_ptr<collisionMesh> m = static_pointer_cast<collisionMesh>(b1->second);
+		auto m = static_pointer_cast<collisionMesh>(bounds);
 		for(auto i = m->vertices.begin(); i != m->vertices.end(); i++)
 		{
-			if(world.altitude(mat1 * (*i)) < 0.0)
+			if(world.altitude(instance->transformationMatrix * (*i)) < 0.0)
 				return true;
 		}
 		return false;
 	}
 	return false;
 }
-void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s)
+//void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s)
+//{
+//	if(objectBounds.find(type) == objectBounds.end()) 
+//	{
+//		objectBounds[type] = shared_ptr<collisionBounds>(new collisionBounds(s));
+//	}
+//}
+//void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices)
+//{
+//	collisionMesh* m = new collisionMesh;
+//	m->sphere = s;
+//	m->vertices = vertices;
+//	for(int i=0; i<indices.size(); i += 3)
+//	{
+//		m->triangles.push_back(triangle(vertices[indices[i]], vertices[indices[i+1]], vertices[indices[i+2]]));
+//	}
+//	objectBounds[type] = shared_ptr<collisionBounds>(m);
+//}
+//shared_ptr<const CollisionManager::collisionBounds> CollisionManager::getCollisionBoundsPtr(objectType type) const
+//{
+//	auto rVal = objectBounds.find(type);
+//	return rVal != objectBounds.end() ? rVal->second : nullptr;
+//}
+shared_ptr<CollisionManager::collisionInstance> CollisionManager::newCollisionInstance(shared_ptr<collisionBounds> collisionBoundsPtr, Mat4f transformation)
 {
-	if(objectBounds.find(type) == objectBounds.end()) 
-	{
-		objectBounds[type] = shared_ptr<collisionBounds>(new collisionBounds(s));
-	}
-}
-void CollisionManager::setCollsionBounds(objectType type, Sphere<float> s, const vector<Vec3f>& vertices, const vector<unsigned int>& indices)
-{
-	collisionMesh* m = new collisionMesh;
-	m->sphere = s;
-	m->vertices = vertices;
-	for(int i=0; i<indices.size(); i += 3)
-	{
-		m->triangles.push_back(triangle(vertices[indices[i]], vertices[indices[i+1]], vertices[indices[i+2]]));
-	}
-	objectBounds[type] = shared_ptr<collisionBounds>(m);
+	return shared_ptr<collisionInstance>(new collisionInstance(collisionBoundsPtr, transformation));
 }

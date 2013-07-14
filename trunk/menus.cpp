@@ -262,7 +262,9 @@ bool options::init()
 
 	initialState.vSync = graphics->getVSync();
 	initialState.textureCompression = (settings.get<string>("graphics", "textureCompression")=="enabled");
-
+	/*if(graphics->hasShaderModel5())		initialState.rendererVersion = 4;
+	else*/if(graphics->hasShaderModel4())	initialState.rendererVersion = 3;
+	else									initialState.rendererVersion = 2;
 
 
 	string appData = fileManager.getAppDataDirectory();
@@ -310,10 +312,10 @@ bool options::init()
 	checkBoxes["vSync"] = new checkBox(0.34*sAspect, 0.395, "",initialState.vSync);
 
 
-	labels["renderVersion"] = new label(0.64*sAspect-graphics->getTextSize("Render Version: ").x,0.275, "Render Version: ");
-	listBoxes["renderVersion"] = new listBox(0.64*sAspect,0.275,0.150,"OpenGL 2", black);
-	listBoxes["renderVersion"]->addOption("OpenGL 2");
-	//listBoxes["renderVersion"]->addOption("OpenGL 3");
+	labels["rendererVersion"] = new label(0.64*sAspect-graphics->getTextSize("Render Version: ").x,0.275, "Render Version: ");
+	listBoxes["rendererVersion"] = new listBox(0.64*sAspect,0.275,0.150,initialState.rendererVersion == 2 ? "OpenGL 2" : "OpenGL 3", black);
+	listBoxes["rendererVersion"]->addOption("OpenGL 2");
+	listBoxes["rendererVersion"]->addOption("OpenGL 3");
 
 	labels["refreshRate"] = new label(0.64*sAspect-graphics->getTextSize("Refresh Rate: ").x,0.315, "Refresh Rate: ");
 	listBoxes["refreshRate"] = new listBox(0.64*sAspect,0.315,0.150,lexical_cast<string>(currentDisplayMode.refreshRate) + " Hz", black);
@@ -409,6 +411,12 @@ void options::update()
 		{
 			settingsFile->bindings["graphics"]["vSync"] = checkBoxes["vSync"]->getChecked() ? "enabled" : "disabled";
 			graphics->setVSync(checkBoxes["vSync"]->getChecked());
+		}
+		/////////////////////////////////////////////////////
+		if(initialState.rendererVersion != listBoxes["rendererVersion"]->getOptionNumber()+2)
+		{
+			settingsFile->bindings["graphics"]["rendererVersion"] = lexical_cast<string>(listBoxes["rendererVersion"]->getOptionNumber()+2);
+			needRestart = true;
 		}
 		/////////////////////////////////////////////////////
 		fileManager.writeFile(settingsFile);

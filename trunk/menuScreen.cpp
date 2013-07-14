@@ -128,9 +128,10 @@ void manager::updateFrame()
 {
 	if(!popups.empty())
 	{
+		unsigned int numPopups = popups.size();
 		auto p = popups.back();
 		p->update();
-		if(p->isDone())
+		if(numPopups == popups.size() && p->isDone())
 		{
 			popups.erase(popups.end()-1); //remove the popup from the vector
 

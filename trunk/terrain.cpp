@@ -475,6 +475,13 @@ Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f
 }
 void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in trees per km^2
 {
+	if(foliageDensity <= 0.0)
+	{
+		unsigned char texData[] = {1,1,1,1};
+		treeTexture = graphics->genTexture2D();
+		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
+		return;
+	}
 	foliageDensity = min(foliageDensity, 150); //keep foliageDensity reasonable
 
 	int				foliagePatchesX = width/8;//64;//16*(width/16)/LOD;
@@ -488,7 +495,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 
 	const int MAX_QUADS_WITHOUT_TF = 100000 * 10000; // 100,000 quads = 50,000 trees = 400,000 vertices
 	bool hasTransformFeedback = graphics->hasShaderModel4();
-
 	foliagePatch patch;
 
 	double t=GetTime();
@@ -499,7 +505,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 		auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 		emptyVBO->setTotalVertexSize(0);
 		emptyVBO->setVertexData(0, nullptr);
-
 		auto counterVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 		counterVBO->setTotalVertexSize(1);
 		counterVBO->setVertexData(4 * foliagePatchesX * foliagePatchesY * sLength * sLength, nullptr);
@@ -516,7 +521,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 		countTreesShader->setUniform1i("patch_width", sLength);
 		countTreesShader->setUniform1i("patch_height", sLength);
 		//countTreesShader->setUniform1i("vertexID_offset", 0);
-
 		unsigned int numTreesInPatch;
 		numTrees = 0;
 		emptyVBO->bindBuffer();
@@ -525,15 +529,13 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 		{
 			for(int x = 0; x < foliagePatchesX; x++)
 			{
-
 				//countTreesShader->setUniform1i("x_offset", x * sLength);
 				//countTreesShader->setUniform1i("y_offset", y * sLength);
 				countTreesShader->setUniform1i("vertexID_offset", (x+y*foliagePatchesX) * sLength*sLength);
 
 				counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
-				
 				emptyVBO->drawBuffer(GraphicsManager::POINTS, 0,  sLength * sLength);
-				numTreesInPatch = counterVBO->unbindTransformFeedback();
+				numTreesInPatch = counterVBO->unbindTransformFeedback();graphics->checkErrors();
 				if(numTreesInPatch > 0)
 				{
 					patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
@@ -544,16 +546,12 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 					patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
 					patch.sm4_treeVboOffset = 12 * numTrees;
 					patch.sm4_treeVboSize = 12 * numTreesInPatch;
-
 					foliagePatches.push_back(patch);
-
 					numTrees += numTreesInPatch;
 				}
-
 			}
 		}
 		counterVBO.reset();
-
 	//	counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
 	//	emptyVBO->bindBuffer();
 	//	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
@@ -569,7 +567,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
 			foliageVBO->setTotalVertexSize(32);
 			foliageVBO->setVertexData(32 * 12 * numTrees, nullptr);
-
 			//render trees into VBO
 			auto placeTreesShader = shaders.bind("place trees");
 			placeTreesShader->setUniform1i("groundTex", 0);
@@ -586,7 +583,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			foliageVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
 			emptyVBO->bindBuffer();
 			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
-
 #ifdef _DEBUG
 			unsigned int n = foliageVBO->unbindTransformFeedback();
 			debugAssert(n == 4*numTrees);
@@ -620,7 +616,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 			emptyVBO->bindBuffer();
 			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
-
 			graphics->endRenderToTexture();
 			treeTexture->generateMipmaps();
 
@@ -631,7 +626,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			//textureFile->width = 4096;
 			//textureFile->height = 4096;
 			//fileManager.writeFile(textureFile); //will delete[] texData
-
 		}
 		else
 		{
@@ -1199,116 +1193,205 @@ Terrain::decal::decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo,
 {
 
 }
-void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1 and http://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
-{//theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)
+void Terrain::generateSky(Vec3f sunDirection)
+{
+	const double AOI = 45.0 * PI/180.0;
+	
 	double t = GetTime();
 
-	unsigned int l = 64; //length of sides of square for each face in cube map
-	float m = 0.5 * l - 0.5;
-	float* cubeMap = new float[l*l * 6 * 3];
-	unsigned char* cubeMapTex = new unsigned char[l*l * 6 * 3];
-
-	Vec3f sunDirection(cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta));
-	sunDirection = sunDirection.normalize();//is this necessary?
-
-
-	//xyY color space stored as:		x						  Y						  y			
-	float constants[5][3] =	{{-0.0193f*L - 0.2592f,		 0.1787f*L - 1.4630f,		-0.0167f*L - 0.2608f},
-							 {-0.0665f*L + 0.0008f,		-0.3554f*L + 0.4275f,		-0.0950f*L + 0.0092f},
-							 {-0.0004f*L + 0.2125f,		-0.0227f*L + 5.3251f,		-0.0079f*L + 0.2102f},
-							 {-0.0641f*L - 0.8989f,		 0.1206f*L - 2.5771f,		-0.0441f*L - 1.6537f},
-							 {-0.0033f*L + 0.0452f,		-0.0670f*L + 0.3703f,		-0.0109f*L + 0.0529f}};
-
-
-
-	float theta2 = theta*theta;
-	float theta3 = theta*theta*theta;
-	float chi = (4.0/9.0 - L/120.0)*(PI - 2*theta);
-	float zenithLuminance = abs((4.0453*L - 4.9710) * tan(chi) - 0.2155*L + 0.24192);// * 1000;
-	float zenith_x = L*L*(0.00166*theta3 - 0.00375*theta2 + 0.00209*theta) + L*(-0.02903*theta3 + 0.06377*theta2 - 0.03202*theta + 0.00394) + (0.11693*theta3 - 0.21196*theta2 + 0.06052*theta + 0.25886);
-	float zenith_y = L*L*(0.00275*theta3 - 0.00610*theta2 + 0.00317*theta) + L*(-0.04214*theta3 + 0.08970*theta2 - 0.04153*theta + 0.00516) + (0.15346*theta3 - 0.26756*theta2 + 0.06670*theta + 0.26688);
-	float zenithOverSun[3] = {static_cast<float>(0.85f*zenith_x /		((1.0 + constants[0][0] * exp(constants[1][0])) * (1.0f + constants[2][0]*exp(constants[3][0]*(float)theta) + constants[4][0]*cos(theta)*cos(theta)))),
-							  static_cast<float>(0.20f*zenithLuminance / ((1.0 + constants[0][1] * exp(constants[1][1])) * (1.0f + constants[2][1]*exp(constants[3][1]*(float)theta) + constants[4][1]*cos(theta)*cos(theta)))),
-							  static_cast<float>(0.85f*zenith_y /		((1.0 + constants[0][2] * exp(constants[1][2])) * (1.0f + constants[2][2]*exp(constants[3][2]*(float)theta) + constants[4][2]*cos(theta)*cos(theta))))};
-
-	//float zenithOverSun[3] = {1.0/0.186220,
-	//						  1.0/0.13,
-	//						  1.0/0.130598};
-
-	Vec3f direction;
-	unsigned int i = 0;
-	for(int face=0; face<6; face++)
-	{
-		for(int x=0;x<l;x++)
-		{
-			for(int y=0;y<l;y++)
-			{
-				if(face == 0)		direction.set(m, m - x, m - y); //right
-				else if(face == 1)	direction.set(-m, m - x, -m + y); //left
-				else if(face == 2)	direction.set(-m + y, m, -m + x); //top
-				else if(face == 3)	direction.set(-m + y, -m, m - x); //bottom
-				else if(face == 4)	direction.set(-m + y, m - x, m); //back
-				else if(face == 5)	direction.set(m - y, m - x, -m); //front
-
-				direction = direction.normalize();
-
-				float cos_sunAngle = direction.dot(sunDirection);
-				float sunAngle = acos(cos_sunAngle);
-				float reciprocal_cos_upAngle = 1.0 / max(direction.y,0.01);//cos_upAng should really be just direction.y but this prevents the horizon from having artifacts
-
-			//	if(sunAngle > PI/2) sunAngle = PI/4 + sunAngle * 0.5;
-				
-																												  //pow(constants[2][i], constants[3][i] * sunAngle) is the only term that dramatically effects the color accros the sky
-				cubeMap[i + 0] = (1.0 + constants[0][0] * exp(constants[1][0]*reciprocal_cos_upAngle)) * (1.0 + constants[2][0]*exp(constants[3][0] * sunAngle) + constants[4][0]*cos_sunAngle*cos_sunAngle) * zenithOverSun[0];
-				cubeMap[i + 1] = (1.0 + constants[0][1] * exp(constants[1][1]*reciprocal_cos_upAngle)) * (1.0 + constants[2][1]*exp(constants[3][1] * sunAngle) + constants[4][1]*cos_sunAngle*cos_sunAngle) * zenithOverSun[1];
-				cubeMap[i + 2] = (1.0 + constants[0][2] * exp(constants[1][2]*reciprocal_cos_upAngle)) * (1.0 + constants[2][2]*exp(constants[3][2] * sunAngle) + constants[4][2]*cos_sunAngle*cos_sunAngle) * zenithOverSun[2];
-			
-				i +=3;
-
-			}
-		}
-	}
-	
-	t = GetTime() - t;
-	t = GetTime();
-
-	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
-	{
-		float x = cubeMap[i + 0];
-		float y = cubeMap[i + 2];
-
-
-		cubeMap[i + 1] = 0.65 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
-		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
-
-		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
-		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
-	}
-
-	t = GetTime() - t;
-	t = GetTime();
-
-	//const float invGamma = 1.0/1.8;
-	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
-	{
-	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
-		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.498530),0.0,1.0) * 255.0;
-		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
-		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
-	}
-
-	t = GetTime() - t;
-	t = GetTime();
-
 	skyTexture = graphics->genTextureCube();
-	skyTexture->setData(l, l, GraphicsManager::texture::BGR, cubeMapTex);
-
-	delete[] cubeMap;
-	delete[] cubeMapTex;
+	skyTexture->setData(256,256,GraphicsManager::texture::BGR, nullptr);
 
 	t = GetTime() - t;
 	t = GetTime();
+
+
+	graphics->setDepthTest(false);
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
+
+	auto skyShader = shaders.bind("sky2 shader");
+
+	dataManager.bind("noise",0);
+	skyShader->setUniform1f("time", world.time());
+	skyShader->setUniform1i("noise", 0);
+	skyShader->setUniform3f("eye", 0, 0, 0);
+	skyShader->setUniform3f("lightDirection", sunDirection.normalize());
+	skyShader->setUniformMatrix("cameraProjection", Mat4f(1,0,0,0,		0,1,0,0,	0,0,1,0,	0,0,0,1));
+	skyShader->setUniform2f("mapCenter", 0, 0);
+
+	//Positive X
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::POSITIVE_X);
+	skyShader->setUniform3f("fwd",		1,0,0);
+	skyShader->setUniform3f("up",		0,-1,0);
+	skyShader->setUniform3f("right",	0,0,-1);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//Positive Y
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::POSITIVE_Y);
+	skyShader->setUniform3f("fwd",		0,1,0);
+	skyShader->setUniform3f("up",		0,0,1);
+	skyShader->setUniform3f("right",	1,0,0);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//Positive Z
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::POSITIVE_Z);
+	skyShader->setUniform3f("fwd",		0,0,1);
+	skyShader->setUniform3f("up",		0,-1,0);
+	skyShader->setUniform3f("right",	1,0,0);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//Negative X
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::NEGATIVE_X);
+	skyShader->setUniform3f("fwd",		-1,0,0);
+	skyShader->setUniform3f("up",		0,-1,0);
+	skyShader->setUniform3f("right",	0,0,1);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//Negative Y
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::NEGATIVE_Y);
+	skyShader->setUniform3f("fwd",		0,-1,0);
+	skyShader->setUniform3f("up",		0,0,-1);
+	skyShader->setUniform3f("right",	-1,0,0);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//Negative Z
+	graphics->startRenderToTexture(skyTexture,GraphicsManager::textureCube::NEGATIVE_Z);
+	skyShader->setUniform3f("fwd",		0,0,-1);
+	skyShader->setUniform3f("up",		0,-1,0);
+	skyShader->setUniform3f("right",	-1 ,0,0);
+	graphics->drawOverlay(Rect::XYXY(	-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+
+	//skyTexture->generateMipmaps(); <- might be needed...
+//	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
+	t = GetTime() - t;
+	t = GetTime();
+
+	unsigned char* texData = skyTexture->getData();
+	shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../skyTexture.png",FileManager::PNG));
+	textureFile->channels = 3;
+	textureFile->contents = texData;
+	textureFile->width = 256;
+	textureFile->height = 256*3;
+	fileManager.writeFile(textureFile); //will delete[] texData
 }
+//void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1 and http://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
+//{//theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)
+//	double t = GetTime();
+//
+//	unsigned int l = 64; //length of sides of square for each face in cube map
+//	float m = 0.5 * l - 0.5;
+//	float* cubeMap = new float[l*l * 6 * 3];
+//	unsigned char* cubeMapTex = new unsigned char[l*l * 6 * 3];
+//
+//	Vec3f sunDirection(cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta));
+//	sunDirection = sunDirection.normalize();//is this necessary?
+//
+//
+//	//xyY color space stored as:		x						  Y						  y			
+//	float constants[5][3] =	{{-0.0193f*L - 0.2592f,		 0.1787f*L - 1.4630f,		-0.0167f*L - 0.2608f},
+//							 {-0.0665f*L + 0.0008f,		-0.3554f*L + 0.4275f,		-0.0950f*L + 0.0092f},
+//							 {-0.0004f*L + 0.2125f,		-0.0227f*L + 5.3251f,		-0.0079f*L + 0.2102f},
+//							 {-0.0641f*L - 0.8989f,		 0.1206f*L - 2.5771f,		-0.0441f*L - 1.6537f},
+//							 {-0.0033f*L + 0.0452f,		-0.0670f*L + 0.3703f,		-0.0109f*L + 0.0529f}};
+//
+//
+//
+//	float theta2 = theta*theta;
+//	float theta3 = theta*theta*theta;
+//	float chi = (4.0/9.0 - L/120.0)*(PI - 2*theta);
+//	float zenithLuminance = abs((4.0453*L - 4.9710) * tan(chi) - 0.2155*L + 0.24192);// * 1000;
+//	float zenith_x = L*L*(0.00166*theta3 - 0.00375*theta2 + 0.00209*theta) + L*(-0.02903*theta3 + 0.06377*theta2 - 0.03202*theta + 0.00394) + (0.11693*theta3 - 0.21196*theta2 + 0.06052*theta + 0.25886);
+//	float zenith_y = L*L*(0.00275*theta3 - 0.00610*theta2 + 0.00317*theta) + L*(-0.04214*theta3 + 0.08970*theta2 - 0.04153*theta + 0.00516) + (0.15346*theta3 - 0.26756*theta2 + 0.06670*theta + 0.26688);
+//	float zenithOverSun[3] = {static_cast<float>(0.85f*zenith_x /		((1.0 + constants[0][0] * exp(constants[1][0])) * (1.0f + constants[2][0]*exp(constants[3][0]*(float)theta) + constants[4][0]*cos(theta)*cos(theta)))),
+//							  static_cast<float>(0.20f*zenithLuminance / ((1.0 + constants[0][1] * exp(constants[1][1])) * (1.0f + constants[2][1]*exp(constants[3][1]*(float)theta) + constants[4][1]*cos(theta)*cos(theta)))),
+//							  static_cast<float>(0.85f*zenith_y /		((1.0 + constants[0][2] * exp(constants[1][2])) * (1.0f + constants[2][2]*exp(constants[3][2]*(float)theta) + constants[4][2]*cos(theta)*cos(theta))))};
+//
+//	//float zenithOverSun[3] = {1.0/0.186220,
+//	//						  1.0/0.13,
+//	//						  1.0/0.130598};
+//
+//	Vec3f direction;
+//	unsigned int i = 0;
+//	for(int face=0; face<6; face++)
+//	{
+//		for(int x=0;x<l;x++)
+//		{
+//			for(int y=0;y<l;y++)
+//			{
+//				if(face == 0)		direction.set(m, m - x, m - y); //right
+//				else if(face == 1)	direction.set(-m, m - x, -m + y); //left
+//				else if(face == 2)	direction.set(-m + y, m, -m + x); //top
+//				else if(face == 3)	direction.set(-m + y, -m, m - x); //bottom
+//				else if(face == 4)	direction.set(-m + y, m - x, m); //back
+//				else if(face == 5)	direction.set(m - y, m - x, -m); //front
+//
+//				direction = direction.normalize();
+//
+//				float cos_sunAngle = direction.dot(sunDirection);
+//				float sunAngle = acos(cos_sunAngle);
+//				float reciprocal_cos_upAngle = 1.0 / max(direction.y,0.01);//cos_upAng should really be just direction.y but this prevents the horizon from having artifacts
+//
+//			//	if(sunAngle > PI/2) sunAngle = PI/4 + sunAngle * 0.5;
+//				
+//																												  //pow(constants[2][i], constants[3][i] * sunAngle) is the only term that dramatically effects the color accros the sky
+//				cubeMap[i + 0] = (1.0 + constants[0][0] * exp(constants[1][0]*reciprocal_cos_upAngle)) * (1.0 + constants[2][0]*exp(constants[3][0] * sunAngle) + constants[4][0]*cos_sunAngle*cos_sunAngle) * zenithOverSun[0];
+//				cubeMap[i + 1] = (1.0 + constants[0][1] * exp(constants[1][1]*reciprocal_cos_upAngle)) * (1.0 + constants[2][1]*exp(constants[3][1] * sunAngle) + constants[4][1]*cos_sunAngle*cos_sunAngle) * zenithOverSun[1];
+//				cubeMap[i + 2] = (1.0 + constants[0][2] * exp(constants[1][2]*reciprocal_cos_upAngle)) * (1.0 + constants[2][2]*exp(constants[3][2] * sunAngle) + constants[4][2]*cos_sunAngle*cos_sunAngle) * zenithOverSun[2];
+//			
+//				i +=3;
+//
+//			}
+//		}
+//	}
+//	
+//	t = GetTime() - t;
+//	t = GetTime();
+//
+//	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
+//	{
+//		float x = cubeMap[i + 0];
+//		float y = cubeMap[i + 2];
+//
+//
+//		cubeMap[i + 1] = 0.65 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
+//		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
+//
+//		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
+//		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
+//	}
+//
+//	t = GetTime() - t;
+//	t = GetTime();
+//
+//	//const float invGamma = 1.0/1.8;
+//	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
+//	{
+//	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
+//		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.498530),0.0,1.0) * 255.0;
+//		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
+//		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
+//	}
+//
+//	t = GetTime() - t;
+//	t = GetTime();
+//
+//	skyTexture = graphics->genTextureCube();
+//	skyTexture->setData(l, l, GraphicsManager::texture::BGR, cubeMapTex);
+//
+//	delete[] cubeMap;
+//	delete[] cubeMapTex;
+//
+//	t = GetTime() - t;
+//	t = GetTime();
+//}
 void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 {
 	const double AOI = 45.0 * PI/180.0;
@@ -1562,7 +1645,8 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
-	generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8); //should actually make the sun be at the position of the light source...
+	//generateSky(acos(sun.y), atan2(sun.z,sun.x), 1.8); //should actually make the sun be at the position of the light source...
+	generateSky(sun);
 	generateOceanTexture(); //we now load this texture from disk to reduce startup time
 
 	//generateTreeTexture(dataManager.getModel("tree model"));
@@ -1580,11 +1664,11 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	float r = 6367500;	//radius of the earth
 
 	double radius = max(h*tan(asin(r/(r+h))), 2.0*max(terrainScale.x,terrainScale.z));
-	//radius = 20000.0;
-	//float h2 = sqrt(2.0*r*r+2.0*r*h+h*h) / r;
 
 	graphics->setDepthMask(false);
 	graphics->setDepthTest(false);
+
+#if defined(PRERENDERED_SKYDOME)
 	auto sky = shaders.bind("sky shader");
 
 	sky->setUniform1i("tex", 0);
@@ -1592,12 +1676,12 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	sky->setUniform1f("time", world.time());
 	skyTexture->bind();
 	dataManager.bind("noise",1);
-//	sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
+	sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), radius), sky);
 	if(!waterPlane)
 	{
 		sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,0,eye.z), Vec3f(radius,-radius,radius)), sky);
 	}
-
+#endif /*PRERENDERED_SKYDOME*/
 
 	if(waterPlane)
 	{
@@ -1636,14 +1720,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 
 		ocean->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		//ocean->setUniformMatrix("modelTransform", Mat4f()); //set in draw mesh
-
-		//graphics->setWireFrame(true);
 
 		ocean->setUniform3f("lightPosition", graphics->getLightPosition());
 		sceneManager.drawMesh(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)), ocean);
-	
-		//graphics->setWireFrame(false);
 
 		//graphics->drawModelCustomShader("disk",center,Quat4f(),Vec3f(radius,1,radius));
 	}
@@ -1666,141 +1745,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	graphics->setDepthMask(true);
 	graphics->setDepthTest(true);
-	//if(shaderType == TERRAIN_ISLAND)
-	//{
-	//	auto islandShader = shaders.bind("island terrain");
-	//	dataManager.bind("sand",2);
-	//	dataManager.bind("grass",3);
-	//	dataManager.bind("rock",4);
-	//	dataManager.bind("LCnoise",5);
-	//	dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
-	//	dataManager.bind("noise",7);
 
-	//	islandShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	//	islandShader->setUniformMatrix("modelTransform",	Mat4f());
-	//	islandShader->setUniform1f("time",					world.time());
-	//	islandShader->setUniform3f("lightPosition",			graphics->getLightPosition());
-	//	islandShader->setUniform3f("eyePos",				view->camera().eye);
-	//	islandShader->setUniform3f("gtex_halfPixel",		0.5 / terrainResolution.x
-	//	islandShader->setUniform3f("gtex_origin",			
-	//	islandShader->setUniform3f("gtex_invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-	//	islandShader->setUniform1f("minHeight",				terrainPosition.y);
-	//	islandShader->setUniform1f("heightRange",			terrainScale.y);
-
-	//	gtex_halfPixel;
-	//	gtex_origin;
-	//	gtex_invScale;
-
-	//	islandShader->setUniform1i("sky",			0);
-	//	islandShader->setUniform1i("sand",		2);
-	//	islandShader->setUniform1i("grass",		3);
-	//	islandShader->setUniform1i("rock",		4);
-	//	islandShader->setUniform1i("LCnoise",		5);
-	//	islandShader->setUniform1i("groundTex",	1);
-	//	islandShader->setUniform1i("grass_normals", 6);
-	//	islandShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
-
-	//	sceneManager.bindLights(islandShader);
-
-	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-	//	{
-	//		(*i)->render(view);
-	//	}
-	//}
-	//else if(shaderType == TERRAIN_MOUNTAINS)
-	//{
-	//	auto mountainShader = shaders.bind("mountain terrain");
-	//	dataManager.bind("sand",2);
-	//	dataManager.bind("grass",3);
-	//	dataManager.bind("rock",4);
-	//	dataManager.bind("LCnoise",5);
-	//	dataManager.bind("grass normals",6); //can take 100+ ms to complete under linux?
-	//	dataManager.bind("noise",7);
-
-	//	mountainShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	//	mountainShader->setUniformMatrix("modelTransform",	Mat4f());
-	//	mountainShader->setUniform1f("time",				world.time());
-	//	mountainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
-	//	mountainShader->setUniform3f("eyePos",				view->camera().eye);
-	//	mountainShader->setUniform3f("invScale",			1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-	//	mountainShader->setUniform1f("minHeight",			terrainPosition.y);
-	//	mountainShader->setUniform1f("heightRange",			terrainScale.y);
-	//	
-
-
-	//	mountainShader->setUniform1i("sky",			0);
-	//	mountainShader->setUniform1i("sand",		2);
-	//	mountainShader->setUniform1i("grass",		3);
-	//	mountainShader->setUniform1i("rock",		4);
-	//	mountainShader->setUniform1i("LCnoise",		5);
-	//	mountainShader->setUniform1i("groundTex",	1);
-	//	mountainShader->setUniform1i("grass_normals", 6);
-	//	mountainShader->setUniform1i("noiseTex",	7);			// make sure uniform exists
-
-	//	sceneManager.bindLights(mountainShader);
-
-	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-	//	{
-	//		mountainShader->setUniform2f("invTerrainResolution",	1.0/(*i)->width, 1.0/(*i)->height);
-	//		(*i)->render(view);
-	//	}
-	//}
-	//else if(shaderType == TERRAIN_SNOW)
-	//{
-	//	auto snowShader = shaders.bind("snow terrain");
-	//	dataManager.bind("snow",2);
-	//	dataManager.bind("LCnoise",3);
-	//	dataManager.bind("snow normals",4);
-
-	//	snowShader->setUniform1f("maxHeight",	terrainPosition.y + terrainScale.y);//shader should just accept minXYZ and maxXYZ vectors
-	//	snowShader->setUniform1f("minHeight",	terrainPosition.y);
-	//	snowShader->setUniform1f("XZscale",		terrainScale.x);
-	//	snowShader->setUniform1f("time",		world.time());
-
-	//	//snowShader->setUniform3f("lightPosition", graphics->getLightPosition());
-
-	//	snowShader->setUniform1i("snow",			2);
-	//	snowShader->setUniform1i("LCnoise",			3);
-	//	snowShader->setUniform1i("groundTex",		1);
-	//	snowShader->setUniform1i("snow_normals",	4);
-
-	//	sceneManager.bindLights(snowShader);
-
-	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-	//	{
-	//		(*i)->render(view);
-	//	}
-	//}
-	//else if(shaderType == TERRAIN_DESERT)
-	//{
-	//	auto desertShader = shaders.bind("desert terrain");
-
-	//	dataManager.bind("desertSand",2);
-	//	dataManager.bind("sand", 3);
-	//	dataManager.bind("LCnoise",4);
-	//	dataManager.bind("noise",5);
-
-	//	desertShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	//	desertShader->setUniformMatrix("modelTransform",	Mat4f());
-	//	desertShader->setUniform1f("time",					world.time());
-	//	desertShader->setUniform3f("lightPosition",			graphics->getLightPosition());
-	//	desertShader->setUniform3f("eyePos",				view->camera().eye);
-	//	desertShader->setUniform3f("invScale",				1.0/(terrainScale.x),1.0/(terrainScale.y),1.0/(terrainScale.z));
-
-	//	desertShader->setUniform1i("sky",		0);
-	//	desertShader->setUniform1i("groundTex",	1);
-	//	desertShader->setUniform1i("sand",		2);
-	//	desertShader->setUniform1i("sand2",		3);
-	//	desertShader->setUniform1i("LCnoise",	4);
-	//	desertShader->setUniform1i("noiseTex",	5);
-
-	//	sceneManager.bindLights(desertShader);
-
-	//	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
-	//	{
-	//		(*i)->render(view);
-	//	}
-	//}
 	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view,shaderType);
@@ -1829,30 +1774,11 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	{
 		graphics->setColorMask(false);
 		sceneManager.drawMesh(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)));
-		//graphics->drawModel("disk",center,Quat4f(),Vec3f(radius,1,radius));
 		graphics->setColorMask(true);
 	}
 
-		//Vec3f right = view->camera().fwd.cross(Vec3f(0,1,0)).normalize();
-		//graphics->setAlphaToCoverage(true);
-		//dataManager.bind("tree");
-		//skyTexture->bind(1);
-
-		//if(graphics->getMultisampling())
-		//	dataManager.bind("trees shader");
-		//else
-		//	dataManager.bind("trees alpha test shader");
-		//
-		//dataManager.setUniform1i("tex", 0);
-		//dataManager.setUniform1i("sky", 1);
-		//dataManager.setUniform3f("eyePos", eye);
-		//
-		//dataManager.setUniform3f("right", right);
-		//dataManager.setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		//
-		//foliageIBO->drawBuffer(GraphicsManager::TRIANGLES,foliageVBO);
-		//graphics->setAlphaToCoverage(false);
 	
+#ifndef PRERENDERED_SKYDOME
 	auto skyShader = shaders.bind("sky2 shader");
 
 	Vec3f fwd = view->camera().fwd;
@@ -1873,13 +1799,14 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 										-1.0 - 2.0*view->viewConstraint().y / view->viewConstraint().h,
 										 2.0 / view->viewConstraint().w,
 										 2.0 / view->viewConstraint().h));//(view->viewport().x,view->viewport().y,view->viewport().width,view->viewport().height));
+#endif
 
 	//graphics->setDepthMask(false);
-	//dataManager.bind("cirrus cloud shader");
+	//auto cloudShader = shaders.bind("cirrus cloud shader");
 	//dataManager.bind("noise");
-	//dataManager.setUniform1i("tex", 0);
-	//dataManager.setUniform3f("eyePos", view->camera().eye);
-	//graphics->drawModelCustomShader("sky dome",Vec3f(eye.x,900,eye.z),Quat4f(),Vec3f(radius,100,radius));
+	//cloudShader->setUniform1i("tex", 0);
+	//cloudShader->setUniform3f("eyePos", view->camera().eye);
+	//sceneManager.drawMesh(view, dataManager.getModel("sky dome"), Mat4f(Quat4f(), Vec3f(eye.x,900,eye.z), Vec3f(radius,100,radius)), cloudShader);
 	//graphics->setDepthMask(true);
 }
 void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const

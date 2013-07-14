@@ -246,6 +246,8 @@ public:
 		unsigned int depth;
 		texture3D():width(0),height(0){}
 	public:
+		virtual unsigned char* getData(unsigned int level)=0;
+		unsigned char* getData(){return getData(0);}
 		virtual void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)=0;
 		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data){setData(Width, Height, Depth, f,  data, false);}
 	};
@@ -256,6 +258,9 @@ public:
 		unsigned int height;
 		textureCube():width(0),height(0){}
 	public:
+		enum Face{POSITIVE_X,POSITIVE_Y,POSITIVE_Z,NEGATIVE_X,NEGATIVE_Y,NEGATIVE_Z};
+		virtual unsigned char* getData(unsigned int level)=0;
+		unsigned char* getData(){return getData(0);}
 		virtual void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)=0;
 	};
 	class shader
@@ -349,7 +354,7 @@ public:
 	virtual void render()=0;
 	virtual void destroyWindow()=0;
 	virtual void setGamma(float gamma)=0;
-	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen)=0;
+	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen, unsigned int targetRendererVersion)=0;
 	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
 	virtual void takeScreenshot()=0;
@@ -358,6 +363,9 @@ public:
 	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture){startRenderToTexture(texture, 0, depthTexture, 0, false);}
 	void startRenderToTexture(shared_ptr<texture2D> texture,unsigned int texture_level){startRenderToTexture(texture,texture_level,nullptr,0,false);}
 	void startRenderToTexture(shared_ptr<texture2D> texture){startRenderToTexture(texture,0,nullptr,0,false);}
+	virtual void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures)=0;
+	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level){startRenderToTexture(texture, face, texture_level, false);}
+	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face){startRenderToTexture(texture, face, 0, false);}
 	virtual void endRenderToTexture()=0;
 	virtual void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s)=0;
 	//virtual void bindRenderTarget(RenderTarget t)=0;
@@ -409,7 +417,7 @@ public:
 	//virtual set functions
 	virtual void setAlphaToCoverage(bool enabled)=0;
 	virtual void setBlendMode(BlendMode blend)=0;
-	virtual void setColor(float r, float g, float b, float a)=0;
+	virtual void setColor(Color4 color)=0;
 	virtual void setColorMask(bool mask)=0;
 	virtual void setDepthMask(bool mask)=0;
 	virtual void setDepthTest(bool enabled)=0;
@@ -418,9 +426,12 @@ public:
 	virtual void setWireFrame(bool enabled)=0;
 	virtual void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)=0;
 	void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth){setFrameBufferTextures(color,0,depth,0);}
+	virtual void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)=0;
+	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face){setFrameBufferTextures(color,face,0);}
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 
 	//set functions
+	void setColor(float r, float g, float b, float a);
 	void setColor(float r, float g, float b);
 	void setInterOcularDistance(float d);
 	void setLightPosition(Vec3f position);
@@ -472,6 +483,8 @@ protected:
 	unsigned int blurTexture;
 	unsigned int blurTexture2;
 
+	unsigned int transformFeedbackQueryID;
+
 	bool multisampling;
 	bool isFullscreen;
 
@@ -495,7 +508,8 @@ protected:
 	double errorGlowEndTime;
 #endif
 
-	bool openGL3;
+	bool openGL3; //true if openGL 3 or higher
+	bool openGL4;
 
 	OpenGLgraphics();
 	~OpenGLgraphics();
@@ -572,6 +586,7 @@ public:
 		texture3DGL();
 		~texture3DGL();
 		void bind(unsigned int textureUnit);
+		unsigned char* getData(unsigned int level);
 		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
 	};
 	class textureCubeGL: public GraphicsManager::textureCube
@@ -583,6 +598,7 @@ public:
 		textureCubeGL();
 		~textureCubeGL();
 		void bind(unsigned int textureUnit);
+		unsigned char* getData(unsigned int level);
 		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
 	};
 	class shaderGL: public GraphicsManager::shader
@@ -639,7 +655,7 @@ public:
 	friend class textureCubeGL;
 	friend class shaderGL;
 
-	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen);
+	bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen, unsigned int targetRendererVersion);
 	//bool changeResolution(Vec2i resolution, unsigned int maxSamples);
 	void destroyWindow();
 
@@ -651,6 +667,7 @@ public:
 	void takeScreenshot();
 
 	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures);
+	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures);
 	void endRenderToTexture();
 
 	void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s);
@@ -677,7 +694,7 @@ public:
 	void setAlphaToCoverage(bool enabled);
 	void setBlendMode(BlendMode blend);
 	void setClientState(unsigned int index, bool state);
-	void setColor(float r, float g, float b, float a);
+	void setColor(Color4 color);
 	void setColorMask(bool mask);
 	void setGamma(float gamma);
 	void setDepthMask(bool mask);
@@ -687,6 +704,7 @@ public:
 	void setWireFrame(bool enabled);
 
 	void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
+	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level);
 	void bindRenderTarget(RenderTarget rTarget);
 
 	void drawText(string text, Vec2f pos, string font);

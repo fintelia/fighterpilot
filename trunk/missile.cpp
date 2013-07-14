@@ -5,7 +5,8 @@ missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot,
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(Mat4f(rotation, position));
+	collisionInstance = objectInfo[type]->newCollisionInstance(Mat4f(rotation, position));
 }
 
 void missileBase::updateFrame(float interpolation) const
@@ -132,6 +133,11 @@ void missile::updateSimulation(double time, double ms)
 		awaitingDelete = true;
 		meshInstance.reset();
 	}
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
+	}
 }
 SAMmissile::SAMmissile(missileType Type, teamNum Team, Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target): missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target)
 {
@@ -195,6 +201,11 @@ void SAMmissile::updateSimulation(double time, double ms)
 	position += (rotation*Vec3f(0,0,1)) * speed *(ms/1000);
 
 	life-=ms/1000;
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
+	}
 //	if(life < 0.0 || world.altitude(position) < 0.0)
 //	{
 //		awaitingDelete = true;

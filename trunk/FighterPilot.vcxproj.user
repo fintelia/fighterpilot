@@ -10,5 +10,10 @@
     <LocalDebuggerCommandArguments Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WindowsLocalDebugger</DebuggerFlavor>
+    <RemoteDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">\\JONATHAN-PC\FighterPilot_share\FighterPilot.exe</RemoteDebuggerCommand>
+    <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\gulem_000\Desktop\FighterPilot\</RemoteDebuggerWorkingDirectory>
+    <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TOBY-PC</RemoteDebuggerServerName>
+    <RemoteDebuggerConnection Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">RemoteWithoutAuthentication</RemoteDebuggerConnection>
+    <RemoteDebuggerDebuggerType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NativeOnly</RemoteDebuggerDebuggerType>
   </PropertyGroup>
 </Project>

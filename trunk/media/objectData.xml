@@ -50,7 +50,7 @@
     </SAM>
 		<AAgun name="AA_GUN" textName="AA gun" model="media/APC/APC_hull.obj" placeable="true">
       <turret model="media/APC/APC_turret.obj" rotationOffsetX="0.0" rotationOffsetZ="2.5"></turret>
-      <cannon model="media/APC/APC_cannon.obj" rotationOffsetY="5.5" rotationOffsetZ="0.0"></cannon>
+      <cannon model="media/APC/APC_cannon.obj" rotationOffsetX="0.0" rotationOffsetY="5.5" rotationOffsetZ="0.0"></cannon>
     </AAgun>
 		<flakCannon name="FLAK_CANNON" textName="Flak Cannon" model="media/SAM/SAM.obj" placeable="true"></flakCannon>
 	</AAA>

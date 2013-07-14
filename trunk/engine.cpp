@@ -274,17 +274,16 @@ int main(int argc, const char* argv[])
 
 	MSG	msg; // Windows Message Structure
 
-	char moduleFilename[512];
-	GetModuleFileNameA(NULL, moduleFilename, 512);
-	//MessageBoxA(nullptr, fileManager.directory(string(moduleFilename,512)).c_str(), "file name", 0);
-	chdir(fileManager.directory(string(moduleFilename,512)).c_str());
-	if(!fileManager.directoryExists("media")) //will happen when run from an IDE and we are actually inside a Debug or Release folder
+	if(!fileManager.directoryExists("media"))								//if the media folder is not in the current working directory
 	{
-		chdir("..");
+		char moduleFilename[512];
+		GetModuleFileNameA(NULL, moduleFilename, 512);
+		chdir(fileManager.directory(string(moduleFilename,512)).c_str());	//change the working directory to the location of the executable
+		if(!fileManager.directoryExists("media"))							//try the parent directory.
+		{
+			chdir("..");													// will happen when run from an IDE and we are actually inside a Debug or Release folder
+		}
 	}
-
-	//for(auto i=game->commandLineOptions.begin(); i!= game->commandLineOptions.end(); i++)
-	//	MessageBoxA(nullptr, (string("\"") + *i + "\"").c_str(), "command line option:", 0);
 
 #elif defined(LINUX)
 	for(int i=0; i<argc; i++)
@@ -294,6 +293,7 @@ int main(int argc, const char* argv[])
 	x11_display = XOpenDisplay(0);
 	x11_screen = DefaultScreen(x11_display);
 #endif
+
 	if(!game->init())
 	{
 		return 1;
@@ -310,7 +310,6 @@ int main(int argc, const char* argv[])
 	//soundManager.loadSound("sound1", "media/engine.wav", true);
 	//soundManager.loadSound("shot1", "media/shot1.wav", false);
 	//soundManager.loadSound("shot2", "media/shot2.wav", false);
-
 	float nextUpdate=0;
 	float swapTime=0.0;
 	float time=0.0;
