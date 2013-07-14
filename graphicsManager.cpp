@@ -250,9 +250,13 @@ bool GraphicsManager::isHighResScreenshot()const
 {
 	return highResScreenshot;
 }
+void GraphicsManager::setColor(float r, float g, float b, float a)
+{
+	setColor(Color4(r,g,b,a));
+}
 void GraphicsManager::setColor(float r, float g, float b)
 {
-	setColor(r,g,b,1.0);
+	setColor(Color4(r,g,b,1.0));
 }
 void GraphicsManager::setLightPosition(Vec3f position)
 {

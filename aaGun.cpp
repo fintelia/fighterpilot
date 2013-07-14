@@ -8,14 +8,13 @@ void antiAircraftArtilleryBase::updateFrame(float interpolation) const
 	{
 		meshInstance->update(objectTransform);
 	}
-	
 
 	if(turretMesh && !objectInfo.aaaData(type)->turrets.empty())
 	{
 		Vec3f turretRotCenter = objectInfo.aaaData(type)->turrets.front().rotationCenter;
 		Mat4f turretTransform = objectTransform;
 		if(targeter.magnitudeSquared() >= 0.001)
-			turretTransform = turretTransform * Mat4f(turretRotCenter) * Mat4f(Quat4f(Vec3f(0,0,-1), Vec3f(targeter.x,0,targeter.z).normalize())) * Mat4f(-turretRotCenter);
+			turretTransform = turretTransform * Mat4f(turretRotCenter) * Mat4f(Quat4f(Vec3f(0,1,0), PI-atan2A(-targeter.x,targeter.z))) * Mat4f(-turretRotCenter);
 		turretMesh->update(turretTransform);
 
 		if(cannonMesh && !objectInfo.aaaData(type)->turrets.empty())
@@ -48,7 +47,8 @@ antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, ob
 
 	lastPosition = position = Vec3f(sPos.x,world.elevation(sPos.x,sPos.z),sPos.z);
 	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
-	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(Mat4f(rotation, position));
+	collisionInstance = objectInfo[type]->newCollisionInstance(Mat4f(rotation, position));
 
 	auto& turrets = objectInfo.aaaData(Type)->turrets;
 	if(!turrets.empty())
@@ -73,8 +73,6 @@ antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, ob
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 AAgun::AAgun(Vec3f sPos, Quat4f sRot, objectType Type, int Team):antiAircraftArtilleryBase(sPos, sRot, Type, Team)
 {
-
-
 	initArmaments();
 }
 void AAgun::initArmaments()
@@ -145,7 +143,7 @@ void AAgun::updateSimulation(double time, double ms)
 	}
 	else
 	{
-		targeter = Vec3f();
+		targeter = Vec3f(1,0,0);
 		shoot = false;
 	}
 	///////////////////END CONTROL////////////////////
@@ -155,14 +153,25 @@ void AAgun::updateSimulation(double time, double ms)
 	else
 	{
 		extraShootTime+=ms;
+		Vec3f turretRotCenter = (!objectInfo.aaaData(type)->turrets.empty()) ? objectInfo.aaaData(type)->turrets.front().rotationCenter : Vec3f(0,0,0);
+		Vec3f cannonRotCenter = (!objectInfo.aaaData(type)->cannons.empty()) ? objectInfo.aaaData(type)->cannons.front().rotationCenter : Vec3f(0,0,0);
+
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(position,targeter+random3<float>()*0.01,id,time-extraShootTime-machineGun.coolDown);
+			Vec3f turretOffset = Quat4f(Vec3f(0,1,0), PI-atan2A(-targeter.x,targeter.z)) * -turretRotCenter + turretRotCenter;
+			Vec3f bulletOrigin = position + rotation*turretRotCenter + cannonRotCenter;
+
+			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(bulletOrigin,targeter+random3<float>()*0.01f,id,time-extraShootTime-machineGun.coolDown);
 
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
 			shotsFired++;
 		}
+	}
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
 	}
 }
 
@@ -215,6 +224,11 @@ void SAMbattery::updateSimulation(double time, double ms)
 		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
 		missileCoolDown = 18000;
 		world.newObject(new SAMmissile(objectInfo.typeFromString("SAM_missile1"), team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target.lock()->id));
+	}
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
 	}
 }
 
@@ -280,5 +294,10 @@ void flakCannon::updateSimulation(double time, double ms)
 			particleManager.addEmitter(new particle::explosionFlash2(),planePtr->position + t, 15.0);
 			particleManager.addEmitter(new particle::explosionFlash2(),planePtr->position + t, 15.0);
 		}
+	}
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
 	}
 }

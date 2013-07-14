@@ -173,8 +173,9 @@ private:
 		int fullscreenChoice;
 		int resolutionChoice;
 		int samplesChoice;
-
+		
 		unsigned int refreshRate;
+		unsigned int rendererVersion;
 
 		float gamma;
 		bool vSync;
@@ -270,6 +271,9 @@ protected:
 #endif
 
 	shared_ptr<GraphicsManager::View> view;
+
+	void drawHudIndicator(shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const;
+
 public:
 	campaign(shared_ptr<const LevelFile> lvl);
 	bool init();

@@ -110,7 +110,7 @@ void main()
 
 	////////////WATER EFFECT///////////
 	//float waterAlpha = clamp(1.0 + clamp((-height)/fwidth(height),0.0,1.0)*(0.1-0.1*exp(-height*0.1)), 0.0,1.0);
-	float waterAlpha = clamp(1.0 + clamp((-height)/fwidth(height),1.0,0.0)*(height*0.03), 0.0,1.0);
+	float waterAlpha = clamp(1.0 + height*0.03, 0.0,1.0);
 
 	//float waterDepth = -height / abs(normalize(positionToEye).y);
 	//float waterAlpha = clamp(1.0-0.1*sqrt(waterDepth), 0.0, 1.0);//clamp(1.0 + clamp((waterDepth)/fwidth(waterDepth),0.0,1.0)*(0.1-0.1*exp(-waterDepth*0.1)), 0.0,1.0);

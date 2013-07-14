@@ -13,7 +13,8 @@ plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Te
 
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(Mat4f(rotation, position));
+	collisionInstance = objectInfo[type]->newCollisionInstance(Mat4f(rotation, position));
 
 	debugAssert(meshInstance);
 
@@ -388,6 +389,11 @@ void plane::updateSimulation(double time, double ms)
 			}
 		}
 	}
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
+	}
 }
 void plane::updateFrame(float interpolation) const
 {
@@ -667,7 +673,7 @@ void plane::findTarget()
 	float minDistSquared;
 	float distSquared;
 	Angle ang;
-	auto planes = world(PLANE);
+	auto& planes = world(PLANE);
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
@@ -679,7 +685,7 @@ void plane::findTarget()
 			targetFound = true;
 		}
 	}
-	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+	auto& AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 	for(auto i = AAA.begin(); i != AAA.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
@@ -691,7 +697,7 @@ void plane::findTarget()
 			targetFound = true;
 		}
 	}
-	auto ships = world(SHIP);
+	auto& ships = world(SHIP);
 	for(auto i = ships.begin(); i != ships.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);

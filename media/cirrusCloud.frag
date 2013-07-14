@@ -17,7 +17,7 @@ void main()
 
 	float dist = length(position-eyePos);
 
-	float t = min(dist*0.1, 1.0) * min(1000.0/dist, 1.0);
+	float t = min(dist*0.1, 1.0) * min(1000.0/dist, 1.0) * 5.0;
 
 	gl_FragColor = vec4(1.0,1.0,1.0, clamp(exp(texture2D(tex, texCoord*3.0).r)-1.5, 0.0, 1.0) * s * t);
 }

@@ -213,8 +213,8 @@ bool AssetLoader::loadAssetList()
 				//load files
 				if(getAttribute(shaderElement,"preload") == "true")
 				{
-					tmpAssetFile->vertFile = fileManager.loadFile<FileManager::textFile>(vertFilename);
-					tmpAssetFile->fragFile = fileManager.loadFile<FileManager::textFile>(fragFilename);
+					tmpAssetFile->vertFile = vertFilename != "" ? fileManager.loadFile<FileManager::textFile>(vertFilename) : nullptr;
+					tmpAssetFile->fragFile = fragFilename != "" ? fileManager.loadFile<FileManager::textFile>(fragFilename) : nullptr;
 
 					tmpAssetFile->vert3File = vert3Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert3Filename) : nullptr;
 					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename) : nullptr;
@@ -230,8 +230,8 @@ bool AssetLoader::loadAssetList()
 				}
 				else
 				{
-					tmpAssetFile->vertFile = fileManager.loadFile<FileManager::textFile>(vertFilename,true);
-					tmpAssetFile->fragFile = fileManager.loadFile<FileManager::textFile>(fragFilename,true);
+					tmpAssetFile->vertFile = vertFilename != "" ? fileManager.loadFile<FileManager::textFile>(vertFilename,true) : nullptr;
+					tmpAssetFile->fragFile = fragFilename != "" ? fileManager.loadFile<FileManager::textFile>(fragFilename,true) : nullptr;
 
 					tmpAssetFile->vert3File = vert3Filename != "" ? fileManager.loadFile<FileManager::textFile>(vert3Filename, true) : nullptr;
 					tmpAssetFile->geom3File = geom3Filename != "" ? fileManager.loadFile<FileManager::textFile>(geom3Filename, true) : nullptr;
@@ -434,70 +434,87 @@ int AssetLoader::loadAsset()
 		else if(file->getType() == assetFile::SHADER)
 		{
 			auto shaderAsset = dynamic_pointer_cast<shaderAssetFile>(file);
-			if(!shaderAsset->vertFile->complete() || !shaderAsset->fragFile->complete())
+
+			if(	(shaderAsset->vertFile		&& !shaderAsset->vertFile->complete()) || 
+				(shaderAsset->fragFile		&& !shaderAsset->fragFile->complete()) ||
+				(shaderAsset->vert3File		&& !shaderAsset->vert3File->complete()) ||
+				(shaderAsset->geom3File		&& !shaderAsset->geom3File->complete()) ||
+				(shaderAsset->frag3File		&& !shaderAsset->frag3File->complete()) ||
+				(shaderAsset->vert4File		&& !shaderAsset->vert4File->complete()) ||
+				(shaderAsset->geom4File		&& !shaderAsset->geom4File->complete()) ||
+				(shaderAsset->tessC4File	&& !shaderAsset->tessC4File->complete()) ||
+				(shaderAsset->tessE4File	&& !shaderAsset->tessE4File->complete()) ||
+				(shaderAsset->frag4File		&& !shaderAsset->frag4File->complete()))
 			{
-				break;
+				break; //wait for all shader files to finish loading
 			}
-			else if(shaderAsset->vertFile->valid() && shaderAsset->fragFile->valid())
+
+			if(shaderAsset->vertFile	&& !shaderAsset->vertFile->complete()){		messageBox(shaderAsset->vertFile->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->fragFile	&& !shaderAsset->fragFile->complete()){		messageBox(shaderAsset->fragFile->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->vert3File	&& !shaderAsset->vert3File->complete()){	messageBox(shaderAsset->vert3File->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->geom3File	&& !shaderAsset->geom3File->complete()){	messageBox(shaderAsset->geom3File->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->frag3File	&& !shaderAsset->frag3File->complete()){	messageBox(shaderAsset->frag3File->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->vert4File	&& !shaderAsset->vert4File->complete()){	messageBox(shaderAsset->vert4File->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->geom4File	&& !shaderAsset->geom4File->complete()){	messageBox(shaderAsset->geom4File->filename + " failed to load properly.");		pop(isPreload); break; }
+			if(shaderAsset->tessC4File	&& !shaderAsset->tessC4File->complete()){	messageBox(shaderAsset->tessC4File->filename + " failed to load properly.");	pop(isPreload); break; }
+			if(shaderAsset->tessE4File	&& !shaderAsset->tessE4File->complete()){	messageBox(shaderAsset->tessE4File->filename + " failed to load properly.");	pop(isPreload); break; }
+			if(shaderAsset->frag4File	&& !shaderAsset->frag4File->complete()){	messageBox(shaderAsset->frag4File->filename + " failed to load properly.");		pop(isPreload); break; }
+
+
+			auto shader = graphics->genShader();
+
+			if(graphics->hasShaderModel4() && shaderAsset->vert3File && !shaderAsset->feedbackTransformVaryings.empty())
 			{
-				auto shader = graphics->genShader();
-
-				if(graphics->hasShaderModel4() && shaderAsset->vert3File && !shaderAsset->feedbackTransformVaryings.empty())
+				if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, nullptr, shaderAsset->feedbackTransformVaryings))
 				{
-					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, nullptr, shaderAsset->feedbackTransformVaryings))
-					{
 #ifdef _DEBUG
-						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
-					}
 				}
-				else if(graphics->hasShaderModel5() && shaderAsset->vert4File /*&& shaderAsset->frag3File*/)
+			}
+			else if(graphics->hasShaderModel5() && shaderAsset->vert4File /*&& shaderAsset->frag3File*/)
+			{
+				if(!shader->init5(shaderAsset->vert4File->contents.c_str(), shaderAsset->geom4File ? shaderAsset->geom4File->contents.c_str() : nullptr,  shaderAsset->tessC4File ? shaderAsset->tessC4File->contents.c_str() : nullptr,  shaderAsset->tessE4File ? shaderAsset->tessE4File->contents.c_str() : nullptr, shaderAsset->frag4File ? shaderAsset->frag4File->contents.c_str() : nullptr))
 				{
-					if(!shader->init5(shaderAsset->vert4File->contents.c_str(), shaderAsset->geom4File ? shaderAsset->geom4File->contents.c_str() : nullptr,  shaderAsset->tessC4File ? shaderAsset->tessC4File->contents.c_str() : nullptr,  shaderAsset->tessE4File ? shaderAsset->tessE4File->contents.c_str() : nullptr, shaderAsset->frag4File ? shaderAsset->frag4File->contents.c_str() : nullptr))
-					{
 #ifdef _DEBUG
-						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
-					}
 				}
-				else if(graphics->hasShaderModel4() && shaderAsset->vert3File /*&& shaderAsset->frag3File*/)
+			}
+			else if(graphics->hasShaderModel4() && shaderAsset->vert3File /*&& shaderAsset->frag3File*/)
+			{
+				if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, shaderAsset->frag3File ? shaderAsset->frag3File->contents.c_str() : nullptr))
 				{
-					if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, shaderAsset->frag3File ? shaderAsset->frag3File->contents.c_str() : nullptr))
-					{
 #ifdef _DEBUG
-						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
-					}
 				}
-				else
+			}
+			else if(shaderAsset->vertFile && shaderAsset->fragFile)
+			{
+				if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
 				{
-					if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
-					{
 #ifdef _DEBUG
-						messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
-					}
-				}
-
-
-				if(shaderAsset->use_sAspect)
-				{
-					shader->setUniform1f("sAspect",sAspect);
-					shaders.add(shaderAsset->name, shader, true);
-				}
-				else
-				{
-					shaders.add(shaderAsset->name, shader, false);
 				}
 			}
 			else
 			{
-				debugBreak();
-				if(!shaderAsset->vertFile->valid())
-					cout << shaderAsset->vertFile->filename << " failed to load properly" << endl;
-				if(!shaderAsset->fragFile->valid())
-					cout << shaderAsset->fragFile->filename << " failed to load properly" << endl;				
+				pop(isPreload);
+				break;
 			}
+
+			if(shaderAsset->use_sAspect)
+			{
+				shader->setUniform1f("sAspect",sAspect);
+				shaders.add(shaderAsset->name, shader, true);
+			}
+			else
+			{
+				shaders.add(shaderAsset->name, shader, false);
+			}
+
 			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::MODEL)
@@ -518,20 +535,12 @@ int AssetLoader::loadAsset()
 		}
 		else if(file->getType() == assetFile::COLLISION_MESH)
 		{
+			auto collisionMeshAsset = dynamic_pointer_cast<collisionMeshAssetFile>(file);
+			auto collisionMeshFile = loadModel(collisionMeshAsset->filename, false);
 
-			auto modelAsset = dynamic_pointer_cast<collisionMeshAssetFile>(file);
-			shared_ptr<FileManager::modelFile> collisionMesh = loadModel(modelAsset->filename, false);
-			if(collisionMesh->valid())
-			{
-				if(!collisionMesh->materials.empty())
-				{
-					vector<Vec3f> vertices;
-					for(auto v=collisionMesh->vertices.begin(); v!=collisionMesh->vertices.end(); v++)
-						vertices.push_back(v->position);
-					collisionManager.setCollsionBounds(modelAsset->objType, collisionMesh->boundingSphere, vertices, collisionMesh->materials[0].indices);
-				}
-			}
-			debugAssert(collisionMesh->valid());
+			dataManager.addCollisionBounds(collisionMeshAsset->filename, collisionMeshFile);
+
+			debugAssert(collisionMeshFile->valid());
 			pop(isPreload);
 		}
 		else if(file->getType() == assetFile::FONT)
@@ -544,6 +553,7 @@ int AssetLoader::loadAsset()
 		}
 	}while(!assetFilesPreload.empty());
 
+	//Add loaded models to dataManager (we couldn't do this earlier since their textures may not have been loaded)
 	if(assetFilesPreload.empty() && assetFiles.empty())
 	{
 		for(auto i = modelsToRegister.begin(); i != modelsToRegister.end(); i++)

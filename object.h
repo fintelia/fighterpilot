@@ -29,6 +29,8 @@ public:
 	bool				dead,
 						awaitingDelete;
 	meshInstancePtr		meshInstance;
+	collisionBoundsPtr	collisionInstance;
+
 
 	object(objectType Type, int Team=NEUTRAL): type(Type), team(Team),  id(++currentId), dead(false), awaitingDelete(false){}
 	virtual void init(){}

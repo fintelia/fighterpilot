@@ -1,11 +1,13 @@
 
 #include "game.h"
 
-bullet::bullet(Vec3f pos,Vec3f vel,int Owner, double StartTime): life(1000), startTime(StartTime), startPos(pos), velocity(vel.normalize()*1000), owner(Owner)
+const float bullet::bulletSpeed = 1000.0;
+
+bullet::bullet(Vec3f pos,Vec3f vel,int Owner, double StartTime): life(1000), startTime(StartTime), startPos(pos), velocity(vel.normalize()*bulletSpeed), owner(Owner)
 {
 
 }
-bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time()), startPos(pos), velocity(vel.normalize()*1000), owner(Owner)
+bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time()), startPos(pos), velocity(vel.normalize()*bulletSpeed), owner(Owner)
 {
 
 }

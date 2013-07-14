@@ -32,8 +32,6 @@
 
 bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
 
-const int TRANSFORM_FEEDBACK_QUERY_ID = 1;
-
 #if defined WINDOWS
 struct OpenGLgraphics::Context
 {
@@ -65,7 +63,7 @@ OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u
 OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
-	glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW); <-- causes an access violation on some hardware (ATI)
 
 	glDeleteBuffers(1, &vBufferID);
 }
@@ -231,7 +229,7 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Prim
 	if(graphics->hasShaderModel4())
 	{
 		glEnable(GL_RASTERIZER_DISCARD);
-		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, TRANSFORM_FEEDBACK_QUERY_ID);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
 
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
@@ -253,7 +251,7 @@ unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
 		glDisable(GL_RASTERIZER_DISCARD);
 
 		int primitiveCount;
-		glGetQueryObjectiv(TRANSFORM_FEEDBACK_QUERY_ID, GL_QUERY_RESULT, &primitiveCount);
+		glGetQueryObjectiv(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
 
 		return primitiveCount;
 	}
@@ -388,10 +386,9 @@ void OpenGLgraphics::indexBufferGL::drawBuffer()
 				(graphics->hasShaderModel5() && primitiveType == GL_PATCHES));
 
 	if(dataCount != 0)
-	{graphics->checkErrors();
+	{
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		glDrawElements(primitiveType, dataCount, dataType, 0);
-		graphics->checkErrors();
 	}
 }
 void OpenGLgraphics::indexBufferGL::drawBuffer(unsigned int numIndicies)
@@ -511,7 +508,7 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 }
 unsigned char* OpenGLgraphics::texture2DGL::getData(unsigned int level)
 {
-	GLenum fmt;
+	GLenum fmt=0;
 	unsigned int bytesPerPixel;
 	if(format == INTENSITY)
 	{
@@ -635,6 +632,72 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 	}
 	//glBindTexture(GL_TEXTURE_3D, 0);
 }
+unsigned char* OpenGLgraphics::texture3DGL::getData(unsigned int level)
+{
+	GLenum fmt=0;
+	unsigned int bytesPerPixel;
+	if(format == INTENSITY)
+	{
+		fmt = GL_INTENSITY;
+		bytesPerPixel=1;
+	}
+	else if(format == LUMINANCE_ALPHA)
+	{
+		fmt = GL_LUMINANCE_ALPHA;
+		bytesPerPixel=2;
+	}
+	else if(format == BGR)
+	{
+		fmt = GL_BGR;
+		bytesPerPixel=3;
+	}
+	else if(format == BGRA)
+	{
+		fmt = GL_BGRA;
+		bytesPerPixel=4;
+	}
+	else if(format == RGB)
+	{
+		fmt = GL_RGB;
+		bytesPerPixel=3;
+	}
+	else if(format == RGBA)
+	{
+		fmt = GL_RGBA;
+		bytesPerPixel=4;
+	}
+	else if(format == RGB16)
+	{
+		fmt = GL_RGB16;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16)
+	{
+		fmt = GL_RGBA16;
+		bytesPerPixel=8;
+	}
+	else if(format == RGB16F)
+	{
+		fmt = GL_RGB16F;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16F)
+	{
+		fmt = GL_RGBA16F;
+		bytesPerPixel=8;
+	}
+	else if(format == DEPTH)
+	{
+		fmt = GL_DEPTH_COMPONENT;
+		bytesPerPixel=1;
+	}
+	else debugBreak();
+
+	unsigned char* data = new unsigned char[max(width>>level,1)*max(height>>level,1)*max(depth>>level,1)*bytesPerPixel];
+	glBindTexture(GL_TEXTURE_3D, textureID);
+	glGetTexImage(GL_TEXTURE_3D, level, fmt, GL_UNSIGNED_BYTE, data);
+	return data;
+}
 OpenGLgraphics::textureCubeGL::textureCubeGL()
 {
 	glGenTextures(1, &textureID);
@@ -663,94 +726,95 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 	if(format == INTENSITY)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data + width*height * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 5 : nullptr);
 	}
 	else if(format == LUMINANCE_ALPHA)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data + width*height*2 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 5 : nullptr);
 	}
 	else if(format == BGR)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data + width*height*3 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 5 : nullptr);
 	}
 	else if(format == BGRA)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 5 : nullptr);
 	}
 	else if(format == RGB)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data + width*height*3 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 5 : nullptr);
 	}
 	else if(format == RGBA)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data + width*height*4 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 5 : nullptr);
 	}
 	else if(format == RGB16)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data + width*height*2*3 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 5 : nullptr);
 	}
 	else if(format == RGBA16)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data + width*height*2*4 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 5 : nullptr);
 	}
 	else if(format == RGB16F)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data + width*height*4*3 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 5 : nullptr);
 	}
 	else if(format == RGBA16F)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 0);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 1);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 2);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 3);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 4);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data + width*height*4*4 * 5);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 0 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 1 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 2 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 3 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 4 : nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 5 : nullptr);
 	}
+
 	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	else
@@ -763,7 +827,78 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
+unsigned char* OpenGLgraphics::textureCubeGL::getData(unsigned int level)
+{
+	GLenum fmt=0;
+	unsigned int bytesPerPixel;
+	if(format == INTENSITY)
+	{
+		fmt = GL_INTENSITY;
+		bytesPerPixel=1;
+	}
+	else if(format == LUMINANCE_ALPHA)
+	{
+		fmt = GL_LUMINANCE_ALPHA;
+		bytesPerPixel=2;
+	}
+	else if(format == BGR)
+	{
+		fmt = GL_BGR;
+		bytesPerPixel=3;
+	}
+	else if(format == BGRA)
+	{
+		fmt = GL_BGRA;
+		bytesPerPixel=4;
+	}
+	else if(format == RGB)
+	{
+		fmt = GL_RGB;
+		bytesPerPixel=3;
+	}
+	else if(format == RGBA)
+	{
+		fmt = GL_RGBA;
+		bytesPerPixel=4;
+	}
+	else if(format == RGB16)
+	{
+		fmt = GL_RGB16;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16)
+	{
+		fmt = GL_RGBA16;
+		bytesPerPixel=8;
+	}
+	else if(format == RGB16F)
+	{
+		fmt = GL_RGB16F;
+		bytesPerPixel=6;
+	}
+	else if(format == RGBA16F)
+	{
+		fmt = GL_RGBA16F;
+		bytesPerPixel=8;
+	}
+	else if(format == DEPTH)
+	{
+		fmt = GL_DEPTH_COMPONENT;
+		bytesPerPixel=1;
+	}
+	else debugBreak();
 
+	unsigned int faceSize = max(width>>level,1)*max(height>>level,1)*bytesPerPixel;
+	unsigned char* data = new unsigned char[faceSize*6];
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X, level, fmt, GL_UNSIGNED_BYTE, data);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, level, fmt, GL_UNSIGNED_BYTE, data+faceSize);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, level, fmt, GL_UNSIGNED_BYTE, data+faceSize*2);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, level, fmt, GL_UNSIGNED_BYTE, data+faceSize*3);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, level, fmt, GL_UNSIGNED_BYTE, data+faceSize*4);
+	glGetTexImage(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, level, fmt, GL_UNSIGNED_BYTE, data+faceSize*5);
+	return data;
+}
 int OpenGLgraphics::shaderGL::getUniformLocation(string uniform)
 {
 	auto it = uniforms.find(uniform);
@@ -1318,7 +1453,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false)
+OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -1420,9 +1555,9 @@ void OpenGLgraphics::setGamma(float gamma)
 {
 	currentGamma = gamma;
 }
-void OpenGLgraphics::setColor(float r, float g, float b, float a)
+void OpenGLgraphics::setColor(Color4 color)
 {
-	getBoundShader()->setUniform4f("color", r, g, b, a);
+	getBoundShader()->setUniform4f("color", color);
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
@@ -1733,6 +1868,65 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigne
 		auto depthTex = dynamic_pointer_cast<texture2DGL>(depth);
 		debugAssert(colorTex->width>>color_level == depthTex->width>>depth_level && colorTex->height>>color_level == depthTex->height>>depth_level);
 		glViewport(0,0,colorTex->width >> color_level, colorTex->height >> color_level);
+	}
+	colorTarget = depthTarget = RT_TEXTURE;
+
+	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
+#if defined(WINDOWS) && defined(_DEBUG)
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
+	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#endif
+}
+void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)
+{
+	if(openGL3)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+
+		if(face == textureCube::POSITIVE_X)				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::POSITIVE_Y)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::POSITIVE_Z)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_X)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_Y)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_Z)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else
+		{
+			debugBreak();
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+		}
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+	}
+	else
+	{
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+
+		if(face == textureCube::POSITIVE_X)				glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::POSITIVE_Y)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::POSITIVE_Z)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_X)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_Y)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else if(face == textureCube::NEGATIVE_Z)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
+		else
+		{
+			debugBreak();
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
+		}
+
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 0, 0);
+	}
+	if(color)
+	{
+		glViewport(0,0,dynamic_pointer_cast<textureCubeGL>(color)->width >> color_level, dynamic_pointer_cast<textureCubeGL>(color)->height >> color_level);
 	}
 	colorTarget = depthTarget = RT_TEXTURE;
 
@@ -2364,9 +2558,9 @@ void OpenGLgraphics::render()
 	
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
 			{
-				setColor(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0));
+				setColor(Color(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0)));
 				drawOverlay(Rect::XYXY(0,0,sAspect,1), "errorGlow");
-				setColor(1,1,1,1);
+				setColor(Color4(1,1,1,1));
 			}
 		}
 	#endif
@@ -2441,7 +2635,7 @@ void OpenGLgraphics::destroyWindow()
 #ifdef WINDOWS
 extern LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 #endif
-bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen)
+bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen, unsigned int targetRendererVersion)
 {
 	bool fullscreenflag=fullscreen;
 
@@ -2729,37 +2923,56 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 
 #if defined(WINDOWS)
-	if(/*game->hasCommandLineOption("--opengl3") &&*/ wglCreateContextAttribsARB)
+	if(wglCreateContextAttribsARB && targetRendererVersion >= 4) //attempt to create an openGL 4 context
 	{
 		int attribs[] =
 		{
-			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,//3,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 3,//3,
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
 			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
 	
-		auto gl3_hrc = wglCreateContextAttribsARB(context->hDC,0, attribs);
-		if(gl3_hrc)
+		auto gl_hrc = wglCreateContextAttribsARB(context->hDC,0, attribs);
+		if(gl_hrc)
 		{
 			wglMakeCurrent(NULL,NULL);
 			wglDeleteContext(context->hRC);
-			context->hRC = gl3_hrc;
+			context->hRC = gl_hrc;
 			wglMakeCurrent(context->hDC, context->hRC);
 			GLuint vao;
 			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
+			glGenQueries(1, &transformFeedbackQueryID);
+			gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
+			openGL3 = true;
+			openGL4 = true;
+		}
+	}
+	if(wglCreateContextAttribsARB && !openGL4 && targetRendererVersion >= 3) //attempt to create an openGL 3 context
+	{
+		int attribs[] =
+		{
+			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			0
+		};
+	
+		auto gl_hrc = wglCreateContextAttribsARB(context->hDC,0, attribs);
+		if(gl_hrc)
+		{
+			wglMakeCurrent(NULL,NULL);
+			wglDeleteContext(context->hRC);
+			context->hRC = gl_hrc;
+			wglMakeCurrent(context->hDC, context->hRC);
+			GLuint vao;
+			glGenVertexArrays(1, &vao);
+			glBindVertexArray(vao);
+			glGenQueries(1, &transformFeedbackQueryID);
 			gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
 			openGL3 = true;
 		}
-		else
-		{
-			MessageBoxA(NULL, "OpenGL 3 unsupported. Reverting to OpenGL 2.1","",MB_OK);
-		}
-	}
-	else if(game->hasCommandLineOption("--opengl3"))
-	{
-		MessageBoxA(NULL, "OpenGL 3 unsupported. Reverting to OpenGL 2.1","",MB_OK);
 	}
 
 	ShowWindow(context->hWnd,SW_SHOW);				// Show The Window
@@ -2898,7 +3111,7 @@ bool OpenGLgraphics::hasShaderModel4()const
 }
 bool OpenGLgraphics::hasShaderModel5()const
 {
-	return false;
+	return openGL4;
 }
 GraphicsManager::displayMode OpenGLgraphics::getCurrentDisplayMode()const
 {
@@ -3122,6 +3335,15 @@ void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, unsigne
 	//	setDepthBufferTexture(nullptr);
 	//	debugBreak(); //textures are different sizes!!!
 	//}
+}
+void OpenGLgraphics::startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures)
+{
+	setFrameBufferTextures(texture, face, texture_level);
+	if(clearTextures)
+	{
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
 }
 void OpenGLgraphics::endRenderToTexture()
 {	

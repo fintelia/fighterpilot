@@ -5,7 +5,8 @@ ship::ship(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team
 {
 	lastPosition = position = sPos;
 	lastRotation = rotation = sRot;
-	meshInstance = objectInfo[type]->newMeshInstance(position, rotation);
+	meshInstance = objectInfo[type]->newMeshInstance(Mat4f(rotation, position));
+	collisionInstance = objectInfo[type]->newCollisionInstance(Mat4f(rotation, position));
 
 	dead = false;
 	health = 100.0;
@@ -22,6 +23,11 @@ void ship::updateSimulation(double time, double ms)
 {
 	lastPosition = position;
 	position += rotation * Vec3f(0,0,100) * ms/1000.0;
+
+	if(collisionInstance)
+	{
+		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
+	}
 }
 void ship::die()
 {

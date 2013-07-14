@@ -83,6 +83,19 @@ public:
 			auto itt = sec->second.find(name);			if(itt == sec->second.end()) return defaultVal;
 			return lexical_cast<T>(itt->second);
 		}
+		bool hasValue(string section, string name)
+		{
+			auto sec = bindings.find(section);
+			if(sec == bindings.end())
+				return false;
+
+			return !(sec->second.find(name) == sec->second.end());
+		}
+		void addValueIfMissing(string section, string name, string value)
+		{
+			auto sec = bindings.find(section);	if(sec == bindings.end()) bindings[section][name] = value;
+			auto itt = sec->second.find(name);	if(itt == sec->second.end()) sec->second[name] = value;
+		}
 	private:
 		friend class FileManager;
 		void parseFile(fileContents data);

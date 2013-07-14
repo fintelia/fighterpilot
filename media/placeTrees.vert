@@ -34,7 +34,7 @@ uniform float placementOdds;
 
 float random(float c1, float c2, int trueVertexID)
 {
-	return fract(sin(c1*(trueVertexID)) * c2);
+	return fract(cos(sin(c1*(trueVertexID)) * c2));
 }
 void main()
 {
@@ -53,5 +53,5 @@ void main()
 	vertexOut.position = worldOrigin + worldSpacing * vec3(pos.x, groundVal.w, pos.y);
 	vertexOut.vertexID = trueVertexID;
 
-	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > placementOdds || vertexOut.position.y <= 40.0 || groundVal.y <= 0.9211 || (vertexOut.position.y >= 150.0 && groundVal.y >= 0.98));
+	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > placementOdds || vertexOut.position.y <= 40.0 || groundVal.y <= 0.9111 || (vertexOut.position.y >= 150.0 && groundVal.y >= 0.98));
 }

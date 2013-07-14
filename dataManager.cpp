@@ -176,6 +176,50 @@ void DataManager::addModel(string name, shared_ptr<FileManager::modelFile> model
 	//	//}
 	//}
 }
+void DataManager::addCollisionBounds(string name, shared_ptr<FileManager::modelFile> collisionMeshFile)
+{
+	if(collisionMeshFile->valid() && !collisionMeshFile->materials.empty())
+	{
+		//create new collisionMeshAsset
+		auto collisionMesh = std::make_shared<CollisionManager::collisionMesh>();
+
+		
+		//initialize vertices
+		for(auto v=collisionMeshFile->vertices.begin(); v!=collisionMeshFile->vertices.end(); v++)
+			collisionMesh->vertices.push_back(v->position);
+		
+		//initialize triangles
+		for(auto material = collisionMeshFile->materials.begin(); material != collisionMeshFile->materials.end(); material++)
+		{
+			for(int i = 0; i < material->indices.size(); i += 3)
+			{
+				collisionMesh->triangles.push_back(CollisionManager::triangle(	collisionMesh->vertices[material->indices[i]], 
+																				collisionMesh->vertices[material->indices[i+1]], 
+																				collisionMesh->vertices[material->indices[i+2]]));
+			}
+		}
+
+		//initialize bounding sphere
+		collisionMesh->sphere = collisionMeshFile->boundingSphere;
+
+		//save asset
+		collisionBoundsAsset* assetPtr = new collisionBoundsAsset;
+		assetPtr->collisionBounds = collisionMesh;
+		assetPtr->type = asset::COLLISION_BOUNDS;
+		assets[name] = shared_ptr<asset>(assetPtr);
+	}
+	else
+	{
+		debugBreak();
+	}
+}
+void DataManager::addCollisionBounds(string name, Sphere<float> boundingSphere)
+{
+	collisionBoundsAsset* assetPtr = new collisionBoundsAsset;
+	assetPtr->collisionBounds = std::make_shared<CollisionManager::collisionBounds>(boundingSphere);
+	assetPtr->type = asset::COLLISION_BOUNDS;
+	assets[name] = shared_ptr<asset>(assetPtr);
+}
 void DataManager::addFont(string name, shared_ptr<FileManager::textFile> f)
 {
 	auto fontPtr = registerFont(f);
@@ -294,6 +338,14 @@ shared_ptr<SceneManager::mesh> DataManager::getModel(string name)
 		return nullptr;
 
 	return static_pointer_cast<modelAsset>(i->second)->mesh;
+}
+shared_ptr<CollisionManager::collisionBounds> DataManager::getCollisionBounds(string name)
+{
+	auto i = assets.find(name);
+	if(i == assets.end() || i->second->type != asset::COLLISION_BOUNDS)
+		return nullptr;
+
+	return static_pointer_cast<collisionBoundsAsset>(i->second)->collisionBounds;
 }
 shared_ptr<GraphicsManager::texture> DataManager::getTexture(string name)
 {

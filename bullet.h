@@ -3,6 +3,9 @@
 class bullet
 {
 public:
+
+	static const float bulletSpeed;
+
 	double life;
 	double startTime;
 	Vec3f startPos;

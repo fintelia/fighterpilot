@@ -78,7 +78,7 @@
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <CustomBuildStep>
-      <Command>COPY "$(OutDir)FighterPilot.exe" "$(ProjectDir)"</Command>
+      <Command>COPY "$(OutDir)FighterPilot.exe" "%UserProfile%/FighterPilot_share"</Command>
       <Inputs>
       </Inputs>
       <Outputs>$(ProjectDir)FighterPilot.exe</Outputs>
@@ -258,6 +258,9 @@
     <None Include="media\icon.ico" />
     <None Include="media\island preview.frag" />
     <None Include="media\island.frag" />
+    <None Include="media\island4.frag" />
+    <None Include="media\island4.tessControl" />
+    <None Include="media\island4.tessEval" />
     <None Include="media\model.frag" />
     <None Include="media\model.vert" />
     <None Include="media\motion blur.frag" />

@@ -242,31 +242,39 @@ void dogFight::updateSimulation()
 	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
 	auto ships = world(SHIP);
 	auto missiles = world(MISSILE);
-	auto& bulletRef = ((bulletCloud*)world[bullets].get())->bullets;
+	auto& bulletsRef = dynamic_pointer_cast<bulletCloud>(world[bullets])->bullets;
 
-
-
+	float bulletLineLength = bullet::bulletSpeed * world.time.length() * 0.001;
+	
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		shared_ptr<plane> p = dynamic_pointer_cast<plane>(i->second); //probably should replace all the 'i->second' with 'p'
-		float damageMultiplier = p->controlType == plane::CONTROL_TYPE_AI ? 1.0 : 0.25;
-		if(!i->second->dead)
+		float damageMultiplier = p->controlType == plane::CONTROL_TYPE_AI ? 1.0f : 0.25f;
+		if(!i->second->dead && i->second->collisionInstance)
 		{
-			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			Sphere<float> boundingSphere = i->second->collisionInstance->boundingSphere();
+			float bulletTestRadiusSquared = (bulletLineLength+boundingSphere.radius)*(bulletLineLength+boundingSphere.radius);
+			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
-				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				bullet& bulletRef = bulletsRef[l];
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
 				{
-					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						i->second->loseHealth(14.4 * damageMultiplier);
-
-						if((*i).second->dead)
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
-							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
-							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
+							i->second->loseHealth(14.4f * damageMultiplier);
+
+							if((*i).second->dead)
+							{
+								if(players.numPlayers() >= 1 && bulletRef.owner==players[0]->objectNum()) players[0]->addKill();
+								if(players.numPlayers() >= 2 && bulletRef.owner==players[1]->objectNum()) players[1]->addKill();
+							}
+							bulletsRef.erase(bulletsRef.begin()+l);
+							l--;
 						}
-						bulletRef.erase(bulletRef.begin()+l);
-						l--;
 					}
 				}
 			}
@@ -300,22 +308,31 @@ void dogFight::updateSimulation()
 	}
 	for(auto i = AAA.begin(); i != AAA.end();i++)
 	{
-		if(!i->second->dead)
+		if(!i->second->dead && i->second->collisionInstance)
 		{
-			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			Sphere<float> boundingSphere = i->second->collisionInstance->boundingSphere();
+			float bulletTestRadiusSquared = (bulletLineLength+boundingSphere.radius)*(bulletLineLength+boundingSphere.radius);
+			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
-				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				bullet& bulletRef = bulletsRef[l];
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
 				{
-					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						i->second->loseHealth(14.4);
-						if((*i).second->dead)
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
-							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
-							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
+							i->second->loseHealth(14.4f);
+
+							if((*i).second->dead)
+							{
+								if(players.numPlayers() >= 1 && bulletRef.owner==players[0]->objectNum()) players[0]->addKill();
+								if(players.numPlayers() >= 2 && bulletRef.owner==players[1]->objectNum()) players[1]->addKill();
+							}
+							bulletsRef.erase(bulletsRef.begin()+l);
+							l--;
 						}
-						bulletRef.erase(bulletRef.begin()+l);
-						l--;
 					}
 				}
 			}
@@ -337,22 +354,31 @@ void dogFight::updateSimulation()
 	}
 	for(auto i = ships.begin(); i != ships.end();i++)
 	{
-		if(!i->second->dead)
+		if(!i->second->dead && i->second->collisionInstance)
 		{
-			for(auto l=0;l<(signed int)bulletRef.size();l++)
+			Sphere<float> boundingSphere = i->second->collisionInstance->boundingSphere();
+			float bulletTestRadiusSquared = (bulletLineLength+boundingSphere.radius)*(bulletLineLength+boundingSphere.radius);
+			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
-				if(bulletRef[l].owner != i->second->id && bulletRef[l].startTime < world.time.lastTime() && bulletRef[l].startTime + bulletRef[l].life > world.time())
+				bullet& bulletRef = bulletsRef[l];
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
 				{
-					if(collisionManager(i->second,bulletRef[l].startPos+bulletRef[l].velocity*(world.time()-bulletRef[l].startTime)/1000, bulletRef[l].startPos+bulletRef[l].velocity*(world.time.lastTime()-bulletRef[l].startTime)/1000))
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						i->second->loseHealth(0.75);
-						if((*i).second->dead)
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
-							if(players.numPlayers() >= 1 && bulletRef[l].owner==players[0]->objectNum()) players[0]->addKill();
-							if(players.numPlayers() >= 2 && bulletRef[l].owner==players[1]->objectNum()) players[1]->addKill();
+							i->second->loseHealth(14.4f);
+
+							if((*i).second->dead)
+							{
+								if(players.numPlayers() >= 1 && bulletRef.owner==players[0]->objectNum()) players[0]->addKill();
+								if(players.numPlayers() >= 2 && bulletRef.owner==players[1]->objectNum()) players[1]->addKill();
+							}
+							bulletsRef.erase(bulletsRef.begin()+l);
+							l--;
 						}
-						bulletRef.erase(bulletRef.begin()+l);
-						l--;
 					}
 				}
 			}

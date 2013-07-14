@@ -82,12 +82,14 @@ void main()
 		discard;
 
 	///////////GRASS AND SAND//////////
-	float noiseVal = texture(noiseTex, position.xz*0.0025).x + texture(LCnoise, position.xz*0.000625).x;
+	float noiseVal = texture2D(noiseTex, position.xz*0.0025).x + texture2D(LCnoise, position.xz*0.000625).x;
+	//float gAmount = pow(clamp(noiseVal + (height-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
 	float gAmount = pow(clamp((noiseVal + (height-6.0)/20.0 - 1.5), 0.0, 1.0), 0.5);
-	diffuse = mix(texture(sand,position.xz*0.0003).rgb*0.9, mix(vec3(1,1,1), texture(grassDetail, position.xz*0.042).rgb * 2.0,clamp(gAmount,0.0,1.0)) * texture(grass,position.xz*0.00125 *4.0).rgb/* / texture(grassDetail, position.xz*0.0532,3.0)*/, gAmount);
+	//gAmount = 0.5-0.5*cos(gAmount * 3.141592);
+	diffuse = mix(texture2D(sand,position.xz*0.0003).rgb, mix(vec3(1,1,1), texture2D(grassDetail, position.xz*0.042).rgb * 2.0,clamp(gAmount,0.0,1.0)) * texture2D(grass,position.xz*0.00125 *4.0).rgb/* / texture2D(grassDetail, position.xz*0.0532,3.0)*/, gAmount);
 
 	////////////TREE CANOPY////////////
-	diffuse *= 1.0 - 0.6 * clamp((height - 37.0)*0.2, 0.0, 1.0) * max(clamp((148.0-height)*0.2,0.0,1.0),clamp((slopeAngle - 0.1) / 0.1, 0.0, 1.0));
+	//diffuse *= 1.0 - 0.6 * clamp((height - 37.0)*0.2, 0.0, 1.0) * max(clamp((148.0-height)*0.2,0.0,1.0),clamp((slopeAngle - 0.1) / 0.1, 0.0, 1.0));
 	
 	//////////////ROCK/////////////////
 	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.40) / 0.06, 0.0,1.0);
@@ -117,7 +119,9 @@ void main()
 	
 	////////////////FOG////////////////
 	vec3 eyeDirection = position.xyz-eyePos;
-	diffuse = vec3(mix(diffuse*max(light,0.0), texture(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)));
-
+	//diffuse = vec3(mix(diffuse*max(light,0.0), texture(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)));
+	//diffuse = vec3(mix(diffuse*max(light,0.0), vec3(0.5,0.5,0.5), clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,0.75)));
+	diffuse = vec3(mix(diffuse*max(light,0.0), vec3(0.5,0.5,0.5), clamp(1.0 - 100000000.0 / dot(eyeDirection,eyeDirection),0.0,0.75)));
+	
 	FragColor = vec4(diffuse + specular, waterAlpha);
 }

@@ -42,8 +42,8 @@ namespace particle
 				vertices[vNum*4 + n].a = 0.5;
 			}
 
-			start = i->startPos+i->velocity*(time-i->startTime)/1000;;
-			end = i->startPos+i->velocity*max(lTime-i->startTime,0.0)/1000;
+			start = i->startPos+i->velocity*(time-i->startTime)*0.001f;
+			end = i->startPos+i->velocity*max(lTime-i->startTime,0.0f)*0.001f;
 
 			dir = (end - start).normalize();
 			a1 = dir.dot(up);

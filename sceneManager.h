@@ -21,28 +21,17 @@ public:
 	};
 	class meshInstance
 	{
-		//string modelName;
-		unsigned int meshID;
-
+		weak_ptr<mesh> meshPtr;
 		Mat4f modelTransform;
-
-		//Quat4f rotation;
-		//Vec3f position;
-
 		unsigned char flags;
-
-		weak_ptr<meshInstance> parent; //just for association right now, does not impact transformation (yet)
+		weak_ptr<meshInstance> parent; //just for association right now, does not impact transformation (yet?)
 
 		friend class SceneManager;
-		meshInstance(unsigned int mID, const Mat4f& transformation, weak_ptr<meshInstance> Parent=weak_ptr<meshInstance>()): meshID(mID), modelTransform(transformation), flags(0x01), parent(Parent) {}
-
-
+		meshInstance(weak_ptr<mesh> mPtr, const Mat4f& transformation, weak_ptr<meshInstance> Parent=weak_ptr<meshInstance>()): meshPtr(mPtr), modelTransform(transformation), flags(0x01), parent(Parent) {}
 
 	public:
 		void update(const Mat4f& transformation,bool render=true);
-
 		Sphere<float> getBoundingSphere();
-
 		bool renderFlag();
 		void setRenderFlag(bool b);
 	};

@@ -22,8 +22,6 @@ public:
 	struct objectData
 	{
 	private:
-		//shared_ptr<FileManager::modelFile>			meshFile;
-		//shared_ptr<FileManager::modelFile>			collisionMeshFile;
 		string meshFilename;
 		string collisionMeshFilename;
 	public:
@@ -31,10 +29,11 @@ public:
 		string textName;
 		objectType type;
 
-		//shared_ptr<PhysicsManager::collisionBounds> collisionMesh;
 		weak_ptr<SceneManager::mesh>				mesh;
+		weak_ptr<CollisionManager::collisionBounds>	collisionMesh;
 
-		shared_ptr<SceneManager::meshInstance> newMeshInstance(Vec3f position, Quat4f rotation) const;
+		shared_ptr<SceneManager::meshInstance> newMeshInstance(Mat4f transformation) const;
+		shared_ptr<CollisionManager::collisionInstance> newCollisionInstance(Mat4f transformation) const;
 
 		friend class ObjectInfo;
 	};

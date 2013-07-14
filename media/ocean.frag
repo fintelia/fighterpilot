@@ -11,6 +11,7 @@ uniform sampler3D oceanNormals;
 uniform samplerCube sky;
 uniform float time;
 uniform vec3 sunColor;
+uniform vec3 eyePos;
 
 uniform sampler2D groundTexture;
 uniform vec2 invGroundScale;
@@ -160,6 +161,9 @@ void main()
 	//color += min(pow(max(dot(vec3(0,1,0),normalize(sunHalfVector)),0.0),8.0), 1.0);
 	color += 2.0*/*fresnel*/sunColor*vec3(pow(max(0.0, dot(reflect(-normalize(sunDir), normalize(vec3(n.x,n.y*5.0,n.z))), normalize(eyeDirection))), 512.0));
 	color += 2.0*/*fresnel*/sunColor*vec3(pow(max(0.0, dot(reflect(-normalize(sunDir), normalize(vec3(n.x,n.y*2.0,n.z))), normalize(eyeDirection))), 512.0));
+
+	vec3 eyeDir = eyePos - worldPosition;
+//	color = mix(color, vec3(0.5,0.5,0.5), clamp(1.0 - 100000000.0 / dot(eyeDirection,eyeDirection),0.0,0.75));
 
 	gl_FragColor = /*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*//*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*/vec4(vec3(color),1.0);
 }
