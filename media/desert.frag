@@ -74,5 +74,5 @@ void main()
 	//color.rgb = vec3(0,0,clamp(i+0.1,0.1,1.0));
 	/////////////////////////////////////////////////////////
 
-	gl_FragColor = vec4(mix(color, textureCube(sky, vec3(eyeDirection.x,0,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
+	gl_FragColor = vec4(mix(color, textureCube(sky, vec3(eyeDirection.x,0.5*eyeDirection.y,eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),1.0);
 }

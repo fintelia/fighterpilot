@@ -10,7 +10,7 @@ dogFight::~dogFight()
 {
 	world.destroy();
 }
-void dogFight::healthBar(float x, float y, float width, float height, float health)
+void dogFight::healthBar(float x, float y, float width, float height, float health) const
 {
 	//if(!firstPerson)
 	//{
@@ -35,7 +35,7 @@ void dogFight::healthBar(float x, float y, float width, float height, float heal
 		shaders.bind("ortho");
 	//}
 }
-void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
+void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees) const
 {
 	x1 *=	0.00125*sw;
 	y1 *=	0.00167*sh;
@@ -45,7 +45,7 @@ void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees)
 	graphics->drawRotatedOverlay(Rect::XYXY(x1,y2,x2,y2),degrees * PI/180,"tilt back");
 	graphics->drawOverlay(Rect::XYXY(x1,y2,x2,y2),"tilt front");
 }
-void dogFight::radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p)
+void dogFight::radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p) const
 {
 	float radarAng = 45.0*world.time()/1000;
 	radarAng = (radarAng/360.0 - floor(radarAng/360.0)) * 360;
@@ -158,36 +158,36 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		graphics->drawOverlay(Rect::XYWH(x,y,width,height),"radar frame");
 	}
 }
-void dogFight::planeIdBoxes(shared_ptr<plane> p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v) //must get 'eye' location instead of plane location to work in 3rd person
-{
-	if(!p->dead)
-	{
-		auto planes = world(PLANE);
-		for(auto i = planes.begin(); i != planes.end();i++)
-		{
-			if(p->id!=i->second->id && !i->second->dead)
-			{
-				Vec2f s = v->project(i->second->position);
-				double distSquared = i->second->position.distanceSquared(p->position);
-				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
-				{
-					if(i->second->team==p->team)		graphics->setColor(0,1,0);
-					else if(distSquared > 2000*2000)	graphics->setColor(0.6,0.5,0.5);
-					else								graphics->setColor(0.5,0,0);
-
-					graphics->drawOverlay(Rect::XYXY(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth),"target ring");
-				}
-			}
-		}
-		graphics->setColor(1,1,1);
-	}
-}
-void dogFight::targeter(float x, float y, float apothem, Angle tilt)
+//void dogFight::planeIdBoxes(shared_ptr<plane> p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v) //must get 'eye' location instead of plane location to work in 3rd person
+//{
+//	if(!p->dead)
+//	{
+//		auto planes = world(PLANE);
+//		for(auto i = planes.begin(); i != planes.end();i++)
+//		{
+//			if(p->id!=i->second->id && !i->second->dead)
+//			{
+//				Vec2f s = v->project(i->second->position);
+//				double distSquared = i->second->position.distanceSquared(p->position);
+//				if(s.x > 0.0 && s.x < 1.0 && s.y > 0.0 && s.y < 1.0)
+//				{
+//					if(i->second->team==p->team)		graphics->setColor(0,1,0);
+//					else if(distSquared > 2000*2000)	graphics->setColor(0.6,0.5,0.5);
+//					else								graphics->setColor(0.5,0,0);
+//
+//					graphics->drawOverlay(Rect::XYXY(vX + (s.x - 0.006) * vWidth,vY + s.y * vHeight - 0.006 * vWidth,vX + (s.x + 0.006) * vWidth, vY + s.y * vHeight + 0.006 * vWidth),"target ring");
+//				}
+//			}
+//		}
+//		graphics->setColor(1,1,1);
+//	}
+//}
+void dogFight::targeter(float x, float y, float apothem, Angle tilt) const
 {
 	graphics->drawRotatedOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),tilt,"tilt");
 	graphics->drawOverlay(Rect::CWH(x,y,apothem*2,-apothem*2),"targeter");
 }
-void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c)
+void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c) const
 {
 	auto hexGrid = shaders.bind("hex grid shader");
 	dataManager.bind("hex grid", 0);
@@ -201,6 +201,77 @@ void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f cen
 	//graphics->drawModelCustomShader("cylinder", Vec3f(center), ,Vec3f(radius,height,radius));
 	sceneManager.drawMesh(view, dataManager.getModel("cylinder"), Mat4f(Quat4f(), center, radius), hexGrid);
 	dataManager.bind("model");
+}
+void dogFight::drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const
+{
+	if(targetPtr && targetPtr->meshInstance != nullptr)
+	{
+		float interpolate = world.time.interpolate();
+		Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
+		Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
+		Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
+
+		Vec3f targetOffset = -targetRot * targetPtr->meshInstance->getBoundingSphere().center;
+		Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * (targetPos+targetOffset);
+		if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
+		{
+			auto circleShader = shaders.bind("circle shader");
+			circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
+
+			graphics->setColor(level->info.night ? nightColor : color);
+			graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
+
+			if(p->team != targetPtr->team && targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
+			{
+				auto targetPlanePtr = dynamic_pointer_cast<plane>(targetPtr);
+				float s = bullet::bulletSpeed; //speed of bullets
+				Vec3f r = (targetPos+targetOffset) - planePos;
+				Vec3f v = targetRot * Vec3f(0,0,targetPlanePtr->speed);
+	
+				float a = v.dot(v) - s*s;
+				float b = 2.0 * v.dot(r);
+				float c = r.dot(r);
+				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
+				if(b*b - 4.0*a*c >= 0.0 && t >= 0)
+				{
+					graphics->setColor(level->info.night ? Color4(0.4,0.4,0.4,0.3) : Color4(1,1,1,0.3));
+					graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
+				}
+			}
+			graphics->setColor(1,1,1);
+			shaders.bind("ortho");
+		}
+		else
+		{
+			Vec3f fwd = view->camera().fwd;
+			Vec3f up = view->camera().up;
+			Vec3f right = view->camera().right;
+			Vec3f direction = (targetPos - planePos).normalize();
+			Vec2f screenDirection(direction.dot(right), direction.dot(up));
+			screenDirection = screenDirection.normalize();
+
+			float w = view->viewport().width;
+			float h = view->viewport().height;
+			if(screenDirection.x/(w-0.1) > abs(screenDirection.y/(h-0.1)))
+				screenDirection = Vec2f(w-0.1, screenDirection.y * (w-0.1) / screenDirection.x);
+			else if(-screenDirection.x/(w-0.1) > abs(screenDirection.y/(h-0.1)))
+				screenDirection = Vec2f(0.1-w, screenDirection.y * (0.1-w) / screenDirection.x);
+			else if(screenDirection.y/(h-0.1) > abs(screenDirection.x/(w-0.1)))
+				screenDirection = Vec2f(screenDirection.x * (h-0.1) / screenDirection.y, h-0.1);
+			else
+				screenDirection = Vec2f(screenDirection.x * (0.1-h) / screenDirection.y, 0.1-h);
+
+			Angle ang = atan2A(screenDirection.y,screenDirection.x);
+			float radius = (w-0.1)*(h-0.1) / sqrt( (h-0.1)*(h-0.1)*cos(ang)*cos(ang) + (w-0.1)*(w-0.1)*sin(ang)*sin(ang) );//min(screenDirection.magnitude(), (w-0.1)*abs(cos(ang))+(h-0.1)*abs(sin(ang)));
+
+			screenDirection.x = radius*cos(ang)*0.5 + 0.5*w + view->viewport().x;
+			screenDirection.y = -radius*sin(ang)*0.5 + 0.5*h + view->viewport().y;
+
+			graphics->setColor(level->info.night ? nightColor : color);
+			graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
+			graphics->setColor(1,1,1);
+		}
+	}
 }
 void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 {

@@ -484,6 +484,7 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 	}
 	foliageDensity = min(foliageDensity, 150); //keep foliageDensity reasonable
 
+
 	int				foliagePatchesX = width/8;//64;//16*(width/16)/LOD;
 	int				foliagePatchesY = height/8;//64;//16*(height/16)/LOD;
 	unsigned int	numPatches = foliagePatchesX * foliagePatchesY;	

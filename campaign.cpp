@@ -176,64 +176,6 @@ void campaign::updateFrame()
 		}
 	}
 }
-void campaign::drawHudIndicator(shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const
-{
-	if(targetPtr && targetPtr->meshInstance != nullptr)
-	{
-		float interpolate = world.time.interpolate();
-		Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
-		Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
-		Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
-
-		Vec3f targetOffset = -targetRot * targetPtr->meshInstance->getBoundingSphere().center;
-		Vec3f proj = (view->projectionMatrix() * view->modelViewMatrix()) * (targetPos+targetOffset);
-		if(proj.z < 1.0 && (proj.x > -1.02 && proj.x < 1.02) && (proj.y > -1.02 && proj.y < 1.02))
-		{
-			auto circleShader = shaders.bind("circle shader");
-			circleShader->setUniform4f("viewConstraint", graphics->getViewContraint());
-
-			graphics->setColor(level->info.night ? nightColor : color);
-			graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset), Vec2f(0.02,0.02)));
-
-			if(p->team != targetPtr->team && targetPtr->type & PLANE && p->position.distanceSquared(targetPos+targetOffset) <= 2000.0*2000.0)
-			{
-				auto targetPlanePtr = dynamic_pointer_cast<plane>(targetPtr);
-				float s = bullet::bulletSpeed; //speed of bullets
-				Vec3f r = (targetPos+targetOffset) - planePos;
-				Vec3f v = targetRot * Vec3f(0,0,targetPlanePtr->speed);
-	
-				float a = v.dot(v) - s*s;
-				float b = 2.0 * v.dot(r);
-				float c = r.dot(r);
-				float t = (-b - sqrt(b*b - 4.0*a*c)) / (2.0 * a);
-				if(b*b - 4.0*a*c >= 0.0 && t >= 0)
-				{
-					graphics->setColor(level->info.night ? Color4(0.4,0.4,0.4,0.3) : Color4(1,1,1,0.3));
-					graphics->drawOverlay(Rect::CWH(view->project(targetPos+targetOffset + v * t), Vec2f(0.015,0.015)));
-				}
-			}
-			graphics->setColor(1,1,1);
-			shaders.bind("ortho");
-		}
-		else
-		{
-			Vec3f fwd = view->camera().fwd;
-			Vec3f up = view->camera().up;
-			Vec3f right = view->camera().right;
-			Vec3f direction = (targetPos - planePos).normalize();
-			Vec3f projectedDirection = direction - fwd * (fwd.dot(direction));
-			Vec2f screenDirection(projectedDirection.dot(right), projectedDirection.dot(up));
-			screenDirection = screenDirection.normalize();
-			Angle ang = atan2A(screenDirection.y,screenDirection.x);
-			screenDirection.x = clamp( (screenDirection.x+1.0)*sAspect/2.0, 0.05, sAspect-0.05);
-			screenDirection.y = clamp( (-screenDirection.y+1.0)/2.0, 0.05, 0.95);
-
-			graphics->setColor(level->info.night ? nightColor : color);
-			graphics->drawRotatedOverlay(Rect::CWH(screenDirection, Vec2f(0.08,0.08)),ang, "arrow");
-			graphics->setColor(1,1,1);
-		}
-	}
-}
 void campaign::render()
 {
 	shared_ptr<plane> p = players[0]->getObject();
@@ -256,15 +198,13 @@ void campaign::render()
 			for(auto i = planes.begin(); i != planes.end();i++)
 			{
 				if(i->second->id != p->id && i->second->team == p->team && !i->second->dead)
-					drawHudIndicator(p, i->second, Color(0,1,0,0.5), Color4(0.66*0.2989,0.34+0.66*0.2989,0.66*0.2989,0.5));
-				else if(i->second->id != p->id && i->second->id != p->target && i->second->team != p->team && !i->second->dead)
-					drawHudIndicator(p,	i->second, Color4(1,0.5,0,0.5), Color4(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140,0.5));
+					drawHudIndicator(view, p, i->second, Color(0,1,0,0.5), Color4(0.66*0.2989,0.34+0.66*0.2989,0.66*0.2989,0.5));
 			}
 			
 			if(p->target != 0 && !graphics->isHighResScreenshot())
 			{
 				auto targetPtr = world[p->target];
-				drawHudIndicator(p,	targetPtr, p->targetLocked ? Color4(1,0.1,0) : Color4(1,0.5,0,0.5), p->targetLocked ? Color4(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989) : Color4(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140,0.5));
+				drawHudIndicator(view, p, targetPtr, p->targetLocked ? Color4(1,0,0) : Color4(0,0,1), p->targetLocked ? Color4(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989) : Color4(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140,0.5));
 			}
 		}
 	}

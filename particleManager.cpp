@@ -82,7 +82,7 @@ void emitter::update()
 	lastPosition = position; //lastPosition is only valid if position is not modified outside of this function!!!
 	if(parentObject != 0)
 	{
-		if(world[parentObject] == nullptr || world[parentObject]->awaitingDelete)
+		if(world[parentObject] == nullptr /*|| world[parentObject]->awaitingDelete*/)
 		{
 			parentObject = 0;
 			particlesPerSecond = 0;
@@ -131,6 +131,13 @@ void emitter::update()
 		oldParticlePositions[i] = particles[i].pos;
 		updateParticle(particles[i]);
 	}
+
+	if(parentObject != 0 && world[parentObject]->awaitingDelete)
+	{
+		parentObject = 0;
+		particlesPerSecond = 0;
+	}
+
 	lPosition = position; //lPosition is only valid inside this method!!!
 }
 void emitter::prepareRender(Vec3f up, Vec3f right)

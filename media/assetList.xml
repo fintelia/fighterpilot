@@ -62,7 +62,7 @@
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
     <texture name="layers"                    file="media/layers.png"                 tileable="true"/>    
-    <texture name="bullet"                    file="media/bullet3.png" />
+    <texture name="bullet"                    file="media/bullet4.png" />
     <texture name="sun"                       file="media/sun.png" />
     <texture name="tree"                      file="media/tree2.png" />
     <texture name="scorch"                    file="media/scorch2.png" />

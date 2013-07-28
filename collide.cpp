@@ -423,9 +423,9 @@ Vec3f CollisionManager::closestPointOnSegment(Vec3f s1, Vec3f s2, Vec3f point) c
 }
 bool CollisionManager::sphereTriangleCollision(const triangle& t, const Mat4f& mat, const Sphere<float>& s) const 
 {//see: http://realtimecollisiondetection.net/blog/?p=103
-	Vec3f a = mat * t.vertices[0] - s.center;
-	Vec3f b = mat * t.vertices[1] - s.center;
-	Vec3f c = mat * t.vertices[2] - s.center;
+	Vec3f a = mat * t.vertex(0) - s.center;
+	Vec3f b = mat * t.vertex(1) - s.center;
+	Vec3f c = mat * t.vertex(2) - s.center;
 	float rr = s.radius * s.radius;
 	Vec3f AB = b - a; 
 	Vec3f BC = c - b;
@@ -499,9 +499,9 @@ bool CollisionManager::segmentPlaneCollision(const Vec3f& a, const Vec3f& b, con
 //}
 bool CollisionManager::pointInTriangle(const triangle& tri,const Vec3f& vert) const
 {
-	float ang = acos((tri.vertices[0]-vert).normalize().dot((tri.vertices[0]-vert).normalize())) +
-				acos((tri.vertices[1]-vert).normalize().dot((tri.vertices[1]-vert).normalize())) +
-				acos((tri.vertices[2]-vert).normalize().dot((tri.vertices[2]-vert).normalize()));
+	float ang = acos((tri.vertex(0)-vert).normalize().dot((tri.vertex(0)-vert).normalize())) +
+				acos((tri.vertex(1)-vert).normalize().dot((tri.vertex(1)-vert).normalize())) +
+				acos((tri.vertex(2)-vert).normalize().dot((tri.vertex(2)-vert).normalize()));
 	return ang > 2.0 * PI - 0.01;
 }
 //bool CollisionChecker::triangleCollision(const triangle& tri1, const triangle& tri2) const
@@ -545,16 +545,16 @@ bool CollisionManager::triangleCollision(const triangle& tri1, const triangle& t
 {
 	Vec3f p;
 
-	Plane3f plane1(tri1.vertices[0], tri1.vertices[1], tri1.vertices[2]);
-	if(	(segmentPlaneCollision(tri2.vertices[0], tri2.vertices[1], plane1, p) && pointInTriangle(tri1,p)) ||
-		(segmentPlaneCollision(tri2.vertices[1], tri2.vertices[2], plane1, p) && pointInTriangle(tri1,p)) ||
-		(segmentPlaneCollision(tri2.vertices[2], tri2.vertices[0], plane1, p) && pointInTriangle(tri1,p)))
+	Plane3f plane1(tri1.vertex(0), tri1.vertex(1), tri1.vertex(2));
+	if(	(segmentPlaneCollision(tri2.vertex(0), tri2.vertex(1), plane1, p) && pointInTriangle(tri1,p)) ||
+		(segmentPlaneCollision(tri2.vertex(1), tri2.vertex(2), plane1, p) && pointInTriangle(tri1,p)) ||
+		(segmentPlaneCollision(tri2.vertex(2), tri2.vertex(0), plane1, p) && pointInTriangle(tri1,p)))
 			return true;
 
-	Plane3f plane2(tri2.vertices[0], tri2.vertices[1], tri2.vertices[2]);
-	if(	(segmentPlaneCollision(tri1.vertices[0], tri1.vertices[1], plane2, p) && pointInTriangle(tri2,p)) ||
-		(segmentPlaneCollision(tri1.vertices[1], tri1.vertices[2], plane2, p) && pointInTriangle(tri2,p)) ||
-		(segmentPlaneCollision(tri1.vertices[2], tri1.vertices[0], plane2, p) && pointInTriangle(tri2,p)))
+	Plane3f plane2(tri2.vertex(0), tri2.vertex(1), tri2.vertex(2));
+	if(	(segmentPlaneCollision(tri1.vertex(0), tri1.vertex(1), plane2, p) && pointInTriangle(tri2,p)) ||
+		(segmentPlaneCollision(tri1.vertex(1), tri1.vertex(2), plane2, p) && pointInTriangle(tri2,p)) ||
+		(segmentPlaneCollision(tri1.vertex(2), tri1.vertex(0), plane2, p) && pointInTriangle(tri2,p)))
 			return true;
 
 	return false;
@@ -564,14 +564,14 @@ bool CollisionManager::triangleCollision(const triangle& tri1, const triangle& t
 	triangle T1 = tri1;
 	triangle T2 = tri2;
 
-	T1.vertices[0] = rot1 * T1.vertices[0];
-	T1.vertices[1] = rot1 * T1.vertices[1];
-	T1.vertices[2] = rot1 * T1.vertices[2];
+	T1.vertex(0) = rot1 * T1.vertex(0);
+	T1.vertex(1) = rot1 * T1.vertex(1);
+	T1.vertex(2) = rot1 * T1.vertex(2);
 
 	
-	T2.vertices[0] = rot2 * T2.vertices[0];
-	T2.vertices[1] = rot2 * T2.vertices[1];
-	T2.vertices[2] = rot2 * T2.vertices[2];
+	T2.vertex(0) = rot2 * T2.vertex(0);
+	T2.vertex(1) = rot2 * T2.vertex(1);
+	T2.vertex(2) = rot2 * T2.vertex(2);
 
 	return triangleCollision(T1, T2);
 }
@@ -630,43 +630,32 @@ bool CollisionManager::triangleCollision(const triangle& tri1, const triangle& t
 //	}
 //	radius = sqrt(radiusSquared);
 //}
-void CollisionManager::triangle::findRadius() const
+void CollisionManager::triangle::setVertices(Vec3f v1, Vec3f v2, Vec3f v3)
 {
-	if(radiusValid) return;
-	float radiusSquared, minx,miny,minz,maxx,maxy,maxz;
+	mVertices[0] = v1;
+	mVertices[1] = v2;
+	mVertices[2] = v3;
 
-	minx = maxx = vertices[0].x;
-	miny = maxy = vertices[0].y;
-	minz = maxz = vertices[0].z;
-
-	if(vertices[1].x < minx)	minx = vertices[1].x;
-	if(vertices[2].x < minx)	minx = vertices[2].x;
-	if(vertices[1].y < miny)	miny = vertices[1].y;
-	if(vertices[2].y < miny)	miny = vertices[2].y;
-	if(vertices[1].z < minz)	minz = vertices[1].z;
-	if(vertices[2].z < minz)	minz = vertices[2].z;
-
-	if(vertices[1].x > maxx)	maxx = vertices[1].x;
-	if(vertices[2].x > maxx)	maxx = vertices[2].x;
-	if(vertices[1].y > maxy)	maxy = vertices[1].y;
-	if(vertices[2].y > maxy)	maxy = vertices[2].y;
-	if(vertices[1].z > maxz)	maxz = vertices[1].z;
-	if(vertices[2].z > maxz)	maxz = vertices[2].z;
-
-	center.x = ((minx+maxx)/2);
-	center.y = ((miny+maxy)/2);
-	center.z = ((minz+maxz)/2);
-
-	radiusSquared = center.distanceSquared(vertices[0]);
-	if (center.distanceSquared(vertices[1]) > radiusSquared)
-		radiusSquared = center.distanceSquared(vertices[1]);
-  	if (center.distanceSquared(vertices[2]) > radiusSquared)
-		radiusSquared = center.distanceSquared(vertices[2]);
-
-	radius = sqrt(radiusSquared);
-	radiusValid=true;
+	mCenter = (v1 + v2 + v3) * 0.3333333f;
+	mRadius = sqrt(max(mCenter.distanceSquared(v1), max(mCenter.distanceSquared(v2), mCenter.distanceSquared(v3))));
 }
-
+float CollisionManager::triangle::radius() const
+{
+	return mRadius;
+}
+Vec3f CollisionManager::triangle::center() const
+{
+	return mCenter;
+}
+Vec3f CollisionManager::triangle::vertex(unsigned int i) const
+{
+	if(i >= 3)
+	{
+		debugBreak();
+		return Vec3f();
+	}
+	return mVertices[i];
+}
 //bool CollisionChecker::operator() (const triangleList& t1, const triangleList& t2) const
 //{
 //	if(t1.center.distanceSquared(t2.center) < (t1.radius+t2.radius)*(t1.radius+t2.radius))
@@ -816,22 +805,46 @@ bool CollisionManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2)
 
 		Sphere<float> s1 = bounds1->sphere;
 		Sphere<float> s2 = bounds2->sphere;
-		s1.center = o1->rotation * s1.center + o1->position;
-		s2.center = o2->rotation * s2.center + o2->position;
+		s1.center = instance1->transformationMatrix * s1.center;
+		s2.center = instance2->transformationMatrix * s2.center;
 		if((s1.center).distanceSquared(s2.center) > (s1.radius+s2.radius)*(s1.radius+s2.radius))
 			return false;
 
-		Mat4f mat1(o1->rotation, o1->position);
 		auto m = static_pointer_cast<const collisionMesh>(bounds1);
 		for(auto i = m->triangles.begin(); i != m->triangles.end(); i++)
 		{
-			if(sphereTriangleCollision(*i, mat1, s2))
+			if(sphereTriangleCollision(*i, instance1->transformationMatrix, s2))
 				return true;
 		}
 	}
 	else if(bounds1->type == collisionBounds::MESH && bounds2->type == collisionBounds::MESH)
 	{
-		debugBreak(); // code not yet written!!!
+		Sphere<float> s1 = bounds1->sphere;
+		Sphere<float> s2 = bounds2->sphere;
+		s1.center = instance1->transformationMatrix * s1.center;
+		s2.center = instance2->transformationMatrix * s2.center;
+		if((s1.center).distanceSquared(s2.center) > (s1.radius+s2.radius)*(s1.radius+s2.radius))
+			return false;
+
+		auto m1 = static_pointer_cast<const collisionMesh>(bounds1);
+		auto m2 = static_pointer_cast<const collisionMesh>(bounds2);
+
+
+		Vec3f transformedCenter;
+		for(auto i = m1->triangles.begin(); i != m1->triangles.end(); i++)
+		{
+			if(s1.center.distanceSquared( instance1->transformationMatrix * i->center()) <= (s1.radius+i->radius()) * (s1.radius+i->radius()) && sphereTriangleCollision(*i, instance1->transformationMatrix, s2))
+			{
+				transformedCenter = instance1->transformationMatrix * i->center();
+				for(auto j = m2->triangles.begin(); j != m2->triangles.end(); j++)
+				{
+					if(transformedCenter.distanceSquared(instance2->transformationMatrix * j->center()) <= (i->radius()+j->radius())*(i->radius()+j->radius()))
+					{
+						return true; //we never actually check the two triangles against each other... Only against bounding spheres...
+					}
+				}
+			}
+		}
 	}
 	return false;
 }

@@ -229,13 +229,12 @@ public:
 
 	virtual bool init()=0;
 
-	void healthBar(float x, float y, float width, float height, float health);
-	void tiltMeter(float x1,float y1,float x2,float y2,float degrees);
-	void radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p);
-	void targeter(float x, float y, float apothem, Angle tilt);
-	void planeIdBoxes(shared_ptr<plane> p, float vX, float vY, float vWidth, float vHeight, shared_ptr<GraphicsManager::View> v);
-
-	void drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c);
+	void healthBar(float x, float y, float width, float height, float health) const;
+	void tiltMeter(float x1,float y1,float x2,float y2,float degrees) const;
+	void radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p) const;
+	void targeter(float x, float y, float apothem, Angle tilt) const;
+	void drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c) const;
+	void drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const;
 	void drawScene(shared_ptr<GraphicsManager::View> view, int acplayer);
 
 	void updateSimulation();
@@ -271,8 +270,6 @@ protected:
 #endif
 
 	shared_ptr<GraphicsManager::View> view;
-
-	void drawHudIndicator(shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const;
 
 public:
 	campaign(shared_ptr<const LevelFile> lvl);
