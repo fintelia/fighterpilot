@@ -250,8 +250,10 @@ unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
 		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 		glDisable(GL_RASTERIZER_DISCARD);
 
-		int primitiveCount;
-		glGetQueryObjectiv(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
+		long long primitiveCount = -1;
+		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
+
+		debugAssert(primitiveCount <=  INT_MAX);
 
 		return primitiveCount;
 	}

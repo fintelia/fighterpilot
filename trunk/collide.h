@@ -12,15 +12,17 @@ public:
 	struct triangle
 	{
 	private:
-		mutable bool radiusValid;
-	public:
-		Vec3f vertices[3];
-		mutable Vec3f center;
-		mutable float radius;
+		Vec3f mCenter;
+		float mRadius;
+		Vec3f mVertices[3];
+	public:	
 
-		void findRadius() const;
-		triangle(Vec3f a,Vec3f b,Vec3f c):radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=a;vertices[1]=b;vertices[2]=c;findRadius();}
-		triangle():radiusValid(false),center(0,0,0),radius(0.0){vertices[0]=vertices[1]=vertices[2]=Vec3f(0,0,0);}
+		float radius() const;
+		Vec3f center() const;
+		Vec3f vertex(unsigned int i) const;
+		void setVertices(Vec3f v1, Vec3f v2, Vec3f v3);
+		triangle(Vec3f v1, Vec3f v2, Vec3f v3):mCenter(0,0,0),mRadius(0.0){setVertices(v1, v2, v3);}
+		triangle():mCenter(0,0,0),mRadius(0.0){mVertices[0]=mVertices[1]=mVertices[2]=Vec3f(0,0,0);}
 	};
 	class collisionBounds
 	{

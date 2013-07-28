@@ -79,7 +79,7 @@ void plane::updateSimulation(double time, double ms)
 	//control->update();
 	//controlState controller=control->getControlState();
 	lastPosition = position;
-	lastRotation = rotation;
+ 	lastRotation = rotation;
 
 	observer.lastFrame = observer.currentFrame;
 	cameraShake *= pow(0.1, world.time.length()/1000.0);
@@ -271,12 +271,12 @@ void plane::updateSimulation(double time, double ms)
 				//	else if(random<float>() < 0.25)
 				//		soundManager.playSound("shot2");
 
-					if(random<float>() < 0.25)
-					{
-						auto tracer = new particle::tracer;
-						particleManager.addEmitter(tracer, position);
-						tracer->setVelocity(rot*Vec3f(0,0,1) * 2000.0);
-					}
+			//		if(random<float>() < 0.25)
+			//		{
+			//			auto tracer = new particle::tracer;
+			//			particleManager.addEmitter(tracer, position);
+			//			tracer->setVelocity(rot*Vec3f(0,0,1) * 2000.0);
+			//		}
 				}
 			}
 			if(controls.shoot2)
@@ -310,12 +310,12 @@ void plane::updateSimulation(double time, double ms)
 			}
 
 			Vec2f positionXZ(position.x,position.z);
-			Vec2f mapCenter = world.bounds().center;
-			float r = world.bounds().radius;
-			if(positionXZ.distanceSquared(mapCenter) > r*r)
-			{
-				returnToBattle();
-			}
+	//		Vec2f mapCenter = world.bounds().center;
+	//		float r = world.bounds().radius;
+	//		if(positionXZ.distanceSquared(mapCenter) > r*r)
+	//		{
+	//			returnToBattle();
+	//		}
 			smoothCamera();
 		}
 		altitude=world.altitude(position);

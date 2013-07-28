@@ -125,7 +125,7 @@ void main()
 
 	////////////////FOG////////////////
 	vec3 eyeDirection = position.xyz-eyePos;
-	color = vec4(mix(color.rgb*max(light,0.0), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
+	color = vec4(mix(color.rgb*max(light,0.0), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*0.00001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
 
 	///////////////GRID////////////////
 	//vec2 px = position.xz/1600.0 + 0.5;

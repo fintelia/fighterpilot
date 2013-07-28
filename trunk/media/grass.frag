@@ -86,7 +86,7 @@ void main()
 
 	vec3 eyeDirection = position.xyz-eyePos;
 
-	color = vec4(mix(color.rgb*max(light,0.7), textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
+	color = vec4(mix(color.rgb*max(light,0.7), textureCube(sky, vec3(-eyeDirection.x,0.5*eyeDirection.y,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a);
 
 	gl_FragColor = color;
 }
