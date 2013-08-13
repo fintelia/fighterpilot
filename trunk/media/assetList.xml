@@ -25,7 +25,9 @@
     <texture name="menu in game"              file="media/menu/in game.png" />
     <texture name="menu in game select"       file="media/menu/in game select.png" />
     <texture name="thumbnails"                file="media/thumbnails.png" />
-
+    <texture name="credits"                   file="media/menu/credits.png" />
+    <texture name="fuction key tabs"          file="media/menu/functionKeyTabs.png" />
+    
     <!-- HUD -->
     <texture name="radarTex"                  file="media/radar2.png" />
     <texture name="cockpit"                   file="media/cockpit.png" />

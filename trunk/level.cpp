@@ -453,7 +453,14 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 
 		unsigned short* h = new unsigned short[w*w];
 		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info.mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-		world.initTerrain(h, w,Vec3f(0,minHeight,0),Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y),info.shaderType,info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
+
+		Circle<float> bounds;
+		if(info.shaderType == TERRAIN_ISLAND)
+			bounds = Circle<float>(info.mapSize * 0.5, max(info.mapSize.x, info.mapSize.y) * 1.0);
+		else
+			bounds = Circle<float>(info.mapSize * 0.5, max(info.mapSize.x, info.mapSize.y) * 0.4);
+
+		world.initTerrain(h, w, Vec3f(0,minHeight,0), Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y), info.shaderType, bounds, info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
 	}
 
 	bullets = world.newObject(new bulletCloud);

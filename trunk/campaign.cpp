@@ -140,7 +140,8 @@ void campaign::updateFrame()
 		countdown-=world.time.length();
 		if(countdown<=0)
 		{
-			menuManager.setMenu(new gui::chooseMode());
+			menuManager.setMenu(new gui::chooseMode);
+			menuManager.setPopup(new gui::credits);
 		}
 	}
 	else

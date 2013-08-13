@@ -284,8 +284,8 @@ void plane::updateSimulation(double time, double ms)
 
 			if(controls.shoot3 && roll.inRange(-PI/6,PI/6) && climb.inRange(-PI/4,PI/12))
 			{
-				//if(cameraShake < 0.1)
-				//	cameraShake = 1.0;
+				if(cameraShake < 0.1)
+					cameraShake = 1.0;
 
 				bombs.firing = true;
 			}
@@ -310,12 +310,12 @@ void plane::updateSimulation(double time, double ms)
 			}
 
 			Vec2f positionXZ(position.x,position.z);
-	//		Vec2f mapCenter = world.bounds().center;
-	//		float r = world.bounds().radius;
-	//		if(positionXZ.distanceSquared(mapCenter) > r*r)
-	//		{
-	//			returnToBattle();
-	//		}
+			Vec2f mapCenter = world.bounds().center;
+			float r = world.bounds().radius;
+			if(positionXZ.distanceSquared(mapCenter) > r*r)
+			{
+				returnToBattle();
+			}
 			smoothCamera();
 		}
 		altitude=world.altitude(position);

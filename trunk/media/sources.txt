@@ -61,6 +61,8 @@ tree2.png -- created same way as tree.png
 white.png -- ceated in GIMP (Jonathan)
 lava.png -- combined (additive blend) the abient and diffuse textures from: http://nobiax.deviantart.com/art/Free-3D-textures-pack-15-244701195
 grassDetail.png -- http://www.brusheezy.com/textures/20185-seamless-green-grass-textures
+menu/credits.png -- ceated in GIMP (Jonathan)
+menu/functionKeyTabs.png -- ceated in GIMP (Jonathan)
 
 grass2.png
 	"Just Add Bison" Genetica viewer

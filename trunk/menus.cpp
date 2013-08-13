@@ -100,6 +100,8 @@ void chooseMode::render()
 	{
 		graphics->drawPartialOverlay(Rect::XYWH((i*0.263-0.144)*sAspect,1.0-0.503,0.256*sAspect,0.0417),Rect::XYWH(0,0.33*(i-1),1,0.33),"menu mode choices");
 	}
+
+	graphics->drawOverlay(Rect::XYWH(0,0,384.0/sh, 32.0/sh), "fuction key tabs");
 }
 bool chooseMode::menuKey(int mkey)
 {
@@ -158,7 +160,11 @@ bool chooseMode::keyDown(int vkey)
 	}
 	else if(vkey==VK_F1)
 	{
-		menuManager.setMenu(new gui::help);
+		menuManager.setPopup(new gui::help);
+	}
+	else if(vkey==VK_F2)
+	{
+		menuManager.setPopup(new gui::credits);
 	}
 	else if(vkey==VK_F3)
 	{
@@ -344,7 +350,7 @@ bool options::init()
 
 	return true;
 }
-void options::update()
+void options::updateFrame()
 {
 	graphics->setGamma(sliders["gamma"]->getValue());
 
@@ -490,7 +496,6 @@ bool help::init()
 }
 void help::render()
 {
-	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 	graphics->drawPartialOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.7),Rect::XYWH(0,0,0.9,0.7),"dialog back");
 
 	graphics->drawText(helpText,Rect::CWH(sAspect/2,0.5,0.8*sAspect-0.1,0.6));
@@ -505,6 +510,38 @@ void help::updateFrame()
 	}
 }
 bool help::keyDown(int vkey)
+{
+	if(vkey==VK_ESCAPE)
+	{
+		menuManager.setMenu(new chooseMode);
+		return true;
+	}
+	return false;
+}
+// ______________________________________________________________________________________________________________________________
+// | 																															|
+// | 													gui::credits										            		|
+// |____________________________________________________________________________________________________________________________|
+//
+bool credits::init()
+{
+	buttons["Continue"] = new button(0.9*sAspect-0.230, 0.760, 0.200, 0.060, "Continue", lightGray);
+	return true;
+}
+void credits::render()
+{
+	graphics->drawOverlay(Rect::CWH(sAspect/2,0.5,0.8*sAspect,0.7),"credits");
+
+	menuManager.drawCursor();
+}
+void credits::updateFrame()
+{
+	if(buttons["Continue"]->checkChanged())
+	{
+		menuManager.setMenu(new chooseMode);
+	}
+}
+bool credits::keyDown(int vkey)
 {
 	if(vkey==VK_ESCAPE)
 	{

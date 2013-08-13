@@ -1631,7 +1631,7 @@ void Terrain::resetTerrain()
 	treeTexture.reset();
 	terrainPages.clear();
 }
-void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, float foliageDensity, unsigned int LOD)
+void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, Circle<float> bounds, float foliageDensity, unsigned int LOD)
 {
 	debugAssert(isPowerOfTwo(patchResolution - 1));
 
@@ -1642,7 +1642,7 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	terrainPages.push_back(p);
 	terrainPosition = position;
 	terrainScale = scale;
-	mBounds = Circle<float>(Vec2f(position.x + scale.x * 0.5, position.z + scale.z * 0.5), max(scale.x, scale.z)/2.0);
+	mBounds = bounds;
 
 	Vec3f sun = (graphics->getLightPosition()).normalize();
 
