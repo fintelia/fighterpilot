@@ -34,7 +34,7 @@ public:
 	enum choice{RESUME=0,OPTIONS=1,QUIT=2};
 	inGame();
 	~inGame(){}
-	void update(){}
+	void updateFrame(){}
 	void render();
 	bool menuKey(int mkey);
 	bool keyDown(int vkey);
@@ -191,16 +191,24 @@ private:
 	shared_ptr<FileManager::iniFile> settingsFile;
 public:
 	bool init();
-	void update();
+	void updateFrame();
 	bool keyDown(int vkey);
 	void render();
 private:
 
 };
-class help: public screen
+class help: public popup
 {
 private:
 	string helpText;
+public:
+	bool init();
+	void render();
+	void updateFrame();
+	bool keyDown(int vkey);
+};
+class credits: public popup
+{
 public:
 	bool init();
 	void render();

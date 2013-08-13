@@ -194,13 +194,16 @@ bool CollisionManager::sweptSphereSphere(Sphere<float> s1, Vec3f v1, Sphere<floa
 	}
 
 	float a = v.magnitudeSquared();
-	if(a <= 1e-5) return false; //spheres not moving
+	if(a <= 1e-5) 
+		return false; //spheres not moving
 
-	float b = v.dot(s);
-	if(b >= 0.0f) return false; //spheres not moving towards each other
+	float b = 2.0*v.dot(s);
+	if(b >= 0.0f)
+		return false; //spheres not moving towards each other
 
-	float d = b*b - a*c;
-	if(d < 0.0f) return false; //no real root: spheres do not intersect
+	float d = b*b - 4.0*a*c;
+	if(d < 0.0f)
+		return false; //no real root: spheres do not intersect
 
 	float t = (-b - sqrt(d)) / a;
 	return t <= 1.0;
@@ -787,15 +790,15 @@ bool CollisionManager::operator() (shared_ptr<object> o1, shared_ptr<object> o2)
 
 	if(bounds1->type == collisionBounds::SPHERE && bounds2->type == collisionBounds::SPHERE)
 	{
-		Sphere<float> s1 = bounds1->sphere;
-		Sphere<float> s2 = bounds2->sphere;
-		s1.center = instance1->transformationMatrix * s1.center;
-		s2.center = instance2->transformationMatrix * s2.center;
+		Sphere<float> s1_old = bounds1->sphere;
+		Sphere<float> s2_old = bounds2->sphere;
+		s1_old.center = instance1->lastTransformationMatrix * s1_old.center;
+		s2_old.center = instance2->lastTransformationMatrix * s2_old.center;
 
-		Vec3f s1_newCenter = instance1->lastTransformationMatrix * s1.center;
-		Vec3f s2_newCenter = instance1->lastTransformationMatrix * s2.center;
+		Vec3f s1_newCenter = instance1->transformationMatrix * bounds1->sphere.center;
+		Vec3f s2_newCenter = instance2->transformationMatrix * bounds1->sphere.center;
 
-		return sweptSphereSphere(s1, s1_newCenter - s1.center, s2, s2_newCenter - s2.center);
+		return sweptSphereSphere(s1_old, s1_newCenter - s1_old.center, s2_old, s2_newCenter - s2_old.center);
 		//return (s1.center).distanceSquared(s2.center) < (s1.radius+s2.radius)*(s1.radius+s2.radius);
 	}
 	else if((bounds1->type == collisionBounds::MESH && bounds2->type == collisionBounds::SPHERE) || (bounds1->type == collisionBounds::SPHERE && bounds2->type == collisionBounds::MESH))

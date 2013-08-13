@@ -130,7 +130,7 @@ void manager::updateFrame()
 	{
 		unsigned int numPopups = popups.size();
 		auto p = popups.back();
-		p->update();
+		p->updateFrame();
 		if(numPopups == popups.size() && p->isDone())
 		{
 			popups.erase(popups.end()-1); //remove the popup from the vector
@@ -422,7 +422,7 @@ void openFile::refreshView()
 
 	scroll = 0.0;
 }
-void openFile::update()
+void openFile::updateFrame()
 {
 #if defined WINDOWS
 	if(buttons["desktop"]->checkChanged())

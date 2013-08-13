@@ -266,7 +266,7 @@ public:
 	popup(): callback(NULL), done(false){}
 	virtual ~popup(){}
 
-	virtual void update()=0;
+	virtual void updateFrame()=0;
 	virtual void render()=0;
 
 	virtual bool mouseL(bool down, float x, float y){return false;}
@@ -293,7 +293,7 @@ public:
 	bool init();
 	bool init(string ExtFilter);
 	bool init(set<string> ExtFilters);
-	void update();
+	void updateFrame();
 	void render();
 
 	void refreshView();
@@ -353,7 +353,7 @@ public:
 
 	bool init(string t);
 	bool init(string t, vector<string> buttons);
-	void update(){}
+	void updateFrame(){}
 	void render();
 
 	bool mouseL(bool down, float x, float y);

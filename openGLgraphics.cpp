@@ -1671,52 +1671,30 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 
 		Vec2f charPos = pos;
 		Rect charRect;
-		//if(dataManager.getBoundShader() == "ortho")
-		//{
-			for(auto i = text.begin(); i != text.end(); i++)
+		for(auto i = text.begin(); i != text.end(); i++)
+		{
+			if(*i == '\n')
 			{
-				if(*i == '\n')
-				{
-					charPos.x = pos.x;
-					charPos.y += f->height / 1024.0;
-				}
-				else if(f->characters.count(*i) != 0)
-				{
-					auto& c = f->characters.find(*i)->second;
-
-					charRect.x = charPos.x + c.xOffset / 1024.0;
-					charRect.y = charPos.y + c.yOffset / 1024.0;
-					charRect.w = c.width / 1024.0;
-					charRect.h = c.height / 1024.0;
-
-					drawPartialOverlay(charRect, c.UV);
-					charPos.x += c.xAdvance  / 1024.0;
-				}
+				charPos.x = pos.x;
+				charPos.y += f->height / 1024.0;
 			}
-		//}
-		//else
-		//{
-		//	for(auto i = text.begin(); i != text.end(); i++)
-		//	{
-		//		if(*i == '\n')
-		//		{
-		//			charPos.x = pos.x;
-		//			charPos.y += f->height;
-		//		}
-		//		else if(f->characters.count(*i) != 0)
-		//		{
-		//			auto& c = f->characters.find(*i)->second;
+			else if(*i == '\t')
+			{
+				charPos.x = pos.x + std::ceil((charPos.x-pos.x) * 32.0 + 0.001) / 32.0;
+			}
+			else if(f->characters.count(*i) != 0)
+			{
+				auto& c = f->characters.find(*i)->second;
 
-		//			charRect.x = charPos.x + c.xOffset;
-		//			charRect.y = charPos.y + c.yOffset;
-		//			charRect.w = c.width;
-		//			charRect.h = c.height;
+				charRect.x = charPos.x + c.xOffset / 1024.0;
+				charRect.y = charPos.y + c.yOffset / 1024.0;
+				charRect.w = c.width / 1024.0;
+				charRect.h = c.height / 1024.0;
 
-		//			drawPartialOverlay(charRect, c.UV);
-		//			charPos.x += c.xAdvance;
-		//		}
-		//	}
-		//}
+				drawPartialOverlay(charRect, c.UV);
+				charPos.x += c.xAdvance  / 1024.0;
+			}
+		}
 	}
 }
 void OpenGLgraphics::drawText(string text, Rect rect, string font)
@@ -1738,7 +1716,7 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 			}
 			else if(*i == '\t')
 			{
-				charPos.x = std::ceil(charPos.x * 32.0 + 0.001) / 32.0;
+				charPos.x = rect.x + std::ceil((charPos.x-rect.x) * 32.0 + 0.001) / 32.0;
 			}
 			else if(f->characters.count(*i) != 0 && rect.inRect(charPos))
 			{
