@@ -458,7 +458,6 @@ void dogFight::updateSimulation()
 				objId owner = dynamic_pointer_cast<missileBase>(l->second)->owner;
 				if(owner != i->second->id &&  owner != (*i).first && !l->second->awaitingDelete && collisionManager(i->second,l->second))
 				{
-					Profiler.increaseCounter("hitCount");
 					i->second->loseHealth(35);
 					if((*i).second->dead)
 					{

@@ -50,23 +50,42 @@ void main()
 	//float NdotL = dot(n,lightDir);
 
 
+//	//////////////////////////////
+//	vec4 fractalColor = texture2D(fractalNormals, position.xz*0.0013);
+////	color *= mix(1.0, 0.5+0.5*fractalColor.a, rAmount);
 
-	vec3 color = texture2D(snow,position.xz*0.00125).rgb;
+//	vec3 positionToEye = eyePos - position;
+//	vec3 positionToEye_tangentSpace = mat3(t,n,b)*positionToEye;
+//	vec2 offset = -normalize(positionToEye_tangentSpace.xz) * (1.0 - fractalColor.a);
 
-	//////////////////////////////
-	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.45) / 0.04, 0.0,1.0);
-	color = mix(color.rgb, vec3(0.15,0.14,0.13)*3.0/*0.5*texture2D(rock,position.xz*0.00125 * 16.0).rgb*/, rAmount); //vec4(0.35,0.25,0.20,1.0)
+//	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023);
+//	n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize(fractalColor.xzy*2.0 - 1.0), 1.0/*rAmount*/));
+//	//////////////////////////
 
-	vec4 fractalColor = texture2D(fractalNormals, position.xz*0.0013);
-	color *= mix(1.0, 0.5+0.5*fractalColor.a, rAmount);
+//	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ dot(n,vec(0,1,0);//clamp((acos(n.y) - 0.45) / 0.04, 0.0,1.0);
+//	color = mix(texture2D(snow,position.xz*0.00125).rgb, vec3(0.15,0.14,0.13)*3.0/*0.5*texture2D(rock,position.xz*0.00125 * 16.0).rgb*/, 0.1/*rAmount*/); //vec4(0.35,0.25,0.20,1.0)
+
+
+//	vec3 color = vec3(1,1,1);
+
+//	float rAmount = /*clamp(height * 0.02, 0.0, 1.0) */ clamp((slopeAngle - 0.40) / 0.06, 0.0,1.0);
+	//n = normalize( mat3(n,t,-b)*mix(vec3(0,0,1), normalize((texture2D(fractalNormals, position.xz*0.0023).xyz*2.0 - 1.0)/*+ 0.8*(texture2D(fractalNormals, position.xz*0.000625).xyz*2.0 - 1.0)*/), rAmount));
+
+	vec4 fractalColor = texture2D(fractalNormals, position.xz*0.0023);
+	//color.rgb *= mix(1.0, 0.5+0.5*fractalColor.a, rAmount);
+	//vec2 offset = vec2(0,0);//(mat3(t,n,b)*normalize(position - eyePos)).xz * (texture2D(fractalNormals, position.xz*0.0023).a - 0.5) * 0.1;
 
 	vec3 positionToEye = eyePos - position;
 	vec3 positionToEye_tangentSpace = mat3(t,n,b)*positionToEye;
 	vec2 offset = -normalize(positionToEye_tangentSpace.xz) * (1.0 - fractalColor.a);
 
-	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023);
-	n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize(fractalColor.xzy*2.0 - 1.0), rAmount));
-	//////////////////////////
+	fractalColor = texture2D(fractalNormals, (position.xz+offset)*0.0023 * 0.5);
+	n = normalize( mat3(t,n,b)*mix(vec3(0,1,0), normalize(fractalColor.xzy*2.0 - 1.0), 1.0));
+
+	////////////////////////
+	float rAmount = clamp((1.60 - acos(n.y) + (1.5 - 3.0*groundTexVal.a)) / 0.06 , 0.0,1.0);
+	vec3 color = mix(texture2D(snow,position.xz*0.00125).rgb, vec3(0.15,0.14,0.13)*2.0/*0.5*texture2D(rock,position.xz*0.00125 * 16.0).rgb*/,rAmount); //vec4(0.35,0.25,0.20,1.0)
+//	color *= mix(1.0, 0.5+0.5*fractalColor.a, rAmount);
 
 
 

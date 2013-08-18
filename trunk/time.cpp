@@ -61,8 +61,8 @@
 
 double GetTime()
 {
-	static long long ticksPerSecond = getTotalTicksPerSecond();
-	return static_cast<double>(totalTicks()) * 1000.0 / ticksPerSecond;
+	static double msPerTick = 1000.0 / getTotalTicksPerSecond();
+	return static_cast<double>(totalTicks()) * msPerTick;
 }
 double GameTime::trueGameTime() const
 {

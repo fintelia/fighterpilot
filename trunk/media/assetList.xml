@@ -2,7 +2,8 @@
 <assets>
   <textures>
     <!-- loading screem -->
-    <texture name="menu background"           file="media/menu/menu background.png"   fileWide="media/menu/menu background wide.png"  preload="true" />
+    <texture name="menu background"           file="media/menu/background.png"        preload="true" />
+    <texture name="menu game title"           file="media/menu/titleText.png"         preload="true" />
     <texture name="progress back"             file="media/progress back.png"          preload="true" />
     <texture name="progress front"            file="media/progress front.png"         preload="true" />
     
