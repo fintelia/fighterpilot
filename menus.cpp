@@ -87,7 +87,8 @@ void chooseMode::render()
 	//	graphics->drawPartialOverlay(Vec2f((i*210-115)*sx,298*sy),Vec2f(205*sx,25*sy),Vec2f(0,0.33*(i-1)),Vec2f(1,0.33),"menu mode choices");
 	}
  */
-	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	graphics->drawPartialOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),Rect::XYXY(0.5*(1.7778-sAspect),0.0,1.0-0.5*(1.7778-sAspect),1.0),"menu background");
+	graphics->drawOverlay(Rect::CWH(0.5*sAspect,0.35,1.111,0.222), "menu game title");
 	graphics->drawOverlay(Rect::XYXY((-0.409+0.525)*sAspect,0.507,0.903*sAspect,0.698),"menu pictures");
 	for(int i=1;i<=5;i++)
 	{
@@ -620,7 +621,8 @@ void loading::render()
 	//static int n = 0;	n++;
 	//if(n <= 1) return;
 
-	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
+	graphics->drawPartialOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),Rect::XYXY(0.5*(1.7778-sAspect),0.0,1.0-0.5*(1.7778-sAspect),1.0),"menu background");
+	graphics->drawOverlay(Rect::CWH(0.5*sAspect,0.35,1.111,0.222), "menu game title");
 	graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,0.95*sAspect,0.98),"progress back");
 
 	if(dataManager.assetLoaded("progress front"))
