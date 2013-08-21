@@ -158,7 +158,7 @@ void AAgun::updateSimulation(double time, double ms)
 
 		while(extraShootTime > machineGun.coolDown && machineGun.roundsLeft > 0)
 		{
-			Vec3f turretOffset = Quat4f(Vec3f(0,1,0), PI-atan2A(-targeter.x,targeter.z)) * -turretRotCenter + turretRotCenter;
+			//Vec3f turretOffset = Quat4f(Vec3f(0,1,0), PI-atan2A(-targeter.x,targeter.z)) * -turretRotCenter + turretRotCenter;
 			Vec3f bulletOrigin = position + rotation*turretRotCenter + cannonRotCenter;
 
 			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(bulletOrigin,targeter+random3<float>()*0.01f,id,time-extraShootTime-machineGun.coolDown);

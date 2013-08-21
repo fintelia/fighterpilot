@@ -1196,7 +1196,7 @@ Terrain::decal::decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo,
 }
 void Terrain::generateSky(Vec3f sunDirection)
 {
-	const double AOI = 45.0 * PI/180.0;
+	//const double AOI = 45.0 * PI/180.0;
 	
 	double t = GetTime();
 

@@ -243,7 +243,7 @@ void dogFight::drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_p
 		}
 		else
 		{
-			Vec3f fwd = view->camera().fwd;
+			//Vec3f fwd = view->camera().fwd;
 			Vec3f up = view->camera().up;
 			Vec3f right = view->camera().right;
 			Vec3f direction = (targetPos - planePos).normalize();

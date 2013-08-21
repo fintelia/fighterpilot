@@ -6,15 +6,18 @@
 	#include <Windows.h>
 	#include <process.h>
 	#include <Shlobj.h>
+	#include "zlib/zlib.h"
+	#include "png/png.h"
 #elif defined(LINUX)
 	#include <sys/types.h>
 	#include <sys/stat.h>
 	#include <dirent.h>
 	#include <pthread.h>
+	#include <zlib.h>
+	#include <png.h>
 #endif 
 
-#include "zlib/zlib.h"
-#include "png/png.h"
+
 
 #if defined(WINDOWS)
 	HANDLE pWorkerThread;
@@ -1499,17 +1502,15 @@ void FileManager::modelFile::parseFile(fileContents data)
 				s2 = (texCoords[faces[i].t[2]-1] - texCoords[faces[i].t[0]-1]).x;
 				t2 = (texCoords[faces[i].t[2]-1] - texCoords[faces[i].t[0]-1]).y;
 
-				T, B, T_prime, B_prime;
-
 				inv_det = s1*t2 - s2*t1;
 
 				T = inv_det * ( t2 * Q1 - t1 * Q2);
 				B = inv_det * (-s1 * Q1 + s1 * Q2);
 
-				float d1 = faceNormal.dot(T);
-				float d2 = faceNormal.dot(B);
-				float d3 = (T - faceNormal.dot(T) * faceNormal).dot(B);
-				float tms = T.magnitudeSquared();
+				//float d1 = faceNormal.dot(T);
+				//float d2 = faceNormal.dot(B);
+				//float d3 = (T - faceNormal.dot(T) * faceNormal).dot(B);
+				//float tms = T.magnitudeSquared();
 
 				T_prime = T - faceNormal.dot(T) * faceNormal;
 				B_prime = B - faceNormal.dot(B) * faceNormal - T_prime.dot(B) * T_prime / T.magnitudeSquared();
