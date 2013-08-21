@@ -51,7 +51,7 @@
     makefile using cmake and compile. If all goes well, you should be able
     to run the generated executable file (which is named 'FighterPilot'). 
     
-    I have only tested FighterPilot on Ubuntu 12.10, so it may or may not
+    I have only tested FighterPilot on Ubuntu, so it may or may not
     work on other distributions. You will probably have to install several
     libraries (boost, zlib, etc.) in order to get it to link properly.
 

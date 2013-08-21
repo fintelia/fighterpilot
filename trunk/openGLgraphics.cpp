@@ -250,7 +250,7 @@ unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
 		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 		glDisable(GL_RASTERIZER_DISCARD);
 
-		long long primitiveCount = -1;
+		GLint64 primitiveCount = -1;
 		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
 
 		debugAssert(primitiveCount <=  INT_MAX);
@@ -3343,8 +3343,6 @@ void OpenGLgraphics::generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr
 	unsigned int width = tex->getWidth();
 	unsigned int height = tex->getHeight();
 	unsigned int level = 0;
-
-	static int num=0;
 
 	setDepthTest(false);
 	//shared_ptr<GraphicsManager::View> view(new GraphicsManager::View());

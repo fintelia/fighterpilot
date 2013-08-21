@@ -49,7 +49,7 @@
     <texture name="spark"                     file="media/spark.png" /> 
     
     <!-- terrain -->
-  	<texture name="grass"                     file="media/grass2_hpf2.png"            tileable="true" />
+  	<texture name="grass"                     file="media/grass2_hpf.png"            tileable="true" />
     <texture name="grass detail"              file="media/grassDetail.png"            tileable="true" />
     <texture name="rock"                      file="media/rock.png"                   tileable="true" />
     <texture name="sand"                      file="media/sand.png"                   tileable="true" />

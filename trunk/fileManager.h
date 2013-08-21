@@ -93,8 +93,16 @@ public:
 		}
 		void addValueIfMissing(string section, string name, string value)
 		{
-			auto sec = bindings.find(section);	if(sec == bindings.end()) bindings[section][name] = value;
-			auto itt = sec->second.find(name);	if(itt == sec->second.end()) sec->second[name] = value;
+			auto sec = bindings.find(section);
+			if(sec == bindings.end())
+			{
+				bindings[section][name] = value;
+			}
+			else
+			{
+				auto itt = sec->second.find(name);
+				if(itt == sec->second.end()) sec->second[name] = value;
+			}
 		}
 	private:
 		friend class FileManager;
