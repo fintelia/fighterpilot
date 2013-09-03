@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>C:\Program Files\boost_1_50_0;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\boost\boost_1_54_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>C:\Program Files\boost_1_50_0;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\boost\boost_1_54_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -300,6 +300,7 @@
     <None Include="media\terrain.vert" />
     <None Include="media\decal.frag" />
     <None Include="media\decal.vert" />
+    <None Include="media\terrain4.vert" />
     <None Include="media\tree3d.frag" />
     <None Include="media\tree3d.vert" />
     <None Include="media\trees.frag" />

@@ -15,8 +15,8 @@ varying vec2 position;
 //see: http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
 const float earthRadius = 6.3675e6;
 const float atmosphereRadius = earthRadius * 1.025;//6.5267e6;
-const float Kr = 0.0025f * 1.5; //* 0.75;
-const float Km = 0.0010f * .5; //* 0.05;
+const float Kr = 0.0025 * 1.5; //* 0.75;
+const float Km = 0.0010 * 0.5; //* 0.05;
 const float sunEnergy = 30.0;
 const float PI = 3.141592653589793238;
 const vec3 v3InvWavelength = vec3(5.6020, 9.4733, 19.6438);			// 1 / pow(wavelength, 4) for the red, green, and blue channels
@@ -25,9 +25,9 @@ const float fKmESun = Km * sunEnergy;								// Km * ESun
 const float fKr4PI = Kr * 4.0 * PI;									// Kr * 4 * PI
 const float fKm4PI = Km * 4.0 * PI;									// Km * 4 * PI
 const float fScale = 1.0 / (atmosphereRadius - earthRadius);		// 1 / (fOuterRadius - fInnerRadius)
-const float fScaleDepth = 0.25f;									// The scale depth (i.e. the altitude at which the atmosphere's average density is found)
+const float fScaleDepth = 0.25;										// The scale depth (i.e. the altitude at which the atmosphere's average density is found)
 const float fScaleOverScaleDepth = fScale / fScaleDepth;			// fScale / fScaleDepth
-const float g = -0.999f;//-0.999f;									// The Mie phase asymmetry factor
+const float g = -0.999;//-0.999f;									// The Mie phase asymmetry factor
 const float g2 = g * g;												// g * g
 const float fExposure = 1.75;
 const int nSamples = 2;

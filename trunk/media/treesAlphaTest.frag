@@ -11,6 +11,7 @@ uniform samplerCube sky;
 
 void main()
 {
+
 	vec4 color = texture2D(tex,texCoord).rgba;
 	color.a *= clamp((9500.0-distance(eyePos,position))*0.002,0.0,1.0);
 	if(color.a < 0.5)

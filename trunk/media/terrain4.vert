@@ -1,5 +1,5 @@
 // vertex shader
-#version 410
+#version 400
 
 //varyings
 //out VertexData{

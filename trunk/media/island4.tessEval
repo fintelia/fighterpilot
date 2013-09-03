@@ -1,5 +1,5 @@
 // tessllation evaluation shader
-#version 410
+#version 400
  
 layout(triangles, equal_spacing, ccw) in;
 uniform mat4 cameraProjection;

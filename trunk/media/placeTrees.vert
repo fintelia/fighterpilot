@@ -10,7 +10,7 @@
 out VertexData{
 	float shouldDiscard;
 	vec3 position;
-	int vertexID;
+	uint vertexID;
 }vertexOut;
 
 uniform sampler2D groundTex;
@@ -32,23 +32,37 @@ uniform int patch_height;
 
 uniform float placementOdds;
 
-float random(float c1, float c2, int trueVertexID)
+//see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
+uint hash(uint x)
 {
-	return fract(cos(sin(c1*(trueVertexID)) * c2));
+    x += x << 10u;
+    x ^= x >>  6u;
+    x += x <<  3u;
+    x ^= x >> 11u;
+    x += x << 15u;
+    return x;
 }
+float random(float c1, float c2, uint trueVertexID)
+{
+    uint h = hash(trueVertexID + uint(float(trueVertexID) * c1 + c2));
+    h &= 0x007FFFFFu;
+    h |= 0x3F800000u;
+    return uintBitsToFloat(h) - 1.0;
+}
+
 void main()
 {
-	int trueVertexID = vertexID_offset + gl_VertexID;//x_offset +int(mod(gl_VertexID,patch_width)) + (gl_VertexID/patch_width + y_offset)*width;
+	uint trueVertexID = uint(vertexID_offset + gl_VertexID);//x_offset +int(mod(gl_VertexID,patch_width)) + (gl_VertexID/patch_width + y_offset)*width;
 
 	int patchArea = patch_width * patch_height;
-	int a = trueVertexID / patchArea;
+	int a = int(trueVertexID) / patchArea;
 	int b = width / patch_width;
-	int c = int(mod(trueVertexID, patchArea));
+	int c = int(mod(int(trueVertexID), patchArea));
 
 	//vec2 pos = vec2(mod(gl_VertexID, patch_width) + x_offset + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, gl_VertexID/patch_width + y_offset + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
 	vec2 pos = vec2(mod(c, patch_width) + mod(a, b)*patch_width + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, c/patch_width + (a/b)*patch_height + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
 	
-	vec4 groundVal = texture2D(groundTex, texOrigin + texSpacing * pos);
+	vec4 groundVal = texture(groundTex, texOrigin + texSpacing * pos);
 
 	vertexOut.position = worldOrigin + worldSpacing * vec3(pos.x, groundVal.w, pos.y);
 	vertexOut.vertexID = trueVertexID;
