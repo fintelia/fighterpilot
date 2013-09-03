@@ -3,7 +3,7 @@
     FighterPilot is a combat flight simulator in which players fly a
     fourth generation jet aircraft on a series of missions to eliminate
     enemy targets. As the pilot of a Dassault Mirage 2000, players face
-    a range of enemies from hostile aircraft to ground based defenses.
+    a range of enemies from hostile aircraft to ground based defences.
     And thanks to arcade style controls, you can be flying in minutes!
 
     The single player mode takes you through a seven level campaign,
