@@ -1713,7 +1713,7 @@ bool FileManager::writeFileContents(string filename, fileContents contents)
 #endif
 
 	try{
-		std::ofstream fout(filename,std::ios::binary);
+		std::ofstream fout(filename,std::ios::binary | std::ios::trunc);
 		if(fout.is_open())
 		{
 			fout.write((const char*)contents.contents, contents.size);

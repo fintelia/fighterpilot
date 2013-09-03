@@ -7,7 +7,7 @@ layout(triangle_strip, max_vertices=4) out;
 in VertexData{
 	float shouldDiscard;
 	vec3 position;
-	int vertexID;
+	uint vertexID;
 }vertexIn[1];
  
 out VertexData{
@@ -17,10 +17,23 @@ out VertexData{
 
 uniform vec2 transform;
 
-
+//see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
+uint hash(uint x)
+{
+    x += x << 10u;
+    x ^= x >>  6u;
+    x += x <<  3u;
+    x ^= x >> 11u;
+    x += x << 15u;
+    return x;
+}
 float random(float c1, float c2)
 {
-	return fract(cos(sin(c1*(vertexIn[0].vertexID)) * c2));
+    uint h = hash(vertexIn[0].vertexID + uint(float(vertexIn[0].vertexID) * c1 + c2));
+    h &= 0x007FFFFFu;
+    h |= 0x3F800000u;
+    
+    return uintBitsToFloat(h) - 1.0;
 }
 
 void main()

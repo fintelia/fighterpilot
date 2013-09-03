@@ -166,7 +166,8 @@ void levelEditor::operator() (popup* p)
 		string f=((saveFile*)p)->getFile();
 		levelFile.info.LOD = 1 << listBoxes["LOD"]->getOptionNumber();
 		levelFile.info.foliageDensity = (levelFile.info.shaderType == TERRAIN_ISLAND) ? 120 : 0;
-		levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue());
+		if(!levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue()))
+			messageBox("Level save failed.");
 		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
 	}
 	//else if(awaitingNewObject)

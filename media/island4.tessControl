@@ -1,12 +1,12 @@
 // tessellation control shader
-#version 410
+#version 400
  
 layout(vertices = 3) out;
 
 struct VertexData{
 	vec3 worldPosition;
 	vec3 sunDir, sunHalfVector;
-	vec3 lightPositions[4];
+	vec3 lightDirections[4];
 };
 in VertexData vData[];
 out VertexData tcData[];

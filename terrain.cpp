@@ -1275,13 +1275,13 @@ void Terrain::generateSky(Vec3f sunDirection)
 	t = GetTime() - t;
 	t = GetTime();
 
-	unsigned char* texData = skyTexture->getData();
-	shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../skyTexture.png",FileManager::PNG));
-	textureFile->channels = 3;
-	textureFile->contents = texData;
-	textureFile->width = 256;
-	textureFile->height = 256*3;
-	fileManager.writeFile(textureFile); //will delete[] texData
+	//unsigned char* texData = skyTexture->getData();
+	//shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../skyTexture.png",FileManager::PNG));
+	//textureFile->channels = 3;
+	//textureFile->contents = texData;
+	//textureFile->width = 256;
+	//textureFile->height = 256*3;
+	//fileManager.writeFile(textureFile); //will delete[] texData
 }
 //void Terrain::generateSky(Angle theta, Angle phi, float L)//see "Rendering Physically-Based Skyboxes" - Game Engine Gems 1 and http://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
 //{//theta = angle from sun to zenith, phi = angle from south axis (positive is towards east)

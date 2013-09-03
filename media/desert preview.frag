@@ -28,5 +28,9 @@ void main()
 				vec3(texture2D(sand,position.xz*0.00005).rgb * (noiseVal*0.3+0.7)),//,clamp(15.0-15.0*r,0.0,1.0));
 				clamp(normal.y*30.0, 0.0, 1.0));
 
-	gl_FragColor = vec4(color*vec3(1.0,1.0,0.7)*(0.5+0.5*NdotL), 1.0);
+	float r = distance(position.xz*invScale.xz,vec2(0.5,0.5));
+	float boundColor = clamp(1.0 - 500.0*abs(r-0.4), 0.0, 1.0);
+	if(r > 0.4) boundColor = min(boundColor+0.5, 1.0);
+
+	gl_FragColor = vec4(mix(color*vec3(1.0,1.0,0.7)*(0.5+0.5*NdotL), vec3(1,0,0), boundColor), 1.0);
 }

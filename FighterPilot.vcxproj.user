@@ -4,9 +4,12 @@
     <ShowAllFiles>false</ShowAllFiles>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WindowsLocalDebugger</DebuggerFlavor>
     <RemoteDebuggerConnection Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">RemoteWithoutAuthentication</RemoteDebuggerConnection>
-    <RemoteDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\\JONATHAN-PC\FighterPilot\Release\fighterPilot.exe</RemoteDebuggerCommand>
-    <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">VSB</RemoteDebuggerServerName>
-    <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\\JONATHAN-PC\FighterPilot\</RemoteDebuggerWorkingDirectory>
+    <RemoteDebuggerCommand Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    </RemoteDebuggerCommand>
+    <RemoteDebuggerServerName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    </RemoteDebuggerServerName>
+    <RemoteDebuggerWorkingDirectory Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    </RemoteDebuggerWorkingDirectory>
     <LocalDebuggerCommandArguments Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WindowsLocalDebugger</DebuggerFlavor>

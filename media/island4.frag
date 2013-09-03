@@ -1,5 +1,5 @@
 // fragment shader
-#version 410
+#version 400
 
 //in VertexData{
 //	vec3 worldPosition;

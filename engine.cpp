@@ -215,7 +215,6 @@ void outOfMemory()
 	exit(EXIT_FAILURE);
 } 
 
-//#pragma comment (lib, "Urlmon.lib")
 #ifdef WINDOWS
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance

@@ -586,6 +586,13 @@ void plane::returnToBattle()//needs to be adjusted for initial speed
 	wayPoints.push_back(wayPoint(time+5660.0*scale,		position+newFwd*scale*1500,							newRot * Quat4f(Vec3f(-1,0,0),PI)		));
 	wayPoints.push_back(wayPoint(time+7000.0*scale,		position-newFwd*scale*55,							newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 
+	Vec2f endpoint(position.x-newFwd.x*scale*55,position.z-newFwd.z*scale*55);
+	if(endpoint.distanceSquared(world.bounds().center) > world.bounds().radius*world.bounds().radius)
+	{
+		float extraDistance = endpoint.distance(world.bounds().center) - world.bounds().radius + 50.0;
+		wayPoints.push_back(wayPoint(time+7000.0*scale+extraDistance, position-newFwd*(scale*55+extraDistance),	newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
+	}
+
 	////wayPoints.push_back(wayPoint(time+7000.0,	pos,
 	////							0,				acceleration,
 	////							angle+180,		0));

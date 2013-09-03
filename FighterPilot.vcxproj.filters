@@ -731,6 +731,9 @@
     <None Include="media\island4.tessEval">
       <Filter>shaders\terrain</Filter>
     </None>
+    <None Include="media\terrain4.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

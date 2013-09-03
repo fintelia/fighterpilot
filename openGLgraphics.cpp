@@ -231,7 +231,6 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Prim
 		glEnable(GL_RASTERIZER_DISCARD);
 		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
-
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
 		else if(primitive == TRIANGLES)	glBeginTransformFeedback(GL_TRIANGLES);
@@ -949,8 +948,8 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 
 	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 	{
-		vertString = string("#version 130\n")+vert;
-		fragString = string("#version 130\nout vec4 _FragColor;\n")+frag;
+		vertString = string("#version 330\n")+vert;
+		fragString = string("#version 330\n\nout vec4 _FragColor;\n")+frag;
 
 		boost::replace_all(vertString, "\t", " ");
 		boost::replace_all(vertString, "attribute ", "in ");
@@ -2908,8 +2907,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+//			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
 	
@@ -2935,7 +2934,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
 			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+//			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
 	
