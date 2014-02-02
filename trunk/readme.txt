@@ -50,10 +50,16 @@
     the source code from the sourceforge repository. Then, generate a
     makefile using cmake and compile. If all goes well, you should be able
     to run the generated executable file (which is named 'FighterPilot'). 
-    
-    I have only tested FighterPilot on Ubuntu, so it may or may not
-    work on other distributions. You will probably have to install several
-    libraries (boost, zlib, etc.) in order to get it to link properly.
+    The following commands will accomplish this. (Note that I have only
+	tested under Ubuntu, other distributions may or may not work.)
+	
+	sudo apt-get update
+	sudo apt-get install build-essential subversion cmake libglu-dev libboost-dev zlib1g-dev libpng-dev libxxf86vm-dev
+	svn checkout svn://svn.code.sf.net/p/fighterpilot/code/trunk fighterpilot
+	cd fighterpilot
+	cmake .
+	make
+	./FighterPilot
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LICENSE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
