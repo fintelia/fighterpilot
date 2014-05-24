@@ -1,0 +1,22 @@
+Main Menu Options
+
+Enter				Select option
+Control-Enter		Load map
+Esc or Alt-F4		Exit
+
+The flight controls are as follows:
+
+						Player 1 Controls		Player 2 Controls
+Climb						S Key					Down Arrow
+Dive						W Key					Up Arrow
+Turn Left					A Key					Left Arrow
+Turn Right					D Key					Right Arrow
+Accelerate					U Key					Numpad 5
+Brake						J Key					Numpad 2
+Cannon					Shift					Numpad 0
+Fire Missiles				Space					Numpad 9
+Drop bombs				F Key					Numpad 8
+Toggle First Person		F1						F2
+
+*Note: If an Xbox 360 controller is present, it will
+be used in addition to keyboard controls for the active player.

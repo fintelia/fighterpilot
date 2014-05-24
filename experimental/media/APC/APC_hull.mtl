@@ -1,0 +1,63 @@
+# Blender MTL File: 'None'
+# Material Count: 5
+
+newmtl asian_apc_bo01
+Ns 39.215686
+Ka 0.000000 0.000000 0.000000
+Kd 0.401600 0.401600 0.401600
+Ks 0.147500 0.157600 0.165500
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_boxes.png
+map_Ka asian_apc_boxes.png
+map_d asian_apc_boxes.png
+
+newmtl asian_apc_ch01
+Ns 31.372549
+Ka 0.000000 0.000000 0.000000
+Kd 0.470400 0.470400 0.470400
+Ks 0.328000 0.328000 0.328000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_chassis.png
+map_Ka asian_apc_chassis.png
+map_d asian_apc_chassis.png
+
+newmtl asian_apc_gr01
+Ns 33.333333
+Ka 0.000000 0.000000 0.000000
+Kd 0.398400 0.398400 0.398400
+Ks 0.188200 0.188200 0.188200
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_gratings.png
+map_Ka asian_apc_gratings.png
+map_d asian_apc_gratings.png
+
+newmtl asian_apc_in01
+Ns 43.137255
+Ka 0.000000 0.000000 0.000000
+Kd 0.401600 0.401600 0.401600
+Ks 0.173300 0.178800 0.182700
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_interior.png
+map_Ka asian_apc_interior.png
+map_d asian_apc_interior.png
+
+newmtl asian_apc_wh01
+Ns 15.686275
+Ka 0.000000 0.000000 0.000000
+Kd 0.382720 0.382720 0.382720
+Ks 0.240000 0.240000 0.240000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_wheel.png
+map_Disp -bm 0.3000 normalMap.png
+map_Ka asian_apc_wheel.png
+map_d asian_apc_wheel.png

@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<assets>
+  <textures>
+    <!-- loading screem -->
+    <texture name="menu background"           file="media/menu/background.png"        preload="true" />
+    <texture name="menu game title"           file="media/menu/titleText.png"         preload="true" />
+    <texture name="progress back"             file="media/progress back.png"          preload="true" />
+    <texture name="progress front"            file="media/progress front.png"         preload="true" />
+    
+    <!-- menu system -->
+    <texture name="dialog box"                file="media/dialog box.png" />
+    <texture name="dialog back"               file="media/dialogBack.png" />
+    <texture name="button"                    file="media/button.png" />
+    <texture name="file viewer"               file="media/file viewer.png" />
+    <texture name="entry bar"                 file="media/entry bar.png" />
+    <texture name="glow"                      file="media/glow.png" />
+    <texture name="cursor"                    file="media/cursor.png" />
+    <texture name="check"                     file="media/check.png" />
+    <texture name="check box"                 file="media/check box.png" />
+    <texture name="slider"                    file="media/slider.png" />
+    <texture name="slider bar"                file="media/slider bar.png" />
+    <texture name="menu start"                file="media/menu/start.png" />
+    <texture name="menu slot"                 file="media/menu/slot.png" />
+    <texture name="menu mode choices"         file="media/menu/mode choices.png" />
+    <texture name="menu pictures"             file="media/menu/choice pics.png" />
+    <texture name="menu in game"              file="media/menu/in game.png" />
+    <texture name="menu in game select"       file="media/menu/in game select.png" />
+    <texture name="menu bar"                  file="media/menu/menu bar.png" />
+    <texture name="menu bar text"             file="media/menu/menu bar text.png" />
+    <texture name="menu bar highlight"        file="media/menu/menu bar highlight.png" />
+    <texture name="menu bar singleplayer"     file="media/menu/menu bar singleplayer.png" />
+    <texture name="menu bar multiplayer"      file="media/menu/menu bar multiplayer.png" />
+    <texture name="menu bar divider"          file="media/menu/divide.png" />
+    <texture name="thumbnails"                file="media/thumbnails.png" />
+    <texture name="credits"                   file="media/menu/credits.png" />
+    <texture name="fuction key tabs"          file="media/menu/functionKeyTabs.png" />
+    <texture name="plane selection back"      file="media/planeSelectionBack.png" />
+    <texture name="arrows"                    file="media/arrows.png" />
+    
+    <!-- HUD -->
+    <texture name="radarTex"                  file="media/radar2.png" />
+    <texture name="cockpit"                   file="media/cockpit.png" />
+    <texture name="health bar"                file="media/health bar.png" />
+    <texture name="tilt"                      file="media/tilt.png" />
+    <texture name="targeter"                  file="media/targeter.png" />
+    <texture name="radar frame"               file="media/radar_frame.png" />
+    <texture name="cockpit square"            file="media/cockpit square.png" />
+    <texture name="arrow"                     file="media/arrow.png" />
+    
+    <!-- effects -->
+    <texture name="particle"                  file="media/particle4.png" />
+    <texture name="smoke"                     file="media/smokeShape.png" />
+    <texture name="smoke2"                    file="media/smokeShape2.png" />
+    <texture name="contrail"                  file="media/smoke.png" />
+    <texture name="splash"                    file="media/splash.png" />
+    <texture name="flash"                     file="media/flash.png" />
+    <texture name="spark"                     file="media/spark.png" />
+    
+    <!-- terrain -->
+  	<texture name="grass"                     file="media/grass2_hpf.png"            tileable="true" />
+    <texture name="grass detail"              file="media/grassDetail.png"            tileable="true" />
+    <texture name="rock"                      file="media/rock.png"                   tileable="true" />
+    <texture name="sand"                      file="media/sand.png"                   tileable="true" />
+    <texture name="snow"                      file="media/snow.png"                   tileable="true" />
+    <texture name="noise"                     file="media/noise.png"                  tileable="true" />
+    <texture name="LCnoise"                   file="media/LCnoise.png"                tileable="true" />
+    <texture name="grass normals"             file="media/grass2_normals.png"         tileable="true" />
+    <texture name="snow normals"              file="media/snow_normals.png"           tileable="true" />
+    <texture name="desertSand"                file="media/desertSand.png"             tileable="true" />
+    <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
+    <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
+    
+    <!-- world -->
+    <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
+    <texture name="layers"                    file="media/layers.png"                 tileable="true"/>    
+    <texture name="bullet"                    file="media/bullet4.png" />
+    <texture name="sun"                       file="media/sun.png" />
+    <texture name="tree"                      file="media/tree2.png" />
+    <texture name="scorch"                    file="media/scorch2.png" />
+    
+    <!-- miscellaneous -->
+    <texture name="white"                     file="media/white.png"                  tileable="true"/>
+    <texture name="black"                     file="media/black.png"                  tileable="true"/>
+    <texture name="default normals"           file="media/default normals.png"        tileable="true"/>
+    <texture name="next level"                file="media/nextLevel.png" />
+    <texture name="victory"                   file="media/victory.png" />
+    <texture name="errorGlow"                 file="media/errorGlow.png" />
+  </textures>
+
+  <shaders>
+    <!-- loading screen -->
+    <shader name="ortho"                     vertex="media/ortho.vert"             fragment="media/ortho.frag"   preload="true" sAspect="true" />
+    <shader name="gamma"                     vertex="media/gamma.vert"             fragment="media/gamma.frag"   />
+    <shader name="gamma bloom"               vertex="media/gamma.vert"             fragment="media/gammaBloom.frag"   />
+    <shader name="gamma night"               vertex="media/gamma.vert"             fragment="media/gammaNight.frag"   />
+    <shader name="gamma night vision"        vertex="media/gamma.vert"             fragment="media/gammaNightVision.frag"   />
+
+    <!-- post process -->
+    <shader name="blurX"                     vertex="media/blur.vert"              fragment="media/blurX.frag"   />
+    <shader name="blurY"                     vertex="media/blur.vert"              fragment="media/blurY.frag"   />
+    
+    <!-- HUD-->
+    <shader name="radar plane shader"        vertex="media/radarPlane.vert"        fragment="media/radarPlane.frag"    sAspect="true" />
+    <shader name="radar"                     vertex="media/radar.vert"             fragment="media/radar.frag"         sAspect="true" />
+    <shader name="radar2"                    vertex="media/radar2.vert"            fragment="media/radar2.frag"        sAspect="true" />
+    <shader name="radar bounds"              vertex="media/radar bounds.vert"      fragment="media/radar bounds.frag"  sAspect="true" />
+    <shader name="health"                    vertex="media/health.vert"            fragment="media/health.frag"        sAspect="true" />
+    <shader name="circle shader"             vertex="media/circle.vert"            fragment="media/circle.frag"        sAspect="true" />
+
+    <!-- general -->
+    <shader name="particle shader"           vertex="media/particle.vert"          fragment="media/particle.frag"  vertex3="media/particle3.vert" geometry3="media/particle3.geom" fragment3="media/particle3.frag"  />   <!--  --> 
+    <shader name="spark shader"              vertex="media/spark.vert"             fragment="media/spark.frag" />
+    <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
+    <shader name="color3D"                   vertex="media/color3D.vert"           fragment="media/color3D.frag" />
+    <shader name="blur mipmaps"              vertex="media/blurMipmaps.vert"       fragment="media/blurMipmaps.frag" preload="true"/>
+    <shader name="hdr luminance"             vertex="media/postProcess.vert"       fragment="media/hdrLuminance.frag" preload="true"/>
+
+    <!-- world -->
+    <shader name="ocean"                     vertex="media/ocean.vert"             fragment="media/ocean.frag" />
+    <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
+    <shader name="sky2 shader"               vertex="media/sky2.vert"              fragment="media/sky2.frag" />
+    <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
+    <shader name="count trees"               vertex3="media/placeTrees.vert"       geometry3="media/conditionalDiscard.geom" feedbackTransformVaryings="placeHolder" />
+    <shader name="place trees"               vertex3="media/placeTrees.vert"       geometry3="media/createTree.geom" feedbackTransformVaryings="position;texCoord;color" />
+    <shader name="create tree texture"       vertex3="media/placeTrees.vert"       geometry3="media/createTreeTexture.geom" fragment3="media/createTreeTexture3.frag" />
+    <shader name="decal"                     vertex="media/decal.vert"             fragment="media/decal.frag" />
+    
+    <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
+    <shader name="trees3D shader"            vertex="media/tree3d.vert"            fragment="media/tree3d.frag" />
+    <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
+    <shader name="cirrus cloud shader"       vertex="media/cirrusCloud.vert"       fragment="media/cirrusCloud.frag" />
+    
+    <!-- terrain -->
+ <!--   <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />  -->
+    <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" vertex4="media/terrain4.vert"     tessellationControl4="media/island4.tessControl"       tessellationEval4="media/island4.tessEval"      fragment4="media/island4.frag" />
+    
+    
+    <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
+    <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
+    <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />
+    
+    <!-- terrain preview -->
+    <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />
+    <shader name="mountain preview terrain"  vertex="media/terrain.vert"           fragment="media/grass preview.frag" />
+    <shader name="desert preview terrain"    vertex="media/terrain.vert"           fragment="media/desert preview.frag" />
+    <shader name="snow preview terrain"      vertex="media/terrain.vert"           fragment="media/snow preview.frag" />
+    <shader name="ocean preview"             vertex="media/ocean preview.vert"     fragment="media/ocean preview.frag" />
+  </shaders>
+  
+  <models>
+    <model name="sky dome"              file="media/dome.obj" />
+    <model name="cylinder"              file="media/cylinder.obj" />
+    <model name="disk"                  file="media/disk.obj" />    
+    <model name="sphere"                file="media/sphere.obj" />
+    <model name="tree model"            file="media/tree2/tree.obj" />
+    <model name="tree leaves"           file="media/tree2/leaves.obj" />
+    <model name="tree trunk"            file="media/tree2/trunk.obj" />
+  </models>
+  <fonts>
+    <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>
+    <font name="font small"        file="media/fonts/tahoma12.fnt" preload="true"/>
+  </fonts>
+</assets>

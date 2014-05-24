@@ -1,0 +1,60 @@
+// tessellation control shader
+#version 400
+ 
+layout(vertices = 3) out;
+
+struct VertexData{
+	vec3 worldPosition;
+	vec3 sunDir, sunHalfVector;
+	vec3 lightDirections[4];
+};
+in VertexData vData[];
+out VertexData tcData[];
+
+//in VertexData{
+//	vec3 worldPosition;
+//	vec3 sunDir, sunHalfVector;
+//	vec3 lightDirections[4];
+//}vData[];
+//
+//out VertexData{
+//	vec3 worldPosition;
+//	vec3 sunDir, sunHalfVector;
+//	vec3 lightDirections[4];
+//}tcData[];
+
+uniform vec3 eyePos;
+uniform mat4 cameraProjection;
+out vec3 tcColor[];
+
+void main()
+{
+	tcData[gl_InvocationID] = vData[gl_InvocationID];
+
+
+		vec4 p0 = cameraProjection * vec4(vData[0].worldPosition,1.0);
+		vec4 p1 = cameraProjection * vec4(vData[1].worldPosition,1.0);
+		vec4 p2 = cameraProjection * vec4(vData[2].worldPosition,1.0);
+		p0 /= p0.w;
+		p1 /= p1.w;
+		p2 /= p2.w;
+		
+		float projectedDistance = max(max(distance(p0.xy,p1.xy),distance(p1.xy,p2.xy)),distance(p2.xy,p0.xy));
+		float level = clamp(projectedDistance * 70, 1.0, 12.0);
+	
+		tcColor[gl_InvocationID] = vec3(0.1 * level);
+		
+		
+	if (gl_InvocationID == 0)
+	{
+
+	
+		//vec3 center = (vData[0].worldPosition + vData[1].worldPosition + vData[2].worldPosition) / 3;
+		//float level = clamp(30.0 - 0.005*distance(eyePos,center), 1.0, 10.0);
+		
+		gl_TessLevelInner[0] = level;//TessLevelInner;
+		gl_TessLevelOuter[0] = clamp(distance(p1.xy,p2.xy) * 50, 1.0, 12.0);//level;//TessLevelOuter;
+		gl_TessLevelOuter[1] = clamp(distance(p0.xy,p2.xy) * 50, 1.0, 12.0);//level;//TessLevelOuter;
+		gl_TessLevelOuter[2] = clamp(distance(p1.xy,p0.xy) * 50, 1.0, 12.0);//level;//TessLevelOuter;
+	}
+}

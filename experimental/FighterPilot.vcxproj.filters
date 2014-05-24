@@ -1,0 +1,743 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{170a5698-3ea5-45cd-bb8c-89c280319f23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\health bar">
+      <UniqueIdentifier>{ff43bfa4-6d7e-4210-8d1a-3436f6d2da16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\terrain">
+      <UniqueIdentifier>{f05f3885-33bc-4cdc-aaf9-6481a7caf828}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\radar">
+      <UniqueIdentifier>{aed43f61-81a4-4a85-9d3c-8d604745c02e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\water">
+      <UniqueIdentifier>{2c6329f1-12c1-4185-ab55-951126b3da50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\model">
+      <UniqueIdentifier>{44548fa7-2143-4966-b24f-508c90d85fd7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\ortho">
+      <UniqueIdentifier>{321d4ec7-3cab-492b-a0b8-cea94b587fbb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\hex grid">
+      <UniqueIdentifier>{2f2f3799-4fac-4cb0-8d80-f2511f1a5b8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\sky">
+      <UniqueIdentifier>{b6730312-4e6c-4673-9ad2-fa955511cf4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\radar\3rd person">
+      <UniqueIdentifier>{1a2a2b2d-8ea5-4599-b8cd-5cb45d008788}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\particle">
+      <UniqueIdentifier>{d153d97e-a3eb-49a3-a183-841ed4972f13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME">
+      <UniqueIdentifier>{441ec224-63b5-4ada-b572-fe5fc8605e5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\menus">
+      <UniqueIdentifier>{fc40e84f-fd73-4e69-9a3e-51d98b08c174}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\particle effects">
+      <UniqueIdentifier>{9f281b62-798f-4785-b5a8-ed9d5267f60a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects">
+      <UniqueIdentifier>{37fc8008-e0d0-403f-ba2d-261787f57435}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\plane">
+      <UniqueIdentifier>{151bbd08-5cdc-4a25-97c9-be1f446ae83e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\aaGun">
+      <UniqueIdentifier>{c65b9e77-25e3-4826-b21a-2e1353164237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\bomb">
+      <UniqueIdentifier>{30bcf0f0-5f97-46cf-b4f8-63b32671536b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\missile">
+      <UniqueIdentifier>{24df66b1-3311-49b9-9992-87aea85000b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\bullet">
+      <UniqueIdentifier>{22a15d90-1b08-48c8-8641-2a9275246076}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE">
+      <UniqueIdentifier>{5351d8cb-6c1c-4784-8742-e0d5cccad21b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\graphicsManager">
+      <UniqueIdentifier>{28695228-5191-4f36-80fe-9e7a88adfc77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math">
+      <UniqueIdentifier>{0b20f20e-370d-4e36-9b55-c464e5757731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\quaternion">
+      <UniqueIdentifier>{4d9b716a-eb2d-4488-87bd-1c5ea0fe69ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\vector">
+      <UniqueIdentifier>{1c4ed234-b520-4c24-8aef-fc2331f4b38d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\angle">
+      <UniqueIdentifier>{8fe210af-2efb-4bc1-bbde-7c452af7576b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\math\matrix">
+      <UniqueIdentifier>{43b6d13e-2f94-45d6-a10f-091eabb61693}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\dataManager">
+      <UniqueIdentifier>{77f31af8-6dec-4928-910b-7c3eeb004224}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\objects">
+      <UniqueIdentifier>{28544286-4dac-4bdc-a2a7-b6d40fe4e80f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\menu">
+      <UniqueIdentifier>{66a21f5d-f01a-4023-9907-2db76e9e5d6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\particle engine">
+      <UniqueIdentifier>{7e66df3a-a3fd-44b5-bf4d-1d658e9eaefb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\random">
+      <UniqueIdentifier>{3dd6417d-bbbc-47e5-aa9e-6138943311ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\time">
+      <UniqueIdentifier>{370e420e-f491-4c35-94e1-f224fc101fda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\input">
+      <UniqueIdentifier>{f1d057cc-fddc-4281-bdc7-95cc02e44054}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\world">
+      <UniqueIdentifier>{d98c40e8-fc7a-42a7-8c48-a20cabfaa8d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\terrain">
+      <UniqueIdentifier>{1efa1c63-ecd3-4816-ad75-0d6539730654}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\fileManager">
+      <UniqueIdentifier>{5c76260d-0f5b-4e4d-acd5-7ec168a2b030}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\sceneManager">
+      <UniqueIdentifier>{9c56d5ad-3a5e-49d3-9fec-3764fe98f99f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\controlManager">
+      <UniqueIdentifier>{273b9718-dd01-462a-847b-5bb7a354d35f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\control">
+      <UniqueIdentifier>{773d0942-ab34-4c61-b208-fb2d1c0c7245}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\settings">
+      <UniqueIdentifier>{f106588d-e9b4-422c-9a0a-5a4855e1d6a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\level">
+      <UniqueIdentifier>{956f438b-9b9e-49da-9ce4-287ffb10e1ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\definitions">
+      <UniqueIdentifier>{5eeb6097-aed2-49e5-8833-e7fa55a81c19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GAME\objectInfo">
+      <UniqueIdentifier>{0817ebb0-d9d0-4ca7-97e1-d9d2712fa775}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\dataManager\assetLoader">
+      <UniqueIdentifier>{564f38bb-8c86-455b-8ada-aebf9fbb35f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\ephemeris">
+      <UniqueIdentifier>{560f319f-15aa-4d48-bb1f-f6e1d5f38d3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\circle">
+      <UniqueIdentifier>{71d9bc9b-75ca-4483-9589-885b04a93d09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\trees">
+      <UniqueIdentifier>{b2d6ff2e-f7d0-405e-848e-5dcdb689fa91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tinyxml2">
+      <UniqueIdentifier>{a6c2b302-98cc-4d45-ab2d-98d3b7383df1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\cirrusCloud">
+      <UniqueIdentifier>{2a9c6203-b083-4428-8e17-dc382879a6a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="glew">
+      <UniqueIdentifier>{e4727c1f-d859-412b-b661-0383e5ed22ae}</UniqueIdentifier>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files\GAME\objects\ship">
+      <UniqueIdentifier>{08639322-847c-49fd-b873-4b0d9ef72dff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\motion blur">
+      <UniqueIdentifier>{06241e9d-9e89-4d88-9b20-a95b5797f252}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\blur">
+      <UniqueIdentifier>{de8f5794-b162-4dbe-8b1c-dca0ccd57af8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\color3D">
+      <UniqueIdentifier>{edaea757-5ba6-4b9a-ac0f-d4e415cc3f2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ENGINE\soundManager">
+      <UniqueIdentifier>{0584e232-7494-4ee1-908d-c96107ef2c6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\decal">
+      <UniqueIdentifier>{0d20ccb2-ed85-4eb0-b3d2-4744a2f0f226}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\blur mipmaps">
+      <UniqueIdentifier>{8a112f01-e33f-4c66-af9d-70f53ce645b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\post processing">
+      <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="collide.cpp">
+      <Filter>Source Files\ENGINE\math</Filter>
+    </ClCompile>
+    <ClCompile Include="graphicsManager.cpp">
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
+    </ClCompile>
+    <ClCompile Include="dataManager.cpp">
+      <Filter>Source Files\ENGINE\dataManager</Filter>
+    </ClCompile>
+    <ClCompile Include="bullet.cpp">
+      <Filter>Source Files\GAME\objects\bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="player.cpp">
+      <Filter>Source Files\GAME\control</Filter>
+    </ClCompile>
+    <ClCompile Include="plane.cpp">
+      <Filter>Source Files\GAME\objects\plane</Filter>
+    </ClCompile>
+    <ClCompile Include="objectList.cpp">
+      <Filter>Source Files\ENGINE\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="menuScreen.cpp">
+      <Filter>Source Files\ENGINE\menu</Filter>
+    </ClCompile>
+    <ClCompile Include="menus.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="levelEditor.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="particleManager.cpp">
+      <Filter>Source Files\ENGINE\particle engine</Filter>
+    </ClCompile>
+    <ClCompile Include="blackSmoke.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="contrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="contrailSmall.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionFlash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionSmoke.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="particleExplosion.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="planeContrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="smokeTrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="splash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="object.cpp">
+      <Filter>Source Files\ENGINE\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="missile.cpp">
+      <Filter>Source Files\GAME\objects\missile</Filter>
+    </ClCompile>
+    <ClCompile Include="bomb.cpp">
+      <Filter>Source Files\GAME\objects\bomb</Filter>
+    </ClCompile>
+    <ClCompile Include="aaGun.cpp">
+      <Filter>Source Files\GAME\objects\aaGun</Filter>
+    </ClCompile>
+    <ClCompile Include="debugBreak.cpp">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClCompile>
+    <ClCompile Include="random.cpp">
+      <Filter>Source Files\ENGINE\random</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>Source Files\ENGINE\time</Filter>
+    </ClCompile>
+    <ClCompile Include="worldManager.cpp">
+      <Filter>Source Files\ENGINE\world</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files\ENGINE\input</Filter>
+    </ClCompile>
+    <ClCompile Include="game.cpp">
+      <Filter>Source Files\GAME</Filter>
+    </ClCompile>
+    <ClCompile Include="engine.cpp">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClCompile>
+    <ClCompile Include="terrain.cpp">
+      <Filter>Source Files\ENGINE\terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="campaign.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="dogFight.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="splitScreen.cpp">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="fileManager.cpp">
+      <Filter>Source Files\ENGINE\fileManager</Filter>
+    </ClCompile>
+    <ClCompile Include="sceneManager.cpp">
+      <Filter>Source Files\ENGINE\sceneManager</Filter>
+    </ClCompile>
+    <ClCompile Include="controlManager.cpp">
+      <Filter>Source Files\ENGINE\controlManager</Filter>
+    </ClCompile>
+    <ClCompile Include="openGLgraphics.cpp">
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
+    </ClCompile>
+    <ClCompile Include="angle.cpp">
+      <Filter>Source Files\ENGINE\math\angle</Filter>
+    </ClCompile>
+    <ClCompile Include="settings.cpp">
+      <Filter>Source Files\GAME\settings</Filter>
+    </ClCompile>
+    <ClCompile Include="level.cpp">
+      <Filter>Source Files\GAME\level</Filter>
+    </ClCompile>
+    <ClCompile Include="definitions.cpp">
+      <Filter>Source Files\ENGINE\definitions</Filter>
+    </ClCompile>
+    <ClCompile Include="objectInfo.cpp">
+      <Filter>Source Files\GAME\objectInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="bulletEffect.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="planeEngines.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="assetLoader.cpp">
+      <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionFlash2.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="explosionSparks.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="ephemeris.cpp">
+      <Filter>Source Files\ENGINE\ephemeris</Filter>
+    </ClCompile>
+    <ClCompile Include="splash2.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="debrisSmokeTrail.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="glew.c">
+      <Filter>glew</Filter>
+    </ClCompile>
+    <ClCompile Include="xml\tinyxml2.cpp">
+      <Filter>tinyxml2</Filter>
+    </ClCompile>
+    <ClCompile Include="ship.cpp">
+      <Filter>Source Files\GAME\objects\ship</Filter>
+    </ClCompile>
+    <ClCompile Include="fireball.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="groundExplosionFlash.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+    <ClCompile Include="soundManager.cpp">
+      <Filter>Source Files\ENGINE\soundManager</Filter>
+    </ClCompile>
+    <ClCompile Include="tracer.cpp">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="quaternion.h">
+      <Filter>Source Files\ENGINE\math\quaternion</Filter>
+    </ClInclude>
+    <ClInclude Include="vector.h">
+      <Filter>Source Files\ENGINE\math\vector</Filter>
+    </ClInclude>
+    <ClInclude Include="collide.h">
+      <Filter>Source Files\ENGINE\math</Filter>
+    </ClInclude>
+    <ClInclude Include="gameMath.h">
+      <Filter>Source Files\ENGINE\math</Filter>
+    </ClInclude>
+    <ClInclude Include="graphicsManager.h">
+      <Filter>Source Files\ENGINE\graphicsManager</Filter>
+    </ClInclude>
+    <ClInclude Include="dataManager.h">
+      <Filter>Source Files\ENGINE\dataManager</Filter>
+    </ClInclude>
+    <ClInclude Include="bullet.h">
+      <Filter>Source Files\GAME\objects\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>Source Files\GAME\control</Filter>
+    </ClInclude>
+    <ClInclude Include="plane.h">
+      <Filter>Source Files\GAME\objects\plane</Filter>
+    </ClInclude>
+    <ClInclude Include="objectList.h">
+      <Filter>Source Files\ENGINE\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="matrix.h">
+      <Filter>Source Files\ENGINE\math\matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="menuScreen.h">
+      <Filter>Source Files\ENGINE\menu</Filter>
+    </ClInclude>
+    <ClInclude Include="menus.h">
+      <Filter>Source Files\GAME\menus</Filter>
+    </ClInclude>
+    <ClInclude Include="particleManager.h">
+      <Filter>Source Files\ENGINE\particle engine</Filter>
+    </ClInclude>
+    <ClInclude Include="particleEffects.h">
+      <Filter>Source Files\GAME\particle effects</Filter>
+    </ClInclude>
+    <ClInclude Include="object.h">
+      <Filter>Source Files\ENGINE\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="missile.h">
+      <Filter>Source Files\GAME\objects\missile</Filter>
+    </ClInclude>
+    <ClInclude Include="bomb.h">
+      <Filter>Source Files\GAME\objects\bomb</Filter>
+    </ClInclude>
+    <ClInclude Include="aaGun.h">
+      <Filter>Source Files\GAME\objects\aaGun</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="debugBreak.h">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>Source Files\ENGINE\random</Filter>
+    </ClInclude>
+    <ClInclude Include="profiler.h">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
+    <ClInclude Include="time.h">
+      <Filter>Source Files\ENGINE\time</Filter>
+    </ClInclude>
+    <ClInclude Include="worldManager.h">
+      <Filter>Source Files\ENGINE\world</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>Source Files\ENGINE\input</Filter>
+    </ClInclude>
+    <ClInclude Include="engine.h">
+      <Filter>Source Files\ENGINE</Filter>
+    </ClInclude>
+    <ClInclude Include="terrain.h">
+      <Filter>Source Files\ENGINE\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="fileManager.h">
+      <Filter>Source Files\ENGINE\fileManager</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Source Files\GAME</Filter>
+    </ClInclude>
+    <ClInclude Include="sceneManager.h">
+      <Filter>Source Files\ENGINE\sceneManager</Filter>
+    </ClInclude>
+    <ClInclude Include="controlManager.h">
+      <Filter>Source Files\ENGINE\controlManager</Filter>
+    </ClInclude>
+    <ClInclude Include="angle.h">
+      <Filter>Source Files\ENGINE\math\angle</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>Source Files\GAME\settings</Filter>
+    </ClInclude>
+    <ClInclude Include="level.h">
+      <Filter>Source Files\GAME\level</Filter>
+    </ClInclude>
+    <ClInclude Include="definitions.h">
+      <Filter>Source Files\ENGINE\definitions</Filter>
+    </ClInclude>
+    <ClInclude Include="objectInfo.h">
+      <Filter>Source Files\GAME\objectInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="assetLoader.h">
+      <Filter>Source Files\ENGINE\dataManager\assetLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="ephemeris.h">
+      <Filter>Source Files\ENGINE\ephemeris</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\glew.h">
+      <Filter>glew</Filter>
+    </ClInclude>
+    <ClInclude Include="GL\wglew.h">
+      <Filter>glew</Filter>
+    </ClInclude>
+    <ClInclude Include="xml\tinyxml2.h">
+      <Filter>tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="ship.h">
+      <Filter>Source Files\GAME\objects\ship</Filter>
+    </ClInclude>
+    <ClInclude Include="soundManager.h">
+      <Filter>Source Files\ENGINE\soundManager</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="media\health.frag">
+      <Filter>shaders\health bar</Filter>
+    </None>
+    <None Include="media\health.vert">
+      <Filter>shaders\health bar</Filter>
+    </None>
+    <None Include="media\icon.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="media\terrain.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\radar2.frag">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar2.vert">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\snow.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\model.frag">
+      <Filter>shaders\model</Filter>
+    </None>
+    <None Include="media\model.vert">
+      <Filter>shaders\model</Filter>
+    </None>
+    <None Include="media\ortho.frag">
+      <Filter>shaders\ortho</Filter>
+    </None>
+    <None Include="media\ortho.vert">
+      <Filter>shaders\ortho</Filter>
+    </None>
+    <None Include="media\hex grid.frag">
+      <Filter>shaders\hex grid</Filter>
+    </None>
+    <None Include="media\hex grid.vert">
+      <Filter>shaders\hex grid</Filter>
+    </None>
+    <None Include="media\gamma.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\gamma.vert">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\radar.frag">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radar.vert">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radarPlane.vert">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\radarPlane.frag">
+      <Filter>shaders\radar\3rd person</Filter>
+    </None>
+    <None Include="media\assetList.xml" />
+    <None Include="media\particle.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\grass preview.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\island preview.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\snow preview.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\radar bounds.frag">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="media\radar bounds.vert">
+      <Filter>shaders\radar</Filter>
+    </None>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="media\sky.frag">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\sky.vert">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\ocean.frag">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean.vert">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean preview.frag">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\ocean preview.vert">
+      <Filter>shaders\water</Filter>
+    </None>
+    <None Include="media\grass.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\island.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\circle.frag">
+      <Filter>shaders\circle</Filter>
+    </None>
+    <None Include="media\circle.vert">
+      <Filter>shaders\circle</Filter>
+    </None>
+    <None Include="media\trees.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\trees.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\desert.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\treesAlphaTest.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\desert preview.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\cirrusCloud.frag">
+      <Filter>shaders\cirrusCloud</Filter>
+    </None>
+    <None Include="media\cirrusCloud.vert">
+      <Filter>shaders\cirrusCloud</Filter>
+    </None>
+    <None Include="media\objectData.xml" />
+    <None Include="media\motion blur.frag">
+      <Filter>shaders\motion blur</Filter>
+    </None>
+    <None Include="media\motion blur.vert">
+      <Filter>shaders\motion blur</Filter>
+    </None>
+    <None Include="media\blur.vert">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\blurX.frag">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\blurY.frag">
+      <Filter>shaders\blur</Filter>
+    </None>
+    <None Include="media\gammaBloom.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\gammaNight.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\gammaNightVision.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\tree3d.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\tree3d.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\spark.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\spark.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.frag">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.geom">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\particle3.vert">
+      <Filter>shaders\particle</Filter>
+    </None>
+    <None Include="media\color3D.frag">
+      <Filter>shaders\color3D</Filter>
+    </None>
+    <None Include="media\color3D.vert">
+      <Filter>shaders\color3D</Filter>
+    </None>
+    <None Include="media\placeTrees.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\conditionalDiscard.geom">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTree.geom">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTreeTexture.geom">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\createTreeTexture3.frag">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\decal.frag">
+      <Filter>shaders\decal</Filter>
+    </None>
+    <None Include="media\decal.vert">
+      <Filter>shaders\decal</Filter>
+    </None>
+    <None Include="media\blurMipmaps.frag">
+      <Filter>shaders\blur mipmaps</Filter>
+    </None>
+    <None Include="media\blurMipmaps.vert">
+      <Filter>shaders\blur mipmaps</Filter>
+    </None>
+    <None Include="media\sky2.frag">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\sky2.vert">
+      <Filter>shaders\sky</Filter>
+    </None>
+    <None Include="media\hdrLuminance.frag">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\postProcess.vert">
+      <Filter>shaders\post processing</Filter>
+    </None>
+    <None Include="media\island4.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\island4.tessControl">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\island4.tessEval">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\terrain4.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FighterPilot.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

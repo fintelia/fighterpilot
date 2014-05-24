@@ -1,0 +1,14 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl asian_apc_tu01
+Ns 7.843137
+Ka 0.000000 0.000000 0.000000
+Kd 0.401600 0.401600 0.401600
+Ks 0.220000 0.220000 0.220000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd asian_apc_turret.png
+map_Ka asian_apc_turret.png
+map_d asian_apc_turret.png
