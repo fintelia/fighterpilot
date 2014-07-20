@@ -1,0 +1,184 @@
+An (incomplete) list of how assets were obtained:
+_________________________________________________________________________________________________________________________
+
+													TEXTURES
+_________________________________________________________________________________________________________________________
+
+arrow.png -- created in GIMP (Jonathan)
+bullet.png -- created in GIMP (Jonathan)
+bullet2.png -- created in GIMP (Jonathan)
+button.png -- created in Photoshop (Nicholas)
+check box.png -- created in Photoshop (Nicholas)
+check.png -- created in Photoshop (Nicholas)
+cockpit square.png -- created in Photoshop (Nicholas)
+cockpit.png -- created in Photoshop (Nicholas)
+cursor.png -- created in Photoshop (Nicholas)
+default normals.png -- created in GIMP (Jonathan)
+desertSand.png -- created in Genetica viewer (Jonathan)
+dialog box.png -- created in Photoshop (Nicholas)
+dialogBack.png -- created in GIMP (Jonathan)
+entry bar.png -- created in Photoshop (Nicholas)
+errorGlow.png -- ceated in GIMP (Jonathan)
+f22.png -- created in Photoshop (Nicholas)
+file viewer.png -- created in Photoshop (Nicholas)
+fire.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
+fire2.png -- from http://www.gamedev.net/page/resources/_/creative/visual-arts/make-a-particle-explosion-effect-r2701
+flash.png -- created in GIMP (Jonathan)
+glow.png -- created in Photoshop (Nicholas)
+grass3.png -- created in GIMP from grass2.png (Jonathan)
+hardNoiseDOT3.png -- created in GIMP and SSbump Generator (Jonathan)
+health bar.png -- created in Photoshop (Nicholas)
+hexGrid.png -- ceated in GIMP (Jonathan)
+layers.png -- created in Genetica viewer (Jonathan)
+LCnoise.png -- ceated in GIMP (Jonathan)
+nextlevel.png -- ceated in GIMP (Jonathan)
+noise.png -- ceated in GIMP (Jonathan)
+noiseDOT3.png -- created in GIMP and SSbump Generator (Jonathan)
+oceanNormals.png -- generated proceedurally by FighterPilot
+particle4.png -- ceated in GIMP (Jonathan)
+particle8.png -- ceated in GIMP (Jonathan)
+particleAtlas.png -- ceated in GIMP from other particle textures (Jonathan)
+plane radar2.png -- created in Photoshop (Nicholas)
+progress back.png -- created in Photoshop (Nicholas)
+progress front.png -- created in Photoshop (Nicholas)
+radar_frame.png -- created in Photoshop (Nicholas)
+radar2.png -- created in Photoshop (Nicholas)
+sand.png -- created in Photoshop (Nicholas)
+slider bar.png -- created in Photoshop (Nicholas)
+slider.png -- created in Photoshop (Nicholas)
+smoke.png -- ceated in GIMP (Jonathan)
+smoke5.png -- ceated in GIMP (Jonathan)
+SmokeShape.png -- http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
+snow.png -- created in Genetica viewer (Jonathan)
+snow_normals.png -- created in SSbump Generator from snow.png (Jonathan)
+spark.png -- ceated in GIMP (Jonathan)
+splash.png -- ceated in GIMP (Jonathan)
+sun.png -- ceated in GIMP (Jonathan)
+targeter.png -- created in Photoshop (Nicholas)
+thumbnails.png -- created in Photoshop (Nicholas)
+tilt.png -- created in Photoshop (Nicholas)
+tree2.png -- created same way as tree.png
+white.png -- ceated in GIMP (Jonathan)
+lava.png -- combined (additive blend) the abient and diffuse textures from: http://nobiax.deviantart.com/art/Free-3D-textures-pack-15-244701195
+grassDetail.png -- http://www.brusheezy.com/textures/20185-seamless-green-grass-textures
+menu/credits.png -- ceated in GIMP (Jonathan)
+menu/functionKeyTabs.png -- ceated in GIMP (Jonathan)
+
+grass2.png
+	"Just Add Bison" Genetica viewer
+	scale = -1.0
+	resolution = 2048x2048 (scaled to 1024x1024)
+	blurred with radius = 4.0
+	color balance -> magenta = +20
+	
+grass2_normals.png
+	grass2.png (pre blur) -> SSbump Generator
+	Height Scale = 3.0
+	mixed with blurred copy (radius = 3.0, 50% transparency)
+	
+dialogBack.png
+	difference clouds (XY size: 3, level: 5, tileable: true)
+	transparency 85% to blend with white background
+	
+rock.png
+	by Jockum Skoglund
+	Online at: http://forums.epicgames.com/threads/506748-My-skies-and-and-cliff-textures-%28large-images 
+	In GIMP, adjusted gamma to 0.30
+	note: normal map ia also available
+	
+smokeShape.png
+	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
+	made the color more white in gimp
+
+	
+sun.png
+	Used several layered nova effects in GIMP
+	To make edges transparent, a single radial gradient (transparent -> black) was applied and then "Color to Alpha" was used to remove the black color
+	
+smokeShape2.png
+	http://www.rigzsoft.co.uk/files/tutorials/smoketrail/SmokeShape.png
+	made the color more white in gimp
+	applied clouds filter in GIMP (level=5, X_size=4, Y_size=4)
+	
+tree.png
+	http://yorik.uncreated.net/greenhouse.html (pine tree)
+	rendered in blender from 2 perpedicular directions
+	resized canvas to center trunk in both images
+	resized images to 1024x1024
+	combined two views into a single image
+	adjusted gamma to 1.5
+
+particle4.png
+	radial gradient from white to alpha
+	
+skybox.png
+	http://www.alusion-fr.com/an1ffa3.htm
+
+_________________________________________________________________________________________________________________________
+
+													MODELS
+_________________________________________________________________________________________________________________________
+
+f22.obj
+	http://www.turbosquid.com/FullPreview/Index.cfm/ID/247738
+
+SAM.obj (and related files)
+	http://thefree3dmodels.com/stuff/vehicles/sam_missile_launcher/13-1-0-2348
+	adjusted in scale and changed texture format
+	
+spitfire.obj (and related files)
+	http://www.gfx-3d-model.com/2011/08/supermarine-spitfire-3d-model/
+	ProOptimize modifier in 3ds Max (to 10% for spitfire.obj)
+	
+betty.obj (and related files)
+	http://www.gfx-3d-model.com/2009/01/mitsubishi-g4m2a-betty-aircraft-model/
+	Centered and scaled by 0.05
+	
+f16.obj (and related files)
+	http://www.gfx-3d-model.com/2008/08/f-16-falcon/#more-691
+	closed bomb bays
+	scaled by a factor of 0.0263
+
+mirage.obj (and related files)
+	http://www.colacola.se/expo_mirage.htm
+	ProOptimize modifier in 3ds Max (to 25%)
+	scaled by a factor of 2.354
+	
+M2.obj (and related files)
+	http://www.gfx-3d-model.com/2008/12/m1-abrams-tank-model/
+	scaled by a factor of 0.026
+
+bunker.obj (and related files)
+	model created in blender
+	texture from http://www.polygonblog.com/seamless-texture/ (free for both personal and commercial projects)
+	
+ship.obj (and related files)
+	model modified version of http://artist-3d.com/free_3d_models/dnm/model_disp.php?uid=152
+	steel texture from http://hhh316.deviantart.com/art/Seamless-metal-texture-smooth-164165216
+	grate texture created in GIMP (Jonathan)
+	
+tree.obj (and related files)
+	originally from 0 A.D
+	converted using pmd2collada_v3 to .dae, then with blender to .obj
+	
+APC_hull.obj, APC_turret.obj, APC_cannon.obj (and related files)
+	from: http://animium.com/2012/11/armored-personnel-carrier-3d-mode/
+	split into seperate models so it could be animated.
+	
+_________________________________________________________________________________________________________________________
+
+													FONTS
+_________________________________________________________________________________________________________________________
+
+All fonts were created using BMFont (http://www.angelcode.com/products/bmfont/)
+
+_________________________________________________________________________________________________________________________
+
+													SOUNDS
+_________________________________________________________________________________________________________________________
+
+shot1.wav -- http://www.freesound.org/people/qubodup/sounds/162402/ (converted with Audacity)
+shot2.wav -- http://www.freesound.org/people/qubodup/sounds/162401/ (converted with Audacity)
+shot3.wav -- http://www.freesound.org/people/qubodup/sounds/67595/ (converted with Audacity)
+shot4.wav -- http://www.freesound.org/people/qubodup/sounds/67596/ (converted with Audacity)
+engine.wav -- http://www.freesound.org/people/qubodup/sounds/162417/ (converted with Audacity)

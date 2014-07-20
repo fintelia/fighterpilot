@@ -1,0 +1,316 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C7F9616-0B43-4C38-9FDB-6FE40996FC45}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>FighterPilot</RootNamespace>
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v100</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <IncludePath>C:\Program Files\boost\boost_1_54_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
+    <IncludePath>C:\Program Files\boost\boost_1_54_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level2</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <CustomBuildStep>
+      <Command>COPY "$(OutDir)FighterPilot.exe" "%UserProfile%/FighterPilot_share"</Command>
+      <Inputs>
+      </Inputs>
+      <Outputs>$(ProjectDir)FighterPilot.exe</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <CustomBuildStep>
+      <Command>COPY "$(OutDir)FighterPilot.exe" "$(ProjectDir)"</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Inputs>
+      </Inputs>
+      <Outputs>xxx.xxx</Outputs>
+      <Message>
+      </Message>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="aaGun.cpp" />
+    <ClCompile Include="angle.cpp" />
+    <ClCompile Include="assetLoader.cpp" />
+    <ClCompile Include="blackSmoke.cpp" />
+    <ClCompile Include="bomb.cpp" />
+    <ClCompile Include="bullet.cpp" />
+    <ClCompile Include="bulletEffect.cpp" />
+    <ClCompile Include="campaign.cpp" />
+    <ClCompile Include="collide.cpp" />
+    <ClCompile Include="contrail.cpp" />
+    <ClCompile Include="contrailSmall.cpp" />
+    <ClCompile Include="controlManager.cpp" />
+    <ClCompile Include="dataManager.cpp" />
+    <ClCompile Include="debrisSmokeTrail.cpp" />
+    <ClCompile Include="debugBreak.cpp" />
+    <ClCompile Include="definitions.cpp" />
+    <ClCompile Include="engine.cpp" />
+    <ClCompile Include="ephemeris.cpp" />
+    <ClCompile Include="explosionFlash.cpp" />
+    <ClCompile Include="explosionFlash2.cpp" />
+    <ClCompile Include="explosionSmoke.cpp" />
+    <ClCompile Include="explosionSparks.cpp" />
+    <ClCompile Include="fileManager.cpp" />
+    <ClCompile Include="fireball.cpp" />
+    <ClCompile Include="game.cpp" />
+    <ClCompile Include="glew.c" />
+    <ClCompile Include="graphicsManager.cpp" />
+    <ClCompile Include="groundExplosionFlash.cpp" />
+    <ClCompile Include="input.cpp" />
+    <ClCompile Include="level.cpp" />
+    <ClCompile Include="levelEditor.cpp" />
+    <ClCompile Include="menus.cpp" />
+    <ClCompile Include="menuScreen.cpp" />
+    <ClCompile Include="missile.cpp" />
+    <ClCompile Include="dogFight.cpp" />
+    <ClCompile Include="object.cpp" />
+    <ClCompile Include="objectInfo.cpp" />
+    <ClCompile Include="objectList.cpp" />
+    <ClCompile Include="openGLgraphics.cpp" />
+    <ClCompile Include="particleExplosion.cpp" />
+    <ClCompile Include="particleManager.cpp" />
+    <ClCompile Include="plane.cpp" />
+    <ClCompile Include="planeContrail.cpp" />
+    <ClCompile Include="planeEngines.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="random.cpp" />
+    <ClCompile Include="sceneManager.cpp" />
+    <ClCompile Include="settings.cpp" />
+    <ClCompile Include="ship.cpp" />
+    <ClCompile Include="smokeTrail.cpp" />
+    <ClCompile Include="soundManager.cpp" />
+    <ClCompile Include="splash.cpp" />
+    <ClCompile Include="splash2.cpp" />
+    <ClCompile Include="splitScreen.cpp" />
+    <ClCompile Include="terrain.cpp" />
+    <ClCompile Include="time.cpp" />
+    <ClCompile Include="tracer.cpp" />
+    <ClCompile Include="worldManager.cpp" />
+    <ClCompile Include="xml\tinyxml2.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="aaGun.h" />
+    <ClInclude Include="angle.h" />
+    <ClInclude Include="assetLoader.h" />
+    <ClInclude Include="bomb.h" />
+    <ClInclude Include="bullet.h" />
+    <ClInclude Include="collide.h" />
+    <ClInclude Include="dataManager.h" />
+    <ClInclude Include="debugBreak.h" />
+    <ClInclude Include="definitions.h" />
+    <ClInclude Include="engine.h" />
+    <ClInclude Include="ephemeris.h" />
+    <ClInclude Include="fileManager.h" />
+    <ClInclude Include="game.h" />
+    <ClInclude Include="GL\glew.h" />
+    <ClInclude Include="GL\wglew.h" />
+    <ClInclude Include="matrix.h" />
+    <ClInclude Include="menus.h" />
+    <ClInclude Include="object.h" />
+    <ClInclude Include="gameMath.h" />
+    <ClInclude Include="graphicsManager.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="level.h" />
+    <ClInclude Include="menuScreen.h" />
+    <ClInclude Include="missile.h" />
+    <ClInclude Include="objectInfo.h" />
+    <ClInclude Include="objectList.h" />
+    <ClInclude Include="particleEffects.h" />
+    <ClInclude Include="particleManager.h" />
+    <ClInclude Include="plane.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="controlManager.h" />
+    <ClInclude Include="profiler.h" />
+    <ClInclude Include="quaternion.h" />
+    <ClInclude Include="random.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="sceneManager.h" />
+    <ClInclude Include="settings.h" />
+    <ClInclude Include="ship.h" />
+    <ClInclude Include="soundManager.h" />
+    <ClInclude Include="terrain.h" />
+    <ClInclude Include="time.h" />
+    <ClInclude Include="vector.h" />
+    <ClInclude Include="worldManager.h" />
+    <ClInclude Include="xml\tinyxml2.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="media\assetList.xml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="media\blur.vert" />
+    <None Include="media\blurMipmaps.frag" />
+    <None Include="media\blurMipmaps.vert" />
+    <None Include="media\blurX.frag" />
+    <None Include="media\blurY.frag" />
+    <None Include="media\circle.frag" />
+    <None Include="media\circle.vert" />
+    <None Include="media\cirrusCloud.frag" />
+    <None Include="media\cirrusCloud.vert" />
+    <None Include="media\color3D.frag" />
+    <None Include="media\color3D.vert" />
+    <None Include="media\conditionalDiscard.geom" />
+    <None Include="media\createTree.geom" />
+    <None Include="media\createTreeTexture3.frag" />
+    <None Include="media\createTreeTexture.geom" />
+    <None Include="media\desert preview.frag" />
+    <None Include="media\desert.frag" />
+    <None Include="media\gamma.frag" />
+    <None Include="media\gamma.vert" />
+    <None Include="media\gammaBloom.frag" />
+    <None Include="media\gammaNight.frag" />
+    <None Include="media\gammaNightVision.frag" />
+    <None Include="media\grass preview.frag" />
+    <None Include="media\grass.frag" />
+    <None Include="media\hdrLuminance.frag" />
+    <None Include="media\health.frag" />
+    <None Include="media\health.vert" />
+    <None Include="media\hex grid.frag" />
+    <None Include="media\hex grid.vert" />
+    <None Include="media\icon.ico" />
+    <None Include="media\island preview.frag" />
+    <None Include="media\island.frag" />
+    <None Include="media\island4.frag" />
+    <None Include="media\island4.tessControl" />
+    <None Include="media\island4.tessEval" />
+    <None Include="media\model.frag" />
+    <None Include="media\model.vert" />
+    <None Include="media\motion blur.frag" />
+    <None Include="media\motion blur.vert" />
+    <None Include="media\objectData.xml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="media\ocean.frag" />
+    <None Include="media\ocean.vert" />
+    <None Include="media\ocean preview.frag" />
+    <None Include="media\ocean preview.vert" />
+    <None Include="media\ortho.frag" />
+    <None Include="media\ortho.vert" />
+    <None Include="media\particle.frag" />
+    <None Include="media\particle.vert" />
+    <None Include="media\particle3.frag" />
+    <None Include="media\particle3.geom" />
+    <None Include="media\particle3.vert" />
+    <None Include="media\placeTrees.vert" />
+    <None Include="media\postProcess.vert" />
+    <None Include="media\radar bounds.frag" />
+    <None Include="media\radar bounds.vert" />
+    <None Include="media\radar.frag" />
+    <None Include="media\radar.vert" />
+    <None Include="media\radar2.frag" />
+    <None Include="media\radar2.vert" />
+    <None Include="media\radarPlane.frag" />
+    <None Include="media\radarPlane.vert" />
+    <None Include="media\sky.frag" />
+    <None Include="media\sky.vert" />
+    <None Include="media\sky2.frag" />
+    <None Include="media\sky2.vert" />
+    <None Include="media\snow preview.frag" />
+    <None Include="media\snow.frag" />
+    <None Include="media\spark.frag" />
+    <None Include="media\spark.vert" />
+    <None Include="media\terrain.vert" />
+    <None Include="media\decal.frag" />
+    <None Include="media\decal.vert" />
+    <None Include="media\terrain4.vert" />
+    <None Include="media\tree3d.frag" />
+    <None Include="media\tree3d.vert" />
+    <None Include="media\trees.frag" />
+    <None Include="media\trees.vert" />
+    <None Include="media\treesAlphaTest.frag" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FighterPilot.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

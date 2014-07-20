@@ -1,0 +1,94 @@
+// tessllation evaluation shader
+#version 400
+ 
+layout(triangles, equal_spacing, ccw) in;
+uniform mat4 cameraProjection;
+
+struct VertexData{
+	vec3 worldPosition;
+	vec3 sunDir, sunHalfVector;
+	vec3 lightDirections[4];
+};
+in VertexData tcData[];
+out VertexData teData;
+//in VertexData{
+//	vec3 worldPosition;
+//	vec3 sunDir, sunHalfVector;
+//	vec3 lightDirections[4];
+//}tcData[];
+//
+//out VertexData{
+//	vec3 worldPosition;
+//	vec3 sunDir, sunHalfVector;
+//	vec3 lightDirections[4];
+//}teData;
+uniform sampler2D fractalNormals;
+uniform sampler2D groundTex;
+uniform sampler2D noiseTex;
+uniform sampler2D LCnoise;
+uniform vec2 gtex_halfPixel;
+uniform vec2 gtex_origin;
+uniform vec2 gtex_invScale;
+
+uniform float minHeight;
+uniform float heightRange;
+
+out vec2 teNormalMapCoord;
+out vec3 teNormal;
+
+in vec3 tcColor[];
+out vec3 teColor;
+
+//float catmullRomInterpolate(float P0, float P1, float P2, float P3, float t)
+//{
+//	(P1 * 2.0 + (-P0+P2) * t + (P0*2.0 - P1*5.0 + P2*4.0 - P3) * t*t + (-P0 + P1*3.0 - P2*3.0 + P3) * t*t*t) * 0.5;
+//}
+
+void main()
+{
+	//const float invHeightmapSize = 1.0 / textureSize(groundTex, 0);
+
+	teColor = tcColor[0];
+
+	vec3 p0 = gl_TessCoord.x * tcData[0].worldPosition;
+	vec3 p1 = gl_TessCoord.y * tcData[1].worldPosition;
+	vec3 p2 = gl_TessCoord.z * tcData[2].worldPosition;
+	teData.worldPosition = p0 + p1 + p2;
+
+	vec3 sd0 = gl_TessCoord.x * tcData[0].sunDir;
+	vec3 sd1 = gl_TessCoord.y * tcData[1].sunDir;
+	vec3 sd2 = gl_TessCoord.z * tcData[2].sunDir;
+	teData.sunDir = sd0 + sd1 + sd2;
+	
+	vec3 sh0 = gl_TessCoord.x * tcData[0].sunHalfVector;
+	vec3 sh1 = gl_TessCoord.y * tcData[1].sunHalfVector;
+	vec3 sh2 = gl_TessCoord.z * tcData[2].sunHalfVector;
+	teData.sunHalfVector = sh0 + sh1 + sh2;
+	
+	for(int i=0;i<4;i++)
+	{
+		vec3 d0 = gl_TessCoord.x * tcData[0].lightDirections[i];
+		vec3 d1 = gl_TessCoord.y * tcData[1].lightDirections[i];
+		vec3 d2 = gl_TessCoord.z * tcData[2].lightDirections[i];
+		teData.lightDirections[i] = d0 + d1 + d2;
+	}
+
+	vec4 groundTexVal = texture(groundTex,gtex_halfPixel + (teData.worldPosition.xz-gtex_origin) * gtex_invScale);
+	vec3 v = groundTexVal.xyz;
+	vec3 n = normalize(vec3(v.x * 2.0 - 1.0, v.y, 1.0 - v.z * 2.0));
+	float height = minHeight + groundTexVal.a * heightRange;
+	float slopeAngle = acos(n.y);
+
+	
+	float rAmount = clamp((slopeAngle - 0.40) / 0.06, 0.0,1.0);//clamp((1.0 - n.y)*20.0,0.0,1.0);// 
+	
+	teNormalMapCoord = teData.worldPosition.xz*0.0023 * 0.5;
+	vec4 fractalColor = texture(fractalNormals, teNormalMapCoord);
+	
+	teNormal = n;
+	
+	teData.worldPosition.y = height;
+	teData.worldPosition += n * (fractalColor.a * 30.0-15.0) * rAmount * 2.0;
+	
+	gl_Position = cameraProjection * vec4(teData.worldPosition, 1);
+}
