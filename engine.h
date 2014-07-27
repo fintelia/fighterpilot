@@ -74,6 +74,7 @@ using std::queue;
 using std::deque;
 using std::shared_ptr;
 using std::weak_ptr;
+using std::unique_ptr;
 using std::dynamic_pointer_cast;
 using std::static_pointer_cast;
 using std::cout;

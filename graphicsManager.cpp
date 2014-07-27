@@ -3,7 +3,7 @@
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
 
-GraphicsManager::GraphicsManager(): currentId(0), stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), currentView(0), currentGamma(1.0), highResScreenshot(false)
+GraphicsManager::GraphicsManager(): stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), currentView(0), currentGamma(1.0), highResScreenshot(false)
 {
 	viewConstraint = Rect::XYXY(0,0,1,1);
 }
@@ -269,4 +269,16 @@ void GraphicsManager::setStereoMode(StereoMode s)
 void GraphicsManager::setInterOcularDistance(float d)
 {
 	interOcularDistance = d;
+}
+bool GraphicsManager::drawOverlay(Rect4f r, string tex)
+{
+	return drawOverlay(r, tex != "" ? dataManager.getTexture(tex) : nullptr);
+}
+bool GraphicsManager::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
+{
+	return drawRotatedOverlay(r, rotation, tex != "" ? dataManager.getTexture(tex) : nullptr);
+}
+bool GraphicsManager::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
+{
+	return drawPartialOverlay(r, t,  tex != "" ? dataManager.getTexture(tex) : nullptr);
 }

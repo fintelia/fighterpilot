@@ -18,7 +18,7 @@ void inGame::render()
 	if(activeChoice==OPTIONS)	graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.472,0.545*sAspect,0.522),"menu in game select");
 	if(activeChoice==QUIT)		graphics->drawOverlay(Rect::XYXY(0.445*sAspect,0.546,0.545*sAspect,0.596),"menu in game select");
 }
-bool inGame::keyDown(int vkey)
+bool inGame::keyDown(int vkey, char ascii)
 {
 //	if(vkey==VK_PAUSE || vkey==VK_ESCAPE)
 //	{
@@ -153,7 +153,7 @@ bool chooseMode::menuKey(int mkey)
 	}
 	return true;
 }
-bool chooseMode::keyDown(int vkey)
+bool chooseMode::keyDown(int vkey, char ascii)
 {
 	if(vkey==VK_ESCAPE)
 	{
@@ -227,7 +227,7 @@ void chooseMap::render()
 {
 	graphics->drawOverlay(Rect::XYXY(0.0,0.0,sAspect,1.0),"menu background");
 }
-bool chooseMap::keyDown(int vkey)
+bool chooseMap::keyDown(int vkey, char ascii)
 {
 	if(mapChoices.empty())
 		return false;
@@ -472,7 +472,7 @@ void options::render()
 
 	menuManager.drawCursor();
 }
-bool options::keyDown(int vkey)
+bool options::keyDown(int vkey, char ascii)
 {
 	if(vkey==VK_ESCAPE)
 	{
@@ -510,7 +510,7 @@ void help::updateFrame()
 		menuManager.setMenu(new chooseMode);
 	}
 }
-bool help::keyDown(int vkey)
+bool help::keyDown(int vkey, char ascii)
 {
 	if(vkey==VK_ESCAPE)
 	{
@@ -542,7 +542,7 @@ void credits::updateFrame()
 		menuManager.setMenu(new chooseMode);
 	}
 }
-bool credits::keyDown(int vkey)
+bool credits::keyDown(int vkey, char ascii)
 {
 	if(vkey==VK_ESCAPE)
 	{
@@ -584,8 +584,9 @@ void loading::updateFrame()
 	int assetsLeft;
 
 	double startTime = GetTime();
-	while(GetTime() - startTime < 10.0)
+	do{
 		assetsLeft = assetLoader.loadAsset();
+	} while(GetTime() - startTime < 10.0);
 
 	if(totalAssets == -1)
 	{

@@ -47,11 +47,11 @@ void main()
 
 
 
-	//float r=0.0;
-	//float s1=0.17;//1.53
-	//float s2=0.15;//1.48
-	//if(slope>s1 		) 	r=1.0;
-	//else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
+	float r=0.0;
+	float s1=0.17;//1.53
+	float s2=0.15;//1.48
+	if(slope>s1 		) 	r=1.0;
+	else if(slope>s2 	)	r=(slope-s2)/(s1-s2);
 	//r = clamp((0.989-normal.y) / (0.001), 0.0, 1.0);
 
 
@@ -67,9 +67,9 @@ void main()
 
 	//float g = pow(clamp(noiseVal + (height-6.0)/20.0 - 1.5, 0.0, 1.0), 2.0);
 	vec3 grassColor = texture2D(grass,position.xz*0.00125).rgb /* (1.0 - 0.6*clamp((height - 37.0)*0.2, 0.0, 1.0))*/*(0.7 - 0.36*gMult);
-	//vec3 rockColor = texture2D(rock,position.xz*0.002).rgb;
+	vec3 rockColor = texture2D(rock,position.xz*0.002).rgb;
 
-	color.rgb = grassColor;//mix(grassColor, rockColor, r);
+	color.rgb = mix(grassColor, rockColor, r);
 	color.rgb *= 0.5 + 0.6*texture2D(LCnoise,position.xz*0.02).r;
 
 

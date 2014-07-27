@@ -13,6 +13,7 @@ out VertexData{
 	vec4 color;
 	vec2 texCoord;
 	float invRadius;
+	float depth;
 }vertexOut;
 
 uniform vec3 up;
@@ -23,7 +24,7 @@ void main()
 {
 	vertexOut.color = vertexIn[0].color;
 	vertexOut.invRadius = 1.0/vertexIn[0].radius;
-	
+
 	float sAng = sin(vertexIn[0].angle);
 	float cAng = cos(vertexIn[0].angle);
 	
@@ -31,18 +32,22 @@ void main()
 	vec4 R = vec4(( right * cAng + up * sAng) * vertexIn[0].radius, 0.0);
 	
 	gl_Position = cameraProjection * (gl_in[0].gl_Position + U + R);
+	vertexOut.depth = gl_Position.w;
 	vertexOut.texCoord  = vec2(0,0);
 	EmitVertex();
 	
 	gl_Position = cameraProjection * (gl_in[0].gl_Position + U - R);
+	vertexOut.depth = gl_Position.w;
 	vertexOut.texCoord  = vec2(0,1);
 	EmitVertex();
 
 	gl_Position = cameraProjection * (gl_in[0].gl_Position - U + R);
+	vertexOut.depth = gl_Position.w;
 	vertexOut.texCoord = vec2(1,0);
 	EmitVertex();
 
 	gl_Position = cameraProjection * (gl_in[0].gl_Position - U - R);
+	vertexOut.depth = gl_Position.w;
 	vertexOut.texCoord  = vec2(1,1);
 	EmitVertex();
 

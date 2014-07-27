@@ -14,10 +14,17 @@ uniform vec3 sunColor;
 uniform vec3 eyePos;
 
 uniform sampler2D groundTexture;
+uniform sampler2D depth;
+//uniform sampler2D renderTexture;
 uniform vec2 invGroundScale;
 uniform vec2 halfPixelOffset;
 uniform float groundHeightScale;
 uniform float texSeaLevel;
+
+//uniform vec2 invScreenDims;
+
+//const float zNear = 1.0;
+//const float zFar = 500000;
 
 ////float height(vec3 textureCoordinates)
 ////{
@@ -141,11 +148,26 @@ void main()
 	r.y = max(r.y,0.0);
 	vec3 cReflect = textureCube(sky, r).rgb;
 
-	const vec3 darkColor = vec3(0.08, 0.24, 0.26);
+
+	//float bufferDepth = 2.0 * zNear * zFar / (zFar + zNear - texture2D(depth, invScreenDims * gl_FragCoord.xy).x * (zFar - zNear));
+	//float fragDepth = 2.0 * zNear * zFar / (zFar + zNear - gl_FragCoord.z * (zFar - zNear));
+
+	//float d = bufferDepth - fragDepth;
+	float d2 = (texSeaLevel - texture2D(groundTexture, (worldPosition.xz)*invGroundScale - halfPixelOffset).a)*groundHeightScale;
+	d2 = min(50.0, d2);
+
+	//const vec3 darkColor = vec3(0.08, 0.24, 0.26);
 	const vec3 lightColor = vec3(0.12, 0.26, 0.55);
-	const vec3 groundColor = vec3(0.482,0.337,0.227);
+	//vec3 groundColor = texture2D(renderTexture, invScreenDims * gl_FragCoord.xy).rgb;//vec3(0.47,0.333,0.165);
+	vec3 darkColor = //mix(groundColor,// * exp(-vec3(d) / vec3(7.0, 30.0, 70.0)) +
+	  sunColor * 0.8 * (exp(-vec3(d2) / vec3(7.0, 30.0, 70.0)));//,
+	//1.0 - exp(-vec3(d) / vec3(7.0, 30.0, 70.0)));
+
+;
+	  //	  vec3(1.333) - vec3(1.0) / (vec3(0.75) + sunColor * (exp(-vec3(d2) / vec3(7.0, 30.0, 70.0))));
+
 							   //texture2D(groundTexture, (worldPosition.xz - halfPixelOffset)*invGroundScale).a; //
-	float depth = (texSeaLevel - texture2D(groundTexture, (worldPosition.xz)*invGroundScale - halfPixelOffset).a)*groundHeightScale;
+
 
 
 
@@ -155,7 +177,9 @@ void main()
 //	color = mix(color, cReflect, fresnel * 0.3 /* *shorelineAlpha*/);//   *   (0.6 + 0.4 * NdotL);
 
 //	color = mix(darkColor, groundColor, vec3(pow(3, -depth/7), pow(3, -depth/30), pow(3, -depth/70)));
-	color = mix(darkColor, cReflect, fresnel * 0.20 * clamp(0.02*(depth-20.0),0.0,1.0)) * (0.9 + 0.1 * NdotL);
+	color = mix(darkColor, cReflect, fresnel * 0.20 * clamp(0.02*(d2-20.0),0.0,1.0)) * (0.9 + 0.1 * NdotL);
+
+
 //	color = mix(color, textureCube(sky, vec3(modelPosition.x,0,modelPosition.y)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection), 0.0, 1.0));
 
 	//color += min(pow(max(dot(vec3(0,1,0),normalize(sunHalfVector)),0.0),8.0), 1.0);
@@ -165,5 +189,6 @@ void main()
 	vec3 eyeDir = eyePos - worldPosition;
 //	color = mix(color, vec3(0.5,0.5,0.5), clamp(1.0 - 100000000.0 / dot(eyeDirection,eyeDirection),0.0,0.75));
 
-	gl_FragColor = /*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*//*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*/vec4(vec3(color),1.0);
+	gl_FragColor = /*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*//*vec4(vec3(fractal(vec3(texCoord.xy,0.0002*time))),1);*/vec4(vec3(color),1);
 }
+

@@ -1,4 +1,5 @@
 
+
 #include "engine.h"
 
 #ifdef OPENGL
@@ -11,9 +12,12 @@
 	#include "GL/wglew.h"
 #elif defined(LINUX)
 	#include <X11/Xlib.h>
+	#include <X11/Xutil.h>
 	#include <X11/extensions/xf86vmode.h>
 
-	#include "GL/glew.h"
+
+	#include <GL/glew.h>
+	#include <GL/glxew.h>
 	#include <GL/glx.h>
 #else
 	#error OS not supported by openGLgraphics
@@ -566,7 +570,12 @@ unsigned char* OpenGLgraphics::texture2DGL::getData(unsigned int level)
 		fmt = GL_DEPTH_COMPONENT;
 		bytesPerPixel=1;
 	}
-	else debugBreak();
+	else /* unrecognized format!!! */
+	{
+		debugBreak();
+		fmt = GL_INTENSITY;
+		bytesPerPixel=1;
+	}
 
 	unsigned char* data = new unsigned char[max(width>>level,1)*max(height>>level,1)*bytesPerPixel];
 	glBindTexture(GL_TEXTURE_2D, textureID);
@@ -692,7 +701,12 @@ unsigned char* OpenGLgraphics::texture3DGL::getData(unsigned int level)
 		fmt = GL_DEPTH_COMPONENT;
 		bytesPerPixel=1;
 	}
-	else debugBreak();
+	else /* unrecognized format!!! */
+	{
+		debugBreak();
+		fmt = GL_INTENSITY;
+		bytesPerPixel=1;
+	}
 
 	unsigned char* data = new unsigned char[max(width>>level,1)*max(height>>level,1)*max(depth>>level,1)*bytesPerPixel];
 	glBindTexture(GL_TEXTURE_3D, textureID);
@@ -887,7 +901,12 @@ unsigned char* OpenGLgraphics::textureCubeGL::getData(unsigned int level)
 		fmt = GL_DEPTH_COMPONENT;
 		bytesPerPixel=1;
 	}
-	else debugBreak();
+	else /* unrecognized format!!! */
+	{
+		debugBreak();
+		fmt = GL_INTENSITY;
+		bytesPerPixel=1;
+	}
 
 	unsigned int faceSize = max(width>>level,1)*max(height>>level,1)*bytesPerPixel;
 	unsigned char* data = new unsigned char[faceSize*6];
@@ -1454,7 +1473,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),renderTarget(RT_SCREEN), colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
+OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),renderTarget(RT_SCREEN),currentViewport(0,0,sw,sh),multisampling(false),samples(0),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -1466,9 +1485,9 @@ OpenGLgraphics::~OpenGLgraphics()
 {
 	delete context;
 }
-bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
+bool OpenGLgraphics::drawOverlay(Rect4f r, shared_ptr<texture> tex)
 {
-	if(tex != "") dataManager.bind(tex);
+	if(tex) tex->bind();
 
 	overlay[0].position = Vec2f(r.x,		r.y+r.h);
 	overlay[1].position = Vec2f(r.x+r.w,	r.y+r.h);
@@ -1486,9 +1505,9 @@ bool OpenGLgraphics::drawOverlay(Rect4f r, string tex)
 
 	return true;
 }
-bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
+bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, shared_ptr<texture> tex)
 {
-	if(tex != "") dataManager.bind(tex);
+	if(tex) tex->bind();
 
 	float w2 = r.w/2;
 	float h2 = r.h/2;
@@ -1508,9 +1527,9 @@ bool OpenGLgraphics::drawRotatedOverlay(Rect4f r, Angle rotation, string tex)
 
 	return true;
 }
-bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
+bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, shared_ptr<texture> tex)
 {
-	if(tex != "") dataManager.bind(tex);
+	if(tex) tex->bind();
 
 	overlay[0].position = Vec2f(r.x,		r.y);
 	overlay[1].position = Vec2f(r.x+r.w,	r.y);
@@ -1530,27 +1549,27 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, string tex)
 }
 shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage)
 {
-	return shared_ptr<vertexBuffer>(new vertexBufferGL(usage));
+	return shared_ptr<vertexBuffer>{new vertexBufferGL(usage)};
 }
 shared_ptr<GraphicsManager::indexBuffer> OpenGLgraphics::genIndexBuffer(indexBuffer::UsageFrequency usage)
 {
-	return shared_ptr<indexBuffer>(new indexBufferGL(usage));
+	return shared_ptr<indexBuffer>{new indexBufferGL(usage)};
 }
 shared_ptr<GraphicsManager::texture2D> OpenGLgraphics::genTexture2D()
 {
-	return shared_ptr<texture2D>(new texture2DGL());
+	return shared_ptr<texture2D>{new texture2DGL()};
 }
 shared_ptr<GraphicsManager::texture3D> OpenGLgraphics::genTexture3D()
 {
-	return shared_ptr<texture3D>(new texture3DGL());
+	return shared_ptr<texture3D>{new texture3DGL()};
 }
 shared_ptr<GraphicsManager::textureCube> OpenGLgraphics::genTextureCube()
 {
-	return shared_ptr<textureCube>(new textureCubeGL());
+	return shared_ptr<textureCube>{new textureCubeGL()};
 }
 shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
 {
-	return shared_ptr<shader>(new shaderGL());
+	return shared_ptr<shader>{new shaderGL()};
 }
 void OpenGLgraphics::setGamma(float gamma)
 {
@@ -1562,26 +1581,8 @@ void OpenGLgraphics::setColor(Color4 color)
 }
 void OpenGLgraphics::setColorMask(bool mask)
 {
-	//if(renderTarget == RT_SCREEN && mask != colorMask)
-	//{
 		colorMask = mask;
 		glColorMask(mask && redChannelMask, mask && greenChannelMask, mask && blueChannelMask, mask);
-	//}
-	//else if(renderTarget == RT_FBO_0 && mask != FBOs[0].colorBound)
-	//{
-	//	FBOs[0].colorBound = mask;
-	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[0].color : 0, 0);
-	//}
-	//else if(renderTarget == RT_FBO_1 && mask != FBOs[1].colorBound)
-	//{
-	//	FBOs[1].colorBound = mask;
-	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, mask ? FBOs[1].color : 0, 0);
-	//}
-	//else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.colorBound)
-	//{
-	//	multisampleFBO.colorBound = mask;
-	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.color : 0);
-	//}
 }
 void OpenGLgraphics::setDepthMask(bool mask)
 {
@@ -1590,26 +1591,6 @@ void OpenGLgraphics::setDepthMask(bool mask)
 		depthMask = mask;
 		glDepthMask(depthMask);
 	}
-	//if(renderTarget == RT_SCREEN && mask != depthMask)
-	//{
-	//	depthMask = mask;
-	//	glDepthMask(depthMask);
-	//}
-	//else if(renderTarget == RT_FBO_0 && mask != FBOs[0].depthBound)
-	//{
-	//	FBOs[0].depthBound = mask;
-	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[0].depth : 0, 0);
-	//}
-	//else if(renderTarget == RT_FBO_1 && mask != FBOs[1].depthBound)
-	//{
-	//	FBOs[1].depthBound = mask;
-	//	glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, mask ? FBOs[1].depth : 0, 0);
-	//}
-	//else if(renderTarget == RT_MULTISAMPLE_FBO && mask != multisampleFBO.depthBound)
-	//{
-	//	multisampleFBO.depthBound = mask;
-	//	glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, mask ? multisampleFBO.depth : 0);
-	//}
 }
 void OpenGLgraphics::setDepthTest(bool enabled)
 {
@@ -1660,6 +1641,10 @@ void OpenGLgraphics::setWireFrame(bool enabled)
 {
 	glPolygonMode(GL_FRONT_AND_BACK, enabled ? GL_LINE : GL_FILL);
 }
+void OpenGLgraphics::setClearColor(Color4 c)
+{
+	clearColor = c;
+}
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
 	auto f = dataManager.getFont(font);
@@ -1690,7 +1675,7 @@ void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 				charRect.w = c.width / 1024.0;
 				charRect.h = c.height / 1024.0;
 
-				drawPartialOverlay(charRect, c.UV);
+				GraphicsManager::drawPartialOverlay(charRect, c.UV);
 				charPos.x += c.xAdvance  / 1024.0;
 			}
 		}
@@ -1740,7 +1725,7 @@ void OpenGLgraphics::drawText(string text, Rect rect, string font)
 						charRect.h -= (charRect.y + charRect.h) - (rect.y + rect.h);
 					}
 
-					drawPartialOverlay(charRect, UV);
+					GraphicsManager::drawPartialOverlay(charRect, UV);
 				}
 				charPos.x += c.xAdvance / 1024.0;
 			}
@@ -1771,43 +1756,6 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 	//else
 	//	return textSize;
 }
-//void OpenGLgraphics::bindRenderTarget(RenderTarget t)
-//{
-//	renderTarget = t;
-//	if(openGL3)
-//	{
-//		if(t == RT_FBO_0)					glBindFramebuffer(GL_FRAMEBUFFER, FBOs[0].fboID);
-//		else if(t == RT_FBO_1)				glBindFramebuffer(GL_FRAMEBUFFER, FBOs[1].fboID);
-//		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFBO.fboID);
-//		else if(t == RT_SCREEN)				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//		else debugBreak();
-//	}
-//	else
-//	{
-//		if(t == RT_FBO_0)					glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[0].fboID);
-//		else if(t == RT_FBO_1)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FBOs[1].fboID);
-//		else if(t == RT_MULTISAMPLE_FBO)	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFBO.fboID);
-//		else if(t == RT_SCREEN)				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-//		else debugBreak();
-//	}
-//}
-//void OpenGLgraphics::renderFBO(RenderTarget src) //right now can only be RT_FBO
-//{
-//	int bufferNum;
-//	if(src == RT_FBO_0)			bufferNum = 0;
-//	else if(src == RT_FBO_1)	bufferNum = 1;
-//	else return;
-//
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].color);
-//
-//	//glActiveTexture(GL_TEXTURE1);
-//	//glBindTexture(GL_TEXTURE_2D, FBOs[bufferNum].normals);
-//	//glActiveTexture(GL_TEXTURE0);
-//
-//	glViewport(0,0,sw,sh);
-//	drawOverlay(Rect::XYXY(-1,-1,1,1));
-//}
 void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)
 {
 	if(openGL3)
@@ -1819,16 +1767,6 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigne
 	else
 	{
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-		//tex->bind();
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, dynamic_pointer_cast<texture2DGL>(tex)->width, dynamic_pointer_cast<texture2DGL>(tex)->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-
-		//glBindTexture(GL_TEXTURE_2D, 0);
-
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, color ? dynamic_pointer_cast<texture2DGL>(color)->textureID : 0, color ? color_level : 0);
 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depth ? dynamic_pointer_cast<texture2DGL>(depth)->textureID : 0, depth ? depth_level : 0);
 
@@ -1848,7 +1786,8 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigne
 		debugAssert(colorTex->width>>color_level == depthTex->width>>depth_level && colorTex->height>>color_level == depthTex->height>>depth_level);
 		glViewport(0,0,colorTex->width >> color_level, colorTex->height >> color_level);
 	}
-	colorTarget = depthTarget = RT_TEXTURE;
+	cachedRenderTarget = renderTarget;
+	renderTarget = RT_TEXTURE;
 
 	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
@@ -1863,6 +1802,18 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigne
 	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
 	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
 	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#else
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			std::cerr << "Framebuffer incomplete: Attachment is NOT complete." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	std::cerr << "Framebuffer incomplete: No image is attached to FBO." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		std::cerr << "Framebuffer incomplete: Attached images have different dimensions." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		std::cerr << "Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		std::cerr << "Framebuffer incomplete: Draw buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		std::cerr << "Framebuffer incomplete: Read buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		std::cerr << "Framebuffer incomplete: Multisample buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					std::cerr << "Unsupported by FBO implementation." << std::endl;
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						std::cerr << "Framebuffer undefined." << std::endl;
+	else 															std::cerr << "Unknow frame buffer error." << std::endl;
+
 #endif
 }
 void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)
@@ -1907,7 +1858,8 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textu
 	{
 		glViewport(0,0,dynamic_pointer_cast<textureCubeGL>(color)->width >> color_level, dynamic_pointer_cast<textureCubeGL>(color)->height >> color_level);
 	}
-	colorTarget = depthTarget = RT_TEXTURE;
+	cachedRenderTarget = renderTarget;
+	renderTarget = RT_TEXTURE;
 
 	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
@@ -1922,6 +1874,17 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textu
 	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
 	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
 	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
+#else
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			std::cerr << "Framebuffer incomplete: Attachment is NOT complete." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	std::cerr << "Framebuffer incomplete: No image is attached to FBO." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		std::cerr << "Framebuffer incomplete: Attached images have different dimensions." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		std::cerr << "Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		std::cerr << "Framebuffer incomplete: Draw buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		std::cerr << "Framebuffer incomplete: Read buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		std::cerr << "Framebuffer incomplete: Multisample buffer." << std::endl;
+	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					std::cerr << "Unsupported by FBO implementation." << std::endl;
+	else if(status == GL_FRAMEBUFFER_UNDEFINED)						std::cerr << "Framebuffer undefined." << std::endl;
+	else 															std::cerr << "Unknow frame buffer error." << std::endl;
 #endif
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
@@ -1933,17 +1896,17 @@ void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 			glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-			colorTarget = depthTarget = RT_FBO;
+			renderTarget = RT_FBO;
 		}
 		else if(rTarget == RT_MULTISAMPLE_FBO)
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-			colorTarget = depthTarget = RT_MULTISAMPLE_FBO;
+			renderTarget = RT_MULTISAMPLE_FBO;
 		}
 		else if(rTarget == RT_SCREEN)
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			colorTarget = depthTarget = RT_SCREEN;
+			renderTarget = RT_SCREEN;
 		}
 		else debugBreak();
 	}
@@ -1954,17 +1917,17 @@ void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
 			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
 			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
-			colorTarget = depthTarget = RT_FBO;
+			renderTarget = RT_FBO;
 		}
 		else if(rTarget == RT_MULTISAMPLE_FBO)
 		{
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-			colorTarget = depthTarget = RT_MULTISAMPLE_FBO;
+			renderTarget = RT_MULTISAMPLE_FBO;
 		}
 		else if(rTarget == RT_SCREEN)
 		{
 			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			colorTarget = depthTarget = RT_SCREEN;
+			renderTarget = RT_SCREEN;
 		}
 		else debugBreak();
 	}
@@ -1982,6 +1945,15 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	//{
 		glGenTextures(1, &renderTexture);
 		glBindTexture(GL_TEXTURE_2D, renderTexture);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+		glGenTextures(1, &renderTexture2);
+		glBindTexture(GL_TEXTURE_2D, renderTexture2);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -2088,6 +2060,7 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 void OpenGLgraphics::destroyFBOs()
 {
 	if(renderTexture != 0)		glDeleteTextures(1, &renderTexture);
+	if(renderTexture2 != 0)		glDeleteTextures(1, &renderTexture2);
 	if(depthTexture != 0)		glDeleteTextures(1, &depthTexture);
 	if(blurTexture != 0)			glDeleteTextures(1, &blurTexture);
 	if(blurTexture2 != 0)			glDeleteTextures(1, &blurTexture2);
@@ -2114,6 +2087,7 @@ void OpenGLgraphics::resize(int w, int h)
 		sh = h;
 		sw = w;
 		sAspect = ((float)sw)/sh;
+		std::cout << w << " " << h << " " << sAspect << std::endl;
 	}
 }
 void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionConstraint)
@@ -2127,17 +2101,6 @@ void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionCon
 		viewport.w = viewport.w / viewConstraint.w;
 		viewport.h = viewport.h / viewConstraint.h;
 		
-		//glViewport(	floor(clamp(viewport.x,0.0,1.0)*sw),
-		//				floor(clamp(viewport.y,0.0,1.0)*sh),
-		//				ceil(clamp(viewport.w*sw,0.0,sw-floor(clamp(viewport.x,0.0,1.0)*sw))),
-		//				ceil(clamp(viewport.h*sh,0.0,sh-floor(clamp(viewport.y,0.0,1.0)*sh))));
-	
-		//Rect r;
-		//r.x = floor(clamp(viewport.x,0.0,1.0)*sw)/sw;
-		//r.y = floor(clamp(viewport.y,0.0,1.0)*sh)/sh;
-		//r.w = ceil(clamp(viewport.w*sw,0.0,sw-floor(clamp(viewport.x,0.0,1.0)*sw)))/sw;
-		//r.h = ceil(clamp(viewport.h*sh,0.0,sh-floor(clamp(viewport.y,0.0,1.0)*sh)))/sh;
-
 		Rect unclipped_viewport;
 		unclipped_viewport.x = floor(viewport.x*sw)/sw;
 		unclipped_viewport.y = floor(viewport.y*sh)/sh;
@@ -2166,8 +2129,6 @@ void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionCon
 	}
 	else
 	{
-		//glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-		//if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(cameraOffset);
 		clipped_viewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0 - currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
 		projectionConstraint = Rect::XYWH(0,0,1,1);
 	}
@@ -2205,6 +2166,7 @@ void OpenGLgraphics::render()
 	setColorMask(true);
 ///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
 	glEnable(GL_DEPTH_TEST);
+	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //////////////////////////////////SET 2D VIEW CONSTRAINTS///////////////////////////////////
 	if(!highResScreenshot)
@@ -2255,6 +2217,10 @@ void OpenGLgraphics::render()
 				if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
 					continue;
 
+				currentViewport.x = clipped_viewport.x*sw;
+				currentViewport.y = clipped_viewport.y*sh;
+				currentViewport.w = clipped_viewport.w*sw;
+				currentViewport.h = clipped_viewport.h*sh;
 				glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 				if(highResScreenshot)
 				{
@@ -2284,13 +2250,13 @@ void OpenGLgraphics::render()
 			}
 		}
 
-		//capture depth buffer for reading and bind it to texture unit 1
+		//capture depth buffer for reading and bind it to texture unit 47
 		if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-			glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+			glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
@@ -2310,9 +2276,11 @@ void OpenGLgraphics::render()
 			setDepthMask(false);
 		}
 		glDisable(GL_DEPTH_TEST);
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE0 + 47);
 		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		
+		glActiveTexture(GL_TEXTURE0 + 46);
+		glBindTexture(GL_TEXTURE_2D, renderTexture);
+
 		for(auto i = views.begin(); i != views.end();)
 		{
 			if(i->expired()) //check if the view no longer exists (just to be safe)
@@ -2324,13 +2292,17 @@ void OpenGLgraphics::render()
 				currentView = shared_ptr<View>(*(i++));
 				if(currentView->transparentRenderFunc())
 				{
-					glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+					//glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
 		
 					Rect clipped_viewport, projConstraint;
 					computeViewport(clipped_viewport, projConstraint);
 					if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
 						continue;
 
+					currentViewport.x = clipped_viewport.x*sw;
+					currentViewport.y = clipped_viewport.y*sh;
+					currentViewport.w = clipped_viewport.w*sw;
+					currentViewport.h = clipped_viewport.h*sh;
 					glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
 					if(highResScreenshot)
 					{
@@ -2357,7 +2329,6 @@ void OpenGLgraphics::render()
 	}
 
 	glDisable(GL_DEPTH_TEST);
-
 	currentView.reset(); //set the current view to null
 	if(stereoMode==STEREO_ANAGLYPH)
 	{
@@ -2430,6 +2401,8 @@ void OpenGLgraphics::render()
 	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	//glGenerateMipmapEXT(GL_TEXTURE_2D);
 
+
+	currentViewport = Rect4i::XYWH(0,0,sw,sh);
 	glViewport(0,0,sw,sh);
 	//bindRenderTarget(RT_SCREEN);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2473,7 +2446,7 @@ void OpenGLgraphics::render()
 						glGenerateMipmapEXT(GL_TEXTURE_2D);
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
-						drawPartialOverlay(overlayRect, textureRect);
+						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 				
 				
 						blurY->bind();
@@ -2482,7 +2455,7 @@ void OpenGLgraphics::render()
 						glBindTexture(GL_TEXTURE_2D, blurTexture2);
 						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
-						drawPartialOverlay(overlayRect, textureRect);
+						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 				
 				
 						glActiveTexture(GL_TEXTURE1);
@@ -2516,7 +2489,7 @@ void OpenGLgraphics::render()
 				glBindTexture(GL_TEXTURE_2D, renderTexture);
 				if(openGL3)	glGenerateMipmap(GL_TEXTURE_2D);
 				else		glGenerateMipmapEXT(GL_TEXTURE_2D);
-				drawPartialOverlay(overlayRect, textureRect);
+				GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 			}
 		}
 	}
@@ -2529,6 +2502,12 @@ void OpenGLgraphics::render()
 	ortho->setUniform4f("color",white);
 	ortho->setUniform4f("viewConstraint", viewConstraint);
 	menuManager.render();
+
+	ortho->setUniform4f("color",white);
+	GraphicsManager::drawOverlay(Rect::XYXY(0,0,0.15,0.045), "white");
+	ortho->setUniform4f("color",black);
+	drawText(lexical_cast<string>(fps), Vec2f(0.005, 0.005), "default font");
+	ortho->setUniform4f("color",white);
 
 	#ifdef _DEBUG
 		if(!highResScreenshot)
@@ -2769,6 +2748,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	}
 
 #elif defined(LINUX)
+	glXCreateContextAttribsARB = (GLXContext(*)(Display* dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int *attrib_list))glXGetProcAddressARB((GLubyte*)"glXCreateContextAttribsARB");
+	glXChooseFBConfig = (GLXFBConfig*(*)(Display *dpy, int screen, const int *attrib_list, int *nelements))glXGetProcAddressARB((GLubyte*)"glXChooseFBConfig");
+	glXGetVisualFromFBConfig = (XVisualInfo*(*)(Display *dpy, GLXFBConfig config))glXGetProcAddressARB((GLubyte*)"glXGetVisualFromFBConfig");
+
 	fullscreenflag = false;
 	//sw = screenResolution.x = 1024;
 	//sh = screenResolution.y = 786;
@@ -2777,47 +2760,70 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	
 	context->fullscreen = fullscreenflag;
 	//based on http://content.gpwiki.org/index.php/OpenGL:Tutorials:Setting_up_OpenGL_on_X11
-	static int attrListDbl[] =
+	int fbAttribs[] =
 	{
-		GLX_RGBA, GLX_DOUBLEBUFFER,
-		GLX_RED_SIZE, 4,
-		GLX_GREEN_SIZE, 4,
-		GLX_BLUE_SIZE, 4,
-		GLX_DEPTH_SIZE, 16,
-		None
+      GLX_X_RENDERABLE    , True,
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+      GLX_RED_SIZE        , 8,
+      GLX_GREEN_SIZE      , 8,
+      GLX_BLUE_SIZE       , 8,
+      GLX_ALPHA_SIZE      , 8,
+      GLX_DEPTH_SIZE      , 16,
+	  // GLX_STENCIL_SIZE    , 8,
+      GLX_DOUBLEBUFFER    , True,
+      //GLX_SAMPLE_BUFFERS  , 1,
+      //GLX_SAMPLES         , 4,
+      None
+	};
+    int contextAttribs[] =
+	{
+        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+        GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+        GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+        None
 	};
 	
-	int glxMajor, glxMinor, vmMajor, vmMinor;
-	XF86VidModeModeInfo **modes;
-	int modeNum, bestMode=0;
+	//int glxMajor, glxMinor;//, vmMajor, vmMinor;
+	//XF86VidModeModeInfo **modes;
+	int fbModeCount, bestFbModeNum=0;
 	XSetWindowAttributes winAttr;
-	
-	XF86VidModeQueryVersion(x11_display, &vmMajor, &vmMinor);
-	XF86VidModeGetAllModeLines(x11_display, x11_screen, &modeNum, &modes);
+
+	//glXQueryVersion(x11_display, &vmMajor, &vmMinor);
+	GLXFBConfig* fbModes = glXChooseFBConfig(x11_display, x11_screen, fbAttribs, &fbModeCount);
+	//XF86VidModeGetAllModeLines(x11_display, x11_screen, &modeNum, &modes);
+
 	/* save desktop-resolution before switching modes */
-	context->desktopMode = *modes[0];
+	//context->desktopMode = nullptr;//*modes[0];
 	/* look for mode with requested resolution */
-	for (int i = 0; i < modeNum; i++)
-	{
-		if ((modes[i]->hdisplay == screenResolution.x) && (modes[i]->vdisplay == screenResolution.y))
-			bestMode = i;
-	}
+	//for (int i = 0; i < modeNum; i++)
+	//{
+	//	if ((modes[i]->hdisplay == screenResolution.x) && (modes[i]->vdisplay == screenResolution.y))
+	//		bestMode = i;
+	//}
+	GLXFBConfig bestFbMode = fbModes[bestFbModeNum];
+	XFree(fbModes);
 	/* get an appropriate visual */
-	XVisualInfo* vi = glXChooseVisual(x11_display, x11_screen, attrListDbl);
+	XVisualInfo* vi = glXGetVisualFromFBConfig(x11_display, bestFbMode);//glXChooseVisual(x11_display, x11_screen, attrListDbl);
 	if (vi == nullptr)
 	{
 		//TODO: add cleanup code
+		std::cout << "FATAL ERROR: could not find visual";
 		return false;// could not find
 	}
-	glXQueryVersion(x11_display, &glxMajor, &glxMinor);
+
+
+
+	//glXQueryVersion(x11_display, &glxMajor, &glxMinor);
 	/* create a GLX context */
-	context->context = glXCreateContext(x11_display, vi, 0, true);
+	//context->context = glXCreateContext(x11_display, vi, 0, true);
 	/* create a color map */
 	Colormap cmap = XCreateColormap(x11_display, RootWindow(x11_display, vi->screen), vi->visual, AllocNone);
 	winAttr.colormap = cmap;
 	winAttr.background_pixmap = None;
-    winAttr.background_pixel = 0;
-    winAttr.border_pixel = 0;
+	winAttr.background_pixel = 0;
+	winAttr.border_pixel = 0;
 	//winAttr.cursor = 0;
 	
 	Pixmap bm_no;
@@ -2829,16 +2835,16 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	bm_no = XCreateBitmapFromData(x11_display, RootWindow(x11_display, vi->screen), blankData, 8, 8);
 	winAttr.cursor = XCreatePixmapCursor(x11_display, bm_no, bm_no, &black, &black, 0, 0);
 	
-	if (fullscreenflag)
+	/*if (fullscreenflag)
 	{
-		/* switch to fullscreen */
-		XF86VidModeSwitchToMode(x11_display, x11_screen, modes[bestMode]);
+		/-* switch to fullscreen *-/
+		XF86VidModeSwitchToMode(x11_display, x11_screen, bestFbMode);
 		XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
 		int dpyWidth = modes[bestMode]->hdisplay;
 		int dpyHeight = modes[bestMode]->vdisplay;
 		XFree(modes);
 
-		/* set window attributes */
+		/-* set window attributes *-/
 		winAttr.override_redirect = True;
 		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask |  StructureNotifyMask;
 		x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, dpyWidth, dpyHeight, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect | CWCursor, &winAttr);
@@ -2847,7 +2853,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		XGrabKeyboard(x11_display, x11_window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
 		XGrabPointer(x11_display, x11_window, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, x11_window, None, CurrentTime);
 	}
-	else
+	else*/
 	{
 		/* create a window in window mode*/
 		winAttr.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask;
@@ -2855,11 +2861,31 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		/* only set window title and handle wm_delete_events if in windowed mode */
 		Atom wmDelete = XInternAtom(x11_display, "WM_DELETE_WINDOW", True);
 		XSetWMProtocols(x11_display, x11_window, &wmDelete, 1);
+		Atom wmFullScreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", True);
+		XChangeProperty(x11_display, x11_window, XInternAtom(x11_display, "_NET_WM_STATE", True), ((Atom) 4)/*XA_ATOM*/, 32, 
+						PropModeReplace, (unsigned char*) &wmFullScreen,  1);
 		XSetStandardProperties(x11_display, x11_window, "FighterPilot", "FighterPilot", None, NULL, 0, NULL);
 		XMapRaised(x11_display, x11_window);
 	}
-	free(modes);
 	XFree(vi);
+
+	XWindowAttributes wAttributes;
+	XGetWindowAttributes(x11_display, x11_window, &wAttributes);
+
+	XSizeHints sizeHints;
+	sizeHints.flags = PAspect;
+	sizeHints.min_aspect.x = wAttributes.width;
+	sizeHints.min_aspect.y = wAttributes.height;
+	sizeHints.max_aspect.x = wAttributes.width;
+	sizeHints.max_aspect.y = wAttributes.height;
+	XSetWMNormalHints(x11_display, x11_window, &sizeHints);
+
+//	typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+//	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
+//	glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
+//		glXGetProcAddressARB( (const GLubyte *) "glXCreateContextAttribsARB" );
+
+	context->context = glXCreateContextAttribsARB(x11_display, bestFbMode, 0, true, contextAttribs);
 	/* connect the glx-context to the window */
 	glXMakeCurrent(x11_display, x11_window, context->context);
 	if(!glXIsDirect(x11_display, context->context))
@@ -2876,12 +2902,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
 	GLenum err = glewInit();
-
-
 	string errorString;
 	if(GLEW_OK != err)						errorString = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
-	else if(!GLEW_VERSION_2_1)				errorString = "Your version of OpenGL must be at least 2.1: Please update your graphics drivers";
-	else if(!GLEW_EXT_framebuffer_object)	errorString = "Your graphics card must support GL_EXT_framebuffer_object: Please update your graphics drivers.";
+	else if(!GLEW_VERSION_3_3)				errorString = "Your version of OpenGL must be at least 3.3: Please update your graphics drivers";
+//	else if(!GLEW_EXT_framebuffer_object)	errorString = "Your graphics card must support GL_EXT_framebuffer_object: Please update your graphics drivers.";
 //	else if(!GLEW_ARB_vertex_array_object)	errorString = "Your graphics card must support ARB_vertex_array_object: Please update your graphics drivers.";
 
 	if(errorString != "")
@@ -2896,6 +2920,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		if(vender) errorString += string("\n   Vender: ") + vender;
 #ifdef WINDOWS
 		MessageBoxA(NULL, errorString.c_str(),"ERROR",MB_OK);
+#else
+		std::cout << "FATAL ERROR: " << errorString << endl;
 #endif
 		return false;
 	}
@@ -2928,7 +2954,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			openGL4 = true;
 		}
 	}
-	if(wglCreateContextAttribsARB && !openGL4 && targetRendererVersion >= 3) //attempt to create an openGL 3 context
+	if(wglCreateContextAttribsARB && !openGL4 /*&& targetRendererVersion >= 3*/) //attempt to create an openGL 3 context
 	{
 		int attribs[] =
 		{
@@ -2960,18 +2986,18 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	RegisterHotKey(context->hWnd,IDHOT_SNAPWINDOW,0,VK_SNAPSHOT);
 	RegisterHotKey(context->hWnd,IDHOT_SNAPDESKTOP,0,VK_SNAPSHOT);
 #elif defined(LINUX)
-	//GLuint vao;
-	//glGenVertexArrays(1, &vao);
-	//glBindVertexArray(vao);
-	//gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
-	//openGL3 = true;	
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
+	openGL3 = true;	
 #endif
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.47f,0.57f,0.63f,1.0f);
+	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	if(gl2Hacks)
@@ -3275,10 +3301,6 @@ void OpenGLgraphics::checkErrors()
 }
 void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures)
 {
-	//if(!texture)
-	//	return;
-
-
 	setFrameBufferTextures(texture, texture_level, depthTexture, depth_level);
 	if(clearTextures && !texture && depthTexture)
 	{
@@ -3294,26 +3316,7 @@ void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, unsigne
 		glClearColor(0,0,0,0);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	}
-	//glClear(GL_COLOR_BUFFER_BIT);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-	//setRenderBufferTexture(texture);
-	//glViewport(0, 0, texture->getWidth(), texture->getHeight());
-
-	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-	//if(!depthTexture)
-	//{
-	//	setDepthBufferTexture(nullptr);
-	//}
-	//else if((texture->getWidth() == depthTexture->getWidth() && texture->getHeight() == depthTexture->getHeight()))
-	//{
-	//	setDepthBufferTexture(depthTexture);
-	//}
-	//else
-	//{
-	//	setDepthBufferTexture(nullptr);
-	//	debugBreak(); //textures are different sizes!!!
-	//}
+	renderingToTexture = true;
 }
 void OpenGLgraphics::startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures)
 {
@@ -3323,11 +3326,22 @@ void OpenGLgraphics::startRenderToTexture(shared_ptr<textureCube> texture, textu
 		glClearColor(0,0,0,0);
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
+	renderingToTexture = true;
 }
 void OpenGLgraphics::endRenderToTexture()
 {	
-	setBlendMode(GraphicsManager::TRANSPARENCY);
-	bindRenderTarget(RT_FBO);
+	if(renderingToTexture)
+	{
+		//setBlendMode(GraphicsManager::TRANSPARENCY);
+		bindRenderTarget(RT_FBO); //restore render textures on RT_FBO
+		bindRenderTarget(cachedRenderTarget); //bind old render target
+		glViewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
+		renderingToTexture = false;
+	}
+	else
+	{
+		debugBreak();
+	}
 }
 void OpenGLgraphics::generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s)
 {
@@ -3361,7 +3375,7 @@ void OpenGLgraphics::generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr
 
 		startRenderToTexture(tex,level,nullptr,0,false);
 		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
-		drawOverlay(Rect::XYXY(-1,-1,1,1));
+		GraphicsManager::drawOverlay(Rect::XYXY(-1,-1,1,1));
 		endRenderToTexture();
 
 	}while(width > 1 || height > 1);

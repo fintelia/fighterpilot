@@ -76,10 +76,20 @@ public:
 		y=Y;
 		return *this;
 	}
-	bool equal(const Vector2& v, T maxDifference=0.01) const
+	template<class TT=T>
+	typename std::enable_if<std::is_integral<TT>::value, bool>::type
+	equal(const Vector2<TT>& v) const
+	{
+		return x==v.x && y==v.y;
+	}
+	template<class TT=T>
+	typename std::enable_if<!std::is_integral<TT>::value, bool>::type
+	equal(const Vector2<TT>& v, TT maxDifference=0.01) const
 	{
 		return (::abs(x-v.x) <= maxDifference && ::abs(y-v.y) <= maxDifference);
 	}
+	
+
 	T distance(const Vector2& v) const
 	{
 		return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));

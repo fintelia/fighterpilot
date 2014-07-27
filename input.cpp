@@ -670,14 +670,18 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			else
 			{
 			//	down(wParam);
-				sendCallbacks(new keyStroke(false, wParam));
+				WORD ascii[2] = {0, 0};
+				ToAscii(wParam, 0, nullptr, &ascii, 0);
+				sendCallbacks(new keyStroke(false, wParam, (char)ascii[0]));
 			}
 		}
 	}
 	else if(uMsg == WM_KEYUP)
 	{
 	//	up(wParam);
-		sendCallbacks(new keyStroke(true, wParam));
+		WORD ascii[2] = {0, 0};
+		ToAscii(wParam, 0, nullptr, &ascii, 0);
+		sendCallbacks(new keyStroke(true, wParam, (char)ascii[0]));
 	}
 	else if(uMsg == WM_LBUTTONDOWN)
 	{

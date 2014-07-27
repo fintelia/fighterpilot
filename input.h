@@ -91,8 +91,9 @@ public:
 	struct keyStroke: public callBack{
 		bool up;
 		int vkey;
+		char ascii;
 		keyStroke(): callBack(KEY_STROKE){}
-		keyStroke(bool Up, int Vkey): callBack(KEY_STROKE), up(Up), vkey(Vkey){}
+	keyStroke(bool Up, int Vkey, char Ascii=0): callBack(KEY_STROKE), up(Up), vkey(Vkey), ascii(Ascii){}
 	};
 	struct mouseClick: public callBack{
 		bool down;

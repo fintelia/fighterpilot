@@ -5,7 +5,7 @@ public:
 	class sound
 	{
 	private:
-		unsigned int soundID;
+		//unsigned int soundID;
 		void* dsSecondaryBuffer; //IDirectSoundBuffer8*
 		string filename;
 		friend class SoundManager;
@@ -15,7 +15,7 @@ public:
 	class soundInstance
 	{
 	private:
-		unsigned int soundID;
+		//unsigned int soundID;
 	public:
 		Vec3f position;
 		Vec3f velocity;

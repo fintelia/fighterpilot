@@ -6,6 +6,7 @@
 #elif defined(LINUX)
 	#include <X11/keysym.h>
 	#include <X11/Xlib.h>
+	#include <X11/Xutil.h>
 	Display* x11_display;
 	int x11_screen;
 	unsigned int x11_window;
@@ -136,12 +137,13 @@ void linuxEventHandler(XEvent event)
 		bool keyup = e->type == KeyRelease;
 		unsigned int keysym = XLookupKeysym(e,0);
 
-		auto trySym = [keysym,keyup](unsigned int sym, unsigned int vk)->bool
-		{
+		auto trySym = [keysym,keyup,e](unsigned int sym, unsigned int vk)->bool
+	{
 			if(keysym == sym)
 			{
-				input.sendCallbacks(new InputManager::keyStroke(keyup, vk));
-				//cout << keysym << endl;
+				char ascii = 0;
+				XLookupString(e, &ascii, 1, nullptr, nullptr);
+				input.sendCallbacks(new InputManager::keyStroke(keyup, vk, ascii));
 				return true;
 			}
 			return false;
@@ -150,7 +152,8 @@ void linuxEventHandler(XEvent event)
 		{
 			if(keysym >= (minSym) && keysym <= (maxSym))
 			{
-				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK)));
+				char* str = XKeysymToString(keysym);
+				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK), str ? str[0] : 0));
 				//cout << keysym << endl;
 				return true;
 			}
@@ -184,6 +187,10 @@ void linuxEventHandler(XEvent event)
 			!trySymRange(XK_a, XK_z,					0x41)) 			// a-z
 		{
 			//keysym not found...
+			char* str = XKeysymToString(keysym);
+			if(str){
+				std::cout << "Unrecognized KeySym: " << str << std::endl;
+			}
 		}
 	}
 	else if(event.type == ButtonPress)
@@ -201,6 +208,11 @@ void linuxEventHandler(XEvent event)
 		if(e->button == 1)	input.sendCallbacks(new InputManager::mouseClick(false, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
 		if(e->button == 2)	input.sendCallbacks(new InputManager::mouseClick(false, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
 		if(e->button == 3)	input.sendCallbacks(new InputManager::mouseClick(false, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+	}
+	else if(event.type == ConfigureNotify)
+	{
+		XConfigureEvent* e = &event.xconfigure;
+		graphics->resize(e->width, e->height);
 	}
 }
 #endif

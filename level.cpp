@@ -158,6 +158,7 @@ bool LevelFile::loadZIP(string filename)
 
 	heights = new float[info.mapResolution.x * info.mapResolution.y];
 	memset(heights, 0, info.mapResolution.x * info.mapResolution.y * sizeof(float));
+
 	for(int i = 0; i < info.mapResolution.x * info.mapResolution.y && i * 2 < rawFile->size; i++)
 	{
 		heights[i] = info.minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info.maxHeight - info.minHeight) / USHRT_MAX;

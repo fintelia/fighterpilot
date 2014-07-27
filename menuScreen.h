@@ -44,8 +44,8 @@ public:
 	virtual bool mouseDownL(float X, float Y){return false;}
 	virtual bool mouseUpR(float X, float Y){return false;}
 	virtual bool mouseUpL(float X, float Y){return false;}
-	virtual bool keyDown(int vkey){return false;}
-	virtual bool keyUp(int vkey){return false;}
+	virtual bool keyDown(int vkey, char ascii){return false;}
+	virtual bool keyUp(int vkey, char ascii){return false;}
 
 	virtual void gainFocus(){focus = true;}
 	virtual void looseFocus(){focus = false;}
@@ -128,7 +128,7 @@ public:
 
 	bool mouseDownL(float X, float Y);
 	bool mouseUpL(float X, float Y);
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 
 	void render();
 
@@ -271,8 +271,8 @@ public:
 
 	virtual bool mouseL(bool down, float x, float y){return false;}
 	virtual bool mouseR(bool down, float x, float y){return false;}
-	virtual bool keyDown(int vkey){return false;}
-	virtual bool keyUp(int vkey){return false;}
+	virtual bool keyDown(int vkey, char ascii){return false;}
+	virtual bool keyUp(int vkey, char ascii){return false;}
 	virtual bool menuKey(int mkey){return false;}
 	virtual bool scroll(float rotations){return false;}
 
@@ -300,7 +300,7 @@ public:
 	bool validFile() {return file != "";}
 	string getFile() {return directory+"/"+file;}
 
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 	bool mouseL(bool down, float x, float y);
 protected:
 	struct thumbnail
@@ -351,8 +351,8 @@ public:
 	messageBox_c():value(-1),clicking(-1){}
 	~messageBox_c(){}
 
-	bool init(string t);
-	bool init(string t, vector<string> buttons);
+	bool initialize(string t);
+	bool initialize(string t, vector<string> buttons);
 	void updateFrame(){}
 	void render();
 
@@ -383,8 +383,8 @@ public:
 	///////////////////////////////////////////
 	virtual bool mouse(mouseButton button, bool down){return false;}
 
-	virtual bool keyDown(int vkey){return false;}
-	virtual bool keyUp(int vkey){return false;}
+	virtual bool keyDown(int vkey, char ascii){return false;}
+	virtual bool keyUp(int vkey, char ascii){return false;}
 	virtual bool menuKey(int mkey){return false;}
 	virtual bool scroll(float rotations){return false;}
 	///////////////////////////////////////////

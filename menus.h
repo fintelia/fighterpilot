@@ -37,7 +37,7 @@ public:
 	void updateFrame(){}
 	void render();
 	bool menuKey(int mkey);
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 protected:
 	choice activeChoice;
 };
@@ -60,7 +60,6 @@ private:
 	shared_ptr<GraphicsManager::vertexBuffer> terrainSkirtVBO;
 	shared_ptr<GraphicsManager::texture2D> groundTex;
 	unsigned int numTerrainIndices;
-	unsigned int numTerrainSkirtVertices;
 	bool terrainValid;
 
 	vector<objectType> typeOptions;
@@ -146,7 +145,7 @@ public:
 	~chooseMode(){}
 	bool init(){activeChoice=SINGLE_PLAYER;return true;}
 	void render();
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 	bool menuKey(int mkey);
 	void operator() (popup* p);
 protected:
@@ -160,7 +159,7 @@ public:
 	~chooseMap(){}
 	bool init();
 	void render();
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 protected:
 	vector<string> mapChoices;
 	int currentChoice;
@@ -192,7 +191,7 @@ private:
 public:
 	bool init();
 	void updateFrame();
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 	void render();
 private:
 
@@ -205,7 +204,7 @@ public:
 	bool init();
 	void render();
 	void updateFrame();
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 };
 class credits: public popup
 {
@@ -213,7 +212,7 @@ public:
 	bool init();
 	void render();
 	void updateFrame();
-	bool keyDown(int vkey);
+	bool keyDown(int vkey, char ascii);
 };
 class loading:public screen
 {
