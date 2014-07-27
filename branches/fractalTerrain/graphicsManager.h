@@ -316,8 +316,6 @@ public:
 		unsigned int refreshRate;
 		bool operator< (const displayMode& other)const{return resolution.x < other.resolution.x || (resolution.x == other.resolution.x && resolution.y < other.resolution.y) || (resolution.x == other.resolution.x && resolution.y == other.resolution.y && refreshRate < other.refreshRate);}
 	};
-private:
-	gID currentId;
 
 protected:
 
@@ -378,9 +376,17 @@ public:
 	virtual void drawQuad(Vec3f p1, Vec3f p2, Vec3f p3, Vec3f p4){drawTriangle(p1,p2,p3);drawTriangle(p1,p3,p4);}
 
 	//draw overlay functions
-	virtual bool drawOverlay(Rect4f r, string tex="")=0;
-	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="")=0;
-	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="")=0;
+	virtual bool drawOverlay(Rect4f r, shared_ptr<texture> tex)=0;
+	virtual bool drawRotatedOverlay(Rect4f r, Angle retation, shared_ptr<texture> tex)=0;
+	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, shared_ptr<texture> tex)=0;
+
+	virtual bool drawOverlay(Rect4f r, string tex);
+	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex);
+	virtual bool drawPartialOverlay(Rect4f r, Rect4f t, string tex);
+
+	virtual bool drawOverlay(Rect4f r){return drawOverlay(r,"");}
+	virtual bool drawRotatedOverlay(Rect4f r, Angle rotation){return drawRotatedOverlay(r, rotation, "");}
+	virtual bool drawPartialOverlay(Rect4f r, Rect4f t){return drawPartialOverlay(r, t, "");}
 
 	//draw text functions
 	virtual void drawText(string text, Vec2f pos, string font)=0;
@@ -429,6 +435,7 @@ public:
 	virtual void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)=0;
 	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face){setFrameBufferTextures(color,face,0);}
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
+	virtual void setClearColor(Color4 clearColor)=0;
 
 	//set functions
 	void setColor(float r, float g, float b, float a);
@@ -468,14 +475,18 @@ protected:
 
 
 	unsigned int renderTexture;
+	unsigned int renderTexture2;
 	unsigned int depthTexture;
 	unsigned int multisampleRenderBuffer;
 	unsigned int multisampleDepthBuffer;
 
-	RenderTarget colorTarget;
-	RenderTarget depthTarget;
+	RenderTarget renderTarget;
 
 	bool renderingToTexture;
+	RenderTarget cachedRenderTarget;
+
+	//only valid within render(), used to restore viewport after renderToTexture
+	Rect4i currentViewport;
 
 	unsigned int fboID;
 	unsigned int multisampleFboID;
@@ -489,7 +500,6 @@ protected:
 	bool isFullscreen;
 
 	int samples;
-	RenderTarget renderTarget;
 	Context* context;
 	bool colorMask;
 	bool depthMask;
@@ -503,6 +513,8 @@ protected:
 	bool color_clientState;
 
 	map<unsigned int, bool> clientStates;
+
+	Color4 clearColor;
 
 #ifdef _DEBUG
 	double errorGlowEndTime;
@@ -526,7 +538,6 @@ public:
 	{
 	private:
 		unsigned int vBufferID;
-		unsigned int iBufferID;
 		void bindBuffer(unsigned int offset);
 
 	public:
@@ -680,9 +691,9 @@ public:
 	//void drawModel(string model, Vec3f position, Quat4f rotation, Vec3f scale);
 	//void drawModelCustomShader(string model, Vec3f position, Quat4f rotation, Vec3f scale);
 
-	bool drawOverlay(Rect4f r, string tex="");
-	bool drawRotatedOverlay(Rect4f r, Angle rotation, string tex="");
-	bool drawPartialOverlay(Rect4f r, Rect4f t, string tex="");
+	bool drawOverlay(Rect4f r, shared_ptr<texture> tex);
+	bool drawRotatedOverlay(Rect4f r, Angle rotation, shared_ptr<texture> tex);
+	bool drawPartialOverlay(Rect4f r, Rect4f t, shared_ptr<texture> tex);
 
 	shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage);
 	shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage);
@@ -702,6 +713,7 @@ public:
 	void setRefreshRate(unsigned int rate);
 	void setVSync(bool enabled);
 	void setWireFrame(bool enabled);
+	void setClearColor(Color4 clearColor);
 
 	void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
 	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level);

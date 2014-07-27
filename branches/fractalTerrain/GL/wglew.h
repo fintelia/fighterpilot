@@ -446,6 +446,28 @@ typedef BOOL (WINAPI * PFNWGLSETPBUFFERATTRIBARBPROC) (HPBUFFERARB hPbuffer, con
 
 #endif /* WGL_ARB_render_texture */
 
+/* ---------------- WGL_ARB_robustness_application_isolation --------------- */
+
+#ifndef WGL_ARB_robustness_application_isolation
+#define WGL_ARB_robustness_application_isolation 1
+
+#define WGL_CONTEXT_RESET_ISOLATION_BIT_ARB 0x00000008
+
+#define WGLEW_ARB_robustness_application_isolation WGLEW_GET_VAR(__WGLEW_ARB_robustness_application_isolation)
+
+#endif /* WGL_ARB_robustness_application_isolation */
+
+/* ---------------- WGL_ARB_robustness_share_group_isolation --------------- */
+
+#ifndef WGL_ARB_robustness_share_group_isolation
+#define WGL_ARB_robustness_share_group_isolation 1
+
+#define WGL_CONTEXT_RESET_ISOLATION_BIT_ARB 0x00000008
+
+#define WGLEW_ARB_robustness_share_group_isolation WGLEW_GET_VAR(__WGLEW_ARB_robustness_share_group_isolation)
+
+#endif /* WGL_ARB_robustness_share_group_isolation */
+
 /* ----------------------- WGL_ATI_pixel_format_float ---------------------- */
 
 #ifndef WGL_ATI_pixel_format_float
@@ -480,6 +502,17 @@ typedef BOOL (WINAPI * PFNWGLSETPBUFFERATTRIBARBPROC) (HPBUFFERARB hPbuffer, con
 #define WGLEW_EXT_create_context_es2_profile WGLEW_GET_VAR(__WGLEW_EXT_create_context_es2_profile)
 
 #endif /* WGL_EXT_create_context_es2_profile */
+
+/* ------------------- WGL_EXT_create_context_es_profile ------------------- */
+
+#ifndef WGL_EXT_create_context_es_profile
+#define WGL_EXT_create_context_es_profile 1
+
+#define WGL_CONTEXT_ES_PROFILE_BIT_EXT 0x00000004
+
+#define WGLEW_EXT_create_context_es_profile WGLEW_GET_VAR(__WGLEW_EXT_create_context_es_profile)
+
+#endif /* WGL_EXT_create_context_es_profile */
 
 /* -------------------------- WGL_EXT_depth_float -------------------------- */
 
@@ -1312,9 +1345,12 @@ WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_pbuffer;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_pixel_format;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_pixel_format_float;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_render_texture;
+WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_robustness_application_isolation;
+WGLEW_VAR_EXPORT GLboolean __WGLEW_ARB_robustness_share_group_isolation;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_ATI_pixel_format_float;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_ATI_render_texture_rectangle;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_EXT_create_context_es2_profile;
+WGLEW_VAR_EXPORT GLboolean __WGLEW_EXT_create_context_es_profile;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_EXT_depth_float;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_EXT_display_color_table;
 WGLEW_VAR_EXPORT GLboolean __WGLEW_EXT_extensions_string;

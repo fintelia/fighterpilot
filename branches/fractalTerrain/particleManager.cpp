@@ -488,13 +488,13 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 
 	auto sparkShader = shaders.bind("spark shader");
 	sparkShader->setUniform1i("tex",0);
-	sparkShader->setUniform1i("depth",1);
+	sparkShader->setUniform1i("depth",47);
 	sparkShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	sparkShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 	auto particleShader = shaders.bind("particle shader");
 	particleShader->setUniform1i("tex",0);
-	particleShader->setUniform1i("depth",1);
+	particleShader->setUniform1i("depth",47);
 	particleShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	particleShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 	if(graphics->hasShaderModel4())

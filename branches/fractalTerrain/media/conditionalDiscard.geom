@@ -7,7 +7,7 @@ layout(points, max_vertices=1) out;
 in VertexData{
 	float shouldDiscard;
 	vec3 position;
-	int vertexID;
+	uint vertexID;
 }vertexIn[1];
 
 out float placeHolder;

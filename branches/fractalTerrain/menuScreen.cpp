@@ -183,8 +183,8 @@ void manager::inputCallback(InputManager::callBack* callback)
 #ifdef _DEBUG
 			int pSize = popups.size();
 #endif
-			if(!call->up && popups.back()->keyDown(call->vkey)) return;
-			if(call->up && popups.back()->keyUp(call->vkey)) return;
+			if(!call->up && popups.back()->keyDown(call->vkey, call->ascii)) return;
+			if(call->up && popups.back()->keyUp(call->vkey, call->ascii)) return;
 
 			debugAssert(popups.size() == pSize);
 
@@ -192,8 +192,8 @@ void manager::inputCallback(InputManager::callBack* callback)
 		}
 		else if(menu!=NULL)
 		{
-			if(!call->up && menu->keyDown(call->vkey))return;
-			if(call->up && menu->keyUp(call->vkey))return;
+			if(!call->up && menu->keyDown(call->vkey, call->ascii))return;
+			if(call->up && menu->keyUp(call->vkey, call->ascii))return;
 
 			debugAssert(menu != NULL);
 
@@ -268,8 +268,8 @@ bool elementContainer::issueInputCallback(InputManager::callBack* callback, elem
 	if(callback->type == KEY_STROKE)
 	{
 		InputManager::keyStroke* call = (InputManager::keyStroke*)callback;
-		if(call->up)	return e->keyUp(call->vkey);
-		else			return e->keyDown(call->vkey);
+		if(call->up)	return e->keyUp(call->vkey, call->ascii);
+		else			return e->keyDown(call->vkey, call->ascii);
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
@@ -524,36 +524,28 @@ void openFile::fileSelected()
 	
 	done = true;
 }
-bool openFile::keyDown(int vkey)
+bool openFile::keyDown(int vkey, char ascii)
 {
-	if(vkey == VK_RETURN)
-	{
-		fileSelected();
-	}
-	else if(vkey == VK_ESCAPE)
-	{
-		file = "";
-		fileSelected();
-		input.up(VK_ESCAPE);//so the program will not quit
-	}
-	else if(vkey == VK_BACK)
-	{
-		if(file.size() != 0)
-			file=file.substr(0,file.size()-1);
-	}
-	else
-	{
-#ifdef WINDOWS
-		char ascii = MapVirtualKey(vkey,2/*MAPVK_VK_TO_CHAR*/);
-#else
-		char ascii = 0; //TODO: add support for mapping virtual keys on linux
-#endif
-		if(ascii != 0 && !input.getKey(VK_SHIFT))
-			file  += tolower(ascii);
-		else if(ascii != 0)
-			file  += ascii;
-	}
-	return true;
+    if(vkey == VK_RETURN)
+    {
+	fileSelected();
+    }
+    else if(vkey == VK_ESCAPE)
+    {
+	file = "";
+	fileSelected();
+	input.up(VK_ESCAPE);//so the program will not quit
+    }
+    else if(vkey == VK_BACK)
+    {
+	if(file.size() != 0)
+	    file=file.substr(0,file.size()-1);
+    }
+    else if(ascii != 0 && !input.getKey(VK_SHIFT))
+    {
+	file += ascii;
+    }
+    return true;
 }
 bool openFile::getThumbnail(Vec2f v, vector<thumbnail>::iterator& itt)
 {
@@ -655,7 +647,7 @@ void saveFile::fileSelected()
 		vector<string> s;
 		s.push_back("yes");
 		s.push_back("no");
-		m->init(file + " already exists. Do you want to replace it?",s);
+		m->initialize(file + " already exists. Do you want to replace it?",s);
 		m->callback = (functor<void,popup*>*)this;
 		menuManager.setPopup(m);
 		replaceDialog = true;
@@ -666,13 +658,13 @@ void saveFile::fileSelected()
 	}
 }
 
-bool messageBox_c::init(string t)
+bool messageBox_c::initialize(string t)
 {
-	return init(t, vector<string>(1,"OK"));
+	return initialize(t, vector<string>(1,"OK"));
 }
-bool messageBox_c::init(string t, vector<string> names)
+bool messageBox_c::initialize(string t, vector<string> names)
 {
-	if(names.empty()) return init(t);//watch out for infinite loop!!
+	if(names.empty()) return initialize(t);//watch out for infinite loop!!
 
 	Vec2f tSize = graphics->getTextSize(t);
 	width = clamp(tSize.x+0.039,0.700,sAspect-0.01);
@@ -968,23 +960,11 @@ void textBox::addChar(char c)
 	text.insert(text.begin()+cursorPos,c);
 	cursorPos++;
 }
-bool textBox::keyDown(int vkey)
+bool textBox::keyDown(int vkey, char ascii)
 {
 	if(focus)
-	{
-		if(0x60 <= vkey && 0x69 >= vkey)// numpad
-		{
-			addChar(vkey - 0x30);
-		}
-		else if(vkey == 0x20)// space
-		{
-			addChar(' ');
-		}
-		else if(vkey == 0x6e)
-		{
-			addChar('.');
-		}
-		else if(vkey == 0x08 && cursorPos > 0)// backspace
+	{	    
+		if(vkey == 0x08 && cursorPos > 0)// backspace
 		{
 			cursorPos--;
 			text.erase(text.begin()+cursorPos);
@@ -1001,32 +981,9 @@ bool textBox::keyDown(int vkey)
 		{
 			cursorPos++;
 		}
-
-
-		else if(input.getKey(VK_SHIFT))
+		else if(ascii != 0)
 		{
-			if(0x41 <= vkey && 0x5a >= vkey)	addChar(vkey);
-			if(vkey == 0xba)					addChar(':');
-			if(vkey == 0xbc)					addChar('<');
-			if(vkey == 0xbe)					addChar('>');
-			if(vkey == 0xbf)					addChar('?');
-			if(vkey == 0xdb)					addChar('{');
-			if(vkey == 0xdc)					addChar('|');
-			if(vkey == 0xdd)					addChar('}');
-			if(vkey == 0xde)					addChar('"');
-		}
-		else
-		{
-			if(0x41 <= vkey && 0x5a >= vkey)	addChar(vkey+0x20);
-			if(0x30 <= vkey && 0x39 >= vkey)	addChar(vkey);
-			if(vkey == 0xba)					addChar(';');
-			if(vkey == 0xbc)					addChar(',');
-			if(vkey == 0xbe)					addChar('.');
-			if(vkey == 0xbf)					addChar('/');
-			if(vkey == 0xdb)					addChar('[');
-			if(vkey == 0xdc)					addChar('\\');
-			if(vkey == 0xdd)					addChar(']');
-			if(vkey == 0xde)					addChar('\'');
+			addChar(ascii);
 		}
 		return true;
 	}
@@ -1368,7 +1325,7 @@ void messageBox(string text)
 	else
 	{
 		gui::messageBox_c* m = new gui::messageBox_c;
-		m->init(text);
+		m->initialize(text);
 		menuManager.setPopup(m);
 	}
 }
@@ -1392,7 +1349,7 @@ void closingMessage(string text,string title)
 			void operator() (gui::popup*){exit(0);}
 		};
 		gui::messageBox_c* m = new gui::messageBox_c;
-		m->init(text);
+		m->initialize(text);
 		m->callback = (functor<void,gui::popup*>*)(new exitor);
 		menuManager.setPopup(m);
 	}

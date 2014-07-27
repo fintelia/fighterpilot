@@ -459,7 +459,7 @@ bool levelEditor::mouse(mouseButton button, bool down)
 			}
 			else if(!objectCircles.empty() && p.x > 0.260 && p.y < 0.960)
 			{
-				float minDist;
+				float minDist = 0.0f;
 				map<int,Circle<float>>::iterator closestCircle = objectCircles.end();
 				for(auto i = objectCircles.begin(); i != objectCircles.end(); i++)
 				{
@@ -1294,7 +1294,7 @@ void levelEditor::fromFile(string filename)
 				}
 			}
 		}
-		if(bpp == 2)
+		else if(bpp == 2)
 		{
 			for(int x = 0; x < nRows; x++)
 			{
@@ -1304,7 +1304,7 @@ void levelEditor::fromFile(string filename)
 				}
 			}
 		}
-		if(bpp == 4)
+		else if(bpp == 4)
 		{
 			for(int x = 0; x < nRows; x++)
 			{
@@ -1313,6 +1313,10 @@ void levelEditor::fromFile(string filename)
 					levelFile.heights[x + y*nRows] = ((__int32*)tmpHeights)[x + y*nRows];
 				}
 			}
+		}
+		else /* error: bpp should be 1, 2, or 4 */
+		{
+			return;
 		}
 		fin.close();
 

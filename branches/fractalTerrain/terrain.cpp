@@ -1,11 +1,567 @@
 
-
 #include "engine.h"
 
-const unsigned char LEFT		= 0x01; //patch to the left is one level above this patch
-const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
-const unsigned char TOP			= 0x04; //patch to the top is one level above this patch
-const unsigned char BOTTOM		= 0x08; //patch to the bottom is one level above this patch
+shared_ptr<GraphicsManager::vertexBuffer> Terrain::FractalNode::vertexBuffer;
+std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> Terrain::FractalNode::indexBuffers;
+shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::subdivideTexture;
+Terrain::FractalNode::WaveGroup<16> Terrain::FractalNode::waves;
+
+void Terrain::FractalNode::recursiveEnvoke(std::function<void(FractalNode*)> func)
+{
+	func(this);
+	for(auto& c : children)
+	{
+		if(c)
+		{
+			c->recursiveEnvoke(func);
+		}
+	}
+}
+
+void Terrain::FractalNode::reverseRecursiveEnvoke(std::function<void(FractalNode*)> func)
+{
+	func(this);
+	if(parent)
+	{
+		parent->reverseRecursiveEnvoke(func);
+	}
+}
+
+Terrain::FractalNode::FractalNode(FractalNode* parent_, 
+								  unsigned int level_, 
+								  Vec2i coordinates_, 
+								  shared_ptr<ClipMap> clipMap_): 
+	divisionLevel(DivisionLevel::COMBINED),waterDivisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_)
+{
+	if(level <= 1)
+	{
+		clipMapLayer = 0;
+	}
+	else
+	{
+		clipMapLayer = 0;//min(layer - 1, clipMapLayer < clipMap->layers.size());
+		/*unsigned int x = coordinates.x * (tileResolution-1);
+		  unsigned int y = coordinates.y * (tileResolution-1);
+		  unsigned int cx = (clipMap->layerResolution << clipLayer) / 2;
+		
+		  while(clipMapLayer > 0)
+		  {
+		  x >>= 1;
+		  y >>= 1;
+
+		  if()
+		  cli
+		  ++clipMapLayer;
+		  layerSize = layerSize / 2 + 1;
+		  }
+		  clipMapLayer = min(layer - 1, clipMap->layers.size());*/
+
+
+
+
+	}
+
+	unsigned int layerSize = ((tileResolution-1) << level) + 1;
+	unsigned int clipMapLayerSize = ((clipMap->layerResolution-1)<<clipMapLayer) + 1;
+	clipMapStep = (float)(clipMapLayerSize-1) / (layerSize-1);
+	clipMapOrigin = coordinates * (tileResolution-1) * clipMapStep
+		- clipMap->layerResolution * ((1 << clipMapLayer) - 1) / 2;
+
+	sideLength = clipMap->sideLength / (1 << level);
+
+	//minHeight = maxHeight = 
+	//for(int x = clipMapOrigin.x; x <= clipMapOrigin.x + ceil(clipMapStep*tileResolution); x++){
+	//	for(int z = clipMapOrigin.y; z <= clipMapOrigin.y + ceil(clipMapStep*tileResolution); z++){
+	//		float h = clipMap->layers[clipMapLayer].heights[]
+	//	}
+	//}
+
+	minHeight = maxHeight = clipMap->layers[clipMapLayer].heights[
+		clipMapOrigin.x + clipMapOrigin.y * clipMap->layerResolution];
+
+	auto& heights = clipMap->layers[clipMapLayer].heights;
+	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
+	{
+		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
+		{
+			float h = heights[x+clipMapOrigin.x + (y+clipMapOrigin.y)*clipMap->layerResolution];
+			minHeight = min(minHeight, h);
+			maxHeight = max(maxHeight, h);
+
+		}
+	}
+	
+	//minHeight = clipMap->layers[clipMapLayer].minHeight;
+	//maxHeight = clipMap->layers[clipMapLayer].maxHeight;
+	
+	texture = graphics->genTexture2D();
+	texture->setData(textureResolution, textureResolution, GraphicsManager::texture::Format::RGBA16, false, false, nullptr);
+
+	if(!parent/* || clipMapStep*(layerResolution-1)+1 >= textureResolution*/)
+	{
+		float p = 1.0 - 1.0 / textureResolution;
+		float t = 0.5 / clipMap->layers[clipMapLayer].texture->getWidth();
+		graphics->startRenderToTexture(texture, 0, nullptr, 0, true);
+		auto shader = shaders.bind("fractal subdivide");
+		shader->setUniform1f("amplitudeScale", 0.03 / (1 << level));
+		shader->setUniform1i("tex", 0);
+		graphics->drawPartialOverlay(Rect::XYXY(-p, -p, p, p), 
+									 Rect::XYWH(t, t, 1-t, 1-t),
+									 clipMap->layers[clipMapLayer].texture);
+		graphics->endRenderToTexture();
+		texture->generateMipmaps();
+	}
+	else
+	{
+		auto& layer = clipMap->layers[clipMapLayer];
+		Vec2f tOrigin = Vec2f(coordinates)/2 - Vec2f(parent->coordinates);
+		Vec2i textureOrigin = tOrigin * textureResolution;
+		float heightRange = layer.maxHeight - layer.minHeight;
+		float slopeScale = heightRange * (clipMap->layerResolution-1)
+			/ clipMap->sideLength;
+		//Subdivide X
+		graphics->startRenderToTexture(texture, 0, nullptr, 0, false);
+		auto shader = shaders.bind("fractal subdivideX");
+		shader->setUniform1f("amplitudeScale",0.00007*sideLength/(tileResolution*(1<<level)));
+		shader->setUniform1f("slopeScale", 1.0*(clipMap->layerResolution-1)
+							 / (textureResolution-1) * (1 << level));
+		shader->setUniform2i("textureOrigin", textureOrigin.x, textureOrigin.y);
+		shader->setUniform2i("origin", coordinates.x * (textureResolution-1),
+							 coordinates.y * (textureResolution-1));
+		shader->setUniform1i("tex", 0);
+		shader->setUniform1f("levelScale", 1.0 / (1 << level));
+		shader->setUniform1f("invLevelScale", 1 << level);
+		graphics->drawPartialOverlay(Rect::XYXY(-1,-1,1,1), 
+									 Rect::XYWH(tOrigin.x,tOrigin.y,0.5,0.5),
+									 parent->texture);
+		graphics->endRenderToTexture();
+		texture->generateMipmaps();
+		//subdivide Y
+/*		graphics->startRenderToTexture(texture, 0, nullptr, 0, false);
+		shader = shaders.bind("fractal subdivide");
+		shader->setUniform1f("amplitudeScale", 0.03 / (1 << level));
+		shader->setUniform2f("origin", coordinates * textureResolution);
+		shader->setUniform1i("tex", 0);
+		graphics->drawPartialOverlay(Rect::XYXY(-1,-1,1,1), 
+									 Rect::XYWH(0,0,1,1),
+									 subdivideTexture);
+		graphics->endRenderToTexture();
+		texture->generateMipmaps();
+*/	}
+
+	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
+				   (coordinates.y - 0.5*(1<<level))*sideLength);
+
+	worldCenter = Vec3f(origin.x+0.5*sideLength,
+						0.5*(maxHeight-minHeight),
+						origin.y+0.5*sideLength);
+
+	worldBounds.minXYZ = Vec3f(origin.x, minHeight, origin.y);
+	worldBounds.maxXYZ = Vec3f(origin.x+sideLength, maxHeight, origin.y+sideLength);
+
+	computeError();
+
+//	if(clipMapStep > 1 || clipMapLayer+1 < clipMap->layers.size()
+//	   || (parent && parent->clipMapStep > 1))
+	//if(sideLength / (tileResolution-1) > 30.0)
+	//{
+	//	subdivide();
+	//}
+}
+void Terrain::FractalNode::computeError()
+{
+	auto& heights = clipMap->layers[clipMapLayer].heights;
+	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
+	{
+		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
+		{
+			float h = heights[x+clipMapOrigin.x + (y+clipMapOrigin.y)*clipMap->layerResolution];
+			minHeight = min(minHeight, h);
+			maxHeight = max(maxHeight, h);
+
+		}
+	}
+
+	minDistance = sideLength * 15.0 / ((tileResolution-1));
+}
+void Terrain::FractalNode::subdivide()
+{
+	if(!children[0])
+		children[0] = std::make_shared<FractalNode>(this, level+1, coordinates*2, clipMap);
+	if(!children[1])
+		children[1] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(1,0), clipMap);
+	if(!children[2])
+		children[2] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(0,1), clipMap);
+	if(!children[3])
+		children[3] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(1,1), clipMap);	
+}
+bool Terrain::FractalNode::computeSubdivision(shared_ptr<GraphicsManager::View> view)
+{
+	bool rVal = false;
+	if(!view->boundingBoxInFrustum(worldBounds))
+		recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::FRUSTUM_CULLED;});
+
+	Vec3f eye = view->camera().eye;
+	float hMinDistance = 0.5*sideLength + minDistance;
+
+/*	if(eye.x > worldCenter.x - hMinDistance && eye.x < worldCenter.x + hMinDistance &&
+	   eye.y < maxHeight + minDistance && eye.y > minHeight - minDistance &&
+	   eye.z > worldCenter.z - hMinDistance && eye.z < worldCenter.z + hMinDistance &&
+	   sideLength / (tileResolution-1) > 10.0)*/
+		if(level <= 2)
+	{
+		divisionLevel = DivisionLevel::SUBDIVIDED;
+		if(!children[0])
+		{
+			subdivide();
+			rVal = true;
+		}
+		
+		for(auto& c : children)
+		{
+			c->computeSubdivision(view);
+		}
+	}
+	else
+	{
+		recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::COMBINED;});
+		divisionLevel = DivisionLevel::LEVEL_USED;
+	}
+	return rVal;
+}
+bool Terrain::FractalNode::computeWaterSubdivision(shared_ptr<GraphicsManager::View> view)
+{
+	bool rVal = false;
+	BoundingBox<float> bounds = worldBounds;
+	bounds.minXYZ.y = -5.0;
+	bounds.maxXYZ.y = 5.0;
+	if(!view->boundingBoxInFrustum(bounds))
+		recursiveEnvoke([](FractalNode* f){f->waterDivisionLevel=DivisionLevel::FRUSTUM_CULLED;});
+
+	if(sideLength / (tileResolution-1) > 100.0)
+	{
+		waterDivisionLevel = DivisionLevel::SUBDIVIDED;
+		if(!children[0])
+		{
+			subdivide();
+			rVal = true;
+		}
+		
+		for(auto& c : children)
+		{
+			c->computeWaterSubdivision(view);
+		}
+	}
+	else
+	{
+		recursiveEnvoke([](FractalNode* f){f->waterDivisionLevel=DivisionLevel::COMBINED;});
+		waterDivisionLevel = DivisionLevel::LEVEL_USED;
+	}
+
+	return rVal;
+}
+/**
+ * Preconditions: neighbors is valid. This means that it contains null values
+ * only if they represent the edge of the map or nodes that have not been 
+ * subdivided that far yet.
+ *
+ * Postcondition: all children have valid neighbors field
+ */
+void Terrain::FractalNode::assignNeighbors()
+{
+	if(children[0]) //if this node actally has children
+	{
+		//child 0
+		if(!neighbors[0].expired()) children[0]->neighbors[0] = neighbors[0].lock()->children[1];
+		if(!neighbors[2].expired()) children[0]->neighbors[2] = neighbors[2].lock()->children[2];
+		children[0]->neighbors[1] = children[1];
+		children[0]->neighbors[3] = children[2];
+
+		//child 1
+		if(!neighbors[1].expired()) children[1]->neighbors[1] = neighbors[1].lock()->children[0];
+		if(!neighbors[2].expired()) children[1]->neighbors[2] = neighbors[2].lock()->children[3];
+		children[1]->neighbors[0] = children[0];
+		children[1]->neighbors[3] = children[3];
+
+		//child 2
+		if(!neighbors[0].expired()) children[2]->neighbors[0] = neighbors[0].lock()->children[3];
+		if(!neighbors[3].expired()) children[2]->neighbors[3] = neighbors[3].lock()->children[0];
+		children[2]->neighbors[1] = children[3];
+		children[2]->neighbors[2] = children[0];
+
+		//child 3
+		if(!neighbors[1].expired()) children[3]->neighbors[1] = neighbors[1].lock()->children[2];
+		if(!neighbors[3].expired()) children[3]->neighbors[3] = neighbors[3].lock()->children[1];
+		children[3]->neighbors[0] = children[2];
+		children[3]->neighbors[2] = children[1];
+	}
+}
+void Terrain::FractalNode::patchEdges()
+{
+	if(divisionLevel == DivisionLevel::SUBDIVIDED ||
+	   waterDivisionLevel == DivisionLevel::SUBDIVIDED)
+	{
+		for(auto& c : children)
+			c->patchEdges();
+	}
+	
+}
+float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
+{
+	//TODO: add interpolation
+
+	float cx = x*clipMapStep + clipMapOrigin.x;
+	float cz = z*clipMapStep + clipMapOrigin.y;
+	
+	int ix = cx;
+	int iz = cz;
+	return clipMap->layers[clipMapLayer].heights[ix + iz*clipMap->layerResolution];
+}
+void Terrain::FractalNode::findNeighbors()
+{
+	throw string("not implemented yet");
+	//TODO: implement
+}
+void Terrain::FractalNode::render(shared_ptr<GraphicsManager::View> view)
+{
+	if(divisionLevel == DivisionLevel::SUBDIVIDED)
+	{
+		for(auto& c : children)
+		{
+			c->render(view);
+		}
+	}
+	else if(divisionLevel == DivisionLevel::LEVEL_USED)
+	{
+		auto& layer = clipMap->layers[clipMapLayer];
+		auto shader = shaders.bind("fractal terrain");
+//		auto texture = clipMap->layers[clipMapLayer].texture;
+		Vec2f tScale = Vec2f(1,1);//Vec2f(1,1) / (1 << level) * (1 >> clipMapLayer);
+		Vec2f tOrigin = Vec2f(0,0);//Vec2f(coordinates.x, coordinates.y) / (1 << level) * (1 >> clipMapLayer);
+		float slopeScale = (layer.maxHeight - layer.minHeight) 
+			* ((clipMap->layerResolution<<clipMapLayer) / clipMap->sideLength);
+
+		shader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
+		shader->setUniformMatrix("modelTransform", Mat4f());
+		shader->setUniform1i("groundTex", 0);
+		shader->setUniform3f("origin", origin.x, layer.minHeight, origin.y);
+		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
+		shader->setUniform2f("tOrigin", tOrigin + 0.5 / textureResolution);
+		shader->setUniform2f("tScale", tScale * (textureResolution-1) / textureResolution);
+		shader->setUniform1f("slopeScale", slopeScale);
+		shader->setUniform3f("eyePosition", view->camera().eye);
+		shader->setUniform3f("sunDirection", graphics->getLightPosition().normalize());
+		shader->setUniform1i("LCnoise",	 1); dataManager.bind("LCnoise",1);
+		shader->setUniform1i("noiseTex", 2); dataManager.bind("noise",2);
+		shader->setUniform1i("sand",     3); dataManager.bind("sand", 3);
+		shader->setUniform1i("grass",    4); dataManager.bind("grass",4);
+		shader->setUniform1i("grassDetail",	5);	dataManager.bind("grass detail",5);
+		texture->bind(0);
+
+
+		indexBuffers[0]->bindBuffer(vertexBuffer);
+		indexBuffers[0]->drawBuffer();
+	}
+}
+void Terrain::FractalNode::renderWater(shared_ptr<GraphicsManager::View> view)
+{
+	if(divisionLevel == DivisionLevel::SUBDIVIDED)
+	{
+		for(auto& c : children)
+		{
+			c->renderWater(view);
+		}
+	}
+	else if(divisionLevel == DivisionLevel::LEVEL_USED)
+	{
+		auto& layer = clipMap->layers[clipMapLayer];
+		auto shader = shaders.bind("fractal ocean");
+		auto texture = clipMap->layers[clipMapLayer].texture;
+		Vec2f tScale = Vec2f(1,1) / (1 << level) * (1 >> clipMapLayer);
+		Vec2f tOrigin = Vec2f(coordinates.x, coordinates.y) / (1 << level) * (1 >> clipMapLayer);
+		float slopeScale = (layer.maxHeight - layer.minHeight) 
+			* ((clipMap->layerResolution<<clipMapLayer) / clipMap->sideLength);
+
+		shader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
+		shader->setUniformMatrix("modelTransform", Mat4f());
+		shader->setUniform1i("groundTex", 3);
+		shader->setUniform3f("origin", origin.x, layer.minHeight, origin.y);
+		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
+		shader->setUniform2f("tOrigin", tOrigin);
+		shader->setUniform2f("tScale", tScale);
+		shader->setUniform1f("slopeScale", slopeScale);
+		shader->setUniform3f("eyePosition", view->camera().eye);
+		shader->setUniform3f("sunDirection", graphics->getLightPosition().normalize());
+		shader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
+		shader->setUniform1f("time",	world.time());
+
+		shader->setUniform1i("colorBuffer", 46);
+		shader->setUniform1i("depthBuffer", 47);
+		shader->setUniform1i("sky", 0);
+		shader->setUniform1i("waves", 1); dataManager.bind("wave lookup", 1);
+		shader->setUniform1i("oceanNormals", 2); dataManager.bind("ocean normals", 2);
+/*		shader->setUniform1fv("amplitudes", waves.size(), waves.amplitudes);
+		shader->setUniform1fv("frequencies", waves.size(), waves.frequencies);
+		shader->setUniform1fv("waveSpeeds", waves.size(), waves.speeds);
+		shader->setUniform2fv("waveDirections", waves.size(), waves.directions);
+*/
+//		shader->setUniform1i("LCnoise",	 1); dataManager.bind("LCnoise",1);
+//		shader->setUniform1i("noiseTex", 2); dataManager.bind("noise",2);
+//		shader->setUniform1i("sand",     3); dataManager.bind("sand", 3);
+//		shader->setUniform1i("grass",    4); dataManager.bind("grass",4);
+//		shader->setUniform1i("grassDetail",	5);	dataManager.bind("grass detail",5);
+		texture->bind(3);
+
+		indexBuffers[0]->bindBuffer(vertexBuffer);
+		indexBuffers[0]->drawBuffer();
+	}
+}
+void Terrain::FractalNode::initialize()
+{
+	int numHeights=0;
+	unique_ptr<float[]> heightMap(new float[tileResolution*tileResolution*2]);
+	for(int x = 0; x < tileResolution; x++)
+	{
+		for(int y=0; y < tileResolution; y++)
+		{
+			heightMap[numHeights*2 + 0] = (float)x / (tileResolution-1);
+			heightMap[numHeights*2 + 1] = (float)y / (tileResolution-1);
+			numHeights++;
+		}
+	}
+
+	auto v = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	vertexBuffer = v;
+	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0*sizeof(float));
+	vertexBuffer->setTotalVertexSize(sizeof(float)*2);
+	vertexBuffer->setVertexData(sizeof(float)*tileResolution*tileResolution*2, heightMap.get());
+
+	const unsigned int numIndices = tileResolution*tileResolution*6;
+	unique_ptr<unsigned int[]> indices((new unsigned int[numIndices]));
+	for(int eFlag=0; eFlag<16; eFlag++)
+	{
+		int i=0;
+		for(int y=0; y < tileResolution-1; y++)
+		{
+			for(int x = 0; x < tileResolution-1; x++)
+			{
+				if((eFlag & 4) && x == 0 && (y%2 == 0))
+				{
+					if(!((eFlag & 8) && y == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = (x+1)		+	(y+1)*tileResolution;
+					indices[i++] = x			+	(y+2)*tileResolution;
+
+					if(!((eFlag & 2) && y == tileResolution-2))
+					{
+						indices[i++] = x		+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+				}
+				if((eFlag & 8) && y == 0 && (x%2 == 0))
+				{
+					if(!((eFlag & 4) && x == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = (x+1)		+	(y+1)*tileResolution;
+					indices[i++] = (x+2)		+	y*tileResolution;
+
+					if(!((eFlag & 1) && x == tileResolution-2))
+					{
+						indices[i++] = (x+2)	+	y*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+						indices[i++] = (x+2)	+	(y+1)*tileResolution;
+					}
+				}
+				if((eFlag & 1) && x == tileResolution-2 && (y%2 == 0))
+				{
+					if(!((eFlag & 8) && y == 0)) //XXX
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+					}
+					indices[i++] = (x+1)		+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	(y+2)*tileResolution;
+
+					if(!((eFlag & 2) && y == tileResolution-2))
+					{
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = x		+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+2)*tileResolution;
+					}
+				}
+				if((eFlag & 2) && y == tileResolution-2 && (x%2 == 0))
+				{
+					if(!((eFlag & 4) && x == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+					}
+
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+2)		+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	y*tileResolution;
+
+					if(!((eFlag & 1) && x == tileResolution-2))
+					{
+						indices[i++] = (x+1)	+	y*tileResolution;
+						indices[i++] = (x+2)	+	(y+1)*tileResolution;
+						indices[i++] = (x+2)	+	y*tileResolution;
+					}
+				}
+
+				//default case
+				if(!((eFlag & 4) && x == 0) && !((eFlag & 8) && y == 0) && !((eFlag & 1) && x == tileResolution-2 && !((eFlag & 2) && y == tileResolution-2)))
+				{
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	y*tileResolution;
+
+					indices[i++] = (x+1)		+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = x+1			+	(y+1)*tileResolution;
+				}
+			}
+		}
+
+		indexBuffers[eFlag] = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+		indexBuffers[eFlag]->setData(indices.get(),graphics->hasShaderModel5() ? GraphicsManager::PATCHES : GraphicsManager::TRIANGLES, i);
+	}	
+
+//	queryTexture = graphics->genTexture2D();
+//	queryTexture.setData(1, 1, ****, false, false, nullptr);
+
+	subdivideTexture = graphics->genTexture2D();
+	subdivideTexture->setData(textureResolution, textureResolution, GraphicsManager::texture::Format::RGBA16, false, false, nullptr);
+
+	for(unsigned int i = 0; i < waves.size(); i++)
+	{
+		float f = pow(10.0f, random<float>(-4.0, -1.0));
+		float A = random<float>(1.0 / (40 * f), 1.0 / (20 * f));
+		waves.frequencies[i] = f;
+		waves.amplitudes[i] = A;
+		waves.speeds[i] = sqrt(9.8 / (3.14259 * 2 * f));
+		waves.directions[i] = random2<float>();
+	}
+}
+
+//const unsigned char LEFT		= 0x01; //patch to the left is one level above this patch
+//const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
+//const unsigned char TOP			= 0x04; //patch to the top is one level above this patch
+//const unsigned char BOTTOM		= 0x08; //patch to the bottom is one level above this patch
 //
 //const unsigned char SUBDIVIDED	= 0x10;	//patch is divided for rendering
 //const unsigned char LEVEL_USED	= 0x20; //patch is rendered at this level
@@ -495,7 +1051,7 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 	float			placementOdds = treesPerPatch / (sLength*sLength);
 
 	const int MAX_QUADS_WITHOUT_TF = 100000 * 10000; // 100,000 quads = 50,000 trees = 400,000 vertices
-	bool hasTransformFeedback = graphics->hasShaderModel4();
+	bool hasTransformFeedback = graphics->hasShaderModel4() && false;
 	foliagePatch patch;
 
 	double t=GetTime();
@@ -581,9 +1137,10 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 			placeTreesShader->setUniform1i("patch_height", sLength);
 			placeTreesShader->setUniform1i("vertexID_offset", 0);
 
+
 			foliageVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
 			emptyVBO->bindBuffer();
-			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
+			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength / 10); //<-causes error on Linux (intel graphics)
 #ifdef _DEBUG
 			unsigned int n = foliageVBO->unbindTransformFeedback();
 			debugAssert(n == 4*numTrees);
@@ -1635,6 +2192,10 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 {
 	debugAssert(isPowerOfTwo(patchResolution - 1));
 
+	graphics->setClearColor(Color4(0, 0.2, 0.3, 1.0));
+
+	FractalNode::initialize();
+
 	shaderType = shader;
 	waterPlane = (shader==TERRAIN_ISLAND);
 	shared_ptr<Page> p(new Page(Heights,patchResolution,position,scale,LOD));
@@ -1655,6 +2216,70 @@ void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolutio
 	graphics->checkErrors();
 
 //	skyTexture = static_pointer_cast<GraphicsManager::textureCube>(dataManager.getTexture("skybox"));
+
+
+	shared_ptr<ClipMap> clipMap = std::make_shared<ClipMap>();
+	clipMap->layerResolution = patchResolution;
+	clipMap->sideLength = scale.x;
+	clipMap->layers.push_back(ClipMap::Layer());
+	clipMap->layers[0].minHeight = position.y;
+	clipMap->layers[0].maxHeight = position.y + scale.y;
+	clipMap->layers[0].heights = unique_ptr<float[]>(new float[patchResolution*patchResolution]);
+	for(int i=0; i<patchResolution*patchResolution; i++)
+	{
+		clipMap->layers[0].heights[i] = Heights[i] * scale.y / USHRT_MAX
+			+ position.y;	
+	}
+
+	unique_ptr<unsigned short[]> groundValues(new unsigned short[clipMap->layerResolution*clipMap->layerResolution*4]);
+	for(unsigned int x=0; x < clipMap->layerResolution; x++)
+	{
+		for(unsigned int z=0; z < clipMap->layerResolution; z++)
+		{
+			float xSlope = 0, zSlope = 0;
+			if(x > 0 && x < clipMap->layerResolution-1)
+				xSlope = ((int)Heights[(x+1)+z*patchResolution] - Heights[(x-1)+z*patchResolution]) / 2;
+			if(z > 0 && z < clipMap->layerResolution-1)
+				xSlope = ((int)Heights[x+(z+1)*patchResolution] - Heights[x+(z-1)*patchResolution]) / 2;
+
+			groundValues[(x + z * clipMap->layerResolution)*4]     = Heights[x+z*patchResolution];
+			groundValues[(x + z * clipMap->layerResolution)*4 + 1] = USHRT_MAX/2 + xSlope;
+			groundValues[(x + z * clipMap->layerResolution)*4 + 2] = USHRT_MAX/2 + zSlope;
+			groundValues[(x + z * clipMap->layerResolution)*4 + 3] = 0;
+		}
+	}
+	clipMap->layers[0].texture = graphics->genTexture2D();
+	clipMap->layers[0].texture->setData(clipMap->layerResolution,
+										clipMap->layerResolution,
+										GraphicsManager::texture::RGBA16,
+										false, false,
+										(unsigned char*)groundValues.get());
+
+
+
+
+	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap));
+
+	//////////////////
+/*	Vec3f n;
+	unique_ptr<unsigned short[]> groundValues(new unsigned short[patchResolution*patchResolution*4]);
+	for(unsigned int x=0; x < patchResolution; x++)
+	{
+		for(unsigned int z=0; z < patchResolution; z++)
+		{
+			(n = rasterNormal(Vec2u(x,z));
+			//n = interpolatedNormal(Vec2f(x,z));
+			if(n.magnitudeSquared() < 0.001)
+				n = Vec3f(0.0,1.0,0.0);
+	
+			groundValues[(x + z * patchResolution)*4 + 0] = (unsigned short)(32767.5+n.x*32767.5);
+			groundValues[(x + z * patchResolution)*4 + 1] = (unsigned short)(n.y*65535.0);
+			groundValues[(x + z * patchResolution)*4 + 2] = (unsigned short)(32767.5+n.z*32767.5);
+			groundValues[(x + z * patchResoultion)*4 + 3] = heights[x+z*width];
+		}
+	}
+	texture->setData(patchResolution, patchResolution, GraphicsManager::texture::RGBA16, false, false, (unsigned char*)groundValues);
+*/
 
 }
 void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
@@ -1684,7 +2309,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	}
 #endif /*PRERENDERED_SKYDOME*/
 
-	if(waterPlane)
+	if(waterPlane && false)
 	{
 		auto ocean = shaders.bind("ocean");
 
@@ -1744,10 +2369,11 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 //		graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 //	}
 
-	graphics->setDepthMask(true);
-	graphics->setDepthTest(true);
 
-	for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
+	graphics->setDepthTest(true);
+	graphics->setDepthMask(true);
+
+	/*for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	{
 		(*i)->render(view,shaderType);
 	}
@@ -1769,9 +2395,27 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		}
 		shader->setUniform4f("color", 1,1,1,1);
 		graphics->setDepthMask(true);
+		}*/
+
+//	graphics->setWireFrame(true);
+
+	if(fractalTerrain->computeSubdivision(view) || fractalTerrain->computeWaterSubdivision(view))
+	{
+		fractalTerrain->assignNeighbors();
 	}
+
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+//	graphics->setWireFrame(true);
+	fractalTerrain->render(view);
+//	graphics->setWireFrame(false);
+	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+	skyTexture->bind(3);
+	fractalTerrain->renderWater(view);
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+//	graphics->setWireFrame(false);
+
 	shaders.bind("model");
-	if(waterPlane)
+	if(waterPlane && false)
 	{
 		graphics->setColorMask(false);
 		sceneManager.drawMesh(view, dataManager.getModel("disk"), Mat4f(Quat4f(), center, Vec3f(radius,1,radius)));
@@ -1949,7 +2593,7 @@ bool Terrain::isLand(float x, float z) const
 //
 //
 //
-//	// lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+//	// lb is the corner of AABB with minmal coordinates - left bottom, rt is maximal corner
 //	// r.org is origin of ray
 //
 //	float t1, t2, t3, t4, t5, t6, tmin, tmax;

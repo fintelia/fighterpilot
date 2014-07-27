@@ -20,7 +20,6 @@ public:
 	private:
 		bool mComplete;
 		bool mValid;
-		bool writeFile;
 		void completeLoad(bool s);
 		friend class FileManager;
 
@@ -35,8 +34,8 @@ public:
 		virtual ~file(){}
 
 	protected:
-		file(FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f){}
-		file(string fName, FileType t, FileFormat f):mComplete(false),mValid(false),writeFile(false), type(t), format(f), filename(fName){}
+		file(FileType t, FileFormat f):mComplete(false),mValid(false), type(t), format(f){}
+		file(string fName, FileType t, FileFormat f):mComplete(false),mValid(false) ,type(t), format(f), filename(fName){}
 
 		virtual void parseFile(fileContents data)=0;
 		virtual fileContents serializeFile()=0;
