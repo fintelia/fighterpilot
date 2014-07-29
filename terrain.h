@@ -42,7 +42,7 @@ protected:
 	class FractalNode
 	{
 	public:
-		static const unsigned int tileResolution = 129;
+		static const unsigned int tileResolution = 17;
 		static const unsigned int textureResolution = 257;
 	private:
 		static shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;

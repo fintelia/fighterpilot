@@ -54,36 +54,23 @@ vec2 textureCubic(vec2 p0, vec2 p1, float t)
 	v1.y = (p1.y - 0.5) * levelScale;
 
 	vec2 r = cubic(v0, v1, t);// * invTexToWorld;
-//	r.y = 0.5 + r.y * invLevelScale * 0.5 * invLevelScale;
+//	r.y = 0.5 + r.y * invLevelScale * 0.5;
 
-	float trueSlope = (p1 - p0).x;
+//	float trueSlope = (p1 - p0).x;
 //	r.x = 0.5 * (p0+p1).x;
-	r.y = trueSlope *0.5 * invLevelScale+ 0.5;
+//	r.y = trueSlope *0.5 * invLevelScale+ 0.5;
+	r.y = 0.5 + r.y * invLevelScale;
 
 	return r;
 }
 
 vec4 valueAtCoord(ivec2 coord)
 {
-//	coord.y = 64;
 	vec4 value = vec4(0,0,0,1);
 
 	if((coord.x % 2) == 0 && (coord.y % 2) == 0)
 	{
 		value.xyz = texelFetch(tex, textureOrigin+coord/2, 0).rgb;
-//		float h0 = (1.0-2.0*random(origin+coord-ivec2(1,0))) * amplitudeScale;
-//		float h1 = (1.0-2.0*random(origin+coord-ivec2(0,1))) * amplitudeScale;
-//		float h2 = (1.0-2.0*random(origin+coord+ivec2(1,0))) * amplitudeScale;
-//		float h3 = (1.0-2.0*random(origin+coord+ivec2(0,1))) * amplitudeScale;
-
-		vec3 t0 = texelFetch(tex,(textureOrigin+coord/2)-ivec2(1,0),0).rgb;
-		vec3 t1 = texelFetch(tex,(textureOrigin+coord/2)+ivec2(1,0),0).rgb;
-
-//		value.y =  0.5 + (t1-t0).x * 0.25;
-
-//		value.yz = value.zy *  vec2(1,0);
-//		value.y = 1;//*value.y +*/ 0.5*(h2 - h0) / slopeScale;
-//		value.z = 1;//*value.z +*/ 0.5*(h3 - h1) / slopeScale;
 	}
 	else if((coord.x % 2) == 1 && (coord.y % 2) == 0)
 	{
@@ -91,11 +78,6 @@ vec4 valueAtCoord(ivec2 coord)
 		vec3 texVal_1 = texelFetch(tex,(textureOrigin+coord/2)+ivec2(1,0),0).rgb;
 		value.xy = textureCubic(texVal_0.xy, texVal_1.xy, 0.5);
 		value.z = 0.5*(texVal_0+texVal_1).z;
-//		value.x += clamp((1.0-2.0*random(origin+coord)) * amplitudeScale,0,1);
-
-//		value.y = 0.5 + 200 * (texVal_1.x - texVal_0.x) * slopeScale;
-//		value.yz = 0.5 + 110.5 * vec2(texVal_0.x - texVal_1.x) * slopeScale;
-		//	value.y = texVal_1.y;//texelFetch(tex, textureOrigin+coord/2, 0).y;
 	}
 	else if((coord.x % 2) == 0 && (coord.y % 2) == 1)
 	{
@@ -103,11 +85,6 @@ vec4 valueAtCoord(ivec2 coord)
 		vec3 texVal_1 = texelFetch(tex, textureOrigin+coord/2+ivec2(0,1), 0).rgb;
 		value.xz = textureCubic(texVal_0.xz, texVal_1.xz, 0.5);
 		value.y = 0.5*(texVal_0+texVal_1).y;
-
-//		value.xyz = 0.5*(texVal_0+texVal_1);
-//		value.x += (1.0-2.0*random(origin+coord)) * amplitudeScale;
-//		value.z = 0.5 + 0.5 * (texVal_1.x - texVal_0.x) * slopeScale;
-//		value.yz = 0.5 + 110.5 * vec2(texVal_0.x - texVal_1.x) * slopeScale;
 	}
 	else
 	{
@@ -122,71 +99,10 @@ vec4 valueAtCoord(ivec2 coord)
 		float m1 = 0.5*(t2+t3).z;
 
 		value.xz = textureCubic(vec2(p0.x, m0), vec2(p1.x, m1), 0.5);
-		value.y = p0.y;//0.5*(p0+p1).y;
-
-
-//		float h0 = (t0.x+t3.x)/2;// + 
-//			(1.0-2.0*random(origin+coord-ivec2(1,0)))*amplitudeScale;
-//		float h1 = (t0.x+t1.x)/2;// + 
-//			(1.0-2.0*random(origin+coord-ivec2(0,1)))*amplitudeScale;
-//		float h2 = (t1.x+t2.x)/2;// + 
-//			(1.0-2.0*random(origin+coord+ivec2(1,0)))*amplitudeScale;
-//		float h3 = (t2.x+t3.x)/2;// + 
-//			(1.0-2.0*random(origin+coord+ivec2(0,1)))*amplitudeScale;
-
-//			value.xyz = 0.25*(t0+t1+t2+t3);
-//			value.yz = vec2(0);
-//		value.x = 0.25*(t0+t1+t2+t3).x + (1.0-2.0*random(origin+coord))*amplitudeScale;
-//		value.y = 0.5 - 0.5*(h2 - h0) * slopeScale;
-//		value.z = 0.5 - 0.5*(h3 - h1) * slopeScale;
-
-//		value.yz = 0.5 + 16*vec2(0.25 * (t1.x - t0.x) *slopeScale);
-//		if(0.5*(h2 - h0) * slopeScale == 0.0)
-//			value.x = 0;
+		value.y = 0.5*(p0+p1).y;
 	}
-
-
-	vec3 t0 = texelFetch(tex, textureOrigin+coord/2, 0).rgb;
-	vec3 t1 = texelFetch(tex, textureOrigin+coord/2+ivec2(1,0), 0).rgb;
-	vec3 t2 = texelFetch(tex, textureOrigin+coord/2+ivec2(1,1), 0).rgb;
-	vec3 t3 = texelFetch(tex, textureOrigin+coord/2+ivec2(0,1), 0).rgb;
-
-	float h0 = (t0.x+t3.x)/2;
-	float h1 = (t0.x+t1.x)/2;
-	float h2 = (t1.x+t2.x)/2;
-	float h3 = (t2.x+t3.x)/2;
-
-	if(coord/2 != coord){
-//			value.y = 0.5 + 0.5 * (h3 - h1) * slopeScale;
-//			value.z = 0.5 + 0.5 * (h2 - h0) * slopeScale;
-	}
-
-	//vec3 texVal_0 = texelFetch(tex,(textureOrigin+coord/2), 0).rgb;
-	//vec3 texVal_1 = texelFetch(tex,(textureOrigin+coord/2)+ivec2(1,0),0).rgb;
-	//value.y = 0.5 + 1.0 * (texVal_1.x - texVal_0.x) * slopeScale;
-
-
-/*	vec2 coordf = (vec2(textureOrigin)+0.5*vec2(coord)) / 256.0;
-	if(mod(coordf.x,1.0/8) < 1.0/16)
-		value.xyz = cubic(vec2(.5,-1), vec2(.5,1), fract(coordf.x*16)).xyy;
-	else
-		value.xyz = cubic(vec2(.5,1), vec2(.5,-1), fract(coordf.x*16)).xyy;
-	value.yz = 0.125 * value.yz;*/
 	return value;
 }
-//precondition: (coord.x % 2 == 1) && (coord.y % 2 == 0)
-//              coord.x >= -1 && <= textureSize(tex)
-/*vec4 computeValueAtCoord(ivec2 coord)
-{
-	vec4 value = vec4(1);
-	
-	vec3 texVal_0 = texelFetch(tex, textureOrigin+coord/2-ivec2(1,0), 0).rgb;
-	vec3 texVal_1 = texelFetch(tex, textureOrigin+coord/2+ivec2(1,0), 0).rgb;
-	value.rgb = 0.5*(texVal_0+texVal_1);
-	value.x += clamp((1.0-2.0*random(coord)) * amplitudeScale,0,1);
-	value.y = 0.5 + 0.5 * (texVal_1.x - texVal_0.x);
-	return value;
-}*/
 
 void main()
 {
