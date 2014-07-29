@@ -129,8 +129,8 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 		shader->setUniform2i("origin", coordinates.x * (textureResolution-1),
 							 coordinates.y * (textureResolution-1));
 		shader->setUniform1i("tex", 0);
-		shader->setUniform1f("levelScale", 1.0 / (1 << level));
-		shader->setUniform1f("invLevelScale", 1 << level);
+		shader->setUniform1f("levelScale", 2.0 / (1 << level));
+		shader->setUniform1f("invLevelScale", 0.5 * (1 << level));
 		graphics->drawPartialOverlay(Rect::XYXY(-1,-1,1,1), 
 									 Rect::XYWH(tOrigin.x,tOrigin.y,0.5,0.5),
 									 parent->texture);
@@ -204,11 +204,11 @@ bool Terrain::FractalNode::computeSubdivision(shared_ptr<GraphicsManager::View> 
 	Vec3f eye = view->camera().eye;
 	float hMinDistance = 0.5*sideLength + minDistance;
 
-/*	if(eye.x > worldCenter.x - hMinDistance && eye.x < worldCenter.x + hMinDistance &&
+	if(eye.x > worldCenter.x - hMinDistance && eye.x < worldCenter.x + hMinDistance &&
 	   eye.y < maxHeight + minDistance && eye.y > minHeight - minDistance &&
 	   eye.z > worldCenter.z - hMinDistance && eye.z < worldCenter.z + hMinDistance &&
-	   sideLength / (tileResolution-1) > 10.0)*/
-		if(level <= 2)
+	   sideLength / (tileResolution-1) > 30.0)
+//	if(level <= 3)
 	{
 		divisionLevel = DivisionLevel::SUBDIVIDED;
 		if(!children[0])

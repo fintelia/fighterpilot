@@ -31,7 +31,7 @@ void main()
 	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
 	float slopeAngle = atan(slope);
 
-	vec3 n = normalize(vec3((2*groundVal.g-1)*slopeScale, .01, (2*groundVal.b-1)*slopeScale));
+	vec3 n = normalize(vec3((2*groundVal.g-1)*slopeScale, 1, (2*groundVal.b-1)*slopeScale));
 
 	vec4 color = vec4(0,0,0,1);
 	///////////GRASS AND SAND//////////
@@ -116,7 +116,8 @@ void main()
 	////////////COLOR OUTPUT///////////
 	//color.rgb = vec3(pow(max(dot(reflect(-sunDirection,n), normalize(eyePosition-position)),0.0),1.0));
 
-	gl_FragColor = vec4((groundVal.zzy),1);//vec4(color.rgb,1.0); // vec4(vec3(height),1.0);// 
+	gl_FragColor =// vec4(groundVal.yyy * 5 - 2,1);
+		vec4(color.rgb,1.0); // vec4(vec3(height),1.0);// 
 
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
