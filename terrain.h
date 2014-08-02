@@ -119,6 +119,7 @@ protected:
 		void patchEdges();
 
 		static void initialize();
+		static void cleanUp();
 	};
 
 	class Patch
@@ -297,7 +298,7 @@ protected:
 	void resetTerrain();
 public:
 	Terrain():waterPlane(true){}
-	virtual ~Terrain(){}
+	virtual ~Terrain();
 	void initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, Circle<float> bounds, float foliageDensity=0, unsigned int LOD=1);
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;

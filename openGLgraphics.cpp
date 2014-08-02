@@ -23,8 +23,6 @@
 	#error OS not supported by openGLgraphics
 #endif
 
-
-#include <GL/glu.h>
 #include "png/png.h"
 
 
@@ -392,7 +390,7 @@ void OpenGLgraphics::indexBufferGL::drawBuffer()
 
 	if(dataCount != 0)
 	{
-		glPatchParameteri(GL_PATCH_VERTICES, 3);
+//		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		glDrawElements(primitiveType, dataCount, dataType, 0);
 	}
 }
@@ -1281,7 +1279,7 @@ bool OpenGLgraphics::shaderGL::init5(const char* vertex, const char* geometry, c
 	glBindAttribLocation(shaderId, 6, "Tangent");
 	glBindAttribLocation(shaderId, 7, "Bitangent");
 	glBindAttribLocation(shaderId, 8, "GenericFloat");
-	glPatchParameteri(GL_PATCH_VERTICES, 3);
+//	glPatchParameteri(GL_PATCH_VERTICES, 3);
 	glLinkProgram(shaderId);
 
 
@@ -1607,6 +1605,7 @@ void OpenGLgraphics::setBlendMode(BlendMode blend)
 {
 	if(blend == TRANSPARENCY)				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	else if(blend == ADDITIVE)				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
+	else if(blend == REPLACE)				glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
 	else if(blend == PREMULTIPLIED_ALPHA)	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	else if(blend == ALPHA_ONLY)			glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -2087,7 +2086,6 @@ void OpenGLgraphics::resize(int w, int h)
 		sh = h;
 		sw = w;
 		sAspect = ((float)sw)/sh;
-		std::cout << w << " " << h << " " << sAspect << std::endl;
 	}
 }
 void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionConstraint)
@@ -2517,7 +2515,7 @@ void OpenGLgraphics::render()
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
 			{
 				setColor(Color(1,0,0,clamp((errorGlowEndTime-GetTime())/1000.0, 0.0, 1.0)));
-				drawOverlay(Rect::XYXY(0,0,sAspect,1), "errorGlow");
+				GraphicsManager::drawOverlay(Rect::XYXY(0,0,sAspect,1), "errorGlow");
 				setColor(Color4(1,1,1,1));
 			}
 		}
@@ -2861,9 +2859,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		/* only set window title and handle wm_delete_events if in windowed mode */
 		Atom wmDelete = XInternAtom(x11_display, "WM_DELETE_WINDOW", True);
 		XSetWMProtocols(x11_display, x11_window, &wmDelete, 1);
-		Atom wmFullScreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", True);
-		XChangeProperty(x11_display, x11_window, XInternAtom(x11_display, "_NET_WM_STATE", True), ((Atom) 4)/*XA_ATOM*/, 32, 
-						PropModeReplace, (unsigned char*) &wmFullScreen,  1);
+//		Atom wmFullScreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", True);
+//		XChangeProperty(x11_display, x11_window, XInternAtom(x11_display, "_NET_WM_STATE", True), ((Atom) 4)/*XA_ATOM*/, 32, 
+//						PropModeReplace, (unsigned char*) &wmFullScreen,  1);
 		XSetStandardProperties(x11_display, x11_window, "FighterPilot", "FighterPilot", None, NULL, 0, NULL);
 		XMapRaised(x11_display, x11_window);
 	}
@@ -2902,6 +2900,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
 	GLenum err = glewInit();
+	glGetError(); //ignore any errors caused by glewInit
 	string errorString;
 	if(GLEW_OK != err)						errorString = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
 	else if(!GLEW_VERSION_3_3)				errorString = "Your version of OpenGL must be at least 3.3: Please update your graphics drivers";

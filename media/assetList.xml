@@ -136,7 +136,6 @@
     <shader name="fractal ocean"           vertex="media/fractalOcean.vert"    fragment="media/fractalOcean.frag" />
     <shader name="fractal subdivide"           vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivide.frag" />
     <shader name="fractal subdivideX"           vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivideX.frag" />
-    <shader name="fractal subdivideY"           vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivideY.frag" />
     
     <!-- terrain preview -->
     <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />

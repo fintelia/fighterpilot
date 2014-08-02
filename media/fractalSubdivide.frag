@@ -44,5 +44,5 @@ void main()
 //		color.r += clamp((1.0-2.0*random(gl_FragCoord.xy)) * amplitudeScale,0,1);
 //	}
 
-	FragColor = vec4(value, 1.0);
+	FragColor = vec4(value, 0.5);
 }

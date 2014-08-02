@@ -83,7 +83,7 @@ void main()
 	float y = groundVal.r;
 	vec3 unscaledPos = vec3(Position2.x, y, Position2.y);
 	vec4 pos = modelTransform * vec4(origin + unscaledPos * scale, 1.0);
-//	pos += vec4(normal*displace, 0.0);
+//	pos.xz += vec4(normal*(groundVal.a - 0.5) * 2000.0, 0.0).xz;
 	position = pos.xyz;
 	gl_Position = cameraProjection * pos;
 
