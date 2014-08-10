@@ -8,7 +8,7 @@ dogFight::dogFight(shared_ptr<const LevelFile> lvl): level(lvl), triggers(level-
 }
 dogFight::~dogFight()
 {
-	world.destroy();
+	world.reset();
 }
 void dogFight::healthBar(float x, float y, float width, float height, float health) const
 {
@@ -47,7 +47,7 @@ void dogFight::tiltMeter(float x1,float y1,float x2,float y2,float degrees) cons
 }
 void dogFight::radar(float x, float y, float width, float height,bool firstPerson, shared_ptr<plane> p) const
 {
-	float radarAng = 45.0*world.time()/1000;
+	float radarAng = 45.0*world->time()/1000;
 	radarAng = (radarAng/360.0 - floor(radarAng/360.0)) * 360;
 
 	if(firstPerson)
@@ -76,7 +76,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 
 		Vec3f n;
 		Vec3f cent, u, v;
-		auto planes = world(PLANE);
+		auto planes = world->getAllOfType(PLANE);
 		for(auto i = planes.begin(); i != planes.end(); i++)
 		{
 			n = (i->second->position - p->position) / (16000.0);
@@ -108,13 +108,13 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 #ifdef RADAR_MAP_BOUNDS
 		auto radarBoundsShader = shaders.bind("radar bounds");
 
-		Vec2f cCenter =world.bounds().center;
+		Vec2f cCenter =world->bounds().center;
 		float cR = sqrt(cCenter.x*cCenter.x + cCenter.y*cCenter.y);
 		float cA = atan2(cCenter.x, cCenter.y) - p->direction;
 		cCenter = Vec3f(sin(cA)*cR, cos(cA)*cR);
 
 
-		double cRadius = world.bounds().radius / 8000.0;
+		double cRadius = world->bounds().radius / 8000.0;
 
 		radarBoundsShader->setUniform2f("mapCenter",cCenter);
 		radarBoundsShader->setUniform1f("mapRadius",cRadius);
@@ -135,7 +135,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 		graphics->setColor(0.05,0.69,0.04);
 		Vec3f n;
 		Vec3f cent, u, v;
-		auto planes = world(PLANE);
+		auto planes = world->getAllOfType(PLANE);
 		for(auto i = planes.begin(); i != planes.end(); i++)
 		{
 			n = (i->second->position - p->position) / (16000.0);
@@ -162,7 +162,7 @@ void dogFight::radar(float x, float y, float width, float height,bool firstPerso
 //{
 //	if(!p->dead)
 //	{
-//		auto planes = world(PLANE);
+//		auto planes = world->getAllOfType(PLANE);
 //		for(auto i = planes.begin(); i != planes.end();i++)
 //		{
 //			if(p->id!=i->second->id && !i->second->dead)
@@ -206,7 +206,7 @@ void dogFight::drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_p
 {
 	if(targetPtr && targetPtr->meshInstance != nullptr)
 	{
-		float interpolate = world.time.interpolate();
+		float interpolate = world->time.interpolate();
 		Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
 		Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
 		Quat4f targetRot = slerp(targetPtr->lastRotation, targetPtr->rotation, interpolate);
@@ -276,8 +276,8 @@ void dogFight::drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_p
 void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 {
 	static map<int,double> lastDraw;
-	double time=world.time();
-//	double interp = 1.0 - world.time.interpolate();
+	double time=world->time();
+//	double interp = 1.0 - world->time.interpolate();
 
 	auto p = players[acplayer]->getObject();
 	if(!p)
@@ -289,11 +289,11 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 //	Vec3f e = camera.eye;
 	//graphics->lookAt(camera.eye, camera.center, camera.up);
 
-	world.renderTerrain(view);
+	world->renderTerrain(view);
 
 	graphics->setDepthMask(false);
 
-	Vec3f cCenter(world.bounds().center.x,0,world.bounds().center.y);
+	Vec3f cCenter(world->bounds().center.x,0,world->bounds().center.y);
 
 	//drawHexCylinder(cCenter,cRadius,20000, white);
 
@@ -309,13 +309,16 @@ void dogFight::drawScene(shared_ptr<GraphicsManager::View> view, int acplayer)
 }
 void dogFight::updateSimulation()
 {
-	auto planes = world(PLANE);
-	auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
-	auto ships = world(SHIP);
-	auto missiles = world(MISSILE);
-	auto& bulletsRef = dynamic_pointer_cast<bulletCloud>(world[bullets])->bullets;
+	players.update();
+	world->simulationUpdate();
 
-	float bulletLineLength = bullet::bulletSpeed * world.time.length() * 0.001;
+	auto planes = world->getAllOfType(PLANE);
+	auto AAA = world->getAllOfType(ANTI_AIRCRAFT_ARTILLARY);
+	auto ships = world->getAllOfType(SHIP);
+	auto missiles = world->getAllOfType(MISSILE);
+	auto& bulletsRef = dynamic_pointer_cast<bulletCloud>(world->getObjectById(bullets))->bullets;
+
+	float bulletLineLength = bullet::bulletSpeed * world->time.length() * 0.001;
 	
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
@@ -328,12 +331,12 @@ void dogFight::updateSimulation()
 			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
 				bullet& bulletRef = bulletsRef[l];
-				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world->time.lastTime() && bulletRef.startTime + bulletRef.life > world->time())
 				{
-					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world->time()-bulletRef.startTime)*0.001f;
 					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world->time.lastTime()-bulletRef.startTime)*0.001f;
 						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
 							i->second->loseHealth(14.4f * damageMultiplier);
@@ -373,7 +376,7 @@ void dogFight::updateSimulation()
 			}
 			if(collisionManager.groundCollsion(i->second))
 			{
-				p->die(world.isLand(i->second->position.x,i->second->position.z) ? plane::DEATH_HIT_GROUND : plane::DEATH_HIT_WATER);
+				p->die(world->isLand(i->second->position.x,i->second->position.z) ? plane::DEATH_HIT_GROUND : plane::DEATH_HIT_WATER);
 			}
 		}
 	}
@@ -386,12 +389,12 @@ void dogFight::updateSimulation()
 			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
 				bullet& bulletRef = bulletsRef[l];
-				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world->time.lastTime() && bulletRef.startTime + bulletRef.life > world->time())
 				{
-					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world->time()-bulletRef.startTime)*0.001f;
 					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world->time.lastTime()-bulletRef.startTime)*0.001f;
 						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
 							i->second->loseHealth(14.4f);
@@ -432,12 +435,12 @@ void dogFight::updateSimulation()
 			for(auto l=0;l<(signed int)bulletsRef.size();l++)
 			{
 				bullet& bulletRef = bulletsRef[l];
-				if(bulletRef.owner != i->second->id && bulletRef.startTime < world.time.lastTime() && bulletRef.startTime + bulletRef.life > world.time())
+				if(bulletRef.owner != i->second->id && bulletRef.startTime < world->time.lastTime() && bulletRef.startTime + bulletRef.life > world->time())
 				{
-					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world.time()-bulletRef.startTime)*0.001f;
+					Vec3f lineStart = bulletRef.startPos+bulletRef.velocity*(world->time()-bulletRef.startTime)*0.001f;
 					if(lineStart.distanceSquared(boundingSphere.center) < bulletTestRadiusSquared)
 					{
-						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world.time.lastTime()-bulletRef.startTime)*0.001f;
+						Vec3f lineEnd = bulletRef.startPos+bulletRef.velocity*(world->time.lastTime()-bulletRef.startTime)*0.001f;
 						if(collisionManager.testSphereSegment(boundingSphere,lineStart,lineEnd))
 						{
 							i->second->loseHealth(14.4f);
@@ -478,14 +481,14 @@ void dogFight::updateSimulation()
 	//Vec3f bulletPosition;				//PARTICLE EFFECTS FOR GROUND/WATER COLLISIONS
 	//for(auto i=0;i<(signed int)bulletRef.size();i++)
 	//{
-	//	bulletPosition = bulletRef[i].startPos+bulletRef[i].velocity*(world.time()-bulletRef[i].startTime)/1000;
-	//	if(world.altitude(bulletPosition) < 0.0)
+	//	bulletPosition = bulletRef[i].startPos+bulletRef[i].velocity*(world->time()-bulletRef[i].startTime)/1000;
+	//	if(world->altitude(bulletPosition) < 0.0)
 	//	{
-	//		if(world.isLand(bulletPosition.x, bulletPosition.z))
+	//		if(world->isLand(bulletPosition.x, bulletPosition.z))
 	//		{
-	//			world.addDecal(Vec2f(bulletPosition.x, bulletPosition.z), 3.0, 3.0, "scorch", 100.0); 
+	//			world->addDecal(Vec2f(bulletPosition.x, bulletPosition.z), 3.0, 3.0, "scorch", 100.0); 
 	//		}
-	//		bulletRef[i].life = world.time()-bulletRef[i].startTime; //makes the bullet die at the current time
+	//		bulletRef[i].life = world->time()-bulletRef[i].startTime; //makes the bullet die at the current time
 	//	}
 	//}
 
@@ -545,7 +548,7 @@ void dogFight::updateSimulation()
 				if((*a) && (*a)->actionType == LevelFile::Trigger::Action::START_PATH)
 				{
 					auto startPath = static_pointer_cast<LevelFile::Trigger::ActionStartPath>(*a);
-					shared_ptr<object> objPtr = world[startPath->objectNumber+1]; //hack since object 1 is bullet cloud!!!
+					shared_ptr<object> objPtr = world->getObjectById(startPath->objectNumber+1); //hack since object 1 is bullet cloud!!!
 					if(objPtr && (objPtr->type & PLANE) && startPath->pathNumber > 0 && level->paths.size() >= startPath->pathNumber)
 					{
 						shared_ptr<plane> planePtr = dynamic_pointer_cast<plane>(objPtr);
@@ -556,7 +559,7 @@ void dogFight::updateSimulation()
 						{
 							Vec3f lastPoint = w != waypoints.begin() ? (w-1)->position : w->position;
 							Vec3f nextPoint = w+1 != waypoints.end() ? (w+1)->position : w->position;
-							planePtr->wayPoints.push_back(plane::wayPoint(world.time() + w->time, w->position, Quat4f((nextPoint-lastPoint)*0.5)));
+							planePtr->wayPoints.push_back(plane::wayPoint(world->time() + w->time, w->position, Quat4f((nextPoint-lastPoint)*0.5)));
 						}
 						planePtr->controled = true;
 					}

@@ -1,33 +1,5 @@
 namespace gui
 {
-
-//class newObject: public popup
-//{
-//public:
-//	newObject(int Type=defaultPlane,int Team=0):type(Type),team(Team){done=true;}
-//	~newObject(){}
-//	int update(){return 0;}
-//	void render(){}
-//	int getObjectType(){return type;}
-//	int getObjectTeam(){return team;}
-//protected:
-//	int type;
-//	int team;
-//};
-//class objectProperties: public popup
-//{
-//protected:
-//	LevelFile::Object* object;
-//	vector<objectType> typeOptions;
-//public:
-//	objectProperties():object(NULL){}
-//	~objectProperties(){}
-//
-//	bool init(LevelFile::Object* obj);
-//
-//	int update();
-//	void render();
-//};
 class inGame: public popup
 {
 public:
@@ -94,7 +66,7 @@ public:
 	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),selectedObject(-1),placingNewObject(false),newRegionRadius(false),center(0,0,0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
-	void updateFrame();
+	void update();
 	void render();
 	void render3D(unsigned int view);
 
@@ -219,22 +191,16 @@ class loading:public screen
 public:
 	loading();
 	bool init();
-	void updateFrame();
+	void update();
 	void render();
 protected:
 	float progress;
 };
-class dogFight: public screen
+class dogFight: public simulationScreen
 {
 protected:
 	shared_ptr<const LevelFile> level;
 	vector<LevelFile::Trigger> triggers;
-
-public:
-	dogFight(shared_ptr<const LevelFile> lvl);
-	virtual ~dogFight();
-
-	virtual bool init()=0;
 
 	void healthBar(float x, float y, float width, float height, float health) const;
 	void tiltMeter(float x1,float y1,float x2,float y2,float degrees) const;
@@ -244,6 +210,11 @@ public:
 	void drawHudIndicator(shared_ptr<GraphicsManager::View> view, shared_ptr<plane> p, shared_ptr<object> targetPtr, Color4 color, Color4 nightColor) const;
 	void drawScene(shared_ptr<GraphicsManager::View> view, int acplayer);
 
+public:
+	dogFight(shared_ptr<const LevelFile> lvl);
+	virtual ~dogFight();
+
+	virtual bool init()=0;
 	void updateSimulation();
 };
 class splitScreen: public dogFight
@@ -255,11 +226,13 @@ protected:
 	bool levelup;
 	bool victory;
 	shared_ptr<GraphicsManager::View> views[2];
+
+	void updateFrame();
+
 public:
 	splitScreen(shared_ptr<const LevelFile> lvl);
 	bool init();
 	bool menuKey(int mkey);
-	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
 	void renderTransparency(unsigned int v);
@@ -278,11 +251,12 @@ protected:
 
 	shared_ptr<GraphicsManager::View> view;
 
+	void updateFrame();
+
 public:
 	campaign(shared_ptr<const LevelFile> lvl);
 	bool init();
 	bool menuKey(int mkey);
-	void updateFrame();
 	void render();
 	void render3D(unsigned int v);
 	void renderTransparency(unsigned int v);

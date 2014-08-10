@@ -459,8 +459,8 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 	
-	if(!gl2Hacks || GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
-	{
+//	if(!gl2Hacks || GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
+//	{
 		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
 		if(GLEW_EXT_texture_compression_s3tc && compress && (format == BGR || format == BGRA || format == RGB || format == RGBA))
@@ -480,34 +480,34 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
 			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
-			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
+			else if(format == RGB16F)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
+			else if(format == RGBA16F)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
 			else if(format == DEPTH)			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data);
 		}
-		if(gl2Hacks)
-		{
-			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
-		}
+//		if(gl2Hacks)
+//		{
+//			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
+//		}
 
 		if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 			glGenerateMipmap(GL_TEXTURE_2D);
 		else
 			glGenerateMipmapEXT(GL_TEXTURE_2D);
-	}
-	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
-	{
-		if(format == INTENSITY)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_INTENSITY, GL_UNSIGNED_BYTE, data);
-		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
-		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
-		else if(format == RGB)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if(format == RGBA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else if(format == RGB16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16, GL_UNSIGNED_SHORT, data);
-		else if(format == RGBA16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16, GL_UNSIGNED_SHORT, data);
-		else if(format == RGB16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16F, GL_FLOAT, data);
-		else if(format == RGBA16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16F, GL_FLOAT, data);
-		else if(format == DEPTH)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, data);
-	}
+//	}
+//	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
+//	{
+//		if(format == INTENSITY)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_INTENSITY, GL_UNSIGNED_BYTE, data);
+//		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+//		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
+//		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
+//		else if(format == RGB)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+//		else if(format == RGBA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+//		else if(format == RGB16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16, GL_UNSIGNED_SHORT, data);
+//		else if(format == RGBA16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16, GL_UNSIGNED_SHORT, data);
+//		else if(format == RGB16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16F, GL_FLOAT, data);
+//		else if(format == RGBA16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16F, GL_FLOAT, data);
+//		else if(format == DEPTH)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, data);
+//	}
 }
 unsigned char* OpenGLgraphics::texture2DGL::getData(unsigned int level)
 {
@@ -2478,7 +2478,7 @@ void OpenGLgraphics::render()
 				currentView->postProcessShader()->setUniform1i("tex",0);
 				currentView->postProcessShader()->setUniform1i("noiseTex",2);
 				dataManager.bind("LCnoise",2);
-				currentView->postProcessShader()->setUniform1f("time",world.time());
+				currentView->postProcessShader()->setUniform1f("time",world->time());
 				if(currentView->blurStage())
 				{
 					currentView->postProcessShader()->setUniform1i("blurTex",1);
@@ -2859,9 +2859,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		/* only set window title and handle wm_delete_events if in windowed mode */
 		Atom wmDelete = XInternAtom(x11_display, "WM_DELETE_WINDOW", True);
 		XSetWMProtocols(x11_display, x11_window, &wmDelete, 1);
-//		Atom wmFullScreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", True);
-//		XChangeProperty(x11_display, x11_window, XInternAtom(x11_display, "_NET_WM_STATE", True), ((Atom) 4)/*XA_ATOM*/, 32, 
-//						PropModeReplace, (unsigned char*) &wmFullScreen,  1);
+		Atom wmFullScreen = XInternAtom(x11_display, "_NET_WM_STATE_FULLSCREEN", True);
+		XChangeProperty(x11_display, x11_window, XInternAtom(x11_display, "_NET_WM_STATE", True), ((Atom) 4)/*XA_ATOM*/, 32, 
+						PropModeReplace, (unsigned char*) &wmFullScreen,  1);
 		XSetStandardProperties(x11_display, x11_window, "FighterPilot", "FighterPilot", None, NULL, 0, NULL);
 		XMapRaised(x11_display, x11_window);
 	}
@@ -3173,7 +3173,7 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 }
 void OpenGLgraphics::takeScreenshot()
 {
-	world.time.pause();
+	world->time.pause();
 #ifdef WINDOWS
 	SYSTEMTIME sTime;
 	GetLocalTime(&sTime);
@@ -3209,7 +3209,7 @@ void OpenGLgraphics::takeScreenshot()
 		{
 			viewConstraint = Rect::XYWH(1.0/TILES*x, 1.0/TILES*y, 1.0/TILES, 1.0/TILES);
 
-			world.frameUpdate();
+			world->frameUpdate();
 			render();
 			bindRenderTarget(RT_SCREEN);
 			glReadPixels(0, 0, sw, sh, GL_BGR, GL_UNSIGNED_BYTE, tileContents);
@@ -3226,7 +3226,7 @@ void OpenGLgraphics::takeScreenshot()
 	fileManager.writeFile(file,true);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
-	world.time.unpause();
+	world->time.unpause();
 }
 void OpenGLgraphics::drawSphere(Vec3f position, float radius, Color4 color)
 {

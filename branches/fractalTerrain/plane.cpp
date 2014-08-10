@@ -2,12 +2,12 @@
 
 #include "game.h"
 
-//plane::plane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
+//plane::plane(int Team, Vec3f sPos, Quat4f sRot, objectType Type, objectController* c):controlledObject(sPos, sRot, Type, c), lastUpdateTime(world->time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), maxHealth(100)
 //{
 //	team = Team;
 //	meshInstance = sceneManager.newMeshInstance(objectTypeString(type), position, rotation);
 //}
-plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0),firstPerson(nullptr),thirdPerson(nullptr), controlType(CONTROL_TYPE_ADVANCED)
+plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world->time()), extraShootTime(0.0),shotsFired(0), lockRollRange(true), cameraRotation(rotation), cameraShake(0.0),firstPerson(nullptr),thirdPerson(nullptr), controlType(CONTROL_TYPE_ADVANCED)
 {
 	//soundManager.playSound("sound1");
 
@@ -23,7 +23,7 @@ plane::plane(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Te
 
 	initArmaments();
 
-	double altitude = world.altitude(position);
+	double altitude = world->altitude(position);
 	if(altitude < 35)
 		position.y -= altitude - 35;
 
@@ -82,7 +82,7 @@ void plane::updateSimulation(double time, double ms)
  	lastRotation = rotation;
 
 	observer.lastFrame = observer.currentFrame;
-	cameraShake *= pow(0.1, world.time.length()/1000.0);
+	cameraShake *= pow(0.1, world->time.length()/1000.0);
 
 
 	if(!dead)
@@ -263,7 +263,7 @@ void plane::updateSimulation(double time, double ms)
 					rot = Quat4f(Vec3f(cos(randAng),sin(randAng),0.0),randF) * rot;
 
 					shotsFired++;
-					((bulletCloud*)world[bullets].get())->addBullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown);
+					((bulletCloud*)world->getObjectById(bullets).get())->addBullet(o + l,rot*Vec3f(0,0,1),id,time-extraShootTime-machineGun.coolDown);
 					cameraShake = max(cameraShake, 0.05);
 
 				//	if(random<float>() < 0.2)
@@ -310,20 +310,20 @@ void plane::updateSimulation(double time, double ms)
 			}
 
 			Vec2f positionXZ(position.x,position.z);
-			Vec2f mapCenter = world.bounds().center;
-			float r = world.bounds().radius;
+			Vec2f mapCenter = world->bounds().center;
+			float r = world->bounds().radius;
 			if(positionXZ.distanceSquared(mapCenter) > r*r)
 			{
 				returnToBattle();
 			}
 			smoothCamera();
 		}
-		altitude=world.altitude(position);
+		altitude=world->altitude(position);
 		findTarget();
 	}//end if(!dead)
 	if(dead) //if we were, or are now dead
 	{
-		altitude = world.altitude(position);
+		altitude = world->altitude(position);
 		speed += 9.8 * (ms/1000) * -sin(climb); //gravity
 
 		if(death == DEATH_HIT_GROUND)
@@ -340,7 +340,7 @@ void plane::updateSimulation(double time, double ms)
 		}
 		else if(death == DEATH_TRAILING_SMOKE)
 		{
-			rotation = slerp(rotation, Quat4f(Vec3f(0,-1,0)), 1.0-pow(0.5, world.time.length()/1000));
+			rotation = slerp(rotation, Quat4f(Vec3f(0,-1,0)), 1.0-pow(0.5, world->time.length()/1000));
 			position += rotation * Vec3f(0,0,1) * 200.0 * (ms/1000);
 			smoothCamera();
 		}
@@ -365,7 +365,7 @@ void plane::updateSimulation(double time, double ms)
 		if(death == DEATH_TRAILING_SMOKE && altitude < 0.0)
 		{
 			smokeTrail->setActive(false);
-			death = world.isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
+			death = world->isLand(position.x,position.z) ? DEATH_HIT_GROUND : DEATH_HIT_WATER;
 			if(death == DEATH_HIT_GROUND)
 			{
 				position.y -= altitude;
@@ -397,7 +397,7 @@ void plane::updateSimulation(double time, double ms)
 }
 void plane::updateFrame(float interpolation) const
 {
-	//float oldInterpolation = interpolation - 16.67 / world.time.getUpdateLength(); //what interpolation would have been one frame ago
+	//float oldInterpolation = interpolation - 16.67 / world->time.getUpdateLength(); //what interpolation would have been one frame ago
 
 	Vec3f pos = lerp(lastPosition, position, interpolation);
 	Quat4f rot = slerp(lastRotation, rotation, interpolation);
@@ -456,7 +456,7 @@ void plane::smoothCamera()
 void plane::autoPilotUpdate(float value)
 {
 	wayPoint w[4];
-	double time=world.time();
+	double time=world->time();
 	float t;
 	if(time>(wayPoints.back()).time)
 	{
@@ -509,7 +509,7 @@ void plane::exitAutoPilot()
 {
 	wayPoint w1;
 	wayPoint w2;
-	double time=world.time();
+	double time=world->time();
 	float t;
 	if(wayPoints.size()==0)//no waypoints
 	{
@@ -562,14 +562,14 @@ void plane::returnToBattle()//needs to be adjusted for initial speed
 	cameraStates.clear();
 	wayPoints.clear();
 	controled =true;
-	double time=world.time();
+	double time=world->time();
 
 	Vec3f fwd	= rotation * Vec3f(0,0,1);
 	//Vec3f up	= rotation * Vec3f(0,1,0);
 	//Vec3f right	= rotation * Vec3f(1,0,0);
 	fwd.y=0; fwd=fwd.normalize();
 
-	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world.bounds().center.x,position.z-world.bounds().center.y));
+	Quat4f newRot(Vec3f(0,1,0),atan2A(position.x-world->bounds().center.x,position.z-world->bounds().center.y));
 	Vec3f newFwd = newRot * Vec3f(0,0,1);
 
 	observer.currentFrame.eye = Vec3f(position.x - fwd.x*20, position.y + sin(45.0)*20,	 position.z - fwd.z*20);
@@ -587,9 +587,9 @@ void plane::returnToBattle()//needs to be adjusted for initial speed
 	wayPoints.push_back(wayPoint(time+7000.0*scale,		position-newFwd*scale*55,							newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 
 	Vec2f endpoint(position.x-newFwd.x*scale*55,position.z-newFwd.z*scale*55);
-	if(endpoint.distanceSquared(world.bounds().center) > world.bounds().radius*world.bounds().radius)
+	if(endpoint.distanceSquared(world->bounds().center) > world->bounds().radius*world->bounds().radius)
 	{
-		float extraDistance = endpoint.distance(world.bounds().center) - world.bounds().radius + 50.0;
+		float extraDistance = endpoint.distance(world->bounds().center) - world->bounds().radius + 50.0;
 		wayPoints.push_back(wayPoint(time+7000.0*scale+extraDistance, position-newFwd*(scale*55+extraDistance),	newRot * Quat4f(Vec3f(0,0,1),PI) * Quat4f(Vec3f(-1,0,0),PI) 	));
 	}
 
@@ -643,7 +643,7 @@ void plane::die(deathType d)
 	}
 	else if(d == DEATH_HIT_GROUND)
 	{
-		position.y -= world.altitude(position);
+		position.y -= world->altitude(position);
 		//particleManager.addEmitter(new particle::blackSmoke(id));
 
 		death = DEATH_HIT_GROUND;
@@ -680,7 +680,7 @@ void plane::findTarget()
 	float minDistSquared;
 	float distSquared;
 	Angle ang;
-	auto& planes = world(PLANE);
+	auto& planes = world->getAllOfType(PLANE);
 	for(auto i = planes.begin(); i != planes.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
@@ -692,7 +692,7 @@ void plane::findTarget()
 			targetFound = true;
 		}
 	}
-	auto& AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+	auto& AAA = world->getAllOfType(ANTI_AIRCRAFT_ARTILLARY);
 	for(auto i = AAA.begin(); i != AAA.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
@@ -704,7 +704,7 @@ void plane::findTarget()
 			targetFound = true;
 		}
 	}
-	auto& ships = world(SHIP);
+	auto& ships = world->getAllOfType(SHIP);
 	for(auto i = ships.begin(); i != ships.end();i++)
 	{
 		distSquared = position.distanceSquared((*i).second->position);
@@ -729,14 +729,14 @@ void plane::shootMissile()
 
 	int pId=0;
 
-	if(target != 0 && world[target] != nullptr && targetLocked && acosA( (rotation*Vec3f(0,0,1)).dot((world[target]->position-position).normalize()) ) && position.distanceSquared(world[target]->position) < 2000 * 2000)
+	if(target != 0 && world->getObjectById(target) != nullptr && targetLocked && acosA( (rotation*Vec3f(0,0,1)).dot((world->getObjectById(target)->position-position).normalize()) ) && position.distanceSquared(world->getObjectById(target)->position) < 2000 * 2000)
 	{
 		pId = target;
 	}
 	else
 	{
 		Angle minAng=PI/6;
-		auto planes = world(PLANE);
+		auto planes = world->getAllOfType(PLANE);
 		for(auto i = planes.begin(); i != planes.end();i++)
 		{
 			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
@@ -746,7 +746,7 @@ void plane::shootMissile()
 				pId = i->second->id;
 			}
 		}
-		auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+		auto AAA = world->getAllOfType(ANTI_AIRCRAFT_ARTILLARY);
 		for(auto i = AAA.begin(); i != AAA.end();i++)
 		{
 			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
@@ -756,7 +756,7 @@ void plane::shootMissile()
 				pId = i->second->id;
 			}
 		}
-		auto ships = world(SHIP);
+		auto ships = world->getAllOfType(SHIP);
 		for(auto i = ships.begin(); i != ships.end();i++)
 		{
 			Angle ang = acosA( (rotation*Vec3f(0,0,1)).dot(((*i).second->position-position).normalize()) );
@@ -773,7 +773,7 @@ void plane::shootMissile()
 	missileType t = rockets.ammoRounds[rockets.max - rockets.left].type;
 	Vec3f o = rockets.ammoRounds[rockets.max - rockets.left].offset;
 
-	world.newObject(new missile(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id, pId)); //lastPosition is used since the missile will update this frame and move to under the plane
+	world->newObject(new missile(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id, pId)); //lastPosition is used since the missile will update this frame and move to under the plane
 	rockets.coolDownLeft=rockets.coolDown;
 	rockets.left--;
 }
@@ -789,7 +789,7 @@ void plane::dropBomb()
 	bombType t = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].type;
 	Vec3f o = bombs.ammoRounds[bombs.roundsMax-bombs.roundsLeft].offset;
 
-	world.newObject(new bomb(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id)); //lastPosition is used since the bomb will update this frame and move to under the plane
+	world->newObject(new bomb(t, team, lastPosition+right*o.x+up*o.y+fwd*o.z, rotation, speed, id)); //lastPosition is used since the bomb will update this frame and move to under the plane
 	bombs.coolDownLeft += bombs.coolDown;
 	bombs.roundsLeft--;
 }

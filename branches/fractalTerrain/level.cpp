@@ -457,21 +457,22 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 
 		Circle<float> bounds;
 		if(info.shaderType == TERRAIN_ISLAND)
-			bounds = Circle<float>(info.mapSize * 0.5, max(info.mapSize.x, info.mapSize.y) * 1.0);
+			bounds = Circle<float>(Vec2f(0,0), max(info.mapSize.x, info.mapSize.y) * 1.0);
 		else
-			bounds = Circle<float>(info.mapSize * 0.5, max(info.mapSize.x, info.mapSize.y) * 0.4);
+			bounds = Circle<float>(Vec2f(0,0), max(info.mapSize.x, info.mapSize.y) * 0.4);
 
-		world.initTerrain(h, w, Vec3f(0,minHeight,0), Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y), info.shaderType, bounds, info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
+		world->setBounds(bounds);
+//		world->initTerrain(h, w, Vec3f(0,minHeight,0), Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y), info.shaderType, bounds, info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
 	}
 
-	bullets = world.newObject(new bulletCloud);
+	bullets = world->newObject(new bulletCloud);
 	particleManager.addEmitter(new particle::bulletEffect, bullets);
 
 	for(auto i = objects.begin(); i != objects.end(); i++)
 	{
 		if(i->type == PLAYER_PLANE && players.numPlayers() < humanPlayers)
 		{
-			auto id = world.newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team));
+			auto id = world->newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team));
 			players.addHumanPlayer(id);
 		}
 	}
@@ -482,30 +483,30 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 		{
 			if(players.numPlayers() == 0) //if the number of objects marked PLAYER_PLANE is less than the number of human players
 			{
-				auto id = world.newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
+				auto id = world->newObject(new plane(i->startloc, i->startRot, objectInfo.getDefaultPlane(), i->team)); //keep creating objects as though they were marked PLAYER_PLANE
 				players.addHumanPlayer(id);
 			}
 			else
 			{
-				auto id = world.newObject(new plane(i->startloc, i->startRot, i->type, i->team)); //create AI object
+				auto id = world->newObject(new plane(i->startloc, i->startRot, i->type, i->team)); //create AI object
 				players.addAIplayer(id);
 			}
 		}
 		else if(i->type == AA_GUN)
 		{
-			world.newObject(new AAgun(i->startloc, i->startRot, i->type, i->team));
+			world->newObject(new AAgun(i->startloc, i->startRot, i->type, i->team));
 		}
 		else if(i->type == SAM_BATTERY)
 		{
-			world.newObject(new SAMbattery(i->startloc, i->startRot, i->type, i->team));
+			world->newObject(new SAMbattery(i->startloc, i->startRot, i->type, i->team));
 		}
 		else if(i->type == FLAK_CANNON)
 		{
-			world.newObject(new flakCannon(i->startloc, i->startRot, i->type, i->team));
+			world->newObject(new flakCannon(i->startloc, i->startRot, i->type, i->team));
 		}
 		else if(i->type & SHIP)
 		{
-			world.newObject(new ship(i->startloc, i->startRot, i->type, i->team));
+			world->newObject(new ship(i->startloc, i->startRot, i->type, i->team));
 		}
 	}
 
@@ -514,12 +515,31 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 		for(int i=players.numPlayers(); i<humanPlayers; i++)
 		{
 			shared_ptr<plane> ally = players[players.numPlayers()-1]->getObject();
-			auto id = world.newObject(new plane(ally->position+ally->rotation * Vec3f(-75, 0, -50), ally->rotation, ally->type, ally->team));
+			auto id = world->newObject(new plane(ally->position+ally->rotation * Vec3f(-75, 0, -50), ally->rotation, ally->type, ally->team));
 			players.addHumanPlayer(id);
 		}
 	}
 
-	world.time.reset();
+	world->time.reset();
+}
+shared_ptr<Terrain::ClipMap> LevelFile::generateClipMap() const
+{
+	if(info.mapResolution.x != info.mapResolution.y)
+		throw string("Map resolution must be the same in x and y directions");
+	else if(info.mapSize.x != info.mapSize.y)
+		throw string("Map must be square");
+	else if(!isPowerOfTwo(info.mapResolution.x-1))
+		throw string("Map resolution must be one more than a power of 2");
+
+	shared_ptr<Terrain::ClipMap> clipMap = 
+		std::make_shared<Terrain::ClipMap>(info.mapResolution.x, info.mapSize.x);
+
+	auto nheights = unique_ptr<float[]>(
+		new float[info.mapResolution.x*info.mapResolution.x]);
+
+	memcpy(nheights.get(), heights, info.mapResolution.x*info.mapResolution.x*sizeof(float));
+	clipMap->addLayer(std::move(nheights));
+	return clipMap;
 }
 bool LevelFile::checkValid()
 {

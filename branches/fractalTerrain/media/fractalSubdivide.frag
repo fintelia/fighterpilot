@@ -27,7 +27,7 @@ float random(vec2 v)
 
 void main()
 {
-	ivec2 coord = ivec2(gl_FragCoord.x, gl_FragCoord.y);
+	ivec2 coord = ivec2(gl_FragCoord.xy);
 	vec2 dx = dFdx(texCoord);
 	vec2 dy = dFdy(texCoord);
 	vec3 value = texture(tex, texCoord).xyz;

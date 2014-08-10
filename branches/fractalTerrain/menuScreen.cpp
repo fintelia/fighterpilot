@@ -117,14 +117,14 @@ void manager::render()
 		}
 	}
 }
-void manager::render3D(unsigned int view)
-{
-	if(menu != NULL)
-	{
-		menu->render3D(view);
-	}
-}
-void manager::updateFrame()
+// void manager::render3D(unsigned int view)
+// {
+// 	if(menu != NULL)
+// 	{
+// 		menu->render3D(view);
+// 	}
+// }
+void manager::update()
 {
 	if(!popups.empty())
 	{
@@ -141,16 +141,16 @@ void manager::updateFrame()
 	}
 	else if(menu != nullptr)
 	{
-		menu->updateFrame();
+		menu->update();
 	}
 }
-void manager::updateSimulation()
-{
-	if(popups.empty() && menu != nullptr)
-	{
-		menu->updateSimulation();
-	}
-}
+// void manager::updateSimulation()
+// {
+// 	if(popups.empty() && menu != nullptr)
+// 	{
+// 		menu->updateSimulation();
+// 	}
+// }
 void manager::setMenu(screen* m)
 {
 	popups.clear();
@@ -285,6 +285,26 @@ bool elementContainer::issueInputCallback(InputManager::callBack* callback, elem
 		else if(call->button == RIGHT_BUTTON && !call->down)return e->mouseUpR(call->pos.x,call->pos.y);
 	}
 	return false;
+}
+void simulationScreen::update()
+{
+	unsigned int n = 0;
+	if(world)
+	{
+		while(world->time.needsUpdate())
+		{
+			world->time.nextUpdate();
+			updateSimulation();
+
+			if(++n==20)
+			{
+				break;//we can no-longer keep up with the simulation
+			}
+		}
+		world->time.nextFrame();	
+		world->frameUpdate();
+	}
+	updateFrame();
 }
 void elementContainer::inputCallback(InputManager::callBack* callback)
 {
@@ -943,7 +963,7 @@ void textBox::render()
 		Vec2f tSize = graphics->getTextSize(text.substr(0,cursorPos));
 
 		graphics->drawText(text,Vec2f(shape.x+2.0/1280,shape.y));
-		if(int(floor(world.time()/500)) % 2 == 1)
+		if(int(floor(world->time()/500)) % 2 == 1)
 		{
 			graphics->drawLine(Vec3f(shape.x+tSize.x,shape.y+2.0/1024,0),Vec3f(shape.x+tSize.x,shape.y+tSize.y,0));
 		}

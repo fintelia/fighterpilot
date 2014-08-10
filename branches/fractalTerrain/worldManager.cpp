@@ -2,16 +2,13 @@
 
 #include "engine.h"
 
-void WorldManager::create()
+WorldManager::WorldManager(shared_ptr<ClipMap> clipMap):
+	Terrain(clipMap)
 {
-	destroy();//just to be safe
-	time.reset();
-
 	particleManager.init();
 }
-void WorldManager::destroy()
+WorldManager::~WorldManager()
 {
-	resetTerrain();
 	clearObjects();
 	sceneManager.reset();
 	particleManager.shutdown();
@@ -19,8 +16,10 @@ void WorldManager::destroy()
 void WorldManager::simulationUpdate()
 {
 	objectsSimulationUpdate(time(),time.length());
+	particleManager.update();
 }
 void WorldManager::frameUpdate()
 {
+	terrainFrameUpdate(time());
 	objectsFrameUpdate(time.interpolate());
 }

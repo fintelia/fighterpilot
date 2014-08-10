@@ -16,13 +16,13 @@ namespace particle
 	}
 	bool smokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		if(!world[parentObject] || !(world[parentObject]->type & PLANE) /*|| ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE*/)
+		if(!world->getObjectById(parentObject) || !(world->getObjectById(parentObject)->type & PLANE) /*|| ((nPlane*)world->getObjectById(parentObject).get())->death != nPlane::DEATH_TRAILING_SMOKE*/)
 		{
 			particlesPerSecond = 0;
 			return false;
 		}
 
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.velocity = random3<float>() * speed();
@@ -30,7 +30,7 @@ namespace particle
 
 		p.size = 3.5;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
@@ -46,8 +46,8 @@ namespace particle
 	}
 	void smokeTrail::updateParticle(particle& p)
 	{
-		p.pos += p.velocity * world.time.length() * bullet::bulletSpeed;
-		float t = (world.time() - p.startTime) * p.invLife;
+		p.pos += p.velocity * world->time.length() * bullet::bulletSpeed;
+		float t = (world->time() - p.startTime) * p.invLife;
 		if(t<0.2f)
 		{
 			p.a = t*5.0f;//0.5;//(t * 5.0)*(t * 5.0);
@@ -62,7 +62,7 @@ namespace particle
 			t = (t-0.2f) * 1.25f;
 			p.a = 0.5f * (1.0f - t);
 			p.size = lerp(7.5f, 35.0f, t*t);
-			//p.pos.y += world.time.length()/100;
+			//p.pos.y += world->time.length()/100;
 		}
 	}
 	void smokeTrail::setColor(Color c)

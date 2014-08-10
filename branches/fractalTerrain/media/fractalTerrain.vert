@@ -52,6 +52,8 @@ float cubic(float t, float x0, float m0, float x1, float m1)
 
 void main()
 {
+	const float earthRadius = 3.3675e6;
+
 	vec4 groundVal;
 	tCoord = tOrigin + tScale*Position2;
 //	ivec2 tFloor = floor(textureSize() * tCoord);
@@ -85,6 +87,9 @@ void main()
 	vec4 pos = modelTransform * vec4(origin + unscaledPos * scale, 1.0);
 //	pos.xz += vec4(normal*(groundVal.a - 0.5) * 2000.0, 0.0).xz;
 	position = pos.xyz;
+
+	vec2 r = pos.xz / earthRadius;
+	pos.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	gl_Position = cameraProjection * pos;
 
 	flogz = 1.0 + gl_Position.w;

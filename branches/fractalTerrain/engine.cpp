@@ -28,12 +28,12 @@ gui::manager& menuManager = gui::manager::getInstance();																	//	//
 DataManager& dataManager = DataManager::getInstance();																		//	//
 ShaderManager& shaders = ShaderManager::getInstance();																		//	//
 AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
-WorldManager& world = WorldManager::getInstance();																			//	//
 CollisionManager& collisionManager = CollisionManager::getInstance();														//	//
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																	//	//
 SoundManager& soundManager = SoundManager::getInstance();																	//  //
 FileManager& fileManager = FileManager::getInstance();																		//  //
 SceneManager& sceneManager = SceneManager::getInstance();																	//  //
+unique_ptr<WorldManager> world;																								//	//
 																															//  //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  //
 //																															    //
@@ -82,7 +82,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	}
 	else if(uMsg == WM_ACTIVATEAPP)
 	{
-		world.time.setPaused(!(wParam != 0));
+		world->time.setPaused(!(wParam != 0));
 		game->active = wParam != 0;
 		input.windowsInput(uMsg,wParam,lParam);
 		return 0;
@@ -387,7 +387,6 @@ int main(int argc, const char* argv[])
 		}
 	}
 	menuManager.~manager();
-	world.~WorldManager();
 	particleManager.~manager();
 	collisionManager.~CollisionManager();
 	assetLoader.~AssetLoader();

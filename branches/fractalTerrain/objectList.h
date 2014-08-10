@@ -11,6 +11,6 @@ protected:
 public:
 	objId newObject(object* newObj);
 
-	shared_ptr<object> operator[] (objId id) const;
-	const map<objId,shared_ptr<object>>& operator() (objectType t);
+	shared_ptr<object> getObjectById(objId id) const;
+	const map<objId,shared_ptr<object>>& getAllOfType(objectType t);
 };

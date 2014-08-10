@@ -45,14 +45,14 @@ void objectList::objectsFrameUpdate(double interpolation)
 		i->second->updateFrame(interpolation);
 	}
 }
-shared_ptr<object> objectList::operator[] (objId id) const
+shared_ptr<object> objectList::getObjectById(objId id) const
 {
 	auto o = mObjects.find(id);
 	if(o!=mObjects.end())
 		return o->second;
 	return shared_ptr<object>();
 }
-const map<objId,shared_ptr<object>>& objectList::operator() (objectType t)
+const map<objId,shared_ptr<object>>& objectList::getAllOfType(objectType t)
 {
 	return mObjectTypes[t];
 }

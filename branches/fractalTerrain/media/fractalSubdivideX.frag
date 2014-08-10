@@ -66,7 +66,7 @@ vec2 textureCubic(vec2 p0, vec2 p1, float t)
 float randomOffset(vec4 value, ivec2 originPlusCoord)
 {
 	float s = clamp(30.0*max(abs(value.y-0.5), abs(value.z-0.5)) - 1.0, 0, 1);
-	return (random(originPlusCoord) - 0.5) * levelScale * 0.05 * s;
+	return (random(originPlusCoord) - 0.5) * levelScale * 0.03 * s;
 }
 /*float randomDisplace(vec4 value, ivec2 originPlusCoord)
 {

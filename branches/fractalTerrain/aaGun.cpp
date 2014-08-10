@@ -41,12 +41,12 @@ void antiAircraftArtilleryBase::loseHealth(float healthLoss)
 		die();
 	}
 }
-antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world.time()), extraShootTime(0.0),shotsFired(0)
+antiAircraftArtilleryBase::antiAircraftArtilleryBase(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), lastUpdateTime(world->time()), extraShootTime(0.0),shotsFired(0)
 {
 	debugAssert(objectInfo.aaaData(type));
 
-	lastPosition = position = Vec3f(sPos.x,world.elevation(sPos.x,sPos.z),sPos.z);
-	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world.terrainNormal(position.x,position.z));
+	lastPosition = position = Vec3f(sPos.x,world->elevation(sPos.x,sPos.z),sPos.z);
+	lastRotation = rotation = Quat4f(Vec3f(0,1,0),world->terrainNormal(position.x,position.z));
 	meshInstance = objectInfo[type]->newMeshInstance(Mat4f(rotation, position));
 	collisionInstance = objectInfo[type]->newCollisionInstance(Mat4f(rotation, position));
 
@@ -108,7 +108,7 @@ void AAgun::updateSimulation(double time, double ms)
 	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
-	auto planes = world(PLANE);
+	auto planes = world->getAllOfType(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
@@ -161,7 +161,7 @@ void AAgun::updateSimulation(double time, double ms)
 			//Vec3f turretOffset = Quat4f(Vec3f(0,1,0), PI-atan2A(-targeter.x,targeter.z)) * -turretRotCenter + turretRotCenter;
 			Vec3f bulletOrigin = position + rotation*turretRotCenter + cannonRotCenter;
 
-			dynamic_pointer_cast<bulletCloud>(world[bullets])->addBullet(bulletOrigin,targeter+random3<float>()*0.01f,id,time-extraShootTime-machineGun.coolDown);
+			dynamic_pointer_cast<bulletCloud>(world->getObjectById(bullets))->addBullet(bulletOrigin,targeter+random3<float>()*0.01f,id,time-extraShootTime-machineGun.coolDown);
 
 			extraShootTime-=machineGun.coolDown;
 			machineGun.roundsLeft--;
@@ -195,7 +195,7 @@ void SAMbattery::updateSimulation(double time, double ms)
 	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
-	auto planes = world(PLANE);
+	auto planes = world->getAllOfType(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
@@ -221,9 +221,9 @@ void SAMbattery::updateSimulation(double time, double ms)
 	missileCoolDown -= ms;
 	if(missileCoolDown <= 0.0 && !target.expired())
 	{
-		Vec3f p(position.x,world.elevation(position.x,position.z)+5.0,position.z);
+		Vec3f p(position.x,world->elevation(position.x,position.z)+5.0,position.z);
 		missileCoolDown = 18000;
-		world.newObject(new SAMmissile(objectInfo.typeFromString("SAM_missile1"), team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target.lock()->id));
+		world->newObject(new SAMmissile(objectInfo.typeFromString("SAM_missile1"), team, position, rotation*Quat4f(Vec3f(-1,0,0),PI/2),1000, id, target.lock()->id));
 	}
 
 	if(collisionInstance)
@@ -247,7 +247,7 @@ void flakCannon::updateSimulation(double time, double ms)
 	target.reset();
 	float lDistSquared = 0.0;
 	float nDistSquared;
-	auto planes = world(PLANE);
+	auto planes = world->getAllOfType(PLANE);
 	for(auto n = planes.begin(); n!= planes.end(); n++)
 	{
 		nDistSquared = n->second->position.distanceSquared(position);
@@ -283,7 +283,7 @@ void flakCannon::updateSimulation(double time, double ms)
 
 		t = planePtr->rotation * t;
 
-		if(world.altitude(planePtr->position + t) >= 200.0)
+		if(world->altitude(planePtr->position + t) >= 200.0)
 		{
 			float strength = clamp( (40.0*40.0 - t.magnitudeSquared()) / (40.0*40.0), 0.0, 1.0);
 			planePtr->cameraShake = 0.3 * strength;

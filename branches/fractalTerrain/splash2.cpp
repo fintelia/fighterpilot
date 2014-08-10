@@ -17,7 +17,7 @@ namespace particle
 		particle p;
 		for(int i = 0; i < 256; i++)
 		{
-			p.startTime = world.time();
+			p.startTime = world->time();
 			p.invLife = 1.0 / life();
 		
 			Vec3f dir = (random3<float>() + Vec3f(0,3.5,0.0)).normalize();
@@ -38,10 +38,10 @@ namespace particle
 	}
 	void splash2::updateParticle(particle& p)
 	{
-		float t = world.time() - p.startTime;
+		float t = world->time() - p.startTime;
 		Vec3f v(p.velocity.x, p.velocity.y - 4.9e-6*t*t, p.velocity.z);
-	//	p.velocity.y = max(p.velocity.y - 9.81 * world.time.length()/1000.0, 0.0);
-		p.pos += v * world.time.length()/1000.0;
+	//	p.velocity.y = max(p.velocity.y - 9.81 * world->time.length()/1000.0, 0.0);
+		p.pos += v * world->time.length()/1000.0;
 
 		t = t * p.invLife;
 

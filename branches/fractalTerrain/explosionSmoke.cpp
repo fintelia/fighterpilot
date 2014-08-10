@@ -12,7 +12,7 @@ namespace particle
 		particle p;
 		for(int i = 0; i < 48; i++)
 		{
-			p.startTime = world.time();
+			p.startTime = world->time();
 			p.invLife = 1.0 / 5000.0;
 
 			Vec3f dir = random3<float>();
@@ -37,12 +37,12 @@ namespace particle
 	}
 	void explosionSmoke::updateParticle(particle& p)
 	{
-		p.velocity *= pow(0.2, world.time.length()/1000.0f);	
-		p.pos += p.velocity * world.time.length()/1000.0;
+		p.velocity *= pow(0.2, world->time.length()/1000.0f);	
+		p.pos += p.velocity * world->time.length()/1000.0;
 
-		float t = world.time() - p.startTime;
+		float t = world->time() - p.startTime;
 
-		p.ang += p.angularSpeed * world.time.length() / 1000.0;
+		p.ang += p.angularSpeed * world->time.length() / 1000.0;
 
 		if(t > 500)
 		{
@@ -61,7 +61,7 @@ namespace particle
 				p.a = 0.3 - 0.33 * ((t-2500)/3000);
 			}
 
-			p.pos.y += world.time.length()/300;
+			p.pos.y += world->time.length()/300;
 		}
 	}
 
@@ -75,7 +75,7 @@ namespace particle
 		particle p;
 		for(int i = 0; i < 64; i++)
 		{
-			p.startTime = world.time();
+			p.startTime = world->time();
 			p.invLife = 1.0 / life();
 
 			Vec3f dir = random3<float>();
@@ -101,19 +101,19 @@ namespace particle
 	}
 	void flakExplosionSmoke::updateParticle(particle& p)
 	{
-		//p.vel *= pow(0.2, world.time.length()/1000.0f);	
-		//p.pos += p.vel * world.time.length()/1000.0;
-		float t = world.time() - p.startTime;
+		//p.vel *= pow(0.2, world->time.length()/1000.0f);	
+		//p.pos += p.vel * world->time.length()/1000.0;
+		float t = world->time() - p.startTime;
 
 		if(t < 100)
 		{
-			p.pos += p.velocity * world.time.length()/1000.0;
+			p.pos += p.velocity * world->time.length()/1000.0;
 		}
 		else
 		{
-			p.pos += p.velocity * 0.01 * world.time.length()/1000.0;
+			p.pos += p.velocity * 0.01 * world->time.length()/1000.0;
 		}
-		p.ang += p.angularSpeed * world.time.length() / 1000.0;
+		p.ang += p.angularSpeed * world->time.length() / 1000.0;
 
 		if(t < 150)
 		{
@@ -130,6 +130,6 @@ namespace particle
 			p.a = 0.8 - 0.8 * ((t-2000)/3000);
 		}
 
-		p.pos.y += world.time.length()/200;
+		p.pos.y += world->time.length()/200;
 	}
 }

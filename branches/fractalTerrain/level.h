@@ -115,6 +115,7 @@ struct LevelFile
 
 	bool parseObjectFile(shared_ptr<FileManager::textFile> f);
 	void initializeWorld(unsigned int humanPlayers) const;//creates objects stored in level file
+	shared_ptr<Terrain::ClipMap> generateClipMap() const;
 
 	bool checkValid();
 

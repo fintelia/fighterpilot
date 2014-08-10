@@ -10,7 +10,7 @@ varying vec4 color;
 
 
 const float zNear = 1.0;
-const float zFar = 500000;
+const float zFar = 2000000.0;
 
 void main()
 {

@@ -16,13 +16,13 @@ namespace particle
 	}
 	bool fireball::createParticle(particle& p, Vec3f currentPosition)
 	{
-		if(!world[parentObject] || !(world[parentObject]->type & PLANE) /*|| ((nPlane*)world[parentObject].get())->death != nPlane::DEATH_TRAILING_SMOKE*/)
+		if(!world->getObjectById(parentObject) || !(world->getObjectById(parentObject)->type & PLANE) /*|| ((nPlane*)world->getObjectById(parentObject).get())->death != nPlane::DEATH_TRAILING_SMOKE*/)
 		{
 			particlesPerSecond = 0;
 			return false;
 		}
 
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.velocity = random3<float>(); //note: velocity only stores direction
@@ -42,19 +42,20 @@ namespace particle
 	void fireball::update()
 	{
 		emitter::update();
-		if(world[parentObject] && world[parentObject]->type & PLANE && (dynamic_pointer_cast<plane>(world[parentObject])->death == plane::DEATH_HIT_GROUND ||dynamic_pointer_cast<plane>(world[parentObject])->death == plane::DEATH_HIT_WATER))
+		auto parentPtr = world->getObjectById(parentObject);
+		if(parentPtr && parentPtr->type & PLANE && (dynamic_pointer_cast<plane>(parentPtr)->death == plane::DEATH_HIT_GROUND ||dynamic_pointer_cast<plane>(parentPtr)->death == plane::DEATH_HIT_WATER))
 		{
 			particlesPerSecond = 0;
 		}
 	}
 	void fireball::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) * p.invLife;
-		//p.pos += p.velocity * radius * 0.3f*(t-1.0)*(t-1.0)*world.time.length()*p.invLife; //NOTE: velocity is actually just a direction
+		float t = (world->time() - p.startTime) * p.invLife;
+		//p.pos += p.velocity * radius * 0.3f*(t-1.0)*(t-1.0)*world->time.length()*p.invLife; //NOTE: velocity is actually just a direction
 
-		p.ang += p.angularSpeed * world.time.length() / 1000.0;
+		p.ang += p.angularSpeed * world->time.length() / 1000.0;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
@@ -79,7 +80,7 @@ namespace particle
 			p.b = 0.6*t + (1.0-t)*0.17;
 
 			p.size = radius*0.3;
-		//	p.pos.y += world.time.length()/100;
+		//	p.pos.y += world->time.length()/100;
 		}
 	}
 }

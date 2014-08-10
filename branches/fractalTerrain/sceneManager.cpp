@@ -298,10 +298,10 @@ void SceneManager::bindLights(shared_ptr<GraphicsManager::shader> shader)
 		else // if we already has MAX_LIGHTS number of lights...
 		{
 			debugAssert(!lights[i].expired());
-			float a = abs(world.altitude(lights[i].lock()->position));
+			float a = abs(world->altitude(lights[i].lock()->position));
 			for(int j=0;j<MAX_LIGHTS;j++)
 			{
-				if(abs(world.altitude(lightPositions[j])) > a)
+				if(abs(world->altitude(lightPositions[j])) > a)
 				{
 					lightPositions[j] = lights[i].lock()->position;
 					invLightStrengths[j] = lights[i].lock()->strength > 0.0 ? 1.0 / lights[i].lock()->strength : 0.0;

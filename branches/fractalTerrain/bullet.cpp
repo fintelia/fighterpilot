@@ -7,7 +7,7 @@ bullet::bullet(Vec3f pos,Vec3f vel,int Owner, double StartTime): life(1000), sta
 {
 
 }
-bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world.time()), startPos(pos), velocity(vel.normalize()*bulletSpeed), owner(Owner)
+bullet::bullet(Vec3f pos,Vec3f vel,int Owner): life(1000), startTime(world->time()), startPos(pos), velocity(vel.normalize()*bulletSpeed), owner(Owner)
 {
 
 }
@@ -27,7 +27,7 @@ void bulletCloud::addBullet(Vec3f pos,Vec3f vel,int Owner)
 }
 void bulletCloud::updateSimulation(double time, double ms)
 {
-	double t = world.time();
+	double t = world->time();
 	bullets.erase(std::remove_if(bullets.begin(), bullets.end(), [&t] (bullet& b) -> bool {return b.startTime + b.life <= t;}), bullets.end());
 	// ---
 }

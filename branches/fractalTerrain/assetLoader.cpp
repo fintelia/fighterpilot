@@ -468,7 +468,7 @@ int AssetLoader::loadAsset()
 				if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, nullptr, shaderAsset->feedbackTransformVaryings))
 				{
 #ifdef _DEBUG
-					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+//					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 				}
 			}
@@ -477,7 +477,7 @@ int AssetLoader::loadAsset()
 				if(!shader->init5(shaderAsset->vert4File->contents.c_str(), shaderAsset->geom4File ? shaderAsset->geom4File->contents.c_str() : nullptr,  shaderAsset->tessC4File ? shaderAsset->tessC4File->contents.c_str() : nullptr,  shaderAsset->tessE4File ? shaderAsset->tessE4File->contents.c_str() : nullptr, shaderAsset->frag4File ? shaderAsset->frag4File->contents.c_str() : nullptr))
 				{
 #ifdef _DEBUG
-					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+//					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 				}
 			}
@@ -486,7 +486,7 @@ int AssetLoader::loadAsset()
 				if(!shader->init4(shaderAsset->vert3File->contents.c_str(), shaderAsset->geom3File ? shaderAsset->geom3File->contents.c_str() : nullptr, shaderAsset->frag3File ? shaderAsset->frag3File->contents.c_str() : nullptr))
 				{
 #ifdef _DEBUG
-					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+//					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 				}
 			}
@@ -495,7 +495,7 @@ int AssetLoader::loadAsset()
 				if(!shader->init(shaderAsset->vertFile->contents.c_str(), shaderAsset->fragFile->contents.c_str()))
 				{
 #ifdef _DEBUG
-					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
+//					messageBox(string("error in shader ") + shaderAsset->name + ":\n\n" + shader->getErrorStrings());
 #endif
 				}
 			}

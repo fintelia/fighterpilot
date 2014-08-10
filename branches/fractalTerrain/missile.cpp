@@ -16,7 +16,7 @@ void missileBase::updateFrame(float interpolation) const
 		meshInstance->update(Mat4f(slerp(lastRotation,rotation, interpolation), lerp(lastPosition,position,interpolation)), !awaitingDelete);
 	}
 }
-missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target), launchTime(world.time()), engineStarted(false), contrailStarted(false), smallContrailStarted(false) 
+missile::missile(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float speed, int Owner, int Target):missileBase(Type, Team, sPos, sRot, speed, Owner), target(Target), launchTime(world->time()), engineStarted(false), contrailStarted(false), smallContrailStarted(false) 
 {
 
 }
@@ -39,7 +39,7 @@ void missile::updateSimulation(double time, double ms)
 	lastRotation = rotation;
 
 	/////////////////follow target////////////////////
-	auto enemy = world[target];
+	auto enemy = world->getObjectById(target);
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead && engineStarted)
 	{
@@ -82,7 +82,7 @@ void missile::updateSimulation(double time, double ms)
 
 		//Vec3f newLineOfSight = (rotation.conjugate() * destVec).normalize();
 		//Vec3f deltaLOS = newLineOfSight - lineOfSight;
-		//float angle = newLineOfSight.dot(lineOfSight) / 1000.0 * world.time.length() * 1.0;
+		//float angle = newLineOfSight.dot(lineOfSight) / 1000.0 * world->time.length() * 1.0;
 		//Vec3f axis = lineOfSight.cross(newLineOfSight);
 		//rotation = rotation * Quat4f(axis, angle);
 
@@ -113,7 +113,7 @@ void missile::updateSimulation(double time, double ms)
 	}
 
 	life-=ms/1000;
-	if(life < 0.0 || world.altitude(position) < 0.0)
+	if(life < 0.0 || world->altitude(position) < 0.0)
 	{
 		if(enemy != NULL && !enemy->dead && !(enemy->type & PLANE) && position.distance(enemy->position+enemy->rotation*enemy->meshInstance->getBoundingSphere().center) < 30.0)
 		{
@@ -125,7 +125,7 @@ void missile::updateSimulation(double time, double ms)
 			}
 
 		}
-		if(world.altitude(position) < 0.0 && world.isLand(position.x, position.z))
+		if(world->altitude(position) < 0.0 && world->isLand(position.x, position.z))
 		{
 			particleManager.addEmitter(new particle::explosion(),position,5.0);
 			particleManager.addEmitter(new particle::groundExplosionFlash(),position,5.0);
@@ -153,7 +153,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 	lastPosition = position;
 	lastRotation = rotation;
 	/////////////////follow target////////////////////
-	auto enemy = world[target];
+	auto enemy = world->getObjectById(target);
 	Vec3f destVec=rotation*Vec3f(0,0,1);
 	if(enemy != NULL && !enemy->dead)
 	{
@@ -206,7 +206,7 @@ void SAMmissile::updateSimulation(double time, double ms)
 	{
 		collisionInstance->update(Mat4f(rotation,position), Mat4f(lastRotation,lastPosition));
 	}
-//	if(life < 0.0 || world.altitude(position) < 0.0)
+//	if(life < 0.0 || world->altitude(position) < 0.0)
 //	{
 //		awaitingDelete = true;
 //		meshInstance->setDeleteFlag(true);

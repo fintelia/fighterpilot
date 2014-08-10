@@ -1,24 +1,20 @@
 
 class WorldManager: public objectList, public Terrain
 {
+private:
+	Circle<float> mBounds;
+
 public:
 	GameTime time;
 
-	void create();
-	void destroy();
+	WorldManager(shared_ptr<ClipMap> clipMap);
+	~WorldManager();
 
 	void simulationUpdate();
 	void frameUpdate();
-private:
-	WorldManager(){}
-	WorldManager(const WorldManager& w){}
 
-public:
-	static WorldManager& getInstance()
-	{
-		static WorldManager* pInstance = new WorldManager();
-		return *pInstance;
-	}
+	void setBounds(Circle<float> c){mBounds = c;}
+	const Circle<float>& bounds() const{return mBounds;}
 };
 
-extern WorldManager& world;
+extern unique_ptr<WorldManager> world;
