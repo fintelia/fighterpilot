@@ -17,7 +17,7 @@ namespace particle
 		particle p;
 		for(int i = 0; i < 128; i++)
 		{
-			p.startTime = world.time();
+			p.startTime = world->time();
 			p.invLife = 1.0 / life();
 		
 			Vec3f dir = (random3<float>() + Vec3f(0,1.5,0.0)).normalize();
@@ -38,9 +38,9 @@ namespace particle
 	}
 	void groundExplosionFlash::updateParticle(particle& p)
 	{
-		p.pos += p.velocity * world.time.length()/1000.0;
+		p.pos += p.velocity * world->time.length()/1000.0;
 
-		float t = (world.time() - p.startTime) * p.invLife;
+		float t = (world->time() - p.startTime) * p.invLife;
 
 		if(t<0.05)
 		{

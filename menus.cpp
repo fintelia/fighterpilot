@@ -8,7 +8,7 @@ namespace gui{
 //
 inGame::inGame(): activeChoice(RESUME)
 {
-	world.time.pause();
+	world->time.pause();
 }
 void inGame::render()
 {
@@ -24,7 +24,7 @@ bool inGame::keyDown(int vkey, char ascii)
 //	{
 //		input.up(VK_PAUSE);
 //		input.up(VK_ESCAPE);
-//		world.time.unpause();
+//		world->time.unpause();
 //		done = true;
 //		return true;
 //	}
@@ -42,7 +42,7 @@ bool inGame::menuKey(int mkey)
 		input.up(VK_RETURN);
 		input.up(VK_PAUSE);
 	//	input.up(VK_ESCAPE);
-		world.time.unpause();
+		world->time.unpause();
 		done = true;
 	}
 	else if(mkey == MENU_ENTER && activeChoice == OPTIONS)
@@ -54,7 +54,7 @@ bool inGame::menuKey(int mkey)
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
 
-		world.time.unpause();
+		world->time.unpause();
 
 		menuManager.setMenu(new gui::chooseMode);
 	}
@@ -565,7 +565,7 @@ bool loading::init()
 	progress = 0.0f;
 	return true;
 }
-void loading::updateFrame()
+void loading::update()
 {
 	static bool loadedObjectData = false;
 	if(!loadedObjectData)

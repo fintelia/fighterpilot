@@ -13,12 +13,12 @@ namespace particle
 		flash = sceneManager.genPointLight();
 		flash->position = position;
 		flash->strength = 0.001;
-		startTime = world.time();
+		startTime = world->time();
 
-		float alt = world.altitude(position);
+		float alt = world->altitude(position);
 		if(alt < 3.0*radius)
 		{
-			world.addDecal(Vec2f(position.x,position.z), 5.0*radius, 5.0*radius, "scorch");
+			world->addDecal(Vec2f(position.x,position.z), 5.0*radius, 5.0*radius, "scorch", world->time());
 		}
 
 		speed =		fuzzyAttribute(1.0, 1.0);
@@ -28,7 +28,7 @@ namespace particle
 		particle p;
 		for(int i = 0; i < 64; i++)
 		{
-			p.startTime = world.time();
+			p.startTime = world->time();
 			p.invLife = 1.0 / life();
 		
 			p.velocity = random3<float>(); //note: velocity only stores direction
@@ -48,7 +48,7 @@ namespace particle
 	}
 	void explosion::update()
 	{
-		double t = (world.time() - startTime) / 1100.0;
+		double t = (world->time() - startTime) / 1100.0;
 
 		float s;
 		if(t<0.05)
@@ -75,12 +75,12 @@ namespace particle
 	}
 	void explosion::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) * p.invLife;
-		p.pos += p.velocity * radius * 3.0f*(t-1.0)*(t-1.0)*world.time.length()*p.invLife; //NOTE: velocity is actually just a direction
+		float t = (world->time() - p.startTime) * p.invLife;
+		p.pos += p.velocity * radius * 3.0f*(t-1.0)*(t-1.0)*world->time.length()*p.invLife; //NOTE: velocity is actually just a direction
 
-		p.ang += p.angularSpeed * world.time.length() / 1000.0;
+		p.ang += p.angularSpeed * world->time.length() / 1000.0;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y /*- p.size*/ < e)
 			p.pos.y = e /*+ p.size*/;
 
@@ -105,7 +105,7 @@ namespace particle
 			p.b = 0.6*t + (1.0-t)*0.17;
 
 			p.size = radius*0.7;
-		//	p.pos.y += world.time.length()/100;
+		//	p.pos.y += world->time.length()/100;
 		}
 	}
 }

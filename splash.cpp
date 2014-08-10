@@ -21,7 +21,7 @@ namespace particle
 		if(totalCreated == 50)
 			particlesPerSecond = 0;
 
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 		
 		float r = random<float>(0, 0.5 * radius);
@@ -34,7 +34,7 @@ namespace particle
 
 		p.size = 0.5 * radius;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
@@ -47,12 +47,12 @@ namespace particle
 	}
 	void splash::updateParticle(particle& p)
 	{
-		float elapsedTime = (world.time() - p.startTime)/1000.0;
+		float elapsedTime = (world->time() - p.startTime)/1000.0;
 
-		p.pos.x += p.velocity.x * world.time.length()/1000.0;
-		p.pos.z += p.velocity.z * world.time.length()/1000.0;
+		p.pos.x += p.velocity.x * world->time.length()/1000.0;
+		p.pos.z += p.velocity.z * world->time.length()/1000.0;
 		p.pos.y = p.velocity.y * elapsedTime - 0.98 * elapsedTime * elapsedTime * radius;
-		float t = (world.time() - p.startTime) * p.invLife;
+		float t = (world->time() - p.startTime) * p.invLife;
 		if(t<0.02)
 		{
 			p.a = t * 20.0 * 0.15;
@@ -63,7 +63,7 @@ namespace particle
 			t = (t-0.05)/0.99;
 			p.a = (1.0 - t) * 0.15;
 			p.size = ((1.0-t) * 0.5 + t * 3.0) * radius;
-			//p.pos.y += world.time.length()/100;
+			//p.pos.y += world->time.length()/100;
 		}
 	//	if(p.size/2 > p.pos.y)
 	//		p.size = p.pos.y * 2;

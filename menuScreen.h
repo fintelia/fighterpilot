@@ -375,8 +375,7 @@ public:
 	screen(){}
 	virtual ~screen(){}
 
-	virtual void updateFrame(){}
-	virtual void updateSimulation(){}
+	virtual void update(){}
 
 	virtual void render()=0;
 	virtual void render3D(unsigned int view){}
@@ -390,9 +389,18 @@ public:
 	///////////////////////////////////////////
 	virtual void operator() (popup* p){}
 	//bool popupActive(){return popup != NULL;}
-protected:
 
+protected:
 	friend class manager;
+};
+class simulationScreen: public screen
+{
+public:
+	virtual void update() final;
+
+protected:
+	virtual void updateFrame()=0;
+	virtual void updateSimulation()=0;
 };
 class manager
 {
@@ -406,11 +414,12 @@ public:
 	void setMenu(screen* m);
 	bool setPopup(popup* p);
 
-	void updateFrame();
-	void updateSimulation();
+	void update();
+//	void updateFrame();
+//	void updateSimulation();
 
 	void render();
-	void render3D(unsigned int view);
+//	void render3D(unsigned int view);
 
 	void inputCallback(InputManager::callBack* callback);
 

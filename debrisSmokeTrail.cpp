@@ -17,13 +17,13 @@ namespace particle
 	}
 	void debrisSmokeTrail::update()
 	{
-		double ms = world.time.length();
-		double time = world.time();
+		double ms = world->time.length();
+		double time = world->time();
 
 		lastPosition = position;
 
-		position += emitterVelocity * world.time.length()/1000;
-		emitterVelocity.y -= 9.8 * world.time.length()/1000;
+		position += emitterVelocity * world->time.length()/1000;
+		emitterVelocity.y -= 9.8 * world->time.length()/1000;
 	
 		for(int i=0; i < total; i++)
 		{
@@ -52,7 +52,7 @@ namespace particle
 		liveParticles = 0;
 		for(int i=0; i < total; i++)
 		{
-			if((world.time() - particles[i].startTime) * particles[i].invLife < 1.0)
+			if((world->time() - particles[i].startTime) * particles[i].invLife < 1.0)
 			{
 				liveParticles++;
 			}
@@ -60,7 +60,7 @@ namespace particle
 
 		for(int i=0; i < total; i++)
 		{
-			if((world.time() - particles[i].startTime) * particles[i].invLife < 1.0)
+			if((world->time() - particles[i].startTime) * particles[i].invLife < 1.0)
 			{
 				oldParticlePositions[i] = particles[i].pos;
 				updateParticle(particles[i]);
@@ -69,7 +69,7 @@ namespace particle
 
 		for(int i=0; i < total; i++)
 		{
-			if((world.time() - particles[i].startTime) * particles[i].invLife < 1.0)
+			if((world->time() - particles[i].startTime) * particles[i].invLife < 1.0)
 			{
 				updateParticle(particles[i]);
 			}
@@ -77,7 +77,7 @@ namespace particle
 	}
 	bool debrisSmokeTrail::createParticle(particle& p, Vec3f currentPosition)
 	{
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.velocity = random3<float>() * speed();
@@ -85,7 +85,7 @@ namespace particle
 
 		p.size = 1.0;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
@@ -101,8 +101,8 @@ namespace particle
 	}
 	void debrisSmokeTrail::updateParticle(particle& p)
 	{
-		p.pos += p.velocity * world.time.length()/1000.0;
-		float t = (world.time() - p.startTime) * p.invLife;
+		p.pos += p.velocity * world->time.length()/1000.0;
+		float t = (world->time() - p.startTime) * p.invLife;
 		if(t<0.2)
 		{
 			p.a = 0.5;//(t * 5.0)*(t * 5.0);
@@ -113,7 +113,7 @@ namespace particle
 			t = (t-0.01)/0.99;
 			p.a = 0.5* (1.0 - t);
 			p.size = (1.0-t) * 2.0 + t * 3.0;
-			//p.pos.y += world.time.length()/100;
+			//p.pos.y += world->time.length()/100;
 		}
 	}
 	void debrisSmokeTrail::setColor(Color c)

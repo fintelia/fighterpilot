@@ -15,7 +15,7 @@ namespace particle
 	}
 	bool contrailSmall::createParticle(particle& p, Vec3f currentPosition)
 	{
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.pos = currentPosition + random3<float>()*spread();
@@ -35,7 +35,7 @@ namespace particle
 	}
 	void contrailSmall::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) * p.invLife;
+		float t = (world->time() - p.startTime) * p.invLife;
 		//if(t<0.1)
 		//{
 		//	p.a = t * 10.0;

@@ -147,23 +147,6 @@ bool Game::init()
 
 void Game::update()
 {
-	int n=0;
 	input.update();
-	while(world.time.needsUpdate())
-	{
-		world.time.nextUpdate();
-
-		players.update();
-		world.simulationUpdate();
-		particleManager.update();
-		menuManager.updateSimulation();
-
-		if(++n==20)
-		{
-			break;//we can no-longer keep up with the simulation
-		}
-	}
-	world.time.nextFrame();	
-	world.frameUpdate();
-	menuManager.updateFrame();
+	menuManager.update();
 }

@@ -58,7 +58,7 @@ float humanPlayer::controlMapping::operator() ()
 
 shared_ptr<plane> player::getObject()
 {
-	return dynamic_pointer_cast<plane>(world[mObjectNum]);
+	return dynamic_pointer_cast<plane>(world->getObjectById(mObjectNum));
 }
 ////
 //void AIcontrol::update()
@@ -199,7 +199,7 @@ AIplayer::AIplayer(int oNum): player(PLAYER_COMPUTER,oNum),missileCountDown(0.0)
 }
 void AIplayer::startPatrol()
 {
-	Vec2f p = random2<float>() * random<float>(world.bounds().radius) + world.bounds().center;
+	Vec2f p = random2<float>() * random<float>(world->bounds().radius) + world->bounds().center;
 	float alt = random<float>(50.0,1000.0);
 	destination = Vec3f(p.x,alt,p.y);
 	state = STATE_PATROL;
@@ -207,7 +207,7 @@ void AIplayer::startPatrol()
 void AIplayer::startHunt(int targetID)
 {
 	target = targetID;
-	huntEndTime = world.time() + random<double>(1000,3000);
+	huntEndTime = world->time() + random<double>(1000,3000);
 	state = STATE_HUNTING;
 }
 void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest, float strength)
@@ -221,8 +221,8 @@ void AIplayer::flyTowardsPoint(shared_ptr<plane> p, Vec3f dest, float strength)
 	float diffAng = Angle(atan2(destDirection.x, destDirection.z) - p->direction).radians_plusMinusPI();
 	float diffClimb = Angle(atan2(destVector.y, sqrt(destVector.x*destVector.x+destVector.z*destVector.z)) - p->climb).radians_plusMinusPI();
 
-	p->direction += clamp(diffAng,1.2,-1.2) * world.time.length()/1000.0 * strength;
-	p->climb += clamp(diffClimb,-0.7,0.7) * world.time.length()/1000.0 * strength;
+	p->direction += clamp(diffAng,1.2,-1.2) * world->time.length()/1000.0 * strength;
+	p->climb += clamp(diffClimb,-0.7,0.7) * world->time.length()/1000.0 * strength;
 
 	float rollError = (diffAng*0.5 + p->roll.radians_plusMinusPI()) / (PI/2);
 
@@ -240,7 +240,7 @@ void AIplayer::update()
 		return;
 	}
 
-	missileCountDown -= world.time.length();
+	missileCountDown -= world->time.length();
 	if(state == STATE_NONE)
 	{
 		startPatrol();
@@ -265,7 +265,7 @@ void AIplayer::update()
 		Vec3f focus1 = p->position;
 		Vec3f focus2 = p->position + p->rotation * Vec3f(0,0,2000.0);
 
-		auto& planes = world(PLANE);
+		auto& planes = world->getAllOfType(PLANE);
 		for(auto i=planes.begin(); i!=planes.end(); i++)
 		{
 			if(i->second->team != p->team)
@@ -281,8 +281,8 @@ void AIplayer::update()
 	}
 	else if(state == STATE_HUNTING)
 	{
-		auto t = world[target];
-		if(huntEndTime <= world.time() || !t || t->dead || !(t->type & PLANE))
+		auto t = world->getObjectById(target);
+		if(huntEndTime <= world->time() || !t || t->dead || !(t->type & PLANE))
 		{
 			target = 0;
 			startPatrol();

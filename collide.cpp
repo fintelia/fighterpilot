@@ -865,14 +865,14 @@ bool CollisionManager::groundCollsion(shared_ptr<object> o1) const
 		Sphere<float> s1 = bounds->sphere;
 		s1.center = instance->transformationMatrix * s1.center;
 
-		return world.altitude(s1.center) <= s1.radius;
+		return world->altitude(s1.center) <= s1.radius;
 	}
 	else if(bounds->type == collisionBounds::MESH)
 	{
 		auto m = static_pointer_cast<collisionMesh>(bounds);
 		for(auto i = m->vertices.begin(); i != m->vertices.end(); i++)
 		{
-			if(world.altitude(instance->transformationMatrix * (*i)) < 0.0)
+			if(world->altitude(instance->transformationMatrix * (*i)) < 0.0)
 				return true;
 		}
 		return false;

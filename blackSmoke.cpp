@@ -15,7 +15,7 @@ namespace particle
 	}
 	bool blackSmoke::createParticle(particle& p, Vec3f currentPosition)
 	{
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.velocity = random3<float>() * speed();
@@ -23,7 +23,7 @@ namespace particle
 
 		p.size = 5.0;
 
-		float e = world.elevation(p.pos.x,p.pos.z);
+		float e = world->elevation(p.pos.x,p.pos.z);
 		if(p.pos.y - p.size < e)
 			p.pos.y = e + p.size;
 
@@ -37,10 +37,10 @@ namespace particle
 	}
 	void blackSmoke::updateParticle(particle& p)
 	{
-		p.pos += p.velocity * world.time.length()/1000.0;
-		p.ang += p.angularSpeed * world.time.length()/1000.0;
-		p.pos.y += world.time.length()/100;
-		float t = (world.time() - p.startTime);
+		p.pos += p.velocity * world->time.length()/1000.0;
+		p.ang += p.angularSpeed * world->time.length()/1000.0;
+		p.pos.y += world->time.length()/100;
+		float t = (world->time() - p.startTime);
 		if(t < 300.0)
 		{
 			p.a = t / 300.0 * 0.75;

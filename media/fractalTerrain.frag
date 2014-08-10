@@ -117,18 +117,17 @@ void main()
 	////////////COLOR OUTPUT///////////
 	//color = vec3(pow(max(dot(reflect(-sunDirection,n), normalize(eyePosition-position)),0.0),1.0));
 
-	if(groundVal.a < 0.5)
+/*	if(groundVal.a < 0.5)
 		color *= pow(groundVal.a * 2, 5) * 0.8;
 	else
 		color *= 0.8 + 0.2 * (groundVal.a - 0.5) * 2;
+*/
 
-
-	gl_FragColor = //vec4(groundVal.yzz,1);
-		vec4(color,1.0); // vec4(vec3(height),1.0);// 
+	gl_FragColor = vec4(color,1.0); // vec4(vec3(height),1.0);// 
 
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
-	const float Fcoef = 2.0 / log2(500000.0 + 1.0);
+	const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
 	const float Fcoef_half = 0.5 * Fcoef;
 	gl_FragDepth = log2(flogz) * Fcoef_half;
 }

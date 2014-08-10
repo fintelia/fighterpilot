@@ -10,11 +10,11 @@ namespace particle
 	void tracer::init()
 	{
 		life = fuzzyAttribute(250.0, 50.0);
-		endTime = world.time() + 300.0;
+		endTime = world->time() + 300.0;
 	}
 	bool tracer::createParticle(particle& p, Vec3f currentPosition)
 	{
-		p.startTime = world.time() - extraTime;
+		p.startTime = world->time() - extraTime;
 		p.invLife = 1.0 / life();
 
 		p.pos = currentPosition;// + random3<float>() * 0.5;
@@ -30,16 +30,16 @@ namespace particle
 	}
 	void tracer::update()
 	{
-		position += velocity * world.time.length()*0.001 + random3<float>() * 0.5;
+		position += velocity * world->time.length()*0.001 + random3<float>() * 0.5;
 
-		if(world.time() >= endTime)
+		if(world->time() >= endTime)
 			particlesPerSecond = 0.0;
 
 		emitter::update();
 	}
 	void tracer::updateParticle(particle& p)
 	{
-		float t = (world.time() - p.startTime) * p.invLife;
+		float t = (world->time() - p.startTime) * p.invLife;
 
 		if(t<0.10f)
 		{

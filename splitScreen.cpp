@@ -7,13 +7,13 @@ splitScreen::splitScreen(shared_ptr<const LevelFile> lvl): dogFight(lvl), countd
 {
 	views[0] = graphics->genView();
 	views[0]->viewport(0, 0.0, sAspect, 0.5);
-	views[0]->perspective(40.0, (double)sw / ((double)sh/2), 1.0, 500000.0);
+	views[0]->perspective(40.0, (double)sw / ((double)sh/2), 1.0, 2000000.0);
 	views[0]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 0);
 	views[0]->setTransparentRenderFunc(std::bind(&splitScreen::renderTransparency, this, std::placeholders::_1), 0);
 
 	views[1] = graphics->genView();
 	views[1]->viewport(0, 0.5, sAspect, 0.5);
-	views[1]->perspective(40.0, (double)sw / ((double)sh/2),1.0, 500000.0);
+	views[1]->perspective(40.0, (double)sw / ((double)sh/2),1.0, 2000000.0);
 	views[1]->setRenderFunc(std::bind(&splitScreen::render3D, this, std::placeholders::_1), 1);
 	views[1]->setTransparentRenderFunc(std::bind(&splitScreen::renderTransparency, this, std::placeholders::_1), 1);
 
@@ -21,7 +21,7 @@ splitScreen::splitScreen(shared_ptr<const LevelFile> lvl): dogFight(lvl), countd
 }
 bool splitScreen::init()
 {
-	world.create();
+	world = unique_ptr<WorldManager>(new WorldManager(level->generateClipMap()));
 	level->initializeWorld(2);
 
 	if(level->info.night)
@@ -87,13 +87,13 @@ void splitScreen::updateFrame()
 	if(input.getKey(0x54))
 	{
 		input.up(0x54);
-		if(world.time.getSpeed() > 0.5)
+		if(world->time.getSpeed() > 0.5)
 		{
-			world.time.changeSpeed(0.1, 5.0);
+			world->time.changeSpeed(0.1, 5.0);
 		}
 		else
 		{
-			world.time.changeSpeed(1.0, 5.0);
+			world->time.changeSpeed(1.0, 5.0);
 		}
 	}
 #endif
@@ -101,7 +101,7 @@ void splitScreen::updateFrame()
 	{
 		if(levelup)
 		{
-			countdown-=world.time.length();
+			countdown-=world->time.length();
 			if(countdown<=0)
 			{
 				string nLevel = level->info.nextLevel;
@@ -116,7 +116,7 @@ void splitScreen::updateFrame()
 		}
 		else if(restart)
 		{
-			countdown-=world.time.length();
+			countdown-=world->time.length();
 			if(countdown<=0)
 			{
 				menuManager.setMenu(new gui::splitScreen(level));
@@ -124,7 +124,7 @@ void splitScreen::updateFrame()
 		}
 		else if(victory)
 		{
-			countdown-=world.time.length();
+			countdown-=world->time.length();
 			if(countdown<=0)
 			{
 				menuManager.setMenu(new gui::chooseMode);
@@ -134,8 +134,8 @@ void splitScreen::updateFrame()
 		else
 		{
 			int enemies_left=0;
-			auto planes = world(PLANE);
-			auto AAA = world(ANTI_AIRCRAFT_ARTILLARY);
+			auto planes = world->getAllOfType(PLANE);
+			auto AAA = world->getAllOfType(ANTI_AIRCRAFT_ARTILLARY);
 			for(auto i = planes.begin(); i != planes.end();i++)
 			{
 				if((*i).second->team != players[0]->getObject()->team && !(*i).second->dead)
@@ -193,7 +193,7 @@ void splitScreen::render()
 		else if(!p->dead && !p->controled && !graphics->isHighResScreenshot())
 		{
 
-			auto planes = world(PLANE);
+			auto planes = world->getAllOfType(PLANE);
 			for(auto i = planes.begin(); i != planes.end();i++)
 			{
 				if(i->second->id != p->id && i->second->team == p->team && !i->second->dead)
@@ -202,7 +202,7 @@ void splitScreen::render()
 			
 			if(p->target != 0 && !graphics->isHighResScreenshot())
 			{
-				auto targetPtr = world[p->target];
+				auto targetPtr = world->getObjectById(p->target);
 				drawHudIndicator(views[acplayer], p, targetPtr, p->targetLocked ? Color4(1,0,0) : Color4(0,0,1), p->targetLocked ? Color4(0.34+0.66*0.2989,0.66*0.2989,0.66*0.2989) : Color4(0.66*0.1140,0.66*0.1140,0.34+0.66*0.1140,0.5));
 			}
 
@@ -211,7 +211,7 @@ void splitScreen::render()
 			//	auto targetPtr = world[p->target];
 			//	if(targetPtr && targetPtr->meshInstance != nullptr)
 			//	{
-			//		float interpolate = world.time.interpolate();
+			//		float interpolate = world->time.interpolate();
 			//		Vec3f planePos = lerp(p->lastPosition, p->position, interpolate);
 			//		//Quat4f planeRot = slerp(p->lastRotation, p->rotation, interpolate);
 			//		Vec3f targetPos = lerp(targetPtr->lastPosition, targetPtr->position, interpolate);
@@ -317,7 +317,7 @@ void splitScreen::render3D(unsigned int v)
 	else
 		sceneManager.renderScene(views[v]);
 
-	world.renderFoliage(views[v]);
+	world->renderFoliage(views[v]);
 
 	if(players[v]->firstPersonView && !players[v]->getObject()->controled && !players[v]->getObject()->dead)
 		sceneManager.renderSceneTransparency(views[v], players[v]->getObject()->meshInstance);
