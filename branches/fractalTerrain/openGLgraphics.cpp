@@ -2998,6 +2998,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glDepthFunc(GL_LEQUAL);
 
 	if(gl2Hacks)
 	{

@@ -134,10 +134,11 @@ private:
 		
 	WaveGroup<16> waves;
 	shared_ptr<GraphicsManager::texture2D> waveTexture;
-	static constexpr unsigned int waveTextureResolution = 256;
-	static constexpr float waveTextureScale = 128.0;
+	static constexpr unsigned int waveTextureResolution = 512;
+	static constexpr float waveTextureScale = 1024.0;
 
-	struct decal
+	static constexpr double earthRadius = 6367444.7;
+/*	struct decal
 	{
 		string texture;
 		shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
@@ -147,28 +148,20 @@ private:
 
 		decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo, shared_ptr<GraphicsManager::indexBuffer> ibo, double sTime, double fLength);
 	};
-	vector<shared_ptr<decal>> decals;
-
-//	Vec3f terrainPosition;
-//	Vec3f terrainScale;
-
-//	Circle<float> mBounds;
-//	bool waterPlane;
-	
-//	TerrainType shaderType;
+	vector<shared_ptr<decal>> decals;*/
 
 	shared_ptr<GraphicsManager::textureCube> skyTexture;
 	shared_ptr<GraphicsManager::texture3D> oceanTexture;
 	shared_ptr<GraphicsManager::texture2D> treeTexture;
 
-//	vector<shared_ptr<Page>> terrainPages;
+	shared_ptr<GraphicsManager::vertexBuffer> waterVBO;
+	shared_ptr<GraphicsManager::indexBuffer> waterIBO;
 
 	unique_ptr<FractalNode> fractalTerrain;
 
 	double currentTime;
+	bool wireframe;
 
-//	shared_ptr<Page> getPage(Vec2f position) const;
-//	shared_ptr<Page> getPage(Vec3f position) const;
 
 	void generateOceanTexture();
 	void resetTerrain();
@@ -191,6 +184,8 @@ public:
 	void addDecal(Vec2f center, float width, float height, string texture, double startTime, double fadeInLength=500.0);
 
 //	const Circle<float>& bounds() const{return mBounds;}
+
+	void setWireframe(bool w);
 
 	float elevation(Vec2f v) const;
 	float elevation(float x, float z) const;

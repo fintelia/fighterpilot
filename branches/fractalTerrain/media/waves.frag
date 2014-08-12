@@ -1,7 +1,5 @@
 #version 330
 
-//uniform sampler2D wavesTex;
-
 in vec2 texCoord;
 out vec4 FragColor;
 
@@ -19,23 +17,23 @@ uniform float time;
  */
 vec2 waveLookup(float t)
 {
-	return vec2(0.5 + 0.5 * sin(t*6.2831853),
+	return vec2(0.5 * sin(t*6.2831853),
 				cos(t*6.2831853) * 3.1415926);
 }
 
 void main()
 {
-	FragColor = vec4(0,0,.1,0);
+	FragColor = vec4(0.5,0,1,0);
 
 	for(int i=0; i < NUM_WAVES; i++){
 		vec2 w = waveLookup(frequencies[i] * dot(texCoord,waveDirections[i]) 
 							+ 0.001*waveSpeeds[i]*time);
 
-		FragColor.x = amplitudes[i] * w.x;
+		FragColor.x += amplitudes[i] * w.x;
 		FragColor.yw += amplitudes[i] * w.y * waveDirections[i];				
 	}
 	
 
 	FragColor.yzw = normalize(FragColor.yzw);
-	FragColor.x = FragColor.x / (16*NUM_WAVES) + 0.5;
+	FragColor.x = FragColor.x;
 }

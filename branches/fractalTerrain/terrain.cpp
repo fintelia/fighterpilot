@@ -466,7 +466,6 @@ unsigned int Terrain::FractalNode::computeWaterSubdivision(shared_ptr<GraphicsMa
 									max(abs(bounds.minXYZ.z), 
 										abs(bounds.maxXYZ.z)));
 
-		const float earthRadius = 3.3675e6;
 		bounds.minXYZ.y =  earthRadius * (cos(asin(furthestPoint.magnitude() 
 												   / earthRadius)) - 1.0) - 5.0;
 		bounds.maxXYZ.y =  earthRadius * (cos(asin(closestPoint.magnitude() 
@@ -1935,11 +1934,11 @@ Terrain::Page::~Page()
 {
 	delete[] heights;
 }*/
-Terrain::decal::decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo, shared_ptr<GraphicsManager::indexBuffer> ibo, double sTime, double fLength): texture(tex), vertexBuffer(vbo), indexBuffer(ibo), startTime(sTime), fadeLength(fLength)
-{
+// Terrain::decal::decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo, shared_ptr<GraphicsManager::indexBuffer> ibo, double sTime, double fLength): texture(tex), vertexBuffer(vbo), indexBuffer(ibo), startTime(sTime), fadeLength(fLength)
+// {
 
-}
-Terrain::Terrain(shared_ptr<ClipMap> clipMap)
+// }
+Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 {
 	debugAssert(isPowerOfTwo(clipMap->layerResolution - 1));
 
@@ -1993,20 +1992,70 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap)
 */
 
 	
-	float s = 1.0 / waveTextureScale;
+	// float s = 16.0 / waveTextureScale;
 	for(unsigned int i = 0; i < waves.size(); i++)
 	{
-		float f = 0.5 * pow(2.0, random<float>(-1.0, 1.0));
-		float A = 0.25 / f;//random<float>(1.0 / (40 * f), 1.0 / (20 * f));
-		waves.frequencies[i] = f / s;
-		waves.amplitudes[i] = A * s;
-		waves.speeds[i] = sqrt(9.8 / (3.14259 * 2 * f)) * s;
-		waves.directions[i] = random2<float>();
+		int fx = random<int>(1, waveTextureResolution / 16 + 1);
+		int fz = random<int>(1, waveTextureResolution / 16 + 1);
+		float f = sqrt(fx*fx + fz*fz);//0.5 * pow(2.0, random<float>(-1.0, 1.0));
+		float A = 1.0 / (20.0*f);//random<float>(1.0 / (40 * f), 1.0 / (20 * f));
+		waves.frequencies[i] = f;
+		waves.amplitudes[i] = A;
+		waves.speeds[i] = sqrt(9.8 * waveTextureScale / (3.14259 * 2 * f)) 
+			/ waveTextureScale;
+		waves.directions[i] = Vec2f(fx*(2*random<int>(0,2)-1), 
+									fz*(2*random<int>(0,2)-1)).normalize();
+
+		cout << waves.directions[i].x << " " << waves.directions[i].y << endl;
 	}
 
 	waveTexture = graphics->genTexture2D();
 	waveTexture->setData(waveTextureResolution,waveTextureResolution,
-						 GraphicsManager::texture::RGBA, false, false, nullptr);
+						 GraphicsManager::texture::RGBA, true, false, nullptr);
+
+	const unsigned int numRings = 96;
+	const unsigned int vertsPerRing = 64;
+	unique_ptr<float[]> vertices{new float[2+2*numRings*vertsPerRing]};
+	vertices[0] = vertices[1] = 0.0f;
+	float angScale = 2 * PI / vertsPerRing;
+	float radiusScale = 1.0 / pow(numRings,4);
+	for(unsigned int ring = 0; ring < numRings; ring++)
+	{
+		for(unsigned int vert = 0; vert< vertsPerRing; vert++)
+		{
+			float r = radiusScale * pow(ring+1, 4);
+			vertices[2+2*(ring*vertsPerRing+vert)] = r * cos(vert*angScale);
+			vertices[2+2*(ring*vertsPerRing+vert)+1] = r * sin(vert*angScale);
+		}
+	}
+	waterVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	waterVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0*sizeof(float));
+	waterVBO->setTotalVertexSize(sizeof(float)*2);
+	waterVBO->setVertexData(sizeof(float)*(2+2*numRings*vertsPerRing), vertices.get());
+
+	unsigned int i = 0;
+	unique_ptr<uint16_t[]> indices{new uint16_t[3*(2*numRings-1)*vertsPerRing]};
+	for(int v = 0; v < vertsPerRing; v++)
+	{
+		indices[i++] = 0;
+		indices[i++] = v+1;
+		indices[i++] = (v+2) % vertsPerRing;
+	}
+	for(unsigned int ring = 1; ring < numRings; ring++)
+	{
+		for(unsigned int vert = 0; vert < vertsPerRing; vert++)
+		{
+			indices[i++] = 1+(ring)*vertsPerRing + vert;
+			indices[i++] = 1+(ring+1)*vertsPerRing + vert;
+			indices[i++] = 1+(ring)*vertsPerRing + (vert+1) % vertsPerRing;
+
+			indices[i++] = 1+(ring+1)*vertsPerRing + vert;
+			indices[i++] = 1+(ring+1)*vertsPerRing + (vert+1) % vertsPerRing;
+			indices[i++] = 1+(ring)*vertsPerRing + (vert+1) % vertsPerRing;
+		}
+	}
+	waterIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+	waterIBO->setData(indices.get(), GraphicsManager::TRIANGLES, 3*(2*numRings-1)*vertsPerRing);
 
 }
 void Terrain::generateSky(Vec3f sunDirection)
@@ -2154,60 +2203,60 @@ void Terrain::generateSky(Vec3f sunDirection)
 //				float cos_sunAngle = direction.dot(sunDirection);
 //				float sunAngle = acos(cos_sunAngle);
 //				float reciprocal_cos_upAngle = 1.0 / max(direction.y,0.01);//cos_upAng should really be just direction.y but this prevents the horizon from having artifacts
-//
-//			//	if(sunAngle > PI/2) sunAngle = PI/4 + sunAngle * 0.5;
-//				
-//																												  //pow(constants[2][i], constants[3][i] * sunAngle) is the only term that dramatically effects the color accros the sky
+
+			//	if(sunAngle > PI/2) sunAngle = PI/4 + sunAngle * 0.5;
+				
+																												  //pow(constants[2][i], constants[3][i] * sunAngle) is the only term that dramatically effects the color accros the sky
 //				cubeMap[i + 0] = (1.0 + constants[0][0] * exp(constants[1][0]*reciprocal_cos_upAngle)) * (1.0 + constants[2][0]*exp(constants[3][0] * sunAngle) + constants[4][0]*cos_sunAngle*cos_sunAngle) * zenithOverSun[0];
-//				cubeMap[i + 1] = (1.0 + constants[0][1] * exp(constants[1][1]*reciprocal_cos_upAngle)) * (1.0 + constants[2][1]*exp(constants[3][1] * sunAngle) + constants[4][1]*cos_sunAngle*cos_sunAngle) * zenithOverSun[1];
-//				cubeMap[i + 2] = (1.0 + constants[0][2] * exp(constants[1][2]*reciprocal_cos_upAngle)) * (1.0 + constants[2][2]*exp(constants[3][2] * sunAngle) + constants[4][2]*cos_sunAngle*cos_sunAngle) * zenithOverSun[2];
-//			
-//				i +=3;
-//
-//			}
-//		}
-//	}
-//	
-//	t = GetTime() - t;
-//	t = GetTime();
-//
-//	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
-//	{
-//		float x = cubeMap[i + 0];
-//		float y = cubeMap[i + 2];
-//
-//
-//		cubeMap[i + 1] = 0.65 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
-//		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
-//
-//		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
-//		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
-//	}
-//
-//	t = GetTime() - t;
-//	t = GetTime();
-//
-//	//const float invGamma = 1.0/1.8;
-//	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
-//	{
-//	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
-//		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.498530),0.0,1.0) * 255.0;
-//		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
-//		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
-//	}
-//
-//	t = GetTime() - t;
-//	t = GetTime();
-//
-//	skyTexture = graphics->genTextureCube();
-//	skyTexture->setData(l, l, GraphicsManager::texture::BGR, cubeMapTex);
-//
-//	delete[] cubeMap;
-//	delete[] cubeMapTex;
-//
-//	t = GetTime() - t;
-//	t = GetTime();
-//}
+	// 			cubeMap[i + 1] = (1.0 + constants[0][1] * exp(constants[1][1]*reciprocal_cos_upAngle)) * (1.0 + constants[2][1]*exp(constants[3][1] * sunAngle) + constants[4][1]*cos_sunAngle*cos_sunAngle) * zenithOverSun[1];
+	// 			cubeMap[i + 2] = (1.0 + constants[0][2] * exp(constants[1][2]*reciprocal_cos_upAngle)) * (1.0 + constants[2][2]*exp(constants[3][2] * sunAngle) + constants[4][2]*cos_sunAngle*cos_sunAngle) * zenithOverSun[2];
+			
+	// 			i +=3;
+
+	// 		}
+	// 	}
+	// }
+	
+// 	t = GetTime() - t;
+// 	t = GetTime();
+
+// 	for(i=0; i < l*l*6*3; i+=3)// xyY -> XYZ (actually xYy -> XYZ)
+// 	{
+// 		float x = cubeMap[i + 0];
+// 		float y = cubeMap[i + 2];
+
+
+// 		cubeMap[i + 1] = 0.65 * cubeMap[i + 1] / (1.0 + cubeMap[i + 1]);	//tone mapping (optional?)
+// 		//cubeMap[i + 1] = pow((double)cubeMap[i + 1], invGamma);
+
+// 		cubeMap[i + 0] = cubeMap[i + 1] * x / y;
+// 		cubeMap[i + 2] = cubeMap[i + 1] * (1.0 - x - y) / y;
+// 	}
+
+// 	t = GetTime() - t;
+// 	t = GetTime();
+
+// 	//const float invGamma = 1.0/1.8;
+// 	for(i=0; i < l*l*6*3; i+=3)// XYZ -> rgb
+// 	{
+// 	//	float brightness = pow(clamp(cubeMap[i + 0], 0.0, 1.0),invGamma);
+// 		cubeMapTex[i + 2] = clamp((cubeMap[i + 0] *  3.240479		+		cubeMap[i + 1] * -1.53715		+		cubeMap[i + 2] * -0.498530),0.0,1.0) * 255.0;
+// 		cubeMapTex[i + 1] = clamp((cubeMap[i + 0] * -0.969256		+		cubeMap[i + 1] *  1.875991		+		cubeMap[i + 2] *  0.041556),0.0,1.0) * 255.0;
+// 		cubeMapTex[i + 0] = clamp((cubeMap[i + 0] *  0.055648		+		cubeMap[i + 1] * -0.204043		+		cubeMap[i + 2] *  1.057311),0.0,1.0) * 255.0;
+// 	}
+
+// 	t = GetTime() - t;
+// 	t = GetTime();
+
+// 	skyTexture = graphics->genTextureCube();
+// 	skyTexture->setData(l, l, GraphicsManager::texture::BGR, cubeMapTex);
+
+// 	delete[] cubeMap;
+// 	delete[] cubeMapTex;
+
+// 	t = GetTime() - t;
+// 	t = GetTime();
+// }
 void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 {
 	const double AOI = 45.0 * PI/180.0;
@@ -2520,15 +2569,14 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	fractalTerrain->computeSubdivision(view, 5);
 	fractalTerrain->computeWaterSubdivision(view, 3);
 
-	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
 //	graphics->setWireFrame(true);
 	renderFractalTerrain(view);
 //	graphics->setWireFrame(false);
-	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
-	skyTexture->bind(3);
+
+
 //	graphics->setWireFrame(true);
 	renderFractalWater(view);
-	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 //	graphics->setWireFrame(false);
 
 	auto skyShader = shaders.bind("sky2 shader");
@@ -2553,6 +2601,8 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 }
 void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 {
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+
 	auto shader = shaders.bind("fractal terrain");
 //		auto texture = clipMap->layers[clipMapLayer].texture;
 	Vec2f tScale = Vec2f(1,1);//Vec2f(1,1) / (1 << level) * (1 >> clipMapLayer);
@@ -2560,6 +2610,7 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	shader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
 	shader->setUniformMatrix("modelTransform", Mat4f());
+	shader->setUniform1f("earthRadius", earthRadius);
 	shader->setUniform1i("groundTex", 0);
 
 	shader->setUniform2f("tOrigin", tOrigin + 0.5 / FractalNode::textureResolution);
@@ -2574,34 +2625,63 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 		
 	fractalTerrain->render(view, shader);
 
+	
+
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const
 {
+	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+
+
+	Vec3f eye = view->camera().eye;
+	float scale = earthRadius * sqrt(1.0-pow(earthRadius/(earthRadius+eye.y),2));
+
 	auto shader = shaders.bind("fractal ocean");
 	shader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
-	shader->setUniformMatrix("modelTransform", Mat4f());
+	shader->setUniformMatrix("modelTransform", Mat4f(Quat4f(),Vec3f(eye.x,0,eye.z), scale));
+	shader->setUniform1f("earthRadius", earthRadius);
 	shader->setUniform1i("groundTex", 3);
-	shader->setUniform3f("eyePosition", view->camera().eye);
+	shader->setUniform3f("eyePosition", eye);
 	shader->setUniform3f("sunDirection", graphics->getLightPosition().normalize());
 	shader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 	shader->setUniform1f("time", currentTime);
 
-	shader->setUniform1i("colorBuffer", 46);
-	shader->setUniform1i("depthBuffer", 47);
-	shader->setUniform1i("sky", 0);
-	shader->setUniform1i("waves", 1); dataManager.bind("wave lookup", 1);
 	shader->setUniform1f("invTextureScale", 1.0 / waveTextureScale);
+
+	shader->setUniform1i("waves", 1); 
+	dataManager.bind("wave lookup", 1);
+	
 	//shader->setUniform1i("oceanNormals", 2);
 	//dataManager.bind("ocean normals", 2);
+	shader->setUniform1i("sky", 0);	
+	skyTexture->bind(0);
+
 	shader->setUniform1i("waveTexture", 2);
 	waveTexture->bind(2);
 	shader->setUniform1fv("amplitudes", waves.size(), (float*)waves.amplitudes);
 	shader->setUniform1fv("frequencies", waves.size(), (float*)waves.frequencies);
 	shader->setUniform1fv("waveSpeeds", waves.size(), (float*)waves.speeds);
 	shader->setUniform2fv("waveDirections", waves.size(), (Vec2f*)waves.directions);
+	shader->setUniform1f("colorMult", 1.0f);
+//	fractalTerrain->renderWater(view, shader);
 
-	fractalTerrain->renderWater(view, shader);
+	waterIBO->bindBuffer(waterVBO);
+
+	graphics->setColorMask(false);
+	waterIBO->drawBuffer();
+	graphics->setColorMask(true);
+	waterIBO->drawBuffer();
+
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);	
+
+	if(wireframe)
+	{
+		shader->setUniform1f("colorMult", 0.0f);
+		graphics->setWireFrame(true);
+		waterIBO->drawBuffer();
+		graphics->setWireFrame(false);
+	}
 }
 void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 {
@@ -2663,6 +2743,10 @@ shared_ptr<Terrain::Page> Terrain::getPage(Vec3f position) const // position.y i
 	}
 	return shared_ptr<Page>();
 	}*/
+void Terrain::setWireframe(bool w)
+{
+	wireframe = w;
+}
 float Terrain::elevation(Vec2f v) const
 {
 	//TODO: implement

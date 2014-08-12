@@ -247,6 +247,7 @@ protected:
 
 #ifdef _DEBUG
 	bool slow;
+	bool wireframe;
 #endif
 
 	shared_ptr<GraphicsManager::View> view;

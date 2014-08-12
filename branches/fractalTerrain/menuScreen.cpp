@@ -548,22 +548,22 @@ bool openFile::keyDown(int vkey, char ascii)
 {
     if(vkey == VK_RETURN)
     {
-	fileSelected();
+		fileSelected();
     }
     else if(vkey == VK_ESCAPE)
     {
-	file = "";
-	fileSelected();
-	input.up(VK_ESCAPE);//so the program will not quit
+		file = "";
+		fileSelected();
+		input.up(VK_ESCAPE); //so the program will not quit?
     }
     else if(vkey == VK_BACK)
     {
-	if(file.size() != 0)
-	    file=file.substr(0,file.size()-1);
+		if(file.size() != 0)
+			file=file.substr(0,file.size()-1);
     }
-    else if(ascii != 0 && !input.getKey(VK_SHIFT))
+    else if(ascii != 0)
     {
-	file += ascii;
+		file += ascii;
     }
     return true;
 }
