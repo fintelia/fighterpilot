@@ -2,9 +2,9 @@
 #include "game.h"
 
 namespace gui{
-campaign::campaign(shared_ptr<const LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
+	campaign::campaign(shared_ptr<const LevelFile> lvl): dogFight(lvl), countdown(0.0), restart(false), levelup(false), victory(false)
 #ifdef _DEBUG
-	,slow(false)
+    ,slow(false), wireframe(false)
 #endif
 {
 	view = graphics->genView();
@@ -104,6 +104,12 @@ void campaign::updateFrame()
 			world->time.changeSpeed(1.0, 300.0);
 			slow = false;
 		}
+	}
+	if(input.getKey(0x55))
+	{
+		input.up(0x55);
+		wireframe = !wireframe;
+		world->setWireframe(wireframe);
 	}
 	//test death animation
 	if(input.getKey(0x4c))

@@ -137,24 +137,24 @@ void linuxEventHandler(XEvent event)
 		bool keyup = e->type == KeyRelease;
 		unsigned int keysym = XLookupKeysym(e,0);
 
-		auto trySym = [keysym,keyup,e](unsigned int sym, unsigned int vk)->bool
+		auto trySym = [keysym,keyup,e](unsigned int sym, unsigned int vk, char ascii=0)->bool
 	{
 			if(keysym == sym)
 			{
-				char ascii = 0;
-				XLookupString(e, &ascii, 1, nullptr, nullptr);
+//				char ascii = 0;
+//				XLookupString(e, &ascii, 1, nullptr, nullptr);
 				input.sendCallbacks(new InputManager::keyStroke(keyup, vk, ascii));
 				return true;
 			}
 			return false;
 		};
-		auto trySymRange = [keysym,keyup](unsigned int minSym, unsigned int maxSym, unsigned int minVK)
+		auto trySymRange = [keysym,keyup,e](unsigned int minSym, unsigned int maxSym, unsigned int minVK)
 		{
 			if(keysym >= (minSym) && keysym <= (maxSym))
 			{
-				char* str = XKeysymToString(keysym);
-				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK), str ? str[0] : 0));
-				//cout << keysym << endl;
+				char ascii = 0;
+				XLookupString(e, &ascii, 1, nullptr, nullptr);
+				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK), ascii));
 				return true;
 			}
 			return false;
@@ -169,27 +169,34 @@ void linuxEventHandler(XEvent event)
 		
 		//see input.h and x11/keysymdef.h 
 		if(	!trySym(XK_BackSpace, 						VK_BACK) &&
-			!trySym(XK_Tab, 							VK_TAB) &&
-			!trySym(XK_Return, 							VK_RETURN) &&
+			!trySym(XK_Tab, 							VK_TAB, '\t') &&
+			!trySym(XK_Return, 							VK_RETURN, '\n') &&
 			!trySym(XK_Alt_L,							VK_MENU) &&		//L-ALT
 			!trySym(XK_Alt_R,							VK_MENU) &&		//R-ALT
 			!trySym(XK_Pause,							VK_PAUSE) &&
 			!trySym(XK_Caps_Lock,						VK_CAPITAL) &&
 			!trySym(XK_Escape,							VK_ESCAPE) &&
-			!trySym(XK_space,							VK_SPACE) &&
+			!trySym(XK_space,							VK_SPACE, ' ') &&
 			!trySymRange(XK_Home, XK_Down,				VK_HOME) && 	// home,up,down,left,right
 			!trySymRange(XK_KP_0, XK_KP_9,				VK_NUMPAD0) &&
 			!trySymRange(XK_KP_Multiply, XK_KP_Divide,	VK_MULTIPLY) &&	// multiply, add, seperator, subtract, decimal, divide (keypad)
 			!trySymRange(XK_F1, XK_F24,					VK_F1) && 		// F1 - F24
 			!trySymRange(XK_Shift_L, XK_Control_R,		VK_LSHIFT) &&	// L-SHIFT, R-SHIFT, L-CONTROL, R-CONTROL
-			!trySymRange(XK_KP_0, XK_KP_9,				0x30) && 		// 0-9
+			!trySymRange(XK_0, XK_9,					0x30) && 		// 0-9
 			!trySymRange(XK_A, XK_Z,					0x41) && 		// A-Z
 			!trySymRange(XK_a, XK_z,					0x41)) 			// a-z
 		{
-			//keysym not found...
-			char* str = XKeysymToString(keysym);
-			if(str){
-				std::cout << "Unrecognized KeySym: " << str << std::endl;
+			char ascii = 0;
+			XLookupString(e, &ascii, 1, nullptr, nullptr);
+			input.sendCallbacks(new InputManager::keyStroke(keyup, 0, ascii));
+
+			if(ascii)
+				cout << "Untranslated KeySym: '" << ascii << "'" << endl;
+			else
+			{
+				char* str = XKeysymToString(keysym);
+				if(str)
+					cout << "Unhandled KeySym: " << str << "" << endl;
 			}
 		}
 	}

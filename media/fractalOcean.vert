@@ -1,9 +1,9 @@
 
 centroid varying vec3 position;
 varying vec3 normal;
-varying vec4 groundVal;
-varying vec3 sunDir, sunHalfVector;
-varying vec2 tCoord;
+//varying vec4 groundVal;
+//varying vec3 sunDir, sunHalfVector;
+//varying vec2 tCoord;
 varying float flogz;
 //varying vec3 lightDirections[4];
 
@@ -13,23 +13,26 @@ varying float flogz;
 
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;
+uniform float earthRadius;
+//uniform sampler2D groundTex;
+//uniform sampler2D waves;
+//uniform vec3 origin;
+//uniform vec3 scale;
 
-uniform sampler2D groundTex;
-uniform sampler2D waves;
-uniform vec3 origin;
-uniform vec3 scale;
+//uniform vec2 tOrigin;
+//uniform vec2 tScale;
+//uniform float tSize;
 
-uniform vec2 tOrigin;
-uniform vec2 tScale;
-uniform float tSize;
+//uniform float time;
 
-uniform float time;
+uniform sampler2D waveTexture;
+uniform float invTextureScale;
 
-const int NUM_WAVES = 16;
-uniform float amplitudes[NUM_WAVES];
-uniform float frequencies[NUM_WAVES];
-uniform float waveSpeeds[NUM_WAVES];
-uniform vec2 waveDirections[NUM_WAVES];
+// const int NUM_WAVES = 16;
+// uniform float amplitudes[NUM_WAVES];
+// uniform float frequencies[NUM_WAVES];
+// uniform float waveSpeeds[NUM_WAVES];
+// uniform vec2 waveDirections[NUM_WAVES];
 
 
 attribute vec2 Position2;
@@ -61,14 +64,14 @@ float cubic(float t, float x0, float m0, float x1, float m1)
 
 void main()
 {
-	tCoord = tOrigin + tScale*Position2;
+//	tCoord = tOrigin + tScale*Position2;
 //	ivec2 tFloor = floor(textureSize() * tCoord);
 //	ivec2 tCeil = ceil(textureSize() * tCoord);
 
 //	if(tCeil == tFloor)
-	{
-		groundVal = texture2D(groundTex, tCoord);
-	}
+//	{
+//		groundVal = texture2D(groundTex, tCoord);
+//	}
 //	else
 //	{
 //		vec4 texels[4] = {
@@ -82,24 +85,23 @@ void main()
 //		groundVal.r = cubic()
 //	}
 
-	normal = normalize(scale * vec3((2.0*groundVal.b-1.0),
-							1,
-							(2.0*groundVal.g-1.0)));
+	// normal = normalize(scale * vec3((2.0*groundVal.b-1.0),
+	// 						1,
+	// 						(2.0*groundVal.g-1.0)));
 
 
-	
 	//float y = groundVal.r;
-	vec3 unscaledPos = vec3(Position2.x, 0, Position2.y);
-	vec4 pos = modelTransform * vec4(origin + unscaledPos * scale, 1.0);
+	vec4 pos = modelTransform * vec4(Position2.x, 0, Position2.y, 1.0);
 
 	float A[4] = float[4](1.0, 0.8, 0.4, 0.3);
 	float f[4] = float[4](0.0015, 0.0035, 0.008, 0.0021);
 	vec2 D[4] = vec2[4](vec2(1,0), vec2(0.6,-0.8), vec2(0,1), vec2(-0.8,-0.6));
 
-	const float earthRadius = 3.3675e6;
+//	const float earthRadius = 3.3675e6;
 	normal = normalize(pos.xyz + vec3(0, earthRadius, 0));
 	vec2 r = pos.xz / earthRadius;
 	pos.y = earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+	pos.y += (texture2D(waveTexture, fract(pos.xz*invTextureScale)).x-0.5) * 32;
 
 //	for(int i=0; i < 4; i++){
 //		pos.xyz += normal * A[i]*(texture(waves, vec2(fract(0.0005*time + f[i]*dot(pos.xz,D[i])), 1)).r-0.5);

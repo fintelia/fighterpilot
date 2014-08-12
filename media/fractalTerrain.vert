@@ -14,6 +14,7 @@ varying vec2 tCoord;
 
 uniform mat4 cameraProjection;
 uniform mat4 modelTransform;
+uniform float earthRadius;
 
 uniform sampler2D groundTex;
 uniform vec3 origin;
@@ -52,8 +53,6 @@ float cubic(float t, float x0, float m0, float x1, float m1)
 
 void main()
 {
-	const float earthRadius = 3.3675e6;
-
 	vec4 groundVal;
 	tCoord = tOrigin + tScale*Position2;
 //	ivec2 tFloor = floor(textureSize() * tCoord);
