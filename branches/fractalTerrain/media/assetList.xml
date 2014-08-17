@@ -49,7 +49,7 @@
     <texture name="spark"                     file="media/spark.png" /> 
     
     <!-- terrain -->
- 	<texture name="grass"                     file="media/grass2_hpf.png"            tileable="true" />
+ 	<texture name="grass"                     file="media/grass2_hpf.png"             tileable="true" />
     <texture name="grass detail"              file="media/grassDetail.png"            tileable="true" />
     <texture name="rock"                      file="media/rock.png"                   tileable="true" />
     <texture name="sand"                      file="media/sand.png"                   tileable="true" />
@@ -60,7 +60,7 @@
     <texture name="snow normals"              file="media/snow_normals.png"           tileable="true" />
     <texture name="desertSand"                file="media/desertSand.png"             tileable="true" />
     <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
-    <texture name="wave lookup"               file="media/waves.png" tileable="true" />
+    <texture name="wave lookup"               file="media/waves.png"                  tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
     
     <!-- world -->

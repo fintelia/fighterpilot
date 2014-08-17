@@ -2624,9 +2624,6 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniform1i("grassDetail",	5);	dataManager.bind("grass detail",5);
 		
 	fractalTerrain->render(view, shader);
-
-	
-
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const
 {

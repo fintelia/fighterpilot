@@ -86,7 +86,7 @@ private:
 		Vec3f worldCenter;
 		BoundingBox<float> worldBounds;
 
-		//last frameNumber on whiche this node was rendered
+		//last frameNumber on which this node was rendered
 		unsigned int lastUseFrame;
 
 		FractalNode* parent;
@@ -94,6 +94,9 @@ private:
 		std::array<shared_ptr<FractalNode>,4> children; // = {TL, TR, BL, BR}
 
 		shared_ptr<GraphicsManager::texture2D> texture;
+
+		shared_ptr<GraphicsManager::vertexBuffer> treesVBO;
+		shared_ptr<GraphicsManager::indexBuffer> treesIBO;
 
 		shared_ptr<ClipMap> clipMap;
 		unsigned int clipMapLayer;

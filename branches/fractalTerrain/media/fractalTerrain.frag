@@ -18,7 +18,6 @@ uniform vec3 scale;
 uniform vec3 sunDirection;
 uniform vec3 eyePosition;
 
-
 void main()
 {
 	float height = position.y;
@@ -44,10 +43,10 @@ void main()
 	if(position.y > 5.0 + fractalNoise*4) {
 		color = //vec3(0, .65, .11) *
 			//texture2D(grassDetail, position.xz*0.042).rgb * 2.0
-			 texture2D(grass,position.xz*0.000125 *4.0).rgb;
+			 texture2D(grass,position.xz*0.0005).rgb;
 //		color.rg *= vec2(.5,.5);//vec3(1,1, 0*pow(slope,.1));
 		color = mix(color, vec3(.6, .6, .0), slope * 0.3);
-		color *= texture2D(grassDetail, position.xz*0.042).rgb * 2.0;
+//		color *= texture2D(grassDetail, position.xz*0.042).rgb * 2.0;
 		color = mix(color, rock, clamp(5*(slope-.8), 0.0, 1.0));
 	}
 	else

@@ -58,8 +58,8 @@ void main()
 	// n = normalize(n);
 
 
-	vec3 n = texture2D(waveTexture, fract(position.xz*invTextureScale)).yzw;
-//		+ texture2D(waveTexture, fract(position.xz*invTextureScale/32)).yzw;
+	vec3 n = texture2D(waveTexture, position.xz*invTextureScale).yzw;
+//		+ texture2D(waveTexture, position.xz*invTextureScale/32).yzw;
 	n = normalize(n);
 //	n = getTangentMatrix() * n;
 
@@ -120,6 +120,8 @@ void main()
 
 //	color.rgb = texture2D(waveTexture, fract(position.xz*invTextureScale)).xxx;
 //	color.a = 1;
+//	color.rgb = n.xxz;
+		
 	gl_FragColor = color; // vec4(vec3(height),1.0);// 
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
