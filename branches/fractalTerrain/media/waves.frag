@@ -29,11 +29,10 @@ void main()
 		vec2 w = waveLookup(frequencies[i] * dot(texCoord,waveDirections[i]) 
 							+ 0.001*waveSpeeds[i]*time);
 
-		FragColor.x += amplitudes[i] * w.x;
+		FragColor.x += amplitudes[i] * w.x * 8.0;
 		FragColor.yw += amplitudes[i] * w.y * waveDirections[i];				
 	}
 	
 
 	FragColor.yzw = normalize(FragColor.yzw);
-	FragColor.x = FragColor.x;
 }

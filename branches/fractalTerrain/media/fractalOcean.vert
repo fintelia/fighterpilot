@@ -101,8 +101,8 @@ void main()
 	normal = normalize(pos.xyz + vec3(0, earthRadius, 0));
 	vec2 r = pos.xz / earthRadius;
 	pos.y = earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
-	pos.y += (texture2D(waveTexture, fract(pos.xz*invTextureScale)).x-0.5) * 32;
-
+	pos.y += (texture2D(waveTexture, pos.xz*invTextureScale*0.1).x-0.5) * 16;
+	
 //	for(int i=0; i < 4; i++){
 //		pos.xyz += normal * A[i]*(texture(waves, vec2(fract(0.0005*time + f[i]*dot(pos.xz,D[i])), 1)).r-0.5);
 //	}

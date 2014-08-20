@@ -2,6 +2,15 @@
 template <class T>
 class Vector2
 {
+private:
+	bool equal_impl(const Vector2<T>& v, std::true_type/*is_integral*/) const
+	{
+		return x==v.x && y==v.y;
+	}
+	bool equal_impl(const Vector2<T>& v, std::false_type/*is_integral*/) const
+	{
+		return (::abs(x-v.x) <= 0.001 && ::abs(y-v.y) <= 0.001);
+	}
 public:
 	T x,y;
 
@@ -76,20 +85,15 @@ public:
 		y=Y;
 		return *this;
 	}
-	template<class TT=T>
-	typename std::enable_if<std::is_integral<TT>::value, bool>::type
-	equal(const Vector2<TT>& v) const
+	bool equal(const Vector2<T>& v) const
 	{
-		return x==v.x && y==v.y;
+		return equal_impl(v, std::is_integral<T>());
 	}
-	template<class TT=T>
-	typename std::enable_if<!std::is_integral<TT>::value, bool>::type
-	equal(const Vector2<TT>& v, TT maxDifference=0.01) const
+	bool equal(const Vector2<T>& v, T maxDifference) const
 	{
+		static_assert(!std::is_integral<T>::value);
 		return (::abs(x-v.x) <= maxDifference && ::abs(y-v.y) <= maxDifference);
 	}
-	
-
 	T distance(const Vector2& v) const
 	{
 		return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));
