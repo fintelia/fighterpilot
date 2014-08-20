@@ -65,7 +65,7 @@ OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u
 OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
-	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW); <-- causes an access violation on some hardware (ATI)
+	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
 
 	glDeleteBuffers(1, &vBufferID);
 }
@@ -1547,27 +1547,27 @@ bool OpenGLgraphics::drawPartialOverlay(Rect4f r, Rect4f t, shared_ptr<texture> 
 }
 shared_ptr<GraphicsManager::vertexBuffer> OpenGLgraphics::genVertexBuffer(GraphicsManager::vertexBuffer::UsageFrequency usage)
 {
-	return shared_ptr<vertexBuffer>{new vertexBufferGL(usage)};
+	return shared_ptr<vertexBuffer>((new vertexBufferGL(usage)));
 }
 shared_ptr<GraphicsManager::indexBuffer> OpenGLgraphics::genIndexBuffer(indexBuffer::UsageFrequency usage)
 {
-	return shared_ptr<indexBuffer>{new indexBufferGL(usage)};
+	return shared_ptr<indexBuffer>((new indexBufferGL(usage)));
 }
 shared_ptr<GraphicsManager::texture2D> OpenGLgraphics::genTexture2D()
 {
-	return shared_ptr<texture2D>{new texture2DGL()};
+	return shared_ptr<texture2D>((new texture2DGL()));
 }
 shared_ptr<GraphicsManager::texture3D> OpenGLgraphics::genTexture3D()
 {
-	return shared_ptr<texture3D>{new texture3DGL()};
+	return shared_ptr<texture3D>((new texture3DGL()));
 }
 shared_ptr<GraphicsManager::textureCube> OpenGLgraphics::genTextureCube()
 {
-	return shared_ptr<textureCube>{new textureCubeGL()};
+	return shared_ptr<textureCube>((new textureCubeGL()));
 }
 shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
 {
-	return shared_ptr<shader>{new shaderGL()};
+	return shared_ptr<shader>((new shaderGL()));
 }
 void OpenGLgraphics::setGamma(float gamma)
 {
@@ -2932,8 +2932,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-//			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 4,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
 	
@@ -2959,7 +2959,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
 			WGL_CONTEXT_MINOR_VERSION_ARB, 3,
-//			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
 	

@@ -1,12 +1,23 @@
 
 #include "engine.h"
 
+const unsigned int Terrain::FractalNode::tileResolution = 17;
+const unsigned int Terrain::FractalNode::textureResolution = 257;
 unsigned int Terrain::FractalNode::totalNodes = 0;
 unsigned int Terrain::FractalNode::frameNumber = 0;
 shared_ptr<GraphicsManager::vertexBuffer> Terrain::FractalNode::vertexBuffer;
 std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> Terrain::FractalNode::indexBuffers;
 shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::subdivideTexture;
 shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::queryTexture;
+
+const unsigned int Terrain::waveTextureResolution = 512;
+const float Terrain::waveTextureScale = 1024.0;
+const double Terrain::earthRadius = 6367444.7;
+
+Terrain::ClipMap::Layer::Layer(Layer&& l): minHeight(l.minHeight), maxHeight(l.maxHeight), heights(std::move(l.heights)), texture(l.texture)
+{
+
+}
 
 Terrain::ClipMap::ClipMap(unsigned int lResolution, float sLength):
 	layerResolution(lResolution), sideLength(sLength)
@@ -725,7 +736,7 @@ void Terrain::FractalNode::initialize()
 		}
 
 		indexBuffers[eFlag] = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-		indexBuffers[eFlag]->setData(indices.get(),graphics->hasShaderModel5() ? GraphicsManager::PATCHES : GraphicsManager::TRIANGLES, i);
+		indexBuffers[eFlag]->setData(indices.get(),/*graphics->hasShaderModel5() ? GraphicsManager::PATCHES : */GraphicsManager::TRIANGLES, i);
 	}	
 
 //	queryTexture = graphics->genTexture2D();
@@ -2015,7 +2026,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 
 	const unsigned int numRings = 96;
 	const unsigned int vertsPerRing = 64;
-	unique_ptr<float[]> vertices{new float[2+2*numRings*vertsPerRing]};
+	unique_ptr<float[]> vertices((new float[2+2*numRings*vertsPerRing]));
 	vertices[0] = vertices[1] = 0.0f;
 	float angScale = 2 * PI / vertsPerRing;
 	float radiusScale = 1.0 / pow(numRings,4);
@@ -2034,7 +2045,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 	waterVBO->setVertexData(sizeof(float)*(2+2*numRings*vertsPerRing), vertices.get());
 
 	unsigned int i = 0;
-	unique_ptr<uint16_t[]> indices{new uint16_t[3*(2*numRings-1)*vertsPerRing]};
+	unique_ptr<uint16_t[]> indices((new uint16_t[3*(2*numRings-1)*vertsPerRing]));
 	for(int v = 0; v < vertsPerRing; v++)
 	{
 		indices[i++] = 0;
@@ -2045,13 +2056,13 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 	{
 		for(unsigned int vert = 0; vert < vertsPerRing; vert++)
 		{
+			indices[i++] = 1+(ring-1)*vertsPerRing + vert;
 			indices[i++] = 1+(ring)*vertsPerRing + vert;
-			indices[i++] = 1+(ring+1)*vertsPerRing + vert;
-			indices[i++] = 1+(ring)*vertsPerRing + (vert+1) % vertsPerRing;
+			indices[i++] = 1+(ring-1)*vertsPerRing + (vert+1) % vertsPerRing;
 
-			indices[i++] = 1+(ring+1)*vertsPerRing + vert;
-			indices[i++] = 1+(ring+1)*vertsPerRing + (vert+1) % vertsPerRing;
+			indices[i++] = 1+(ring)*vertsPerRing + vert;
 			indices[i++] = 1+(ring)*vertsPerRing + (vert+1) % vertsPerRing;
+			indices[i++] = 1+(ring-1)*vertsPerRing + (vert+1) % vertsPerRing;
 		}
 	}
 	waterIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
@@ -2612,7 +2623,8 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniformMatrix("modelTransform", Mat4f());
 	shader->setUniform1f("earthRadius", earthRadius);
 	shader->setUniform1i("groundTex", 0);
-
+	
+	shader->setUniform1f("invWaveTextureScale", 1.0 / waveTextureScale);
 	shader->setUniform2f("tOrigin", tOrigin + 0.5 / FractalNode::textureResolution);
 	shader->setUniform2f("tScale", Vec2f(1,1)*(FractalNode::textureResolution-1) / FractalNode::textureResolution);
 	shader->setUniform3f("eyePosition", view->camera().eye);
@@ -2622,7 +2634,7 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniform1i("sand",     3); dataManager.bind("sand", 3);
 	shader->setUniform1i("grass",    4); dataManager.bind("grass",4);
 	shader->setUniform1i("grassDetail",	5);	dataManager.bind("grass detail",5);
-		
+	shader->setUniform1i("waveTexture", 6);	waveTexture->bind(6);
 	fractalTerrain->render(view, shader);
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const

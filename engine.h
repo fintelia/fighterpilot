@@ -52,6 +52,7 @@ typedef void* HANDLE;
 #include <queue>
 #include <deque>
 #include <set>
+#include <array>
 #include <string>
 #include <sstream>
 #include <fstream>

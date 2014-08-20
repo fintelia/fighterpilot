@@ -29,6 +29,12 @@ public:
 			float maxHeight;
 			unique_ptr<float[]> heights;
 			shared_ptr<GraphicsManager::texture2D> texture;
+
+			Layer(const Layer&)/*=delete*/;
+			Layer(Layer&& layer);
+
+		public:
+			Layer(){}
 		};
 		vector<Layer> layers;
 		
@@ -51,8 +57,8 @@ private:
 	{
 	public:
 		static unsigned int frameNumber;
-		static const unsigned int tileResolution = 17;
-		static const unsigned int textureResolution = 257;
+		static const unsigned int tileResolution;
+		static const unsigned int textureResolution;
 	private:
 		static unsigned int totalNodes;
 		static shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
@@ -137,10 +143,10 @@ private:
 		
 	WaveGroup<16> waves;
 	shared_ptr<GraphicsManager::texture2D> waveTexture;
-	static constexpr unsigned int waveTextureResolution = 512;
-	static constexpr float waveTextureScale = 1024.0;
+	static const unsigned int waveTextureResolution;
+	static const float waveTextureScale;
 
-	static constexpr double earthRadius = 6367444.7;
+	static const double earthRadius;
 /*	struct decal
 	{
 		string texture;

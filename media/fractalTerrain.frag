@@ -12,11 +12,14 @@ uniform sampler2D sand;
 uniform sampler2D grass;
 uniform sampler2D grassDetail;
 uniform sampler2D groundTex;
+uniform sampler2D waveTexture;
 uniform float slopeScale;
 uniform vec3 eyePos;
 uniform vec3 scale;
 uniform vec3 sunDirection;
 uniform vec3 eyePosition;
+uniform float invWaveTextureScale;
+uniform float earthRadius;
 
 void main()
 {
@@ -85,11 +88,17 @@ void main()
 //	light = clamp(light, 0.0, 1.0);
 	color *= light;
 	////////////WATER EFFECT///////////
+	vec2 r = position.xz / earthRadius;
+	float waveHeight = (texture2D(waveTexture, position.xz*invWaveTextureScale*0.1).x-0.5) * 16 + earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	//see: http://www-evasion.imag.fr/~Fabrice.Neyret/images/fluids-nuages/waves/Jonathan/articlesCG/rendering-natural-waters-00.pdf
 	float c = 0.000;
-	float depth = max(-height/max(abs(normalize(eyePosition-position).y),1e-6),0);
+	float depth = max((waveHeight-height)/max(abs(normalize(eyePosition-position).y),1e-6),0);
 	color *= exp(-depth / vec3(7.0,30.0,70.0));
-	color += vec3(0.00, 0.2, 0.3) * (vec3(1.0) - exp(vec3(-c*depth) + 3*min(height,0) / vec3(7.0,30.0,70.0)));
+	color += vec3(0.00, 0.2, 0.3) * (vec3(1.0) - exp(vec3(-c*depth) + 3*min(height-waveHeight,0) / vec3(7.0,30.0,70.0)));
+	
+	
+	//color = texture2D(waveTexture, position.xz*invWaveTextureScale*0.1).xxx;
+	
 	//float waterAlpha = clamp(1.0 - depth*0.03, 0.0,1.0);
 
 	//light *= waterAlpha;
