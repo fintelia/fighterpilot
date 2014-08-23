@@ -164,8 +164,10 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 				vNum++;
 			}
 		}
-
-		VBO->setVertexData(sizeof(vertex)*vNum, vertices);
+		if(vNum > 0)
+		{
+			VBO->setVertexData(sizeof(vertex)*vNum, vertices);
+		}
 	}
 	else if(vertsPerParticle == 4)
 	{
@@ -200,8 +202,10 @@ void emitter::prepareRender(Vec3f up, Vec3f right)
 				vNum++;
 			}
 		}
-
-		VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+		if(vNum > 0)
+		{
+			VBO->setVertexData(sizeof(vertex)*vNum*4, vertices);
+		}
 	}
 	else
 	{

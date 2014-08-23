@@ -355,7 +355,7 @@ public:
 	virtual bool createWindow(string title, Vec2i screenResolution, unsigned int maxSamples, bool fullscreen, unsigned int targetRendererVersion)=0;
 	//virtual bool changeResolution(Vec2i resolution, unsigned int maxSamples)=0;
 	virtual void swapBuffers()=0;
-	virtual void takeScreenshot()=0;
+	virtual void takeScreenshot(unsigned int tiles)=0;
 	virtual void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures)=0;
 	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level){startRenderToTexture(texture, texture_level, depthTexture, depth_level, false);}
 	void startRenderToTexture(shared_ptr<texture2D> texture, shared_ptr<texture2D> depthTexture){startRenderToTexture(texture, 0, depthTexture, 0, false);}
@@ -436,6 +436,8 @@ public:
 	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face){setFrameBufferTextures(color,face,0);}
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 	virtual void setClearColor(Color4 clearColor)=0;
+	virtual void setSampleShadingFraction(float f)=0;
+	virtual void setSampleShading(bool enabled)=0;
 
 	//set functions
 	void setColor(float r, float g, float b, float a);
@@ -528,6 +530,7 @@ protected:
 
 	bool initFBOs(unsigned int maxSamples);
 	void destroyFBOs();
+	void setEnabled(unsigned int glEnum, bool enabled);
 	void computeViewport(Rect& clipped_viewport, Rect& projectionConstraint);
 
 	//void bindRenderTarget(RenderTarget t);
@@ -675,7 +678,7 @@ public:
 	void render();
 
 	void swapBuffers();
-	void takeScreenshot();
+	void takeScreenshot(unsigned int tiles);
 
 	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures);
 	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures);
@@ -714,6 +717,8 @@ public:
 	void setVSync(bool enabled);
 	void setWireFrame(bool enabled);
 	void setClearColor(Color4 clearColor);
+	void setSampleShadingFraction(float f);
+	void setSampleShading(bool enabled);
 
 	void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
 	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level);

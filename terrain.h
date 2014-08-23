@@ -70,7 +70,6 @@ private:
 		enum DivisionLevel{FRUSTUM_CULLED, SUBDIVIDED, LEVEL_USED, COMBINED};
 		//enum TileType{LAND, SHORE, OCEAN};
 		DivisionLevel divisionLevel;
-		DivisionLevel waterDivisionLevel;
 
 		//TileType tileType;
 
@@ -100,9 +99,9 @@ private:
 		std::array<shared_ptr<FractalNode>,4> children; // = {TL, TR, BL, BR}
 
 		shared_ptr<GraphicsManager::texture2D> texture;
-
+		shared_ptr<GraphicsManager::texture2D> treeTexture;
 		shared_ptr<GraphicsManager::vertexBuffer> treesVBO;
-		shared_ptr<GraphicsManager::indexBuffer> treesIBO;
+		unsigned int treesVBOcount;
 
 		shared_ptr<ClipMap> clipMap;
 		unsigned int clipMapLayer;
@@ -114,6 +113,9 @@ private:
 		
 		void computeError();
 		void subdivide();
+		void generateTrees();
+		void generateTreeTexture();
+		void generateTreeDensityTexture();
 		void pruneGrandchildren();
 		float getHeight(unsigned int x, unsigned int z) const;
 
@@ -121,12 +123,10 @@ private:
 		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates, shared_ptr<ClipMap> clipMap);
 		~FractalNode();
 		void render(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader);
-		void renderWater(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader);
+		void renderTrees(shared_ptr<GraphicsManager::View> view);
 		float getWorldHeight(Vec2f worldPos) const;
 
 		unsigned int computeSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions);
-		unsigned int computeWaterSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions);
-		void patchEdges();
 
 		static void initialize();
 		static void cleanUp();
@@ -138,6 +138,7 @@ private:
 		float frequencies[N];
 		float speeds[N];
 		Vec2f directions[N];
+		float amplitudeSum;
 		unsigned int size()const{return N;}
 	};
 		

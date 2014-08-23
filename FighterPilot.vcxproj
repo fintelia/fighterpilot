@@ -244,6 +244,8 @@
     <None Include="media\createTreeTexture.geom" />
     <None Include="media\desert preview.frag" />
     <None Include="media\desert.frag" />
+    <None Include="media\fractalOcean.frag" />
+    <None Include="media\fractalOcean.vert" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
     <None Include="media\gammaBloom.frag" />

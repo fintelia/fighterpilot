@@ -3,7 +3,7 @@ centroid varying vec3 position;
 //varying vec4 groundVal;
 varying vec3 normal;
 //varying vec2 tCoord;
-varying float flogz;
+invariant varying float flogz;
 
 //uniform vec3 lightColors[4];
 //uniform vec3 lightPositions[4];
@@ -22,6 +22,7 @@ uniform vec3 sunDirection;
 uniform vec3 eyePosition;
 
 uniform float colorMult;
+
 //uniform float time;
 
 // const int NUM_WAVES = 16;
@@ -115,7 +116,8 @@ void main()
 
 //	color.rgb = n;//vec3(0.1,0.4,0.9) * light * 0.25;
 
-	color.rgb *= colorMult;
+	//color = vec4(texture2D(waveTexture, position.xz*invTextureScale).xxx,1);
+	
 	color.a = 1.0 - (1.0 - color.a) * colorMult;
 
 //	color.rgb = texture2D(waveTexture, fract(position.xz*invTextureScale)).xxx;

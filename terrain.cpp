@@ -93,7 +93,7 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 								  unsigned int level_, 
 								  Vec2i coordinates_, 
 								  shared_ptr<ClipMap> clipMap_): 
-	divisionLevel(DivisionLevel::COMBINED),waterDivisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_)
+	divisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_)
 {
 	totalNodes++;
 	lastUseFrame = frameNumber;
@@ -229,6 +229,22 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	worldBounds.maxXYZ = Vec3f(origin.x+sideLength, maxHeight, origin.y+sideLength);
 
 	computeError();
+	
+//	if(sideLength > 1024.0 && maxHeight > 0.0)
+//	{
+//		generateTreeTexture();
+//	}
+//	else
+	{
+		unsigned char texData[] = {0,1,0,0};
+		treeTexture = graphics->genTexture2D();
+		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
+	}
+
+	if(sideLength <= 1024 && sideLength > 512.0 && maxHeight > 0.0)
+		generateTrees();
+
+
 
 //	if(clipMapStep > 1 || clipMapLayer+1 < clipMap->layers.size()
 //	   || (parent && parent->clipMapStep > 1))
@@ -251,7 +267,162 @@ void Terrain::FractalNode::computeError()
 		}
 	}
 
-	minDistance = sideLength / (tileResolution-1) * 15;
+	minDistance = (sideLength / textureResolution) * sw / 2.5;
+}
+void Terrain::FractalNode::generateTrees()
+{
+	double t = GetTime();
+
+	texture->bind(0);
+
+	unsigned int foliagePatchesX = 1;
+	unsigned int foliagePatchesY = 1;
+
+	unsigned int sLength = floor(sideLength / 16.0);
+
+	auto& layer = clipMap->layers[clipMapLayer];
+	float slopeScale = (layer.maxHeight - layer.minHeight) 
+		* ((textureResolution-1) / clipMap->sideLength);
+
+	auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	emptyVBO->setTotalVertexSize(0);
+	emptyVBO->setVertexData(0, nullptr);
+	auto counterVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	counterVBO->setTotalVertexSize(1);
+	counterVBO->setVertexData(4 * foliagePatchesX * foliagePatchesY * sLength * sLength, nullptr);
+
+	//count the number of trees that there will be
+	auto countTreesShader = shaders.bind("count trees");
+	countTreesShader->setUniform1i("groundTex", 0);
+	countTreesShader->setUniform1i("width", foliagePatchesX * sLength);
+	countTreesShader->setUniform3f("worldOrigin", Vec3f(origin.x, layer.minHeight, origin.y));
+	countTreesShader->setUniform3f("worldSpacing", Vec3f(sideLength / (foliagePatchesX*sLength), layer.maxHeight - layer.minHeight, sideLength / (foliagePatchesY*sLength)));
+	countTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+	countTreesShader->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
+	countTreesShader->setUniform1f("earthRadius", earthRadius);
+	countTreesShader->setUniform1f("slopeScale", slopeScale);
+	countTreesShader->setUniform1i("patch_width", sLength);
+	countTreesShader->setUniform1i("patch_height", sLength);
+	//countTreesShader->setUniform1i("vertexID_offset", 0);
+	unsigned int numTreesInPatch;
+	unsigned int numTrees = 0;
+	emptyVBO->bindBuffer();
+	for(int y = 0; y < foliagePatchesY; y++)
+	{
+		for(int x = 0; x < foliagePatchesX; x++)
+		{
+			//countTreesShader->setUniform1i("x_offset", x * sLength);
+			//countTreesShader->setUniform1i("y_offset", y * sLength);
+			countTreesShader->setUniform1i("vertexID_offset", (x+y*foliagePatchesX) * sLength*sLength);
+
+			counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
+			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0,  sLength * sLength);
+			numTreesInPatch = counterVBO->unbindTransformFeedback();graphics->checkErrors();
+			//if(numTreesInPatch > 0)
+			//{
+			//	patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
+			//	patch.center.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (0.5+y) / foliagePatchesY;
+			//	patch.center.y = getHeight(Vec2f(patch.center.x,patch.center.z)) + 12.0;
+			//	Vec3f boundsMin = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * x / foliagePatchesX, minXYZ.y, minXYZ.z + (maxXYZ.z-minXYZ.z) * y / foliagePatchesY);
+			//	Vec3f boundsMax = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * (1.0+x) / foliagePatchesX, maxXYZ.y+24.0, minXYZ.z + (maxXYZ.z-minXYZ.z) * (1.0+y) / foliagePatchesY);
+			//	patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
+			//	patch.sm4_treeVboOffset = 12 * numTrees;
+			//	patch.sm4_treeVboSize = 12 * numTreesInPatch;
+			//	foliagePatches.push_back(patch);
+				numTrees += numTreesInPatch;
+			//}
+		}
+	}
+	counterVBO.reset();
+	//	counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
+	//	emptyVBO->bindBuffer();
+	//	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
+	//	numTrees = counterVBO->unbindTransformFeedback();
+	//	counterVBO.reset();
+
+	if(numTrees > 0)
+	{
+		//prepare foliage VBO
+		treesVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+		treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+		treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
+		treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
+		treesVBO->setTotalVertexSize(32);
+		treesVBO->setVertexData(32 * 12 * numTrees, nullptr);
+		//render trees into VBO
+		auto placeTreesShader = shaders.bind("place trees");
+		placeTreesShader->setUniform1i("groundTex", 0);
+		placeTreesShader->setUniform1i("width", foliagePatchesX*sLength);
+		placeTreesShader->setUniform3f("worldOrigin", Vec3f(origin.x, clipMap->layers[clipMapLayer].minHeight, origin.y));
+		placeTreesShader->setUniform3f("worldSpacing", Vec3f(sideLength / (foliagePatchesX*sLength), clipMap->layers[clipMapLayer].maxHeight - clipMap->layers[clipMapLayer].minHeight, sideLength / (foliagePatchesY*sLength)));
+		placeTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+		placeTreesShader->setUniform2f("texSpacing",	float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), 
+														float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
+		placeTreesShader->setUniform1f("earthRadius", earthRadius);
+		placeTreesShader->setUniform1f("slopeScale", slopeScale);
+		placeTreesShader->setUniform1i("patch_width", sLength);//foliagePatchesX *sLength
+		placeTreesShader->setUniform1i("patch_height", sLength);
+		placeTreesShader->setUniform1i("vertexID_offset", 0);
+
+		treesVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
+		emptyVBO->bindBuffer();
+		emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength); //<-causes error on Linux (intel graphics)?
+		unsigned int n = treesVBO->unbindTransformFeedback();
+		debugAssert(n == 4*numTrees);
+	}
+	treesVBOcount = numTrees * 12;
+
+	t = GetTime() - t;
+}
+void Terrain::FractalNode::generateTreeTexture()
+{
+	double t = GetTime();
+
+	unsigned int sLength = floor(sideLength / 16.0);
+
+	auto& layer = clipMap->layers[clipMapLayer];
+	float slopeScale = (layer.maxHeight - layer.minHeight) 
+		* ((textureResolution-1) / clipMap->sideLength);
+
+	auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	emptyVBO->setTotalVertexSize(0);
+	emptyVBO->setVertexData(0, nullptr);
+
+	treeTexture = graphics->genTexture2D();
+	treeTexture->setData(512, 512, GraphicsManager::texture::RGBA, false, false, nullptr);
+
+	//auto depthTex = graphics->genTexture2D();
+	//depthTex->setData(4096,4096,GraphicsManager::texture::DEPTH, false, false, nullptr);
+
+	graphics->setDepthTest(false);
+	auto createTreeTexture = shaders.bind("create tree texture");
+	createTreeTexture->setUniform1i("groundTex", 0); texture->bind();
+	createTreeTexture->setUniform1i("width", sLength);
+	createTreeTexture->setUniform3f("worldOrigin", Vec3f(0, clipMap->layers[clipMapLayer].minHeight, 0));
+	createTreeTexture->setUniform3f("worldSpacing", Vec3f(sideLength / (sLength), clipMap->layers[clipMapLayer].maxHeight - clipMap->layers[clipMapLayer].minHeight, sideLength / (sLength)));
+	createTreeTexture->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+	createTreeTexture->setUniform2f("texSpacing",	float((texture->getWidth()-1.0) / texture->getWidth())/(sLength), 
+													float((texture->getHeight()-1.0) / texture->getHeight())/(sLength));
+	createTreeTexture->setUniform1f("earthRadius", earthRadius);
+	createTreeTexture->setUniform1f("slopeScale", slopeScale);
+	createTreeTexture->setUniform1i("patch_width", sLength);//foliagePatchesX *sLength
+	createTreeTexture->setUniform1i("patch_height", sLength);
+	createTreeTexture->setUniform1i("vertexID_offset", 0);
+	createTreeTexture->setUniform1f("scale", 2.0 / sideLength);
+	graphics->startRenderToTexture(treeTexture, nullptr);
+	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
+	emptyVBO->bindBuffer();
+	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, sLength * sLength / 10);
+	graphics->endRenderToTexture();
+	treeTexture->generateMipmaps();
+	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
+	graphics->setDepthTest(true);
+
+	t = GetTime() - t;
+}
+void Terrain::FractalNode::generateTreeDensityTexture()
+{
+
 }
 /**
  * Preconditions: neighbors are valid. This means that it contains null values
@@ -317,10 +488,10 @@ void Terrain::FractalNode::pruneGrandchildren()
 		if(!c->children[0])
 			continue;
 
-		double lFrame = min(min(children[0]->lastUseFrame,
-								children[1]->lastUseFrame),
-							min(children[2]->lastUseFrame,
-								children[3]->lastUseFrame));
+		double lFrame = min(min(c->children[0]->lastUseFrame,
+								c->children[1]->lastUseFrame),
+							min(c->children[2]->lastUseFrame,
+								c->children[3]->lastUseFrame));
 
 		if(frameNumber - lFrame >= 150){
 			for(auto& g : c->children)
@@ -453,86 +624,9 @@ unsigned int Terrain::FractalNode::computeSubdivision(shared_ptr<GraphicsManager
 
 //	cout << tiles << " (" << ((totalNodes * 257 * 257 * 8) >> 20) << " MiB)" << endl;
 
+	Profiler.setOutput("tiles", lexical_cast<string>(tiles) + "/" + lexical_cast<string>(totalNodes));
+
 	return divisions;
-}
-unsigned int Terrain::FractalNode::computeWaterSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions)
-{
-	unsigned int divisions = 0;
-	std::queue<FractalNode*> nodes;
-	nodes.push(this);
-
-	while(divisions < maxDivisions && !nodes.empty())
-	{
-		auto n = nodes.front();
-		nodes.pop();
-
-		BoundingBox<float> bounds = n->worldBounds;
-		Vec2f closestPoint = Vec2f(min(abs(bounds.minXYZ.x), 
-									   abs(bounds.maxXYZ.x)),
-								   min(abs(bounds.minXYZ.z), 
-									   abs(bounds.maxXYZ.z)));
-
-		Vec2f furthestPoint = Vec2f(max(abs(bounds.minXYZ.x), 
-										abs(bounds.maxXYZ.x)),
-									max(abs(bounds.minXYZ.z), 
-										abs(bounds.maxXYZ.z)));
-
-		bounds.minXYZ.y =  earthRadius * (cos(asin(furthestPoint.magnitude() 
-												   / earthRadius)) - 1.0) - 5.0;
-		bounds.maxXYZ.y =  earthRadius * (cos(asin(closestPoint.magnitude() 
-												   / earthRadius)) - 1.0) + 5.0;
-
-		if(!view->boundingBoxInFrustum(bounds))
-		{
-			n->recursiveEnvoke([](FractalNode* f){f->waterDivisionLevel=DivisionLevel::FRUSTUM_CULLED;});
-		}
-		else
-		{			
-			Vec3f eye = view->camera().eye;
-			float hMinDistance = 0.5*n->sideLength + n->minDistance * 0.25;
-			if(eye.x > n->worldCenter.x - hMinDistance && 
-			   eye.x < n->worldCenter.x + hMinDistance &&
-			   eye.y < bounds.maxXYZ.y + n->minDistance * 0.25 && 
-			   eye.y > bounds.minXYZ.y - n->minDistance * 0.25 &&
-			   eye.z > n->worldCenter.z - hMinDistance && 
-			   eye.z < n->worldCenter.z + hMinDistance &&
-			   n->sideLength / (tileResolution-1) > 30.0)
-			{
-				n->waterDivisionLevel = DivisionLevel::SUBDIVIDED;
-				if(!n->children[0])
-				{
-					divisions++;
-					n->subdivide();
-				}
-		
-				for(auto& c : n->children)
-				{
-					nodes.push(c.get());
-				}
-			}
-			else
-			{
-				n->recursiveEnvoke([](FractalNode* f){f->waterDivisionLevel=DivisionLevel::COMBINED;});
-				n->waterDivisionLevel = DivisionLevel::LEVEL_USED;
-			}
-		}
-	}
-	while(!nodes.empty())
-	{
-		nodes.front()->waterDivisionLevel = DivisionLevel::LEVEL_USED;
-		nodes.pop();
-	}
-	return divisions;
-}
-void Terrain::FractalNode::patchEdges()
-{
-	if(divisionLevel == DivisionLevel::SUBDIVIDED ||
-	   waterDivisionLevel == DivisionLevel::SUBDIVIDED)
-	{
-		for(auto& c : children)
-			c->patchEdges();
-	}
-	
 }
 float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
 {
@@ -567,6 +661,7 @@ void Terrain::FractalNode::render(shared_ptr<GraphicsManager::View> view, shared
 		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
 		shader->setUniform1f("slopeScale", slopeScale);
 		texture->bind(0);
+		treeTexture->bind(1);
 
 		unsigned int IBO_index = 0;
 		if(neighbors[0].expired() || neighbors[0].lock()->divisionLevel == DivisionLevel::COMBINED)
@@ -582,36 +677,20 @@ void Terrain::FractalNode::render(shared_ptr<GraphicsManager::View> view, shared
 		indexBuffers[IBO_index]->drawBuffer();
 	}
 }
-void Terrain::FractalNode::renderWater(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader)
+void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 {
-	if(waterDivisionLevel == DivisionLevel::SUBDIVIDED)
+	if((divisionLevel == DivisionLevel::LEVEL_USED || divisionLevel == DivisionLevel::SUBDIVIDED)
+		&& treesVBO && treesVBOcount > 0)
 	{
-		lastUseFrame = frameNumber;
+		treesVBO->bindBuffer();
+		treesVBO->drawBuffer(GraphicsManager::TRIANGLES,0,treesVBOcount);
+	}
+	else if(divisionLevel == DivisionLevel::SUBDIVIDED)
+	{
 		for(auto& c : children)
 		{
-			c->renderWater(view, shader);
+			c->renderTrees(view);
 		}
-	}
-	else if(waterDivisionLevel == DivisionLevel::LEVEL_USED)
-	{
-		lastUseFrame = frameNumber;
-		auto& layer = clipMap->layers[clipMapLayer];
-		auto texture = clipMap->layers[clipMapLayer].texture;
-		Vec2f tScale = Vec2f(1,1) / (1 << level) * (1 >> clipMapLayer);
-		Vec2f tOrigin = Vec2f(coordinates.x, coordinates.y) / (1 << level) * (1 >> clipMapLayer);
-		float slopeScale = (layer.maxHeight - layer.minHeight) 
-			* ((clipMap->layerResolution<<clipMapLayer) / clipMap->sideLength);
-
-		shader->setUniform3f("origin", origin.x, layer.minHeight, origin.y);
-		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
-		shader->setUniform2f("tOrigin", tOrigin);
-		shader->setUniform2f("tScale", tScale);
-		shader->setUniform1f("slopeScale", slopeScale);
-
-		texture->bind(3);
-
-		indexBuffers[0]->bindBuffer(vertexBuffer);
-		indexBuffers[0]->drawBuffer();
 	}
 }
 void Terrain::FractalNode::initialize()
@@ -2002,23 +2081,26 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 	texture->setData(patchResolution, patchResolution, GraphicsManager::texture::RGBA16, false, false, (unsigned char*)groundValues);
 */
 
-	
-	// float s = 16.0 / waveTextureScale;
+	float amplitudeSum = 0.0f;
 	for(unsigned int i = 0; i < waves.size(); i++)
 	{
-		int fx = random<int>(1, waveTextureResolution / 16 + 1);
-		int fz = random<int>(1, waveTextureResolution / 16 + 1);
-		float f = sqrt(fx*fx + fz*fz);//0.5 * pow(2.0, random<float>(-1.0, 1.0));
-		float A = 1.0 / (20.0*f);//random<float>(1.0 / (40 * f), 1.0 / (20 * f));
+		int fx = 3;//random<int>(-(int)waveTextureResolution/16, waveTextureResolution/16 + 1);
+		int fz = 3;//random<int>(-(int)waveTextureResolution/16, waveTextureResolution/16 + 1);
+		if(fx == 0 && fz == 0)
+		{
+			--i;
+			continue;
+		}
+		float f = sqrt(fx*fx + fz*fz);
+		float A = i>0?0: 1.0 / (40.0*f);//random<float>(1.0 / (40 * f), 1.0 / (20 * f));
 		waves.frequencies[i] = f;
 		waves.amplitudes[i] = A;
 		waves.speeds[i] = sqrt(9.8 * waveTextureScale / (3.14259 * 2 * f)) 
 			/ waveTextureScale;
-		waves.directions[i] = Vec2f(fx*(2*random<int>(0,2)-1), 
-									fz*(2*random<int>(0,2)-1)).normalize();
-
-		cout << waves.directions[i].x << " " << waves.directions[i].y << endl;
+		waves.directions[i] = Vec2f(fx, fz).normalize();
+		amplitudeSum += A;
 	}
+	waves.amplitudeSum = amplitudeSum;
 
 	waveTexture = graphics->genTexture2D();
 	waveTexture->setData(waveTextureResolution,waveTextureResolution,
@@ -2027,6 +2109,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 	const unsigned int numRings = 96;
 	const unsigned int vertsPerRing = 64;
 	unique_ptr<float[]> vertices((new float[2+2*numRings*vertsPerRing]));
+	memset(vertices.get(),0,4*(2+2*numRings*vertsPerRing));
 	vertices[0] = vertices[1] = 0.0f;
 	float angScale = 2 * PI / vertsPerRing;
 	float radiusScale = 1.0 / pow(numRings,4);
@@ -2046,6 +2129,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 
 	unsigned int i = 0;
 	unique_ptr<uint16_t[]> indices((new uint16_t[3*(2*numRings-1)*vertsPerRing]));
+	memset(indices.get(),0,2*3*(2*numRings-1)*vertsPerRing);
 	for(int v = 0; v < vertsPerRing; v++)
 	{
 		indices[i++] = 0;
@@ -2523,7 +2607,8 @@ void Terrain::terrainFrameUpdate(double cTime)
 	graphics->setBlendMode(GraphicsManager::REPLACE);
 
 	auto shader = shaders.bind("waves");
-	shader->setUniform1f("time", currentTime * 20);
+	shader->setUniform1f("time", currentTime);
+	shader->setUniform1f("amplitudeScale", 1.0 / waves.amplitudeSum);
 	shader->setUniform1fv("amplitudes", waves.size(), (float*)waves.amplitudes);
 	shader->setUniform1fv("frequencies", waves.size(), (float*)waves.frequencies);
 	shader->setUniform1fv("waveSpeeds", waves.size(), (float*)waves.speeds);
@@ -2578,8 +2663,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 
 	fractalTerrain->computeSubdivision(view, 5);
-	fractalTerrain->computeWaterSubdivision(view, 3);
-
 
 //	graphics->setWireFrame(true);
 	renderFractalTerrain(view);
@@ -2623,24 +2706,25 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniformMatrix("modelTransform", Mat4f());
 	shader->setUniform1f("earthRadius", earthRadius);
 	shader->setUniform1i("groundTex", 0);
+	shader->setUniform1i("treeTex", 1);
 	
+	shader->setUniform1f("waveAmplitude", waves.amplitudeSum * waveTextureScale);
 	shader->setUniform1f("invWaveTextureScale", 1.0 / waveTextureScale);
 	shader->setUniform2f("tOrigin", tOrigin + 0.5 / FractalNode::textureResolution);
 	shader->setUniform2f("tScale", Vec2f(1,1)*(FractalNode::textureResolution-1) / FractalNode::textureResolution);
 	shader->setUniform3f("eyePosition", view->camera().eye);
 	shader->setUniform3f("sunDirection", graphics->getLightPosition().normalize());
-	shader->setUniform1i("LCnoise",	 1); dataManager.bind("LCnoise",1);
-	shader->setUniform1i("noiseTex", 2); dataManager.bind("noise",2);
-	shader->setUniform1i("sand",     3); dataManager.bind("sand", 3);
-	shader->setUniform1i("grass",    4); dataManager.bind("grass",4);
-	shader->setUniform1i("grassDetail",	5);	dataManager.bind("grass detail",5);
-	shader->setUniform1i("waveTexture", 6);	waveTexture->bind(6);
+	shader->setUniform1i("LCnoise",	 2); dataManager.bind("LCnoise",2);
+	shader->setUniform1i("noiseTex", 3); dataManager.bind("noise",3);
+	shader->setUniform1i("sand",     4); dataManager.bind("sand", 4);
+	shader->setUniform1i("grass",    5); dataManager.bind("grass",5);
+	shader->setUniform1i("grassDetail",	6);	dataManager.bind("grass detail",6);
+	shader->setUniform1i("waveTexture", 7);	waveTexture->bind(7);
 	fractalTerrain->render(view, shader);
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const
 {
 	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
-
 
 	Vec3f eye = view->camera().eye;
 	float scale = earthRadius * sqrt(1.0-pow(earthRadius/(earthRadius+eye.y),2));
@@ -2655,6 +2739,7 @@ void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 
 	shader->setUniform1f("time", currentTime);
+	shader->setUniform1f("waveAmplitude", waves.amplitudeSum * waveTextureScale);
 
 	shader->setUniform1f("invTextureScale", 1.0 / waveTextureScale);
 
@@ -2704,31 +2789,37 @@ void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 //		(*i)->renderFoliage(view);
 //	}
 
-	//dataManager.bind("tree");
-	//skyTexture->bind(1);
-	//
-	//auto alphaTreesShader = shaders.bind("trees alpha test shader");
-	//alphaTreesShader->setUniform1i("tex", 0);
-	//alphaTreesShader->setUniform1i("sky", 1);
-	//alphaTreesShader->setUniform3f("eyePos", view->camera().eye);
+	dataManager.bind("tree");
+	skyTexture->bind(1);
+
+	auto alphaTreesShader = shaders.bind("trees alpha test shader");
+	alphaTreesShader->setUniform1i("tex", 0);
+	alphaTreesShader->setUniform1i("sky", 1);
+	alphaTreesShader->setUniform3f("eyePos", view->camera().eye);
 	//alphaTreesShader->setUniform3f("right", view->camera().right);
-	//alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	//for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	//{
 	//	(*i)->renderFoliage(view);
 	//}
 	//
-	//graphics->setDepthMask(false);
-	//auto treesShader = shaders.bind("trees shader");
-	//treesShader->setUniform1i("tex", 0);
-	//treesShader->setUniform1i("sky", 1);
-	//treesShader->setUniform3f("eyePos", view->camera().eye);
-	//treesShader->setUniform3f("right", view->camera().right);
-	//treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+	graphics->setSampleShading(true);
+	fractalTerrain->renderTrees(view);
+	graphics->setSampleShading(false);
+//	graphics->setDepthMask(false);
+//	auto treesShader = shaders.bind("trees shader");
+//	treesShader->setUniform1i("tex", 0);
+//	treesShader->setUniform1i("sky", 1);
+//	treesShader->setUniform3f("eyePos", view->camera().eye);
+//	treesShader->setUniform3f("right", view->camera().right);
+//	treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
 	//for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	//{
 	//	(*i)->renderFoliage(view);
 	//}
+//	fractalTerrain->renderTrees(view);
+
+
 }
 /*shared_ptr<Terrain::Page> Terrain::getPage(Vec2f position) const
 {

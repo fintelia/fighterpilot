@@ -38,12 +38,6 @@ private:
 
 	enum Tab{NO_TAB, TERRAIN,OBJECTS,REGIONS} lastTab;
 
-	bool awaitingMapFile;
-	bool awaitingMapSave;
-	bool awaitingLevelFile;
-	bool awaitingLevelSave;
-	//bool awaitingNewObject;
-
 	int selectedObject;
 	bool placingNewObject;
 
@@ -63,7 +57,7 @@ private:
 
 public:
 	
-	levelEditor():terrainValid(false), lastTab((Tab)-1), awaitingMapFile(false),awaitingMapSave(false),awaitingLevelFile(false),awaitingLevelSave(false),selectedObject(-1),placingNewObject(false),newRegionRadius(false),center(0,0,0), objPlacementAlt(10.0){}
+	levelEditor():terrainValid(false), lastTab((Tab)-1), selectedObject(-1),placingNewObject(false),newRegionRadius(false),center(0,0,0), objPlacementAlt(10.0){}
 	~levelEditor(){}
 	bool init();
 	void update();
@@ -74,7 +68,6 @@ public:
 	bool scroll(float rotations);
 	Tab getTab();
 	int getShader();
-	void operator() (popup* p);
 
 private:
 	float getHeight(unsigned int x, unsigned int z) const;
@@ -119,10 +112,8 @@ public:
 	void render();
 	bool keyDown(int vkey, char ascii);
 	bool menuKey(int mkey);
-	void operator() (popup* p);
 protected:
 	choice activeChoice;
-	bool choosingFile;
 };
 class chooseMap: public screen
 {
@@ -256,6 +247,24 @@ protected:
 
 public:
 	campaign(shared_ptr<const LevelFile> lvl);
+	bool init();
+	bool menuKey(int mkey);
+	void render();
+	void render3D(unsigned int v);
+	void renderTransparency(unsigned int v);
+};
+class lightbox: public dogFight
+{
+protected:
+	Vec3f eye;
+	Angle yaw;
+	Angle pitch;
+
+	shared_ptr<GraphicsManager::View> view;
+	void updateFrame();
+
+public:
+	lightbox(shared_ptr<const LevelFile> lvl);
 	bool init();
 	bool menuKey(int mkey);
 	void render();

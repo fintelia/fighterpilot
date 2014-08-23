@@ -4,7 +4,7 @@ varying vec3 normal;
 //varying vec4 groundVal;
 //varying vec3 sunDir, sunHalfVector;
 //varying vec2 tCoord;
-varying float flogz;
+invariant varying float flogz;
 //varying vec3 lightDirections[4];
 
 //uniform vec3 sunPosition;
@@ -28,12 +28,13 @@ uniform float earthRadius;
 uniform sampler2D waveTexture;
 uniform float invTextureScale;
 
+uniform float waveAmplitude;
+
 // const int NUM_WAVES = 16;
 // uniform float amplitudes[NUM_WAVES];
 // uniform float frequencies[NUM_WAVES];
 // uniform float waveSpeeds[NUM_WAVES];
 // uniform vec2 waveDirections[NUM_WAVES];
-
 
 attribute vec2 Position2;
 
@@ -88,8 +89,7 @@ void main()
 	// normal = normalize(scale * vec3((2.0*groundVal.b-1.0),
 	// 						1,
 	// 						(2.0*groundVal.g-1.0)));
-
-
+		
 	//float y = groundVal.r;
 	vec4 pos = modelTransform * vec4(Position2.x, 0, Position2.y, 1.0);
 
@@ -101,7 +101,7 @@ void main()
 	normal = normalize(pos.xyz + vec3(0, earthRadius, 0));
 	vec2 r = pos.xz / earthRadius;
 	pos.y = earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
-	pos.y += (texture2D(waveTexture, pos.xz*invTextureScale*0.1).x-0.5) * 16;
+	pos.y += (texture2D(waveTexture, pos.xz*invTextureScale).x-0.5) * waveAmplitude;
 	
 //	for(int i=0; i < 4; i++){
 //		pos.xyz += normal * A[i]*(texture(waves, vec2(fract(0.0005*time + f[i]*dot(pos.xz,D[i])), 1)).r-0.5);

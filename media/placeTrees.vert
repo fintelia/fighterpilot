@@ -28,9 +28,8 @@ uniform int patch_height;
 //uniform int x_offset;
 //uniform int y_offset;
 
-
-
-uniform float placementOdds;
+uniform float earthRadius;
+uniform float slopeScale;
 
 //see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
 uint hash(uint x)
@@ -63,9 +62,19 @@ void main()
 	vec2 pos = vec2(mod(c, patch_width) + mod(a, b)*patch_width + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, c/patch_width + (a/b)*patch_height + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
 	
 	vec4 groundVal = texture(groundTex, texOrigin + texSpacing * pos);
-
-	vertexOut.position = worldOrigin + worldSpacing * vec3(pos.x, groundVal.w, pos.y);
+	
+	vertexOut.position = worldOrigin + worldSpacing * vec3(pos.x, groundVal.r, pos.y);
 	vertexOut.vertexID = trueVertexID;
 
-	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > placementOdds || vertexOut.position.y <= 40.0 || groundVal.y <= 0.9111 || (vertexOut.position.y >= 150.0 && groundVal.y >= 0.98));
+	vec2 r = vertexOut.position.xz / earthRadius;
+	vertexOut.position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+	
+	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
+	
+	float odds = clamp(0.05 * (vertexOut.position.y - 20.0), 0.0, 1.0) * 
+		clamp(20 * (0.9 - slope), 0.0, 1.0) *
+		clamp(5 * (slope - 0.05), 0.0, 1.0);
+	
+	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > odds /*|| groundVal.y <= 0.9111 ||(vertexOut.position.y >= 150.0 && groundVal.y >= 0.98)*/);
+	
 }

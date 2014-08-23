@@ -15,7 +15,7 @@ out VertexData{
 	vec3 color;
 }vertexOut;
 
-uniform vec2 transform;
+uniform float scale;
 
 //see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
 uint hash(uint x)
@@ -46,19 +46,19 @@ void main()
 		vertexOut.color.g = 0.8 + 0.3 * random(50.780, 94699.9964);
 		vertexOut.color.b = 0.8 + 0.3 * random(57.329, 49563.7059);
 
-		gl_Position = vec4((vertexIn[0].position.xz + vec2(-2.5,-2.5) * size) * transform / 2048 - 1.0, 0.0, 1.0); 
+		gl_Position = vec4(scale * (vertexIn[0].position.xz + vec2(-2.5,-2.5) * size) - 1.0, 0.0, 1.0); 
 		vertexOut.texCoord = vec2(0,0);
 		EmitVertex();
 
-		gl_Position = vec4((vertexIn[0].position.xz + vec2(-2.5,2.5) * size) * transform / 2048 - 1.0, 0.0, 1.0);
+		gl_Position = vec4(scale * (vertexIn[0].position.xz + vec2(-2.5,2.5) * size) - 1.0, 0.0, 1.0);
 		vertexOut.texCoord = vec2(0,1);
 		EmitVertex();
 		
-		gl_Position = vec4((vertexIn[0].position.xz + vec2(2.5,-2.5) * size) * transform / 2048 - 1.0, 0.0, 1.0);
+		gl_Position = vec4(scale * (vertexIn[0].position.xz + vec2(2.5,-2.5) * size) - 1.0, 0.0, 1.0);
 		vertexOut.texCoord = vec2(1,0);
 		EmitVertex();
 
-		gl_Position = vec4((vertexIn[0].position.xz + vec2(2.5,2.5) * size) * transform / 2048 - 1.0, 0.0, 1.0);
+		gl_Position = vec4(scale * (vertexIn[0].position.xz + vec2(2.5,2.5) * size) - 1.0, 0.0, 1.0);
 		vertexOut.texCoord = vec2(1,1);
 		EmitVertex();
 

@@ -110,91 +110,49 @@ bool levelEditor::init()
 
 	return true;
 }
-void levelEditor::operator() (popup* p)
-{
-	if(awaitingMapFile)
-	{
-		awaitingMapFile=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((openFile*)p)->getFile();
-		fromFile(f);
-	}
-	//else if(awaitingShaderFile)
-	//{
-	//	awaitingShaderFile=false;
-	//	if(!((saveFile*)p)->validFile()) return;
-	//	string f=((openFile*)p)->getFile();
-	//	addShader(f);
-	//}
-	else if(awaitingMapSave)
-	{
-		awaitingMapSave=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((saveFile*)p)->getFile();
-		//level->exportBMP(f);
-		messageBox("feature currently unavailable");
-	}
-	else if(awaitingLevelFile)
-	{
-		awaitingLevelFile=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((openFile*)p)->getFile();
-
-		if(!levelFile.loadZIP(f))
-			debugBreak();
-
-		LOD = levelFile.info.LOD;
-		listBoxes["LOD"]->setOption(0);
-		if(LOD == 2)		listBoxes["LOD"]->setOption(1);
-		else if(LOD == 4)	listBoxes["LOD"]->setOption(2);
-		else if(LOD == 8)	listBoxes["LOD"]->setOption(3);
-
-		sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight),0.0,1.0));
-
-		if(levelFile.info.shaderType == TERRAIN_ISLAND) toggles["shaders"]->setValue(0);
-		else if(levelFile.info.shaderType == TERRAIN_SNOW) toggles["shaders"]->setValue(1);
-		else if(levelFile.info.shaderType == TERRAIN_DESERT) toggles["shaders"]->setValue(2);
-		else if(levelFile.info.shaderType == TERRAIN_MOUNTAINS) toggles["shaders"]->setValue(3);
-
-		resetView();
-		terrainValid=false;
-	}
-	else if(awaitingLevelSave)
-	{
-		awaitingLevelSave=false;
-		if(!((saveFile*)p)->validFile()) return;
-		string f=((saveFile*)p)->getFile();
-		levelFile.info.LOD = 1 << listBoxes["LOD"]->getOptionNumber();
-		levelFile.info.foliageDensity = (levelFile.info.shaderType == TERRAIN_ISLAND) ? 120 : 0;
-		if(!levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue()))
-			messageBox("Level save failed.");
-		//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
-	}
-	//else if(awaitingNewObject)
-	//{
-	//	awaitingNewObject = false;
-	//	newObjectType=((newObject*)p)->getObjectType();
-	//}
-	//else if(...)
-	//   .
-	//   .
-	//   .
-}
 void levelEditor::update()
 {
 	if(buttons["load"]->checkChanged())
 	{
-		awaitingLevelFile = true;
 		popup* p = new openFile;
-		p->callback = (functor<void,popup*>*)this;
+		p->callback = [this](popup* p){
+			if(!((saveFile*)p)->validFile()) return;
+			string f=((openFile*)p)->getFile();
+
+			if(!levelFile.loadZIP(f))
+				debugBreak();
+
+			LOD = levelFile.info.LOD;
+			listBoxes["LOD"]->setOption(0);
+			if(LOD == 2)		listBoxes["LOD"]->setOption(1);
+			else if(LOD == 4)	listBoxes["LOD"]->setOption(2);
+			else if(LOD == 8)	listBoxes["LOD"]->setOption(3);
+
+			sliders["sea level"]->setValue(clamp(-levelFile.info.minHeight/(levelFile.info.maxHeight - levelFile.info.minHeight),0.0,1.0));
+
+			if(levelFile.info.shaderType == TERRAIN_ISLAND) toggles["shaders"]->setValue(0);
+			else if(levelFile.info.shaderType == TERRAIN_SNOW) toggles["shaders"]->setValue(1);
+			else if(levelFile.info.shaderType == TERRAIN_DESERT) toggles["shaders"]->setValue(2);
+			else if(levelFile.info.shaderType == TERRAIN_MOUNTAINS) toggles["shaders"]->setValue(3);
+
+			resetView();
+			terrainValid=false;
+		};
 		((openFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
 	else if(buttons["save"]->checkChanged())
 	{
-		awaitingLevelSave = true;
 		popup* p = new saveFile;
-		p->callback = (functor<void,popup*>*)this;
+		p->callback = [this](popup* p){
+			if(!((saveFile*)p)->validFile()) return;
+			string f=((saveFile*)p)->getFile();
+			levelFile.info.LOD = 1 << listBoxes["LOD"]->getOptionNumber();
+			levelFile.info.foliageDensity = (levelFile.info.shaderType == TERRAIN_ISLAND) ? 120 : 0;
+			if(!levelFile.saveZIP(f,pow(10.0f,sliders["height scale"]->getValue()), sliders["sea level"]->getValue()))
+				messageBox("Level save failed.");
+			//level->save(f, sliders["sea level"]->getValue() * (maxHeight - minHeight) + minHeight);
+		};
 		((saveFile*)p)->init(".lvl");
 		menuManager.setPopup(p);
 	}
@@ -219,9 +177,12 @@ void levelEditor::update()
 			s.insert(".png");
 			s.insert(".bil");
 
-			awaitingMapFile = true;
 			popup* p = new openFile;
-			p->callback = (functor<void,popup*>*)this;
+			p->callback = [this](popup* p){
+				if(((saveFile*)p)->validFile()){
+					fromFile(((openFile*)p)->getFile());
+				}
+			};
 			((openFile*)p)->init(s);
 			menuManager.setPopup(p);
 		}
@@ -1751,7 +1712,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
 			shader->setUniform3f("sunPosition", graphics->getLightPosition());
 			shader->setUniform3f("eyePos",		view->camera().eye);
-			shader->setUniform1f("time",		world->time());
+//			shader->setUniform1f("time",		world->time());
 			shader->setUniform1i("sand",		0);
 			shader->setUniform1i("grass",		1);
 			shader->setUniform1i("rock",		2);
@@ -1790,7 +1751,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
 			shader->setUniform3f("sunPosition", graphics->getLightPosition());
 			shader->setUniform3f("eyePos",		view->camera().eye);
-			shader->setUniform1f("time",		world->time());
+//			shader->setUniform1f("time",		world->time());
 			shader->setUniform1i("sand",		0);
 			shader->setUniform1i("grass",		1);
 			shader->setUniform1i("rock",		2);
