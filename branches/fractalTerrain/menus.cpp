@@ -111,13 +111,37 @@ bool chooseMode::menuKey(int mkey)
 	if(activeChoice<0) activeChoice=(choice)2;
 	if(activeChoice>2) activeChoice=(choice)0;
 
-	if(mkey == MENU_ENTER && input.getKey(VK_CONTROL) && (activeChoice==SINGLE_PLAYER || activeChoice==MULTIPLAYER))//if the control key is pressed
+	if(mkey == MENU_ENTER && input.getKey(VK_CONTROL) && activeChoice==SINGLE_PLAYER)//if the control key is pressed
 	{
 		openFile* p = new openFile;
-		p->callback = (functor<void,popup*>*)this;
+		p->callback = [](popup* p){
+			input.up(VK_SPACE);
+			input.up(VK_RETURN);
+
+			shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
+			{
+				menuManager.setMenu(new gui::campaign(l));
+			}
+		};
 		p->init(".lvl");
 		menuManager.setPopup(p);
-		choosingFile = true;
+	}
+	else if(mkey == MENU_ENTER && input.getKey(VK_CONTROL) && activeChoice==MULTIPLAYER)//if the control key is pressed
+	{
+		openFile* p = new openFile;
+		p->callback = [](popup* p){
+			input.up(VK_SPACE);
+			input.up(VK_RETURN);
+
+			shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
+			{
+				menuManager.setMenu(new gui::splitScreen(l));
+			}
+		};
+		p->init(".lvl");
+		menuManager.setPopup(p);
 	}
 	else if(mkey == MENU_ENTER && activeChoice == SINGLE_PLAYER)
 	{
@@ -171,43 +195,29 @@ bool chooseMode::keyDown(int vkey, char ascii)
 	{
 		menuManager.setPopup(new gui::options);
 	}
+#ifdef _DEBUG
+	else if(vkey==VK_F12)
+	{
+		openFile* p = new openFile;
+		p->callback = [](popup* p){
+			input.up(VK_SPACE);
+			input.up(VK_RETURN);
+
+			shared_ptr<LevelFile> l(new LevelFile);
+			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
+			{
+				menuManager.setMenu(new gui::lightbox(l));
+			}
+		};
+		p->init(".lvl");
+		menuManager.setPopup(p);
+	}
+#endif
 	else
 	{
 		return false;
 	}
 	return true;
-}
-void chooseMode::operator() (popup* p)
-{
-	if(choosingFile && ((openFile*)p)->validFile())
-	{
-		if(activeChoice==SINGLE_PLAYER)
-		{
-			input.up(VK_SPACE);
-			input.up(VK_RETURN);
-
-
-			shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
-			{
-				menuManager.setMenu(new gui::campaign(l));
-			}
-			return;
-		}
-		else if(activeChoice==MULTIPLAYER)
-		{
-			input.up(VK_SPACE);
-			input.up(VK_RETURN);
-
-			shared_ptr<LevelFile> l(new LevelFile);
-			if(l->loadZIP(((openFile*)p)->getFile()) && l->checkValid())
-			{
-				menuManager.setMenu(new gui::splitScreen(l));
-			}
-			return;
-		}
-		choosingFile = false;
-	}
 }
 bool chooseMap::init()
 {
@@ -634,5 +644,127 @@ void loading::render()
 	{
 		graphics->drawOverlay(Rect::XYXY(0.05*sAspect,0.96,(0.05+0.9*progress)*sAspect,0.98));
 	}
+}
+// ______________________________________________________________________________________________________________________________
+// | 																															|
+// | 													gui::lightbox										            		|
+// |____________________________________________________________________________________________________________________________|
+//
+lightbox::lightbox(shared_ptr<const LevelFile> lvl): dogFight(lvl), eye(0,1500,-4000)
+{
+	view = graphics->genView();
+	view->viewport(0, 0, sAspect, 1.0);
+	view->perspective(50.0, (double)sw / ((double)sh), 1.0, 2000000.0);
+	view->setRenderFunc(bind(&lightbox::render3D, this, std::placeholders::_1));
+	view->setTransparentRenderFunc(bind(&lightbox::renderTransparency, this, std::placeholders::_1));
+	graphics->setLightPosition(Vec3f(0.0, 100000.0, 100000.0).normalize());
+}
+bool lightbox::init()
+{
+	world = unique_ptr<WorldManager>(new WorldManager(level->generateClipMap()));
+	level->initializeWorld(1);
+
+	if(level->info.night)
+	{
+		view->blurStage(true);
+		view->postProcessShader(shaders("gamma night"));
+	}
+	else
+	{
+		view->blurStage(false);
+		view->postProcessShader(shaders("gamma bloom"));
+	}
+
+	world->time.pause();
+
+	return true;
+}
+bool lightbox::menuKey(int mkey)
+{
+	if(mkey == MENU_BACK)
+	{
+		menuManager.setMenu(new gui::chooseMode);
+	}
+	else if(mkey == MENU_UP)
+	{
+		eye.z += 500.0;
+	}
+	else if(mkey == MENU_DOWN)
+	{
+		eye.z -= 500.0;
+	}
+	else if(mkey == MENU_LEFT)
+	{
+		eye.x += 500.0;
+	}
+	else if(mkey == MENU_RIGHT)
+	{
+		eye.x -= 500.0;
+	}
+	else if(mkey == MENU_ENTER)
+	{
+		graphics->takeScreenshot(8);
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+void lightbox::updateFrame()
+{
+	//check whether to toggle first person view
+	if(input.getKey(VK_F1))
+	{
+		players[0]->toggleFirstPerson();
+		input.up(VK_F1);
+	}
+
+	Vec3f fwd(-sin(yaw), sin(pitch),cos(yaw));
+
+	//set camera position
+	shared_ptr<plane> p=players[0]->getObject();
+	auto camera = players[0]->getCamera(p->controled || p->dead);
+	view->lookAt(eye, eye + fwd, Vec3f(0,1,0));
+	if(level->info.night)
+	{
+		if(players[0]->firstPersonView && !p->controled && !p->dead)
+		{
+			view->blurStage(false);
+			view->postProcessShader(shaders("gamma night vision"));
+		}
+		else
+		{
+			view->blurStage(true);
+			view->postProcessShader(shaders("gamma night"));
+		}
+	}
+	players[0]->setVibrate(p->cameraShake);
+}
+void lightbox::render()
+{
+	shared_ptr<plane> p = players[0]->getObject();
+
+	if(!graphics->isHighResScreenshot())
+	{
+		auto planes = world->getAllOfType(PLANE);
+		for(auto i = planes.begin(); i != planes.end();i++)
+		{
+			if(i->second->id != p->id && i->second->team == p->team && !i->second->dead)
+				drawHudIndicator(view, p, i->second, Color(0,1,0,0.5), Color4(0.66*0.2989,0.34+0.66*0.2989,0.66*0.2989,0.5));
+		}
+	}
+}
+
+void lightbox::render3D(unsigned int v)
+{
+	drawScene(view, 0);
+	sceneManager.renderScene(view);
+	world->renderFoliage(view);
+	sceneManager.renderSceneTransparency(view);
+}
+void lightbox::renderTransparency(unsigned int v)
+{
+	particleManager.render(view);
 }
 }

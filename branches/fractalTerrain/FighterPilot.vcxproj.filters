@@ -187,6 +187,9 @@
     <Filter Include="shaders\post processing">
       <UniqueIdentifier>{5dafe95d-c593-4a2f-bd2c-df913b04f921}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\fractalWater">
+      <UniqueIdentifier>{3dca7bec-bf7e-41e0-8d09-b4e99489d975}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="collide.cpp">
@@ -613,9 +616,6 @@
     <None Include="media\trees.frag">
       <Filter>shaders\trees</Filter>
     </None>
-    <None Include="media\trees.vert">
-      <Filter>shaders\trees</Filter>
-    </None>
     <None Include="media\desert.frag">
       <Filter>shaders\terrain</Filter>
     </None>
@@ -733,6 +733,15 @@
     </None>
     <None Include="media\terrain4.vert">
       <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\trees.vert">
+      <Filter>shaders\trees</Filter>
+    </None>
+    <None Include="media\fractalOcean.frag">
+      <Filter>shaders\fractalWater</Filter>
+    </None>
+    <None Include="media\fractalOcean.vert">
+      <Filter>shaders\fractalWater</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

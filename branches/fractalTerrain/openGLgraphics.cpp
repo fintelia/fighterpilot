@@ -71,6 +71,7 @@ OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 }
 void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data)
 {
+	//note: size must be greater than 0
 	vertexBuffer::bindBuffer();
 	totalSize = size;
 	if(usageFrequency == STATIC)		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
@@ -80,7 +81,6 @@ void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data
 void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
-
 
 	for(unsigned int i=0; i<=7; i++)
 	{
@@ -1453,6 +1453,13 @@ void OpenGLgraphics::shaderGL::setUniform4iv(string name, unsigned int n, int* v
 	if(boundShader != this) bind();
 	glUniform4iv(getUniformLocation(name), n, v);
 }
+void OpenGLgraphics::setEnabled(unsigned int glEnum, bool enabled)
+{
+	if(enabled)
+		glEnable(glEnum);
+	else
+		glDisable(glEnum);
+}
 void OpenGLgraphics::flashTaskBar(int times, int length)
 {
 #ifdef VISUAL_STUDIO
@@ -1592,14 +1599,7 @@ void OpenGLgraphics::setDepthMask(bool mask)
 }
 void OpenGLgraphics::setDepthTest(bool enabled)
 {
-	if(enabled)
-	{
-		glEnable(GL_DEPTH_TEST);
-	}
-	else
-	{
-		glDisable(GL_DEPTH_TEST);
-	}
+	setEnabled(GL_DEPTH_TEST, enabled);
 }
 void OpenGLgraphics::setBlendMode(BlendMode blend)
 {
@@ -1630,10 +1630,7 @@ void OpenGLgraphics::setAlphaToCoverage(bool enabled)
 {
 	if(multisampling)
 	{
-		if(enabled)
-			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		else
-			glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		setEnabled(GL_SAMPLE_ALPHA_TO_COVERAGE, enabled);
 	}
 }
 void OpenGLgraphics::setWireFrame(bool enabled)
@@ -1643,6 +1640,27 @@ void OpenGLgraphics::setWireFrame(bool enabled)
 void OpenGLgraphics::setClearColor(Color4 c)
 {
 	clearColor = c;
+}
+void OpenGLgraphics::setSampleShadingFraction(float f)
+{
+	if(multisampling && openGL4)
+	{
+		glMinSampleShading(clamp(f, 0.0f, 1.0f));			
+	}
+	else if(multisampling && GLEW_ARB_sample_shading)
+	{
+		glMinSampleShadingARB(clamp(f, 0.0f, 1.0f));
+	}
+}
+void OpenGLgraphics::setSampleShading(bool enabled)
+{
+	if(multisampling)
+	{
+		if(openGL4)
+			setEnabled(GL_SAMPLE_SHADING, enabled);
+		else if(GLEW_ARB_sample_shading)
+			setEnabled(GL_SAMPLE_SHADING_ARB, enabled);
+	}
 }
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
@@ -2501,15 +2519,15 @@ void OpenGLgraphics::render()
 	ortho->setUniform4f("viewConstraint", viewConstraint);
 	menuManager.render();
 
-	ortho->setUniform4f("color",white);
-	GraphicsManager::drawOverlay(Rect::XYXY(0,0,0.15,0.045), "white");
-	ortho->setUniform4f("color",black);
-	drawText(lexical_cast<string>(fps), Vec2f(0.005, 0.005), "default font");
-	ortho->setUniform4f("color",white);
-
 	#ifdef _DEBUG
 		if(!highResScreenshot)
 		{
+			//ortho->setUniform4f("color",white);
+			//GraphicsManager::drawOverlay(Rect::XYXY(0,0,0.15,0.045), "white");
+			//ortho->setUniform4f("color",black);
+			//drawText(lexical_cast<string>(fps), Vec2f(0.005, 0.005), "default font");
+			//ortho->setUniform4f("color",white);
+
 			Profiler.draw();
 	
 			if(errorGlowEndTime > GetTime() && dataManager.assetLoaded("errorGlow"))
@@ -2932,7 +2950,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 4,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 2,
 			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
@@ -2953,6 +2971,9 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			openGL4 = true;
 		}
 	}
+	if(!openGL4)
+		messageBox("failed to create OpenGL 4 context");
+
 	if(wglCreateContextAttribsARB && !openGL4 /*&& targetRendererVersion >= 3*/) //attempt to create an openGL 3 context
 	{
 		int attribs[] =
@@ -3172,7 +3193,7 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 	//TODO: add support for changing refresh rate under linux
 #endif
 }
-void OpenGLgraphics::takeScreenshot()
+void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 {
 	world->time.pause();
 #ifdef WINDOWS
@@ -3185,30 +3206,27 @@ void OpenGLgraphics::takeScreenshot()
 				lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" +
 				lexical_cast<string>(sTime.wMilliseconds) + ".bmp";
 #else
-	string filename = "screen shots/FighterPilot.bmp";
+	string filename = "screen shots/FighterPilot"s + lexical_cast<string>((unsigned int)GetTime()) + ".bmp"s;
 #endif
-
-
 
 	fileManager.createDirectory("screen shots");
 	highResScreenshot = true;
-	const int TILES=4;
 
 	shared_ptr<FileManager::textureFile> file(new FileManager::textureFile(filename,FileManager::BMP));
 	file->channels = 3;
-	file->width = sw*TILES;
-	file->height = sh*TILES;
-	file->contents = new unsigned char[3*sw*TILES*sh*TILES];
+	file->width = sw*tiles;
+	file->height = sh*tiles;
+	file->contents = new unsigned char[3*sw*tiles*sh*tiles];
 
-	memset(file->contents, 0, 3*sw*TILES*sh*TILES);
+	memset(file->contents, 0, 3*sw*tiles*sh*tiles);
 
 	unsigned char* tileContents = new unsigned char[3*sw*sh];
 
-	for(int x=0; x<TILES; x++)
+	for(int x=0; x<tiles; x++)
 	{
-		for(int y=0; y<TILES; y++)
+		for(int y=0; y<tiles; y++)
 		{
-			viewConstraint = Rect::XYWH(1.0/TILES*x, 1.0/TILES*y, 1.0/TILES, 1.0/TILES);
+			viewConstraint = Rect::XYWH(1.0/tiles*x, 1.0/tiles*y, 1.0/tiles, 1.0/tiles);
 
 			world->frameUpdate();
 			render();
@@ -3217,7 +3235,7 @@ void OpenGLgraphics::takeScreenshot()
 
 			for(int row=0;row<sh;row++)
 			{
-				memcpy(file->contents + (y*sw*sh*TILES + x*sw + row*sw*TILES)*3, tileContents+row*sw*3, 3*sw);
+				memcpy(file->contents + (y*sw*sh*tiles + x*sw + row*sw*tiles)*3, tileContents+row*sw*3, 3*sw);
 			}
 		}
 	}

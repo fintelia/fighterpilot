@@ -106,7 +106,7 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	{
 		if(game->active && (wParam == IDHOT_SNAPDESKTOP || wParam == IDHOT_SNAPWINDOW))
 		{
-			graphics->takeScreenshot();
+			graphics->takeScreenshot(4);
 			return 0;
 		}
 	}

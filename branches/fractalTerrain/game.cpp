@@ -137,6 +137,8 @@ bool Game::init()
 
 	graphics->setRefreshRate(settings.get<unsigned int>("graphics", "refreshRate"));
 	graphics->setVSync(settings.get<string>("graphics", "vSync")=="enabled");
+	graphics->setSampleShadingFraction(1);
+	graphics->setSampleShading(false);
 
 	input.initialize();
 

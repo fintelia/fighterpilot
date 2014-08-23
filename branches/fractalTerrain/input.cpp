@@ -665,7 +665,7 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			if(wParam == VK_SNAPSHOT || wParam == VK_INSERT)
 			{
-				graphics->takeScreenshot();
+				graphics->takeScreenshot(4);
 			}
 			else
 			{

@@ -263,7 +263,7 @@ public:
 class popup: public elementContainer
 {
 public:
-	popup(): callback(NULL), done(false){}
+	popup(): done(false){}
 	virtual ~popup(){}
 
 	virtual void updateFrame()=0;
@@ -277,7 +277,7 @@ public:
 	virtual bool scroll(float rotations){return false;}
 
 	bool isDone(){return done;}
-	functor<void,popup*>* callback;
+	std::function<void(popup*)> callback;
 protected:
 	bool done;
 
@@ -336,10 +336,9 @@ protected:
 	//menuButton* myComputer;
 	//menuButton* myNetwork;
 };
-class saveFile: public openFile, functor<void,popup*>
+class saveFile: public openFile
 {
 public:
-	void operator() (popup* p);
 	saveFile():replaceDialog(false){}
 protected:
 	bool replaceDialog;
@@ -364,12 +363,10 @@ protected:
 	int value;
 
 	float x, y, width, height;
-
 	int clicking;
-
 };
 
-class screen: public elementContainer, functor<void,popup*>
+class screen: public elementContainer
 {
 public:
 	screen(){}
@@ -386,9 +383,6 @@ public:
 	virtual bool keyUp(int vkey, char ascii){return false;}
 	virtual bool menuKey(int mkey){return false;}
 	virtual bool scroll(float rotations){return false;}
-	///////////////////////////////////////////
-	virtual void operator() (popup* p){}
-	//bool popupActive(){return popup != NULL;}
 
 protected:
 	friend class manager;

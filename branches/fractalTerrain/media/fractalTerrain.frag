@@ -12,6 +12,7 @@ uniform sampler2D sand;
 uniform sampler2D grass;
 uniform sampler2D grassDetail;
 uniform sampler2D groundTex;
+uniform sampler2D treeTex;
 uniform sampler2D waveTexture;
 uniform float slopeScale;
 uniform vec3 eyePos;
@@ -20,6 +21,7 @@ uniform vec3 sunDirection;
 uniform vec3 eyePosition;
 uniform float invWaveTextureScale;
 uniform float earthRadius;
+uniform float waveAmplitude;
 
 void main()
 {
@@ -29,7 +31,7 @@ void main()
 //		discard;
 
 	vec4 groundVal = texture2D(groundTex, tCoord);
-
+	vec4 treeVal = texture2D(treeTex, tCoord);
 	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
 	float slopeAngle = atan(slope);
 
@@ -89,7 +91,7 @@ void main()
 	color *= light;
 	////////////WATER EFFECT///////////
 	vec2 r = position.xz / earthRadius;
-	float waveHeight = (texture2D(waveTexture, position.xz*invWaveTextureScale*0.1).x-0.5) * 16 + earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+	float waveHeight = (texture2D(waveTexture, position.xz*invWaveTextureScale).x-0.5) * waveAmplitude; + earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	//see: http://www-evasion.imag.fr/~Fabrice.Neyret/images/fluids-nuages/waves/Jonathan/articlesCG/rendering-natural-waters-00.pdf
 	float c = 0.000;
 	float depth = max((waveHeight-height)/max(abs(normalize(eyePosition-position).y),1e-6),0);
@@ -131,6 +133,8 @@ void main()
 		color *= 0.8 + 0.2 * (groundVal.a - 0.5) * 2;
 */
 
+	color = mix(color.rgb, treeVal.rgb, treeVal.a);
+	
 	gl_FragColor = vec4(color,1.0); // vec4(vec3(height),1.0);// 
 
 	///////////////DEPTH///////////////

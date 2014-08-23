@@ -10,6 +10,7 @@ uniform float waveSpeeds[NUM_WAVES];
 uniform vec2 waveDirections[NUM_WAVES];
 
 uniform float time;
+uniform float amplitudeScale;
 
 /*
  * gets the height and slope of a wave. 
@@ -29,10 +30,9 @@ void main()
 		vec2 w = waveLookup(frequencies[i] * dot(texCoord,waveDirections[i]) 
 							+ 0.001*waveSpeeds[i]*time);
 
-		FragColor.x += amplitudes[i] * w.x * 8.0;
+		FragColor.x += amplitudes[i] * w.x * amplitudeScale;
 		FragColor.yw += amplitudes[i] * w.y * waveDirections[i];				
 	}
-	
 
 	FragColor.yzw = normalize(FragColor.yzw);
 }

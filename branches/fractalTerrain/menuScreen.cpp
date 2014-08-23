@@ -136,7 +136,7 @@ void manager::update()
 			popups.erase(popups.end()-1); //remove the popup from the vector
 
 			if(p->callback != nullptr)//see if we need to issue a callback (using the pointer we have)
-				(*p->callback)(p.get());
+				p->callback(p.get());
 		}
 	}
 	else if(menu != nullptr)
@@ -638,20 +638,6 @@ bool openFile::mouseL(bool down, float x, float y)
 		return false;
 	}
 }
-void saveFile::operator() (popup* p)
-{
-	if(replaceDialog)
-	{
-		if(((messageBox_c*)p)->getValue() == 0)
-		{
-			done = true;
-		}
-		else
-		{
-			replaceDialog = false;
-		}
-	}
-}
 void saveFile::fileSelected()
 {
 	if(file == "")
@@ -668,16 +654,23 @@ void saveFile::fileSelected()
 		s.push_back("yes");
 		s.push_back("no");
 		m->initialize(file + " already exists. Do you want to replace it?",s);
-		m->callback = (functor<void,popup*>*)this;
+		m->callback = [this](popup* p){
+			if(((messageBox_c*)p)->getValue() == 0)
+			{
+				done = true;
+			}
+			else
+			{
+				replaceDialog = false;
+			}
+		};
 		menuManager.setPopup(m);
-		replaceDialog = true;
 	}
 	else
 	{
 		done = true;
 	}
 }
-
 bool messageBox_c::initialize(string t)
 {
 	return initialize(t, vector<string>(1,"OK"));
@@ -1364,13 +1357,9 @@ void closingMessage(string text,string title)
 	}
 	else
 	{
-		struct exitor: public functor<void,gui::popup*>
-		{
-			void operator() (gui::popup*){exit(0);}
-		};
 		gui::messageBox_c* m = new gui::messageBox_c;
 		m->initialize(text);
-		m->callback = (functor<void,gui::popup*>*)(new exitor);
+		m->callback = std::bind(exit, 0);
 		menuManager.setPopup(m);
 	}
 }
