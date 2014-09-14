@@ -339,3 +339,51 @@ public:
 		}
 	}
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+class IndexPool
+{
+public:
+	class Index
+	{
+		friend class IndexPool;
+		unsigned int value;
+		std::function<void()> deleter;
+		Index(unsigned int v, std::function<void()> d):value(v), deleter(d){}
+
+	public:
+		operator unsigned int(){return value;}
+		~Index(){deleter();}
+	};
+	typedef unique_ptr<Index> indexPtr;
+	class pool_empty: public std::exception{};
+
+private:
+	std::stack<unsigned int> unassigned;
+
+public:
+	explicit IndexPool(unsigned int size)
+	{
+		for(unsigned int i=0; i<size; i++)
+			unassigned.push(i);
+	}
+	indexPtr nextIndex()
+	{
+		if(unassigned.empty())
+			throw pool_empty();
+
+		unsigned int i = unassigned.top();
+		unassigned.pop();
+
+		return unique_ptr<Index>(new Index(i, [this, i](){
+					unassigned.push(i);
+	    }));
+	}
+	unsigned int indicesRemaining()
+	{
+		return unassigned.size();
+	}
+	explicit operator bool()
+	{
+		return !unassigned.empty();
+	}
+};

@@ -3,12 +3,14 @@
 
 const unsigned int Terrain::FractalNode::tileResolution = 17;
 const unsigned int Terrain::FractalNode::textureResolution = 257;
+unsigned int Terrain::FractalNode::maxNodes = 256;
 unsigned int Terrain::FractalNode::totalNodes = 0;
 unsigned int Terrain::FractalNode::frameNumber = 0;
 shared_ptr<GraphicsManager::vertexBuffer> Terrain::FractalNode::vertexBuffer;
 std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> Terrain::FractalNode::indexBuffers;
 shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::subdivideTexture;
 shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::queryTexture;
+vector<unsigned int> Terrain::FractalNode::unassignedTextureIndices;
 
 const unsigned int Terrain::waveTextureResolution = 512;
 const float Terrain::waveTextureScale = 1024.0;
@@ -20,7 +22,7 @@ Terrain::ClipMap::Layer::Layer(Layer&& l): minHeight(l.minHeight), maxHeight(l.m
 }
 
 Terrain::ClipMap::ClipMap(unsigned int lResolution, float sLength):
-	layerResolution(lResolution), sideLength(sLength)
+	sideLength(sLength), layerResolution(lResolution)
 {
 	
 }
@@ -70,7 +72,7 @@ void Terrain::FractalNode::recursiveEnvoke(std::function<void(FractalNode*)> fun
 {
 	func(this);
 	for(auto& c : children)
-	{
+	    {
 		if(c)
 		{
 			c->recursiveEnvoke(func);
@@ -87,6 +89,7 @@ void Terrain::FractalNode::reverseRecursiveEnvoke(std::function<void(FractalNode
 }
 Terrain::FractalNode::~FractalNode()
 {
+	unassignedTextureIndices.push_back(textureArrayIndex);
 	totalNodes--;
 }
 Terrain::FractalNode::FractalNode(FractalNode* parent_, 
@@ -95,8 +98,17 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 								  shared_ptr<ClipMap> clipMap_): 
 	divisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_)
 {
+	if(unassignedTextureIndices.empty())
+		throw no_indices_remaining();
+
 	totalNodes++;
+	textureArrayIndex = unassignedTextureIndices.back();
+	unassignedTextureIndices.pop_back();
 	lastUseFrame = frameNumber;
+
+	Profiler.setOutput("totalNodes/assigned", lexical_cast<string>(totalNodes) + " " + lexical_cast<string>(maxNodes - unassignedTextureIndices.size()));
+
+
 
 	if(level <= 1)
 	{
@@ -180,10 +192,8 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	}
 	else
 	{
-		auto& layer = clipMap->layers[clipMapLayer];
 		Vec2f tOrigin = Vec2f(coordinates)/2 - Vec2f(parent->coordinates);
 		Vec2i textureOrigin = tOrigin * textureResolution;
-		float heightRange = layer.maxHeight - layer.minHeight;
 //		float slopeScale = heightRange * (clipMap->layerResolution-1)
 //			/ clipMap->sideLength;
 		//Subdivide X
@@ -205,18 +215,7 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 		graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 		graphics->endRenderToTexture();
 		texture->generateMipmaps();
-		//subdivide Y
-/*		graphics->startRenderToTexture(texture, 0, nullptr, 0, false);
-		shader = shaders.bind("fractal subdivide");
-		shader->setUniform1f("amplitudeScale", 0.03 / (1 << level));
-		shader->setUniform2f("origin", coordinates * textureResolution);
-		shader->setUniform1i("tex", 0);
-		graphics->drawPartialOverlay(Rect::XYXY(-1,-1,1,1), 
-									 Rect::XYWH(0,0,1,1),
-									 subdivideTexture);
-		graphics->endRenderToTexture();
-		texture->generateMipmaps();
-*/	}
+	}
 
 	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
 				   (coordinates.y - 0.5*(1<<level))*sideLength);
@@ -241,17 +240,9 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
 	}
 
-	if(sideLength <= 1024 && sideLength > 512.0 && maxHeight > 0.0)
-		generateTrees();
+//	if(sideLength <= 1024 && sideLength > 512.0 && maxHeight > 0.0)
+//		generateTrees();
 
-
-
-//	if(clipMapStep > 1 || clipMapLayer+1 < clipMap->layers.size()
-//	   || (parent && parent->clipMapStep > 1))
-	//if(sideLength / (tileResolution-1) > 30.0)
-	//{
-	//	subdivide();
-	//}
 }
 void Terrain::FractalNode::computeError()
 {
@@ -436,6 +427,11 @@ void Terrain::FractalNode::generateTreeDensityTexture()
  */
 void Terrain::FractalNode::subdivide()
 {
+	if(unassignedTextureIndices.size() < 4){
+		debugBreak();
+		return; //no space for more nodes...
+	}
+
 	if(!children[0])
 		children[0] = std::make_shared<FractalNode>(this, level+1, coordinates*2, clipMap);
 	if(!children[1])
@@ -477,156 +473,12 @@ void Terrain::FractalNode::subdivide()
 	children[3]->neighbors[0] = children[2];
 	children[3]->neighbors[2] = children[1];
 }
-void Terrain::FractalNode::pruneGrandchildren()
+void Terrain::FractalNode::pruneChildren()
 {
-	if(!children[0])
-		return;
-
-
 	for(auto& c : children)
 	{
-		if(!c->children[0])
-			continue;
-
-		double lFrame = min(min(c->children[0]->lastUseFrame,
-								c->children[1]->lastUseFrame),
-							min(c->children[2]->lastUseFrame,
-								c->children[3]->lastUseFrame));
-
-		if(frameNumber - lFrame >= 150){
-			for(auto& g : c->children)
-				g.reset();
-		}
+		c.reset();
 	}
-}
-unsigned int Terrain::FractalNode::computeSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions)
-{
-	unsigned int divisions = 0;
-	const unsigned int maxTiles = 250;
-	unsigned int tiles = 1;
-	std::queue<FractalNode*> nodes;
-	std::queue<FractalNode*> usedNodes;
-	nodes.push(this);
-	recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::COMBINED;});
-
-	while(divisions < maxDivisions && tiles < maxTiles && !nodes.empty())
-	{
-		auto n = nodes.front();
-		nodes.pop();
-
-		if(!view->boundingBoxInFrustum(n->worldBounds)){
-			n->recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::FRUSTUM_CULLED;});
-			n->pruneGrandchildren();
-			tiles--;
-		}
-		else
-		{
-			Vec3f eye = view->camera().eye;
-			float hMinDistance = 0.5*n->sideLength + n->minDistance;
-
-			if(eye.x > n->worldCenter.x - hMinDistance && 
-			   eye.x < n->worldCenter.x + hMinDistance &&
-			   eye.y < n->maxHeight + n->minDistance && 
-			   eye.y > n->minHeight - n->minDistance &&
-			   eye.z > n->worldCenter.z - hMinDistance && 
-			   eye.z < n->worldCenter.z + hMinDistance &&
-			   n->sideLength / (tileResolution-1) > 15.0 &&
-			   n->maxHeight > -2.0f)
-			{
-				n->divisionLevel = DivisionLevel::SUBDIVIDED;
-				if(!n->children[0])
-				{
-					divisions++;
-					n->subdivide();
-				}
-		
-				tiles--;
-				for(auto& c : n->children)
-				{
-					tiles++;
-					nodes.push(c.get());
-				}
-			}
-			else
-			{
-				n->recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::COMBINED;});
-				n->divisionLevel = DivisionLevel::LEVEL_USED;
-				usedNodes.push(n);
-			}
-		}
-	}
-	while(!nodes.empty())
-	{
-		if(view->boundingBoxInFrustum(nodes.front()->worldBounds))
-		{
-			nodes.front()->recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::COMBINED;});
-			nodes.front()->divisionLevel = DivisionLevel::LEVEL_USED;
-			usedNodes.push(nodes.front());
-		}
-		else
-		{
-			nodes.front()->recursiveEnvoke([](FractalNode* f){f->divisionLevel=DivisionLevel::FRUSTUM_CULLED;});
-			nodes.front()->pruneGrandchildren();
-			tiles--;
-		}
-		nodes.pop();
-	}
-
-	while(!usedNodes.empty())
-	{
-		auto node = usedNodes.front();
-		auto checkNeighbor = [node](unsigned int neighbor, unsigned int child1, unsigned int child2)->bool{
-			shared_ptr<FractalNode> n = node->neighbors[neighbor].lock();
-			if(n && n->divisionLevel == DivisionLevel::SUBDIVIDED)
-			{
-				auto c1 = n->children[child1];
-				auto c2 = n->children[child2];
-				return (c1 && c1->divisionLevel == DivisionLevel::SUBDIVIDED) ||
-					(c2 && c2->divisionLevel == DivisionLevel::SUBDIVIDED);
-			}
-			return false;
-		};
-
-		FractalNode* ptr;
-		if(checkNeighbor(0, 1, 3) || checkNeighbor(1, 0, 2) || checkNeighbor(2, 2, 3) || checkNeighbor(3, 0, 1))
-		{
-			node->divisionLevel = DivisionLevel::SUBDIVIDED;
-			if(!node->children[0])
-			{
-				divisions++;
-				node->subdivide();
-			}
-		
-			tiles--;
-			for(auto& c : node->children)
-			{
-				if(view->boundingBoxInFrustum(c->worldBounds))
-				{
-					tiles++;
-					c->divisionLevel = DivisionLevel::LEVEL_USED;
-					usedNodes.push(c.get());
-				}
-				else
-				{
-					c->divisionLevel = DivisionLevel::FRUSTUM_CULLED;
-					c->pruneGrandchildren();
-				}
-			}
-		}
-		else
-		{
-			node->pruneGrandchildren();
-		}
-
-		usedNodes.pop();
-	}
-
-
-//	cout << tiles << " (" << ((totalNodes * 257 * 257 * 8) >> 20) << " MiB)" << endl;
-
-	Profiler.setOutput("tiles", lexical_cast<string>(tiles) + "/" + lexical_cast<string>(totalNodes));
-
-	return divisions;
 }
 float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
 {
@@ -695,6 +547,10 @@ void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 }
 void Terrain::FractalNode::initialize()
 {
+	unassignedTextureIndices.clear();
+	for(unsigned int i = 0u; i < maxNodes; i++)
+		unassignedTextureIndices.push_back(i);
+
 	int numHeights=0;
 	unique_ptr<float[]> heightMap(new float[tileResolution*tileResolution*2]);
 	for(int x = 0; x < tileResolution; x++)
@@ -829,6 +685,7 @@ void Terrain::FractalNode::cleanUp()
 	vertexBuffer.reset();
 	subdivideTexture.reset();
 	queryTexture.reset();
+	unassignedTextureIndices.clear();
 	for(auto i : indexBuffers)
 		i.reset();
 }
@@ -1514,8 +1371,6 @@ void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in tr
 					{
 						if(random<float>() < placementOdds)
 						{
-							//position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (/*random<float>* /(0.5*std::sin(10.0*x*sLength+h+11.0*y*sLength+k)+0.5)*(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
-							//position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (/*random<float>* /(0.5*std::cos(10.0*x*sLength+h+11.0*y*sLength+k)+0.5)*(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
 							position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (random<float>(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
 							position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (random<float>(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
 
@@ -1923,7 +1778,7 @@ void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 		{
 			for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
 			{
-				//if(i->renderType == foliagePatch::RENDER_BILLBAORD /*|| i->renderType == foliagePatch::RENDER_MODEL* /)
+				//if(i->renderType == foliagePatch::RENDER_BILLBAORD)
 				if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
 				{
 					i->plantIndexBuffer->bindBuffer();
@@ -1955,7 +1810,7 @@ void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 			{
 				for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
 				{
-					//if(i->renderType == foliagePatch::RENDER_BILLBAORD /*|| i->renderType == foliagePatch::RENDER_MODEL* /)
+					//if(i->renderType == foliagePatch::RENDER_BILLBAORD)
 					if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
 					{
 						i->plantIndexBuffer->bindBuffer();
@@ -2009,7 +1864,7 @@ void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	//	{
 	//		if(view->camera().eye.distanceSquared(p->location) < 200.0*200.0)
 	//		{
-	//				tree3DShader->setUniform1f("transparency", 1.0/*clamp((200.0 - view->camera().eye.distance(p->location))*0.2, 0.0, 1.0)* /);
+	//				tree3DShader->setUniform1f("transparency", 1.0/-*clamp((200.0 - view->camera().eye.distance(p->location))*0.2, 0.0, 1.0)* /);
 	//				tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
 	//				leavesMesh->materials.front().indexBuffer->drawBuffer();
 	//		}
@@ -2057,7 +1912,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 
 //	skyTexture = static_pointer_cast<GraphicsManager::textureCube>(dataManager.getTexture("skybox"));
 
-
+	
 	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap));
 
 	//////////////////
@@ -2152,6 +2007,110 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 	waterIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
 	waterIBO->setData(indices.get(), GraphicsManager::TRIANGLES, 3*(2*numRings-1)*vertsPerRing);
 
+}
+unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
+{
+	if(!view->boundingBoxInFrustum(fractalTerrain->worldBounds)){
+		fractalTerrain->recursiveEnvoke([](FractalNode* f){f->divisionLevel=FractalNode::FRUSTUM_CULLED;});
+		return 0u;
+	}
+
+	unsigned int tiles = 1;
+	unsigned int divisions = 0;
+	std::queue<FractalNode*> nodes;
+	std::vector<FractalNode*> inactiveNodes;
+	nodes.push(fractalTerrain.get());
+	fractalTerrain->recursiveEnvoke([](FractalNode* f){f->divisionLevel=FractalNode::COMBINED;});
+	fractalTerrain->recursiveEnvoke([&inactiveNodes](FractalNode* f){if(f->children[0])inactiveNodes.push_back(f);});
+
+	std::sort(inactiveNodes.begin(), inactiveNodes.end(), [](FractalNode* a, FractalNode* b){
+			if(a->lastUseFrame != b->lastUseFrame)
+				return a->lastUseFrame < b->lastUseFrame;
+
+			if(a->level != b->level)
+				return a->level > b->level;
+
+			std::less<FractalNode*> l;
+			return l(a, b);
+	});
+
+	while(!nodes.empty())
+	{
+		auto n = nodes.front();
+		nodes.pop();
+
+		Vec3f eye = view->camera().eye;
+		float hMinDistance = 0.5*n->sideLength + n->minDistance;
+		
+		//list of nodes that must subdivide if n does
+		vector<FractalNode*> dependents;
+
+		//TODO: fill dependent by recursively adding depn
+
+		//remove old nodes to make room for new ones
+		auto lru = inactiveNodes.begin();		
+		while(FractalNode::unassignedTextureIndices.size() < 4+4*dependents.size() && 
+			  divisions+dependents.size() < maxDivisions && 
+			  lru != inactiveNodes.end())
+		{
+			if(find(dependents.begin(), dependents.end (), *lru) != dependents.end() || *lru == n)
+			{
+				++lru; //don't delete nodes that we will need this frame
+			}
+			else
+			{
+				(*lru)->pruneChildren();
+				lru = inactiveNodes.erase(lru);
+			}
+		}
+
+		if(eye.x > n->worldCenter.x - hMinDistance && 
+		   eye.x < n->worldCenter.x + hMinDistance &&
+		   eye.y < n->maxHeight + n->minDistance && 
+		   eye.y > n->minHeight - n->minDistance &&
+		   eye.z > n->worldCenter.z - hMinDistance && 
+		   eye.z < n->worldCenter.z + hMinDistance &&
+		   n->sideLength / (FractalNode::tileResolution-1) > 15.0 &&
+		   n->maxHeight > -2.0f && 
+		   (n->children[0] || (divisions < maxDivisions && 
+		    FractalNode::unassignedTextureIndices.size() >= 4+4*dependents.size())))
+		{
+			n->divisionLevel = FractalNode::SUBDIVIDED;
+			if(!n->children[0])
+			{
+				divisions++;
+				n->subdivide();
+			}
+		
+			tiles--;
+			auto iNode = find(inactiveNodes.begin(), inactiveNodes.end(), n);
+			if(iNode != inactiveNodes.end())
+				inactiveNodes.erase(iNode);
+
+			for(auto& c : n->children)
+			{
+				if(view->boundingBoxInFrustum(n->worldBounds))
+				{
+					tiles++;
+					nodes.push(c.get());
+				}
+				else
+				{
+					c->recursiveEnvoke([](FractalNode* f){f->divisionLevel=FractalNode::FRUSTUM_CULLED;});
+				}
+			}
+		}
+		else
+		{
+			n->recursiveEnvoke([](FractalNode* f){f->divisionLevel=FractalNode::COMBINED;});
+			n->divisionLevel = FractalNode::LEVEL_USED;
+		}
+	}
+
+	Profiler.setOutput("tiles", lexical_cast<string>(tiles) + "/" + lexical_cast<string>(FractalNode::totalNodes));
+	Profiler.setOutput("indexList", lexical_cast<string>(FractalNode::unassignedTextureIndices.size()) + "/" + lexical_cast<string>(FractalNode::maxNodes));
+
+	return divisions;
 }
 void Terrain::generateSky(Vec3f sunDirection)
 {
@@ -2613,8 +2572,7 @@ void Terrain::terrainFrameUpdate(double cTime)
 	shader->setUniform1fv("frequencies", waves.size(), (float*)waves.frequencies);
 	shader->setUniform1fv("waveSpeeds", waves.size(), (float*)waves.speeds);
 	shader->setUniform2fv("waveDirections", waves.size(), (Vec2f*)waves.directions);
-	float p = 1.0 - 1.0 / waveTextureResolution;
-	float t = 0.5 / waveTextureResolution;
+
 	graphics->drawPartialOverlay(Rect::XYXY(-1, -1, 1, 1), 
 								 Rect::XYWH(0, 0, 1, 1),
 								 "wave lookup");
@@ -2662,7 +2620,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	}*/
 
 
-	fractalTerrain->computeSubdivision(view, 5);
+	computeFractalSubdivision(view, 5);
 
 //	graphics->setWireFrame(true);
 	renderFractalTerrain(view);
@@ -2699,7 +2657,6 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 
 	auto shader = shaders.bind("fractal terrain");
 //		auto texture = clipMap->layers[clipMapLayer].texture;
-	Vec2f tScale = Vec2f(1,1);//Vec2f(1,1) / (1 << level) * (1 >> clipMapLayer);
 	Vec2f tOrigin = Vec2f(0,0);//Vec2f(coordinates.x, coordinates.y) / (1 << level) * (1 >> clipMapLayer);
 
 	shader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());

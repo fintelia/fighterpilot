@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 PROJECT(FighterPilot CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++11 -Wall -O0 -g") #Debug:"-O0 -g"  Release:"-02"
+SET(CMAKE_CXX_FLAGS "-std=c++1y -Wall -O0 -g") #Debug:"-O0 -g"  Release:"-02"
 
 add_definitions(-D_DEBUG)
 

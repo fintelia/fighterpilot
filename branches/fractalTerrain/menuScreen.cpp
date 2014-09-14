@@ -1359,7 +1359,7 @@ void closingMessage(string text,string title)
 	{
 		gui::messageBox_c* m = new gui::messageBox_c;
 		m->initialize(text);
-		m->callback = std::bind(exit, 0);
+		m->callback = [](gui::popup*){std::exit(0);};
 		menuManager.setPopup(m);
 	}
 }
