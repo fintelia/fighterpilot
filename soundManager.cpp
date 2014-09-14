@@ -7,6 +7,16 @@
 #endif
 
 #if defined(WINDOWS)
+struct SoundManager::SoundInterface{
+	void* dsDevice; //IDirectSound8*
+	void* dsPrimaryBuffer; //IDirectSoundBuffer*	
+};
+SoundManager(): interface(new SoundInterface)
+{
+	interface->dsDevice = nullptr;
+	interface->dsPrimaryBuffer = nullptr;
+}
+
 bool SoundManager::initialize()
 {
 	if(FAILED(DirectSoundCreate8(NULL, (IDirectSound8**)&dsDevice, NULL)))
@@ -52,7 +62,13 @@ SoundManager::~SoundManager()
 		IDirectSound_Release((IDirectSound8*)dsDevice); 
 	}
 }
+
 #elif defined(LINUX)
+struct SoundManager::SoundInterface{};
+SoundManager::SoundManager(): interface(new SoundInterface)
+{
+
+}
 bool SoundManager::initialize()
 {
 	//code not written...
@@ -73,6 +89,7 @@ void SoundManager::loadSound(string name, string filename, bool loop)
 	auto nSound = std::make_shared<sound>();
 	nSound->filename = filename;
 	nSound->loop = loop;
+	nSound->dsSecondaryBuffer = nullptr;
 	sounds[name] = nSound;
 }
 shared_ptr<SoundManager::soundInstance> SoundManager::newSoundInstance()

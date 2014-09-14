@@ -25,10 +25,10 @@ private:
 	map<string, shared_ptr<sound>> sounds;
 	map<string, weak_ptr<soundInstance>> soundInstances;
 
-	void* dsDevice; //IDirectSound8*
-	void* dsPrimaryBuffer; //IDirectSoundBuffer*
+	struct SoundInterface;
+	unique_ptr<SoundInterface> interface;
 
-	SoundManager(): dsDevice(nullptr){}
+	SoundManager();
 public:
 	static SoundManager& getInstance()
 	{
@@ -45,5 +45,4 @@ public:
 };
 
 typedef shared_ptr<SoundManager::soundInstance> soundInstancePtr;
-
 extern SoundManager& soundManager;

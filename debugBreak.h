@@ -38,7 +38,14 @@ extern void minimizeActiveWindow();
 
 #else /* _MSC_VER */
 
-#define debugBreak() {}
-#define debugAssert(a) {}
+	#define debugBreak(){				\
+		__asm__("int3");				\
+	}
+	#define debugAssert(a){				\
+		if(!(a))						\
+		{								\
+			__asm__("int3");			\
+		}								\
+	}
 
 #endif /* _MSC_VER */

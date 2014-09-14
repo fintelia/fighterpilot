@@ -1886,7 +1886,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	color3D->setUniform4f("color", 0.0, 0.0, 0.0, 1.0);
 	for(auto i = checkLine.begin(); i != checkLine.end() &&  i+1 != checkLine.end(); i++)
 	{
-		if(renderLine=!renderLine)
+		if(renderLine == !renderLine)
 		{
 			A = Vec3f((i->x)*xMult,		getHeight(i->x, i->y)-levelFile.info.minHeight+1,		(i->y)*yMult);	
 			B = Vec3f(((i+1)->x)*xMult,	getHeight((i+1)->x, (i+1)->y)-levelFile.info.minHeight+1,	((i+1)->y)*yMult);

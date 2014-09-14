@@ -724,7 +724,6 @@ void lightbox::updateFrame()
 
 	//set camera position
 	shared_ptr<plane> p=players[0]->getObject();
-	auto camera = players[0]->getCamera(p->controled || p->dead);
 	view->lookAt(eye, eye + fwd, Vec3f(0,1,0));
 	if(level->info.night)
 	{

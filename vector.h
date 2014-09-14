@@ -91,7 +91,7 @@ public:
 	}
 	bool equal(const Vector2<T>& v, T maxDifference) const
 	{
-		static_assert(!std::is_integral<T>::value);
+		static_assert(!std::is_integral<T>::value, "This version requires elements to be floating point");
 		return (::abs(x-v.x) <= maxDifference && ::abs(y-v.y) <= maxDifference);
 	}
 	T distance(const Vector2& v) const

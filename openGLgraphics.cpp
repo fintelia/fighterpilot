@@ -1478,7 +1478,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderingToTexture(false),blurTexture(0),blurTexture2(0),renderTarget(RT_SCREEN),currentViewport(0,0,sw,sh),multisampling(false),samples(0),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
+OpenGLgraphics::OpenGLgraphics():renderTarget(RT_SCREEN),renderingToTexture(false),currentViewport(0,0,sw,sh),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
 {
 	vSync = false;
 #ifdef _DEBUG
@@ -3206,7 +3206,7 @@ void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 				lexical_cast<string>(sTime.wMinute) + "-" + lexical_cast<string>(sTime.wSecond) + "-" +
 				lexical_cast<string>(sTime.wMilliseconds) + ".bmp";
 #else
-	string filename = "screen shots/FighterPilot"s + lexical_cast<string>((unsigned int)GetTime()) + ".bmp"s;
+	string filename = string("screen shots/FighterPilot") + lexical_cast<string>((unsigned int)GetTime()) + ".bmp";
 #endif
 
 	fileManager.createDirectory("screen shots");

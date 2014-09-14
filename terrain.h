@@ -30,7 +30,12 @@ public:
 			unique_ptr<float[]> heights;
 			shared_ptr<GraphicsManager::texture2D> texture;
 
+
+#ifdef VISUAL_STUDIO //since we don't have full C++11 support
 			Layer(const Layer&)/*=delete*/;
+#else
+			Layer(const Layer&)=delete;
+#endif
 			Layer(Layer&& layer);
 
 		public:
@@ -56,22 +61,24 @@ private:
 	class FractalNode
 	{
 	public:
-		static unsigned int frameNumber;
 		static const unsigned int tileResolution;
 		static const unsigned int textureResolution;
+		class no_indices_remaining{};
+
 	private:
+		friend class Terrain;
+		static unsigned int maxNodes;
 		static unsigned int totalNodes;
+		static unsigned int frameNumber;
 		static shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
 		static std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> indexBuffers;
 		static shared_ptr<GraphicsManager::texture2D> subdivideTexture;
 		static shared_ptr<GraphicsManager::texture2D> queryTexture;
+		static vector<unsigned int> unassignedTextureIndices;
 
 		enum Directions{LEFT=1, RIGHT=2, TOP=4, BOTTOM=8};
 		enum DivisionLevel{FRUSTUM_CULLED, SUBDIVIDED, LEVEL_USED, COMBINED};
-		//enum TileType{LAND, SHORE, OCEAN};
 		DivisionLevel divisionLevel;
-
-		//TileType tileType;
 
 		unsigned int level; //0 = top level node, 1+ = subdivided
 		Vec2i coordinates; //from `0` to `2^level-1`
@@ -79,10 +86,7 @@ private:
 		float minHeight;
 		float maxHeight;
 
-		//the minimum distance to camera for which this level is
-		//allowed to be used
 		float minDistance;
-		//float maxError;
 		//BoundingBox<float> bounds;
 		Vec2f origin; //center in XZ plane
 
@@ -95,8 +99,18 @@ private:
 		unsigned int lastUseFrame;
 
 		FractalNode* parent;
-		std::array<weak_ptr<FractalNode>,4> neighbors; // = {L, R, T, B}
-		std::array<shared_ptr<FractalNode>,4> children; // = {TL, TR, BL, BR}
+
+		/**
+		 *  ordering: {Left, Right, Top, Bottom}
+		 */
+		std::array<weak_ptr<FractalNode>,4> neighbors;
+
+		/**
+		 * Invariant: either all children must be valid, or none are
+		 *
+		 * ordering: {Top Left, Top Right, Bottom Left, Bottom Right}
+		 */
+		std::array<shared_ptr<FractalNode>,4> children;
 
 		shared_ptr<GraphicsManager::texture2D> texture;
 		shared_ptr<GraphicsManager::texture2D> treeTexture;
@@ -107,6 +121,8 @@ private:
 		unsigned int clipMapLayer;
 		Vec2f clipMapOrigin;
 		float clipMapStep;
+
+		unsigned int textureArrayIndex;
 		
 		void recursiveEnvoke(std::function<void(FractalNode*)> func);
 		void reverseRecursiveEnvoke(std::function<void(FractalNode*)> func);
@@ -116,8 +132,16 @@ private:
 		void generateTrees();
 		void generateTreeTexture();
 		void generateTreeDensityTexture();
-		void pruneGrandchildren();
+		void pruneChildren();
 		float getHeight(unsigned int x, unsigned int z) const;
+
+#ifdef VISUAL_STUDIO //since we don't have full C++11 support
+		FractalNode(const FractalNode&)/*=delete*/;
+		void operator=(const FractalNode&)/*=delete*/;
+#else
+		FractalNode(const FractalNode&)=delete;
+		void operator=(const FractalNode&)=delete;
+#endif
 
 	public:
 		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates, shared_ptr<ClipMap> clipMap);
@@ -125,9 +149,6 @@ private:
 		void render(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader);
 		void renderTrees(shared_ptr<GraphicsManager::View> view);
 		float getWorldHeight(Vec2f worldPos) const;
-
-		unsigned int computeSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions);
-
 		static void initialize();
 		static void cleanUp();
 	};
@@ -177,6 +198,8 @@ private:
 	void resetTerrain();
 	void generateSky(Vec3f sunDirection);
 	void generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr);
+
+	unsigned int computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const;
 
 	void renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const;
 	void renderFractalWater(shared_ptr<GraphicsManager::View> view) const;
