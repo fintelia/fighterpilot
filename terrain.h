@@ -58,6 +58,34 @@ public:
 	};
 
 private:
+    struct TerrainData {
+        struct vertex
+        {
+            float x, y, z;
+            float u, v;
+            float slopeX;
+            float slopeY;
+            float curvature;
+        };
+
+        /** space taken by each tile in the vertex buffer */
+        const unsigned int vertexStep;
+        /** number of vertices to render for each tile */
+        const unsigned int verticesPerTile;
+
+        /** positions of each segment in the index buffer */
+        vector<unsigned int> segmentOffsets;
+        /** size of each segment in the index buffer */
+        vector<unsigned int> segmentSizes;
+
+        shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
+		shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
+        shared_ptr<GraphicsManager::multiDraw> multiDraw;
+        IndexPool nodeIndices;
+        
+        TerrainData(unsigned int totalIndices, unsigned int tileResolution);
+    } mutable terrainData;
+
 	class FractalNode
 	{
 	public:
@@ -67,14 +95,14 @@ private:
 
 	private:
 		friend class Terrain;
-		static unsigned int maxNodes;
+		//static unsigned int maxNodes;
 		static unsigned int totalNodes;
 		static unsigned int frameNumber;
-		static shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
-		static std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> indexBuffers;
-		static shared_ptr<GraphicsManager::texture2D> subdivideTexture;
-		static shared_ptr<GraphicsManager::texture2D> queryTexture;
-		static vector<unsigned int> unassignedTextureIndices;
+		//static shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
+		//static std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> indexBuffers;
+		//static shared_ptr<GraphicsManager::texture2D> subdivideTexture;
+		//static shared_ptr<GraphicsManager::texture2D> queryTexture;
+		//static vector<unsigned int> unassignedTextureIndices;
 
 		enum Directions{LEFT=1, RIGHT=2, TOP=4, BOTTOM=8};
 		enum DivisionLevel{FRUSTUM_CULLED, SUBDIVIDED, LEVEL_USED, COMBINED};
@@ -122,13 +150,13 @@ private:
 		Vec2f clipMapOrigin;
 		float clipMapStep;
 
-		unsigned int textureArrayIndex;
+        IndexPool::IndexPtr index;
 		
 		void recursiveEnvoke(std::function<void(FractalNode*)> func);
 		void reverseRecursiveEnvoke(std::function<void(FractalNode*)> func);
 		
 		void computeError();
-		void subdivide();
+		void subdivide(TerrainData& terrainData);
 		void generateTrees();
 		void generateTreeTexture();
 		void generateTreeDensityTexture();
@@ -144,13 +172,10 @@ private:
 #endif
 
 	public:
-		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates, shared_ptr<ClipMap> clipMap);
+		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates, shared_ptr<ClipMap> clipMap, TerrainData& terrainData);
 		~FractalNode();
-		void render(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader);
 		void renderTrees(shared_ptr<GraphicsManager::View> view);
 		float getWorldHeight(Vec2f worldPos) const;
-		static void initialize();
-		static void cleanUp();
 	};
 
 	template<unsigned int N>
@@ -209,7 +234,6 @@ protected:
 
 public:
 	Terrain(shared_ptr<ClipMap> clipMap);
-	virtual ~Terrain();
 
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;

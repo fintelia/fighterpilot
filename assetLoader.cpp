@@ -376,6 +376,7 @@ int AssetLoader::loadAsset()
 	{
 		////////////////////set file////////////////////////
 		file = (isPreload = !assetFilesPreload.empty()) ? assetFilesPreload.front() : assetFiles.front();
+//        cout << file->name << endl;
 		////////////////////////////////////////////////////
 		if(file->getType() == assetFile::TEXTURE)
 		{
@@ -512,7 +513,7 @@ int AssetLoader::loadAsset()
 			}
 			else
 			{
-				shaders.add(shaderAsset->name, shader, false);
+                shaders.add(shaderAsset->name, shader, false);
 			}
 
 			pop(isPreload);

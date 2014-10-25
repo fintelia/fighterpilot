@@ -247,7 +247,7 @@ bool GameTime::needsUpdate() const
 }
 double GameTime::interpolate() const
 {
-	double i = 1.0 - (cUpdateTime - cGame) / (cUpdateTime - lUpdateTime);
+	double i = 1.0 - (cUpdateTime - cGame) / (cUpdateTime - lUpdateTime + 0.e-6);
 	if(i >= 0.0 && i <= 1.0)
 		return i;
 	else if(i > 1.0)

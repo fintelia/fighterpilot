@@ -78,13 +78,13 @@ private:
 
 	vector<objectType> placeableObjects;
 	map<objectType,shared_ptr<objectData>> objectMap;
-	ObjectInfo(){}
 public:
-	static ObjectInfo& getInstance()
+	ObjectInfo(){}
+/*	static ObjectInfo& getInstance()
 	{
 		static ObjectInfo* pInstance = new ObjectInfo();
 		return *pInstance;
-	}
+        }*/
 	bool loadObjectData(string filename="media/objectData.xml");
 	void linkObjectMeshes();
 	objectType typeFromString(string s);
@@ -97,4 +97,4 @@ public:
 	const vector<objectType>& getPlaceableObjects(){return placeableObjects;}
 };
 
-extern ObjectInfo& objectInfo;
+extern ObjectInfo objectInfo;

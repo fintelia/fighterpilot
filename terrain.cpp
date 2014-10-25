@@ -3,14 +3,8 @@
 
 const unsigned int Terrain::FractalNode::tileResolution = 17;
 const unsigned int Terrain::FractalNode::textureResolution = 257;
-unsigned int Terrain::FractalNode::maxNodes = 256;
 unsigned int Terrain::FractalNode::totalNodes = 0;
 unsigned int Terrain::FractalNode::frameNumber = 0;
-shared_ptr<GraphicsManager::vertexBuffer> Terrain::FractalNode::vertexBuffer;
-std::array<shared_ptr<GraphicsManager::indexBuffer>, 16> Terrain::FractalNode::indexBuffers;
-shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::subdivideTexture;
-shared_ptr<GraphicsManager::texture2D> Terrain::FractalNode::queryTexture;
-vector<unsigned int> Terrain::FractalNode::unassignedTextureIndices;
 
 const unsigned int Terrain::waveTextureResolution = 512;
 const float Terrain::waveTextureScale = 1024.0;
@@ -67,12 +61,146 @@ void Terrain::ClipMap::addLayer(unique_ptr<float[]> heights)
 						   GraphicsManager::texture::RGBA16, false, false,
 						   (unsigned char*)groundValues.get());
 }
+Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexStep(tileResolution*tileResolution*sizeof(vertex)), verticesPerTile(6*(tileResolution-1)*(tileResolution-1)),nodeIndices(totalIndices)
+{
+    unsigned int n = 0;
+    vector<vertex> heights(tileResolution*tileResolution*totalIndices);
+    for(int i = 0; i < totalIndices; i++)
+    {
+        for(int x = 0; x < tileResolution; x++)
+        {
+            for(int z = 0; z < tileResolution; z++)
+            {
+                heights[n].x = x * 1000.0;
+                heights[n].y = 50.0;
+                heights[n].z = z * 1000.0;
+                heights[n].slopeX = 0;
+                heights[n].slopeY = 0;
+                heights[n].curvature = 0;
+                n++;
+            }
+        }
+    }
+    vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	vertexBuffer->setTotalVertexSize(sizeof(vertex));
+	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
+	vertexBuffer->setVertexData(vertexStep * totalIndices, heights.data());
 
+    unsigned int i=0;
+	const unsigned int numIndices = (tileResolution-1)*(tileResolution-1)*6;
+	unique_ptr<uint32_t[]> indices((new uint32_t[numIndices * 16]));
+	for(int eFlag=0; eFlag<16; eFlag++)
+	{
+        unsigned int segmentStartIndex = i;
+		for(int y=0; y < tileResolution-1; y++)
+		{
+			for(int x = 0; x < tileResolution-1; x++)
+			{
+				if((eFlag & 4) && x == 0 && (y%2 == 0))
+				{
+					if(!((eFlag & 8) && y == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = (x+1)		+	(y+1)*tileResolution;
+					indices[i++] = x			+	(y+2)*tileResolution;
+
+					if(!((eFlag & 2) && y == tileResolution-2))
+					{
+						indices[i++] = x		+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+				}
+				if((eFlag & 8) && y == 0 && (x%2 == 0))
+				{
+					if(!((eFlag & 4) && x == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+					}
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = (x+1)		+	(y+1)*tileResolution;
+					indices[i++] = (x+2)		+	y*tileResolution;
+
+					if(!((eFlag & 1) && x == tileResolution-2))
+					{
+						indices[i++] = (x+2)	+	y*tileResolution;
+						indices[i++] = (x+1)	+	(y+1)*tileResolution;
+						indices[i++] = (x+2)	+	(y+1)*tileResolution;
+					}
+				}
+				if((eFlag & 1) && x == tileResolution-2 && (y%2 == 0))
+				{
+					if(!((eFlag & 8) && y == 0)) //XXX
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+					}
+					indices[i++] = (x+1)		+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	(y+2)*tileResolution;
+
+					if(!((eFlag & 2) && y == tileResolution-2))
+					{
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = x		+	(y+2)*tileResolution;
+						indices[i++] = (x+1)	+	(y+2)*tileResolution;
+					}
+				}
+				if((eFlag & 2) && y == tileResolution-2 && (x%2 == 0))
+				{
+					if(!((eFlag & 4) && x == 0))
+					{
+						indices[i++] = x		+	y*tileResolution;
+						indices[i++] = x		+	(y+1)*tileResolution;
+						indices[i++] = (x+1)	+	y*tileResolution;
+					}
+
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+2)		+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	y*tileResolution;
+
+					if(!((eFlag & 1) && x == tileResolution-2))
+					{
+						indices[i++] = (x+1)	+	y*tileResolution;
+						indices[i++] = (x+2)	+	(y+1)*tileResolution;
+						indices[i++] = (x+2)	+	y*tileResolution;
+					}
+				}
+
+				//default case
+				if(!((eFlag & 4) && x == 0) && !((eFlag & 8) && y == 0) && !((eFlag & 1) && x == tileResolution-2) && !((eFlag & 2) && y == tileResolution-2))
+				{
+					indices[i++] = x			+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = (x+1)		+	y*tileResolution;
+
+					indices[i++] = (x+1)		+	y*tileResolution;
+					indices[i++] = x			+	(y+1)*tileResolution;
+					indices[i++] = x+1			+	(y+1)*tileResolution;
+				}
+			}
+		}
+        segmentOffsets.push_back(segmentStartIndex * 4);
+        segmentSizes.push_back((i - segmentStartIndex) * 4);
+	}
+    indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+    indexBuffer->setData(indices.get(),/*graphics->hasShaderModel5() ? GraphicsManager::PATCHES : */GraphicsManager::TRIANGLES, i);
+
+    multiDraw = graphics->genMultiDraw(vertexBuffer, indexBuffer);
+}
 void Terrain::FractalNode::recursiveEnvoke(std::function<void(FractalNode*)> func)
 {
 	func(this);
 	for(auto& c : children)
-	    {
+	{
 		if(c)
 		{
 			c->recursiveEnvoke(func);
@@ -89,26 +217,17 @@ void Terrain::FractalNode::reverseRecursiveEnvoke(std::function<void(FractalNode
 }
 Terrain::FractalNode::~FractalNode()
 {
-	unassignedTextureIndices.push_back(textureArrayIndex);
 	totalNodes--;
 }
 Terrain::FractalNode::FractalNode(FractalNode* parent_, 
 								  unsigned int level_, 
 								  Vec2i coordinates_, 
-								  shared_ptr<ClipMap> clipMap_): 
-	divisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_)
+								  shared_ptr<ClipMap> clipMap_,
+                                  TerrainData& terrainData): 
+	divisionLevel(DivisionLevel::COMBINED), level(level_), coordinates(coordinates_), parent(parent_), clipMap(clipMap_), index(terrainData.nodeIndices.nextIndex())
 {
-	if(unassignedTextureIndices.empty())
-		throw no_indices_remaining();
-
 	totalNodes++;
-	textureArrayIndex = unassignedTextureIndices.back();
-	unassignedTextureIndices.pop_back();
-	lastUseFrame = frameNumber;
-
-	Profiler.setOutput("totalNodes/assigned", lexical_cast<string>(totalNodes) + " " + lexical_cast<string>(maxNodes - unassignedTextureIndices.size()));
-
-
+    lastUseFrame = frameNumber;
 
 	if(level <= 1)
 	{
@@ -167,6 +286,16 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 
 		}
 	}
+
+	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
+				   (coordinates.y - 0.5*(1<<level))*sideLength);
+
+	worldCenter = Vec3f(origin.x+0.5*sideLength,
+						0.5*(maxHeight-minHeight),
+						origin.y+0.5*sideLength);
+
+	worldBounds.minXYZ = Vec3f(origin.x, minHeight, origin.y);
+	worldBounds.maxXYZ = Vec3f(origin.x+sideLength, maxHeight, origin.y+sideLength);
 	
 	//minHeight = clipMap->layers[clipMapLayer].minHeight;
 	//maxHeight = clipMap->layers[clipMapLayer].maxHeight;
@@ -174,7 +303,7 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	texture = graphics->genTexture2D();
 	texture->setData(textureResolution, textureResolution, GraphicsManager::texture::Format::RGBA16, false, false, nullptr);
 
-	if(!parent/* || clipMapStep*(layerResolution-1)+1 >= textureResolution*/)
+	/*if(!parent/ * || clipMapStep*(layerResolution-1)+1 >= textureResolution* /)
 	{
 		float p = 1.0 - 1.0 / textureResolution;
 		float t = 0.5 / clipMap->layers[clipMapLayer].texture->getWidth();
@@ -215,17 +344,32 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 		graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 		graphics->endRenderToTexture();
 		texture->generateMipmaps();
-	}
+	}*/
 
-	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
-				   (coordinates.y - 0.5*(1<<level))*sideLength);
+////////////
+    unsigned int n = 0;
+    vector<TerrainData::vertex> tileHeights(tileResolution*tileResolution);
+    for(int x = 0; x < tileResolution; x++)
+    {
+        for(int z = 0; z < tileResolution; z++)
+        {
+            tileHeights[n].x = worldBounds.minXYZ.x + sideLength * x
+                / tileResolution;
+            tileHeights[n].z = worldBounds.minXYZ.z + sideLength * z
+                / tileResolution;
+            tileHeights[n].y = 10.0;//worldBounds.minXYZ.y;
+            tileHeights[n].slopeX = 0;
+            tileHeights[n].slopeY = 0;
+            tileHeights[n].curvature = 0;
+            n++;
+        }
+    }
 
-	worldCenter = Vec3f(origin.x+0.5*sideLength,
-						0.5*(maxHeight-minHeight),
-						origin.y+0.5*sideLength);
+    terrainData.vertexBuffer->setVertexDataRange((*index)*terrainData.vertexStep,
+                                                 terrainData.vertexStep, 
+                                                 tileHeights.data());
 
-	worldBounds.minXYZ = Vec3f(origin.x, minHeight, origin.y);
-	worldBounds.maxXYZ = Vec3f(origin.x+sideLength, maxHeight, origin.y+sideLength);
+////////////
 
 	computeError();
 	
@@ -425,21 +569,38 @@ void Terrain::FractalNode::generateTreeDensityTexture()
  *
  * Postcondition: all children are initialized and have valid neighbors fields
  */
-void Terrain::FractalNode::subdivide()
+void Terrain::FractalNode::subdivide(TerrainData& terrainData)
 {
-	if(unassignedTextureIndices.size() < 4){
-		debugBreak();
-		return; //no space for more nodes...
-	}
+    if(terrainData.nodeIndices.indicesRemaining() < 4)
+    {
+        throw no_indices_remaining();
+    }
 
 	if(!children[0])
-		children[0] = std::make_shared<FractalNode>(this, level+1, coordinates*2, clipMap);
-	if(!children[1])
-		children[1] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(1,0), clipMap);
-	if(!children[2])
-		children[2] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(0,1), clipMap);
-	if(!children[3])
-		children[3] = std::make_shared<FractalNode>(this, level+1, coordinates*2 + Vec2i(1,1), clipMap);
+    {
+        debugAssert(!children[1]);
+        debugAssert(!children[2]);
+        debugAssert(!children[3]);
+
+		children[0] = std::make_shared<FractalNode>(this, level+1, 
+                                                    coordinates*2,
+                                                    clipMap, terrainData);
+        children[1] = std::make_shared<FractalNode>(this, level+1,
+                                                    coordinates*2 + Vec2i(1,0),
+                                                    clipMap, terrainData);       
+		children[2] = std::make_shared<FractalNode>(this, level+1, 
+                                                    coordinates*2 + Vec2i(0,1), 
+                                                    clipMap, terrainData);       
+		children[3] = std::make_shared<FractalNode>(this, level+1, 
+                                                    coordinates*2 + Vec2i(1,1), 
+                                                    clipMap, terrainData);       
+    }
+    else
+    {
+        debugAssert(children[1]);
+        debugAssert(children[2]);
+        debugAssert(children[3]);
+    }
 
 	//child 0
 	if(!neighbors[0].expired()) children[0]->neighbors[0] = neighbors[0].lock()->children[1];
@@ -491,44 +652,43 @@ float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
 	int iz = cz;
 	return clipMap->layers[clipMapLayer].heights[ix + iz*clipMap->layerResolution];
 }
-void Terrain::FractalNode::render(shared_ptr<GraphicsManager::View> view, shared_ptr<GraphicsManager::shader> shader)
-{
-	if(divisionLevel == DivisionLevel::SUBDIVIDED)
-	{
-		lastUseFrame = frameNumber;
-		for(auto& c : children)
-		{
-			c->render(view, shader);
-		}
-	}
-	else if(divisionLevel == DivisionLevel::LEVEL_USED)
-	{
-		lastUseFrame = frameNumber;
-		auto& layer = clipMap->layers[clipMapLayer];
+// void Terrain::FractalNode::render(shared_ptr<GraphicsManager::View> view)
+// {
+// 	if(divisionLevel == DivisionLevel::SUBDIVIDED)
+// 	{
+// 		lastUseFrame = frameNumber;
+// 		for(auto& c : children)
+// 		{
+// 			c->render(view, multiDraw);
+// 		}
+// 	}
+// 	else if(divisionLevel == DivisionLevel::LEVEL_USED)
+// 	{
+// 		lastUseFrame = frameNumber;
+// 		/*auto& layer = clipMap->layers[clipMapLayer];
 
-		float slopeScale = (layer.maxHeight - layer.minHeight) 
-			* ((textureResolution-1) / clipMap->sideLength);
+// 		float slopeScale = (layer.maxHeight - layer.minHeight) 
+// 			* ((textureResolution-1) / clipMap->sideLength);
 
-		shader->setUniform3f("origin", origin.x, layer.minHeight, origin.y);
-		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
-		shader->setUniform1f("slopeScale", slopeScale);
-		texture->bind(0);
-		treeTexture->bind(1);
+// 		shader->setUniform3f("origin", origin.x, layer.minHeight, origin.y);
+// 		shader->setUniform3f("scale", Vec3f(sideLength, layer.maxHeight-layer.minHeight, sideLength)); 
+// 		shader->setUniform1f("slopeScale", slopeScale);
+// 		texture->bind(0);
+// 		treeTexture->bind(1); */
 
-		unsigned int IBO_index = 0;
-		if(neighbors[0].expired() || neighbors[0].lock()->divisionLevel == DivisionLevel::COMBINED)
-			IBO_index |= 8;
-		if(neighbors[1].expired() || neighbors[1].lock()->divisionLevel == DivisionLevel::COMBINED)
-			IBO_index |= 2;
-		if(neighbors[2].expired() || neighbors[2].lock()->divisionLevel == DivisionLevel::COMBINED)
-			IBO_index |= 4;
-		if(neighbors[3].expired() || neighbors[3].lock()->divisionLevel == DivisionLevel::COMBINED)
-			IBO_index |= 1;
+// 		unsigned int IBO_index = 0;
+// 		if(neighbors[0].expired() || neighbors[0].lock()->divisionLevel == DivisionLevel::COMBINED)
+// 			IBO_index |= 8;
+// 		if(neighbors[1].expired() || neighbors[1].lock()->divisionLevel == DivisionLevel::COMBINED)
+// 			IBO_index |= 2;
+// 		if(neighbors[2].expired() || neighbors[2].lock()->divisionLevel == DivisionLevel::COMBINED)
+// 			IBO_index |= 4;
+// 		if(neighbors[3].expired() || neighbors[3].lock()->divisionLevel == DivisionLevel::COMBINED)
+// 			IBO_index |= 1;
 
-		indexBuffers[IBO_index]->bindBuffer(vertexBuffer);
-		indexBuffers[IBO_index]->drawBuffer();
-	}
-}
+// //        multiDraw->addDraw(/*indexOffset*/, /*baseVertex*/, /*count*/);
+// 	}
+// }
 void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 {
 	if((divisionLevel == DivisionLevel::LEVEL_USED || divisionLevel == DivisionLevel::SUBDIVIDED)
@@ -545,150 +705,151 @@ void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 		}
 	}
 }
-void Terrain::FractalNode::initialize()
-{
-	unassignedTextureIndices.clear();
-	for(unsigned int i = 0u; i < maxNodes; i++)
-		unassignedTextureIndices.push_back(i);
+// void Terrain::FractalNode::initialize()
+// {
+// 	unassignedTextureIndices.clear();
+// //	for(unsigned int i = 0u; i < maxNodes; i++)
+// //		unassignedTextureIndices.push_back(i);
 
-	int numHeights=0;
-	unique_ptr<float[]> heightMap(new float[tileResolution*tileResolution*2]);
-	for(int x = 0; x < tileResolution; x++)
-	{
-		for(int y=0; y < tileResolution; y++)
-		{
-			heightMap[numHeights*2 + 0] = (float)x / (tileResolution-1);
-			heightMap[numHeights*2 + 1] = (float)y / (tileResolution-1);
-			numHeights++;
-		}
-	}
+// 	// int numHeights=0;
+// 	// unique_ptr<float[]> heightMap(new float[tileResolution*tileResolution*2]);
+// 	// for(int x = 0; x < tileResolution; x++)
+// 	// {
+// 	// 	for(int y=0; y < tileResolution; y++)
+// 	// 	{
+// 	// 		heightMap[numHeights*2 + 0] = (float)x / (tileResolution-1);
+// 	// 		heightMap[numHeights*2 + 1] = (float)y / (tileResolution-1);
+// 	// 		numHeights++;
+// 	// 	}
+// 	// }
 
-	auto v = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-	vertexBuffer = v;
-	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0*sizeof(float));
-	vertexBuffer->setTotalVertexSize(sizeof(float)*2);
-	vertexBuffer->setVertexData(sizeof(float)*tileResolution*tileResolution*2, heightMap.get());
 
-	const unsigned int numIndices = tileResolution*tileResolution*6;
-	unique_ptr<unsigned int[]> indices((new unsigned int[numIndices]));
-	for(int eFlag=0; eFlag<16; eFlag++)
-	{
-		int i=0;
-		for(int y=0; y < tileResolution-1; y++)
-		{
-			for(int x = 0; x < tileResolution-1; x++)
-			{
-				if((eFlag & 4) && x == 0 && (y%2 == 0))
-				{
-					if(!((eFlag & 8) && y == 0))
-					{
-						indices[i++] = x		+	y*tileResolution;
-						indices[i++] = (x+1)	+	y*tileResolution;
-						indices[i++] = (x+1)	+	(y+1)*tileResolution;
-					}
-					indices[i++] = x			+	y*tileResolution;
-					indices[i++] = (x+1)		+	(y+1)*tileResolution;
-					indices[i++] = x			+	(y+2)*tileResolution;
+// 	// auto v = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+// 	// vertexBuffer = v;
+// 	// vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0*sizeof(float));
+// 	// vertexBuffer->setTotalVertexSize(sizeof(float)*2);
+// 	// vertexBuffer->setVertexData(sizeof(float)*tileResolution*tileResolution*2, heightMap.get());
 
-					if(!((eFlag & 2) && y == tileResolution-2))
-					{
-						indices[i++] = x		+	(y+2)*tileResolution;
-						indices[i++] = (x+1)	+	(y+2)*tileResolution;
-						indices[i++] = (x+1)	+	(y+1)*tileResolution;
-					}
-				}
-				if((eFlag & 8) && y == 0 && (x%2 == 0))
-				{
-					if(!((eFlag & 4) && x == 0))
-					{
-						indices[i++] = x		+	y*tileResolution;
-						indices[i++] = x		+	(y+1)*tileResolution;
-						indices[i++] = (x+1)	+	(y+1)*tileResolution;
-					}
-					indices[i++] = x			+	y*tileResolution;
-					indices[i++] = (x+1)		+	(y+1)*tileResolution;
-					indices[i++] = (x+2)		+	y*tileResolution;
+// 	// const unsigned int numIndices = tileResolution*tileResolution*6;
+// 	// unique_ptr<unsigned int[]> indices((new unsigned int[numIndices]));
+// 	// for(int eFlag=0; eFlag<16; eFlag++)
+// 	// {
+// 	// 	int i=0;
+// 	// 	for(int y=0; y < tileResolution-1; y++)
+// 	// 	{
+// 	// 		for(int x = 0; x < tileResolution-1; x++)
+// 	// 		{
+// 	// 			if((eFlag & 4) && x == 0 && (y%2 == 0))
+// 	// 			{
+// 	// 				if(!((eFlag & 8) && y == 0))
+// 	// 				{
+// 	// 					indices[i++] = x		+	y*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	y*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+1)*tileResolution;
+// 	// 				}
+// 	// 				indices[i++] = x			+	y*tileResolution;
+// 	// 				indices[i++] = (x+1)		+	(y+1)*tileResolution;
+// 	// 				indices[i++] = x			+	(y+2)*tileResolution;
 
-					if(!((eFlag & 1) && x == tileResolution-2))
-					{
-						indices[i++] = (x+2)	+	y*tileResolution;
-						indices[i++] = (x+1)	+	(y+1)*tileResolution;
-						indices[i++] = (x+2)	+	(y+1)*tileResolution;
-					}
-				}
-				if((eFlag & 1) && x == tileResolution-2 && (y%2 == 0))
-				{
-					if(!((eFlag & 8) && y == 0)) //XXX
-					{
-						indices[i++] = x		+	y*tileResolution;
-						indices[i++] = x		+	(y+1)*tileResolution;
-						indices[i++] = (x+1)	+	y*tileResolution;
-					}
-					indices[i++] = (x+1)		+	y*tileResolution;
-					indices[i++] = x			+	(y+1)*tileResolution;
-					indices[i++] = (x+1)		+	(y+2)*tileResolution;
+// 	// 				if(!((eFlag & 2) && y == tileResolution-2))
+// 	// 				{
+// 	// 					indices[i++] = x		+	(y+2)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+2)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+1)*tileResolution;
+// 	// 				}
+// 	// 			}
+// 	// 			if((eFlag & 8) && y == 0 && (x%2 == 0))
+// 	// 			{
+// 	// 				if(!((eFlag & 4) && x == 0))
+// 	// 				{
+// 	// 					indices[i++] = x		+	y*tileResolution;
+// 	// 					indices[i++] = x		+	(y+1)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+1)*tileResolution;
+// 	// 				}
+// 	// 				indices[i++] = x			+	y*tileResolution;
+// 	// 				indices[i++] = (x+1)		+	(y+1)*tileResolution;
+// 	// 				indices[i++] = (x+2)		+	y*tileResolution;
 
-					if(!((eFlag & 2) && y == tileResolution-2))
-					{
-						indices[i++] = x		+	(y+1)*tileResolution;
-						indices[i++] = x		+	(y+2)*tileResolution;
-						indices[i++] = (x+1)	+	(y+2)*tileResolution;
-					}
-				}
-				if((eFlag & 2) && y == tileResolution-2 && (x%2 == 0))
-				{
-					if(!((eFlag & 4) && x == 0))
-					{
-						indices[i++] = x		+	y*tileResolution;
-						indices[i++] = x		+	(y+1)*tileResolution;
-						indices[i++] = (x+1)	+	y*tileResolution;
-					}
+// 	// 				if(!((eFlag & 1) && x == tileResolution-2))
+// 	// 				{
+// 	// 					indices[i++] = (x+2)	+	y*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+1)*tileResolution;
+// 	// 					indices[i++] = (x+2)	+	(y+1)*tileResolution;
+// 	// 				}
+// 	// 			}
+// 	// 			if((eFlag & 1) && x == tileResolution-2 && (y%2 == 0))
+// 	// 			{
+// 	// 				if(!((eFlag & 8) && y == 0)) //XXX
+// 	// 				{
+// 	// 					indices[i++] = x		+	y*tileResolution;
+// 	// 					indices[i++] = x		+	(y+1)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	y*tileResolution;
+// 	// 				}
+// 	// 				indices[i++] = (x+1)		+	y*tileResolution;
+// 	// 				indices[i++] = x			+	(y+1)*tileResolution;
+// 	// 				indices[i++] = (x+1)		+	(y+2)*tileResolution;
 
-					indices[i++] = x			+	(y+1)*tileResolution;
-					indices[i++] = (x+2)		+	(y+1)*tileResolution;
-					indices[i++] = (x+1)		+	y*tileResolution;
+// 	// 				if(!((eFlag & 2) && y == tileResolution-2))
+// 	// 				{
+// 	// 					indices[i++] = x		+	(y+1)*tileResolution;
+// 	// 					indices[i++] = x		+	(y+2)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	(y+2)*tileResolution;
+// 	// 				}
+// 	// 			}
+// 	// 			if((eFlag & 2) && y == tileResolution-2 && (x%2 == 0))
+// 	// 			{
+// 	// 				if(!((eFlag & 4) && x == 0))
+// 	// 				{
+// 	// 					indices[i++] = x		+	y*tileResolution;
+// 	// 					indices[i++] = x		+	(y+1)*tileResolution;
+// 	// 					indices[i++] = (x+1)	+	y*tileResolution;
+// 	// 				}
 
-					if(!((eFlag & 1) && x == tileResolution-2))
-					{
-						indices[i++] = (x+1)	+	y*tileResolution;
-						indices[i++] = (x+2)	+	(y+1)*tileResolution;
-						indices[i++] = (x+2)	+	y*tileResolution;
-					}
-				}
+// 	// 				indices[i++] = x			+	(y+1)*tileResolution;
+// 	// 				indices[i++] = (x+2)		+	(y+1)*tileResolution;
+// 	// 				indices[i++] = (x+1)		+	y*tileResolution;
 
-				//default case
-				if(!((eFlag & 4) && x == 0) && !((eFlag & 8) && y == 0) && !((eFlag & 1) && x == tileResolution-2) && !((eFlag & 2) && y == tileResolution-2))
-				{
-					indices[i++] = x			+	y*tileResolution;
-					indices[i++] = x			+	(y+1)*tileResolution;
-					indices[i++] = (x+1)		+	y*tileResolution;
+// 	// 				if(!((eFlag & 1) && x == tileResolution-2))
+// 	// 				{
+// 	// 					indices[i++] = (x+1)	+	y*tileResolution;
+// 	// 					indices[i++] = (x+2)	+	(y+1)*tileResolution;
+// 	// 					indices[i++] = (x+2)	+	y*tileResolution;
+// 	// 				}
+// 	// 			}
 
-					indices[i++] = (x+1)		+	y*tileResolution;
-					indices[i++] = x			+	(y+1)*tileResolution;
-					indices[i++] = x+1			+	(y+1)*tileResolution;
-				}
-			}
-		}
+// 	// 			//default case
+// 	// 			if(!((eFlag & 4) && x == 0) && !((eFlag & 8) && y == 0) && !((eFlag & 1) && x == tileResolution-2) && !((eFlag & 2) && y == tileResolution-2))
+// 	// 			{
+// 	// 				indices[i++] = x			+	y*tileResolution;
+// 	// 				indices[i++] = x			+	(y+1)*tileResolution;
+// 	// 				indices[i++] = (x+1)		+	y*tileResolution;
 
-		indexBuffers[eFlag] = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-		indexBuffers[eFlag]->setData(indices.get(),/*graphics->hasShaderModel5() ? GraphicsManager::PATCHES : */GraphicsManager::TRIANGLES, i);
-	}	
+// 	// 				indices[i++] = (x+1)		+	y*tileResolution;
+// 	// 				indices[i++] = x			+	(y+1)*tileResolution;
+// 	// 				indices[i++] = x+1			+	(y+1)*tileResolution;
+// 	// 			}
+// 	// 		}
+// 	// 	}
 
-//	queryTexture = graphics->genTexture2D();
-//	queryTexture.setData(1, 1, ****, false, false, nullptr);
+// 	// 	indexBuffers[eFlag] = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
+// 	// 	indexBuffers[eFlag]->setData(indices.get(),/*graphics->hasShaderModel5() ? GraphicsManager::PATCHES : */GraphicsManager::TRIANGLES, i);
+// 	// }	
 
-	subdivideTexture = graphics->genTexture2D();
-	subdivideTexture->setData(textureResolution, textureResolution, GraphicsManager::texture::Format::RGBA16, false, false, nullptr);
-}
-void Terrain::FractalNode::cleanUp()
-{
-	vertexBuffer.reset();
-	subdivideTexture.reset();
-	queryTexture.reset();
-	unassignedTextureIndices.clear();
-	for(auto i : indexBuffers)
-		i.reset();
-}
+// //	queryTexture = graphics->genTexture2D();
+// //	queryTexture.setData(1, 1, ****, false, false, nullptr);
+
+// //	subdivideTexture = graphics->genTexture2D();
+// //	subdivideTexture->setData(textureResolution, textureResolution, GraphicsManager::texture::Format::RGBA16, false, false, nullptr);
+// }
+// void Terrain::FractalNode::cleanUp()
+// {
+// 	//vertexBuffer.reset();
+// 	//subdivideTexture.reset();
+// 	//queryTexture.reset();
+// 	//unassignedTextureIndices.clear();
+// 	//for(auto i : indexBuffers)
+// 	//	i.reset();
+// }
 //const unsigned char LEFT		= 0x01; //patch to the left is one level above this patch
 //const unsigned char RIGHT		= 0x02; //patch to the right is one level above this patch
 //const unsigned char TOP			= 0x04; //patch to the top is one level above this patch
@@ -750,1148 +911,17 @@ void Terrain::FractalNode::cleanUp()
 //	}
 //}
 
-/*void Terrain::Page::subdivide(quadTree<Patch>::node* n, const Vec3f& eye) const
-{
-	float d = (eye.x-n->element.center.x)*(eye.x-n->element.center.x) + (eye.z-n->element.center.z)*(eye.z-n->element.center.z);//eye.distanceSquared(center);
-	if(n->children[0] && n->children[1] && n->children[2] && n->children[3] && d < n->element.minDistanceSquared)// || (bounds.minXYZ.x < eye.x && bounds.minXYZ.z < eye.z && bounds.maxXYZ.x > eye.x && bounds.maxXYZ.z > eye.z)
-	{
-		n->element.divisionLevel = Patch::SUBDIVIDED;
-
-		subdivide(n->children[0],eye);
-		subdivide(n->children[1],eye);
-		subdivide(n->children[2],eye);
-		subdivide(n->children[3],eye);
-	}
-	else
-	{
-		n->element.divisionLevel = Patch::LEVEL_USED;
-	}
-}
-void Terrain::Page::setSubdivided(quadTree<Patch>::node* n) const
-{
-	n->element.divisionLevel = Patch::SUBDIVIDED;
-	if(n->parent) setSubdivided(n->parent);
-};
-void Terrain::Page::checkEdges() const
-{
-	quadTree<Patch>::node* n;
-	int d, x, y, i;
-	for(d=patches->depth()-1; d>=2; d--)
-	{
-		for(x=0; x<patches->getSideLength(d); x++)
-		{
-			for(y=0; y<patches->getSideLength(d); y++)
-			{
-				n = patches->getNode(d,x,y);
-				if(n->element.divisionLevel == Patch::LEVEL_USED)
-				{
-					for(i=0; i<4; i++)
-					{
-						if(n->neighbors[i] && n->neighbors[i]->parent && n->neighbors[i]->parent->element.divisionLevel == Patch::COMBINED)
-						{
-							n->neighbors[i]->parent->parent->children[0]->element.divisionLevel = Patch::LEVEL_USED;
-							n->neighbors[i]->parent->parent->children[1]->element.divisionLevel = Patch::LEVEL_USED;
-							n->neighbors[i]->parent->parent->children[2]->element.divisionLevel = Patch::LEVEL_USED;
-							n->neighbors[i]->parent->parent->children[3]->element.divisionLevel = Patch::LEVEL_USED;
-							setSubdivided(n->neighbors[i]->parent->parent);
-						}
-					}
-				}
-			}
-		}
-	}
-}
-void Terrain::Page::patchEdges(quadTree<Patch>::node* n) const
-{
-	if(n->element.divisionLevel == Patch::SUBDIVIDED)
-	{
-		patchEdges(n->children[0]);
-		patchEdges(n->children[1]);
-		patchEdges(n->children[2]);
-		patchEdges(n->children[3]);
-	}
-	else if(n->element.divisionLevel == Patch::LEVEL_USED)
-	{
-		if(n->neighbors[0] && n->neighbors[0]->element.divisionLevel == Patch::SUBDIVIDED)
-		{
-			n->neighbors[0]->children[0]->element.edgeFlags |= 8;
-			n->neighbors[0]->children[3]->element.edgeFlags |= 8;
-		}
-		if(n->neighbors[1] && n->neighbors[1]->element.divisionLevel == Patch::SUBDIVIDED)
-		{
-			n->neighbors[1]->children[0]->element.edgeFlags |= 4;
-			n->neighbors[1]->children[1]->element.edgeFlags |= 4;
-		}
-		if(n->neighbors[2] && n->neighbors[2]->element.divisionLevel == Patch::SUBDIVIDED)
-		{
-			n->neighbors[2]->children[1]->element.edgeFlags |= 2;
-			n->neighbors[2]->children[2]->element.edgeFlags |= 2;
-		}
-		if(n->neighbors[3] && n->neighbors[3]->element.divisionLevel == Patch::SUBDIVIDED)
-		{
-			n->neighbors[3]->children[2]->element.edgeFlags |= 1;
-			n->neighbors[3]->children[3]->element.edgeFlags |= 1;
-		}
-	}
-}
-Terrain::Page::Page(unsigned short* Heights, unsigned int patchResolution, Vec3f position, Vec3f scale, unsigned int lod):minXYZ(position), maxXYZ(position+scale),LOD(lod), heights(Heights)//,trunk(nullptr)
-{
-	if(!isPowerOfTwo(patchResolution-1))
-	{
-		unsigned int nPatchResolution = uPowerOfTwo(patchResolution-1) + 1;
-		unsigned short* nHeights = new unsigned short[nPatchResolution*nPatchResolution];
-
-		scale.x *= static_cast<float>(nPatchResolution) / patchResolution;
-		scale.z *= static_cast<float>(nPatchResolution) / patchResolution;
-		maxXYZ = position+scale;
-
-		for(unsigned int x = 0; x < nPatchResolution; x++)
-		{
-			for(unsigned int y = 0; y < nPatchResolution; y++)
-			{
-				if(x < patchResolution && y < patchResolution)
-				{
-					nHeights[x + y*nPatchResolution] = heights[x + y*patchResolution];
-				}
-				else
-				{
-					nHeights[x + y*nPatchResolution] = 0;
-				}
-			}
-		}
-		swap(nHeights, heights);
-		patchResolution = nPatchResolution;
-		delete[] nHeights;
-	}
-
-	height = patchResolution;
-	width = patchResolution;
-
-	unsigned int v = ((patchResolution-1)/LOD) >> 4;
-	levelsDeep = 0;
-	while(v >>= 1) ++levelsDeep;
-
-//////////////////////////////////////////////////////VBO and texture//////////////////////////////////////////////////////
-
-	texture = graphics->genTexture2D();
-
-	//const float EARTH_RADIUS = 3.3675e6;
-	//const float EARTH_RADIUS_SQUARED = EARTH_RADIUS * EARTH_RADIUS;
-
-	//float xCenterDist;
-	//float zCenterDist;
-	//float elevationAdjust;
-	int numHeights=0;
-	float* heightMap = new float[((width-1)/LOD+1)*((height-1)/LOD+1)*3];
-	for(int x = 0; x < width; x += LOD)
-	{
-		for(int y=0; y < height; y += LOD)
-		{
-			//xCenterDist = scale.x * abs(0.5*width - x) / width;
-			//zCenterDist = scale.z * abs(0.5*height - y) / height;
-			//elevationAdjust = sqrt(EARTH_RADIUS_SQUARED - xCenterDist*xCenterDist - zCenterDist*zCenterDist) - EARTH_RADIUS;
-
-			heightMap[numHeights*3 + 0] = minXYZ.x + (maxXYZ.x - minXYZ.x) * x / (width-LOD);
-			heightMap[numHeights*3 + 1] = minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[x+y*width] / (float)USHRT_MAX;
-			heightMap[numHeights*3 + 2] = minXYZ.z + (maxXYZ.z - minXYZ.z) * y / (height-LOD);
-			numHeights++;
-		}
-	}
-
-	vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0*sizeof(float));
-	vertexBuffer->setTotalVertexSize(sizeof(float)*3);
-	vertexBuffer->setVertexData(sizeof(float)*((width-1)/LOD+1)*((height-1)/LOD+1)*3, heightMap);
-
-	const unsigned int numIndices = 16*16 * 6;
-	unsigned int* indices = new unsigned int[numIndices];
-	for(unsigned int d = 0; d <= levelsDeep; d++)
-	{
-		indexBuffers.push_back(vector<shared_ptr<GraphicsManager::indexBuffer>>());
-		for(int eFlag=0; eFlag<16; eFlag++)
-		{
-			int i=0;
-			unsigned int spacing = 1 << (levelsDeep-d);	
-			for(int y=0; y < 16; y++)
-			{
-				for(int x = 0; x < 16; x++)
-				{
-					if((eFlag & 4) && x == 0 && (y%2 == 0))
-					{
-						if(!((eFlag & 8) && y == 0))
-						{
-							indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						}
-						indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = (x*spacing)			+	((y+2)*spacing)*((width-1)/LOD+1);
-
-						if(!((eFlag & 2) && y == 15))
-						{
-							indices[i++] = (x*spacing)			+	((y+2)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+2)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						}
-					}
-					if((eFlag & 8) && y == 0 && (x%2 == 0))
-					{
-						if(!((eFlag & 4) && x == 0))
-						{
-							indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						}
-						indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+2)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-
-						if(!((eFlag & 1) && x == 15))
-						{
-							indices[i++] = ((x+2)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+2)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						}
-					}
-					if((eFlag & 1) && x == 15 && (y%2 == 0))
-					{
-						if(!((eFlag & 8) && y == 0)) //XXX
-						{
-							indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-						}
-						indices[i++] = ((x+1)*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-						indices[i++] = (x*spacing)				+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)			+	((y+2)*spacing)*((width-1)/LOD+1);
-
-						if(!((eFlag & 2) && y == 15))
-						{
-							indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = (x*spacing)			+	((y+2)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	((y+2)*spacing)*((width-1)/LOD+1);
-						}
-					}
-					if((eFlag & 2) && y == 15 && (x%2 == 0))
-					{
-						if(!((eFlag & 4) && x == 0))
-						{
-							indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-						}
-
-						indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+2)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-
-						if(!((eFlag & 1) && x == 15))
-						{
-							indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+2)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-							indices[i++] = ((x+2)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-						}
-					}
-					if(!((eFlag & 4) && x == 0) && !((eFlag & 8) && y == 0) && !((eFlag & 1) && x == 15) && !((eFlag & 2) && y == 15)) //default
-					{
-						indices[i++] = (x*spacing)			+	(y*spacing)*((width-1)/LOD+1);
-						indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-
-						indices[i++] = ((x+1)*spacing)		+	(y*spacing)*((width-1)/LOD+1);
-						indices[i++] = (x*spacing)			+	((y+1)*spacing)*((width-1)/LOD+1);
-						indices[i++] = ((x+1)*spacing)		+	((y+1)*spacing)*((width-1)/LOD+1);
-					}
-				}
-			}
-
-			auto iBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-			iBuffer->setData(indices,graphics->hasShaderModel5() ? GraphicsManager::PATCHES : GraphicsManager::TRIANGLES, i);
-			indexBuffers[d].push_back(iBuffer);
-		}
-	}
-	delete[] indices;
-
-	//////////////////
-	Vec3f n;
-	//int xPOT = uPowerOfTwo(width);
-	//int zPOT = uPowerOfTwo(height);
-
-	/////////////////////////////////////
-	unsigned short* groundValues = new unsigned short[(width)*(height)*4];
-	for(unsigned int x=0; x < width; x++)
-	{
-		for(unsigned int z=0; z < height; z++)
-		{
-			n = rasterNormal(Vec2u(x,z));
-			//n = interpolatedNormal(Vec2f(x,z));
-			if(n.magnitudeSquared() < 0.001)
-				n = Vec3f(0.0,1.0,0.0);
-	
-			groundValues[(x + z * width)*4 + 0] = (unsigned short)(32767.5+n.x*32767.5);
-			groundValues[(x + z * width)*4 + 1] = (unsigned short)(n.y*65535.0);
-			groundValues[(x + z * width)*4 + 2] = (unsigned short)(32767.5+n.z*32767.5);
-			groundValues[(x + z * width)*4 + 3] = heights[x+z*width];
-		}
-	}
-	texture->setData(width, height, GraphicsManager::texture::RGBA16, false, false, (unsigned char*)groundValues);
-	/////////////////////////////////////
-	//float sx = static_cast<float>(width-1)/width;
-	//float sz = static_cast<float>(height-1)/height;
-	//unsigned short* groundValues = new unsigned short[(width-1)*(height-1)*4];
-	//for(unsigned int x=0; x < width-1; x++)
-	//{
-	//	for(unsigned int z=0; z < height-1; z++)
-	//	{
-	//		n = interpolatedNormal(Vec2u(sx*x,sz*z));
-	//		//n = interpolatedNormal(Vec2f(x,z));
-	//		if(n.magnitudeSquared() < 0.001)
-	//			n = Vec3f(0.0,1.0,0.0);
-	//
-	//		groundValues[(x + z * (width-1))*4 + 0] = (unsigned short)(32767.0+n.x*32768.0);
-	//		groundValues[(x + z * (width-1))*4 + 1] = (unsigned short)(n.y*65536.0);
-	//		groundValues[(x + z * (width-1))*4 + 2] = (unsigned short)(32767.0+n.z*32768.0);
-	//		groundValues[(x + z * (width-1))*4 + 3] = (unsigned short)(interpolatedHeight(Vec2f(sx*x,sz*z)) - minXYZ.y)/(maxXYZ.y-minXYZ.y)*USHRT_MAX;
-	//	}
-	//}
-	//texture->setData(width-1, height-1, GraphicsManager::texture::RGBA16, (unsigned char*)groundValues);
-	/////////////////////////////////////
-	//unsigned char* groundValues = new unsigned char[(width)*(height)*4];
-	//for(unsigned int x=0; x < width; x++)
-	//{
-	//	for(unsigned int z=0; z < height; z++)
-	//	{
-	//		n = rasterNormal(Vec2u(x,z));
-	//		if(n.magnitudeSquared() < 0.001)
-	//			n = Vec3f(0.0,1.0,0.0);
-	//
-	//		groundValues[(x + z * width)*4 + 0] = (unsigned char)(127.0+n.x*128.0);
-	//		groundValues[(x + z * width)*4 + 1] = (unsigned char)(n.y*255.0);
-	//		groundValues[(x + z * width)*4 + 2] = (unsigned char)(127.0+n.z*128.0);
-	//		groundValues[(x + z * width)*4 + 3] = (unsigned char)(heights[x+z*width]>>8);
-	//	}
-	//}
-	//texture->setData(width, height, GraphicsManager::texture::RGBA, (unsigned char*)groundValues);
-
-
-	delete[] groundValues;
-	/////////////////
-
-	delete[] heightMap;
-
-///////////////////////////////////////////////////QUAD TREE///////////////////////////////////////////////////
-	
-	patches = shared_ptr<quadTree<Patch>>(new quadTree<Patch>(levelsDeep+1));
-	
-	//unsigned int nPatches = 0;
-	//for(int i=0; i<=levelsDeep; i++)
-	//{
-	//	nPatches += 1 << (2*i);
-	//}
-	//
-	//trunk = new Patch[nPatches];
-	//trunk->parent = nullptr;
-	//trunk->init(trunk, 0, levelsDeep);
-
-	quadTree<Patch>::node* p;
-	float e;
-	float r = sqrt(scale.x*scale.x + scale.z*scale.z) / 2;
-	unsigned int spacing;
-	float errorScale = (maxXYZ.y - minXYZ.y) / USHRT_MAX / 2.0;
-
-	unsigned int x,y,h,k;
-
-	float C = 549.0;//(1.0 / 512.0) / (2.0 * 4.0 / 1024); // A = verticalResoution / (2 * tan(fovy) * nearClipPlaneDistance * maxErrorInPixels) = (nearClipPlane / abs(topClipPlane)) / (2*maxErrorInPixels / verticalResolution)
-	for(int l=levelsDeep; l>=0; l--)
-	{
-		for(x=0; x < patches->getSideLength(l); x++)
-		{
-			for(y=0; y < patches->getSideLength(l); y++)
-			{
-				p = patches->getNode(l,x,y);
-
-				p->element.bounds.minXYZ.x = minXYZ.x + scale.x * x / (1<<l);
-				p->element.bounds.minXYZ.z = minXYZ.z + scale.z * y / (1<<l);
-				p->element.bounds.maxXYZ.x = minXYZ.x + scale.x * (x+1) / (1<<l);
-				p->element.bounds.maxXYZ.z = minXYZ.z + scale.z * (y+1) / (1<<l);
-
-				p->element.maxError = 0.0f;
-				p->element.minDistanceSquared = 0.0f;
-				if(l < levelsDeep)
-				{
-					spacing = 1 << (levelsDeep-l);
-					for(h = x*16*spacing; h < (x*16+15)*spacing; h += spacing)
-					{
-						for(k = y*16*spacing; k < (y*16+15)*spacing; k += spacing)
-						{
-							if(heights[h*LOD + k*LOD*width] < p->element.bounds.minXYZ.y)
-								p->element.bounds.minXYZ.y = heights[h*LOD + k*LOD*width];
-
-							if(heights[h*LOD + k*LOD*width] > p->element.bounds.maxXYZ.y)
-								p->element.bounds.maxXYZ.y = heights[h*LOD + k*LOD*width];
-
-							e = errorScale * abs(heights[h*LOD + k*LOD*width] + heights[(h+spacing)*LOD + k*LOD*width] - 2*heights[(h+spacing/2)*LOD + k*LOD*width]);
-							if(e > p->element.maxError) p->element.maxError = e;
-
-							e = errorScale * abs(heights[h*LOD + k*LOD*width] + heights[h*LOD + (k+spacing)*LOD*width] - 2*heights[h*LOD + (k+spacing/2)*LOD*width]);
-							if(e > p->element.maxError) p->element.maxError = e;
-						}
-					}
-					p->element.minDistanceSquared = (p->element.maxError * C + r/(1<<l)) * (p->element.maxError * C + r/(1<<l));
-				}
-				else
-				{
-					spacing = 1 << (levelsDeep-l);
-					for(h = x*16*spacing; h < (x*16+15)*spacing; h += spacing)
-					{
-						for(k = y*16*spacing; k < (y*16+15)*spacing; k += spacing)
-						{
-							if(heights[h*LOD + k*LOD*width] < p->element.bounds.minXYZ.y)
-								p->element.bounds.minXYZ.y = heights[h*LOD + k*LOD*width];
-
-							if(heights[h*LOD + k*LOD*width] > p->element.bounds.maxXYZ.y)
-								p->element.bounds.maxXYZ.y = heights[h*LOD + k*LOD*width];
-						}
-					}
-				}
-				p->element.center = (p->element.bounds.minXYZ + p->element.bounds.maxXYZ) * 0.5;
-			}
-		}
-	}
-}
-void Terrain::Page::generateFoliage(float foliageDensity) //foliageDensity in trees per km^2
-{
-	return;
-	if(foliageDensity <= 0.0)
-	{
-		unsigned char texData[] = {1,1,1,1};
-		treeTexture = graphics->genTexture2D();
-		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
-		return;
-	}
-	foliageDensity = min(foliageDensity, 150); //keep foliageDensity reasonable
-
-
-	int				foliagePatchesX = width/8;//64;//16*(width/16)/LOD;
-	int				foliagePatchesY = height/8;//64;//16*(height/16)/LOD;
-	unsigned int	numPatches = foliagePatchesX * foliagePatchesY;	
-	float			patchArea = (maxXYZ.x-minXYZ.x) * (maxXYZ.z-minXYZ.z) / numPatches;
-	float			treesPerPatch = patchArea * foliageDensity / (1000*1000) * 15.0;
-	int				sLength = ceil(1.5 * sqrt(treesPerPatch));
-	float			inv_sLength = 1.0f/sLength;
-	float			placementOdds = treesPerPatch / (sLength*sLength);
-
-	const int MAX_QUADS_WITHOUT_TF = 100000 * 10000; // 100,000 quads = 50,000 trees = 400,000 vertices
-	bool hasTransformFeedback = graphics->hasShaderModel4();
-	foliagePatch patch;
-
-	double t=GetTime();
-	if(hasTransformFeedback)
-	{
-		texture->bind();
-
-		auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-		emptyVBO->setTotalVertexSize(0);
-		emptyVBO->setVertexData(0, nullptr);
-		auto counterVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-		counterVBO->setTotalVertexSize(1);
-		counterVBO->setVertexData(4 * foliagePatchesX * foliagePatchesY * sLength * sLength, nullptr);
-
-		//count the number of trees that there will be
-		auto countTreesShader = shaders.bind("count trees");
-		countTreesShader->setUniform1i("groundTex", 0);
-		countTreesShader->setUniform1i("width", foliagePatchesX * sLength);
-		countTreesShader->setUniform3f("worldOrigin", minXYZ);
-		countTreesShader->setUniform3f("worldSpacing", Vec3f((maxXYZ.x-minXYZ.x) / (foliagePatchesX*sLength), (maxXYZ.y-minXYZ.y), (maxXYZ.z-minXYZ.z) / (foliagePatchesY*sLength)));
-		countTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
-		countTreesShader->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
-		countTreesShader->setUniform1f("placementOdds", placementOdds);
-		countTreesShader->setUniform1i("patch_width", sLength);
-		countTreesShader->setUniform1i("patch_height", sLength);
-		//countTreesShader->setUniform1i("vertexID_offset", 0);
-		unsigned int numTreesInPatch;
-		numTrees = 0;
-		emptyVBO->bindBuffer();
-		patch.plantIndexBuffer = nullptr;	
-		for(int y = 0; y < foliagePatchesY; y++)
-		{
-			for(int x = 0; x < foliagePatchesX; x++)
-			{
-				//countTreesShader->setUniform1i("x_offset", x * sLength);
-				//countTreesShader->setUniform1i("y_offset", y * sLength);
-				countTreesShader->setUniform1i("vertexID_offset", (x+y*foliagePatchesX) * sLength*sLength);
-
-				counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
-				emptyVBO->drawBuffer(GraphicsManager::POINTS, 0,  sLength * sLength);
-				numTreesInPatch = counterVBO->unbindTransformFeedback();graphics->checkErrors();
-				if(numTreesInPatch > 0)
-				{
-					patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
-					patch.center.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (0.5+y) / foliagePatchesY;
-					patch.center.y = getHeight(Vec2f(patch.center.x,patch.center.z)) + 12.0;
-					Vec3f boundsMin = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * x / foliagePatchesX, minXYZ.y, minXYZ.z + (maxXYZ.z-minXYZ.z) * y / foliagePatchesY);
-					Vec3f boundsMax = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * (1.0+x) / foliagePatchesX, maxXYZ.y+24.0, minXYZ.z + (maxXYZ.z-minXYZ.z) * (1.0+y) / foliagePatchesY);
-					patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
-					patch.sm4_treeVboOffset = 12 * numTrees;
-					patch.sm4_treeVboSize = 12 * numTreesInPatch;
-					foliagePatches.push_back(patch);
-					numTrees += numTreesInPatch;
-				}
-			}
-		}
-		counterVBO.reset();
-	//	counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
-	//	emptyVBO->bindBuffer();
-	//	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
-	//	numTrees = counterVBO->unbindTransformFeedback();
-	//	counterVBO.reset();
-
-		if(numTrees > 0)
-		{
-			//prepare foliage VBO
-			foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
-			foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
-			foliageVBO->setTotalVertexSize(32);
-			foliageVBO->setVertexData(32 * 12 * numTrees, nullptr);
-			//render trees into VBO
-			auto placeTreesShader = shaders.bind("place trees");
-			placeTreesShader->setUniform1i("groundTex", 0);
-			placeTreesShader->setUniform1i("width", foliagePatchesX*sLength);
-			placeTreesShader->setUniform3f("worldOrigin", minXYZ);
-			placeTreesShader->setUniform3f("worldSpacing", Vec3f((maxXYZ.x-minXYZ.x) / (foliagePatchesX*sLength), (maxXYZ.y-minXYZ.y), (maxXYZ.z-minXYZ.z) / (foliagePatchesY*sLength)));
-			placeTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
-			placeTreesShader->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
-			placeTreesShader->setUniform1f("placementOdds", placementOdds);
-			placeTreesShader->setUniform1i("patch_width", sLength);//foliagePatchesX *sLength
-			placeTreesShader->setUniform1i("patch_height", sLength);
-			placeTreesShader->setUniform1i("vertexID_offset", 0);
-
-
-			foliageVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
-			emptyVBO->bindBuffer();
-			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength / 10); //<-causes error on Linux (intel graphics)
-#ifdef _DEBUG
-			unsigned int n = foliageVBO->unbindTransformFeedback();
-			debugAssert(n == 4*numTrees);
-#else
-			foliageVBO->unbindTransformFeedback();
-#endif
-
-			treeTexture = graphics->genTexture2D();
-			treeTexture->setData(4096, 4096, GraphicsManager::texture::RGBA, false, false, nullptr);
-
-			//auto depthTex = graphics->genTexture2D();
-			//depthTex->setData(4096,4096,GraphicsManager::texture::DEPTH, false, false, nullptr);
-
-			graphics->setDepthTest(false);
-			shared_ptr<GraphicsManager::View> view(new GraphicsManager::View());
-			view->ortho(-2048,2048, -2048,2048, -1, 1);
-			view->lookAt(Vec3f(0.5, 2.0, 0.5), Vec3f(0.5, 0.0, 0.5), Vec3f(0, 0, 1));
-			auto createTreeTexture = shaders.bind("create tree texture");
-			createTreeTexture->setUniform1i("groundTex", 0); texture->bind();
-			createTreeTexture->setUniform1i("width", foliagePatchesX*sLength);
-			createTreeTexture->setUniform3f("worldOrigin", minXYZ);
-			createTreeTexture->setUniform3f("worldSpacing", Vec3f((maxXYZ.x-minXYZ.x) / (foliagePatchesX*sLength), (maxXYZ.y-minXYZ.y), (maxXYZ.z-minXYZ.z) / (foliagePatchesY*sLength)));
-			createTreeTexture->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
-			createTreeTexture->setUniform2f("texSpacing", float((texture->getWidth()-1.0) / texture->getWidth())/(foliagePatchesX*sLength), float((texture->getHeight()-1.0) / texture->getHeight())/(foliagePatchesY*sLength));
-			createTreeTexture->setUniform1f("placementOdds", placementOdds);
-			createTreeTexture->setUniform1i("patch_width", sLength);//foliagePatchesX *sLength
-			createTreeTexture->setUniform1i("patch_height", sLength);
-			createTreeTexture->setUniform1i("vertexID_offset", 0);
-			createTreeTexture->setUniform2f("transform", 4096 / (maxXYZ.x-minXYZ.x), 4096 / (maxXYZ.z-minXYZ.z));
-			graphics->startRenderToTexture(treeTexture, nullptr);
-			graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
-			emptyVBO->bindBuffer();
-			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, foliagePatchesX * foliagePatchesY * sLength * sLength);
-			graphics->endRenderToTexture();
-			treeTexture->generateMipmaps();
-
-			//unsigned char* texData = treeTexture->getData();
-			//shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../treesTexture.png",FileManager::PNG));
-			//textureFile->channels = 4;
-			//textureFile->contents = texData;
-			//textureFile->width = 4096;
-			//textureFile->height = 4096;
-			//fileManager.writeFile(textureFile); //will delete[] texData
-		}
-		else
-		{
-			unsigned char texData[] = {1,1,1,1};
-			treeTexture = graphics->genTexture2D();
-			treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
-		}
-	}
-	else
-	{
-		unsigned int nQuads=0;
-		unsigned int nQuadsStart=0;
-		Vec2f dir;
-		Vec3f right, fwd;
-		Vec3f position;
-		
-		vector<texturedColoredVertex3D> vertices;
-		//foliagePatch::plant p;
-		float normal_y;
-
-		texturedColoredVertex3D tmpVerts[16];
-
-		tmpVerts[0].UV = Vec2f(0.0,1.0);	//Vec2f(0.0,1.0);
-		tmpVerts[1].UV = Vec2f(0.5,1.0);	//Vec2f(1.0,1.0);
-		tmpVerts[2].UV = Vec2f(0.5,0.0);	//Vec2f(1.0,0.0);
-		tmpVerts[3].UV = Vec2f(0.0,0.0);	//Vec2f(0.0,0.0);
-
-		tmpVerts[4].UV = Vec2f(0.5,1.0);	//Vec2f(0.0,1.0);
-		tmpVerts[5].UV = Vec2f(1.0,1.0);	//Vec2f(1.0,1.0);
-		tmpVerts[6].UV = Vec2f(1.0,0.0);	//Vec2f(1.0,0.0);
-		tmpVerts[7].UV = Vec2f(0.5,0.0);	//Vec2f(0.0,0.0);
-
-		tmpVerts[8].UV =  Vec2f(0.5,1.0);	//Vec2f(0.0,1.0);
-		tmpVerts[9].UV =  Vec2f(0.0,1.0);	//Vec2f(1.0,1.0);
-		tmpVerts[10].UV = Vec2f(0.0,0.0);	//Vec2f(1.0,0.0);
-		tmpVerts[11].UV = Vec2f(0.5,0.0);	//Vec2f(0.0,0.0);
-
-		tmpVerts[12].UV = Vec2f(1.0,1.0);	//Vec2f(0.0,1.0);
-		tmpVerts[13].UV = Vec2f(0.5,1.0);	//Vec2f(1.0,1.0);
-		tmpVerts[14].UV = Vec2f(0.5,0.0);	//Vec2f(1.0,0.0);
-		tmpVerts[15].UV = Vec2f(1.0,0.0);	//Vec2f(0.0,0.0);
-
-		for(int x=0; x < foliagePatchesX && (hasTransformFeedback || nQuads < MAX_QUADS_WITHOUT_TF); x++)
-		{
-			for(int y=0; y < foliagePatchesY && (hasTransformFeedback || nQuads < MAX_QUADS_WITHOUT_TF); y++)
-			{
-				unsigned int n = 0;
-				nQuadsStart = nQuads;
-
-				for(int h=0; h<sLength && nQuads < MAX_QUADS_WITHOUT_TF; h++)
-				{
-					for(int k=0; k<sLength && nQuads < MAX_QUADS_WITHOUT_TF; k++)
-					{
-						if(random<float>() < placementOdds)
-						{
-							position.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (random<float>(inv_sLength)+h*inv_sLength + x) / foliagePatchesX;
-							position.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (random<float>(inv_sLength)+k*inv_sLength + y) / foliagePatchesY;
-
-							position.y = getHeight(Vec2f(position.x, position.z));
-							normal_y = getNormal(Vec2f(position.x, position.z)).y;
-							if(position.y > 40.0 && normal_y > 0.9211 && (position.y < 150.0 || normal_y < 0.98))
-							{
-								n = random<float>(1.0) < 0.5 ? 0 : 8;
-
-								//set all vertices to have the same color
-								tmpVerts[n+0].color = tmpVerts[n+1].color = tmpVerts[n+2].color = tmpVerts[n+3].color = 
-								tmpVerts[n+4].color = tmpVerts[n+5].color = tmpVerts[n+6].color = tmpVerts[n+7].color = 
-									Color3(random<float>(0.8,1.1), random<float>(0.8,1.1), random<float>(0.8,1.1));
-
-								dir = random2<float>();
-								float s = (4.0 + random<float>(4.0) + random<float>(4.0))*0.4 * 1.5;
-								tmpVerts[n+0].position = position + Vec3f(-2.5*dir.x, 0.0, -2.5*dir.y)*s;	//width: 2.0 -> 2.5
-								tmpVerts[n+1].position = position + Vec3f( 2.5*dir.x, 0.0,  2.5*dir.y)*s;
-								tmpVerts[n+2].position = position + Vec3f( 2.5*dir.x, 5.0,  2.5*dir.y)*s;
-								tmpVerts[n+3].position = position + Vec3f(-2.5*dir.x, 5.0, -2.5*dir.y)*s;
-
-								swap(dir.x, dir.y);
-								dir.x = - dir.x;
-								tmpVerts[n+4].position = position + Vec3f(-2.5*dir.x, 0.0, -2.5*dir.y)*s;
-								tmpVerts[n+5].position = position + Vec3f( 2.5*dir.x, 0.0,  2.5*dir.y)*s;
-								tmpVerts[n+6].position = position + Vec3f( 2.5*dir.x, 5.0,  2.5*dir.y)*s;
-								tmpVerts[n+7].position = position + Vec3f(-2.5*dir.x, 5.0, -2.5*dir.y)*s;
-
-								//tmpTopVerts[0].position = position + Vec3f( 3.0*dir.x, 1.0,  3.0*dir.y)*s;
-								//tmpTopVerts[1].position = position + Vec3f( 3.0*dir.y, 1.0, -3.0*dir.x)*s;
-								//tmpTopVerts[2].position = position + Vec3f(-3.0*dir.x, 1.0, -3.0*dir.y)*s;
-								//tmpTopVerts[3].position = position + Vec3f(-3.0*dir.y, 1.0,  3.0*dir.x)*s;
-
-								vertices.push_back(tmpVerts[n+0]);
-								vertices.push_back(tmpVerts[n+1]);
-								vertices.push_back(tmpVerts[n+2]);
-								vertices.push_back(tmpVerts[n+3]);
-
-								vertices.push_back(tmpVerts[n+4]);
-								vertices.push_back(tmpVerts[n+5]);
-								vertices.push_back(tmpVerts[n+6]);
-								vertices.push_back(tmpVerts[n+7]);
-
-								//vertices.push_back(tmpTopVerts[0]);
-								//vertices.push_back(tmpTopVerts[1]);
-								//vertices.push_back(tmpTopVerts[2]);
-								//vertices.push_back(tmpTopVerts[3]);
-
-								//foliagePatch::plant p;
-								//p.location = position;
-								//p.height = 5.0*s;
-								//patch.plants.push_back(p);
-
-
-								nQuads += 2;
-							}
-						}
-					}
-				}
-
-				if(nQuads-nQuadsStart > 0)
-				{
-					patch.center.x = minXYZ.x + (maxXYZ.x-minXYZ.x) * (0.5+x) / foliagePatchesX;
-					patch.center.z = minXYZ.z + (maxXYZ.z-minXYZ.z) * (0.5+y) / foliagePatchesY;
-					patch.center.y = getHeight(Vec2f(patch.center.x,patch.center.z)) + 12.0;
-					Vec3f boundsMin = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * x / foliagePatchesX, minXYZ.y, minXYZ.z + (maxXYZ.z-minXYZ.z) * y / foliagePatchesY);
-					Vec3f boundsMax = Vec3f(minXYZ.x + (maxXYZ.x-minXYZ.x) * (1.0+x) / foliagePatchesX, maxXYZ.y+24.0, minXYZ.z + (maxXYZ.z-minXYZ.z) * (1.0+y) / foliagePatchesY);
-					patch.bounds = BoundingBox<float>(boundsMin, boundsMax);
-
-
-					patch.plantIndexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
-
-					unsigned int* indices = new unsigned int[(nQuads-nQuadsStart)*6];
-					for(unsigned int i=0; i<nQuads-nQuadsStart; i++)
-					{
-						indices[i*6+0] = (i+nQuadsStart)*4 + 0;
-						indices[i*6+1] = (i+nQuadsStart)*4 + 1;
-						indices[i*6+2] = (i+nQuadsStart)*4 + 2;
-						indices[i*6+3] = (i+nQuadsStart)*4 + 0;
-						indices[i*6+4] = (i+nQuadsStart)*4 + 2;
-						indices[i*6+5] = (i+nQuadsStart)*4 + 3;
-					}
-					patch.plantIndexBuffer->setData(indices, GraphicsManager::TRIANGLES, (nQuads-nQuadsStart)*6);	
-
-					foliagePatches.push_back(patch);
-					//patch.plants.clear();
-				}
-			}
-		}
-
-		foliageVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,		3*sizeof(float));
-		foliageVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
-		foliageVBO->setTotalVertexSize(sizeof(texturedColoredVertex3D));
-		foliageVBO->setVertexData(sizeof(texturedColoredVertex3D)*vertices.size(), !vertices.empty() ? &vertices[0] : nullptr);
-
-		if(nQuads >= MAX_QUADS_WITHOUT_TF)
-		{
-			messageBox("Warning: level contains more trees than supported by Shader Model 3 graphics cards. Some trees may be missing!");
-		}
-
-		unsigned char texData[] = {1,1,1,1};
-		treeTexture = graphics->genTexture2D();
-		treeTexture->setData(1,1, GraphicsManager::texture::RGBA, false, false, texData); 
-	}
-	t = GetTime() - t;
-	t = GetTime();
-}
-Vec3f Terrain::Page::rasterNormal(Vec2u loc) const
-{
-	loc.x = clamp(loc.x, 0, width-1);
-	loc.y = clamp(loc.y, 0, height-1);
-
-	float By = (loc.y < height-1)	? heights[(loc.x)	+ (loc.y+1)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
-	float Ay = (loc.x < width-1)	? heights[(loc.x+1) + (loc.y)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
-	float Dy = (  loc.y > 0	)		? heights[(loc.x)	+ (loc.y-1)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
-	float Cy = (  loc.x > 0	)		? heights[(loc.x-1)	+ (loc.y)	* width] - heights[loc.x + loc.y*width]  : 0.0f;
-
-	return Vec3f((Cy - Ay) * width / (maxXYZ.x-minXYZ.x), 2.0 * 65536.0 / (maxXYZ.y-minXYZ.y), (Dy - By) * height / (maxXYZ.z-minXYZ.z)).normalize();
-}
-float Terrain::Page::rasterHeight(Vec2u loc) const
-{
-	return minXYZ.y + (maxXYZ.y - minXYZ.y) * heights[min(loc.x,width-1) + min(loc.y,height-1) * width] / USHRT_MAX;
-}
-Vec3f Terrain::Page::interpolatedNormal(Vec2f loc) const
-{
-	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
-	{
-		Vec3f A = rasterNormal(Vec2u(floor(loc.x),floor(loc.y)));
-		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
-		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
-	}
-	else
-	{
-		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
-		Vec3f C = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y+1)));
-		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
-	}
-}
-float Terrain::Page::interpolatedHeight(Vec2f loc) const
-{
-	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
-	{
-		float A = rasterHeight(Vec2u(floor(loc.x),floor(loc.y)));
-		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
-		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
-	}
-	else
-	{
-		float B = rasterHeight(Vec2u(floor(loc.x),floor(loc.y+1)));
-		float C = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y+1)));
-		float D = rasterHeight(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
-	}
-}
-Vec3f Terrain::Page::getNormal(Vec2f loc) const
-{
-	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
-	loc.x *= static_cast<float>(width-1) / (maxXYZ.x - minXYZ.x);
-	loc.y *= static_cast<float>(height-1) / (maxXYZ.z - minXYZ.z);
-
-	if(loc.x-floor(loc.x)+loc.y-floor(loc.y)<1.0)
-	{
-		Vec3f A = rasterNormal(Vec2u(floor(loc.x),floor(loc.y)));
-		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
-		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(A,B,loc.y-floor(loc.y)),D,loc.x-floor(loc.x));
-	}
-	else
-	{
-		Vec3f B = rasterNormal(Vec2u(floor(loc.x),floor(loc.y+1)));
-		Vec3f C = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y+1)));
-		Vec3f D = rasterNormal(Vec2u(floor(loc.x+1),floor(loc.y)));
-		return lerp(lerp(B,C,loc.x-floor(loc.x)),D,1.0-(loc.y-floor(loc.y)));
-	}
-}
-float Terrain::Page::getHeight(Vec2f loc) const
-{
-	loc = loc - Vec2f(minXYZ.x, minXYZ.z);
-	loc.x *= static_cast<float>(width-1) / (maxXYZ.x - minXYZ.x);
-	loc.y *= static_cast<float>(height-1) / (maxXYZ.z - minXYZ.z);
-
-	float A, B, C, D;
-	//  A  _____  B
-	//    |    /|
-	//	  |  /  |
-	//  D |/____| C
-
-	float x_fract = loc.x-floor(loc.x);
-	float y_fract = loc.y-floor(loc.y);
-
-	if(x_fract + y_fract < 1.0)
-	{
-		A = rasterHeight(Vec2u(floor(loc.x),floor(loc.y)));
-		B = rasterHeight(Vec2u(ceil(loc.x),floor(loc.y)));
-		D = rasterHeight(Vec2u(floor(loc.x),ceil(loc.y)));
-		C = B + D - A;
-	}
-	else
-	{
-		B = rasterHeight(Vec2u(ceil(loc.x),floor(loc.y)));
-		C = rasterHeight(Vec2u(ceil(loc.x),ceil(loc.y)));
-		D = rasterHeight(Vec2u(floor(loc.x),ceil(loc.y)));
-		A = B + D - C;
-	}
-	return lerp(lerp(A,B,x_fract), lerp(D,C,x_fract), y_fract);
-}
-void Terrain::Page::render(shared_ptr<GraphicsManager::View> view, TerrainType shaderType) const
-{
-	renderQueue.clear();
-
-	unsigned int x, y;
-	quadTree<Patch>::node* p;
-	for(int l=0; l<=levelsDeep; l++)
-	{
-		for(x=0; x < (0x1<<l); x++)
-		{
-			for(y=0; y < (0x1<<l); y++)
-			{
-				p = patches->getNode(l,x,y);
-				p->element.edgeFlags = 0;
-				p->element.divisionLevel = Patch::COMBINED;
-			}
-		}
-	}
-	subdivide(patches->trunk(),view->camera().eye);
-	checkEdges();
-	patchEdges(patches->trunk());
-	for(int l=0; l<=levelsDeep; l++)
-	{
-		for(unsigned int x=0; x < (1<<l); x++)
-		{
-			for(unsigned int y=0; y < (1<<l); y++)
-			{
-				p = patches->getNode(l,x,y);
-				if(p->element.divisionLevel == Patch::LEVEL_USED && view->boundingBoxInFrustum(p->element.bounds))
-				{
-					renderQueue.push_back(p);
-				}
-			}
-		}
-	}
-
-	//for(unsigned int x=0; x < (1<<(levelsDeep)); x++) //for now just render the highest level of detail
-	//{
-	//	for(unsigned int y=0; y < (1<<(levelsDeep)); y++)
-	//	{
-	//		p = getPatch(levelsDeep,x,y);
-	//		if(view->boundingBoxInFrustum(p->bounds))
-	//			renderQueue.push_back(p);
-	//	}
-	//}
-
-	//view->lookAt(Vec3f(12900/2,15000,12900/2),Vec3f(12900/2,0,12900/2), Vec3f(0,0,1));
-
-
-
-
-	shared_ptr<GraphicsManager::shader> terrainShader;
-	if(shaderType == TERRAIN_ISLAND)
-	{
-		terrainShader = shaders.bind("island terrain");
-	}
-	else if(shaderType == TERRAIN_MOUNTAINS)
-	{
-		terrainShader = shaders.bind("mountain terrain");
-	}
-	else if(shaderType == TERRAIN_SNOW)
-	{
-		terrainShader = shaders.bind("snow terrain");
-	}
-	else if(shaderType == TERRAIN_DESERT)
-	{
-		terrainShader = shaders.bind("desert terrain");
-	}
-
-	//global
-	terrainShader->setUniform1i("sky",			0); //bound by caller
-	terrainShader->setUniform1i("groundTex",	1);	texture->bind(1);
-	terrainShader->setUniform1i("LCnoise",		2);	dataManager.bind("LCnoise",2);
-	terrainShader->setUniform1i("noiseTex",		3);	dataManager.bind("noise",3);
-	terrainShader->setUniform1i("sand",			4);	dataManager.bind("sand", 4);
-	terrainShader->setUniform1i("sand2",		5);	dataManager.bind("desertSand",5);
-	terrainShader->setUniform1i("snow",			6);	dataManager.bind("snow",6);
-	terrainShader->setUniform1i("snow_normals",	7);	dataManager.bind("snow normals",7);
-	terrainShader->setUniform1i("grass",		8);	dataManager.bind("grass",8);
-	terrainShader->setUniform1i("rock",			9);	dataManager.bind("rock",9);
-	terrainShader->setUniform1i("grass_normals",10);dataManager.bind("grass normals",10); //can take 100+ ms to complete under linux?
-	terrainShader->setUniform1i("fractalNormals",11);dataManager.bind("fractal normals",11); //can take 100+ ms to complete under linux?
-	terrainShader->setUniform1i("treesTexture",12);treeTexture->bind(12);
-	terrainShader->setUniform1i("grassDetail",	13);	dataManager.bind("grass detail",13);
-
-	terrainShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
-	terrainShader->setUniformMatrix("modelTransform",	Mat4f());
-	terrainShader->setUniform1f("time",					world->time());
-	terrainShader->setUniform3f("lightPosition",		graphics->getLightPosition());
-	terrainShader->setUniform3f("eyePos",				view->camera().eye);
-	terrainShader->setUniform2f("gtex_halfPixel",		0.5 / (width), 0.5 / (height));
-	terrainShader->setUniform2f("gtex_origin",			minXYZ.x, minXYZ.z);
-	terrainShader->setUniform2f("gtex_invScale",		1.0/(maxXYZ.x-minXYZ.x) * (width-1)/width, 1.0/(maxXYZ.z-minXYZ.z) * (height-1)/height);
-	terrainShader->setUniform2f("ttex_halfPixel",		0.5 / (4096), 0.5 / (4096));
-	terrainShader->setUniform2f("ttex_origin",			minXYZ.x, minXYZ.z);
-	terrainShader->setUniform2f("ttex_invScale",		1.0/(maxXYZ.x-minXYZ.x) * (4096-1)/4096, 1.0/(maxXYZ.z-minXYZ.z) * (4096-1)/4096);
-	terrainShader->setUniform1f("minHeight",			minXYZ.y);
-	terrainShader->setUniform1f("heightRange",			maxXYZ.y-minXYZ.y);
-	sceneManager.bindLights(terrainShader);
-
-	Vec3f eye;
-	unsigned int bufferOffset;
-	for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
-	{
-		//float d = (eye.x-(*i)->center.x)*(eye.x-(*i)->center.x) + (eye.z-(*i)->center.z)*(eye.z-(*i)->center.z);
-		//dataManager.setUniform1f("dist", (*i)->minDistanceSquared / d);
-		bufferOffset = sizeof(float)*3 * ((*i)->y + ((*i)->x*((width-1)/LOD+1))) * (16<<(levelsDeep-(*i)->level));
-		indexBuffers[(*i)->level][(*i)->element.edgeFlags]->bindBuffer(vertexBuffer, bufferOffset);
-		indexBuffers[(*i)->level][(*i)->element.edgeFlags]->drawBuffer();
-		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
-		//graphics->drawLine(Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z));
-		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.maxXYZ.z), Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
-		//graphics->drawLine(Vec3f((*i)->bounds.maxXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z), Vec3f((*i)->bounds.minXYZ.x,(*i)->bounds.maxXYZ.y,(*i)->bounds.minXYZ.z));
-	}
-	//graphics->setDepthTest(false);
-	//auto s = shaders.bind("model");
-	//dataManager.bind("white");
-
-	//s->setUniform4f("diffuse", 0,0,0,1);
-	//graphics->setWireFrame(true);
-	//for(auto i = renderQueue.begin(); i != renderQueue.end(); i++)
-	//{
-	//	bufferOffset = sizeof(float)*3 * ((*i)->y + ((*i)->x*((width-1)/LOD+1))) * (16<<(levelsDeep-(*i)->level));
-	//	indexBuffers[(*i)->level][(*i)->element.edgeFlags]->drawBuffer(GraphicsManager::TRIANGLES, vertexBuffer, bufferOffset);
-	//}
-	//graphics->setWireFrame(false);
-	//graphics->setDepthTest(true);
-}
-void Terrain::Page::renderFoliage(shared_ptr<GraphicsManager::View> view) const
-{
-	//skyTexture->bind(1); <-- bound by caller
-	//bool trees3D = false;
-
-	//static vector<foliagePatch::plant> treeModels;
-	//treeModels.clear();
-
-	//Profiler.startElement("checkDepth");
-	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-	//{
-	//	if(!i->plantIndexBuffer || !view->boundingBoxInFrustum(i->bounds) || i->center.distanceSquared(view->camera().eye) > 10000.0*10000.0)
-	//	{
-	//		i->renderType = foliagePatch::DONT_RENDER;
-	//	}
-	//	else// if(!trees3D || i->center.distanceSquared(view->camera().eye) > 250.0*250.0)
-	//	{
-	//		i->renderType = foliagePatch::RENDER_BILLBAORD;
-	//	}
-	//	//else
-	//	//{
-	//	//	for(auto p = i->plants.begin(); p != i->plants.end(); p++)
-	//	//	{
-	//	//		(*p).screenDepth = view->project3(p->location).z;
-	//	//	}
-	//	//	treeModels.insert(treeModels.begin(), i->plants.begin(), i->plants.end());
-	//	//	i->renderType = foliagePatch::RENDER_MODEL;
-	//	//}
-	//}
-	//Profiler.endElement("checkDepth");
-	//std::sort(treeModels.begin(), treeModels.end(), [](const foliagePatch::plant& p1, const foliagePatch::plant& p2)->bool{return p1.screenDepth > p2.screenDepth;});
-
-	//graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
-	
-	return;
-
-	if(foliageVBO)
-	{
-		bool hasTransformFeedback = graphics->hasShaderModel4();
-
-		unsigned int treesRendered = 0;
-
-		graphics->setDepthMask(true);
-		//world->treeTexture->bind();
-		dataManager.bind("tree");
-		auto alphaTreesShader = shaders.bind("trees alpha test shader");
-		alphaTreesShader->setUniform1i("tex", 0);
-		alphaTreesShader->setUniform1i("sky", 1);
-		alphaTreesShader->setUniform3f("eyePos", view->camera().eye);
-		alphaTreesShader->setUniform3f("right", view->camera().right);
-		alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-		foliageVBO->bindBuffer();
-		if(hasTransformFeedback)
-		{
-			//foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, 0, numTrees * 12);
-			for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-			{
-				if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
-				{
-					foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, i->sm4_treeVboOffset, i->sm4_treeVboSize);
-					treesRendered += i->sm4_treeVboSize / 12;
-				}
-			}
-		}
-		else
-		{
-			for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-			{
-				//if(i->renderType == foliagePatch::RENDER_BILLBAORD)
-				if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
-				{
-					i->plantIndexBuffer->bindBuffer();
-					i->plantIndexBuffer->drawBuffer();
-				}
-			}
-		}
-		graphics->setDepthMask(false);
-		if(graphics->getMultisampling() > 1)
-		{
-			auto treesShader = shaders.bind("trees shader");
-			treesShader->setUniform1i("tex", 0);
-			treesShader->setUniform1i("sky", 1);
-			treesShader->setUniform3f("eyePos", view->camera().eye);
-			treesShader->setUniform3f("right", view->camera().right);
-			treesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-			if(hasTransformFeedback)
-			{
-				//foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, 0, numTrees * 12);
-				for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-				{
-					if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
-					{
-						foliageVBO->drawBuffer(GraphicsManager::TRIANGLES, i->sm4_treeVboOffset, i->sm4_treeVboSize);
-					}
-				}
-			}
-			else
-			{
-				for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-				{
-					//if(i->renderType == foliagePatch::RENDER_BILLBAORD)
-					if(view->boundingBoxInFrustum(i->bounds) && i->center.distanceSquared(view->camera().eye) < 10000.0*10000.0)
-					{
-						i->plantIndexBuffer->bindBuffer();
-						i->plantIndexBuffer->drawBuffer();
-					}
-				}
-			}
-		}
-	}
-
-
-	//auto tree3DShader = shaders("trees3D shader");
-	//auto leavesMesh = dataManager.getModel("tree leaves");
-	//auto trunkMesh = dataManager.getModel("tree trunk");
-	//if(trees3D && tree3DShader && trunkMesh && !trunkMesh->materials.empty() && leavesMesh && !leavesMesh->materials.empty())
-	//{
-	//	tree3DShader->bind();
-	//	tree3DShader->setUniform1i("tex",0);
-	//	trunkMesh->materials.front().tex->bind(0);
-	//	trunkMesh->materials.front().indexBuffer->bindBuffer(trunkMesh->VBO);
-	//	tree3DShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
-	//
-	//	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-	//	//{
-	//	//	if(i->renderType == foliagePatch::RENDER_MODEL)
-	//	//	{
-	//	//		for(auto p = i->plants.begin(); p != i->plants.end(); p++)
-	//	//		{
-	//	for(auto p = treeModels.begin(); p != treeModels.end(); p++)
-	//	{
-	//		if(view->camera().eye.distanceSquared(p->location) < 200.0*200.0)
-	//		{
-	//				tree3DShader->setUniform1f("transparency", clamp((200.0 - view->camera().eye.distance(p->location))*0.02, 0.0, 1.0));
-	//				tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
-	//				trunkMesh->materials.front().indexBuffer->drawBuffer();
-	//		}
-	//	}
-	//	//		}
-	//	//	}
-	//	//}
-	//
-	//	leavesMesh->materials.front().tex->bind(0);
-	//	leavesMesh->materials.front().indexBuffer->bindBuffer(leavesMesh->VBO);
-	//	//for(auto i = foliagePatches.begin(); i != foliagePatches.end(); i++)
-	//	//{
-	//	//	if(i->renderType == foliagePatch::RENDER_MODEL)
-	//	//	{
-	//	//		for(auto p = i->plants.begin(); p != i->plants.end(); p++)
-	//	//		{
-	//	for(auto p = treeModels.begin(); p != treeModels.end(); p++)
-	//	{
-	//		if(view->camera().eye.distanceSquared(p->location) < 200.0*200.0)
-	//		{
-	//				tree3DShader->setUniform1f("transparency", 1.0/-*clamp((200.0 - view->camera().eye.distance(p->location))*0.2, 0.0, 1.0)* /);
-	//				tree3DShader->setUniform4f("position_scale",p->location.x, p->location.y, p->location.z, p->height / 23.73);
-	//				leavesMesh->materials.front().indexBuffer->drawBuffer();
-	//		}
-	//	}
-	//	//		}
-	//	//	}
-	//	//}
-	//}
-	//graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
-}
-Terrain::Page::~Page()
-{
-	delete[] heights;
-}*/
 // Terrain::decal::decal(string tex, shared_ptr<GraphicsManager::vertexBuffer> vbo, shared_ptr<GraphicsManager::indexBuffer> ibo, double sTime, double fLength): texture(tex), vertexBuffer(vbo), indexBuffer(ibo), startTime(sTime), fadeLength(fLength)
 // {
 
 // }
-Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
+Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::tileResolution), wireframe(false)
 {
 	debugAssert(isPowerOfTwo(clipMap->layerResolution - 1));
 
 	graphics->setClearColor(Color4(0, 0.2, 0.3, 1.0));
 
-	FractalNode::initialize();
-
-/*	shaderType = shader;
+	/*	shaderType = shader;
 	waterPlane = (shader==TERRAIN_ISLAND);
 	shared_ptr<Page> p(new Page(Heights,patchResolution,position,scale,LOD));
 	p->generateFoliage(foliageDensity);
@@ -1913,7 +943,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): wireframe(false)
 //	skyTexture = static_pointer_cast<GraphicsManager::textureCube>(dataManager.getTexture("skybox"));
 
 	
-	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap));
+	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap, terrainData));
 
 	//////////////////
 /*	Vec3f n;
@@ -2049,7 +1079,7 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 
 		//remove old nodes to make room for new ones
 		auto lru = inactiveNodes.begin();		
-		while(FractalNode::unassignedTextureIndices.size() < 4+4*dependents.size() && 
+		while(terrainData.nodeIndices.indicesRemaining() < 4+4*dependents.size() && 
 			  divisions+dependents.size() < maxDivisions && 
 			  lru != inactiveNodes.end())
 		{
@@ -2073,13 +1103,14 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 		   n->sideLength / (FractalNode::tileResolution-1) > 15.0 &&
 		   n->maxHeight > -2.0f && 
 		   (n->children[0] || (divisions < maxDivisions && 
-		    FractalNode::unassignedTextureIndices.size() >= 4+4*dependents.size())))
+		    terrainData.nodeIndices.indicesRemaining() >= 4+4*dependents.size())))
 		{
 			n->divisionLevel = FractalNode::SUBDIVIDED;
 			if(!n->children[0])
 			{
 				divisions++;
-				n->subdivide();
+				n->subdivide(terrainData);
+                             
 			}
 		
 			tiles--;
@@ -2107,8 +1138,10 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 		}
 	}
 
+
+
 	Profiler.setOutput("tiles", lexical_cast<string>(tiles) + "/" + lexical_cast<string>(FractalNode::totalNodes));
-	Profiler.setOutput("indexList", lexical_cast<string>(FractalNode::unassignedTextureIndices.size()) + "/" + lexical_cast<string>(FractalNode::maxNodes));
+//	Profiler.setOutput("indexList", lexical_cast<string>(FractalNode::unassignedTextureIndices.size()) + "/" + lexical_cast<string>(FractalNode::maxNodes));
 
 	return divisions;
 }
@@ -2553,10 +1586,6 @@ void Terrain::generateOceanTexture()
 //void Terrain::initTerrain(unsigned short* Heights, unsigned short patchResolution, Vec3f position, Vec3f scale, TerrainType shader, Circle<float> bounds, float foliageDensity, unsigned int LOD)
 //{
 //}
-Terrain::~Terrain()
-{
-	FractalNode::cleanUp();
-}
 void Terrain::terrainFrameUpdate(double cTime)
 {
 	FractalNode::frameNumber++;
@@ -2579,7 +1608,6 @@ void Terrain::terrainFrameUpdate(double cTime)
 	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 	graphics->endRenderToTexture();
 	waveTexture->generateMipmaps();
-
 }
 void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 {
@@ -2620,7 +1648,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	}*/
 
 
-	computeFractalSubdivision(view, 5);
+
 
 //	graphics->setWireFrame(true);
 	renderFractalTerrain(view);
@@ -2677,7 +1705,45 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniform1i("grass",    5); dataManager.bind("grass",5);
 	shader->setUniform1i("grassDetail",	6);	dataManager.bind("grass detail",6);
 	shader->setUniform1i("waveTexture", 7);	waveTexture->bind(7);
-	fractalTerrain->render(view, shader);
+
+
+	computeFractalSubdivision(view, 5);
+
+    //do a breadth first search of the quadtree to find nodes to render
+    terrainData.multiDraw->clearDraws();
+    std::queue<FractalNode*> nodes;
+    nodes.push(fractalTerrain.get());
+    while(!nodes.empty()){
+        FractalNode* n = nodes.front();
+        nodes.pop();
+
+        if(n->divisionLevel == FractalNode::LEVEL_USED)
+        {
+            unsigned int index = 0;
+            if(n->neighbors[0].expired() || 
+               n->neighbors[0].lock()->divisionLevel == FractalNode::COMBINED)
+                index |= 8;
+            if(n->neighbors[1].expired() || 
+               n->neighbors[1].lock()->divisionLevel == FractalNode::COMBINED)
+                index |= 2;
+            if(n->neighbors[2].expired() || 
+               n->neighbors[2].lock()->divisionLevel == FractalNode::COMBINED)
+                index |= 4;
+            if(n->neighbors[3].expired() || 
+               n->neighbors[3].lock()->divisionLevel == FractalNode::COMBINED)
+                index |= 1;
+
+            terrainData.multiDraw->addDraw(terrainData.segmentOffsets[index],
+                                           0,//*(n->index) * terrainData.vertexStep,
+                                           terrainData.segmentSizes[index]);
+        }
+        else if(n->divisionLevel == FractalNode::SUBDIVIDED)
+        {
+            for(auto& c : n->children)
+                if(c) nodes.push(c.get());
+        }
+    }
+    terrainData.multiDraw->render();
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const
 {

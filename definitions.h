@@ -354,19 +354,22 @@ public:
 		operator unsigned int(){return value;}
 		~Index(){deleter();}
 	};
-	typedef unique_ptr<Index> indexPtr;
+	typedef unique_ptr<Index> IndexPtr;
 	class pool_empty: public std::exception{};
 
 private:
 	std::stack<unsigned int> unassigned;
 
 public:
+    IndexPool(const IndexPool&)=delete;
+    void operator=(const IndexPool&)=delete;
+
 	explicit IndexPool(unsigned int size)
 	{
 		for(unsigned int i=0; i<size; i++)
 			unassigned.push(i);
 	}
-	indexPtr nextIndex()
+	IndexPtr nextIndex()
 	{
 		if(unassigned.empty())
 			throw pool_empty();
@@ -378,11 +381,11 @@ public:
 					unassigned.push(i);
 	    }));
 	}
-	unsigned int indicesRemaining()
+	unsigned int indicesRemaining() const
 	{
 		return unassigned.size();
 	}
-	explicit operator bool()
+	explicit operator bool() const
 	{
 		return !unassigned.empty();
 	}

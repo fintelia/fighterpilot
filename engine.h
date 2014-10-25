@@ -154,4 +154,4 @@ public:
 	virtual void update();
 };
 
-extern Game* game;
+extern unique_ptr<Game> game;

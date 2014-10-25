@@ -121,7 +121,7 @@ public:
 #ifdef WINDOWS
 	void windowsInput(unsigned int uMsg, unsigned int wParam, long lParam);
 #endif
-	void sendCallbacks(callBack* c);
+	void sendCallbacks(shared_ptr<callBack> c);
 	
 	int lastKey;
 	int tPresses;

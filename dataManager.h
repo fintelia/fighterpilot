@@ -39,11 +39,6 @@ private:
 	string							boundShader;
 
 public:
-	static DataManager& getInstance()
-	{
-		static DataManager* pInstance = new DataManager();
-		return *pInstance;
-	}
 	void bind(string name, int textureUnit=0);
 
 	shared_ptr<const fontAsset>						getFont(string name);
@@ -62,8 +57,6 @@ public:
 private:
 	textureAsset* registerTexture(shared_ptr<FileManager::textureFile> f, bool tileable=false, bool compress=false);
 	fontAsset* registerFont(shared_ptr<FileManager::textFile> f);
-
-	DataManager(){}
 };
 class ShaderManager
 {
@@ -73,24 +66,17 @@ private:
 		shared_ptr<GraphicsManager::shader> shader;
 		bool use_sAspect;
 	};
-	map<string,shared_ptr<shaderAsset>>	shaderAssets;
+	map<string,shared_ptr<shaderAsset>> shaderAssets;
 
 public:
-	static ShaderManager& getInstance()
-	{
-		static ShaderManager* pInstance = new ShaderManager();
-		return *pInstance;
-	}
-	shared_ptr<GraphicsManager::shader> bind(string name);
+	GraphicsManager::shader* bind(string name);
 	shared_ptr<GraphicsManager::shader> operator() (string name);
 	bool shaderExists(string name);
 
 	void add(string name, shared_ptr<GraphicsManager::shader> shader, bool use_sAspect);
 	void writeErrorLog(string filename);
-private:
-	ShaderManager(){}
 };
 
 
-extern DataManager& dataManager;
-extern ShaderManager& shaders;
+extern DataManager dataManager;
+extern ShaderManager shaders;

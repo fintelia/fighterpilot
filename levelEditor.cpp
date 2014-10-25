@@ -347,21 +347,22 @@ void levelEditor::update()
 	Vec2f p = input.getMousePos();
 	if(getTab() == REGIONS && (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
-		if(p.x < 2.0/sh)			orthoCenter += Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000;
-		if(p.x > sAspect-2.0/sh)	orthoCenter -= Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000;
-		if(p.y < 2.0/sh)			orthoCenter += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000;
-		if(p.y > 1.0-2.0/sh)		orthoCenter -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000;
+
+		// if(p.x < 2.0/sh)			orthoCenter += Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000;
+		// if(p.x > sAspect-2.0/sh)	orthoCenter -= Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000;
+		// if(p.y < 2.0/sh)			orthoCenter += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000;
+		// if(p.y > 1.0-2.0/sh)		orthoCenter -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000;
 	}
 	else if(/*!input.getMouseState(MIDDLE_BUTTON).down &&*/ (p.x < 2.0/sh || p.x > sAspect-2.0/sh || p.y < 2.0/sh || p.y > 1.0-2.0/sh))
 	{
-		//if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * pow(1.1f,-scrollVal);
-		//if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * pow(1.1f,-scrollVal);
-		//if(p.y < 2.0/sh)			center -= rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * pow(1.1f,-scrollVal);
-		//if(p.y > 1.0-2.0/sh)		center += rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * pow(1.1f,-scrollVal);
-		if(p.x < 2.0/sh)			center += Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * fovy/80.0;
-		if(p.x > sAspect-2.0/sh)	center -= Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * fovy/80.0;
-		if(p.y < 2.0/sh)			center += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * fovy/80.0;
-		if(p.y > 1.0-2.0/sh)		center -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * fovy/80.0;
+		// //if(p.x < 2.0/sh)			center -= rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * pow(1.1f,-scrollVal);
+		// //if(p.x > sAspect-2.0/sh)	center += rot * Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * pow(1.1f,-scrollVal);
+		// //if(p.y < 2.0/sh)			center -= rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * pow(1.1f,-scrollVal);
+		// //if(p.y > 1.0-2.0/sh)		center += rot * Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * pow(1.1f,-scrollVal);
+		// if(p.x < 2.0/sh)			center += Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * fovy/80.0;
+		// if(p.x > sAspect-2.0/sh)	center -= Vec3f(0.25,0,0) * levelFile.info.mapSize.x * world->time.length() / 1000 * fovy/80.0;
+		// if(p.y < 2.0/sh)			center += Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * fovy/80.0;
+		// if(p.y > 1.0-2.0/sh)		center -= Vec3f(0,0,0.25) * levelFile.info.mapSize.y * world->time.length() / 1000 * fovy/80.0;
 		center.x = clamp(center.x, 0.0, levelFile.info.mapSize.x);
 		center.z = clamp(center.z, 0.0, levelFile.info.mapSize.y);
 	}
@@ -1813,7 +1814,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 			shader->setUniform3f("invScale",	1.0/levelFile.info.mapSize.x, 1.0/(levelFile.info.maxHeight-levelFile.info.minHeight), 1.0/levelFile.info.mapSize.y);
 			shader->setUniform3f("sunPosition", graphics->getLightPosition());
 			shader->setUniform3f("eyePos",		view->camera().eye);
-			shader->setUniform1f("time",		world->time());
+			shader->setUniform1f("time",		0/*world->time()*/);
 			shader->setUniform1i("snow",		0);
 			shader->setUniform1i("LCnoise",		1);
 			shader->setUniform1i("groundTex",	2);
@@ -1842,7 +1843,7 @@ void levelEditor::renderTerrain(bool drawWater, float scale, float seaLevelOffse
 	//	dataManager.setUniform1i("groundTex", 1);
 	//	dataManager.setUniform1i("rock", 2);
 	//	dataManager.setUniform1i("sand", 3);
-		ocean->setUniform1f("time", world->time());
+		ocean->setUniform1f("time", 0/*world->time()*/);
 	//	dataManager.setUniform1f("seaLevel", (seaLevelOffset-levelFile.info.minHeight)/(levelFile.info.maxHeight-levelFile.info.minHeight));
 	//	dataManager.setUniform1f("XZscale", levelFile.info.mapSize.x);
 
