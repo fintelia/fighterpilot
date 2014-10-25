@@ -25,8 +25,8 @@ profiler Profiler;																											//	//
 Ephemeris& ephemeris=Ephemeris::getInstance();																				//  //
 InputManager& input=InputManager::getInstance();																			//	//
 gui::manager& menuManager = gui::manager::getInstance();																	//	//
-DataManager& dataManager = DataManager::getInstance();																		//	//
-ShaderManager& shaders = ShaderManager::getInstance();																		//	//
+DataManager dataManager;
+ShaderManager shaders;
 AssetLoader& assetLoader = AssetLoader::getInstance();																		//  //
 CollisionManager& collisionManager = CollisionManager::getInstance();														//	//
 GraphicsManager* graphics = OpenGLgraphics::getInstance();																	//	//
@@ -143,7 +143,7 @@ void linuxEventHandler(XEvent event)
 			{
 //				char ascii = 0;
 //				XLookupString(e, &ascii, 1, nullptr, nullptr);
-				input.sendCallbacks(new InputManager::keyStroke(keyup, vk, ascii));
+				input.sendCallbacks(std::make_shared<InputManager::keyStroke>(keyup, vk, ascii));
 				return true;
 			}
 			return false;
@@ -154,17 +154,17 @@ void linuxEventHandler(XEvent event)
 			{
 				char ascii = 0;
 				XLookupString(e, &ascii, 1, nullptr, nullptr);
-				input.sendCallbacks(new InputManager::keyStroke(keyup, keysym-(minSym)+(minVK), ascii));
+				input.sendCallbacks(std::make_shared<InputManager::keyStroke>(keyup, keysym-(minSym)+(minVK), ascii));
 				return true;
 			}
 			return false;
 		};
 		
 		if(keysym == 0xffe1 || keysym == 0xffe2)// L-SHIFT / R-SHIFT
-			input.sendCallbacks(new InputManager::keyStroke(keyup, VK_SHIFT));
+			input.sendCallbacks(std::make_shared<InputManager::keyStroke>(keyup, VK_SHIFT));
 
 		if(keysym == 0xffe3 || keysym == 0xffe4)// L-CONTROL / R-CONTROL
-			input.sendCallbacks(new InputManager::keyStroke(keyup, VK_CONTROL));
+			input.sendCallbacks(std::make_shared<InputManager::keyStroke>(keyup, VK_CONTROL));
 		
 		
 		//see input.h and x11/keysymdef.h 
@@ -188,7 +188,7 @@ void linuxEventHandler(XEvent event)
 		{
 			char ascii = 0;
 			XLookupString(e, &ascii, 1, nullptr, nullptr);
-			input.sendCallbacks(new InputManager::keyStroke(keyup, 0, ascii));
+			input.sendCallbacks(std::make_shared<InputManager::keyStroke>(keyup, 0, ascii));
 
 			if(ascii)
 				cout << "Untranslated KeySym: '" << ascii << "'" << endl;
@@ -203,18 +203,18 @@ void linuxEventHandler(XEvent event)
 	else if(event.type == ButtonPress)
 	{
 		XButtonEvent* e = &event.xbutton;
-		if(e->button == 1)	input.sendCallbacks(new InputManager::mouseClick(true, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
-		if(e->button == 2)	input.sendCallbacks(new InputManager::mouseClick(true, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
-		if(e->button == 3)	input.sendCallbacks(new InputManager::mouseClick(true, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
-		if(e->button == 4)	input.sendCallbacks(new InputManager::mouseScroll(1.0/3.0));
-		if(e->button == 5)	input.sendCallbacks(new InputManager::mouseScroll(-1.0/3.0));
+		if(e->button == 1)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(true, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 2)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(true, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 3)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(true, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 4)	input.sendCallbacks(std::make_shared<InputManager::mouseScroll>(1.0/3.0));
+		if(e->button == 5)	input.sendCallbacks(std::make_shared<InputManager::mouseScroll>(-1.0/3.0));
 	}
 	else if(event.type == ButtonRelease)
 	{
 		XButtonEvent* e = &event.xbutton;
-		if(e->button == 1)	input.sendCallbacks(new InputManager::mouseClick(false, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
-		if(e->button == 2)	input.sendCallbacks(new InputManager::mouseClick(false, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
-		if(e->button == 3)	input.sendCallbacks(new InputManager::mouseClick(false, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 1)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(false, LEFT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 2)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(false, MIDDLE_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
+		if(e->button == 3)	input.sendCallbacks(std::make_shared<InputManager::mouseClick>(false, RIGHT_BUTTON, Vec2f((float)e->x / sh, (float)e->y / sh)));
 	}
 	else if(event.type == ConfigureNotify)
 	{
@@ -304,7 +304,7 @@ int main(int argc, const char* argv[])
 	}
 
 #elif defined(LINUX)
-	for(int i=0; i<argc; i++)
+	for(int i=1; i<argc; i++)
 	{
 		game->commandLineOptions.push_back(string(argv[i]));
 	}
@@ -397,9 +397,7 @@ int main(int argc, const char* argv[])
 	particleManager.~manager();
 	collisionManager.~CollisionManager();
 	assetLoader.~AssetLoader();
-	dataManager.~DataManager();
 	sceneManager.~SceneManager();
-	shaders.~ShaderManager();
 	input.~InputManager();
 	soundManager.~SoundManager();
 	graphics->destroyWindow();

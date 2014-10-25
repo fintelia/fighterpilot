@@ -8,7 +8,7 @@ SettingsManager& settings = SettingsManager::getInstance();
 
 
 
-Game* game = new Game;
+unique_ptr<Game> game(new Game);
 
 objId bullets;
 
@@ -143,7 +143,7 @@ bool Game::init()
 	input.initialize();
 
 	menuManager.setMenu(new gui::loading);
-
+    menuManager.update();
 	return true;
 }
 

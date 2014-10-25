@@ -310,48 +310,51 @@ double InputManager::directInputControllerState::getAxis(unsigned int axis)const
 #endif
 }
 #endif
-void InputManager::sendCallbacks(callBack* c)
+void InputManager::sendCallbacks(shared_ptr<callBack> cb)
 {
-	if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == LEFT_BUTTON)
-	{
-		if((leftMouse.down = static_cast<mouseClick*>(c)->down) == true)
-		{
-			leftMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
-			leftMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;		
-		}
-		else
-		{
-			leftMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
-			leftMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
-		}
-	}
-	else if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == MIDDLE_BUTTON)
-	{
-		if((middleMouse.down = static_cast<mouseClick*>(c)->down) == true)
-		{
-			middleMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
-			middleMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;		
-		}
-		else
-		{
-			middleMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
-			middleMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
-		}
-	}
-	else if(c->type == MOUSE_CLICK && static_cast<mouseClick*>(c)->button == RIGHT_BUTTON)
-	{
-		if((rightMouse.down = static_cast<mouseClick*>(c)->down) == true)
-		{
-			rightMouse.downPos.x = static_cast<mouseClick*>(c)->pos.x;
-			rightMouse.downPos.y = static_cast<mouseClick*>(c)->pos.y;			
-		}
-		else
-		{
-			rightMouse.upPos.x = static_cast<mouseClick*>(c)->pos.x;
-			rightMouse.upPos.y = static_cast<mouseClick*>(c)->pos.y;
-		}
-	}
-	menuManager.inputCallback(c);
+    if(cb->type == MOUSE_CLICK){
+        shared_ptr<mouseClick> c = static_pointer_cast<mouseClick>(cb);
+        if(c->button == LEFT_BUTTON)
+        {
+            if((leftMouse.down = c->down) == true)
+            {
+                leftMouse.downPos.x = c->pos.x;
+                leftMouse.downPos.y = c->pos.y;		
+            }
+            else
+            {
+                leftMouse.upPos.x = c->pos.x;
+                leftMouse.upPos.y = c->pos.y;
+            }
+        }
+        else if(c->button == MIDDLE_BUTTON)
+        {
+            if((middleMouse.down = c->down) == true)
+            {
+                middleMouse.downPos.x = c->pos.x;
+                middleMouse.downPos.y = c->pos.y;		
+            }
+            else
+            {
+                middleMouse.upPos.x = c->pos.x;
+                middleMouse.upPos.y = c->pos.y;
+            }
+        }
+        else if(c->button == RIGHT_BUTTON)
+        {
+            if((rightMouse.down = c->down) == true)
+            {
+                rightMouse.downPos.x = c->pos.x;
+                rightMouse.downPos.y = c->pos.y;			
+            }
+            else
+            {
+                rightMouse.upPos.x = c->pos.x;
+                rightMouse.upPos.y = c->pos.y;
+            }
+        }
+    }
+	menuManager.inputCallback(cb);
 }
 void InputManager::initialize()
 {
@@ -540,35 +543,35 @@ void InputManager::update()
 
 			if(xboxControllers[i].leftPressLength >= 5.0)
 			{
-				sendCallbacks(new menuKeystroke(MENU_LEFT));
+				sendCallbacks(std::make_shared<menuKeystroke>(MENU_LEFT));
 				xboxControllers[i].leftPressLength = -395.0;
 			}
 			if(xboxControllers[i].rightPressLength >= 5.0)
 			{
-				sendCallbacks(new menuKeystroke(MENU_RIGHT));
+				sendCallbacks(std::make_shared<menuKeystroke>(MENU_RIGHT));
 				xboxControllers[i].rightPressLength = -395.0;
 			}
 			if(xboxControllers[i].upPressLength >= 5.0)
 			{
-				sendCallbacks(new menuKeystroke(MENU_UP));
+				sendCallbacks(std::make_shared<menuKeystroke>(MENU_UP));
 				xboxControllers[i].upPressLength = -395.0;
 			}
 			if(xboxControllers[i].downPressLength >= 5.0)
 			{
-				sendCallbacks(new menuKeystroke(MENU_DOWN));
+				sendCallbacks(std::make_shared<menuKeystroke>(MENU_DOWN));
 				xboxControllers[i].downPressLength = -395.0;
 			}
 		}
 	}
 
 	if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT)))
-		sendCallbacks(new menuKeystroke(MENU_LEFT));
+		sendCallbacks(std::make_shared<menuKeystroke>(MENU_LEFT));
 	if(((newKeyStates[VK_RIGHT] & 0x80) && !(keys[VK_RIGHT] & KEYSTATE_CURRENT))) 
-		sendCallbacks(new menuKeystroke(MENU_RIGHT));
+		sendCallbacks(std::make_shared<menuKeystroke>(MENU_RIGHT));
 	if(((newKeyStates[VK_UP] & 0x80) && !(keys[VK_UP] & KEYSTATE_CURRENT)))
-		sendCallbacks(new menuKeystroke(MENU_UP));
+		sendCallbacks(std::make_shared<menuKeystroke>(MENU_UP));
 	if(((newKeyStates[VK_DOWN] & 0x80) && !(keys[VK_DOWN] & KEYSTATE_CURRENT))) 
-		sendCallbacks(new menuKeystroke(MENU_DOWN));
+		sendCallbacks(std::make_shared<menuKeystroke>(MENU_DOWN));
 
 
 
@@ -578,32 +581,31 @@ void InputManager::update()
 		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_A) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_A) ||
 		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_A) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_A) ||
 		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_A) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_A))
-			sendCallbacks(new menuKeystroke(MENU_ENTER));
+			sendCallbacks(std::make_shared<menuKeystroke>(MENU_ENTER));
 	if(((newKeyStates[VK_ESCAPE] & 0x80) && !(keys[VK_ESCAPE] & KEYSTATE_CURRENT)) || 
 		xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_BACK) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_BACK) ||
 		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_BACK) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_BACK) ||
 		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_BACK) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_BACK) ||
 		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_BACK) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_BACK))
-			sendCallbacks(new menuKeystroke(MENU_BACK));
+			sendCallbacks(std::make_shared<menuKeystroke>(MENU_BACK));
 	if( xboxControllers[0].connected && !(xboxControllers[0].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[0].Gamepad.wButtons & XINPUT_START) ||
 		xboxControllers[1].connected && !(xboxControllers[1].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[1].Gamepad.wButtons & XINPUT_START) ||
 		xboxControllers[2].connected && !(xboxControllers[2].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[2].Gamepad.wButtons & XINPUT_START) ||
 		xboxControllers[3].connected && !(xboxControllers[3].state->Gamepad.wButtons & XINPUT_START) && (newXboxControllerStates[3].Gamepad.wButtons & XINPUT_START))
-			sendCallbacks(new menuKeystroke(MENU_START)); //can't be triggered from keyboard!!!
+			sendCallbacks(std::make_shared<menuKeystroke>(MENU_START)); //can't be triggered from keyboard!!!
 #else
 	if(((newKeyStates[VK_LEFT] & 0x80) && !(keys[VK_LEFT] & KEYSTATE_CURRENT))) // KEYSTATE_CURRENT actually reflects the old state (we are about to update it)
-			sendCallbacks(new menuKeystroke(MENU_LEFT));
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_LEFT));
 	if(((newKeyStates[VK_RIGHT] & 0x80) && !(keys[VK_RIGHT] & KEYSTATE_CURRENT)))
-			sendCallbacks(new menuKeystroke(MENU_RIGHT));
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_RIGHT));
 	if(((newKeyStates[VK_UP] & 0x80) && !(keys[VK_UP] & KEYSTATE_CURRENT)))
-			sendCallbacks(new menuKeystroke(MENU_UP));
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_UP));
 	if(((newKeyStates[VK_DOWN] & 0x80) && !(keys[VK_DOWN] & KEYSTATE_CURRENT))) 
-			sendCallbacks(new menuKeystroke(MENU_DOWN));
-
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_DOWN));
 	if(((newKeyStates[VK_SPACE] & 0x80) && !(keys[VK_SPACE] & KEYSTATE_CURRENT)) ||	((newKeyStates[VK_RETURN] & 0x80) && !(keys[VK_RETURN] & KEYSTATE_CURRENT))) 
-			sendCallbacks(new menuKeystroke(MENU_ENTER));
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_ENTER));
 	if(((newKeyStates[VK_ESCAPE] & 0x80) && !(keys[VK_ESCAPE] & KEYSTATE_CURRENT))) 
-			sendCallbacks(new menuKeystroke(MENU_BACK));
+        sendCallbacks(std::make_shared<menuKeystroke>(MENU_BACK));
 #endif
 
 ////////////////////////////////////////////////////mutex lock////////////////////////////////////////////////////

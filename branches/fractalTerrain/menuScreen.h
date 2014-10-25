@@ -251,7 +251,7 @@ protected:
 
 	friend class manager;
 
-	void inputCallback(InputManager::callBack* callback);
+	void inputCallback(shared_ptr<InputManager::callBack> callback);
 	bool issueInputCallback(InputManager::callBack* callback, element* e);
 
 	elementContainer():focus(NULL){}
@@ -409,25 +409,18 @@ public:
 	bool setPopup(popup* p);
 
 	void update();
-//	void updateFrame();
-//	void updateSimulation();
-
 	void render();
-//	void render3D(unsigned int view);
 
-	void inputCallback(InputManager::callBack* callback);
-
+	void inputCallback(shared_ptr<InputManager::callBack> callback);
 	void drawCursor(){mDrawCursor = true;}
 
-	~manager(){delete menu;}
 private:
 	vector<shared_ptr<popup>> popups;
-	screen* menu;
+	bool mDrawCursor;
+	unique_ptr<screen> menu;
+    unique_ptr<screen> newMenu;
 
 	manager():menu(nullptr){}
-
-
-	bool mDrawCursor;
 };
 }
 

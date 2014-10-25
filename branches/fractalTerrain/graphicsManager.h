@@ -182,11 +182,13 @@ public:
 		void bindBuffer(){bindBuffer(0);}
 
 		virtual void bindTransformFeedback(GraphicsManager::Primitive primitive)=0;
+		virtual void bindTransformFeedbackRange(GraphicsManager::Primitive primitive, unsigned int offset, unsigned int size)=0;
 		virtual unsigned int unbindTransformFeedback()=0;
 
 		virtual void setTotalVertexSize(unsigned int size){totalVertexSize = size;}
 		virtual void addVertexAttribute(VertexAttribute attrib, unsigned int offset);
 		virtual void setVertexData(unsigned int size, void* data)=0;
+        virtual void setVertexDataRange(unsigned int offset, unsigned int size, void* data)=0;
 		virtual void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count)=0;
 		virtual void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances)=0;
 	};
@@ -210,8 +212,16 @@ public:
 
 		virtual void drawBuffer()=0;
 		virtual void drawBuffer(unsigned int numIndicies)=0;
-
 	};
+    class multiDraw
+    {
+    protected:
+        multiDraw(){}
+    public:
+        virtual void clearDraws()=0;
+        virtual void addDraw(unsigned int indexOffset, unsigned int baseVertex, unsigned int count)=0;
+        virtual void render()=0;
+    };
 	class texture
 	{
 	public:
@@ -399,11 +409,12 @@ public:
 	//gen* functions
 	virtual shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage)=0;
 	virtual shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage)=0;
+    virtual shared_ptr<multiDraw> genMultiDraw(shared_ptr<vertexBuffer> vBuffer, shared_ptr<indexBuffer> iBuffer)=0;
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
 	virtual shared_ptr<textureCube> genTextureCube()=0;
-	virtual shared_ptr<shader> genShader()=0;
 	virtual shared_ptr<View> genView();
+	virtual shared_ptr<shader> genShader()=0;
 
 	//get functions
 	float	getGamma()const;			//gamma correction
@@ -458,7 +469,6 @@ public:
 #endif
 };
 
-#ifdef OPENGL
 class OpenGLgraphics: public GraphicsManager
 {
 public:
@@ -535,133 +545,15 @@ protected:
 
 	//void bindRenderTarget(RenderTarget t);
 	//void renderFBO(RenderTarget src);
+	class vertexBufferGL;
+	class indexBufferGL;
+	class texture2DGL;
+	class texture3DGL;
+	class textureCubeGL;
+	class shaderGL;
+    class multiDrawGL;
 
 public:
-	class vertexBufferGL: public GraphicsManager::vertexBuffer
-	{
-	private:
-		unsigned int vBufferID;
-		void bindBuffer(unsigned int offset);
-
-	public:
-		vertexBufferGL(UsageFrequency u);
-		~vertexBufferGL();
-		void setVertexData(unsigned int size, void* data);
-
-		void bindTransformFeedback(GraphicsManager::Primitive primitive);
-		unsigned int unbindTransformFeedback();
-
-		void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
-		void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances);
-	};
-	class indexBufferGL: public GraphicsManager::indexBuffer
-	{
-	private:
-		unsigned int bufferID;
-		unsigned int dataCount;
-		unsigned int dataType;		//GLenum
-		unsigned int primitiveType;	//GLenum
-#ifdef _DEBUG
-		unsigned int maxIndex;
-		bool vboToSmallForMaxIndex;
-#endif
-	public:
-		indexBufferGL(UsageFrequency u);
-		~indexBufferGL();
-		void setData(unsigned char* data, Primitive primitive, unsigned int count);
-		void setData(unsigned short* data, Primitive primitive, unsigned int count);
-		void setData(unsigned int* data, Primitive primitive, unsigned int count);
-
-		void bindBuffer();
-		void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset);
-
-		void drawBuffer();
-		void drawBuffer(unsigned int numIndicies);
-	};
-	class texture2DGL: public GraphicsManager::texture2D
-	{
-	private:
-		unsigned int textureID;
-	public:
-		friend class OpenGLgraphics;
-		texture2DGL();
-		~texture2DGL();
-		void bind(unsigned int textureUnit);
-		void generateMipmaps();
-		unsigned char* getData(unsigned int level);
-		void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data);
-	};
-	class texture3DGL: public GraphicsManager::texture3D
-	{
-	private:
-		unsigned int textureID;
-	public:
-		friend class OpenGLgraphics;
-		texture3DGL();
-		~texture3DGL();
-		void bind(unsigned int textureUnit);
-		unsigned char* getData(unsigned int level);
-		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
-	};
-	class textureCubeGL: public GraphicsManager::textureCube
-	{
-	private:
-		unsigned int textureID;
-	public:
-		friend class OpenGLgraphics;
-		textureCubeGL();
-		~textureCubeGL();
-		void bind(unsigned int textureUnit);
-		unsigned char* getData(unsigned int level);
-		void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
-	};
-	class shaderGL: public GraphicsManager::shader
-	{
-	private:
-		string fragErrorLog;
-		string geomErrorLog;
-		string vertErrorLog;
-		string linkErrorLog;
-
-		unsigned int shaderId;
-		map<string, int> uniforms;
-		map<string, int> attributes;
-		int getUniformLocation(string uniform);
-		bool compileShader(unsigned int sId, const char* src, string& errorLog);
-	public:
-		shaderGL(): shaderId(0){}
-		~shaderGL();
-
-		void bind();
-
-		bool init5(const char* vert, const char* geometry, const char* tessellationControl, const char* tessellationEvaluation, const char* frag);
-		bool init4(const char* vert, const char* geometry, const char* frag);
-		bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings);
-		bool init(const char* vert, const char* frag);
-
-		void setUniform1f(string name, float v0);
-		void setUniform2f(string name, float v0, float v1);
-		void setUniform3f(string name, float v0, float v1, float v2);
-		void setUniform4f(string name, float v0, float v1, float v2, float v3);
-		void setUniform1i(string name, int v0);
-		void setUniform2i(string name, int v0, int v1);
-		void setUniform3i(string name, int v0, int v1, int v2);
-		void setUniform4i(string name, int v0, int v1, int v2, int v3);
-		void setUniform1fv(string name, unsigned int n, float* v);
-		void setUniform2fv(string name, unsigned int n, float* v);
-		void setUniform3fv(string name, unsigned int n, float* v);
-		void setUniform4fv(string name, unsigned int n, float* v);
-		void setUniform1iv(string name, unsigned int n, int* v);
-		void setUniform2iv(string name, unsigned int n, int* v);
-		void setUniform3iv(string name, unsigned int n, int* v);
-		void setUniform4iv(string name, unsigned int n, int* v);
-
-		void setUniformMatrix(string name, const Mat3f& m);
-		void setUniformMatrix(string name, const Mat4f& m);
-
-		string getErrorStrings();
-	};
-
 	friend class vertexBufferGL;
 	friend class indexBufferGL;
 	friend class texture2DGL;
@@ -700,6 +592,7 @@ public:
 
 	shared_ptr<vertexBuffer> genVertexBuffer(vertexBuffer::UsageFrequency usage);
 	shared_ptr<indexBuffer> genIndexBuffer(indexBuffer::UsageFrequency usage);
+    shared_ptr<multiDraw> genMultiDraw(shared_ptr<vertexBuffer> vBuffer, shared_ptr<indexBuffer> iBuffer);
 	shared_ptr<texture2D> genTexture2D();
 	shared_ptr<texture3D> genTexture3D();
 	shared_ptr<textureCube> genTextureCube();
@@ -745,6 +638,5 @@ public:
 	HWND getWindowHWND();
 #endif
 };
-#endif
 
 extern GraphicsManager* graphics;

@@ -24,7 +24,7 @@ uniform vec2 tOrigin;
 uniform vec2 tScale;
 uniform float tSize;
 
-attribute vec2 Position2;
+attribute vec3 Position;
 
 //see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
 uint hash(uint x)
@@ -53,27 +53,9 @@ float cubic(float t, float x0, float m0, float x1, float m1)
 
 void main()
 {
-	vec4 groundVal;
+/*	vec4 groundVal;
 	tCoord = tOrigin + tScale*Position2;
-//	ivec2 tFloor = floor(textureSize() * tCoord);
-//	ivec2 tCeil = ceil(textureSize() * tCoord);
-
-//	if(tCeil == tFloor)
-	{
-		groundVal = texture2D(groundTex, tCoord);
-	}
-//	else
-//	{
-//		vec4 texels[4] = {
-//			texelFetch(groundTex, tFloor),
-//			texelFetch(groundTex, vec2(tCeil.x, tFloor.y)),
-//			texelFetch(groundTex, tCeil),
-//			texelFetch(groundTex, vec2(tFloor.x, tCeil.y)),
-//		};
-//
-//		float h1 = cubic(texels[0].r texels[0].) 
-//		groundVal.r = cubic()
-//	}
+    groundVal = texture2D(groundTex, tCoord);
 
 	normal = normalize(scale * vec3((2.0*groundVal.b-1.0),
 							1,
@@ -89,10 +71,13 @@ void main()
 	
 	vec2 r = pos.xz / earthRadius;
 	pos.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
-	gl_Position = cameraProjection * pos;
+
+
+*/
+
+    
+
+	gl_Position = cameraProjection * vec4(Position,1.0);
 
 	flogz = 1.0 + gl_Position.w;
-
-//	sunHalfVector = sunPosition + position.xyz;
-//	sunDir = normalize(sunPosition/* - position.xyz*/);
 }

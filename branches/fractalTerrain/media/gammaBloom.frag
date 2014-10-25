@@ -14,7 +14,6 @@ void main()
 	//vec3 blurColor = texture2DLod(tex, texCoord, 1.0).rgb;
 
 	vec3 color = texture2D(tex, texCoord).rgb;
-	//float i = color.r+color.g+color.b;
 	float L = 0.27*color.r + 0.67*color.g + 0.07*color.b;
 	color += L*L*L * 0.25;
 	color = pow(color,vec3(g,g,g));

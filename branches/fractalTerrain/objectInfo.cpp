@@ -4,7 +4,7 @@
 
 using namespace tinyxml2;
 
-ObjectInfo& objectInfo = ObjectInfo::getInstance();
+ObjectInfo objectInfo;
 
 shared_ptr<SceneManager::meshInstance> ObjectInfo::objectData::newMeshInstance(Mat4f transformation) const
 {
@@ -52,7 +52,7 @@ shared_ptr<SceneManager::meshInstance> ObjectInfo::aaaObjectData::cannon::newMes
 }
 bool ObjectInfo::loadObjectData(string filename)
 {
-	auto  getAttribute = [](XMLElement* element, const char* attribute)->string
+	auto getAttribute = [](XMLElement* element, const char* attribute)->string
 	{
 		const char* c = element->Attribute(attribute);
 		string s = (c != NULL) ? string(c) : string("");

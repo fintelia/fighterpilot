@@ -13,8 +13,6 @@ void manager::render()
 	{
 		menu->render();
 
-
-
 		for(auto e = menu->labels.begin(); e != menu->labels.end(); e++)
 		{
 			if(e->second != NULL && e->second->getVisibility())
@@ -143,6 +141,17 @@ void manager::update()
 	{
 		menu->update();
 	}
+
+    if(newMenu)
+    {
+        popups.clear();
+
+        menu = std::move(newMenu);
+        newMenu.reset();
+
+        if(menu)
+            menu->init();
+    }
 }
 // void manager::updateSimulation()
 // {
@@ -153,15 +162,7 @@ void manager::update()
 // }
 void manager::setMenu(screen* m)
 {
-	popups.clear();
-
-	if(menu != nullptr)
-		delete menu;
-
-	menu = m;
-
-	if(m != nullptr)
-		m->init();
+    newMenu = unique_ptr<screen>(m);
 }
 bool manager::setPopup(popup* p)
 {
@@ -173,11 +174,11 @@ bool manager::setPopup(popup* p)
 	}
 	return false;
 }
-void manager::inputCallback(InputManager::callBack* callback)
+void manager::inputCallback(shared_ptr<InputManager::callBack> callback)
 {
 	if(callback->type == KEY_STROKE)
 	{
-		InputManager::keyStroke* call = (InputManager::keyStroke*)callback;
+		auto call = static_pointer_cast<InputManager::keyStroke>(callback);
 		if(!popups.empty())
 		{
 #ifdef _DEBUG
@@ -202,7 +203,7 @@ void manager::inputCallback(InputManager::callBack* callback)
 	}
 	else if(callback->type == MENU_KEY_STROKE)
 	{
-		InputManager::menuKeystroke* call = (InputManager::menuKeystroke*)callback;
+		auto call = static_pointer_cast<InputManager::menuKeystroke>(callback);
 		if(!popups.empty())
 		{
 #ifdef _DEBUG
@@ -227,7 +228,7 @@ void manager::inputCallback(InputManager::callBack* callback)
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
-		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;
+		auto call = static_pointer_cast<InputManager::mouseClick>(callback);
 
 		if(!popups.empty())
 		{
@@ -255,7 +256,7 @@ void manager::inputCallback(InputManager::callBack* callback)
 	}
 	else if(callback->type == MOUSE_SCROLL)
 	{
-		InputManager::mouseScroll* call = (InputManager::mouseScroll*)callback;
+		auto call = static_pointer_cast<InputManager::mouseScroll>(callback);
 		if(!popups.empty() && popups.back()->scroll(call->rotations)) return;
 		if(menu!=NULL && menu->scroll(call->rotations)) return;
 	}
@@ -306,16 +307,16 @@ void simulationScreen::update()
 	}
 	updateFrame();
 }
-void elementContainer::inputCallback(InputManager::callBack* callback)
+void elementContainer::inputCallback(shared_ptr<InputManager::callBack> callback)
 {
 	if(callback->type == KEY_STROKE && focus != NULL)
 	{
 	//	Input::keyStroke* call = (Input::keyStroke*)callback;
-		issueInputCallback(callback,focus);
+		issueInputCallback(callback.get(),focus);
 	}
 	else if(callback->type == MOUSE_CLICK)
 	{
-		InputManager::mouseClick* call = (InputManager::mouseClick*)callback;
+		auto call = static_pointer_cast<InputManager::mouseClick>(callback);
 
 
 	//	call->pos.x *= sh;
@@ -327,7 +328,7 @@ void elementContainer::inputCallback(InputManager::callBack* callback)
 			{
 				if(focus->getVisibility() && focus->getElementState() && focus->inElement(call->pos))
 				{
-					issueInputCallback(callback,focus);
+					issueInputCallback(callback.get(),focus);
 					return;
 				}
 				else
@@ -336,20 +337,52 @@ void elementContainer::inputCallback(InputManager::callBack* callback)
 					focus = nullptr;
 				}
 			}
+            auto elementInput = [this,call,callback](element* e){
+                if(e->inElement(call->pos) && e->getVisibility() && e->getElementState()){
+                    focus = e;
+                    issueInputCallback(callback.get(), focus);
+                    return true;
+                }
+                return false;
+            };
 
-			for(auto e = buttons.begin(); this!=NULL && e != buttons.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-			for(auto e = toggles.begin(); this!=NULL && e != toggles.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-			for(auto e = sliders.begin(); this!=NULL && e != sliders.end(); e++)		if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-			for(auto e = checkBoxes.begin(); this!=NULL && e != checkBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-			for(auto e = textBoxes.begin(); this!=NULL && e != textBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
-			for(auto e = listBoxes.begin(); this!=NULL && e != listBoxes.end(); e++)	if(e->second->inElement(call->pos) && e->second->getVisibility() && e->second->getElementState()){focus=e->second;	issueInputCallback(callback,focus); return;}
+			for(auto e : buttons)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
+			for(auto e : toggles)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
+			for(auto e : sliders)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
+			for(auto e : checkBoxes)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
+			for(auto e : textBoxes)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
+			for(auto e : listBoxes)
+            {
+                if(elementInput(e.second))
+                    return;
+            }
 
 			debugAssert(focus == nullptr);//break if focus is not NULL
 			focus = nullptr;//if anything responded to the mouse press, this will execute
 		}
 		else
 		{
-			if(focus != nullptr)	issueInputCallback(callback,focus);
+			if(focus != nullptr)	issueInputCallback(callback.get(),focus);
 		}
 	}
 }

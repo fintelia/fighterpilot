@@ -431,13 +431,13 @@ bool DataManager::assetLoaded(string name)
 //	}
 //}
 
-shared_ptr<GraphicsManager::shader> ShaderManager::bind(string name)
+GraphicsManager::shader* ShaderManager::bind(string name)
 {
 	auto s = shaderAssets.find(name);
 	if(s != shaderAssets.end())
 	{
 		s->second->shader->bind();
-		return s->second->shader;
+		return s->second->shader.get();
 	}
 	debugBreak();
 	return nullptr;

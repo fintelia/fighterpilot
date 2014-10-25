@@ -189,7 +189,8 @@ void dogFight::targeter(float x, float y, float apothem, Angle tilt) const
 }
 void dogFight::drawHexCylinder(shared_ptr<GraphicsManager::View> view, Vec3f center, float radius, float height, Color c) const
 {
-	auto hexGrid = shaders.bind("hex grid shader");
+	auto hexGrid = shaders("hex grid shader");
+    hexGrid->bind();
 	dataManager.bind("hex grid", 0);
 
 	hexGrid->setUniform1i("tex",0);

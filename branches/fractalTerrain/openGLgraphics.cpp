@@ -5,7 +5,6 @@
 #ifdef OPENGL
 
 #define GLEW_STATIC
-
 #if defined(WINDOWS)
 	#include <Windows.h>
 	#include "GL/glew.h"
@@ -14,8 +13,6 @@
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
 	#include <X11/extensions/xf86vmode.h>
-
-
 	#include <GL/glew.h>
 	#include <GL/glxew.h>
 	#include <GL/glx.h>
@@ -25,14 +22,8 @@
 
 #include "png/png.h"
 
-
-//EXTENSIONS USED:
-//GL_EXT_framebuffer_object (required)
-//GL_EXT_framebuffer_multisample (optional)
-//WGL_EXT_swap_control (optional)
-
-
-bool gl2Hacks=true; //Some hacks are required to get code to run on old hardware (disabled if running in OpenGL 3 mode)
+// NOTE: Versions of OpenGL prior to 3.3 are no longer supported. However not
+// all the code has been updated to reflect this.
 
 #if defined WINDOWS
 struct OpenGLgraphics::Context
@@ -57,6 +48,148 @@ struct OpenGLgraphics::Context
 	bool					fullscreen;
 };
 #endif
+class OpenGLgraphics::vertexBufferGL: public GraphicsManager::vertexBuffer
+{
+private:
+    unsigned int vBufferID;
+    void bindBuffer(unsigned int offset);
+
+public:
+    vertexBufferGL(UsageFrequency u);
+    ~vertexBufferGL();
+    void setVertexData(unsigned int size, void* data);
+    void setVertexDataRange(unsigned int offset, unsigned int size, void* data);
+    void bindTransformFeedback(GraphicsManager::Primitive primitive);
+    void bindTransformFeedbackRange(GraphicsManager::Primitive primitive, unsigned int offset, unsigned int size);
+    unsigned int unbindTransformFeedback();
+
+    void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
+    void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances);
+};
+class OpenGLgraphics::indexBufferGL: public GraphicsManager::indexBuffer
+{
+private:
+    unsigned int bufferID;
+    unsigned int dataCount;
+    unsigned int dataType;
+    unsigned int primitiveType;
+#ifdef _DEBUG
+    unsigned int maxIndex;
+    bool vboToSmallForMaxIndex;
+#endif
+    friend class multiDrawGL;
+public:
+    indexBufferGL(UsageFrequency u);
+    ~indexBufferGL();
+    void setData(unsigned char* data, Primitive primitive, unsigned int count);
+    void setData(unsigned short* data, Primitive primitive, unsigned int count);
+    void setData(unsigned int* data, Primitive primitive, unsigned int count);
+
+    void bindBuffer();
+    void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset);
+
+    void drawBuffer();
+    void drawBuffer(unsigned int numIndicies);
+};
+class OpenGLgraphics::multiDrawGL: public GraphicsManager::multiDraw
+{
+private:
+    vector<GLsizei> count;
+    vector<GLvoid*> indices;
+    vector<GLint> baseVertex;
+
+    shared_ptr<vertexBufferGL> VBO;
+    shared_ptr<indexBufferGL> IBO;
+    multiDrawGL(shared_ptr<vertexBufferGL> vBuffer, shared_ptr<indexBufferGL> iBuffer):VBO(vBuffer), IBO(iBuffer) {}
+    friend class OpenGLgraphics;
+public:
+    void clearDraws();
+    void addDraw(unsigned int indexOffset, unsigned int baseVertex, unsigned int count);
+    void render();
+};
+class OpenGLgraphics::texture2DGL: public GraphicsManager::texture2D
+{
+private:
+    unsigned int textureID;
+public:
+    friend class OpenGLgraphics;
+    texture2DGL();
+    ~texture2DGL();
+    void bind(unsigned int textureUnit);
+    void generateMipmaps();
+    unsigned char* getData(unsigned int level);
+    void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data);
+};
+class OpenGLgraphics::texture3DGL: public GraphicsManager::texture3D
+{
+private:
+    unsigned int textureID;
+public:
+    friend class OpenGLgraphics;
+    texture3DGL();
+    ~texture3DGL();
+    void bind(unsigned int textureUnit);
+    unsigned char* getData(unsigned int level);
+    void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
+};
+class OpenGLgraphics::textureCubeGL: public GraphicsManager::textureCube
+{
+private:
+    unsigned int textureID;
+public:
+    friend class OpenGLgraphics;
+    textureCubeGL();
+    ~textureCubeGL();
+    void bind(unsigned int textureUnit);
+    unsigned char* getData(unsigned int level);
+    void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
+};
+class OpenGLgraphics::shaderGL: public GraphicsManager::shader
+{
+private:
+    string fragErrorLog;
+    string geomErrorLog;
+    string vertErrorLog;
+    string linkErrorLog;
+
+    unsigned int shaderId;
+    map<string, int> uniforms;
+    map<string, int> attributes;
+    int getUniformLocation(string uniform);
+    bool compileShader(unsigned int sId, const char* src, string& errorLog);
+public:
+    shaderGL(): shaderId(0){}
+    ~shaderGL();
+
+    void bind();
+
+    bool init5(const char* vert, const char* geometry, const char* tessellationControl, const char* tessellationEvaluation, const char* frag);
+    bool init4(const char* vert, const char* geometry, const char* frag);
+    bool init4(const char* vert, const char* geometry, const char* frag, vector<const char*> feedbackTransformVaryings);
+    bool init(const char* vert, const char* frag);
+
+    void setUniform1f(string name, float v0);
+    void setUniform2f(string name, float v0, float v1);
+    void setUniform3f(string name, float v0, float v1, float v2);
+    void setUniform4f(string name, float v0, float v1, float v2, float v3);
+    void setUniform1i(string name, int v0);
+    void setUniform2i(string name, int v0, int v1);
+    void setUniform3i(string name, int v0, int v1, int v2);
+    void setUniform4i(string name, int v0, int v1, int v2, int v3);
+    void setUniform1fv(string name, unsigned int n, float* v);
+    void setUniform2fv(string name, unsigned int n, float* v);
+    void setUniform3fv(string name, unsigned int n, float* v);
+    void setUniform4fv(string name, unsigned int n, float* v);
+    void setUniform1iv(string name, unsigned int n, int* v);
+    void setUniform2iv(string name, unsigned int n, int* v);
+    void setUniform3iv(string name, unsigned int n, int* v);
+    void setUniform4iv(string name, unsigned int n, int* v);
+
+    void setUniformMatrix(string name, const Mat3f& m);
+    void setUniformMatrix(string name, const Mat4f& m);
+
+    string getErrorStrings();
+};
 
 OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
 {
@@ -65,7 +198,6 @@ OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u
 OpenGLgraphics::vertexBufferGL::~vertexBufferGL()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vBufferID);
-	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STATIC_DRAW);
 
 	glDeleteBuffers(1, &vBufferID);
 }
@@ -74,9 +206,25 @@ void OpenGLgraphics::vertexBufferGL::setVertexData(unsigned int size, void* data
 	//note: size must be greater than 0
 	vertexBuffer::bindBuffer();
 	totalSize = size;
-	if(usageFrequency == STATIC)		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-	else if(usageFrequency == STREAM)	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
+	if(usageFrequency == STATIC)
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+	else if(usageFrequency == DYNAMIC)
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+	else if(usageFrequency == STREAM)
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
+}
+    void OpenGLgraphics::vertexBufferGL::setVertexDataRange(unsigned int offset, unsigned int size, void* data)
+{
+    debugAssert(offset + size <= totalSize);
+
+	//note: size must be greater than 0
+	vertexBuffer::bindBuffer();
+	if(usageFrequency == STATIC)
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
+	else if(usageFrequency == DYNAMIC)
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
+	else if(usageFrequency == STREAM)
+        glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
 }
 void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 {
@@ -87,14 +235,7 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 		auto v = (VertexAttribute)i;
 		auto f = vertexAttributes.find(v);
 		bool b = (f != vertexAttributes.end());
-		if(gl2Hacks && i == 1)
-		{
-			dynamic_cast<OpenGLgraphics*>(graphics)->setClientState(0, b);
-		}
-		else
-		{
-			dynamic_cast<OpenGLgraphics*>(graphics)->setClientState(i, b);
-		}
+        dynamic_cast<OpenGLgraphics*>(graphics)->setClientState(i, b);
 	}
 
 	//if(dataManager.getBoundShader() == "model")
@@ -126,27 +267,11 @@ void OpenGLgraphics::vertexBufferGL::bindBuffer(unsigned int offset)
 			//glDisableClientState(GL_VERTEX_ARRAY);
 			if(i->first == POSITION2)
 			{
-				if(gl2Hacks)
-				{
-					glVertexPointer(2, GL_FLOAT, totalVertexSize, (void*)((long)i->second.offset+offset));
-					glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
-				}
-				else
-				{
-					glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
-				}
+                glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 			}
 			else if(i->first == POSITION3)
 			{
-				if(gl2Hacks)
-				{
-					glVertexPointer(3, GL_FLOAT, totalVertexSize, (void*)((long)i->second.offset+offset));
-					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
-				}
-				else
-				{
-					glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
-				}
+                glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 			}
 			else if(i->first == TEXCOORD)		glVertexAttribPointer(i->first, 2, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
 			else if(i->first == NORMAL)			glVertexAttribPointer(i->first, 3, GL_FLOAT, GL_FALSE, totalVertexSize, (void*)((long)i->second.offset+offset));
@@ -233,6 +358,23 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Prim
 		glEnable(GL_RASTERIZER_DISCARD);
 		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
+		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
+		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
+		else if(primitive == TRIANGLES)	glBeginTransformFeedback(GL_TRIANGLES);
+		else debugBreak();
+	}
+	else
+	{
+		debugBreak();
+	}
+}
+void OpenGLgraphics::vertexBufferGL::bindTransformFeedbackRange(GraphicsManager::Primitive primitive, unsigned int offset, unsigned int size)
+{
+	if(graphics->hasShaderModel4())
+	{
+		glEnable(GL_RASTERIZER_DISCARD);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
+		glBindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID, offset, size);
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
 		else if(primitive == TRIANGLES)	glBeginTransformFeedback(GL_TRIANGLES);
@@ -409,6 +551,50 @@ void OpenGLgraphics::indexBufferGL::drawBuffer(unsigned int numIndicies)
 	{
 		glDrawElements(primitiveType, min(dataCount,numIndicies), dataType, 0);
 	}
+}
+void OpenGLgraphics::multiDrawGL::clearDraws()
+{
+    count.clear();
+    indices.clear();
+    baseVertex.clear();
+}
+void OpenGLgraphics::multiDrawGL::addDraw(unsigned int indexOffset, unsigned int bVertex, unsigned int c)
+{
+    indices.push_back((GLvoid*)(intptr_t)indexOffset);
+    baseVertex.push_back((GLint)bVertex);
+    count.push_back((GLsizei)c);
+}
+void OpenGLgraphics::multiDrawGL::render()
+{
+    IBO->bindBuffer(VBO, 0);
+
+	debugAssert(IBO->dataType == GL_UNSIGNED_BYTE ||
+                IBO->dataType == GL_UNSIGNED_SHORT ||
+                IBO->dataType == GL_UNSIGNED_INT);
+
+	debugAssert(IBO->primitiveType == GL_POINTS ||
+                IBO->primitiveType == GL_LINES ||
+                IBO->primitiveType == GL_LINE_STRIP ||
+				IBO->primitiveType == GL_LINE_LOOP ||
+                IBO->primitiveType == GL_TRIANGLES ||
+                IBO->primitiveType == GL_TRIANGLE_STRIP ||
+				IBO->primitiveType == GL_TRIANGLE_FAN ||
+                IBO->primitiveType == GL_QUADS ||
+                IBO->primitiveType == GL_QUAD_STRIP);
+
+    for(int i = 0; i < count.size(); i++)
+        glDrawElementsBaseVertex(IBO->primitiveType,
+                                 count[i],
+                                 IBO->dataType,
+                                 indices[i],
+                                 baseVertex[i]);
+
+/*    glMultiDrawElementsBaseVertex(IBO->primitiveType,
+                                  count.data(),
+                                  IBO->dataType,
+                                  indices.data(),
+                                  count.size(),
+                                  baseVertex.data());*/
 }
 OpenGLgraphics::texture2DGL::texture2DGL()
 {
@@ -1006,13 +1192,6 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 	glBindAttribLocation(shaderId, 6, "Tangent");
 	glBindAttribLocation(shaderId, 7, "Bitangent");
 	glBindAttribLocation(shaderId, 8, "GenericFloat");
-
-	if(gl2Hacks) //force both positions to occupy the location of gl_Vertex
-	{
-		//glBindAttribLocation(shaderId, 0, "Position2"); (already set)
-		glBindAttribLocation(shaderId, 0, "Position");
-	}
-
 	glLinkProgram(shaderId);
 
 
@@ -1560,6 +1739,10 @@ shared_ptr<GraphicsManager::indexBuffer> OpenGLgraphics::genIndexBuffer(indexBuf
 {
 	return shared_ptr<indexBuffer>((new indexBufferGL(usage)));
 }
+shared_ptr<GraphicsManager::multiDraw> OpenGLgraphics::genMultiDraw(shared_ptr<vertexBuffer> vBuffer, shared_ptr<indexBuffer> iBuffer)
+{
+    return shared_ptr<multiDraw>(new multiDrawGL(dynamic_pointer_cast<vertexBufferGL>(vBuffer), dynamic_pointer_cast<indexBufferGL>(iBuffer)));
+}
 shared_ptr<GraphicsManager::texture2D> OpenGLgraphics::genTexture2D()
 {
 	return shared_ptr<texture2D>((new texture2DGL()));
@@ -1574,7 +1757,7 @@ shared_ptr<GraphicsManager::textureCube> OpenGLgraphics::genTextureCube()
 }
 shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
 {
-	return shared_ptr<shader>((new shaderGL()));
+	return shared_ptr<shader>(new shaderGL());
 }
 void OpenGLgraphics::setGamma(float gamma)
 {
@@ -1952,91 +2135,65 @@ void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
-	bool gl3FBOs = openGL3 || GLEW_ARB_framebuffer_object;
-	/////////////////////////////////////////////////////////////////////////////////////
 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
 	samples = samples >= maxSamples ? maxSamples : samples;
-	multisampling = (GLEW_EXT_framebuffer_multisample || gl3FBOs) && samples > 1;
+	multisampling = samples > 1;
 	//////////////////////////////////////////////////////////////////////////////////////
-	//for(int i = 0; i < 2; i++)
-	//{
-		glGenTextures(1, &renderTexture);
-		glBindTexture(GL_TEXTURE_2D, renderTexture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glGenTextures(1, &renderTexture);
+    glBindTexture(GL_TEXTURE_2D, renderTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB10_A2, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGB10_A2, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		glGenTextures(1, &renderTexture2);
-		glBindTexture(GL_TEXTURE_2D, renderTexture2);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glGenTextures(1, &renderTexture2);
+    glBindTexture(GL_TEXTURE_2D, renderTexture2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB10_A2, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGB10_A2, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		glGenTextures(1, &depthTexture);
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT24, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-	//}
-	//////////////////////////////////////////////////////////////////////////////////////
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT24, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
 	glGenFramebuffers(1, &fboID);
-	if(gl3FBOs)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-	}
-	else
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
-	}
-
-	if(multisampling)
+    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+	
+    if(multisampling)
 	{
 		glGenFramebuffers(1, &multisampleFboID);
-		if(gl3FBOs)
-		{
-			glGenRenderbuffers(1, &multisampleRenderBuffer);
-			glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA, sw, sh);
+        glGenRenderbuffers(1, &multisampleRenderBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB10_A2, sw, sh);
 
-			glGenRenderbuffers(1, &multisampleDepthBuffer);
-			glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
+        glGenRenderbuffers(1, &multisampleDepthBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
-		}
-		else
-		{
-			glGenRenderbuffersEXT(1, &multisampleRenderBuffer);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleRenderBuffer);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_RGBA, sw, sh);
-
-			glGenRenderbuffersEXT(1, &multisampleDepthBuffer);
-			glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, multisampleDepthBuffer);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER_EXT, samples, GL_DEPTH_COMPONENT24, sw, sh);
-
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, multisampleRenderBuffer);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, multisampleDepthBuffer);
-		}
+        glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
 	}
+    else
+    {
+        multisampleRenderBuffer = 0;
+        multisampleFboID = 0;
+        multisampleDepthBuffer = 0;
+    }
 	
-	GLenum status = gl3FBOs ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
 #ifdef WINDOWS
 	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
@@ -2051,10 +2208,8 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
 #endif
 
-	if(gl3FBOs)
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	else		
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 	glGenTextures(1, &blurTexture);
 	glBindTexture(GL_TEXTURE_2D, blurTexture);
@@ -2165,7 +2320,9 @@ void OpenGLgraphics::render()
 	double totalTime=0.0; //total recorded time for all the frame times (in seconds)
 	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
 		totalTime+=((*i)*0.001);
-	fps= ((double)frameTimes.size()) /  totalTime;
+
+    if(totalTime > 0)
+        fps = ((double)frameTimes.size()) /  totalTime;
 ////////////////////////////////////CLEAR SCREEN//////////////////////////////////////////
 	bindRenderTarget(RT_SCREEN);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2356,7 +2513,7 @@ void OpenGLgraphics::render()
 	sceneManager.endRender(); //do some post render cleanup
 
 //////////////////////////////////Blit Framebuffer///////////////////////////////
-	if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
+	if(multisampling)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
@@ -2365,16 +2522,6 @@ void OpenGLgraphics::render()
 
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	}
-	else if(multisampling)
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
-		glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
 	}
 ////////////////////////////////////Motion Blur//////////////////////////////////
 	//glActiveTexture(GL_TEXTURE0);	glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
@@ -2496,7 +2643,7 @@ void OpenGLgraphics::render()
 				currentView->postProcessShader()->setUniform1i("tex",0);
 				currentView->postProcessShader()->setUniform1i("noiseTex",2);
 				dataManager.bind("LCnoise",2);
-				currentView->postProcessShader()->setUniform1f("time",world->time());
+//				currentView->postProcessShader()->setUniform1f("time",world->time());
 				if(currentView->blurStage())
 				{
 					currentView->postProcessShader()->setUniform1i("blurTex",1);
@@ -2524,9 +2671,9 @@ void OpenGLgraphics::render()
 		{
 			//ortho->setUniform4f("color",white);
 			//GraphicsManager::drawOverlay(Rect::XYXY(0,0,0.15,0.045), "white");
-			//ortho->setUniform4f("color",black);
-			//drawText(lexical_cast<string>(fps), Vec2f(0.005, 0.005), "default font");
-			//ortho->setUniform4f("color",white);
+			ortho->setUniform4f("color",black);
+			drawText(lexical_cast<string>(fps), Vec2f(0.005, 0.005), "default font");
+			ortho->setUniform4f("color",white);
 
 			Profiler.draw();
 	
@@ -2913,7 +3060,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	XTextProperty textProperty;
 	XStringListToTextProperty( (char **) &cTitle, 1, &textProperty );
 	XSetWMProperties(x11_display, x11_window, &textProperty, &textProperty, 0, 0, nullptr, nullptr, nullptr);
-	
+    XFree(textProperty.value);
 #endif
 
 	glewExperimental = true; //force glew to attempt to get all function pointers (even for "unsupported" extensions)
@@ -3009,7 +3156,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
 	openGL3 = true;	
 #endif
 
@@ -3020,11 +3166,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glDepthFunc(GL_LEQUAL);
-
-	if(gl2Hacks)
-	{
-		glEnableClientState(GL_VERTEX_ARRAY);
-	}
 
 	if (!initFBOs(maxSamples))
 	{
@@ -3195,7 +3336,8 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 }
 void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 {
-	world->time.pause();
+    cout << "Warning: can't pause for screenshot" << endl;
+//	world->time.pause();
 #ifdef WINDOWS
 	SYSTEMTIME sTime;
 	GetLocalTime(&sTime);
@@ -3228,7 +3370,7 @@ void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 		{
 			viewConstraint = Rect::XYWH(1.0/tiles*x, 1.0/tiles*y, 1.0/tiles, 1.0/tiles);
 
-			world->frameUpdate();
+			//world->frameUpdate();
 			render();
 			bindRenderTarget(RT_SCREEN);
 			glReadPixels(0, 0, sw, sh, GL_BGR, GL_UNSIGNED_BYTE, tileContents);
@@ -3245,7 +3387,7 @@ void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 	fileManager.writeFile(file,true);
 	viewConstraint = Rect::XYXY(0,0,1,1);
 	highResScreenshot = false;
-	world->time.unpause();
+//	world->time.unpause();
 }
 void OpenGLgraphics::drawSphere(Vec3f position, float radius, Color4 color)
 {

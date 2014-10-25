@@ -609,7 +609,7 @@ void loading::update()
 		assetLoader.saveAssetZip();
 		shaders.writeErrorLog("media/shaderErrors.txt");
 
-		if(!game->commandLineOptions.empty() && fileManager.fileExists(game->commandLineOptions[0]))
+/*		if(!game->commandLineOptions.empty() && fileManager.fileExists(game->commandLineOptions[0]))
 		{
 			shared_ptr<LevelFile> l(new LevelFile);
 			if(l->loadZIP(game->commandLineOptions[0]) && l->checkValid())
@@ -621,7 +621,7 @@ void loading::update()
 				menuManager.setMenu(new gui::chooseMode);
 			}
 		}
-		else
+		else */
 		{
 			menuManager.setMenu(new gui::chooseMode); //otherwise just chose the chooseMode menu
 		}

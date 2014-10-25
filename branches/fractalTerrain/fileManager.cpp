@@ -110,7 +110,9 @@ void FileManager::file::completeLoad(bool s)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class T> T readAs(void* c)
 {
-	return *((T*)c);
+    T c_copy = 0;
+    memcpy(&c_copy, c, sizeof(T));
+    return c_copy;
 }
 template<class T>void writeAs(void* c, const T& value)
 {
