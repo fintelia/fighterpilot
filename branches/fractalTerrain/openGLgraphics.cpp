@@ -582,19 +582,19 @@ void OpenGLgraphics::multiDrawGL::render()
                 IBO->primitiveType == GL_QUADS ||
                 IBO->primitiveType == GL_QUAD_STRIP);
 
-    for(int i = 0; i < count.size(); i++)
+    /*for(int i = 0; i < count.size(); i++)
         glDrawElementsBaseVertex(IBO->primitiveType,
                                  count[i],
                                  IBO->dataType,
                                  indices[i],
-                                 baseVertex[i]);
+                                 baseVertex[i]);*/
 
-/*    glMultiDrawElementsBaseVertex(IBO->primitiveType,
+    glMultiDrawElementsBaseVertex(IBO->primitiveType,
                                   count.data(),
                                   IBO->dataType,
                                   indices.data(),
                                   count.size(),
-                                  baseVertex.data());*/
+                                  baseVertex.data());
 }
 OpenGLgraphics::texture2DGL::texture2DGL()
 {
@@ -3113,7 +3113,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
 			glGenQueries(1, &transformFeedbackQueryID);
-			gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
 			openGL3 = true;
 			openGL4 = true;
 		}
@@ -3142,7 +3141,6 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			glGenVertexArrays(1, &vao);
 			glBindVertexArray(vao);
 			glGenQueries(1, &transformFeedbackQueryID);
-			gl2Hacks = false; //we won't be needing any hacks to get FighterPilot to work on old hardware...
 			openGL3 = true;
 		}
 	}
