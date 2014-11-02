@@ -14,7 +14,6 @@ Terrain::ClipMap::Layer::Layer(Layer&& l): minHeight(l.minHeight), maxHeight(l.m
 {
 
 }
-
 Terrain::ClipMap::ClipMap(unsigned int lResolution, float sLength):
 	sideLength(sLength), layerResolution(lResolution)
 {
@@ -61,26 +60,9 @@ void Terrain::ClipMap::addLayer(unique_ptr<float[]> heights)
 						   GraphicsManager::texture::RGBA16, false, false,
 						   (unsigned char*)groundValues.get());
 }
-Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexStep(tileResolution*tileResolution*sizeof(vertex)), verticesPerTile(6*(tileResolution-1)*(tileResolution-1)),nodeIndices(totalIndices)
+Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexStep(tileResolution*tileResolution*sizeof(vertex)), verticesPerTile(tileResolution*tileResolution),nodeIndices(totalIndices)
 {
-    unsigned int n = 0;
     vector<vertex> heights(tileResolution*tileResolution*totalIndices);
-    for(int i = 0; i < totalIndices; i++)
-    {
-        for(int x = 0; x < tileResolution; x++)
-        {
-            for(int z = 0; z < tileResolution; z++)
-            {
-                heights[n].x = x * 1000.0;
-                heights[n].y = 50.0;
-                heights[n].z = z * 1000.0;
-                heights[n].slopeX = 0;
-                heights[n].slopeY = 0;
-                heights[n].curvature = 0;
-                n++;
-            }
-        }
-    }
     vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	vertexBuffer->setTotalVertexSize(sizeof(vertex));
 	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
@@ -189,7 +171,7 @@ Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileRe
 			}
 		}
         segmentOffsets.push_back(segmentStartIndex * 4);
-        segmentSizes.push_back((i - segmentStartIndex) * 4);
+        segmentCounts.push_back((i - segmentStartIndex));
 	}
     indexBuffer = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     indexBuffer->setData(indices.get(),/*graphics->hasShaderModel5() ? GraphicsManager::PATCHES : */GraphicsManager::TRIANGLES, i);
@@ -354,10 +336,10 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
         for(int z = 0; z < tileResolution; z++)
         {
             tileHeights[n].x = worldBounds.minXYZ.x + sideLength * x
-                / tileResolution;
+                / (tileResolution - 1);
             tileHeights[n].z = worldBounds.minXYZ.z + sideLength * z
-                / tileResolution;
-            tileHeights[n].y = 10.0;//worldBounds.minXYZ.y;
+                / (tileResolution - 1);
+            tileHeights[n].y = 10.0;
             tileHeights[n].slopeX = 0;
             tileHeights[n].slopeY = 0;
             tileHeights[n].curvature = 0;
@@ -368,7 +350,7 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
     terrainData.vertexBuffer->setVertexDataRange((*index)*terrainData.vertexStep,
                                                  terrainData.vertexStep, 
                                                  tileHeights.data());
-
+												 
 ////////////
 
 	computeError();
@@ -1091,6 +1073,7 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 			{
 				(*lru)->pruneChildren();
 				lru = inactiveNodes.erase(lru);
+				//TODO: remove lru's children from inactiveNodes?
 			}
 		}
 
@@ -1734,15 +1717,15 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
                 index |= 1;
 
             terrainData.multiDraw->addDraw(terrainData.segmentOffsets[index],
-                                           0,//*(n->index) * terrainData.vertexStep,
-                                           terrainData.segmentSizes[index]);
+                                     *(n->index) * terrainData.verticesPerTile,
+                                     terrainData.segmentCounts[index]);
         }
         else if(n->divisionLevel == FractalNode::SUBDIVIDED)
         {
             for(auto& c : n->children)
                 if(c) nodes.push(c.get());
         }
-    }
+    } 
     terrainData.multiDraw->render();
 }
 void Terrain::renderFractalWater(shared_ptr<GraphicsManager::View> view) const

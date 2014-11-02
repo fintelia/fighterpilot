@@ -674,7 +674,7 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			//	down(wParam);
 				WORD ascii[2] = {0, 0};
 				ToAscii(wParam, 0, nullptr, (LPWORD)&ascii, 0);
-				sendCallbacks(new keyStroke(false, wParam, (char)ascii[0]));
+				sendCallbacks(std::make_shared<keyStroke>(false, wParam, (char)ascii[0]));
 			}
 		}
 	}
@@ -683,53 +683,53 @@ void InputManager::windowsInput(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	//	up(wParam);
 		WORD ascii[2] = {0, 0};
 		ToAscii(wParam, 0, nullptr, (LPWORD)&ascii, 0);
-		sendCallbacks(new keyStroke(true, wParam, (char)ascii[0]));
+		sendCallbacks(std::make_shared<keyStroke>(true, wParam, (char)ascii[0]));
 	}
 	else if(uMsg == WM_LBUTTONDOWN)
 	{
 		//leftMouse.down = true;
 		//leftMouse.downPos.x = (float)LOWORD(lParam) / sh;
 		//leftMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(true, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MBUTTONDOWN)
 	{
 		//middleMouse.down = true;
 		//middleMouse.downPos.x = (float)LOWORD(lParam) / sh;
 		//middleMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(true, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_RBUTTONDOWN)
 	{
 		//rightMouse.down = true;
 		//rightMouse.downPos.x = (float)LOWORD(lParam) / sh;
 		//rightMouse.downPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(true, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(true, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_LBUTTONUP)
 	{
 		//leftMouse.down = false;
 		//leftMouse.upPos.x = (float)LOWORD(lParam) / sh;
 		//leftMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(false, LEFT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MBUTTONUP)
 	{
 		//middleMouse.down = false;
 		//middleMouse.upPos.x = (float)LOWORD(lParam) / sh;
 		//middleMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(false, MIDDLE_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_RBUTTONUP)
 	{
 		//rightMouse.down = false;
 		//rightMouse.upPos.x = (float)LOWORD(lParam) / sh;
 		//rightMouse.upPos.y = (float)HIWORD(lParam) / sh;
-		sendCallbacks(new mouseClick(false, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
+		sendCallbacks(std::make_shared<mouseClick>(false, RIGHT_BUTTON, Vec2f((float)LOWORD(lParam) / sh, (float)HIWORD(lParam) / sh)));
 	}
 	else if(uMsg == WM_MOUSEWHEEL)
 	{
-		sendCallbacks(new mouseScroll(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
+		sendCallbacks(std::make_shared<mouseScroll>(double(GET_WHEEL_DELTA_WPARAM(wParam))/120.0));
 	}
 }
 #endif /*WINDOWS*/

@@ -66,17 +66,18 @@ private:
             float slopeX;
             float slopeY;
             float curvature;
+			vertex(): x(0), y(0), z(0), slopeX(0), slopeY(0), curvature(0) {}
         };
 
         /** space taken by each tile in the vertex buffer */
         const unsigned int vertexStep;
-        /** number of vertices to render for each tile */
+        /** number of vertices in each tile */
         const unsigned int verticesPerTile;
 
         /** positions of each segment in the index buffer */
         vector<unsigned int> segmentOffsets;
-        /** size of each segment in the index buffer */
-        vector<unsigned int> segmentSizes;
+        /** number of triangles for segment in the index buffer */
+        vector<unsigned int> segmentCounts;
 
         shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
 		shared_ptr<GraphicsManager::indexBuffer> indexBuffer;
