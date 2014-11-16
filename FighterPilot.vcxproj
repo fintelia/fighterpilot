@@ -245,6 +245,8 @@
     <None Include="media\desert.frag" />
     <None Include="media\fractalOcean.frag" />
     <None Include="media\fractalOcean.vert" />
+    <None Include="media\fractalTerrain.frag" />
+    <None Include="media\fractalTerrain.vert" />
     <None Include="media\fractalTessellate.vert" />
     <None Include="media\gamma.frag" />
     <None Include="media\gamma.vert" />
