@@ -746,6 +746,12 @@
     <None Include="media\fractalTessellate.vert">
       <Filter>shaders\terrain</Filter>
     </None>
+    <None Include="media\fractalTerrain.frag">
+      <Filter>shaders\terrain</Filter>
+    </None>
+    <None Include="media\fractalTerrain.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

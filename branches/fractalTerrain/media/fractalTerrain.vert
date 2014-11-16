@@ -75,7 +75,7 @@ void main()
 
 */
 
-    
+    position = Position;
 
 	gl_Position = cameraProjection * vec4(Position,1.0);
 

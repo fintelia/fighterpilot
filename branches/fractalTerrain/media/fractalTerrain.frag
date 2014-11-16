@@ -25,14 +25,6 @@ uniform float waveAmplitude;
 
 void main()
 {
-    // gl_FragColor = vec4(1,0,0,1);
-
-	///////////////DEPTH///////////////
-	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
-	// const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
-	// const float Fcoef_half = 0.5 * Fcoef;
-	// gl_FragDepth = log2(flogz) * Fcoef_half;
-
 	float height = position.y;
 
 //	if(position.y < -45.0)
@@ -71,7 +63,6 @@ void main()
 
  	color *= 0.9 + 0.1 * (1.0 - slope);
 
-
 /*****************************************************************/
 
 
@@ -97,9 +88,10 @@ void main()
 	//}
 //	light = clamp(light, 0.0, 1.0);
 	color *= light;
+	
 	////////////WATER EFFECT///////////
 	vec2 r = position.xz / earthRadius;
-	float waveHeight = (texture2D(waveTexture, position.xz*invWaveTextureScale).x-0.5) * waveAmplitude; + earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+	float waveHeight = 0;//(texture2D(waveTexture, position.xz*invWaveTextureScale).x-0.5) * waveAmplitude;// + earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	//see: http://www-evasion.imag.fr/~Fabrice.Neyret/images/fluids-nuages/waves/Jonathan/articlesCG/rendering-natural-waters-00.pdf
 	float c = 0.000;
 	float depth = max((waveHeight-height)/max(abs(normalize(eyePosition-position).y),1e-6),0);
@@ -136,10 +128,11 @@ void main()
 	//color = vec3(pow(max(dot(reflect(-sunDirection,n), normalize(eyePosition-position)),0.0),1.0));
 
 
-	color = mix(color.rgb, treeVal.rgb, treeVal.a);
+	//%%color = mix(color.rgb, treeVal.rgb, treeVal.a);
 	
-	gl_FragColor = vec4(vec3(height),1.0); 
-
+	//%%gl_FragColor = vec4(color, 1.0); 
+	gl_FragColor = vec4(vec3(color), 1.0); 
+	
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
 	const float Fcoef = 2.0 / log2(2000000.0 + 1.0);

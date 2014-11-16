@@ -19,7 +19,7 @@ void main()
 	int z = gl_VertexID / tileResolution;
 	float y = texture(heightmap, texOffset + vec2(x,z) * texStep, 0).r;
 
-	pos = position + vec3(x,y,z) * scale / (tileResolution - 1);
+	pos = position + vec3(x,y,z) * scale;
 
 	slope = vec2(0);
 	texCoord = vec2(0);
