@@ -31,11 +31,11 @@ public:
 			shared_ptr<GraphicsManager::texture2D> texture;
 
 
-#ifdef VISUAL_STUDIO //since we don't have full C++11 support
-			Layer(const Layer&)/*=delete*/;
-#else
+//#ifdef VISUAL_STUDIO //since we don't have full C++11 support
+//			Layer(const Layer&)/*=delete*/;
+//#else
 			Layer(const Layer&)=delete;
-#endif
+//#endif
 			Layer(Layer&& layer);
 
 		public:
@@ -59,16 +59,8 @@ public:
 
 private:
     struct TerrainData {
-        struct vertex
-        {
-            float x, y, z;
-            float u, v;
-            float slopeX;
-            float slopeY;
-            float curvature;
-			vertex(): x(0), y(0), z(0), slopeX(0), slopeY(0), curvature(0) {}
-        };
-
+		/** space taken by a single vertex in the buffer */
+		const unsigned int vertexSize;
         /** space taken by each tile in the vertex buffer */
         const unsigned int vertexStep;
         /** number of vertices in each tile */
@@ -141,18 +133,21 @@ private:
 		 */
 		std::array<shared_ptr<FractalNode>,4> children;
 
-		shared_ptr<GraphicsManager::texture2D> texture;
 		shared_ptr<GraphicsManager::texture2D> treeTexture;
 		shared_ptr<GraphicsManager::vertexBuffer> treesVBO;
 		unsigned int treesVBOcount;
 
 		shared_ptr<ClipMap> clipMap;
-		unsigned int clipMapLayer;
+		unsigned int clipMapLayerIndex;
+		ClipMap::Layer& clipMapLayer;
 		Vec2f clipMapOrigin;
 		float clipMapStep;
 
         IndexPool::IndexPtr index;
 		
+		unsigned int getLayerSize();
+		unsigned int getLayerStep();
+
 		void recursiveEnvoke(std::function<void(FractalNode*)> func);
 		void reverseRecursiveEnvoke(std::function<void(FractalNode*)> func);
 		
@@ -164,16 +159,17 @@ private:
 		void pruneChildren();
 		float getHeight(unsigned int x, unsigned int z) const;
 
-#ifdef VISUAL_STUDIO //since we don't have full C++11 support
-		FractalNode(const FractalNode&)/*=delete*/;
-		void operator=(const FractalNode&)/*=delete*/;
-#else
+//#ifdef VISUAL_STUDIO //since we don't have full C++11 support
+//		FractalNode(const FractalNode&)/*=delete*/;
+//		void operator=(const FractalNode&)/*=delete*/;
+//#else
 		FractalNode(const FractalNode&)=delete;
 		void operator=(const FractalNode&)=delete;
-#endif
+//#endif
 
 	public:
-		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates, shared_ptr<ClipMap> clipMap, TerrainData& terrainData);
+		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates,
+					shared_ptr<ClipMap> clipMap, TerrainData& terrainData);
 		~FractalNode();
 		void renderTrees(shared_ptr<GraphicsManager::View> view);
 		float getWorldHeight(Vec2f worldPos) const;
@@ -239,7 +235,8 @@ public:
 	void renderTerrain(shared_ptr<GraphicsManager::View> view) const;
 	void renderFoliage(shared_ptr<GraphicsManager::View> view) const;
 
-	void addDecal(Vec2f center, float width, float height, string texture, double startTime, double fadeInLength=500.0);
+	void addDecal(Vec2f center, float width, float height, string texture,
+				  double startTime, double fadeInLength=500.0);
 
 //	const Circle<float>& bounds() const{return mBounds;}
 
