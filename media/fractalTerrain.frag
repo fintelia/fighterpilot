@@ -25,15 +25,13 @@ uniform float waveAmplitude;
 
 void main()
 {
-    gl_FragColor = vec4(1,0,0,1);
+    // gl_FragColor = vec4(1,0,0,1);
 
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
-	const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
-	const float Fcoef_half = 0.5 * Fcoef;
-	gl_FragDepth = log2(flogz) * Fcoef_half;
-}
-#ifdef XXX
+	// const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
+	// const float Fcoef_half = 0.5 * Fcoef;
+	// gl_FragDepth = log2(flogz) * Fcoef_half;
 
 	float height = position.y;
 
@@ -140,7 +138,7 @@ void main()
 
 	color = mix(color.rgb, treeVal.rgb, treeVal.a);
 	
-	gl_FragColor = vec4(color,1.0); // vec4(vec3(height),1.0);// 
+	gl_FragColor = vec4(vec3(height),1.0); 
 
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
@@ -148,4 +146,3 @@ void main()
 	const float Fcoef_half = 0.5 * Fcoef;
 	gl_FragDepth = log2(flogz) * Fcoef_half;
 }
-#endif

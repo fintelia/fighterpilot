@@ -133,10 +133,11 @@
     <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />
 
     <shader name="fractal terrain"           vertex="media/fractalTerrain.vert"    fragment="media/fractalTerrain.frag" />
-    <shader name="fractal ocean"           vertex="media/fractalOcean.vert"    fragment="media/fractalOcean.frag" />
-    <shader name="fractal subdivide"           vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivide.frag" />
-    <shader name="fractal subdivideX"           vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivideX.frag" />
-    <shader name="waves"           vertex3="media/waves.vert"    fragment3="media/waves.frag" />
+    <shader name="fractal ocean"             vertex="media/fractalOcean.vert"      fragment="media/fractalOcean.frag" />
+    <shader name="fractal tessellate"        vertex3="media/fractalTessellate.vert"    feedbackTransformVaryings="pos;slope;curvature;texCoord" />
+    <shader name="fractal subdivide"         vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivide.frag" />
+    <shader name="fractal subdivideX"        vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivideX.frag" />
+    <shader name="waves"                     vertex3="media/waves.vert"    fragment3="media/waves.frag" />
     
     <!-- terrain preview -->
     <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />

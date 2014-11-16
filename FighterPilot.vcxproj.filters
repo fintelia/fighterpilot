@@ -743,6 +743,9 @@
     <None Include="media\fractalOcean.vert">
       <Filter>shaders\fractalWater</Filter>
     </None>
+    <None Include="media\fractalTessellate.vert">
+      <Filter>shaders\terrain</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">
