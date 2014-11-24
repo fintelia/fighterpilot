@@ -207,9 +207,10 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
                                   TerrainData& terrainData): 
 	divisionLevel(DivisionLevel::COMBINED), level(level_), 
 	coordinates(coordinates_), parent(parent_), clipMap(clipMap_),
-	index(terrainData.nodeIndices.nextIndex()),
 	clipMapLayerIndex(0),
-	clipMapLayer(clipMap->layers[clipMapLayerIndex])
+	clipMapLayer(clipMap->layers[clipMapLayerIndex]),
+    index(terrainData.nodeIndices.nextIndex())
+
 {
 	totalNodes++;
     lastUseFrame = frameNumber;

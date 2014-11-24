@@ -17,7 +17,7 @@ void main()
 {
 	int x = gl_VertexID % tileResolution;
 	int z = gl_VertexID / tileResolution;
-	float y = texture(heightmap, texOffset + vec2(x,z) * texStep, 0).r;
+	float y = texture(heightmap, texOffset + vec2(x,z) * texStep).r;
 
 	pos = position + vec3(x,y,z) * scale;
 
