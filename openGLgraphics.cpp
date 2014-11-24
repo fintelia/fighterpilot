@@ -3154,6 +3154,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
+    glGenQueries(1, &transformFeedbackQueryID);
 	openGL3 = true;	
 #endif
 
