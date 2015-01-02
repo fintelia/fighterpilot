@@ -25,6 +25,8 @@ uniform vec2 tScale;
 uniform float tSize;
 
 attribute vec3 Position;
+attribute vec3 Normal; // Actually (slopeX, slopeZ, curvature)
+attribute vec2 TexCoord;
 
 //see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
 uint hash(uint x)
@@ -75,9 +77,11 @@ void main()
 
 */
 
+    normal = normalize(vec3(-Normal.x, 1.0, -Normal.y));
     position = Position;
 
-	gl_Position = cameraProjection * vec4(Position,1.0);
+	gl_Position = cameraProjection * vec4(position.x, max(position.y, 0.0f),
+                                          position.z, 1.0);
 
 	flogz = 1.0 + gl_Position.w;
 }

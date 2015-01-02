@@ -1,5 +1,6 @@
 
 varying vec3 position;
+varying vec3 normal;
 varying vec2 tCoord;
 varying float flogz;
 
@@ -14,8 +15,8 @@ uniform sampler2D grassDetail;
 uniform sampler2D groundTex;
 uniform sampler2D treeTex;
 uniform sampler2D waveTexture;
+uniform samplerCube skyTexture;
 uniform float slopeScale;
-uniform vec3 eyePos;
 uniform vec3 scale;
 uniform vec3 sunDirection;
 uniform vec3 eyePosition;
@@ -35,7 +36,7 @@ void main()
 	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
 	float slopeAngle = atan(slope);
 
-	vec3 n = normalize(vec3((2*groundVal.g-1)*slopeScale, 1, (2*groundVal.b-1)*slopeScale));
+	vec3 n = normalize(normal);//normalize(vec3((2*groundVal.g-1)*slopeScale, 1, (2*groundVal.b-1)*slopeScale));
 
 	vec3 color = vec3(0);
 /*****************************************************************/
@@ -67,7 +68,7 @@ void main()
 
 
 
-	vec3 positionToEye = eyePos - position;
+	vec3 positionToEye = eyePosition - position;
 	//vec3 positionToEye_tangentSpace = mat3(t,n,b)*positionToEye;
 	//vec2 offset = -normalize(positionToEye_tangentSpace.xz) * (1.0 - fractalColor.a);
 
@@ -98,7 +99,20 @@ void main()
 	color *= exp(-depth / vec3(7.0,30.0,70.0));
 	color += vec3(0.00, 0.2, 0.3) * (vec3(1.0) - exp(vec3(-c*depth) + 3*min(height-waveHeight,0) / vec3(7.0,30.0,70.0)));
 	
-	
+    /*******************ocean surface***********************/
+    if(position.y < 0){
+        vec3 n = normalize(texture2D(waveTexture,
+                                     position.xz*invWaveTextureScale).yzw);
+        vec3 eyeDir = normalize(eyePosition - vec3(position.x,0,position.z));
+        float R = 0.14 + (1.0 - 0.14) * (1.0 - pow(dot(n, eyeDir), 1.0));;
+
+        vec3 skyColor = texture2D(skyTexture, reflect(-eyeDir,n)).rgb;
+        
+        color = mix(skyColor, color,  R);
+
+//        color = texture2D(waveTexture, position.xz*invWaveTextureScale).rrr;
+    }
+    
 	//color = texture2D(waveTexture, position.xz*invWaveTextureScale*0.1).xxx;
 	
 	//float waterAlpha = clamp(1.0 - depth*0.03, 0.0,1.0);
@@ -129,9 +143,9 @@ void main()
 
 
 	//%%color = mix(color.rgb, treeVal.rgb, treeVal.a);
-	
+
 	//%%gl_FragColor = vec4(color, 1.0); 
-	gl_FragColor = vec4(vec3(color), 1.0); 
+	gl_FragColor = vec4(color, 1.0); 
 	
 	///////////////DEPTH///////////////
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html

@@ -65,7 +65,8 @@ Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileRe
     vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	vertexBuffer->setTotalVertexSize(vertexSize);
 	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
+    vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::NORMAL,	3*sizeof(float));
+	vertexBuffer->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	6*sizeof(float));
 	vertexBuffer->setVertexData(vertexStep * totalIndices, nullptr);
 
     unsigned int i=0;
@@ -238,6 +239,9 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 		}
 	}
 
+    //TODO: factor in maximum wave height
+    maxHeight = max(maxHeight, 0);
+    
 	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
 				   (coordinates.y - 0.5*(1<<level))*sideLength);
 
@@ -633,8 +637,8 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
 	float amplitudeSum = 0.0f;
 	for(unsigned int i = 0; i < waves.size(); i++)
 	{
-		int fx = random<int>(-(int)waveTextureResolution/4, waveTextureResolution/4 + 1);
-		int fz = random<int>(-(int)waveTextureResolution/4, waveTextureResolution/4 + 1);
+		int fx = random<int>(-(int)waveTextureResolution/32, waveTextureResolution/32 + 1);
+		int fz = random<int>(-(int)waveTextureResolution/32, waveTextureResolution/32 + 1);
 		if(fx == 0 && fz == 0)
 		{
 			--i;
@@ -766,7 +770,7 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 		   eye.z > n->worldCenter.z - hMinDistance && 
 		   eye.z < n->worldCenter.z + hMinDistance &&
 		   n->sideLength / (FractalNode::tileResolution-1) > 15.0 &&
-		   n->maxHeight > -2.0f && 
+/*		   n->maxHeight > -2.0f && */
 		   (n->children[0] || (divisions < maxDivisions && 
 		    terrainData.nodeIndices.indicesRemaining() >= 4+4*dependents.size())))
 		{
@@ -1321,7 +1325,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 
 
 //	graphics->setWireFrame(true);
-	renderFractalWater(view);
+//	renderFractalWater(view);
 //	graphics->setWireFrame(false);
 
 	auto skyShader = shaders.bind("sky2 shader");
@@ -1373,6 +1377,10 @@ void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 	shader->setUniform1i("grassDetail",	6);	dataManager.bind("grass detail",6);
 	shader->setUniform1i("waveTexture", 7);	waveTexture->bind(7);
 
+	shader->setUniform1i("skyTexture", 8);	
+	skyTexture->bind(8);
+
+    
     //do a breadth first search of the quadtree to find nodes to render
     terrainData.multiDraw->clearDraws();
     std::queue<FractalNode*> nodes;

@@ -10,6 +10,7 @@ import os.path
 import urllib3
 import ftplib
 import itertools
+import subprocess
 from PIL import Image
 from math import cos, sqrt, pi
 
@@ -19,35 +20,39 @@ from math import cos, sqrt, pi
 # service available at ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/NED/1/IMG/
 # to download NED1 tiles.
 
-def ftp_download(server, remote_filename, local_filename):
-    if os.path.isfile(local_filename):
-        return
-    
-    ftp = ftplib.FTP(server)
-    ftp.login("anonymous", "password")
-    with open(local_filename, 'wb') as file:
-        ftp.retrbinary('RETR ' + remote_filename, file.write)
+def ftp_download(server, remote_filename, local_filename, force=False):
+    if not force and os.path.isfile(local_filename):
+        return True
 
-def show_preview(north, west, width, height):
-    for x in range(width):
-        for y in range(height):
+    try:
+        ftp = ftplib.FTP(server)
+        ftp.login("anonymous", "password")
+        with open(local_filename, 'wb') as file:
+            ftp.retrbinary('RETR ' + remote_filename, file.write)
+        return True
+    except:
+        return False
+
+def show_preview(north, west, size):
+    for x in range(size):
+        for y in range(size):
             cstring = "n{0:02d}w{1:03d}".format(north+x, west+y)
             ftp_download('rockyftp.cr.usgs.gov', \
                          'vdelivery/Datasets/Staged/NED/1/IMG/img' + cstring + '_1_thumb.jpg', \
                          'download/ned1/preview/img' + cstring + '_1_thumb.jpg')
 
-    images = [[Image.open('download/ned1/preview/imgn{0:02d}w{1:03d}_1_thumb.jpg'.format(north+x,west+y)) for x in range(width)] for y in range(height)]
+    images = [[Image.open('download/ned1/preview/imgn{0:02d}w{1:03d}_1_thumb.jpg'.format(north+x,west+y)) for x in range(size)] for y in range(size)]
     im_shape = images[0][0].size
     for im in itertools.chain(*images):
         assert im.size == im_shape
 
         
-    preview_shape = im_shape[0] * width, im_shape[1] * height
+    preview_shape = im_shape[0] * size, im_shape[1] * size
 
     preview = Image.new("RGB", preview_shape)
-    for x in range(width):
-        for y in range(height):
-            preview.paste(images[x][y], ((width-1-x) * im_shape[0], (height-1-y) * im_shape[1]))
+    for x in range(size):
+        for y in range(size):
+            preview.paste(images[x][y], ((size-1-x) * im_shape[0], (size-1-y) * im_shape[1]))
 
     preview.thumbnail((512,512))
     preview.show()
@@ -58,95 +63,86 @@ def get_dataset(N, W):
     zip_filename = 'download/ned1/zip/'+ cstring + '.zip'
     img_filename = 'download/ned1/img/'+ cstring + '.img'
 
-    zip_downloaded = os.path.isfile(zip_filename)
-    img_extracted = os.path.isfile(img_filename)
-
-    print(zip_filename + (": Already downloaded." if zip_downloaded else ": Downloading..."))
-    if not zip_downloaded and not img_extracted:
-#        url = 'ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/NED/1/IMG/' + cstring + '.zip'
-        ftp = ftplib.FTP("rockyftp.cr.usgs.gov")
-        n = 'vdelivery/Datasets/Staged/NED/1/IMG/' + cstring + '.zip'
-        ftp.login("anonymous", "password")
-        with open(zip_filename, 'wb') as file:
-            ftp.retrbinary('RETR ' + n, file.write)
-
-    if not img_extracted:
-        archive = zipfile.ZipFile(zip_filename, 'r')
-        imgdata = archive.extract('img' + cstring + '_1.img', 'download/ned1/img/')
-        os.rename('download/ned1/img/img' + cstring + '_1.img', img_filename)
-
+    if os.path.isfile(img_filename):
+        return img_filename
     
-    #gdal.FileFromMemBuffer('/vsimem/img' + cstring + '_1.img', imgdata)
+    zip_downloaded = ftp_download('rockyftp.cr.usgs.gov', \
+                                  'vdelivery/Datasets/Staged/NED/1/IMG/' + cstring + '.zip', \
+                                  zip_filename)
+        
+    if not zip_downloaded:
+        return ""
 
-    dataset = gdal.Open(img_filename)
-    if dataset is None:
-        print("could not open dataset")
-        sys.exit(1)
+    archive = zipfile.ZipFile(zip_filename, 'r')
+    imgdata = archive.extract('img' + cstring + '_1.img', 'download/ned1/img/')
+    os.rename('download/ned1/img/img' + cstring + '_1.img', img_filename)
 
-    return dataset
+    return img_filename
+    
+    #dataset = gdal.Open(img_filename)
+    #if dataset is None:
+    #    print("could not open dataset")
+    #    sys.exit(1)
+    #
+    #return dataset
 
+def arr_zoom(band, center, step, final_shape):
+    returny = np.empty(final_shape, band.ReadAsArray(0,0,1,1).dtype)
 
-def arr_zoom(arr, step, final_shape):
-    returny = np.empty(final_shape, arr.dtype)
-
-    cx, cy = arr.shape[0]/2, arr.shape[1]/2
-    w,h = final_shape
-    for x in range(w):
-        for y in range(h):
-            returny[x,y] = arr[cx+(x-w/2)*step, cy+(y-h/2)*step]
+    cx, cy = center
+    w2 = int(final_shape[0]/2)
+    h2 = int(final_shape[1]/2)
+    print("cx, cy: {0} {1}".format(cx, cy))
+    print("w2, h2: {0} {1}".format(w2, h2))
+    print("step {0}".format(step))
+    for x in range(final_shape[0]):
+        for y in range(final_shape[1]):
+            data = band.ReadAsArray(int(cx+(x-w2)*step), \
+                                    int(cy+(y-h2)*step), 1, 1)
+            returny[x,y] = data[0,0]
 
     return returny
 
 
-def write_level(datasets, filename):
+def write_level(dataset, filename):
 
-    # Extract the geotransforms for each dataset
-    geotransforms = [dataset.GetGeoTransform() for dataset in itertools.chain(*datasets)]
+    geotransforms = dataset.GetGeoTransform()
+    # TODO: Account for these sizes being negative (by flipping the arrays)
+    sizeX = math.fabs(geotransforms[1] * dataset.RasterXSize * 111319.5)
+    sizeY = math.fabs(geotransforms[5] * dataset.RasterYSize * 111319.5)
 
-    # Validate that all geotransforms match
-    for g in geotransforms:
-        if g is None:
-            print("Could not get geotransform!")
-            return
-        if not np.allclose(geotransforms[0][1], g[1]) or not np.allclose(geotransforms[0][5], g[5]):
-            print("Geotransforms do not match!")
-            return
-        
-    sizeX = geotransforms[0][1] * datasets[0][0].RasterXSize * 111319.5 * len(datasets[0])
-    sizeY = geotransforms[0][5] * datasets[0][0].RasterYSize * 111319.5 * len(datasets)
-
-    # Concatenate all the input datasets into a single large array.
-    print("concatenating datasets...")
-    arr = np.concatenate([np.concatenate([d.ReadAsArray() for d in row], axis=1) for row in datasets], axis=0)
-
-    # Resample arr to have a resolution that is in the form 2^n+1. The final
-    # resolution is selected by rounding the input resolution down to the
-    # nearest value that meets our requirements.
-    print(str(arr.nbytes >> 20)+ " MiB")
-    assert arr.shape[0] == arr.shape[1]
-    full_res = math.pow(2, math.floor(math.log(arr.shape[0]-1,2))) + 1; 
-    print("Resampling... (from {0}x{0} to {1}x{1})".format(arr.shape[0], full_res))
-    print("Scale={0}".format((full_res / arr.shape[0])))
-    arr2 = scipy.ndimage.zoom(arr, (full_res / arr.shape[0]+1.e-6, full_res / arr.shape[1]+1.e-6), order=0)
-    print("Done Resampling")
-    exit()
+    assert dataset.RasterXSize == dataset.RasterYSize
+    assert dataset.RasterCount > 0
+    
+    #arr = dataset.ReadAsArray()
+    band = dataset.GetRasterBand(1)
+    print('Computing statistics...')
+    band.ComputeStatistics(False) #, lambda x,msg,data : print()
+    amin = band.GetMinimum()
+    amax = band.GetMaximum()
+    
 #    arr *= 10
 #    s =  geotransform[1] * dataset.RasterXSize / 1025 * pi / 180 * 3
 #    for x in range(1025):
 #        for y in range(1025):
 #            arr[x,y] -= 6378100 * (1 - cos(sqrt((x-512)*(x-512)+(y-512)*(y-512))*s))
 
-    amin = np.amin(arr)
-    amax = np.amax(arr)
+    print(amax)
+    print(amin)
+    #arr = (arr - amin) * 65536 / (amax - amin)
+    #arr = arr.astype(np.uint16)
 
-    arr = (arr - amin) * 65536 / (amax - amin)
-    print("converting array type...")
-    arr = arr.astype(np.uint16)
-    print("done converting array type...")
-    
-    num_levels = math.log((full_res-1) / 256, 2) + 1
-    arr_levels = [arr_zoom(arr, 1 << n, (257,257)) for n in range(num_levels)]
-    print("Done computing zoom")
+
+    out_resolution = 513
+    num_levels = int(math.log((dataset.RasterXSize-1) / (out_resolution-1), 2) + 1)
+
+    arr_levels = []
+    center = int(dataset.RasterXSize/2), int(dataset.RasterYSize/2)
+    for n in range(num_levels):
+        level = arr_zoom(band, center, 1 << n, (out_resolution,out_resolution))
+        level = (level - amin) * 65536 / (amax - amin)
+        level = level.astype(np.uint16)
+        arr_levels.append(level)
     
     print("Writing level file...")
     with zipfile.ZipFile('output/ned1/' + filename, mode='w') as zf:
@@ -155,9 +151,8 @@ def write_level(datasets, filename):
         attributes += 'foliageDensity=0\n'
         attributes += 'minHeight=' + str(amin) + '\n'
         attributes += 'maxHeight=' + str(amax) + '\n'
-        attributes += 'resolutionX=257\n'
-
-        attributes += 'resolutionY=257\n'
+        attributes += 'resolutionX=' + str(out_resolution) + '\n'
+        attributes += 'resolutionY=' + str(out_resolution) + '\n'
         attributes += 'depth=4\n'
         attributes += 'sizeX=' + str(sizeX) + '\n'
         attributes += 'sizeZ=' + str(sizeY) + '\n'
@@ -172,7 +167,7 @@ def write_level(datasets, filename):
 	type=F22
 	team=2
 	spawnPos=(3000.0,20000.0,10000.0)
-}
+        }
 object
 {
 	type=PLAYER_PLANE
@@ -186,18 +181,39 @@ object
                 l = ''
             zf.writestr('heightmap' + l + '.raw', arr_levels[n].tostring())
 
+def combine_datasets(datasets, name):
 
+    datasets_string = ' '.join(map(str, itertools.chain(*datasets)))
+
+    d = gdal.Open(datasets[0][0])
+    assert d is not None
+    assert d.RasterXSize == d.RasterYSize
+    full_size = math.pow(2, math.floor(math.log(d.RasterXSize*size-1,2))) + 1; 
+
+    if not os.path.isfile(name + ".vrt") and not os.path.isfile(name + ".tif"):
+        print("Combining datasets...")
+        subprocess.call("gdalbuildvrt {0}.vrt {1}".format(name, datasets_string), shell=True)
+    if not os.path.isfile(name + ".tif"):
+        print("Resampling...")
+        subprocess.call("gdalwarp -ts {0} {0} -r cubic -overwrite {1}.vrt {1}.tif".format(full_size, name), shell=True)
+
+    print(name + ".tif")
+    ret =  gdal.Open(name + ".tif")
+    assert ret is not None
+    return ret
+            
 ################################################################################
-
 
 north = 44
 west = 95
-width = 8
-height = 8
+size = 6#10
+name = "n{0}_{1}w{2}_{3}".format(north, north+size, west, west+size)
+    
+show_preview(north, west, size)
 
-#show_preview(north, west, width, height)
-dataset = [[get_dataset(north+x,west+y) for x in range(width)] for y in range(height)] 
-write_level(dataset, 'n45_49w100_103')
+datasets = [[get_dataset(north+x,west+y) for x in range(size)] for y in range(size)]
+dataset = combine_datasets(datasets, name)
+write_level(dataset, name + ".lvl")
 
 ################################################################################
 
