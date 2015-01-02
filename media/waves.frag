@@ -31,7 +31,7 @@ void main()
 							+ 0.001*waveSpeeds[i]*time);
 
 		FragColor.x += amplitudes[i] * w.x * amplitudeScale;
-		FragColor.yw += amplitudes[i] * w.y * waveDirections[i];				
+		FragColor.yw += amplitudes[i] * w.y * waveDirections[i];
 	}
 
 	FragColor.yzw = normalize(FragColor.yzw);
