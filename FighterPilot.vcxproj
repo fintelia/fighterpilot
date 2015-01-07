@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>C:\Program Files\boost\boost_1_56_0;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\Boost\boost_1_57_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <CustomBuildAfterTargets>Build</CustomBuildAfterTargets>
-    <IncludePath>C:\Program Files\boost_1_52_0;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\Boost\boost_1_57_0;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
