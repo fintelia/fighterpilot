@@ -3117,7 +3117,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			openGL4 = true;
 		}
 	}
-	if(!openGL4)
+	if(!openGL4 && targetRendererVersion >= 4)
 		messageBox("failed to create OpenGL 4 context");
 
 	if(wglCreateContextAttribsARB && !openGL4 /*&& targetRendererVersion >= 3*/) //attempt to create an openGL 3 context
