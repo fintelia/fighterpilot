@@ -105,7 +105,6 @@ def arr_zoom(band, center, step, final_shape):
 
 
 def write_level(dataset, filename):
-
     geotransforms = dataset.GetGeoTransform()
     # TODO: Account for these sizes being negative (by flipping the arrays)
     sizeX = math.fabs(geotransforms[1] * dataset.RasterXSize * 111319.5)
@@ -117,10 +116,10 @@ def write_level(dataset, filename):
     #arr = dataset.ReadAsArray()
     band = dataset.GetRasterBand(1)
     print('Computing statistics...')
-    band.ComputeStatistics(False) #, lambda x,msg,data : print()
+
+    band.ComputeStatistics(False, gdal.TermProgress) #, lambda x,msg,data : print()
     amin = band.GetMinimum()
     amax = band.GetMaximum()
-    
 #    arr *= 10
 #    s =  geotransform[1] * dataset.RasterXSize / 1025 * pi / 180 * 3
 #    for x in range(1025):
@@ -153,7 +152,7 @@ def write_level(dataset, filename):
         attributes += 'maxHeight=' + str(amax) + '\n'
         attributes += 'resolutionX=' + str(out_resolution) + '\n'
         attributes += 'resolutionY=' + str(out_resolution) + '\n'
-        attributes += 'depth=4\n'
+        attributes += 'depth=' + str(num_levels) + '\n'
         attributes += 'sizeX=' + str(sizeX) + '\n'
         attributes += 'sizeZ=' + str(sizeY) + '\n'
         attributes += '[level]\n'
@@ -182,34 +181,33 @@ object
             zf.writestr('heightmap' + l + '.raw', arr_levels[n].tostring())
 
 def combine_datasets(datasets, name):
-
     datasets_string = ' '.join(map(str, itertools.chain(*datasets)))
+    filename = "tmp/" + name + ".vrt"
+#    d = gdal.Open(datasets[0][0])
+#    assert d is not None
+#    assert d.RasterXSize == d.RasterYSize
+#    full_size = math.pow(2, math.floor(math.log(d.RasterXSize*size-1,2))) + 1; 
 
-    d = gdal.Open(datasets[0][0])
-    assert d is not None
-    assert d.RasterXSize == d.RasterYSize
-    full_size = math.pow(2, math.floor(math.log(d.RasterXSize*size-1,2))) + 1; 
-
-    if not os.path.isfile(name + ".vrt") and not os.path.isfile(name + ".tif"):
+    if not os.path.isfile(filename):#and not os.path.isfile(name + ".tif"):
         print("Combining datasets...")
-        subprocess.call("gdalbuildvrt {0}.vrt {1}".format(name, datasets_string), shell=True)
-    if not os.path.isfile(name + ".tif"):
-        print("Resampling...")
-        subprocess.call("gdalwarp -ts {0} {0} -r cubic -overwrite {1}.vrt {1}.tif".format(full_size, name), shell=True)
+        subprocess.call("gdalbuildvrt {0} {1}".format(filename, datasets_string), shell=True)
+#    if not os.path.isfile(name + ".tif"):
+#        print("Resampling...")
+#        subprocess.call("gdalwarp -ts {0} {0} -r cubic -overwrite {1}.vrt {1}.tif".format(full_size, name), shell=True)
 
-    print(name + ".tif")
-    ret =  gdal.Open(name + ".tif")
+#    print(name + ".tif")
+    ret =  gdal.Open(filename)
     assert ret is not None
     return ret
-            
+
 ################################################################################
 
 north = 44
 west = 95
-size = 6#10
+size = 10
 name = "n{0}_{1}w{2}_{3}".format(north, north+size, west, west+size)
     
-show_preview(north, west, size)
+# show_preview(north, west, size)
 
 datasets = [[get_dataset(north+x,west+y) for x in range(size)] for y in range(size)]
 dataset = combine_datasets(datasets, name)
