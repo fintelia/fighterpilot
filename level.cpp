@@ -97,12 +97,6 @@ bool LevelFile::loadZIP(string filename)
 	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
 	shared_ptr<FileManager::textFile> objectsFile(dynamic_pointer_cast<FileManager::textFile>(oFile->second));
 
-	if(attributesFile->getValue<int>("heightmap", "resolutionX") <= 2 || attributesFile->getValue<int>("heightmap", "resolutionY") <= 2)
-	{
-		messageBox("invalid heightmap size!");
-		return false;
-	}
-
 	clipMap.reset();
 	objects.clear();
 	regions.clear();
