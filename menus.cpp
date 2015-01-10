@@ -169,7 +169,8 @@ bool chooseMode::menuKey(int mkey)
 	{
 		input.up(VK_SPACE);
 		input.up(VK_RETURN);
-		menuManager.setMenu(new gui::levelEditor);
+		messageBox("Level editor not currently available.");
+	//	menuManager.setMenu(new gui::levelEditor);
 	}
 	else
 	{
@@ -661,7 +662,7 @@ lightbox::lightbox(shared_ptr<const LevelFile> lvl): dogFight(lvl), eye(0,1500,-
 }
 bool lightbox::init()
 {
-	world = unique_ptr<WorldManager>(new WorldManager(level->generateClipMap()));
+	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(1);
 
 	if(level->info.night)

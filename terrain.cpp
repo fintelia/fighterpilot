@@ -10,55 +10,48 @@ const unsigned int Terrain::waveTextureResolution = 1024;
 const float Terrain::waveTextureScale = 256.0;
 const double Terrain::earthRadius = 6367444.7;
 
-Terrain::ClipMap::Layer::Layer(Layer&& l): minHeight(l.minHeight), maxHeight(l.maxHeight), heights(std::move(l.heights)), texture(l.texture)
+Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique_ptr<float[]>> layerHeights) :
+sideLength(sLength), layerResolution(lResolution), layers(layerHeights)
 {
+	debugAssert(!layers.empty() && layerResolution != 0 && sideLength != 0);
 
-}
-Terrain::ClipMap::ClipMap(unsigned int lResolution, float sLength):
-	sideLength(sLength), layerResolution(lResolution)
-{
-	
-}
-void Terrain::ClipMap::addLayer(unique_ptr<float[]> heights)
-{
-	layers.emplace_back();
-	auto& layer = layers.back();
-	layer.heights = std::move(heights);
-	layer.minHeight = layer.maxHeight = layer.heights[0];
-	for(unsigned int i = 1; i < layerResolution*layerResolution; i++){
-		layer.minHeight = min(layer.minHeight, layer.heights[i]);
-		layer.maxHeight = max(layer.maxHeight, layer.heights[i]);
+	minHeight = maxHeight = layers.front()[0];
+	for (auto&& l : layers) {
+		for (unsigned int i = 0; i < layerResolution * layerResolution; i++){
+			minHeight = min(minHeight, l[i]);
+			maxHeight = max(maxHeight, l[i]);
+		}
 	}
 
 	unique_ptr<unsigned short[]> groundValues(
-		new unsigned short[layerResolution*layerResolution*4]);
+		new unsigned short[layerResolution*layerResolution * 4]);
 
-	float hRange = layer.maxHeight - layer.minHeight;
-	for(unsigned int x=0; x < layerResolution; x++)
+	float hRange = maxHeight - minHeight;
+	for (unsigned int x = 0; x < layerResolution; x++)
 	{
-		for(unsigned int z=0; z < layerResolution; z++)
+		for (unsigned int z = 0; z < layerResolution; z++)
 		{
 			float xSlope = 0, zSlope = 0;
-			if(x > 0 && x < layerResolution-1)
-				xSlope = (layer.heights[(x+1)+z*layerResolution] 
-						  - layer.heights[(x-1)+z*layerResolution]) / 2;
+			if (x > 0 && x < layerResolution - 1)
+				xSlope = (layers[0][(x + 1) + z*layerResolution]
+				- layers[0][(x - 1) + z*layerResolution]) / 2;
 
-			if(z > 0 && z < layerResolution-1)
-				zSlope = (layer.heights[x+(z+1)*layerResolution] 
-						  - layer.heights[x+(z-1)*layerResolution]) / 2;
-			
-			groundValues[(x + z * layerResolution)*4] =	USHRT_MAX *
-				(layer.heights[x+z*layerResolution] - layer.minHeight) / hRange;
-			groundValues[(x + z * layerResolution)*4 + 1] = 
+			if (z > 0 && z < layerResolution - 1)
+				zSlope = (layers[0][x + (z + 1)*layerResolution]
+				- layers[0][x + (z - 1)*layerResolution]) / 2;
+
+			groundValues[(x + z * layerResolution) * 4] = USHRT_MAX *
+				(layers[0][x + z*layerResolution] - minHeight) / hRange;
+			groundValues[(x + z * layerResolution) * 4 + 1] =
 				USHRT_MAX * (0.5 + xSlope / hRange);
-			groundValues[(x + z * layerResolution)*4 + 2] = 
+			groundValues[(x + z * layerResolution) * 4 + 2] =
 				USHRT_MAX * (0.5 + zSlope / hRange);
 		}
 	}
-	layer.texture = graphics->genTexture2D();
-	layer.texture->setData(layerResolution, layerResolution,
-						   GraphicsManager::texture::RGBA16, false, false,
-						   (unsigned char*)groundValues.get());
+	texture = graphics->genTexture2D();
+	texture->setData(layerResolution, layerResolution,
+		GraphicsManager::texture::RGBA16, false, false,
+		(unsigned char*)groundValues.get());
 }
 Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexSize(32), vertexStep(tileResolution*tileResolution*vertexSize), verticesPerTile(tileResolution*tileResolution),nodeIndices(totalIndices)
 {
@@ -209,7 +202,6 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	divisionLevel(DivisionLevel::COMBINED), level(level_), 
 	coordinates(coordinates_), parent(parent_), clipMap(clipMap_),
 	clipMapLayerIndex(0),
-	clipMapLayer(clipMap->layers[clipMapLayerIndex]),
     index(terrainData.nodeIndices.nextIndex())
 
 {
@@ -224,18 +216,16 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 
 	sideLength = clipMap->sideLength / (1 << level);
 
-	minHeight = maxHeight = clipMapLayer.heights[clipMapOrigin.x 
-		+ clipMapOrigin.y * clipMap->layerResolution];
+	minHeight = maxHeight = clipMap->getHeight(clipMapLayerIndex, 
+		clipMapOrigin.x, clipMapOrigin.y);
 
 	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
 	{
 		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
 		{
-			float h = clipMapLayer.heights[x + clipMapOrigin.x 
-				+ (y + clipMapOrigin.y)*clipMap->layerResolution];
+			float h = clipMap->getHeight(clipMapLayerIndex, x, y);
 			minHeight = min(minHeight, h);
 			maxHeight = max(maxHeight, h);
-
 		}
 	}
 
@@ -255,7 +245,7 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	emptyVBO->setTotalVertexSize(0);
 	emptyVBO->setVertexData(0, nullptr);
-	clipMapLayer.texture->bind();
+	clipMap->texture->bind();
 	auto shader = shaders.bind("fractal tessellate");
 	shader->setUniform1i("heightmap", 0);
 	//TODO: make these work for any layer...
@@ -264,10 +254,10 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	shader->setUniform1f("texStep", 1.0f / ((tileResolution-1) << level));
 	shader->setUniform1i("tileResolution", tileResolution);
 	shader->setUniform3f("position", worldBounds.minXYZ.x, 
-		clipMapLayer.minHeight, worldBounds.minXYZ.z);
+		clipMap->getMinHeight(), worldBounds.minXYZ.z);
 	Vec3f worldScale = worldBounds.maxXYZ - worldBounds.minXYZ;
 	shader->setUniform3f("scale", worldScale.x / (tileResolution - 1), 
-		clipMapLayer.maxHeight - clipMapLayer.minHeight,
+		clipMap->getMaxHeight() - clipMap->getMinHeight(),
 		worldScale.z / (tileResolution - 1));
 
 	terrainData.vertexBuffer->
@@ -325,12 +315,11 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 }
 void Terrain::FractalNode::computeError()
 {
-	auto& heights = clipMapLayer.heights;
 	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
 	{
 		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
 		{
-			float h = heights[x+clipMapOrigin.x + (y+clipMapOrigin.y)*clipMap->layerResolution];
+			float h = clipMap->getHeight(clipMapLayerIndex,x+clipMapOrigin.x, y+clipMapOrigin.y);
 			minHeight = min(minHeight, h);
 			maxHeight = max(maxHeight, h);
 
@@ -450,9 +439,8 @@ void Terrain::FractalNode::generateTreeTexture()
 
 	unsigned int sLength = floor(sideLength / 16.0);
 
-	auto& layer = clipMapLayer;
-	float slopeScale = (layer.maxHeight - layer.minHeight) 
-		* ((textureResolution-1) / clipMap->sideLength);
+	float slopeScale = (clipMap->getMaxHeight() - clipMap->getMinHeight()) 
+		* ((textureResolution-1) / clipMap->getSideLength());
 
 	auto emptyVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
 	emptyVBO->setTotalVertexSize(0);
@@ -468,8 +456,8 @@ void Terrain::FractalNode::generateTreeTexture()
 	auto createTreeTexture = shaders.bind("create tree texture");
 	createTreeTexture->setUniform1i("groundTex", 0); /*texture->bind();*/
 	createTreeTexture->setUniform1i("width", sLength);
-	createTreeTexture->setUniform3f("worldOrigin", Vec3f(0, clipMapLayer.minHeight, 0));
-	createTreeTexture->setUniform3f("worldSpacing", Vec3f(sideLength / (sLength), clipMapLayer.maxHeight - clipMapLayer.minHeight, sideLength / (sLength)));
+	createTreeTexture->setUniform3f("worldOrigin", Vec3f(0, clipMap->getMaxHeight(), 0));
+	createTreeTexture->setUniform3f("worldSpacing", Vec3f(sideLength / (sLength), clipMap->getMaxHeight() - clipMap->getMinHeight(), sideLength / (sLength)));
 /*	createTreeTexture->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
 	createTreeTexture->setUniform2f("texSpacing",	float((texture->getWidth()-1.0) / texture->getWidth())/(sLength), 
 													float((texture->getHeight()-1.0) / texture->getHeight())/(sLength));
@@ -585,7 +573,7 @@ float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
 	
 	int ix = cx;
 	int iz = cz;
-	return clipMapLayer.heights[ix + iz*clipMap->layerResolution];
+	return clipMap->getHeight(clipMapLayerIndex, ix, iz);
 }
 void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 {
@@ -1315,9 +1303,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		shader->setUniform4f("color", 1,1,1,1);
 		graphics->setDepthMask(true);
 	}*/
-
-
-
 
 //	graphics->setWireFrame(true);
 	renderFractalTerrain(view);

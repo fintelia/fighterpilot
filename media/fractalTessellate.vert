@@ -25,7 +25,7 @@ void main()
 	pos = position + vec3(x,y,z) * scale;
 
     // TODO: eliminate this x1000 fudge factor
-	slope = (texVal.yz*2.0 - 1.0) * scale.y / (scale.xz / texStep) * 1000.0;
+	slope = (texVal.yz*2.0 - 1.0) * scale.y / (scale.xz / texStep) * 1000.0 * 100.0;
 	texCoord = vec2(0);
 	curvature = 0;
 }

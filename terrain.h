@@ -1,7 +1,4 @@
 
-enum TerrainType{TERRAIN_ISLAND, TERRAIN_MOUNTAINS, TERRAIN_SNOW, TERRAIN_DESERT};
-
-
 class Terrain
 {
 public:
@@ -21,27 +18,15 @@ public:
 	class ClipMap
 	{
 	private:
+		float minHeight;
+		float maxHeight;
+
 		float sideLength;
 		unsigned int layerResolution;
-		struct Layer
-		{
-			float minHeight;
-			float maxHeight;
-			unique_ptr<float[]> heights;
-			shared_ptr<GraphicsManager::texture2D> texture;
 
+		shared_ptr<GraphicsManager::texture2D> texture;
 
-//#ifdef VISUAL_STUDIO //since we don't have full C++11 support
-//			Layer(const Layer&)/*=delete*/;
-//#else
-			Layer(const Layer&)=delete;
-//#endif
-			Layer(Layer&& layer);
-
-		public:
-			Layer(){}
-		};
-		vector<Layer> layers;
+		vector<unique_ptr<float[]>> layers;
 		
 		/**
 		 * Uses the data from heights to create textures for all levels that do
@@ -53,8 +38,17 @@ public:
 		friend class FractalNode;
 
 	public:
-		ClipMap(unsigned int layerResolution, float sideLength);
-		void addLayer(unique_ptr<float[]> heights);
+		ClipMap(float sideLength, unsigned int layerResolution, vector<unique_ptr<float[]>> layers);
+
+		float getMinHeight() const { return minHeight; }
+		float getMaxHeight() const { return maxHeight; }
+		float getSideLength() const { return sideLength; }
+		float getHeight(unsigned int layer, unsigned int x, unsigned int z) const { return layers[layer][x + z * layerResolution]; }
+		
+		void bindTexture(unsigned int textureUnit = 0) { texture->bind(textureUnit); }
+
+		unsigned int getLayerResolution() const { return layerResolution; }
+		unsigned int getNumLayers() const { return layers.size(); }
 	};
 
 private:
@@ -139,7 +133,6 @@ private:
 
 		shared_ptr<ClipMap> clipMap;
 		unsigned int clipMapLayerIndex;
-		ClipMap::Layer& clipMapLayer;
 		Vec2f clipMapOrigin;
 		float clipMapStep;
 

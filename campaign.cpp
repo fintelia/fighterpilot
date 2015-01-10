@@ -19,7 +19,7 @@ namespace gui{
 }
 bool campaign::init()
 {
-	world = unique_ptr<WorldManager>(new WorldManager(level->generateClipMap()));
+	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(1);
 
 	if(level->info.night)

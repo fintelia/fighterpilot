@@ -21,7 +21,7 @@ splitScreen::splitScreen(shared_ptr<const LevelFile> lvl): dogFight(lvl), countd
 }
 bool splitScreen::init()
 {
-	world = unique_ptr<WorldManager>(new WorldManager(level->generateClipMap()));
+	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(2);
 
 	if(level->info.night)

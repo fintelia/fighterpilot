@@ -12,7 +12,7 @@ public:
 	bool keyDown(int vkey, char ascii);
 protected:
 	choice activeChoice;
-};
+};/*
 class levelEditor: public screen
 {
 private:
@@ -101,7 +101,7 @@ private:
 
 	void renderObjectPreview();
 	Rect orthoView();
-};
+};*/
 class chooseMode: public screen
 {
 public:

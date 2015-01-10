@@ -18,68 +18,51 @@ bool LevelFile::Trigger::checkComparison(int value) const
 	return false;
 }
 
-bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset)
+bool LevelFile::saveZIP(string filename)
 {
-	//check that basic level data is valid
-	if(heights == nullptr || info.mapResolution.x == 0 || info.mapResolution.y == 0)
-		return 0;
+	shared_ptr<FileManager::zipFile> lvlFile(new FileManager::zipFile(filename));
 
-	//create several FileManager::file to hold various aspects of our level
-	shared_ptr<FileManager::zipFile>		lvlFile(new FileManager::zipFile(filename));
-	shared_ptr<FileManager::binaryFile>		rawFile(new FileManager::binaryFile("heightmap.raw"));
-	shared_ptr<FileManager::iniFile>		attributesFile(new FileManager::iniFile("attributes.ini"));
-	shared_ptr<FileManager::textFile>		objectsFile(new FileManager::textFile("objects.txt"));
+	for (unsigned int layer = 0; layer < clipMap->getNumLayers(); layer++){
+		string rawFilename = "heightmap" + lexical_cast<string>(layer) + ".raw";
 
-	//initialize local variables
-	unsigned int width	= info.mapResolution.x;
-	unsigned int height = info.mapResolution.y;
-	float maxHeight		= heights[0]+0.001;
-	float minHeight		= heights[0];
+		auto rawFile = std::make_shared<FileManager::binaryFile>(rawFilename);
+		unsigned int width = clipMap->getLayerResolution();
+		unsigned int height = clipMap->getLayerResolution();
+		float maxHeight = clipMap->getMinHeight();
+		float minHeight = clipMap->getMaxHeight();
 
-	//find minimum and maximum heights
-	for(int x=0;x<width;x++)
-	{
-		for(int z=0;z<height;z++)
+		//store heightmap data in our "heightmap.raw" file
+		rawFile->size = 2 * width * height;
+		rawFile->contents = new unsigned char[rawFile->size];
+		memset(rawFile->contents, 0, rawFile->size);
+		for (unsigned int x = 0; x < width; x++)
 		{
-			maxHeight = max(maxHeight, heights[x+z*width]);
-			minHeight = min(minHeight, heights[x+z*width]);
-		}
-	}
+			for (unsigned int z = 0; z < height; z++)
+			{
+				float h = clipMap->getHeight(layer, x, z);
+				if (h > maxHeight) debugBreak();
+				if (h < minHeight) debugBreak();
 
-	//store heightmap data in our "heightmap.raw" file
-	rawFile->size = 2 * width * height;
-	rawFile->contents = new unsigned char[rawFile->size];
-	memset(rawFile->contents,0,rawFile->size);
-	for(int x=0; x<width; x++)
-	{
-		for(int z=0; z<height; z++)
-		{
-			if(heights[x + z*width] > maxHeight) debugBreak();
-			if(heights[x + z*width] < minHeight) debugBreak();
-
-			*((unsigned short*)rawFile->contents + (x + z*width)) = USHRT_MAX * (heights[x + z*width] - minHeight) / (maxHeight - minHeight);
+				*((unsigned short*)rawFile->contents + (x + z*width)) = USHRT_MAX * (h - minHeight) / (maxHeight - minHeight);
+			}
 		}
+		lvlFile->files[rawFilename] = rawFile;
 	}
 
 	//place information about our level in attributes.ini
-	attributesFile->bindings["heightmap"]["resolutionX"] = lexical_cast<string>(width);
-	attributesFile->bindings["heightmap"]["resolutionY"] = lexical_cast<string>(height);
-	attributesFile->bindings["heightmap"]["minHeight"] = lexical_cast<string>(-seaLevelOffset*(maxHeight-minHeight)*heightScale);
-	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(-seaLevelOffset*(maxHeight-minHeight)*heightScale + (maxHeight-minHeight)*heightScale);
-	attributesFile->bindings["heightmap"]["sizeX"] = lexical_cast<string>(info.mapSize.x);
-	attributesFile->bindings["heightmap"]["sizeZ"] = lexical_cast<string>(info.mapSize.y);
-	attributesFile->bindings["heightmap"]["foliageDensity"] = lexical_cast<string>(info.foliageDensity);
-	attributesFile->bindings["heightmap"]["LOD"] = lexical_cast<string>(info.LOD);
+	auto attributesFile = std::make_shared<FileManager::iniFile>("attributes.ini");
 
+	attributesFile->bindings["heightmap"]["resolution"] = lexical_cast<string>(clipMap->getLayerResolution());
+	attributesFile->bindings["heightmap"]["minHeight"] = lexical_cast<string>(clipMap->getMinHeight());
+	attributesFile->bindings["heightmap"]["maxHeight"] = lexical_cast<string>(clipMap->getMaxHeight());
+	attributesFile->bindings["heightmap"]["numLayers"] = lexical_cast<string>(clipMap->getNumLayers());
+	attributesFile->bindings["heightmap"]["sideLength"] = lexical_cast<string>(clipMap->getSideLength());
+	attributesFile->bindings["heightmap"]["foliageDensity"] = lexical_cast<string>(info.foliageDensity);
 	attributesFile->bindings["level"]["nextLevel"] = info.nextLevel;
 	attributesFile->bindings["level"]["night"] = info.night ? "true" : "false";
+	lvlFile->files["attributes.ini"] = attributesFile;
 
-	if(info.shaderType == TERRAIN_ISLAND)			attributesFile->bindings["shaders"]["shaderType"] = "ISLAND";
-	else if(info.shaderType == TERRAIN_MOUNTAINS)	attributesFile->bindings["shaders"]["shaderType"] = "MOUNTAINS";
-	else if(info.shaderType == TERRAIN_SNOW)		attributesFile->bindings["shaders"]["shaderType"] = "SNOW";
-	else if(info.shaderType == TERRAIN_DESERT)		attributesFile->bindings["shaders"]["shaderType"] = "DESERT";
-	else											attributesFile->bindings["shaders"]["shaderType"] = "NONE";
-
+	auto objectsFile = std::make_shared<FileManager::textFile>("objects.txt");
 	for(auto i = objects.begin(); i != objects.end(); i++)
 	{
 		objectsFile->contents += "object\n{\n";
@@ -88,10 +71,8 @@ bool LevelFile::saveZIP(string filename, float heightScale, float seaLevelOffset
 		objectsFile->contents += string("\tspawnPos=(") + lexical_cast<string>(i->startloc.x) + "," + lexical_cast<string>(i->startloc.y) + "," + lexical_cast<string>(i->startloc.z) + ")\n";
 		objectsFile->contents += "}\n";
 	}
-	//add all these files to the lvl (zip) file
-	lvlFile->files["heightmap.raw"] = rawFile;
-	lvlFile->files["attributes.ini"] = attributesFile;
 	lvlFile->files["objects.txt"] = objectsFile;
+
 	//attempt to write the lvl file and return whether we were successful
 	return fileManager.writeFile(lvlFile);
 }
@@ -99,15 +80,8 @@ bool LevelFile::loadZIP(string filename)
 {
 	auto f = fileManager.loadFile<FileManager::zipFile>(filename);
 
-	auto rFile = f->files.find("heightmap.raw");
 	auto aFile = f->files.find("attributes.ini");
 	auto oFile = f->files.find("objects.txt");
-
-	if(rFile == f->files.end())
-	{
-		messageBox("heightmap.raw file not found!");
-		return false;
-	}
 
 	if(aFile == f->files.end())
 	{
@@ -120,7 +94,6 @@ bool LevelFile::loadZIP(string filename)
 		return false;
 	}
 
-	shared_ptr<FileManager::binaryFile>	rawFile(dynamic_pointer_cast<FileManager::binaryFile>(rFile->second));
 	shared_ptr<FileManager::iniFile> attributesFile(dynamic_pointer_cast<FileManager::iniFile>(aFile->second));
 	shared_ptr<FileManager::textFile> objectsFile(dynamic_pointer_cast<FileManager::textFile>(oFile->second));
 
@@ -129,61 +102,47 @@ bool LevelFile::loadZIP(string filename)
 		messageBox("invalid heightmap size!");
 		return false;
 	}
-	delete[] heights;
-	heights = nullptr;
+
+	clipMap.reset();
 	objects.clear();
 	regions.clear();
 	info = Info();
 
-	attributesFile->readValue("heightmap", "resolutionX", info.mapResolution.x);
-	attributesFile->readValue("heightmap", "resolutionY", info.mapResolution.y);
-	attributesFile->readValue("heightmap", "minHeight", info.minHeight);
-	attributesFile->readValue("heightmap", "maxHeight", info.maxHeight);
-	attributesFile->readValue("heightmap", "sizeX", info.mapSize.x);
-	attributesFile->readValue("heightmap", "sizeZ", info.mapSize.y);
+	unsigned int resolution, numLayers;
+	attributesFile->readValue("heightmap", "resolution", resolution);
+	attributesFile->readValue("heightmap", "numLayers", numLayers);
+
+	float minHeight, maxHeight;
+	attributesFile->readValue("heightmap", "minHeight", minHeight);
+	attributesFile->readValue("heightmap", "maxHeight", maxHeight);
+
+	float sideLength;
+	attributesFile->readValue("heightmap", "sideLength", sideLength);
 	attributesFile->readValue("heightmap", "foliageDensity", info.foliageDensity);
-	attributesFile->readValue<unsigned int>("heightmap", "LOD", info.LOD, 1);
 	attributesFile->readValue("level", "nextLevel", info.nextLevel);
 
 	info.night = attributesFile->getValue<string>("level","night","false") == "true";
 
+	vector<unique_ptr<float[]>> layers;
+	for (unsigned int layer = 0; layer < numLayers; layer++){
+		layers.emplace_back(new float[resolution * resolution]);
 
-	string sType;
-	attributesFile->readValue("shaders", "shaderType", sType);
-	if(sType == "ISLAND")			info.shaderType = TERRAIN_ISLAND;
-	else if(sType == "MOUNTAINS")	info.shaderType = TERRAIN_MOUNTAINS;
-	else if(sType == "SNOW")		info.shaderType = TERRAIN_SNOW;
-	else if(sType == "DESERT")		info.shaderType = TERRAIN_DESERT;
-	else							info.shaderType = TERRAIN_ISLAND; //grass is default
-
-	heights = new float[info.mapResolution.x * info.mapResolution.y];
-	memset(heights, 0, info.mapResolution.x * info.mapResolution.y * sizeof(float));
-
-	for(int i = 0; i < info.mapResolution.x * info.mapResolution.y && i * 2 < rawFile->size; i++)
-	{
-		heights[i] = info.minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (info.maxHeight - info.minHeight) / USHRT_MAX;
-	}
-
-	if(!isPowerOfTwo(info.mapResolution.x-1) || !isPowerOfTwo(info.mapResolution.y-1)) //just pad edges of terrain if they are not 1 greater than a power of 2
-	{
-		Vec2u nResolution(uPowerOfTwo(info.mapResolution.x-1)+1, uPowerOfTwo(info.mapResolution.y-1)+1);
-		float* nHeights = new float[nResolution.x*nResolution.y];
-
-		for(int y = 0; y < nResolution.y; y++)
+		auto rFile = f->files.find("heightmap" + lexical_cast<string>(layer) + ".raw");
+		if (rFile == f->files.end())
 		{
-			memcpy(nHeights + y * nResolution.x, heights + min(y,info.mapResolution.y-1) * info.mapResolution.x, info.mapResolution.x * sizeof(float));
-			for(int x = info.mapResolution.x; x < nResolution.x; x++)
-			{
-				nHeights[x + y * nResolution.x] = nHeights[x-1 + y * nResolution.x];
-			}
+			messageBox("heightmap.raw file not found!");
+			return false;
 		}
-
-		delete[] heights;
-		heights = nHeights;
-		info.mapResolution = nResolution;
-
-		messageBox(string("Terrain size was not one greater than a power of two! Terrain has been padded to ") + lexical_cast<string>(nResolution.x)+"x"+lexical_cast<string>(nResolution.y)+".");
+		
+		shared_ptr<FileManager::binaryFile>	rawFile(dynamic_pointer_cast<FileManager::binaryFile>(rFile->second));
+		for (int i = 0; i < resolution * resolution && i * 2 < rawFile->size; i++)
+		{
+			layers[layer][i] = minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (maxHeight - minHeight) / USHRT_MAX;
+		}
 	}
+	clipMap = std::make_unique<Terrain::ClipMap>(sideLength, resolution, layers);
+
+	debugAssert(isPowerOfTwo(resolution - 1));
 
 	if(!parseObjectFile(objectsFile))
 	{
@@ -438,32 +397,10 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 {
 	players.resetPlayers();
 
-	int w = min(info.mapResolution.x, info.mapResolution.y);
-	if(w != 0 && heights != nullptr)
-	{
-		float maxHeight=heights[0]+0.001;
-		float minHeight=heights[0];
-		for(int x=0;x<info.mapResolution.x;x++)
-		{
-			for(int z=0;z<info.mapResolution.y;z++)
-			{
-				if(heights[x+z*info.mapResolution.x]>maxHeight) maxHeight=heights[x+z*info.mapResolution.x];
-				if(heights[x+z*info.mapResolution.x]<minHeight) minHeight=heights[x+z*info.mapResolution.x];
-			}
-		}
+	debugAssert(clipMap->getNumLayers() != 0 && clipMap->getLayerResolution() != 0 && clipMap->getSideLength() != 0)
 
-//		unsigned short* h = new unsigned short[w*w];
-//		for(int i=0;i<w*w;i++) h[i] = ((heights[(i%w)+(i/w)*info.mapResolution.x]-minHeight)/(maxHeight-minHeight)) * USHRT_MAX;
-
-		Circle<float> bounds;
-		if(info.shaderType == TERRAIN_ISLAND)
-			bounds = Circle<float>(Vec2f(0,0), max(info.mapSize.x, info.mapSize.y) * 1.0);
-		else
-			bounds = Circle<float>(Vec2f(0,0), max(info.mapSize.x, info.mapSize.y) * 0.4);
-
-		world->setBounds(bounds);
-//		world->initTerrain(h, w, Vec3f(0,minHeight,0), Vec3f(info.mapSize.x,maxHeight - minHeight,info.mapSize.y), info.shaderType, bounds, info.foliageDensity, info.shaderType==TERRAIN_DESERT?4:1);
-	}
+	Circle<float> bounds{Vec2f(0,0), clipMap->getSideLength() / (2 << clipMap->getNumLayers())};
+	world->setBounds(bounds);
 
 	bullets = world->newObject(new bulletCloud);
 	particleManager.addEmitter(new particle::bulletEffect, bullets);
@@ -522,25 +459,6 @@ void LevelFile::initializeWorld(unsigned int humanPlayers) const
 
 	world->time.reset();
 }
-shared_ptr<Terrain::ClipMap> LevelFile::generateClipMap() const
-{
-	if(info.mapResolution.x != info.mapResolution.y)
-		throw string("Map resolution must be the same in x and y directions");
-	else if(info.mapSize.x != info.mapSize.y)
-		throw string("Map must be square");
-	else if(!isPowerOfTwo(info.mapResolution.x-1))
-		throw string("Map resolution must be one more than a power of 2");
-
-	shared_ptr<Terrain::ClipMap> clipMap = 
-		std::make_shared<Terrain::ClipMap>(info.mapResolution.x, info.mapSize.x);
-
-	auto nheights = unique_ptr<float[]>(
-		new float[info.mapResolution.x*info.mapResolution.x]);
-
-	memcpy(nheights.get(), heights, info.mapResolution.x*info.mapResolution.x*sizeof(float));
-	clipMap->addLayer(std::move(nheights));
-	return clipMap;
-}
 bool LevelFile::checkValid()
 {
 	if(objects.size() == 0)
@@ -560,12 +478,4 @@ bool LevelFile::checkValid()
 		return false;
 	}
 	return true;
-}
-LevelFile::LevelFile(): heights(nullptr)
-{
-
-}
-LevelFile::~LevelFile()
-{
-	delete[] heights;
 }

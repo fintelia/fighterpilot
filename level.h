@@ -3,16 +3,10 @@ struct LevelFile
 {
 	struct Info
 	{
-		TerrainType		shaderType;
-		Vec2f			mapSize;
-		Vec2u			mapResolution;
 		string			nextLevel;
-		float			minHeight;
-		float			maxHeight;
 		float			foliageDensity; //in trees per km^2
-		unsigned int	LOD;
 		bool			night;
-		Info(): shaderType(TERRAIN_ISLAND), mapSize(1,1), mapResolution(0,0), foliageDensity(0), LOD(1), night(false){}
+		Info(): foliageDensity(0), night(false){}
 	};
 	struct Path
 	{
@@ -108,17 +102,13 @@ struct LevelFile
 	vector<Region>	regions;
 	vector<Trigger>	triggers;
 	vector<Path>	paths;
-	float*			heights;
+	shared_ptr<Terrain::ClipMap> clipMap;
 
-	bool saveZIP(string filename, float heightScale, float seaLevelOffset);
+	bool saveZIP(string filename);
 	bool loadZIP(string filename);
 
 	bool parseObjectFile(shared_ptr<FileManager::textFile> f);
 	void initializeWorld(unsigned int humanPlayers) const;//creates objects stored in level file
-	shared_ptr<Terrain::ClipMap> generateClipMap() const;
 
 	bool checkValid();
-
-	LevelFile();
-	~LevelFile();
 };
