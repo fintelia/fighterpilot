@@ -125,7 +125,7 @@ bool LevelFile::loadZIP(string filename)
 
 	vector<unique_ptr<float[]>> layers;
 	for (unsigned int layer = 0; layer < numLayers; layer++){
-		layers.emplace_back(new float[resolution * resolution]);
+		layers.emplace_back(new float[resolution * resolution]());
 
 		auto rFile = f->files.find("heightmap" + lexical_cast<string>(layer) + ".raw");
 		if (rFile == f->files.end())
@@ -140,7 +140,8 @@ bool LevelFile::loadZIP(string filename)
 			layers[layer][i] = minHeight + ((float)*((unsigned short*)rawFile->contents + i)) * (maxHeight - minHeight) / USHRT_MAX;
 		}
 	}
-	clipMap = std::make_unique<Terrain::ClipMap>(sideLength, resolution, layers);
+	clipMap = std::make_unique<Terrain::ClipMap>(sideLength, resolution,
+                                                 std::move(layers));
 
 	debugAssert(isPowerOfTwo(resolution - 1));
 

@@ -10,8 +10,8 @@ const unsigned int Terrain::waveTextureResolution = 1024;
 const float Terrain::waveTextureScale = 256.0;
 const double Terrain::earthRadius = 6367444.7;
 
-Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique_ptr<float[]>> layerHeights) :
-sideLength(sLength), layerResolution(lResolution), layers(layerHeights)
+Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique_ptr<float[]>>&& layerHeights) :
+    sideLength(sLength), layerResolution(lResolution), layers(std::move(layerHeights))
 {
 	debugAssert(!layers.empty() && layerResolution != 0 && sideLength != 0);
 

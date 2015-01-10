@@ -38,7 +38,7 @@ public:
 		friend class FractalNode;
 
 	public:
-		ClipMap(float sideLength, unsigned int layerResolution, vector<unique_ptr<float[]>> layers);
+		ClipMap(float sideLength, unsigned int layerResolution, vector<unique_ptr<float[]>>&& layers);
 
 		float getMinHeight() const { return minHeight; }
 		float getMaxHeight() const { return maxHeight; }
