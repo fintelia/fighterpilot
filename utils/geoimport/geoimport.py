@@ -109,7 +109,7 @@ def write_level(dataset, filename):
     # TODO: Account for these sizes being negative (by flipping the arrays)
     sizeX = math.fabs(geotransforms[1] * dataset.RasterXSize * 111319.5)
     sizeY = math.fabs(geotransforms[5] * dataset.RasterYSize * 111319.5)
-
+    
     assert dataset.RasterXSize == dataset.RasterYSize
     assert dataset.RasterCount > 0
     
@@ -146,15 +146,12 @@ def write_level(dataset, filename):
     print("Writing level file...")
     with zipfile.ZipFile('output/ned1/' + filename, mode='w') as zf:
         attributes = '[heightmap]\n'
-        attributes += 'LOD=1\n'
-        attributes += 'foliageDensity=0\n'
         attributes += 'minHeight=' + str(amin) + '\n'
         attributes += 'maxHeight=' + str(amax) + '\n'
-        attributes += 'resolutionX=' + str(out_resolution) + '\n'
-        attributes += 'resolutionY=' + str(out_resolution) + '\n'
-        attributes += 'depth=' + str(num_levels) + '\n'
-        attributes += 'sizeX=' + str(sizeX) + '\n'
-        attributes += 'sizeZ=' + str(sizeY) + '\n'
+        attributes += 'resolution=' + str(out_resolution) + '\n'
+        attributes += 'numLayers=' + str(num_levels) + '\n'
+        attributes += 'sideLength=' + str(sizeX) + '\n'
+        attributes += 'foliageDensity=0\n'
         attributes += '[level]\n'
         attributes += 'nextLevel=\n'
         attributes += 'night=false\n'
@@ -176,8 +173,6 @@ object
 
         for n in range(len(arr_levels)):
             l = str((len(arr_levels) - 1) - n)
-            if l == '0':
-                l = ''
             zf.writestr('heightmap' + l + '.raw', arr_levels[n].tostring())
 
 def combine_datasets(datasets, name):
