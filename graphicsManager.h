@@ -138,6 +138,7 @@ public:
 
 		bool sphereInFrustum(Sphere<float> s);
 		bool boundingBoxInFrustum(BoundingBox<float> b);
+		float boundingBoxProjectedArea(BoundingBox<float> b);
 
 		void render(){if(mRenderFunc)mRenderFunc(mRenderFuncParam);}
 		void renderTransparent(){if(mTransparentRenderFunc)mTransparentRenderFunc(mTransparentRenderFuncParam);}

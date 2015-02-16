@@ -1157,6 +1157,10 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 		boost::replace_all(vertString, "\t", " ");
 		boost::replace_all(vertString, "attribute ", "in ");
 		boost::replace_all(vertString, "varying ", "out ");
+		boost::replace_all(vertString, "texture1D", "texture");
+		boost::replace_all(vertString, "texture2D", "texture");
+		boost::replace_all(vertString, "texture3D", "texture");
+		boost::replace_all(vertString, "textureCube", "texture");
 
 		boost::replace_all(fragString, "\t", " ");
 		boost::replace_all(fragString, "varying ", "in ");
@@ -3142,6 +3146,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 			glBindVertexArray(vao);
 			glGenQueries(1, &transformFeedbackQueryID);
 			openGL3 = true;
+		}
+		else
+		{
+			debugBreak();
 		}
 	}
 

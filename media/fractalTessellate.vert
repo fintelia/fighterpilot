@@ -23,6 +23,8 @@ void main()
     float y = texVal.r;
     
 	pos = position + vec3(x,y,z) * scale;
+	//pos.y = 100.0 * y - 130.0;
+
 
     // TODO: eliminate this x1000 fudge factor
 	slope = (texVal.yz*2.0 - 1.0) * scale.y / (scale.xz / texStep) * 1000.0 * 100.0;

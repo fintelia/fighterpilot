@@ -41,7 +41,7 @@ float scale(float fCos)
 
 void main()
 {
-	vec3 earthCenter = vec3(mapCenter.x, -earthRadius, mapCenter.y);
+	vec3 earthCenter = vec3(0.0, -earthRadius, 0.0);
 
 // ---------------------------------------- position ------------------------------------------------------------
 	vec3 direction = normalize(fwd + right*(2.0*position.x-1.0) + up*(2.0*position.y-1.0));
