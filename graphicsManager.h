@@ -261,6 +261,17 @@ public:
 		virtual void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)=0;
 		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data){setData(Width, Height, Depth, f,  data, false);}
 	};
+	class texture2DArray : public texture
+	{
+	protected:
+		unsigned int width;
+		unsigned int height;
+		unsigned int depth;
+		texture2DArray():width(0), height(0){}
+	public:
+		virtual void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable) = 0;
+		void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data){ setData(Width, Height, Depth, f, data, false); }
+	};
 	class textureCube: public texture
 	{
 	protected:
@@ -412,7 +423,8 @@ public:
     virtual shared_ptr<multiDraw> genMultiDraw(shared_ptr<vertexBuffer> vBuffer, shared_ptr<indexBuffer> iBuffer)=0;
 	virtual shared_ptr<texture2D> genTexture2D()=0;
 	virtual shared_ptr<texture3D> genTexture3D()=0;
-	virtual shared_ptr<textureCube> genTextureCube()=0;
+	virtual shared_ptr<textureCube> genTextureCube() = 0;
+	virtual shared_ptr<texture2DArray> genTexture2DArray() = 0;
 	virtual shared_ptr<View> genView();
 	virtual shared_ptr<shader> genShader()=0;
 
@@ -549,6 +561,7 @@ protected:
 	class indexBufferGL;
 	class texture2DGL;
 	class texture3DGL;
+	class texture2DArrayGL;
 	class textureCubeGL;
 	class shaderGL;
     class multiDrawGL;
@@ -596,6 +609,7 @@ public:
 	shared_ptr<texture2D> genTexture2D();
 	shared_ptr<texture3D> genTexture3D();
 	shared_ptr<textureCube> genTextureCube();
+	shared_ptr<texture2DArray> genTexture2DArray();
 	shared_ptr<shader> genShader();
 
 	void setAlphaToCoverage(bool enabled);

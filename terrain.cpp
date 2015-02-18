@@ -15,6 +15,8 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 {
 	debugAssert(!layers.empty() && layerResolution != 0 && sideLength != 0);
 
+	double t = GetTime();
+
 	minHeight = maxHeight = layers.front()[0];
 	for (auto&& l : layers) {
 		for (unsigned int i = 0; i < layerResolution * layerResolution; i++){
@@ -24,34 +26,43 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 	}
 
 	unique_ptr<unsigned short[]> groundValues(
-		new unsigned short[layerResolution*layerResolution * 4]);
+		new unsigned short[layerResolution*layerResolution*layers.size()*4]);
 
 	float hRange = maxHeight - minHeight;
-	for (unsigned int x = 0; x < layerResolution; x++)
+	for (unsigned int layer = 0; layer < layers.size(); layer++)
 	{
-		for (unsigned int z = 0; z < layerResolution; z++)
+		for (unsigned int x = 0; x < layerResolution; x++)
 		{
-			float xSlope = 0, zSlope = 0;
-			if (x > 0 && x < layerResolution - 1)
-				xSlope = (layers[0][(x + 1) + z*layerResolution]
-				- layers[0][(x - 1) + z*layerResolution]) / 2;
+			for (unsigned int z = 0; z < layerResolution; z++)
+			{
+				float xSlope = 0, zSlope = 0;
+				if (x > 0 && x < layerResolution - 1)
+					xSlope = (layers[layer][(x + 1) + z*layerResolution]
+					- layers[layer][(x - 1) + z*layerResolution]) / 2;
 
-			if (z > 0 && z < layerResolution - 1)
-				zSlope = (layers[0][x + (z + 1)*layerResolution]
-				- layers[0][x + (z - 1)*layerResolution]) / 2;
+				if (z > 0 && z < layerResolution - 1)
+					zSlope = (layers[layer][x + (z + 1)*layerResolution]
+					- layers[layer][x + (z - 1)*layerResolution]) / 2;
 
-			groundValues[(x + z * layerResolution) * 4] = USHRT_MAX *
-				(layers[0][x + z*layerResolution] - minHeight) / hRange;
-			groundValues[(x + z * layerResolution) * 4 + 1] =
-				USHRT_MAX * (0.5 + xSlope / hRange);
-			groundValues[(x + z * layerResolution) * 4 + 2] =
-				USHRT_MAX * (0.5 + zSlope / hRange);
+				groundValues[(x + z * layerResolution) * 4] = USHRT_MAX *
+					(layers[layer][x + z*layerResolution] - minHeight) / hRange;
+				groundValues[(x + z * layerResolution) * 4 + 1] =
+					USHRT_MAX * (0.5 + xSlope / hRange);
+				groundValues[(x + z * layerResolution) * 4 + 2] =
+					USHRT_MAX * (0.5 + zSlope / hRange);
+			}
 		}
 	}
-	texture = graphics->genTexture2D();
-	texture->setData(layerResolution, layerResolution,
-		GraphicsManager::texture::RGBA16, false, false,
-		(unsigned char*)groundValues.get());
+
+	t = GetTime() - t;
+	t = GetTime();
+
+	texture = graphics->genTexture2DArray();
+	texture->setData(layerResolution, layerResolution, layers.size(),
+		GraphicsManager::texture::RGBA16, (unsigned char*)groundValues.get());
+
+	t = GetTime() - t;
+	t = GetTime();
 }
 Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexSize(32), vertexStep(tileResolution*tileResolution*vertexSize), verticesPerTile(tileResolution*tileResolution),nodeIndices(totalIndices)
 {
@@ -216,18 +227,21 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 
 	sideLength = clipMap->sideLength / (1 << level);
 
-	minHeight = maxHeight = clipMap->getHeight(clipMapLayerIndex, 
-		clipMapOrigin.x, clipMapOrigin.y);
+	//minHeight = maxHeight = clipMap->getHeight(clipMapLayerIndex, 
+	//	clipMapOrigin.x, clipMapOrigin.y);
 
-	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
-	{
-		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
-		{
-			float h = clipMap->getHeight(clipMapLayerIndex, x, y);
-			minHeight = min(minHeight, h);
-			maxHeight = max(maxHeight, h);
-		}
-	}
+	//for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
+	//{
+	//	for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
+	//	{
+	//		float h = clipMap->getHeight(clipMapLayerIndex, x, y);
+	//		minHeight = min(minHeight, h);
+	//		maxHeight = max(maxHeight, h);
+	//	}
+	//}
+
+	minHeight = clipMap->getMinHeight();
+	maxHeight = clipMap->getMaxHeight();
 
     //TODO: factor in maximum wave height
     maxHeight = max(maxHeight, 0);
@@ -315,17 +329,17 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 }
 void Terrain::FractalNode::computeError()
 {
-	for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
-	{
-		for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
-		{
-			float h = clipMap->getHeight(clipMapLayerIndex,x+clipMapOrigin.x, y+clipMapOrigin.y);
-			minHeight = min(minHeight, h);
-			maxHeight = max(maxHeight, h);
+	//for(unsigned int x = 0; x < clipMapStep * (tileResolution-1)+1; x++)
+	//{
+	//	for(unsigned int y = 0; y < clipMapStep * (tileResolution-1)+1; y++)
+	//	{
+	//		float h = clipMap->getHeight(clipMapLayerIndex,x+clipMapOrigin.x, y+clipMapOrigin.y);
+	//		minHeight = min(minHeight, h);
+	//		maxHeight = max(maxHeight, h);
 
-		}
-	}
-	minDistance = (sideLength / (tileResolution-1)) * sw / 64.0;
+	//	}
+	//}
+	minDistance = (sideLength / (tileResolution-1)) * sw / 128.0;
 	//minDistance = (sideLength / textureResolution) * sw / 2.5;
 }
 void Terrain::FractalNode::generateTrees()
@@ -564,17 +578,17 @@ void Terrain::FractalNode::pruneChildren()
 		c.reset();
 	}
 }
-float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
-{
-	//TODO: add interpolation
-
-	float cx = x*clipMapStep + clipMapOrigin.x;
-	float cz = z*clipMapStep + clipMapOrigin.y;
-	
-	int ix = cx;
-	int iz = cz;
-	return clipMap->getHeight(clipMapLayerIndex, ix, iz);
-}
+//float Terrain::FractalNode::getHeight(unsigned int x, unsigned int z) const
+//{
+//	//TODO: add interpolation
+//
+//	float cx = x*clipMapStep + clipMapOrigin.x;
+//	float cz = z*clipMapStep + clipMapOrigin.y;
+//	
+//	int ix = cx;
+//	int iz = cz;
+//	return clipMap->getHeight(clipMapLayerIndex, ix, iz);
+//}
 void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 {
 	if((divisionLevel == DivisionLevel::LEVEL_USED || divisionLevel == DivisionLevel::SUBDIVIDED)
@@ -1304,9 +1318,13 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->setDepthMask(true);
 	}*/
 
-//	graphics->setWireFrame(true);
+	if (wireframe)
+		graphics->setWireFrame(true);
+
 	renderFractalTerrain(view);
-//	graphics->setWireFrame(false);
+
+	if (wireframe)
+		graphics->setWireFrame(false);
 
 
 //	graphics->setWireFrame(true);

@@ -149,7 +149,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_RETURN);
 
 		shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadZIP("media/simpleCampaign/mission1.lvl") && l->checkValid())
+		if(l->loadZIP("n44_54w95_105.lvl") && l->checkValid())
 		{
 			menuManager.setMenu(new gui::campaign(l));
 		}
@@ -160,7 +160,7 @@ bool chooseMode::menuKey(int mkey)
 		input.up(VK_RETURN);
 
 		shared_ptr<LevelFile> l(new LevelFile);
-		if(l->loadZIP("media/simpleCampaign/mission1.lvl") && l->checkValid())
+		if(l->loadZIP("n44_54w95_105.lvl") && l->checkValid())
 		{
 			menuManager.setMenu(new gui::splitScreen(l));
 		}

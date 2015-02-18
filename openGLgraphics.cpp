@@ -132,6 +132,18 @@ public:
     unsigned char* getData(unsigned int level);
     void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
 };
+class OpenGLgraphics::texture2DArrayGL : public GraphicsManager::texture2DArray
+{
+private:
+	unsigned int textureID;
+public:
+	friend class OpenGLgraphics;
+	texture2DArrayGL();
+	~texture2DArrayGL();
+	void bind(unsigned int textureUnit);
+	unsigned char* getData(unsigned int level);
+	void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
+};
 class OpenGLgraphics::textureCubeGL: public GraphicsManager::textureCube
 {
 private:
@@ -896,6 +908,63 @@ unsigned char* OpenGLgraphics::texture3DGL::getData(unsigned int level)
 	glBindTexture(GL_TEXTURE_3D, textureID);
 	glGetTexImage(GL_TEXTURE_3D, level, fmt, GL_UNSIGNED_BYTE, data);
 	return data;
+}
+OpenGLgraphics::texture2DArrayGL::texture2DArrayGL()
+{
+	glGenTextures(1, &textureID);
+}
+OpenGLgraphics::texture2DArrayGL::~texture2DArrayGL()
+{
+	glDeleteTextures(1, &textureID);
+}
+void OpenGLgraphics::texture2DArrayGL::bind(unsigned int textureUnit)
+{
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, textureID);
+}
+void OpenGLgraphics::texture2DArrayGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
+{
+	if (f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
+	{
+		debugBreak();
+		return;
+	}
+
+	format = f;
+	width = Width;
+	height = Height;
+	depth = Depth;
+
+	glBindTexture(GL_TEXTURE_2D_ARRAY, textureID);
+	if (format == INTENSITY)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_INTENSITY, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+	else if (format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+	else if (format == BGR)				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	else if (format == BGRA)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	else if (format == RGB)				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	else if (format == RGBA)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	else if (format == RGB16)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16, width, height, depth, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
+	else if (format == RGBA16)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA16, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
+	else if (format == RGB16F)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
+	else if (format == RGBA16F)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA16F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data);
+
+	if (graphics->hasShaderModel4()) //means we are running OpenGL 3+
+		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+	else
+		glGenerateMipmapEXT(GL_TEXTURE_2D_ARRAY);
+
+	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	if (tileable)
+	{
+		glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	else
+	{
+		glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
 }
 OpenGLgraphics::textureCubeGL::textureCubeGL()
 {
@@ -1754,6 +1823,10 @@ shared_ptr<GraphicsManager::texture3D> OpenGLgraphics::genTexture3D()
 shared_ptr<GraphicsManager::textureCube> OpenGLgraphics::genTextureCube()
 {
 	return shared_ptr<textureCube>((new textureCubeGL()));
+}
+shared_ptr<GraphicsManager::texture2DArray> OpenGLgraphics::genTexture2DArray()
+{
+	return shared_ptr<texture2DArray>((new texture2DArrayGL()));
 }
 shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
 {

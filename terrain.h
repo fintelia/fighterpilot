@@ -24,7 +24,7 @@ public:
 		float sideLength;
 		unsigned int layerResolution;
 
-		shared_ptr<GraphicsManager::texture2D> texture;
+		shared_ptr<GraphicsManager::texture2DArray> texture;
 
 		vector<unique_ptr<float[]>> layers;
 		
@@ -150,22 +150,16 @@ private:
 		void generateTreeTexture();
 		void generateTreeDensityTexture();
 		void pruneChildren();
-		float getHeight(unsigned int x, unsigned int z) const;
+//		float getHeight(unsigned int x, unsigned int z) const;
 
-//#ifdef VISUAL_STUDIO //since we don't have full C++11 support
-//		FractalNode(const FractalNode&)/*=delete*/;
-//		void operator=(const FractalNode&)/*=delete*/;
-//#else
 		FractalNode(const FractalNode&)=delete;
 		void operator=(const FractalNode&)=delete;
-//#endif
 
 	public:
 		FractalNode(FractalNode* parent, unsigned int level, Vec2i coordinates,
 					shared_ptr<ClipMap> clipMap, TerrainData& terrainData);
 		~FractalNode();
 		void renderTrees(shared_ptr<GraphicsManager::View> view);
-		float getWorldHeight(Vec2f worldPos) const;
 	};
 
 	template<unsigned int N>
