@@ -168,6 +168,40 @@ bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
 
 	return result || result2; //since neither method always works, return whether either believes that AABB to in inside the frustum
 }
+/**
+ * Returns the (approximate) projected area of the bounding box. The units are (screen heights)^2. 
+ * This means that on a 16x9 (wide screen) display, a return value of 1.0 indicates 
+ * that the box takes up 9/16 of the entire screen.
+ */
+float GraphicsManager::View::boundingBoxProjectedArea(BoundingBox<float> b)
+{
+	float ret = 0.0f;
+
+	Vec2f p[8] = { project(Vec3f(b.minXYZ.x, b.minXYZ.y, b.minXYZ.z)),
+		project(Vec3f(b.minXYZ.x, b.minXYZ.y, b.maxXYZ.z)),
+		project(Vec3f(b.minXYZ.x, b.maxXYZ.y, b.minXYZ.z)),
+		project(Vec3f(b.minXYZ.x, b.maxXYZ.y, b.maxXYZ.z)),
+
+		project(Vec3f(b.maxXYZ.x, b.minXYZ.y, b.minXYZ.z)),
+		project(Vec3f(b.maxXYZ.x, b.minXYZ.y, b.maxXYZ.z)),
+		project(Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.minXYZ.z)),
+		project(Vec3f(b.maxXYZ.x, b.maxXYZ.y, b.maxXYZ.z)) };
+
+	Vec2f minXY = p[0], maxXY = p[0];
+	for (int i = 1; i < 8; i++){
+		minXY.x = min(minXY.x, p[i].x);
+		minXY.y = min(minXY.y, p[i].y);
+		maxXY.x = max(maxXY.x, p[i].x);
+		maxXY.y = max(maxXY.y, p[i].y);
+	}
+
+	minXY.x = max(minXY.x, 0.0f);
+	minXY.y = max(minXY.y, 0.0f);
+	maxXY.x = min(maxXY.x, sAspect);
+	maxXY.y = min(maxXY.y, 1.0f);
+
+	return max((maxXY.x - minXY.x) * (maxXY.y - minXY.y), 0.0f);
+}
 void GraphicsManager::View::shiftCamera(Vec3f shift)
 {
 	Vec3f diff = Quat4f(mCamera.fwd) * (shift - cameraShift);

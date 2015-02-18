@@ -20,8 +20,8 @@
     #pragma comment (lib, "libz.lib")
     #pragma comment (lib, "libpng15.lib")
 
-	#define XINPUT
-	#pragma comment (lib,"xinput")
+//	#define XINPUT
+//	#pragma comment (lib,"xinput")
 
 	#define DIRECT_INPUT	//can cause performance issues?
 	#pragma comment (lib, "dinput8.lib")

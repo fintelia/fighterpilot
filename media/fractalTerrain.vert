@@ -77,11 +77,16 @@ void main()
 
 */
 
+	tCoord = vec2(0.0);
+
     normal = normalize(vec3(-Normal.x, 1.0, -Normal.y));
     position = Position;
 
-	gl_Position = cameraProjection * vec4(position.x, max(position.y, 0.0f),
-                                          position.z, 1.0);
+	vec2 r = position.xz / earthRadius;
+	position.y = max(position.y, 0.0);
+	position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+
+	gl_Position = cameraProjection * vec4(position, 1.0);
 
 	flogz = 1.0 + gl_Position.w;
 }

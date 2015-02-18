@@ -25,7 +25,7 @@ void main()
 	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
 	const float Fcoef = 2.0 / log2(zFar + 1.0);
 	const float Fcoef_half = 0.5 * Fcoef;
-	float logDepth =  texture2D(depth, invScreenDims * gl_FragCoord.xy).x;
+	float logDepth =  texture(depth, invScreenDims * gl_FragCoord.xy).x;
 	float bufferDepth = exp2(logDepth / Fcoef_half) - 1.0;
 
 	vec4 Color = vertexIn.color * texture(tex, vertexIn.texCoord) * vec4(1.0,1.0,1.0,clamp(0.5+(bufferDepth-vertexIn.depth) * vertexIn.invRadius,0.0,1.0));

@@ -6,7 +6,7 @@ const unsigned int Terrain::FractalNode::textureResolution = 257;
 unsigned int Terrain::FractalNode::totalNodes = 0;
 unsigned int Terrain::FractalNode::frameNumber = 0;
 
-const unsigned int Terrain::waveTextureResolution = 1024;
+const unsigned int Terrain::waveTextureResolution = 256;
 const float Terrain::waveTextureScale = 256.0;
 const double Terrain::earthRadius = 6367444.7;
 
@@ -243,9 +243,13 @@ Terrain::FractalNode::FractalNode(FractalNode* parent_,
 	minHeight = clipMap->getMinHeight();
 	maxHeight = clipMap->getMaxHeight();
 
+	//TODO: remove this (testing only) hack
+	//minHeight = -10.0;
+
     //TODO: factor in maximum wave height
     maxHeight = max(maxHeight, 0);
     
+
 	origin = Vec2f((coordinates.x - 0.5*(1<<level))*sideLength,
 				   (coordinates.y - 0.5*(1<<level))*sideLength);
 
@@ -339,7 +343,7 @@ void Terrain::FractalNode::computeError()
 
 	//	}
 	//}
-	minDistance = (sideLength / (tileResolution-1)) * sw / 128.0;
+	minDistance = (sideLength / (tileResolution-1)) * sw / 16.0;
 	//minDistance = (sideLength / textureResolution) * sw / 2.5;
 }
 void Terrain::FractalNode::generateTrees()
@@ -765,12 +769,9 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 			}
 		}
 
-		if(eye.x > n->worldCenter.x - hMinDistance && 
-		   eye.x < n->worldCenter.x + hMinDistance &&
-		   eye.y < n->maxHeight + n->minDistance && 
-		   eye.y > n->minHeight - n->minDistance &&
-		   eye.z > n->worldCenter.z - hMinDistance && 
-		   eye.z < n->worldCenter.z + hMinDistance &&
+		float projectedArea = view->boundingBoxProjectedArea(n->worldBounds);
+		float minArea = 16.0 * FractalNode::tileResolution * FractalNode::tileResolution / (sh * sh);
+		if (projectedArea > minArea &&
 		   n->sideLength / (FractalNode::tileResolution-1) > 15.0 &&
 /*		   n->maxHeight > -2.0f && */
 		   (n->children[0] || (divisions < maxDivisions && 
@@ -1262,7 +1263,7 @@ void Terrain::terrainFrameUpdate(double cTime)
 	FractalNode::frameNumber++;
 	currentTime = cTime;
 
-	graphics->startRenderToTexture(waveTexture, 0, nullptr, 0, false);
+	/*graphics->startRenderToTexture(waveTexture, 0, nullptr, 0, false);
 	graphics->setBlendMode(GraphicsManager::REPLACE);
 
 	auto shader = shaders.bind("waves");
@@ -1278,7 +1279,7 @@ void Terrain::terrainFrameUpdate(double cTime)
 								 "wave lookup");
 	graphics->setBlendMode(GraphicsManager::PREMULTIPLIED_ALPHA);
 	graphics->endRenderToTexture();
-	waveTexture->generateMipmaps();
+	waveTexture->generateMipmaps();*/
 }
 void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 {
@@ -1353,7 +1354,9 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 }
 void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 {
+	double t = GetTime();
 	computeFractalSubdivision(view, 5);
+	t = GetTime() - t;
 
 	graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 
