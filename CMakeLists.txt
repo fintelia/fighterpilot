@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
 PROJECT(FighterPilot CXX)
-SET(CMAKE_CXX_FLAGS "-std=c++1y -Wall -O1 -g") #Debug:"-O0 -g"  Release:"-02"
+SET(CMAKE_CXX_FLAGS "-std=c++1y -Wall -O0 -ggdb -fsanitize=address")
+#Debug:"-O0 -g"  Release:"-02"
 #-fsanitize=address -fsanitize=undefined -fno-optimize-sibling-calls
 
 add_definitions(-D_DEBUG)

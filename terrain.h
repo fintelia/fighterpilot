@@ -50,6 +50,7 @@ public:
 		unsigned int getLayerResolution() const { return layerResolution; }
 		unsigned int getNumLayers() const { return layers.size(); }
 	};
+private:
     class GpuClipMap
     {
     private:
@@ -57,17 +58,23 @@ public:
         float sideLength;
         // Length of side of largest unpinned layer.
         float uSideLength;
-        // Resolution of each of the layers
+        // Resolution of each of the layers. Must be a power of two.
         unsigned int layerResolution;
         // Number of layers that are pinned. Pinned layers are not proceedurally
         // generated and must remain centered. Thus, all lower levels of the
         // clipMap are constrained to be entirely inside the area of the
         // smallest pinned layer.
         unsigned int numPinnedLayers;
-        // Texture arrays containing the current state of the clipMap.
-        shared_ptr<GraphicsManager::texture2DArray> heights;
-        shared_ptr<GraphicsManager::texture2DArray> normals;
-        shared_ptr<GraphicsManager::texture2DArray> shoreDistance;
+
+        shared_ptr<GraphicsManager::vertexBuffer> clipMapVBO;
+        shared_ptr<GraphicsManager::indexBuffer> clipMapIBO;
+        unsigned int numRingIndices;
+
+        // Ratio of active window resolution to the block (mesh) resolution used
+        // to represent a block. Setting this value greater than 1 allows us to
+        // encode additional information for the normal map. Must be a power of
+        // two.
+        static constexpr unsigned int blockStep = 8;
         
         struct layer{
             // Which texel in the texture is the top left of the region. Since
@@ -80,6 +87,11 @@ public:
             // (0,0). Similarly, when it is as far southeast as possible, each
             // coordinate would be layerResolution*(2^n-1).
             Vec2i layerPosition;
+
+            // Texture arrays containing the current state of the clipMap.
+            shared_ptr<GraphicsManager::texture2D> heights;
+            shared_ptr<GraphicsManager::texture2D> normals;
+            shared_ptr<GraphicsManager::texture2D> shoreDistance;
             
             layer(Vec2i lPosition): layerPosition(lPosition){}
         };
@@ -91,9 +103,10 @@ public:
     public:
         GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, vector<unique_ptr<float[]>> pinnedLayers);
         void centerClipMap(Vec2f center);
-        void render();
+        void render(shared_ptr<GraphicsManager::View> view);
     };
-private:
+    mutable unique_ptr<GpuClipMap> gpuClipMap;
+
     struct TerrainData {
 		/** space taken by a single vertex in the buffer */
 		const unsigned int vertexSize;

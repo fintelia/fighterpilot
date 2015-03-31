@@ -66,10 +66,10 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
     }
 
     switch(fmt){
-    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
-    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
-    case GraphicsManager::texture::BGR:             return GL_BGR;
-    case GraphicsManager::texture::BGRA:            return GL_BGRA;
+//    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
+//    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::BGR:             return GL_RGB;
+    case GraphicsManager::texture::BGRA:            return GL_RGBA;
     case GraphicsManager::texture::RGB:             return GL_RGB;
     case GraphicsManager::texture::RGBA:            return GL_RGBA;
     case GraphicsManager::texture::RGB16:           return GL_RGB16;
@@ -85,18 +85,24 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
 GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
-    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
-    case GraphicsManager::texture::BGR:             return GL_BGR;
-    case GraphicsManager::texture::BGRA:            return GL_BGRA;
-    case GraphicsManager::texture::RGB:             return GL_RGB;
-    case GraphicsManager::texture::RGBA:            return GL_RGBA;
-    case GraphicsManager::texture::RGB16:           return GL_RGB16;
-    case GraphicsManager::texture::RGBA16:          return GL_RGBA16;
-    case GraphicsManager::texture::RGB16F:          return GL_RGB16F;
-    case GraphicsManager::texture::RGBA16F:         return GL_RGBA16F;
-    case GraphicsManager::texture::R32F:            return GL_R32F;
-    case GraphicsManager::texture::DEPTH:           return GL_DEPTH_COMPONENT24;
+//    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
+//    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::BGR:
+        return GL_BGR;
+    case GraphicsManager::texture::BGRA:
+        return GL_BGRA;
+    case GraphicsManager::texture::RGB:
+    case GraphicsManager::texture::RGB16:
+    case GraphicsManager::texture::RGB16F:
+        return GL_RGB;
+    case GraphicsManager::texture::RGBA:
+    case GraphicsManager::texture::RGBA16:
+    case GraphicsManager::texture::RGBA16F:
+        return GL_RGBA;
+    case GraphicsManager::texture::R32F:
+        return GL_RED;
+    case GraphicsManager::texture::DEPTH:
+        return GL_DEPTH_COMPONENT24;
     default: debugBreak();
     }
     return 0;
@@ -105,8 +111,8 @@ GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-    case GraphicsManager::texture::INTENSITY:
-    case GraphicsManager::texture::LUMINANCE_ALPHA:
+//    case GraphicsManager::texture::INTENSITY:
+//    case GraphicsManager::texture::LUMINANCE_ALPHA:
     case GraphicsManager::texture::BGR:
     case GraphicsManager::texture::BGRA:
     case GraphicsManager::texture::RGB:
@@ -119,8 +125,8 @@ GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
     case GraphicsManager::texture::RGBA16F:
     case GraphicsManager::texture::R32F:
         return GL_FLOAT;
-    case GraphicsManager::texture::DEPTH:
-        return GL_UNSIGNED_BYTE;
+//    case GraphicsManager::texture::DEPTH:
+//        return GL_UNSIGNED_BYTE;
     default: debugBreak();
     }
     return 0;
@@ -128,11 +134,11 @@ GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
 GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-    case GraphicsManager::texture::INTENSITY:
-    case GraphicsManager::texture::DEPTH:
-        return 3;
-    case GraphicsManager::texture::LUMINANCE_ALPHA:
-        return 2;
+//    case GraphicsManager::texture::INTENSITY:
+//    case GraphicsManager::texture::DEPTH:
+//        return 3;
+//    case GraphicsManager::texture::LUMINANCE_ALPHA:
+//        return 2;
     case GraphicsManager::texture::BGR:
     case GraphicsManager::texture::RGB:
         return 3;
@@ -2155,8 +2161,10 @@ void OpenGLgraphics::render()
 	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
 		totalTime+=((*i)*0.001);
 
+    fps = 0;
     if(totalTime > 0)
         fps = ((double)frameTimes.size()) /  totalTime;
+
 ////////////////////////////////////CLEAR SCREEN//////////////////////////////////////////
 	bindRenderTarget(RT_SCREEN);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

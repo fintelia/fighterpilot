@@ -127,6 +127,8 @@
  <!--   <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />  -->
     <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" vertex4="media/terrain4.vert"     tessellationControl4="media/island4.tessControl"       tessellationEval4="media/island4.tessEval"      fragment4="media/island4.frag" />
     
+    <shader name="clipmap terrain"          vertex3="media/clipMap.vert"           fragment3="media/clipMap.frag" />
+
     
     <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
     <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
