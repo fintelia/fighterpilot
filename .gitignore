@@ -1,9 +1,15 @@
 Debug/
 Release/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+settings.ini
 FighterPilot.opensdf
 FighterPilot.sdf
 media/settings.ini.url
 media/shaderErrors.txt
 FighterPilot.v12.suo
 FighterPilot.exe
+FighterPilot
 media/assets.zip

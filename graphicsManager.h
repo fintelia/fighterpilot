@@ -226,7 +226,7 @@ public:
 	class texture
 	{
 	public:
-		enum Format{NONE=0, INTENSITY=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, DEPTH};
+		enum Format{NONE=0, INTENSITY=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, R32F, DEPTH};
 	protected:
 		friend class GraphicsManager;
 		Format format;
@@ -388,6 +388,7 @@ public:
 	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face){startRenderToTexture(texture, face, 0, false);}
 	virtual void endRenderToTexture()=0;
 	virtual void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s)=0;
+    //virtual void textureBarrier();
 	//virtual void bindRenderTarget(RenderTarget t)=0;
 	//virtual void renderFBO(RenderTarget src)=0;
 
@@ -589,9 +590,9 @@ public:
 	void startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures);
 	void startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures);
 	void endRenderToTexture();
-
 	void generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr<shader> s);
-
+    //void textureBarrier();
+    
 	void drawLine(Vec3f start, Vec3f end);
 	void drawSphere(Vec3f position, float radius, Color4 color);
 	void drawTriangle(Vec3f p1, Vec3f p2, Vec3f p3);

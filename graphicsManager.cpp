@@ -175,8 +175,6 @@ bool GraphicsManager::View::boundingBoxInFrustum(BoundingBox<float> b)
  */
 float GraphicsManager::View::boundingBoxProjectedArea(BoundingBox<float> b)
 {
-	float ret = 0.0f;
-
 	Vec2f p[8] = { project(Vec3f(b.minXYZ.x, b.minXYZ.y, b.minXYZ.z)),
 		project(Vec3f(b.minXYZ.x, b.minXYZ.y, b.maxXYZ.z)),
 		project(Vec3f(b.minXYZ.x, b.maxXYZ.y, b.minXYZ.z)),

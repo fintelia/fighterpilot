@@ -50,7 +50,49 @@ public:
 		unsigned int getLayerResolution() const { return layerResolution; }
 		unsigned int getNumLayers() const { return layers.size(); }
 	};
+    class GpuClipMap
+    {
+    private:
+        // Length of one side of the (square) clipMap in world space.
+        float sideLength;
+        // Length of side of largest unpinned layer.
+        float uSideLength;
+        // Resolution of each of the layers
+        unsigned int layerResolution;
+        // Number of layers that are pinned. Pinned layers are not proceedurally
+        // generated and must remain centered. Thus, all lower levels of the
+        // clipMap are constrained to be entirely inside the area of the
+        // smallest pinned layer.
+        unsigned int numPinnedLayers;
+        // Texture arrays containing the current state of the clipMap.
+        shared_ptr<GraphicsManager::texture2DArray> heights;
+        shared_ptr<GraphicsManager::texture2DArray> normals;
+        shared_ptr<GraphicsManager::texture2DArray> shoreDistance;
+        
+        struct layer{
+            // Which texel in the texture is the top left of the region. Since
+            // the texture wraps around, this may not actually be the top
+            // left. Initially however, the region is aligned to the texture and
+            // thus this starts out as (0,0).
+            Vec2i texturePosition{0, 0};
+            // Where the region is relative to the rest of the layer. For
+            // instance, if it is as far northwest as possible then it would be
+            // (0,0). Similarly, when it is as far southeast as possible, each
+            // coordinate would be layerResolution*(2^n-1).
+            Vec2i layerPosition;
+            
+            layer(Vec2i lPosition): layerPosition(lPosition){}
+        };
+        vector<layer> layers;
 
+        Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
+        void regenLayer(unsigned int layer, Vec2i newLayerPosition);
+        
+    public:
+        GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, vector<unique_ptr<float[]>> pinnedLayers);
+        void centerClipMap(Vec2f center);
+        void render();
+    };
 private:
     struct TerrainData {
 		/** space taken by a single vertex in the buffer */

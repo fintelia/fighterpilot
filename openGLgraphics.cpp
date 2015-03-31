@@ -48,6 +48,110 @@ struct OpenGLgraphics::Context
 	bool					fullscreen;
 };
 #endif
+
+GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
+                                  bool use_compression = false)
+{
+    if(use_compression){
+        switch(fmt){
+        case GraphicsManager::texture::BGR:
+        case GraphicsManager::texture::RGB:
+            return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+        case GraphicsManager::texture::BGRA:
+        case GraphicsManager::texture::RGBA:
+            return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        default: /* fall through to normal texture formats */
+            break;
+        }
+    }
+
+    switch(fmt){
+    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
+    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::BGR:             return GL_BGR;
+    case GraphicsManager::texture::BGRA:            return GL_BGRA;
+    case GraphicsManager::texture::RGB:             return GL_RGB;
+    case GraphicsManager::texture::RGBA:            return GL_RGBA;
+    case GraphicsManager::texture::RGB16:           return GL_RGB16;
+    case GraphicsManager::texture::RGBA16:          return GL_RGBA16;
+    case GraphicsManager::texture::RGB16F:          return GL_RGB16F;
+    case GraphicsManager::texture::RGBA16F:         return GL_RGBA16F;
+    case GraphicsManager::texture::R32F:            return GL_R32F;
+    case GraphicsManager::texture::DEPTH:           return GL_DEPTH_COMPONENT24;
+    default: debugBreak();
+    }
+    return 0;
+}
+GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
+{
+    switch(fmt){
+    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
+    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::BGR:             return GL_BGR;
+    case GraphicsManager::texture::BGRA:            return GL_BGRA;
+    case GraphicsManager::texture::RGB:             return GL_RGB;
+    case GraphicsManager::texture::RGBA:            return GL_RGBA;
+    case GraphicsManager::texture::RGB16:           return GL_RGB16;
+    case GraphicsManager::texture::RGBA16:          return GL_RGBA16;
+    case GraphicsManager::texture::RGB16F:          return GL_RGB16F;
+    case GraphicsManager::texture::RGBA16F:         return GL_RGBA16F;
+    case GraphicsManager::texture::R32F:            return GL_R32F;
+    case GraphicsManager::texture::DEPTH:           return GL_DEPTH_COMPONENT24;
+    default: debugBreak();
+    }
+    return 0;
+
+}
+GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
+{
+    switch(fmt){
+    case GraphicsManager::texture::INTENSITY:
+    case GraphicsManager::texture::LUMINANCE_ALPHA:
+    case GraphicsManager::texture::BGR:
+    case GraphicsManager::texture::BGRA:
+    case GraphicsManager::texture::RGB:
+    case GraphicsManager::texture::RGBA:
+        return GL_UNSIGNED_BYTE;
+    case GraphicsManager::texture::RGB16:
+    case GraphicsManager::texture::RGBA16:
+        return GL_UNSIGNED_SHORT;
+    case GraphicsManager::texture::RGB16F:
+    case GraphicsManager::texture::RGBA16F:
+    case GraphicsManager::texture::R32F:
+        return GL_FLOAT;
+    case GraphicsManager::texture::DEPTH:
+        return GL_UNSIGNED_BYTE;
+    default: debugBreak();
+    }
+    return 0;
+}
+GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
+{
+    switch(fmt){
+    case GraphicsManager::texture::INTENSITY:
+    case GraphicsManager::texture::DEPTH:
+        return 3;
+    case GraphicsManager::texture::LUMINANCE_ALPHA:
+        return 2;
+    case GraphicsManager::texture::BGR:
+    case GraphicsManager::texture::RGB:
+        return 3;
+    case GraphicsManager::texture::BGRA:
+    case GraphicsManager::texture::RGBA:
+    case GraphicsManager::texture::R32F:
+        return 4;
+    case GraphicsManager::texture::RGB16:
+    case GraphicsManager::texture::RGB16F:
+        return 6;
+    case GraphicsManager::texture::RGBA16:
+    case GraphicsManager::texture::RGBA16F:
+        return 8;
+
+        return GL_UNSIGNED_BYTE;
+    default: debugBreak();
+    }
+    return 0;
+}
 class OpenGLgraphics::vertexBufferGL: public GraphicsManager::vertexBuffer
 {
 private:
@@ -624,19 +728,10 @@ void OpenGLgraphics::texture2DGL::bind(unsigned int textureUnit)
 void OpenGLgraphics::texture2DGL::generateMipmaps()
 {
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
-		glGenerateMipmap(GL_TEXTURE_2D);
-	else
-		glGenerateMipmapEXT(GL_TEXTURE_2D);
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)
 {
-	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F && f != DEPTH)
-	{
-		debugBreak();
-		return;
-	}
-
 	format = f;
 	width = Width;
 	height = Height;
@@ -656,124 +751,20 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
-	
-//	if(!gl2Hacks || GLEW_ARB_texture_non_power_of_two || (!(width & (width-1)) && !(height & (height-1)))) //if we have support for NPOT textures, or texture is power of 2
-//	{
-		//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 
-		if(GLEW_EXT_texture_compression_s3tc && compress && (format == BGR || format == BGRA || format == RGB || format == RGBA))
-		{
-			if(format == BGR)					glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB_S3TC_DXT1_EXT, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		}
-		else
-		{
-			if(format == INTENSITY)				glTexImage2D(GL_TEXTURE_2D, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-			else if(format == LUMINANCE_ALPHA)	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-			else if(format == BGR)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-			else if(format == BGRA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-			else if(format == RGBA)				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			else if(format == RGB16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
-			else if(format == RGBA16)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-			else if(format == RGB16F)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
-			else if(format == RGBA16F)			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data);
-			else if(format == DEPTH)			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, data);
-		}
-//		if(gl2Hacks)
-//		{
-//			glEnable(GL_TEXTURE_2D); //required for some ATI drivers?
-//		}
+    glTexImage2D(GL_TEXTURE_2D, 0, getGLInternalTextureFormat(format), width,
+                 height, 0, getGLTextureFormat(format),
+                 getGLTextureDataType(format), data);
 
-		if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
-			glGenerateMipmap(GL_TEXTURE_2D);
-		else
-			glGenerateMipmapEXT(GL_TEXTURE_2D);
-//	}
-//	else // we need to resize to a power of 2 (should only occur on GeForce FX graphics cards)
-//	{
-//		if(format == INTENSITY)				gluBuild2DMipmaps(GL_TEXTURE_2D, 1, width, height, GL_INTENSITY, GL_UNSIGNED_BYTE, data);
-//		else if(format == LUMINANCE_ALPHA)	gluBuild2DMipmaps(GL_TEXTURE_2D, 2, width, height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-//		else if(format == BGR)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
-//		else if(format == BGRA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGRA, GL_UNSIGNED_BYTE, data);
-//		else if(format == RGB)				gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-//		else if(format == RGBA)				gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-//		else if(format == RGB16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16, GL_UNSIGNED_SHORT, data);
-//		else if(format == RGBA16)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16, GL_UNSIGNED_SHORT, data);
-//		else if(format == RGB16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_RGB16F, GL_FLOAT, data);
-//		else if(format == RGBA16F)			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGBA16F, GL_FLOAT, data);
-//		else if(format == DEPTH)			gluBuild2DMipmaps(GL_TEXTURE_2D, 3, width, height, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, data);
-//	}
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 unsigned char* OpenGLgraphics::texture2DGL::getData(unsigned int level)
 {
-	GLenum fmt=0;
-	unsigned int bytesPerPixel;
-	if(format == INTENSITY)
-	{
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
-	else if(format == LUMINANCE_ALPHA)
-	{
-		fmt = GL_LUMINANCE_ALPHA;
-		bytesPerPixel=2;
-	}
-	else if(format == BGR)
-	{
-		fmt = GL_BGR;
-		bytesPerPixel=3;
-	}
-	else if(format == BGRA)
-	{
-		fmt = GL_BGRA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB)
-	{
-		fmt = GL_RGB;
-		bytesPerPixel=3;
-	}
-	else if(format == RGBA)
-	{
-		fmt = GL_RGBA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB16)
-	{
-		fmt = GL_RGB16;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16)
-	{
-		fmt = GL_RGBA16;
-		bytesPerPixel=8;
-	}
-	else if(format == RGB16F)
-	{
-		fmt = GL_RGB16F;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16F)
-	{
-		fmt = GL_RGBA16F;
-		bytesPerPixel=8;
-	}
-	else if(format == DEPTH)
-	{
-		fmt = GL_DEPTH_COMPONENT;
-		bytesPerPixel=1;
-	}
-	else /* unrecognized format!!! */
-	{
-		debugBreak();
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
-
-	unsigned char* data = new unsigned char[max(width>>level,1)*max(height>>level,1)*bytesPerPixel];
+	GLenum fmt = getGLTextureFormat(format);
+	unsigned int bytesPerPixel = getGLTextureBytesPerPixel(format);
+    
+	unsigned char* data = new unsigned char[max(width>>level,1)*
+                                            max(height>>level,1)*bytesPerPixel];
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glGetTexImage(GL_TEXTURE_2D, level, fmt, GL_UNSIGNED_BYTE, data);
 	return data;
@@ -793,28 +784,13 @@ void OpenGLgraphics::texture3DGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
 {
-	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
-	{
-		debugBreak();
-		return;
-	}
-
 	format = f;
 	width = Width;
 	height = Height;
 	depth = Depth;
 
 	glBindTexture(GL_TEXTURE_3D, textureID);
-	if(format == INTENSITY)				glTexImage3D(GL_TEXTURE_3D, 0, GL_INTENSITY, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-	else if(format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-	else if(format == BGR)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-	else if(format == BGRA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
-	else if(format == RGB)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width, height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else if(format == RGBA)				glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	else if(format == RGB16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16, width, height, depth, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
-	else if(format == RGBA16)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-	else if(format == RGB16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
-	else if(format == RGBA16F)			glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data);
+	glTexImage3D(GL_TEXTURE_3D, 0, getGLInternalTextureFormat(format), width, height, depth, 0, getGLTextureFormat(format), getGLTextureDataType(format), data);
 
 	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
 		glGenerateMipmap(GL_TEXTURE_3D);
@@ -840,69 +816,8 @@ void OpenGLgraphics::texture3DGL::setData(unsigned int Width, unsigned int Heigh
 }
 unsigned char* OpenGLgraphics::texture3DGL::getData(unsigned int level)
 {
-	GLenum fmt=0;
-	unsigned int bytesPerPixel;
-	if(format == INTENSITY)
-	{
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
-	else if(format == LUMINANCE_ALPHA)
-	{
-		fmt = GL_LUMINANCE_ALPHA;
-		bytesPerPixel=2;
-	}
-	else if(format == BGR)
-	{
-		fmt = GL_BGR;
-		bytesPerPixel=3;
-	}
-	else if(format == BGRA)
-	{
-		fmt = GL_BGRA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB)
-	{
-		fmt = GL_RGB;
-		bytesPerPixel=3;
-	}
-	else if(format == RGBA)
-	{
-		fmt = GL_RGBA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB16)
-	{
-		fmt = GL_RGB16;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16)
-	{
-		fmt = GL_RGBA16;
-		bytesPerPixel=8;
-	}
-	else if(format == RGB16F)
-	{
-		fmt = GL_RGB16F;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16F)
-	{
-		fmt = GL_RGBA16F;
-		bytesPerPixel=8;
-	}
-	else if(format == DEPTH)
-	{
-		fmt = GL_DEPTH_COMPONENT;
-		bytesPerPixel=1;
-	}
-	else /* unrecognized format!!! */
-	{
-		debugBreak();
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
+	GLenum fmt = getGLTextureFormat(format);
+	unsigned int bytesPerPixel = getGLTextureBytesPerPixel(format);
 
 	unsigned char* data = new unsigned char[max(width>>level,1)*max(height>>level,1)*max(depth>>level,1)*bytesPerPixel];
 	glBindTexture(GL_TEXTURE_3D, textureID);
@@ -924,33 +839,17 @@ void OpenGLgraphics::texture2DArrayGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::texture2DArrayGL::setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable)
 {
-	if (f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
-	{
-		debugBreak();
-		return;
-	}
-
 	format = f;
 	width = Width;
 	height = Height;
 	depth = Depth;
 
 	glBindTexture(GL_TEXTURE_2D_ARRAY, textureID);
-	if (format == INTENSITY)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_INTENSITY, width, height, depth, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-	else if (format == LUMINANCE_ALPHA)	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_LUMINANCE_ALPHA, width, height, depth, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
-	else if (format == BGR)				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, depth, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-	else if (format == BGRA)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, depth, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
-	else if (format == RGB)				glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, width, height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else if (format == RGBA)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	else if (format == RGB16)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16, width, height, depth, 0, GL_RGB, GL_UNSIGNED_SHORT, data);
-	else if (format == RGBA16)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA16, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_SHORT, data);
-	else if (format == RGB16F)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB16F, width, height, depth, 0, GL_RGB, GL_FLOAT, data);
-	else if (format == RGBA16F)			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA16F, width, height, depth, 0, GL_RGBA, GL_FLOAT, data);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, getGLInternalTextureFormat(format),
+                 width, height, depth, 0, getGLTextureFormat(format),
+                 getGLTextureDataType(format), data);
 
-	if (graphics->hasShaderModel4()) //means we are running OpenGL 3+
-		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-	else
-		glGenerateMipmapEXT(GL_TEXTURE_2D_ARRAY);
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
 	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -981,112 +880,31 @@ void OpenGLgraphics::textureCubeGL::bind(unsigned int textureUnit)
 }
 void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data)
 {
-	if(f != INTENSITY && f != LUMINANCE_ALPHA && f != BGR && f != BGRA && f != RGB && f != RGBA && f != RGB16 && f != RGBA16 && f != RGB16F && f != RGBA16F)
-	{
-		debugBreak();
-		return;
-	}
-
 	format = f;
 	width = Width;
 	height = Height;
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-	if(format == INTENSITY)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_INTENSITY, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data ? data + width*height * 5 : nullptr);
-	}
-	else if(format == LUMINANCE_ALPHA)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_LUMINANCE_ALPHA, width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data ? data + width*height*2 * 5 : nullptr);
-	}
-	else if(format == BGR)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 5 : nullptr);
-	}
-	else if(format == BGRA)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 5 : nullptr);
-	}
-	else if(format == RGB)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data ? data + width*height*3 * 5 : nullptr);
-	}
-	else if(format == RGBA)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data ? data + width*height*4 * 5 : nullptr);
-	}
-	else if(format == RGB16)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT, data ? data + width*height*2*3 * 5 : nullptr);
-	}
-	else if(format == RGBA16)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT, data ? data + width*height*2*4 * 5 : nullptr);
-	}
-	else if(format == RGB16F)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data ? data + width*height*4*3 * 5 : nullptr);
-	}
-	else if(format == RGBA16F)
-	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 0 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 1 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 2 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 3 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 4 : nullptr);
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, data ? data + width*height*4*4 * 5 : nullptr);
-	}
 
-	if(graphics->hasShaderModel4()) //means we are running OpenGL 3+
-		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-	else
-		glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
+    GLenum ifmt = getGLInternalTextureFormat(format);
+    GLenum fmt = getGLTextureFormat(format);
+    GLenum type = getGLTextureDataType(format);
+    GLenum bpp = getGLTextureBytesPerPixel(format);
+    
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 0 : nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 1 : nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 2 : nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 3 : nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 4 : nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, ifmt, width, height, 0,
+                 fmt, type, data ? data + width*height*bpp * 5 : nullptr);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1097,69 +915,8 @@ void OpenGLgraphics::textureCubeGL::setData(unsigned int Width, unsigned int Hei
 }
 unsigned char* OpenGLgraphics::textureCubeGL::getData(unsigned int level)
 {
-	GLenum fmt=0;
-	unsigned int bytesPerPixel;
-	if(format == INTENSITY)
-	{
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
-	else if(format == LUMINANCE_ALPHA)
-	{
-		fmt = GL_LUMINANCE_ALPHA;
-		bytesPerPixel=2;
-	}
-	else if(format == BGR)
-	{
-		fmt = GL_BGR;
-		bytesPerPixel=3;
-	}
-	else if(format == BGRA)
-	{
-		fmt = GL_BGRA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB)
-	{
-		fmt = GL_RGB;
-		bytesPerPixel=3;
-	}
-	else if(format == RGBA)
-	{
-		fmt = GL_RGBA;
-		bytesPerPixel=4;
-	}
-	else if(format == RGB16)
-	{
-		fmt = GL_RGB16;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16)
-	{
-		fmt = GL_RGBA16;
-		bytesPerPixel=8;
-	}
-	else if(format == RGB16F)
-	{
-		fmt = GL_RGB16F;
-		bytesPerPixel=6;
-	}
-	else if(format == RGBA16F)
-	{
-		fmt = GL_RGBA16F;
-		bytesPerPixel=8;
-	}
-	else if(format == DEPTH)
-	{
-		fmt = GL_DEPTH_COMPONENT;
-		bytesPerPixel=1;
-	}
-	else /* unrecognized format!!! */
-	{
-		debugBreak();
-		fmt = GL_INTENSITY;
-		bytesPerPixel=1;
-	}
+	GLenum fmt = getGLTextureFormat(format);
+	unsigned int bytesPerPixel = getGLTextureBytesPerPixel(format);
 
 	unsigned int faceSize = max(width>>level,1)*max(height>>level,1)*bytesPerPixel;
 	unsigned char* data = new unsigned char[faceSize*6];
@@ -3144,29 +2901,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	GLenum err = glewInit();
 	glGetError(); //ignore any errors caused by glewInit
 	string errorString;
-	if(GLEW_OK != err)						errorString = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
-	else if(!GLEW_VERSION_3_3)				errorString = "Your version of OpenGL must be at least 3.3: Please update your graphics drivers";
-//	else if(!GLEW_EXT_framebuffer_object)	errorString = "Your graphics card must support GL_EXT_framebuffer_object: Please update your graphics drivers.";
-//	else if(!GLEW_ARB_vertex_array_object)	errorString = "Your graphics card must support ARB_vertex_array_object: Please update your graphics drivers.";
-
-	if(errorString != "")
-	{
-		destroyWindow();
-		const char* version = (const char*)glGetString(GL_VERSION);
-		const char* renderer = (const char*)glGetString(GL_RENDERER);
-		const char* vender = (const char*)glGetString(GL_VENDOR);
-
-		if(version) errorString += string("\n   OpenGL version: ") + version;
-		if(renderer) errorString += string("\n   Renderer: ") + renderer;
-		if(vender) errorString += string("\n   Vender: ") + vender;
-#ifdef WINDOWS
-		MessageBoxA(NULL, errorString.c_str(),"ERROR",MB_OK);
-#else
-		std::cout << "FATAL ERROR: " << errorString << endl;
-#endif
-		return false;
-	}
-
+	if(GLEW_OK != err)
+        errorString = string("Glew initialization failed with error: \"") + string((const char*)glewGetErrorString(err)) + "\"";
 
 #if defined(WINDOWS)
 	if(wglCreateContextAttribsARB && targetRendererVersion >= 4) //attempt to create an openGL 4 context
@@ -3174,7 +2910,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		int attribs[] =
 		{
 			WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-			WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+			WGL_CONTEXT_MINOR_VERSION_ARB, 5,
 			WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 			0
 		};
@@ -3238,6 +2974,31 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
     glGenQueries(1, &transformFeedbackQueryID);
 	openGL3 = true;	
 #endif
+
+    if(errorString == ""){
+        if(!GLEW_VERSION_3_3)
+            errorString = "Your version of OpenGL must be at least 3.3: Please update your graphics drivers";
+//        else if(!GLEW_VERSION_4_5 || !GLEW_ARB_TEXTURE_BARRIER)
+//            errorString = "Your graphics card must support GL_ARB_TEXTURE_BARRIER";
+    }
+    
+	if(errorString != "")
+	{
+		destroyWindow();
+		const char* version = (const char*)glGetString(GL_VERSION);
+		const char* renderer = (const char*)glGetString(GL_RENDERER);
+		const char* vender = (const char*)glGetString(GL_VENDOR);
+
+		if(version) errorString += string("\n   OpenGL version: ") + version;
+		if(renderer) errorString += string("\n   Renderer: ") + renderer;
+		if(vender) errorString += string("\n   Vender: ") + vender;
+#ifdef WINDOWS
+		MessageBoxA(NULL, errorString.c_str(),"ERROR",MB_OK);
+#else
+		std::cout << "FATAL ERROR: " << errorString << endl;
+#endif
+		return false;
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -3624,6 +3385,9 @@ void OpenGLgraphics::generateCustomMipmaps(shared_ptr<texture2D> tex, shared_ptr
 	tex->bind(0);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 }
+//void textureBarrier(){
+//    glTextureBarrier();
+//}
 #ifdef WINDOWS
 HWND OpenGLgraphics::getWindowHWND()
 {

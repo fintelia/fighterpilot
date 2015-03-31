@@ -64,6 +64,62 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 	t = GetTime() - t;
 	t = GetTime();
 }
+
+Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, vector<unique_ptr<float[]>> pinnedLayers): sideLength(sLength), uSideLength(sLength / (1<<pinnedLayers.size())),layerResolution(resolution), numPinnedLayers(pinnedLayers.size())
+{
+    assert(num_layers > 0);
+    assert(num_layers >= pinnedLayers.size());
+
+    unsigned int layerSize = layerResolution * layerResolution;
+    unique_ptr<float[]> h(new float[num_layers]());
+    for(unsigned int i = 0; i < numPinnedLayers; i++){
+        memcpy(h.get() + i*layerSize, pinnedLayers[i].get(),
+               layerSize*sizeof(float));
+    }
+   
+    heights = graphics->genTexture2DArray();
+    heights->setData(layerResolution, layerResolution, num_layers,
+                     GraphicsManager::texture::R32F,
+                    (unsigned char*)h.get(), false);
+
+    for(unsigned int i = 0; i < num_layers; i++){
+        int p = layerResolution * (((1<<i) - 1) / 2); 
+        layers.push_back(layer(Vec2i(p, p)));
+
+        if(i >= numPinnedLayers){
+            Vec2i position = worldCenterToLayerPosition(center);
+            regenLayer(i, position);
+        }
+    }
+}
+Vec2i Terrain::GpuClipMap::worldCenterToLayerPosition(unsigned int layer,
+                                                      Vec2f center)
+{
+    center.x = clamp(center.x + uSideLength/4, 0, uSideLength/2);
+    center.y = clamp(center.y + uSideLength/4, 0, uSideLength/2);
+
+    Vec2i icenter{center.x * layerResolution / ((1<<layer)*sideLength),
+                  center.y * layerResolution / ((1<<layer)*sideLength)};
+    
+    return Vec2i(icenter.x - layerResolution/2, icenter.y - layerResolution/2);
+}
+void Terrain::GpuClipMap::regenLayer(unsigned int layer, Vec2i newLayerPosition)
+{
+    //TODO
+}
+void Terrain::GpuClipMap::centerClipMap(Vec2f center)
+{
+    for(unsigned int l = 0; l < layers.size(); l++){
+        Vec2i newPosition = worldCenterToLayerPosition(newCenter);
+        if(abs(newPosition - layers[l].layerPosition) > layerResolution/8){
+            regenLayer(l, newPosition);
+        }
+    }
+}
+void Terrain::GpuClipMap::render()
+{
+
+}
 Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexSize(32), vertexStep(tileResolution*tileResolution*vertexSize), verticesPerTile(tileResolution*tileResolution),nodeIndices(totalIndices)
 {
     vertexBuffer = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
@@ -743,8 +799,8 @@ unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View
 		auto n = nodes.front();
 		nodes.pop();
 
-		Vec3f eye = view->camera().eye;
-		float hMinDistance = 0.5*n->sideLength + n->minDistance;
+//		Vec3f eye = view->camera().eye;
+//		float hMinDistance = 0.5*n->sideLength + n->minDistance;
 		
 		//list of nodes that must subdivide if n does
 		vector<FractalNode*> dependents;
