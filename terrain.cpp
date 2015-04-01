@@ -141,13 +141,13 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution, unsigned
             addTriangle(0,2*i+2,   1,2*i+2,   1,2*i+1);
             addTriangle(-1,2*i+2,  -2,2*i+2,  -2,2*i+1);
         }
-
     }
     // ring
+    unsigned int ringSize = (blockResolution - 3) / 4;
     for(int y = 1; y < blockResolution-2; y++){
         for(int x = 1; x < blockResolution-2; x++){
-/*            if((x < ringSize-1 || x >= blockResolution-ringSize) &&
-              (y < ringSize-1 || y >= blockResolution-ringSize))*/{
+            if((x < ringSize || x >= blockResolution-ringSize) ||
+               (y < ringSize || y >= blockResolution-ringSize)){
 
                 addTriangle(x,y,      x,y+1,     x+1,y);
                 addTriangle(x+1,y,    x+1,y+1,   x,y+1);
@@ -155,18 +155,14 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution, unsigned
         }
     }
     numRingIndices = index;
-    // center
-/*    for(int x = ringSize-1; x < blockResolution-ringSize-1; x++){
-        for(int y = ringSize-1; y < blockResolution-ringSize-1; y++){
-            iboData[index++] = x + y * blockResolution;
-            iboData[index++] = (x+1) + y * blockResolution;
-            iboData[index++] = x + (y+1) * blockResolution;
 
-            iboData[index++] = (x+1) + y * blockResolution;
-            iboData[index++] = x + (y+1) * blockResolution;
-            iboData[index++] = (x+1) + (y+1) * blockResolution;
+    // center
+    for(int x = ringSize; x < blockResolution-ringSize; x++){
+        for(int y = ringSize; y < blockResolution-ringSize; y++){
+            addTriangle(x,y,      x,y+1,     x+1,y);
+            addTriangle(x+1,y,    x+1,y+1,   x,y+1);
         }
-        }*/
+    }
 //    debugAssert(iboDataSize == index);
     clipMapIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     clipMapIBO->setData(iboData.get(), GraphicsManager::TRIANGLES, index/*iboDataSize*/);
