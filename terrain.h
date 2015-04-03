@@ -55,50 +55,69 @@ private:
     {
     private:
         // Length of one side of the (square) clipMap in world space.
-        float sideLength;
-        // Length of side of largest unpinned layer.
-        float uSideLength;
+        const float sideLength;
         // Resolution of each of the layers. Must be a power of two.
-        unsigned int layerResolution;
+        const unsigned int layerResolution;
         // Number of layers that are pinned. Pinned layers are not proceedurally
         // generated and must remain centered. Thus, all lower levels of the
         // clipMap are constrained to be entirely inside the area of the
         // smallest pinned layer.
-        unsigned int numPinnedLayers;
-
+        const unsigned int numPinnedLayers;
+        // Resolution of the clipmap if the most detailed layer were present
+        // across the entire range of the clipmap. 
+        const unsigned int resolution;
+        // Ratio of block resolution to the mesh resolution. Setting this value
+        // greater than 1 allows us to leave additional information for the
+        // normal map. Must be a power of two.
+        const unsigned int blockStep = 8;
+        // Resolution of the mesh used to represent a block of a layer.
+        const unsigned int meshResolution;
+        // The resolution of a block. It is generally around half the size of a
+        // layer. This leaves us a wide border around the block so we don't have
+        // to update it every frame, but rather only when the viewer moves by a
+        // significant amount.
+        const unsigned int blockResolution;
+        
         shared_ptr<GraphicsManager::vertexBuffer> clipMapVBO;
         shared_ptr<GraphicsManager::indexBuffer> clipMapIBO;
         unsigned int numRingIndices;
-
-        // Ratio of active window resolution to the block (mesh) resolution used
-        // to represent a block. Setting this value greater than 1 allows us to
-        // encode additional information for the normal map. Must be a power of
-        // two.
-        static constexpr unsigned int blockStep = 8;
         
-        struct layer{
-            // Which texel in the texture is the top left of the region. Since
-            // the texture wraps around, this may not actually be the top
-            // left. Initially however, the region is aligned to the texture and
-            // thus this starts out as (0,0).
-            Vec2i texturePosition{0, 0};
-            // Where the region is relative to the rest of the layer. For
-            // instance, if it is as far northwest as possible then it would be
-            // (0,0). Similarly, when it is as far southeast as possible, each
-            // coordinate would be layerResolution*(2^n-1).
-            Vec2i layerPosition;
+        struct Layer{
+            // Each layer represents a progressively higher resolution, but
+            // smaller, area of the clipmap.  The first numPinnedLayers layers
+            // are set at initialization and have a fixed location. All other
+            // layers are generated dynamically from the most detailed pinned
+            // layer.
 
+            
+            // Where the region is relative to the rest of the clipmap. This
+            // value is relative to the coordinatios of the detailed layer so it
+            // must be between (-resolution/2+1) and (resolution/2) inclusive in
+            // each dimension. However, since this value is the center of the
+            // layer, we also have to make sure that the layer extents do not
+            // exceed that range either. Additionally, no nonpinned layer can be
+            // outside the extents of the previous layer. All pinned layers must
+            // remain at (0,0).
+            Vec2i center;
+            // This is the value that center would have if we regenerated the
+            // layer to be centered around the eye position. Since we avoid
+            // regenerating the whole thing when the camera only moves a little
+            // bit, this might not be exactly the same as center.
+            Vec2i targetCenter;
+            // Which texel in the texture corresponds to the center of the
+            // region. Since the texture wraps around, this may not actually be
+            // the center of the texture.
+            Vec2u textureCenter;
+            
             // Texture arrays containing the current state of the clipMap.
             shared_ptr<GraphicsManager::texture2D> heights;
             shared_ptr<GraphicsManager::texture2D> normals;
             shared_ptr<GraphicsManager::texture2D> shoreDistance;
-            
-            layer(Vec2i lPosition): layerPosition(lPosition){}
         };
-        vector<layer> layers;
+        vector<Layer> layers;
 
         Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
-        void regenLayer(unsigned int layer, Vec2i newLayerPosition);
+        void regenLayer(unsigned int layer);
         
     public:
         GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, vector<unique_ptr<float[]>> pinnedLayers);

@@ -11,6 +11,7 @@ uniform float invResolution;
 
 uniform sampler2D heightmap;
 uniform ivec2 textureOrigin;
+uniform int textureStep;
 
 in vec2 Position2;
 
@@ -35,11 +36,11 @@ float random(vec2 v)
 
 void main()
 {
-    ivec2 texCoord = ivec2(mod(ivec2(Position2) + textureOrigin,
+    ivec2 texCoord = ivec2(mod(ivec2(Position2)*textureStep + textureOrigin,
                                textureSize(heightmap, 0)));
 
     position.y = texelFetch(heightmap, texCoord, 0).x;
-    position.xz = worldOrigin + abs(Position2 * invResolution*2) * sideLength;
+    position.xz = worldOrigin + Position2 * invResolution * sideLength;
 
 //    float r = length(position.xz) / 10000;
 //    position.y = 1500 * sin(3.1415 * r) / (3.1415 * r);

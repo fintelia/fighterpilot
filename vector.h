@@ -33,23 +33,28 @@ public:
 		debugBreak();
 		throw std::out_of_range(string("attempted to access element ") + lexical_cast<string>(index) + "of a 2D vector. Index should be either 0 or 1.");
 	}
-	Vector2 operator+(T scale) const{return Vector2(x + scale, y + scale);}
-	Vector2 operator-(T scale) const{return Vector2(x - scale, y - scale);}
-	Vector2 operator/(T scale) const{return Vector2(x / scale, y / scale);}
-	Vector2 operator+(const Vector2& other) const{return Vector2(x + other.x, y + other.y);}
+	Vector2 operator+(T scalar) const{return Vector2(x + scalar, y + scalar);}
+	Vector2 operator-(T scalar) const{return Vector2(x - scalar, y - scalar);}
+	Vector2 operator*(T scalar) const{return Vector2(x * scalar, y * scalar);}
+	Vector2 operator/(T scalar) const{return Vector2(x / scalar, y / scalar);}
+    Vector2 operator%(T scalar) const{return Vector2(x % scalar, y % scalar);}
+    Vector2 operator+(const Vector2& other) const{return Vector2(x + other.x, y + other.y);}
 	Vector2 operator-(const Vector2& other) const{return Vector2(x - other.x, y - other.y);}
 	Vector2 operator*(const Vector2& other) const{return Vector2(x * other.x, y * other.y);}
 	Vector2 operator/(const Vector2& other) const{return Vector2(x / other.x, y / other.y);}
+    Vector2 operator%(const Vector2& other) const{return Vector2(x % other.x, y % other.y);}
 	Vector2 operator-() const{return Vector2(-x, -y);}
 
-	Vector2& operator+=(T scale){	return *this = (*this)+scale;}
-	Vector2& operator-=(T scale){	return *this = (*this)-scale;}
-	Vector2& operator*=(T scale){	return *this = (*this)*scale;}
-	Vector2& operator/=(T scale){	return *this = (*this)/scale;}
+	Vector2& operator+=(T scalar){	return *this = (*this)+scalar;}
+	Vector2& operator-=(T scalar){	return *this = (*this)-scalar;}
+	Vector2& operator*=(T scalar){	return *this = (*this)*scalar;}
+	Vector2& operator/=(T scalar){	return *this = (*this)/scalar;}
+    Vector2& operator%=(T scalar){	return *this = (*this)%scalar;}
 	Vector2& operator+=(const Vector2 &other){return *this = (*this)+other;}
 	Vector2& operator-=(const Vector2 &other){return *this = (*this)-other;}
 	Vector2& operator*=(const Vector2 &other){return *this = (*this)*other;}
 	Vector2& operator/=(const Vector2 &other){return *this = (*this)/other;}
+    Vector2& operator%=(const Vector2 &other){return *this = (*this)%other;}
 
 	bool operator!=(const Vector2& other) const{return !equal(other);}
 	bool operator==(const Vector2& other) const{return equal(other);}
