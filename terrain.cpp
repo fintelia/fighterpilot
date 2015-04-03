@@ -150,11 +150,11 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
         }
     }
     // ring
-    unsigned int ringSize = (meshResolution - 3) / 4;
+    unsigned int ringSize = (meshResolution - 1) / 4;
     for(int y = 1; y < meshResolution-2; y++){
         for(int x = 1; x < meshResolution-2; x++){
-            if((x < ringSize || x >= meshResolution-ringSize) ||
-               (y < ringSize || y >= meshResolution-ringSize)){
+            if((x < ringSize+1 || x >= meshResolution-ringSize-1) ||
+               (y < ringSize+1 || y >= meshResolution-ringSize-1)){
                 addTriangle(x,y,      x,y+1,     x+1,y);
                 addTriangle(x+1,y,    x+1,y+1,   x,y+1);
             }
@@ -163,8 +163,8 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     numRingIndices = index;
 
     // center
-    for(int x = ringSize; x < meshResolution-ringSize; x++){
-        for(int y = ringSize; y < meshResolution-ringSize; y++){
+    for(int x = ringSize+1; x < meshResolution-ringSize-1; x++){
+        for(int y = ringSize+1; y < meshResolution-ringSize-1; y++){
             addTriangle(x,y,      x,y+1,     x+1,y);
             addTriangle(x+1,y,    x+1,y+1,   x,y+1);
         }
@@ -183,17 +183,17 @@ void Terrain::GpuClipMap::centerClipMap(Vec2f center)
     unsigned int num_layers = layers.size();
 
     // TODO fix these bounds?
-    int minBound = -(layerResolution/2 - blockResolution/2 - 2*blockStep)
-        << (numPinnedLayers - num_layers);
-    int maxBound = (layerResolution/2 - blockResolution/2 - 1*blockStep)
-        << (numPinnedLayers - num_layers);
+//    int minBound = -(layerResolution/2 - blockResolution/2 - 2*blockStep)
+//        << (num_layers - numPinnedLayers);
+    int bound = (layerResolution/2 - blockResolution/2 - 2*blockStep)
+        << (num_layers - numPinnedLayers);
 
     Vec2f ncenter = center/sideLength+0.5;
     Vec2i icenter{(int)(ncenter.x*resolution), (int)(ncenter.y*resolution)};
 
-    icenter -= resolution/2 - 1;
-    icenter.x = clamp(icenter.x, minBound, maxBound);
-    icenter.y = clamp(icenter.y, minBound, maxBound);
+    icenter -= resolution/2;
+    icenter.x = clamp(icenter.x, -bound, bound);
+    icenter.y = clamp(icenter.y, -bound, bound);
     
     for(unsigned int i = 0; i < layers.size(); i++){
         auto& layer = layers[i];
@@ -202,8 +202,8 @@ void Terrain::GpuClipMap::centerClipMap(Vec2f center)
         // detailed layer.
         unsigned int layerScale = 1 << (num_layers-i-1);
         
-        unsigned int step = blockStep * layerScale;
-        layers[i].targetCenter = (icenter / step) * step;
+        unsigned int step = blockStep * layerScale * 2;
+        layers[i].targetCenter = ((icenter+resolution) / step) * step - resolution;
 
         int dx = abs(layers[i].targetCenter.x - layer.center.x);
         int dy = abs(layers[i].targetCenter.y - layer.center.y);
@@ -219,31 +219,41 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
 	shader->setUniformMatrix("cameraProjection",
                              view->projectionMatrix() * view->modelViewMatrix());
 	shader->setUniform1f("earthRadius", earthRadius);
+    shader->setUniform1i("resolution", meshResolution-1);
     shader->setUniform1f("invResolution", 1.0 / (meshResolution-1));
     shader->setUniform1i("textureStep", blockStep);
 	shader->setUniform1i("heightmap", 0);
 
-    float slength = sideLength * (blockResolution-1) / (layerResolution-1);
-    
     clipMapIBO->bindBuffer(clipMapVBO);
     for(int i = 0; i < layers.size(); i++){
         unsigned int layerScale = 1 << (layers.size()-i-1);
+        float slength = sideLength * (blockResolution - 1) * layerScale
+            / (resolution - 1);
         Vec2f worldOrigin =
-            (layers[i].targetCenter - blockResolution/2 * layerScale);
-        worldOrigin = (worldOrigin - 0.5) * sideLength/resolution;
-        Vec2i textureOrigin = layers[i].textureCenter - blockResolution/2;
+            (layers[i].targetCenter - ((blockResolution-1)/2-blockStep) * layerScale);
+        worldOrigin = (worldOrigin-0.5) * sideLength/(resolution-1);
+        Vec2i textureOrigin =
+            layers[i].textureCenter - ((blockResolution-1)/2-blockStep);
         textureOrigin -= (layers[i].center - layers[i].targetCenter)
             / layerScale;
         
-        shader->setUniform1f("sideLength", slength / (1 << i));
+        shader->setUniform1f("sideLength", slength);
         shader->setUniform2f("worldOrigin", worldOrigin.x, worldOrigin.y);
         shader->setUniform2i("textureOrigin", textureOrigin.x, textureOrigin.y);
 
+
         layers[i].heights->bind(0);
-        if(i != layers.size())
-            clipMapIBO->drawBuffer();
-        else
+        if(i < layers.size()-1){
+            Vec2i scCenter = layers[i+1].targetCenter/(layerScale*blockStep)+1;
+            shader->setUniform2i("flipAxis",
+                                 ((scCenter.x % 2) + 2) % 2,
+                                 ((scCenter.y % 2) + 2) % 2);
             clipMapIBO->drawBuffer(numRingIndices);
+        }
+        else{
+            shader->setUniform2i("flipAxis", 0, 0);
+            clipMapIBO->drawBuffer();         
+        }
     }
 }
 Terrain::TerrainData::TerrainData(unsigned int totalIndices, unsigned int tileResolution): vertexSize(32), vertexStep(tileResolution*tileResolution*vertexSize), verticesPerTile(tileResolution*tileResolution),nodeIndices(totalIndices)
@@ -900,12 +910,32 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
         v.emplace_back(new float[res*res]);
         for(int x = 0; x < res; x++){
             for(int y = 0; y < res; y++){
-//              float r = sqrt((x-res/2)*(x-res/2) + (y-res/2)*(y-res/2)) / res;
-                v[0][x + y*res] = (x % 64 < 32) ^ (y % 64 < 32) ? 0 : 450;
-//                    1500 * sin(3.1415 * ) / (3.1415 * r);//350.0 * (1.0 - r);
+                int dx = x-(int)res/2;
+                int dy = y-(int)res/2;
+                float r = sqrt(dx*dx+dy*dy) * 0.2;
+                v[0][x + y*res] = sin(r) / r * 1000;
             }
         }
-        gpuClipMap = unique_ptr<GpuClipMap>(new GpuClipMap(25000.0, res, 1,
+        v.emplace_back(new float[res*res]);
+        for(int x = 0; x < res; x++){
+            for(int y = 0; y < res; y++){
+                int dx = x-(int)res/2;
+                int dy = y-(int)res/2;
+                float r = sqrt(dx*dx+dy*dy) * 0.1;
+                v[1][x + y*res] = sin(r) / r * 1000;
+            }
+        }
+        v.emplace_back(new float[res*res]);
+        for(int x = 0; x < res; x++){
+            for(int y = 0; y < res; y++){
+                int dx = x-(int)res/2;
+                int dy = y-(int)res/2;
+                float r = sqrt(dx*dx+dy*dy) * 0.05;
+                v[2][x + y*res] = sin(r) / r * 1000;
+            }
+        }
+        
+        gpuClipMap = unique_ptr<GpuClipMap>(new GpuClipMap(25000.0, res, 3,
                                                            Vec2f(), std::move(v)));
     }
 }

@@ -8,10 +8,12 @@ uniform float earthRadius;
 uniform vec2 worldOrigin;
 uniform float sideLength;
 uniform float invResolution;
+uniform ivec2 flipAxis = ivec2(0,0);
 
 uniform sampler2D heightmap;
 uniform ivec2 textureOrigin;
 uniform int textureStep;
+uniform int resolution;
 
 in vec2 Position2;
 
@@ -36,11 +38,16 @@ float random(vec2 v)
 
 void main()
 {
-    ivec2 texCoord = ivec2(mod(ivec2(Position2)*textureStep + textureOrigin,
-                               textureSize(heightmap, 0)));
+    ivec2 iposition = ivec2(Position2);
+    iposition = iposition * (1-flipAxis) + (resolution-iposition) * flipAxis;
+    ivec2 texCoord = iposition*textureStep + textureOrigin;
+    texCoord = ivec2(mod(texCoord, textureSize(heightmap, 0)));
 
     position.y = texelFetch(heightmap, texCoord, 0).x;
-    position.xz = worldOrigin + Position2 * invResolution * sideLength;
+
+    vec2 npos = Position2 * invResolution;
+    vec2 fpos = npos * (1-flipAxis) + (1 - npos) * flipAxis;
+    position.xz = worldOrigin + fpos * sideLength;
 
 //    float r = length(position.xz) / 10000;
 //    position.y = 1500 * sin(3.1415 * r) / (3.1415 * r);

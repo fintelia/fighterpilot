@@ -92,7 +92,7 @@ private:
             
             // Where the region is relative to the rest of the clipmap. This
             // value is relative to the coordinatios of the detailed layer so it
-            // must be between (-resolution/2+1) and (resolution/2) inclusive in
+            // must be between (-resolution/2) and (resolution/2-1) inclusive in
             // each dimension. However, since this value is the center of the
             // layer, we also have to make sure that the layer extents do not
             // exceed that range either. Additionally, no nonpinned layer can be
