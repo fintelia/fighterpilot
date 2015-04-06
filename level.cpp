@@ -137,7 +137,7 @@ bool LevelFile::loadZIP(string filename)
 	clipMap = std::make_unique<Terrain::ClipMap>(sideLength, resolution,
                                                  std::move(layers));
 
-	debugAssert(isPowerOfTwo(resolution - 1));
+	debugAssert(isPowerOfTwo(resolution));
 
 	if(!parseObjectFile(objectsFile))
 	{

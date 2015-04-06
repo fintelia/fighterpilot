@@ -1,6 +1,7 @@
 #version 330
 
 out vec3 position;
+out vec2 texCoord;
 out float flogz;
 
 uniform mat4 cameraProjection;
@@ -40,10 +41,10 @@ void main()
 {
     ivec2 iposition = ivec2(Position2);
     iposition = iposition * (1-flipAxis) + (resolution-iposition) * flipAxis;
-    ivec2 texCoord = iposition*textureStep + textureOrigin;
-    texCoord = ivec2(mod(texCoord, textureSize(heightmap, 0)));
+    ivec2 tCoord = iposition*textureStep + textureOrigin;
+    texCoord = vec2(tCoord) / textureSize(heightmap,0);
 
-    position.y = texelFetch(heightmap, texCoord, 0).x;
+    position.y = texelFetch(heightmap, tCoord, 0).x;
 
     vec2 npos = Position2 * invResolution;
     vec2 fpos = npos * (1-flipAxis) + (1 - npos) * flipAxis;
@@ -51,9 +52,9 @@ void main()
 
 //    float r = length(position.xz) / 10000;
 //    position.y = 1500 * sin(3.1415 * r) / (3.1415 * r);
-    //vec2 r = position.xz / earthRadius;
-	//position.y = max(position.y, 0.0);
-	//position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+    vec2 r = position.xz / earthRadius;
+	position.y = max(position.y, 0.0);
+	position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 
 	gl_Position = cameraProjection * vec4(position, 1.0);
 

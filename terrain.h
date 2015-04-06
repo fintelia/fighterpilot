@@ -117,10 +117,13 @@ private:
         vector<Layer> layers;
 
         Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
+
+        void synthesizeHeightmap(unsigned int layer);
+        void generateAuxiliaryMaps(unsigned int layer);
         void regenLayer(unsigned int layer);
         
     public:
-        GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, vector<unique_ptr<float[]>> pinnedLayers);
+        GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, const vector<unique_ptr<float[]>>& pinnedLayers);
         void centerClipMap(Vec2f center);
         void render(shared_ptr<GraphicsManager::View> view);
     };

@@ -15,7 +15,7 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 {
 	debugAssert(!layers.empty() && layerResolution != 0 && sideLength != 0);
 
-	double t = GetTime();
+	// double t = GetTime();
 
 	minHeight = maxHeight = layers.front()[0];
 	for (auto&& l : layers) {
@@ -25,49 +25,49 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 		}
 	}
 
-	unique_ptr<unsigned short[]> groundValues(
-		new unsigned short[layerResolution*layerResolution*layers.size()*4]);
+	// unique_ptr<unsigned short[]> groundValues(
+	// 	new unsigned short[layerResolution*layerResolution*layers.size()*4]);
 
-	float hRange = maxHeight - minHeight;
-	for (unsigned int layer = 0; layer < layers.size(); layer++)
-	{
-		for (unsigned int x = 0; x < layerResolution; x++)
-		{
-			for (unsigned int z = 0; z < layerResolution; z++)
-			{
-				float xSlope = 0, zSlope = 0;
-				if (x > 0 && x < layerResolution - 1)
-					xSlope = (layers[layer][(x + 1) + z*layerResolution]
-					- layers[layer][(x - 1) + z*layerResolution]) / 2;
+	// float hRange = maxHeight - minHeight;
+	// for (unsigned int layer = 0; layer < layers.size(); layer++)
+	// {
+	// 	for (unsigned int x = 0; x < layerResolution; x++)
+	// 	{
+	// 		for (unsigned int z = 0; z < layerResolution; z++)
+	// 		{
+	// 			float xSlope = 0, zSlope = 0;
+	// 			if (x > 0 && x < layerResolution - 1)
+	// 				xSlope = (layers[layer][(x + 1) + z*layerResolution]
+	// 				- layers[layer][(x - 1) + z*layerResolution]) / 2;
 
-				if (z > 0 && z < layerResolution - 1)
-					zSlope = (layers[layer][x + (z + 1)*layerResolution]
-					- layers[layer][x + (z - 1)*layerResolution]) / 2;
+	// 			if (z > 0 && z < layerResolution - 1)
+	// 				zSlope = (layers[layer][x + (z + 1)*layerResolution]
+	// 				- layers[layer][x + (z - 1)*layerResolution]) / 2;
 
-				groundValues[(x + z * layerResolution) * 4] = USHRT_MAX *
-					(layers[layer][x + z*layerResolution] - minHeight) / hRange;
-				groundValues[(x + z * layerResolution) * 4 + 1] =
-					USHRT_MAX * (0.5 + xSlope / hRange);
-				groundValues[(x + z * layerResolution) * 4 + 2] =
-					USHRT_MAX * (0.5 + zSlope / hRange);
-			}
-		}
-	}
+	// 			groundValues[(x + z * layerResolution) * 4] = USHRT_MAX *
+	// 				(layers[layer][x + z*layerResolution] - minHeight) / hRange;
+	// 			groundValues[(x + z * layerResolution) * 4 + 1] =
+	// 				USHRT_MAX * (0.5 + xSlope / hRange);
+	// 			groundValues[(x + z * layerResolution) * 4 + 2] =
+	// 				USHRT_MAX * (0.5 + zSlope / hRange);
+	// 		}
+	// 	}
+	// }
 
-	t = GetTime() - t;
-	t = GetTime();
+	// t = GetTime() - t;
+	// t = GetTime();
 
-	texture = graphics->genTexture2DArray();
-	texture->setData(layerResolution, layerResolution, layers.size(),
-		GraphicsManager::texture::RGBA16, (unsigned char*)groundValues.get());
+	// texture = graphics->genTexture2DArray();
+	// texture->setData(layerResolution, layerResolution, layers.size(),
+	// 	GraphicsManager::texture::RGBA16, (unsigned char*)groundValues.get());
 
-	t = GetTime() - t;
-	t = GetTime();
+	// t = GetTime() - t;
+	// t = GetTime();
 }
 
 Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                                 unsigned int num_layers, Vec2f center,
-                                vector<unique_ptr<float[]>> pinnedLayers):
+                                const vector<unique_ptr<float[]>>& pinnedLayers):
     sideLength(sLength),
     layerResolution(resolution),
     numPinnedLayers(pinnedLayers.size()),
@@ -84,19 +84,30 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
             float* ptr = pinnedLayers[i].get();
             layers[i].heights = graphics->genTexture2D();
             layers[i].heights->setData(layerResolution, layerResolution,
-                                  GraphicsManager::texture::R32F, false,
+                                  GraphicsManager::texture::R32F, true,
                                   false, (unsigned char*)ptr);
+            layers[i].normals = graphics->genTexture2D();
+            layers[i].normals->setData(layerResolution, layerResolution,
+                                       GraphicsManager::texture::RGB, true,
+                                       false, nullptr);
             layers[i].textureCenter.x = layerResolution/2;
             layers[i].textureCenter.y = layerResolution/2;
+            generateAuxiliaryMaps(i);
         } else {
             layers[i].heights = graphics->genTexture2D();
             layers[i].heights->setData(layerResolution, layerResolution,
-                                       GraphicsManager::texture::R32F, false,
+                                       GraphicsManager::texture::R32F, true,
                                        false, nullptr);
+            layers[i].normals = graphics->genTexture2D();
+            layers[i].normals->setData(layerResolution, layerResolution,
+                                       GraphicsManager::texture::RGB, true,
+                                       false, nullptr);
+
 // TODO
 //            Vec2i position = worldCenterToLayerPosition(i, center);
 //            regenLayer(i, position);
         }
+        layers[i].textureCenter = Vec2u(layerResolution/2, layerResolution/2);
     }
 
     size_t vboDataSize = 2 * meshResolution * meshResolution;
@@ -173,10 +184,28 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     clipMapIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     clipMapIBO->setData(iboData.get(), GraphicsManager::TRIANGLES, index/*iboDataSize*/);
 }
+
+void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
+{
+
+}
+void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
+{
+    auto shader = shaders.bind("clipmap auxmapgen");
+    shader->setUniform1f("invTexelSize", (resolution-1) / (sideLength * (1<<(layers.size()-1-layer))));
+	shader->setUniform1i("heightmap", 0);
+    layers[layer].heights->bind(0);
+    
+    graphics->startRenderToTexture(layers[layer].normals);
+	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+    layers[layer].normals->generateMipmaps();
+}
 void Terrain::GpuClipMap::regenLayer(unsigned int layer)
 {
-    //TODO
     layers[layer].center = layers[layer].targetCenter;
+    synthesizeHeightmap(layer);
+    generateAuxiliaryMaps(layer);
 }
 void Terrain::GpuClipMap::centerClipMap(Vec2f center)
 {
@@ -203,7 +232,7 @@ void Terrain::GpuClipMap::centerClipMap(Vec2f center)
         unsigned int layerScale = 1 << (num_layers-i-1);
         
         unsigned int step = blockStep * layerScale * 2;
-        layers[i].targetCenter = ((icenter+resolution) / step) * step - resolution;
+        layers[i].targetCenter = ((icenter+resolution) / step) * step-resolution;
 
         int dx = abs(layers[i].targetCenter.x - layer.center.x);
         int dy = abs(layers[i].targetCenter.y - layer.center.y);
@@ -222,7 +251,15 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
     shader->setUniform1i("resolution", meshResolution-1);
     shader->setUniform1f("invResolution", 1.0 / (meshResolution-1));
     shader->setUniform1i("textureStep", blockStep);
+    shader->setUniform3f("eyePosition", view->camera().eye);
+	shader->setUniform3f("sunDirection",
+                         graphics->getLightPosition().normalize());
+
 	shader->setUniform1i("heightmap", 0);
+    shader->setUniform1i("normalmap", 1);
+
+	shader->setUniform1i("grass", 2);
+    dataManager.bind("grass", 2);
 
     clipMapIBO->bindBuffer(clipMapVBO);
     for(int i = 0; i < layers.size(); i++){
@@ -243,6 +280,7 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
 
 
         layers[i].heights->bind(0);
+        layers[i].normals->bind(1);
         if(i < layers.size()-1){
             Vec2i scCenter = layers[i+1].targetCenter/(layerScale*blockStep)+1;
             shader->setUniform2i("flipAxis",
@@ -804,7 +842,7 @@ void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 
 Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::tileResolution), wireframe(false)
 {
-	debugAssert(isPowerOfTwo(clipMap->layerResolution - 1));
+	debugAssert(isPowerOfTwo(clipMap->layerResolution));
 
 	graphics->setClearColor(Color4(0, 0.2, 0.3, 1.0));
 
@@ -830,7 +868,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
 //	skyTexture = static_pointer_cast<GraphicsManager::textureCube>(dataManager.getTexture("skybox"));
 
 	
-	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap, terrainData));
+//	fractalTerrain = unique_ptr<FractalNode>(new FractalNode(nullptr, 0, Vec2i(0,0), clipMap, terrainData));
 
 	float amplitudeSum = 0.0f;
 	for(unsigned int i = 0; i < waves.size(); i++)
@@ -904,40 +942,39 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
 	waterIBO->setData(indices.get(), GraphicsManager::TRIANGLES, 3*(2*numRings-1)*vertsPerRing);
 
 
-    {// GPU Clip Map test
-        const unsigned int res = 512;
-        vector<unique_ptr<float[]>> v;
-        v.emplace_back(new float[res*res]);
-        for(int x = 0; x < res; x++){
-            for(int y = 0; y < res; y++){
-                int dx = x-(int)res/2;
-                int dy = y-(int)res/2;
-                float r = sqrt(dx*dx+dy*dy) * 0.2;
-                v[0][x + y*res] = sin(r) / r * 1000;
-            }
-        }
-        v.emplace_back(new float[res*res]);
-        for(int x = 0; x < res; x++){
-            for(int y = 0; y < res; y++){
-                int dx = x-(int)res/2;
-                int dy = y-(int)res/2;
-                float r = sqrt(dx*dx+dy*dy) * 0.1;
-                v[1][x + y*res] = sin(r) / r * 1000;
-            }
-        }
-        v.emplace_back(new float[res*res]);
-        for(int x = 0; x < res; x++){
-            for(int y = 0; y < res; y++){
-                int dx = x-(int)res/2;
-                int dy = y-(int)res/2;
-                float r = sqrt(dx*dx+dy*dy) * 0.05;
-                v[2][x + y*res] = sin(r) / r * 1000;
-            }
-        }
+        // const unsigned int res = 512;
+        // vector<unique_ptr<float[]>> v;
+        // v.emplace_back(new float[res*res]);
+        // for(int x = 0; x < res; x++){
+        //     for(int y = 0; y < res; y++){
+        //         int dx = x-(int)res/2;
+        //         int dy = y-(int)res/2;
+        //         float r = sqrt(dx*dx+dy*dy) * 0.2;
+        //         v[0][x + y*res] = sin(r) / r * 1000;
+        //     }
+        // }
+        // v.emplace_back(new float[res*res]);
+        // for(int x = 0; x < res; x++){
+        //     for(int y = 0; y < res; y++){
+        //         int dx = x-(int)res/2;
+        //         int dy = y-(int)res/2;
+        //         float r = sqrt(dx*dx+dy*dy) * 0.1;
+        //         v[1][x + y*res] = sin(r) / r * 1000;
+        //     }
+        // }
+        // v.emplace_back(new float[res*res]);
+        // for(int x = 0; x < res; x++){
+        //     for(int y = 0; y < res; y++){
+        //         int dx = x-(int)res/2;
+        //         int dy = y-(int)res/2;
+        //         float r = sqrt(dx*dx+dy*dy) * 0.05;
+        //         v[2][x + y*res] = sin(r) / r * 1000;
+        //     }
+        // }
         
-        gpuClipMap = unique_ptr<GpuClipMap>(new GpuClipMap(25000.0, res, 3,
-                                                           Vec2f(), std::move(v)));
-    }
+        gpuClipMap = unique_ptr<GpuClipMap>(
+            new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
+                           clipMap->getNumLayers(), Vec2f(), clipMap->layers));
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {
@@ -1734,9 +1771,9 @@ void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	//	(*i)->renderFoliage(view);
 	//}
 	//
-	graphics->setSampleShading(true);
-	fractalTerrain->renderTrees(view);
-	graphics->setSampleShading(false);
+//	graphics->setSampleShading(true);
+//	fractalTerrain->renderTrees(view);
+//	graphics->setSampleShading(false);
 //	graphics->setDepthMask(false);
 //	auto treesShader = shaders.bind("trees shader");
 //	treesShader->setUniform1i("tex", 0);
