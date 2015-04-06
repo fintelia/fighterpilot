@@ -28,6 +28,7 @@ def ftp_download(server, remote_filename, local_filename, force=False):
         ftp = ftplib.FTP(server)
         ftp.login("anonymous", "password")
         with open(local_filename, 'wb') as file:
+            print("Downloading " + local_filename + "...")
             ftp.retrbinary('RETR ' + remote_filename, file.write)
         return True
     except:
@@ -65,7 +66,7 @@ def get_dataset(N, W):
 
     if os.path.isfile(img_filename):
         return img_filename
-    
+
     zip_downloaded = ftp_download('rockyftp.cr.usgs.gov', \
                                   'vdelivery/Datasets/Staged/NED/1/IMG/' + cstring + '.zip', \
                                   zip_filename)
@@ -132,8 +133,8 @@ def write_level(dataset, filename):
     #arr = arr.astype(np.uint16)
 
 
-    out_resolution = 513
-    num_levels = int(math.log((dataset.RasterXSize-1) / (out_resolution-1), 2) + 1)
+    out_resolution = 1024
+    num_levels = int(math.log(dataset.RasterXSize / out_resolution, 2) + 1)
 
     arr_levels = []
     center = int(dataset.RasterXSize/2), int(dataset.RasterYSize/2)
@@ -197,12 +198,12 @@ def combine_datasets(datasets, name):
 
 ################################################################################
 
-north = 44
-west = 95
+north = 41
+west = 102
 size = 10
 name = "n{0}_{1}w{2}_{3}".format(north, north+size, west, west+size)
     
-# show_preview(north, west, size)
+show_preview(north, west, size)
 
 datasets = [[get_dataset(north+x,west+y) for x in range(size)] for y in range(size)]
 dataset = combine_datasets(datasets, name)
