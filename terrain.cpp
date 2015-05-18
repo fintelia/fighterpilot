@@ -202,7 +202,6 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
     shader->setUniform1i("layerResolution", layerResolution);
     shader->setUniform2i("parent_center", (Vec2i)layers[layer-1].center);
     shader->setUniform2i("center", (Vec2i)layers[layer].center);
-    std::cout << layers[layer].center.x << " " << layers[layer].center.y << std::endl;
     
     layers[layer-1].heights->bind(0);
     layers[layer-1].normals->bind(1);

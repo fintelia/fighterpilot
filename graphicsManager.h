@@ -495,7 +495,7 @@ public:
 		return pInstance;
 	}
 protected:
-	struct Context;
+	class Context;
 
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];
@@ -529,7 +529,7 @@ protected:
 	bool isFullscreen;
 
 	int samples;
-	Context* context;
+	unique_ptr<Context> context;
 	bool colorMask;
 	bool depthMask;
 
@@ -553,7 +553,6 @@ protected:
 	bool openGL4;
 
 	OpenGLgraphics();
-	~OpenGLgraphics();
 
 	bool initFBOs(unsigned int maxSamples);
 	void destroyFBOs();

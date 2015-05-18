@@ -33,6 +33,44 @@ struct OpenGLgraphics::Context
 	HWND		hWnd;
 	HINSTANCE	hInstance; // not initialized?
 	Context(): hDC(NULL),hRC(NULL),hWnd(NULL){}
+
+    ~Context(){
+        ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
+        ShowCursor(true);								// Show Mouse Pointer
+
+        if (context->hRC)											// Do We Have A Rendering Context?
+        {
+            if (!wglMakeCurrent(NULL,NULL))					// Are We Able To Release The DC And RC Contexts?
+            {
+                //MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+            }
+
+            if (!wglDeleteContext(context->hRC))						// Are We Able To Delete The RC?
+            {
+                //MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+            }
+            context->hRC=NULL;										// Set RC To NULL
+        }
+
+        if (context->hDC && !ReleaseDC(context->hWnd,context->hDC))					// Are We Able To Release The DC
+        {
+            //MessageBox(NULL,"Release Device Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+            context->hDC=NULL;										// Set DC To NULL
+        }
+
+        if (context->hWnd && !DestroyWindow(context->hWnd))					// Are We Able To Destroy The Window?
+        {
+            //MessageBox(NULL,"Could Not Release hWnd.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+            context->hWnd=NULL;										// Set hWnd To NULL
+        }
+
+        if (!UnregisterClass(L"OpenGL",context->hInstance))			// Are We Able To Unregister Class
+        {
+            MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
+            context->hInstance=NULL;									// Set hInstance To NULL
+        }
+
+    }
 };
 #elif defined(LINUX)
 struct OpenGLgraphics::Context
@@ -46,6 +84,24 @@ struct OpenGLgraphics::Context
 	/*original desktop mode which we save so we can restore it later*/
 	XF86VidModeModeInfo		desktopMode;
 	bool					fullscreen;
+
+    ~Context(){
+        if(context)
+        {
+            glXMakeCurrent(x11_display, None, nullptr);
+            glXDestroyContext(x11_display, context);
+            context = nullptr;
+        }
+        //switch back to original desktop resolution if we were in fullscreen
+        if(fullscreen)
+        {
+            XF86VidModeSwitchToMode(x11_display, x11_screen, &desktopMode);
+            XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
+        }
+        //XDestroyWindow(x11_display, x11_window);
+        //XFreeColormap(x11_display, context->winAttr.colormap);
+        XCloseDisplay(x11_display);
+    }
 };
 #endif
 
@@ -1493,17 +1549,13 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderTarget(RT_SCREEN),renderingToTexture(false),currentViewport(0,0,sw,sh),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
+OpenGLgraphics::OpenGLgraphics():renderTarget(RT_SCREEN),renderingToTexture(false),currentViewport(0,0,sw,sh),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),context(new Context),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
 {
 	vSync = false;
+
 #ifdef _DEBUG
 	errorGlowEndTime = 0;
 #endif
-	context = new Context;
-}
-OpenGLgraphics::~OpenGLgraphics()
-{
-	delete context;
 }
 bool OpenGLgraphics::drawOverlay(Rect4f r, shared_ptr<texture> tex)
 {
@@ -2539,60 +2591,6 @@ void OpenGLgraphics::destroyWindow()
 	overlayVBO.reset();
 
 	//glDeleteRenderbuffersEXT(2, depthRenderBuffers);
-
-#if defined(WINDOWS)
-	ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
-	ShowCursor(true);								// Show Mouse Pointer
-
-	if (context->hRC)											// Do We Have A Rendering Context?
-	{
-		if (!wglMakeCurrent(NULL,NULL))					// Are We Able To Release The DC And RC Contexts?
-		{
-			//MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		}
-
-		if (!wglDeleteContext(context->hRC))						// Are We Able To Delete The RC?
-		{
-			//MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		}
-		context->hRC=NULL;										// Set RC To NULL
-	}
-
-	if (context->hDC && !ReleaseDC(context->hWnd,context->hDC))					// Are We Able To Release The DC
-	{
-		//MessageBox(NULL,"Release Device Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		context->hDC=NULL;										// Set DC To NULL
-	}
-
-	if (context->hWnd && !DestroyWindow(context->hWnd))					// Are We Able To Destroy The Window?
-	{
-		//MessageBox(NULL,"Could Not Release hWnd.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		context->hWnd=NULL;										// Set hWnd To NULL
-	}
-
-	if (!UnregisterClass(L"OpenGL",context->hInstance))			// Are We Able To Unregister Class
-	{
-		MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-		context->hInstance=NULL;									// Set hInstance To NULL
-	}
-#elif defined(LINUX)
-	if(context->context)
-	{
-		glXMakeCurrent(x11_display, None, nullptr);
-		glXDestroyContext(x11_display, context->context);
-		context->context = nullptr;
-	}
-	/* switch back to original desktop resolution if we were in fullscreen */
-	if(context->fullscreen)
-	{
-		XF86VidModeSwitchToMode(x11_display, x11_screen, &context->desktopMode);
-		XF86VidModeSetViewPort(x11_display, x11_screen, 0, 0);
-	}
-	//XDestroyWindow(x11_display, x11_window);
-	//XFreeColormap(x11_display, context->winAttr.colormap);
-	XCloseDisplay(x11_display);
-
-#endif
 	this->~OpenGLgraphics();
 }
 #ifdef WINDOWS
