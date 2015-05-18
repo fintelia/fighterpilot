@@ -129,6 +129,7 @@
     
     <shader name="clipmap terrain"          vertex3="media/clipMap.vert"           fragment3="media/clipMap.frag" />
     <shader name="clipmap auxmapgen"          vertex3="media/auxMapGen.vert"           fragment3="media/auxMapGen.frag" />
+  <shader name="clipmap synthesize"          vertex3="media/synthesizeClipmap.vert"           fragment3="media/synthesizeClipmap.frag" />
 
     
     <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />

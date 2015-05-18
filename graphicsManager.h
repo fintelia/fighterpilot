@@ -310,11 +310,14 @@ public:
 		void setUniform3f(string name, Color3 c){setUniform3f(name,c.r,c.g,c.b);}
 		void setUniform4f(string name, Color4 c){setUniform4f(name,c.r,c.g,c.b,c.a);}
 		void setUniform4f(string name, Rect r){setUniform4f(name,r.x,r.y,r.w,r.h);}
+		void setUniform2i(string name, Vec2i v){setUniform2i(name,v.x,v.y);}
 		void setUniform2fv(string name, unsigned int n, Vec2f* v){setUniform2fv(name,n,&v->x);}
 		void setUniform3fv(string name, unsigned int n, Vec3f* v){setUniform3fv(name,n,&v->x);}
 		void setUniform3fv(string name, unsigned int n, Color3* c){setUniform3fv(name,n,&c->r);}
 		void setUniform4fv(string name, unsigned int n, Color4* c){setUniform4fv(name,n,&c->r);}
 
+        
+        
 		virtual void setUniform1i(string name, int v0)=0;
 		virtual void setUniform2i(string name, int v0, int v1)=0;
 		virtual void setUniform3i(string name, int v0, int v1, int v2)=0;

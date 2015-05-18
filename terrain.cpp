@@ -66,7 +66,7 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 }
 
 Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
-                                unsigned int num_layers, Vec2f center,
+                                unsigned int num_layers, 
                                 const vector<unique_ptr<float[]>>& pinnedLayers):
     sideLength(sLength),
     layerResolution(resolution),
@@ -103,9 +103,11 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                                        GraphicsManager::texture::RGB, true,
                                        false, nullptr);
 
-// TODO
-//            Vec2i position = worldCenterToLayerPosition(i, center);
-//            regenLayer(i, position);
+            // TODO: actually center this on center
+            layers[i].center = Vec2i(0,0);
+            layers[i].targetCenter = Vec2i(0,0);
+            synthesizeHeightmap(i);
+            generateAuxiliaryMaps(i);
         }
         layers[i].textureCenter = Vec2u(layerResolution/2, layerResolution/2);
     }
@@ -187,7 +189,28 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
 
 void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
 {
+    debugAssert(layer > 0);
 
+    float layerScale = 1 << (layers.size()-1-layer);
+    
+    auto shader = shaders.bind("clipmap synthesize");
+	shader->setUniform1i("parent_heightmap", 0);
+    shader->setUniform1i("parent_normalmap", 1);
+    shader->setUniform1i("layerScale", layerScale);
+    shader->setUniform1f("texelSize", (sideLength*layerScale) / (resolution-1));
+    shader->setUniform1i("resolution", resolution);
+    shader->setUniform1i("layerResolution", layerResolution);
+    shader->setUniform2i("parent_center", (Vec2i)layers[layer-1].center);
+    shader->setUniform2i("center", (Vec2i)layers[layer].center);
+    std::cout << layers[layer].center.x << " " << layers[layer].center.y << std::endl;
+    
+    layers[layer-1].heights->bind(0);
+    layers[layer-1].normals->bind(1);
+    
+    graphics->startRenderToTexture(layers[layer].heights);
+	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+	graphics->endRenderToTexture();
+    layers[layer].heights->generateMipmaps();
 }
 void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 {
@@ -237,7 +260,7 @@ void Terrain::GpuClipMap::centerClipMap(Vec2f center)
         int dx = abs(layers[i].targetCenter.x - layer.center.x);
         int dy = abs(layers[i].targetCenter.y - layer.center.y);
         if((dx > layerResolution/8 || dy > layerResolution/8) &&
-           i > numPinnedLayers){
+           i >= numPinnedLayers){
             regenLayer(i);
         }
     }
@@ -942,17 +965,15 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
 	waterIBO->setData(indices.get(), GraphicsManager::TRIANGLES, 3*(2*numRings-1)*vertsPerRing);
 
 
-        // const unsigned int res = 512;
-        // vector<unique_ptr<float[]>> v;
-        // v.emplace_back(new float[res*res]);
-        // for(int x = 0; x < res; x++){
-        //     for(int y = 0; y < res; y++){
-        //         int dx = x-(int)res/2;
-        //         int dy = y-(int)res/2;
-        //         float r = sqrt(dx*dx+dy*dy) * 0.2;
-        //         v[0][x + y*res] = sin(r) / r * 1000;
-        //     }
-        // }
+        const unsigned int res = 1024;
+        vector<unique_ptr<float[]>> v;
+        v.emplace_back(new float[res*res]);
+        for(int x = 0; x < res; x++){
+            for(int y = 0; y < res; y++){
+                float r = sqrt((x-res/2)*(x-res/2)+(y-res/2)*(y-res/2));
+                v[0][x + y*res] = 800.0*max(1.0 - 16.0*r / res, 0);
+            }
+        }
         // v.emplace_back(new float[res*res]);
         // for(int x = 0; x < res; x++){
         //     for(int y = 0; y < res; y++){
@@ -971,10 +992,13 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
         //         v[2][x + y*res] = sin(r) / r * 1000;
         //     }
         // }
+        // gpuClipMap = unique_ptr<GpuClipMap>(
+        //     new GpuClipMap(50000.0, res,
+        //                    2, std::move(v)));
         
         gpuClipMap = unique_ptr<GpuClipMap>(
-            new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
-                           clipMap->getNumLayers(), Vec2f(), clipMap->layers));
+             new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
+                            clipMap->getNumLayers() + 3, clipMap->layers));
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {

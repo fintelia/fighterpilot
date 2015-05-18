@@ -91,13 +91,13 @@ private:
 
             
             // Where the region is relative to the rest of the clipmap. This
-            // value is relative to the coordinatios of the detailed layer so it
-            // must be between (-resolution/2) and (resolution/2-1) inclusive in
-            // each dimension. However, since this value is the center of the
-            // layer, we also have to make sure that the layer extents do not
-            // exceed that range either. Additionally, no nonpinned layer can be
-            // outside the extents of the previous layer. All pinned layers must
-            // remain at (0,0).
+            // value is relative to the coordinates of the most detailed layer
+            // so it must be between (-resolution/2) and (resolution/2-1)
+            // inclusive in each dimension. However, since this value is the
+            // center of the layer, we also have to make sure that the layer
+            // extents do not exceed that range either. Additionally, no
+            // nonpinned layer can be outside the extents of the previous
+            // layer. All pinned layers must remain at (0,0).
             Vec2i center;
             // This is the value that center would have if we regenerated the
             // layer to be centered around the eye position. Since we avoid
@@ -123,7 +123,7 @@ private:
         void regenLayer(unsigned int layer);
         
     public:
-        GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, Vec2f center, const vector<unique_ptr<float[]>>& pinnedLayers);
+        GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, const vector<unique_ptr<float[]>>& pinnedLayers);
         void centerClipMap(Vec2f center);
         void render(shared_ptr<GraphicsManager::View> view);
     };

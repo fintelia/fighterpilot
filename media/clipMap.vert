@@ -42,7 +42,7 @@ void main()
     ivec2 iposition = ivec2(Position2);
     iposition = iposition * (1-flipAxis) + (resolution-iposition) * flipAxis;
     ivec2 tCoord = iposition*textureStep + textureOrigin;
-    texCoord = vec2(tCoord) / textureSize(heightmap,0);
+    texCoord = vec2(tCoord+0.5) / textureSize(heightmap,0);
 
     position.y = texelFetch(heightmap, tCoord, 0).x;
 
