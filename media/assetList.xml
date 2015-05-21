@@ -62,6 +62,8 @@
     <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
     <texture name="wave lookup"               file="media/waves.png"                  tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
+    <texture3D name="fft ocean heights"       file="media/fftOceanHeights.png"           tileable="true"     depth="32" />
+    <texture3D name="fft ocean normals"       file="media/fftOceanNormals.png"           tileable="true"     depth="32" />
 
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />

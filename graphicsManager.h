@@ -226,7 +226,7 @@ public:
 	class texture
 	{
 	public:
-		enum Format{NONE=0, INTENSITY=1, LUMINANCE_ALPHA=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, R32F, DEPTH};
+		enum Format{NONE=0, RED=1, RG=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, R32F, DEPTH};
 	protected:
 		friend class GraphicsManager;
 		Format format;

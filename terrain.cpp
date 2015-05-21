@@ -276,12 +276,18 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
     shader->setUniform3f("eyePosition", view->camera().eye);
 	shader->setUniform3f("sunDirection",
                          graphics->getLightPosition().normalize());
-
+    shader->setUniform1f("time", world->time() / 1000.0);
+    
 	shader->setUniform1i("heightmap", 0);
     shader->setUniform1i("normalmap", 1);
 
 	shader->setUniform1i("grass", 2);
     dataManager.bind("grass", 2);
+
+    shader->setUniform1i("oceanHeights", 3);
+    dataManager.bind("fft ocean heights", 3);
+    shader->setUniform1i("oceanNormals", 4);
+    dataManager.bind("fft ocean normals", 4);
 
     clipMapIBO->bindBuffer(clipMapVBO);
     for(int i = 0; i < layers.size(); i++){
@@ -997,7 +1003,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
         
         gpuClipMap = unique_ptr<GpuClipMap>(
              new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
-                            clipMap->getNumLayers() + 3, clipMap->layers));
+                            clipMap->getNumLayers() + 0, clipMap->layers));
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {

@@ -122,8 +122,8 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
     }
 
     switch(fmt){
-//    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
-//    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::RED:             return GL_RED;
+    case GraphicsManager::texture::RG:              return GL_RG;
     case GraphicsManager::texture::BGR:             return GL_RGB;
     case GraphicsManager::texture::BGRA:            return GL_RGBA;
     case GraphicsManager::texture::RGB:             return GL_RGB;
@@ -141,8 +141,10 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
 GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-//    case GraphicsManager::texture::INTENSITY:       return GL_INTENSITY;
-//    case GraphicsManager::texture::LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+    case GraphicsManager::texture::RED:
+        return GL_RED;
+    case GraphicsManager::texture::RG:
+        return GL_RG;
     case GraphicsManager::texture::BGR:
         return GL_BGR;
     case GraphicsManager::texture::BGRA:
@@ -167,8 +169,8 @@ GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-//    case GraphicsManager::texture::INTENSITY:
-//    case GraphicsManager::texture::LUMINANCE_ALPHA:
+    case GraphicsManager::texture::RED:
+    case GraphicsManager::texture::RG:
     case GraphicsManager::texture::BGR:
     case GraphicsManager::texture::BGRA:
     case GraphicsManager::texture::RGB:
@@ -190,11 +192,12 @@ GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
 GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
-//    case GraphicsManager::texture::INTENSITY:
+    case GraphicsManager::texture::RED:
+        return 1;
 //    case GraphicsManager::texture::DEPTH:
 //        return 3;
-//    case GraphicsManager::texture::LUMINANCE_ALPHA:
-//        return 2;
+    case GraphicsManager::texture::RG:
+        return 2;
     case GraphicsManager::texture::BGR:
     case GraphicsManager::texture::RGB:
         return 3;

@@ -944,7 +944,7 @@ void FileManager::textureFile::parseFile(fileContents data)
 				memcpy(contents + width*y, contents + position, width);
 				position += width * 3 + rowExtra;
 			}
-			textureFormat = GraphicsManager::texture::INTENSITY;
+			textureFormat = GraphicsManager::texture::RED;
 		}
 		else if(infoHeader.bitCount == 24)
 		{
@@ -1088,8 +1088,8 @@ void FileManager::textureFile::parseFile(fileContents data)
 
 
 		//int format;
-		if(colorChannels == 1)		textureFormat = GraphicsManager::texture::INTENSITY;
-		else if(colorChannels == 2)	textureFormat = GraphicsManager::texture::LUMINANCE_ALPHA;
+		if(colorChannels == 1)		textureFormat = GraphicsManager::texture::RED;
+		else if(colorChannels == 2)	textureFormat = GraphicsManager::texture::RG;
 		else if(colorChannels == 3) textureFormat = GraphicsManager::texture::BGR;
 		else if(colorChannels == 4) textureFormat = GraphicsManager::texture::BGRA;
 
