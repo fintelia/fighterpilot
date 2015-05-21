@@ -1,49 +1,118 @@
-#!/usr/bin/python3
+#!/usr/bin/python2
 
-# see
-# http://outerra.blogspot.com/2011/02/ocean-rendering.html
-# http://forum.outerra.com/index.php?topic=544.0
+# See http://www.keithlantz.net/2011/10/ocean-simulation-part-one-using-the-discrete-fourier-transform/
 
 import numpy as np
-from math import sin, cos, atan, pow, pi, sqrt
-from PIL import Image
+import Image
+import math
+import cmath
+import scipy
+import scipy.misc
+import sys
 
-arr = np.zeros((256, 256,3))
+g = 9.8
 
-for y in range(256):
-    w = np.zeros((256,3))
+def genFrequencies(N, Lx, V, w):
+    arr = np.zeros((N,N), dtype=complex)
 
-    b = 0.00 # must be ~0.005 so that there aren't overhangs...
-    for t in range(256):
-        gamma = 1-y/256
-        ang = pow(t/256, gamma) * 2*pi
-        slope = 0
-        if t != 0:
-            slope = sin(ang)/(b*cos(ang) - 1/(2*pi*gamma*pow(t/256,gamma-1)))
+    A = 1.0
+    L = V**2 / g
+    l = Lx / 1000.0
 
-        w[t] = (t - 256*b*sin(ang), 0.5+0.5*cos(ang), slope)
+    max_P = 0
 
-   # w[0,2] = w[255,2]
+    for x in range(N):
+        for y in range(N):
+            if x == N/2 and y == N/2:
+                continue
+            
+            kx = 2.0*math.pi * (x - N/2) / Lx
+            ky = 2.0*math.pi * (y - N/2) / Lx
+            k = math.sqrt(kx**2 + ky**2)
 
-    lt = 0
-    nt = 1
-    for x in range(256):
-        while nt < 255 and w[nt,0] < x:
-            if(w[nt,0] < w[nt+1,0]):
-                lt = nt
-            nt = nt + 1
+            crand = np.random.normal() + 1j*np.random.normal()
+            P = A * math.exp(-1.0 / (k*L)**2) / k**4 * (kx/k*w[0] + ky/k*w[1])**2
+            P *= math.exp(-(k**2 * l**2))
+            
+            arr[x,y] = crand * math.sqrt(P / 2)
+    return arr
 
-        dt = w[nt,0] - w[lt,0]
-        height = (w[nt,0] - x)/dt * w[lt,1] + (1 - (w[nt,0]-x)/dt) * w[nt,1]
-        slope = (w[nt,0] - x)/dt * w[lt,2] + (1 - (w[nt,0]-x)/dt) * w[nt,2]
-        
-        arr[y,x,0] = height
-        arr[y,x,1] = 0.5 + round(slope) / 256
-        arr[y,x,2] = 0.5 + 0.5 * (slope-round(slope))
+def computeHeights(N,Lx,t,w0,tilde_h0):
+    tilde_h = np.zeros((N,N), dtype=complex)
+#    ikx_tilde_h = np.zeros((N,N), dtype=complex)
+#    iky_tilde_h = np.zeros((N,N), dtype=complex)
+    for x in range(N):
+        for y in range(N):
+            kx = 2.0*math.pi * (x - N/2) / Lx
+            ky = 2.0*math.pi * (y - N/2) / Lx
+            k = math.sqrt(kx**2 + ky**2)
+            w = math.ceil(math.sqrt(g * k)/w0)*w0
+            jwt = 1j * w * t
+            tilde_h[x,y] = tilde_h0[x,y] * cmath.exp(jwt)  + \
+                           tilde_h0[N-1-x, N-1-y] * cmath.exp(-jwt)
 
-        if y == 0:
-            print(arr[y,x])
-#        arr[y,x,2] = 0.5 + 0.5 * cos(atan(slope)) # y component of normal
+#            ikx_tilde_h[x,y] = 1j * kx * tilde_h[x,y]
+#            iky_tilde_h[x,y] = 1j * ky * tilde_h[x,y]
 
-im = Image.fromarray((arr * 255).astype(np.uint8))
-im.save("waves.png")
+    h = np.fft.fft2(np.fft.ifftshift(tilde_h))
+    return h
+#    ex = np.fft.fft2(np.fft.ifftshift(ikx_tilde_h))
+#    ey = np.fft.fft2(np.fft.ifftshift(iky_tilde_h))
+
+
+ #   img[0:N, t*N:(t+1)*N] = h.real
+ #   img2[0:N, t*N:(t+1)*N,0] = ex.real
+ #   img2[0:N, t*N:(t+1)*N,1] = ey.real
+
+def computeNormals(heights):
+    W,H = heights.shape
+    normals = np.zeros((W,H,3))
+    for x in range(W):
+        for y in range(H):
+            dx = heights[(x+1)%W, y] - heights[(x-1)%W, y]
+            dy = heights[x, (y+1)%H] - heights[x, (y-1)%H]
+            s = 2 / math.sqrt(dx**2 + dy**2 + 4)
+            normals[x,y,:] = (dx*s*0.5+0.5, dy*s*0.5 + 0.5, s)
+    return normals
+
+def generateOcean(N, Lx, V, T, f):
+    w0 = 2*math.pi / T
+    tilde_h0 = genFrequencies(N, Lx, V, (0,1))
+    heights = np.zeros((N,N*T*f))
+    for tf in range(T*f):
+        heights[:,tf*N:(tf+1)*N] = computeHeights(N,Lx,tf/f,w0,tilde_h0).real
+        print "heightmap", tf
+
+    print "Scale = ", (heights.max() - heights.min())
+    heights = (heights - heights.min()) / (heights.max() - heights.min())
+
+    normals = np.zeros((N,N*T*f,3))
+    for tf in range(T*f):
+        normals[:,tf*N:(tf+1)*N] = computeNormals(heights[:,tf*N:(tf+1)*N])
+        print "normalmap", tf
+
+    heights = (heights*255).astype(np.uint8)
+    normals = (normals*255).astype(np.uint8)
+    return heights, normals
+
+def saveImages(heights, normals, prefix):
+    scipy.misc.imsave(prefix+'Heights.png', heights.transpose())
+    scipy.misc.imsave(prefix+'Normals.png', normals.transpose())
+
+
+print "=== FFT Ocean 1 ==="
+h,n = generateOcean(512, 2000, 15, 1, 2)
+saveImages(h,n, 'fftOcean')
+print "Done"
+
+print "=== FFT Ocean 2 ==="
+h,n = generateOcean(128, 50, 15, 4, 4)
+saveImages(h,n, 'fftOcean2')
+print "Done"
+#for x in range(N):
+#    for y in range(N):
+#        for kx in range(-N/2, N/2):
+#            for ky in range(-N/2, N/2):
+#                kdotx = 2.0*math.pi * (float(x)/N * kx + float(y)/N * ky)
+#                th = tilde_h[N/2+kx, N/2+ky]
+#                img[x,y] += (th * cmath.exp(-1j * kdotx)).real
