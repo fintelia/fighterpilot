@@ -64,6 +64,7 @@
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
     <texture3D name="fft ocean heights"       file="media/fftOceanHeights.png"           tileable="true"     depth="32" />
     <texture3D name="fft ocean normals"       file="media/fftOceanNormals.png"           tileable="true"     depth="32" />
+    <texture3D name="fft ocean2 normals"       file="media/fftOcean2Normals.png"           tileable="true"     depth="16" />
 
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />

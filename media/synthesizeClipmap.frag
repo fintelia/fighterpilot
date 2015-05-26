@@ -13,6 +13,8 @@ uniform float texelSize;
 uniform int resolution;
 uniform int layerResolution;
 
+uniform int vertexStep;
+
 out vec4 FragColor;
 
 //see:http://amindforeverprogramming.blogspot.com/2013/07/random-floats-in-glsl-330.html
@@ -93,6 +95,8 @@ void main()
         float random_scale = clamp(slope-0.02, 0, 0.2) * texelSize;
         height += random_scale * (random(uvec2(position+resolution/2))-0.5);
     }
-    
-    FragColor = vec4(height, 0, 0, 1);
+
+    float pvHeight = 0;
+
+    FragColor = vec4(height, pvHeight, 0, 1);
 }

@@ -14,6 +14,13 @@ import subprocess
 from PIL import Image
 from math import cos, sqrt, pi
 
+# FTP access to nation map data:
+# ftp://rockyftp.cr.usgs.gov/vdelivery/Datasets/Staged/
+
+
+# NLCD Sample Download link:
+# http://gisdata.usgs.gov/tdds/downloadfile.php?TYPE=nlcd2011_lc_3x3&ORIG=SBDDG&FNAME=NLCD2011_LC_N69W147.zip
+
 #https://gis.stackexchange.com/questions/37405/programmatically-download-seamless-ned-tiles
 
 # As per http://www.usgs.gov/faq/categories/9852/5861, we are using the FTP
@@ -34,7 +41,14 @@ def ftp_download(server, remote_filename, local_filename, force=False):
     except:
         return False
 
+def try_open_image(filename):
+    try:
+        return Image.open(filename)
+    except:
+        return None
+    
 def show_preview(north, west, size):
+    # Download any preview images we don't yet have
     for x in range(size):
         for y in range(size):
             cstring = "n{0:02d}w{1:03d}".format(north+x, west+y)
@@ -42,19 +56,32 @@ def show_preview(north, west, size):
                          'vdelivery/Datasets/Staged/NED/1/IMG/img' + cstring + '_1_thumb.jpg', \
                          'download/ned1/preview/img' + cstring + '_1_thumb.jpg')
 
-    images = [[Image.open('download/ned1/preview/imgn{0:02d}w{1:03d}_1_thumb.jpg'.format(north+x,west+y)) for x in range(size)] for y in range(size)]
-    im_shape = images[0][0].size
+    # Open images
+    images = [[try_open_image('download/ned1/preview/imgn{0:02d}w{1:03d}_1_thumb.jpg'.format(north+x,west+y)) for x in range(size)] for y in range(size)]
+
+    # Make sure all images are the same shape, and find out what that is
+    im_shape = None
     for im in itertools.chain(*images):
-        assert im.size == im_shape
+        if im is None:
+            continue
+        elif im_shape is None:
+            im_shape = im.size
+        else:
+            assert im.size == im_shape
 
-        
+    # Make sure we got at least one preview image
+    if im_shape is None:
+        print("Preview display failed")
+
+    # Combine all images into one
     preview_shape = im_shape[0] * size, im_shape[1] * size
-
-    preview = Image.new("RGB", preview_shape)
+    preview = Image.new("RGB", preview_shape, "blue")
     for x in range(size):
         for y in range(size):
-            preview.paste(images[x][y], ((size-1-x) * im_shape[0], (size-1-y) * im_shape[1]))
+            if images[x][y] is not None:
+                preview.paste(images[x][y], ((size-1-x) * im_shape[0], (size-1-y) * im_shape[1]))
 
+    # Downsample and display the result
     preview.thumbnail((512,512))
     preview.show()
         
@@ -63,14 +90,14 @@ def get_dataset(N, W):
     cstring = "n{0:02d}w{1:03d}".format(N,W)
     zip_filename = 'download/ned1/zip/'+ cstring + '.zip'
     img_filename = 'download/ned1/img/'+ cstring + '.img'
-
+    
     if os.path.isfile(img_filename):
         return img_filename
 
     zip_downloaded = ftp_download('rockyftp.cr.usgs.gov', \
                                   'vdelivery/Datasets/Staged/NED/1/IMG/' + cstring + '.zip', \
                                   zip_filename)
-        
+    
     if not zip_downloaded:
         return ""
 
@@ -87,6 +114,7 @@ def get_dataset(N, W):
     #
     #return dataset
 
+    
 def arr_zoom(band, center, step, final_shape):
     returny = np.empty(final_shape, band.ReadAsArray(0,0,1,1).dtype)
 
@@ -133,7 +161,7 @@ def write_level(dataset, filename):
     #arr = arr.astype(np.uint16)
 
 
-    out_resolution = 1024
+    out_resolution = 2048
     num_levels = int(math.log(dataset.RasterXSize / out_resolution, 2) + 1)
 
     arr_levels = []
@@ -204,7 +232,6 @@ size = 10
 name = "n{0}_{1}w{2}_{3}".format(north, north+size, west, west+size)
     
 show_preview(north, west, size)
-
 datasets = [[get_dataset(north+x,west+y) for x in range(size)] for y in range(size)]
 dataset = combine_datasets(datasets, name)
 write_level(dataset, name + ".lvl")

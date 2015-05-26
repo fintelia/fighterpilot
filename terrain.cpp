@@ -72,6 +72,7 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     layerResolution(resolution),
     numPinnedLayers(pinnedLayers.size()),
     resolution(layerResolution << (num_layers-1)),
+    blockStep(4),
     meshResolution(layerResolution/(2*blockStep)-1),
     blockResolution((meshResolution - 1) * blockStep + 1),
     layers(num_layers)
@@ -103,7 +104,6 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                                        GraphicsManager::texture::RGB, true,
                                        false, nullptr);
 
-            // TODO: actually center this on center
             layers[i].center = Vec2i(0,0);
             layers[i].targetCenter = Vec2i(0,0);
             synthesizeHeightmap(i);
@@ -128,8 +128,9 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
 	clipMapVBO->setVertexData(sizeof(float)*vboDataSize, vboData.get());
 
 
-    size_t iboDataSize = 6*((meshResolution-1)*(meshResolution-1)
-                            /*- (blockResolution-1)*/);
+    // size is an over estimate, but is easier than computing the actual value,
+    // and the memory is freed at the end of this function.
+    size_t iboDataSize = 6*((meshResolution-1)*(meshResolution-1)) * 2;
     unique_ptr<uint32_t[]> iboData{new uint32_t[iboDataSize]};
     size_t index = 0;
 
@@ -143,38 +144,48 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
         iboData[index++] = mod(bx) + mod(by) * meshResolution;
         iboData[index++] = mod(cx) + mod(cy) * meshResolution;
     };
-    for(int i = 0; i < (meshResolution-1)/2; i++){
-        addTriangle(2*i,0,   2*i+2,0,  2*i+1,1);  // y = 0
-        addTriangle(2*i,-1,  2*i+2,-1, 2*i+1,-2); // y = blockResolution -1
-        addTriangle(0,2*i,   0,2*i+2,  1,2*i+1);  // x = 0
-        addTriangle(-1,2*i,  -1,2*i+2, -2,2*i+1); // x = blockResolution - 1
-
-        if(i > 0){
-            addTriangle(2*i,0,   2*i,1,   2*i+1,1);
-            addTriangle(2*i,-1,  2*i,-2,  2*i+1,-2);
-            addTriangle(0,2*i,   1,2*i,   1,2*i+1);
-            addTriangle(-1,2*i,  -2,2*i,  -2,2*i+1);
-        }
-        if(i < (meshResolution-1)/2 - 1){
-            addTriangle(2*i+2,0,   2*i+2,1,   2*i+1,1);
-            addTriangle(2*i+2,-1,  2*i+2,-2,  2*i+1,-2);
-            addTriangle(0,2*i+2,   1,2*i+2,   1,2*i+1);
-            addTriangle(-1,2*i+2,  -2,2*i+2,  -2,2*i+1);
-        }
-    }
+    
     // ring
     unsigned int ringSize = (meshResolution - 1) / 4;
-    for(int y = 1; y < meshResolution-2; y++){
-        for(int x = 1; x < meshResolution-2; x++){
-            if((x < ringSize+1 || x >= meshResolution-ringSize-1) ||
-               (y < ringSize+1 || y >= meshResolution-ringSize-1)){
-                addTriangle(x,y,      x,y+1,     x+1,y);
-                addTriangle(x+1,y,    x+1,y+1,   x,y+1);
+    for(int p = 0; p < 2; p++){
+        for(int i = 0; i < (meshResolution-1)/2; i++){
+            addTriangle(2*i,0,   2*i+2,0,  2*i+1,1);  // y = 0
+            addTriangle(2*i,-1,  2*i+2,-1, 2*i+1,-2); // y = blockResolution -1
+            addTriangle(0,2*i,   0,2*i+2,  1,2*i+1);  // x = 0
+            addTriangle(-1,2*i,  -1,2*i+2, -2,2*i+1); // x = blockResolution - 1
+
+            if(i > 0){
+                addTriangle(2*i,0,   2*i,1,   2*i+1,1);
+                addTriangle(2*i,-1,  2*i,-2,  2*i+1,-2);
+                addTriangle(0,2*i,   1,2*i,   1,2*i+1);
+                addTriangle(-1,2*i,  -2,2*i,  -2,2*i+1);
+            }
+            if(i < (meshResolution-1)/2 - 1){
+                addTriangle(2*i+2,0,   2*i+2,1,   2*i+1,1);
+                addTriangle(2*i+2,-1,  2*i+2,-2,  2*i+1,-2);
+                addTriangle(0,2*i+2,   1,2*i+2,   1,2*i+1);
+                addTriangle(-1,2*i+2,  -2,2*i+2,  -2,2*i+1);
             }
         }
-    }
-    numRingIndices = index;
+        for(int y = 1-1; y < meshResolution-2+1; y++){
+            for(int x = 1-1; x < meshResolution-2+1; x++){
+                if((x < ringSize+1 || x >= meshResolution-ringSize-1) ||
+                   (y < ringSize+1 || y >= meshResolution-ringSize-1)){
+                    if(p == 0){
+                        addTriangle(x,y,      x+1,y+1,   x+1,y);
+                        addTriangle(x,y,      x+1,y+1,   x,y+1);
+                    }else{
+                        addTriangle(x,y,      x,y+1,     x+1,y);
+                        addTriangle(x+1,y,    x+1,y+1,   x,y+1);
+                    }
+                }
+            }
+        }
 
+        if(p == 0){
+            numRingIndices = index;
+        }
+    }
     // center
     for(int x = ringSize+1; x < meshResolution-ringSize-1; x++){
         for(int y = ringSize+1; y < meshResolution-ringSize-1; y++){
@@ -182,6 +193,7 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
             addTriangle(x+1,y,    x+1,y+1,   x,y+1);
         }
     }
+    numCenterIndices = index - numRingIndices;
 //    debugAssert(iboDataSize == index);
     clipMapIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     clipMapIBO->setData(iboData.get(), GraphicsManager::TRIANGLES, index/*iboDataSize*/);
@@ -189,6 +201,8 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
 
 void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
 {
+    static unique_ptr<GraphicsManager::timer> t = graphics->genTimer();
+    t->start();
     debugAssert(layer > 0);
 
     float layerScale = 1 << (layers.size()-1-layer);
@@ -205,11 +219,14 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
     
     layers[layer-1].heights->bind(0);
     layers[layer-1].normals->bind(1);
-    
+
     graphics->startRenderToTexture(layers[layer].heights);
 	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
 	graphics->endRenderToTexture();
+    t->stop();
     layers[layer].heights->generateMipmaps();
+
+    std::cout << "synthesizeHeighmap: " << t->getElapsedTime() << " ms" << std::endl;
 }
 void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 {
@@ -288,6 +305,8 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
     dataManager.bind("fft ocean heights", 3);
     shader->setUniform1i("oceanNormals", 4);
     dataManager.bind("fft ocean normals", 4);
+    shader->setUniform1i("oceanNormals2", 5);
+    dataManager.bind("fft ocean2 normals", 5);
 
     clipMapIBO->bindBuffer(clipMapVBO);
     for(int i = 0; i < layers.size(); i++){
@@ -306,19 +325,24 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
         shader->setUniform2f("worldOrigin", worldOrigin.x, worldOrigin.y);
         shader->setUniform2i("textureOrigin", textureOrigin.x, textureOrigin.y);
 
-
         layers[i].heights->bind(0);
         layers[i].normals->bind(1);
-        if(i < layers.size()-1){
+
+        // TODO: factor in actual terrain height at viewer location, and make
+        // max LOD decisions in update/regen phase instead of render.
+        if(i < layers.size()-1 && slength+2000 > 0.4 * view->camera().eye.y){
             Vec2i scCenter = layers[i+1].targetCenter/(layerScale*blockStep)+1;
-            shader->setUniform2i("flipAxis",
-                                 ((scCenter.x % 2) + 2) % 2,
-                                 ((scCenter.y % 2) + 2) % 2);
-            clipMapIBO->drawBuffer(numRingIndices);
+            Vec2i fs = Vec2i(((scCenter.x % 2) + 2) % 2,
+                             ((scCenter.y % 2) + 2) % 2);
+
+            shader->setUniform2i("flipAxis", fs.x, fs.y);
+            clipMapIBO->drawBuffer(numRingIndices,
+                                   fs.x==fs.y ? 0 : numRingIndices);
         }
         else{
             shader->setUniform2i("flipAxis", 0, 0);
-            clipMapIBO->drawBuffer();         
+            clipMapIBO->drawBuffer(numCenterIndices, numRingIndices);
+            break;
         }
     }
 }
@@ -1003,7 +1027,7 @@ Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::til
         
         gpuClipMap = unique_ptr<GpuClipMap>(
              new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
-                            clipMap->getNumLayers() + 0, clipMap->layers));
+                            clipMap->getNumLayers() + 8, clipMap->layers));
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {
@@ -1612,12 +1636,14 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 		graphics->setDepthMask(true);
 	}*/
 
-	if (wireframe)
-		graphics->setWireFrame(true);
 
 //	renderFractalTerrain(view);
     Vec2f center{view->camera().eye.x, view->camera().eye.z};
     gpuClipMap->centerClipMap(center);
+
+	if (wireframe)
+		graphics->setWireFrame(true);
+
     gpuClipMap->render(view);
     
 	if (wireframe)

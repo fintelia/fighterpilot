@@ -84,7 +84,7 @@ public:
 			float top;
 			float bottom;
 		}mProjection;
-
+        
 		struct Camera{
 			Vec3f eye;
 
@@ -213,6 +213,7 @@ public:
 
 		virtual void drawBuffer()=0;
 		virtual void drawBuffer(unsigned int numIndicies)=0;
+		virtual void drawBuffer(unsigned int numIndicies, unsigned int offset)=0;
 	};
     class multiDraw
     {
@@ -226,7 +227,7 @@ public:
 	class texture
 	{
 	public:
-		enum Format{NONE=0, RED=1, RG=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, R32F, DEPTH};
+		enum Format{NONE=0, RED=1, RG=2, BGR=3, BGRA=4, RGB, RGBA, RGB16, RGBA16, RGB16F, RGBA16F, R32F, RG32F, DEPTH};
 	protected:
 		friend class GraphicsManager;
 		Format format;
@@ -334,7 +335,14 @@ public:
 
 		virtual ~shader(){if(boundShader==this)boundShader=nullptr;}
 	};
-
+    class timer{
+    protected:
+        bool running = false;
+    public:
+        virtual void start()=0;
+        virtual void stop()=0;
+        virtual float getElapsedTime()=0;
+    };
 	struct displayMode
 	{
 		Vec2u resolution;
@@ -432,7 +440,8 @@ public:
 	virtual shared_ptr<texture2DArray> genTexture2DArray() = 0;
 	virtual shared_ptr<View> genView();
 	virtual shared_ptr<shader> genShader()=0;
-
+    virtual unique_ptr<timer> genTimer()=0;
+    
 	//get functions
 	float	getGamma()const;			//gamma correction
 	Vec3f	getLightPosition()const;	//the location of the global light
@@ -569,7 +578,8 @@ protected:
 	class textureCubeGL;
 	class shaderGL;
     class multiDrawGL;
-
+    class timerGL;
+    
 public:
 	friend class vertexBufferGL;
 	friend class indexBufferGL;
@@ -615,7 +625,8 @@ public:
 	shared_ptr<textureCube> genTextureCube();
 	shared_ptr<texture2DArray> genTexture2DArray();
 	shared_ptr<shader> genShader();
-
+    unique_ptr<timer> genTimer();
+    
 	void setAlphaToCoverage(bool enabled);
 	void setBlendMode(BlendMode blend);
 	void setClientState(unsigned int index, bool state);

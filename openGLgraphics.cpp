@@ -133,6 +133,7 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
     case GraphicsManager::texture::RGB16F:          return GL_RGB16F;
     case GraphicsManager::texture::RGBA16F:         return GL_RGBA16F;
     case GraphicsManager::texture::R32F:            return GL_R32F;
+    case GraphicsManager::texture::RG32F:           return GL_RG32F;
     case GraphicsManager::texture::DEPTH:           return GL_DEPTH_COMPONENT24;
     default: debugBreak();
     }
@@ -142,8 +143,10 @@ GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
     case GraphicsManager::texture::RED:
+    case GraphicsManager::texture::R32F:
         return GL_RED;
     case GraphicsManager::texture::RG:
+    case GraphicsManager::texture::RG32F:
         return GL_RG;
     case GraphicsManager::texture::BGR:
         return GL_BGR;
@@ -157,8 +160,6 @@ GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
     case GraphicsManager::texture::RGBA16:
     case GraphicsManager::texture::RGBA16F:
         return GL_RGBA;
-    case GraphicsManager::texture::R32F:
-        return GL_RED;
     case GraphicsManager::texture::DEPTH:
         return GL_DEPTH_COMPONENT24;
     default: debugBreak();
@@ -182,6 +183,7 @@ GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
     case GraphicsManager::texture::RGB16F:
     case GraphicsManager::texture::RGBA16F:
     case GraphicsManager::texture::R32F:
+    case GraphicsManager::texture::RG32F:
         return GL_FLOAT;
 //    case GraphicsManager::texture::DEPTH:
 //        return GL_UNSIGNED_BYTE;
@@ -208,11 +210,10 @@ GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
     case GraphicsManager::texture::RGB16:
     case GraphicsManager::texture::RGB16F:
         return 6;
+    case GraphicsManager::texture::RG32F:
     case GraphicsManager::texture::RGBA16:
     case GraphicsManager::texture::RGBA16F:
         return 8;
-
-        return GL_UNSIGNED_BYTE;
     default: debugBreak();
     }
     return 0;
@@ -259,6 +260,7 @@ public:
 
     void drawBuffer();
     void drawBuffer(unsigned int numIndicies);
+    void drawBuffer(unsigned int numIndicies, unsigned int offset);
 };
 class OpenGLgraphics::multiDrawGL: public GraphicsManager::multiDraw
 {
@@ -371,7 +373,49 @@ public:
 
     string getErrorStrings();
 };
+class OpenGLgraphics::timerGL: public GraphicsManager::timer
+{
+private:
+    bool started = false;
+    unsigned int queryID[2];
+public:
+    timerGL(){
+        glGenQueries(2, queryID);
+    }
+    void start(){
+        started = true;
+        running = true;
+        glQueryCounter(queryID[0], GL_TIMESTAMP);
+    }
+    void stop(){
+        if(running){
+            running = false;
+            glQueryCounter(queryID[1], GL_TIMESTAMP);
+        }
+    }
+    float getElapsedTime(){
+        if(!started){
+            return 0.0f;
+        }
+            
+        if(running){
+            glQueryCounter(queryID[1], GL_TIMESTAMP);
+        }
 
+        GLint stopTimerAvailable = 0;
+        while (!stopTimerAvailable) {
+            glGetQueryObjectiv(queryID[1],
+                               GL_QUERY_RESULT_AVAILABLE, 
+                               &stopTimerAvailable);
+        }
+        
+        GLuint64 startTime, stopTime;
+        glGetQueryObjectui64v(queryID[0], GL_QUERY_RESULT, &startTime);
+        glGetQueryObjectui64v(queryID[1], GL_QUERY_RESULT, &stopTime);
+
+        return 1.0e-6 * (stopTime - startTime);
+    }
+};
 OpenGLgraphics::vertexBufferGL::vertexBufferGL(UsageFrequency u): vertexBuffer(u), vBufferID(0)
 {
 	glGenBuffers(1, &vBufferID);
@@ -731,6 +775,27 @@ void OpenGLgraphics::indexBufferGL::drawBuffer(unsigned int numIndicies)
 	if(dataCount != 0)
 	{
 		glDrawElements(primitiveType, min(dataCount,numIndicies), dataType, 0);
+	}
+}
+void OpenGLgraphics::indexBufferGL::drawBuffer(unsigned int numIndicies, unsigned int offset)
+{
+	if(dataCount == 0 || numIndicies == 0)
+		return;
+
+	debugAssert(dataType == GL_UNSIGNED_BYTE || dataType == GL_UNSIGNED_SHORT || dataType == GL_UNSIGNED_INT);
+	debugAssert(primitiveType == GL_POINTS		 || primitiveType == GL_LINES		|| primitiveType == GL_LINE_STRIP		||
+				primitiveType == GL_LINE_LOOP	 || primitiveType == GL_TRIANGLES	|| primitiveType == GL_TRIANGLE_STRIP	||
+				primitiveType == GL_TRIANGLE_FAN || primitiveType == GL_QUADS		|| primitiveType == GL_QUAD_STRIP);
+	debugAssert(numIndicies != 0);
+
+    unsigned int step = 1;
+    if(dataType == GL_UNSIGNED_SHORT) step = 2;
+    if(dataType == GL_UNSIGNED_INT) step = 4;
+    
+	if(dataCount != 0)
+	{
+		glDrawElements(primitiveType, min(dataCount,numIndicies), dataType,
+                       (void*)(uintptr_t)(offset * step));
 	}
 }
 void OpenGLgraphics::multiDrawGL::clearDraws()
@@ -1654,6 +1719,11 @@ shared_ptr<GraphicsManager::shader> OpenGLgraphics::genShader()
 {
 	return shared_ptr<shader>(new shaderGL());
 }
+unique_ptr<GraphicsManager::timer> OpenGLgraphics::genTimer()
+{
+    return std::move(unique_ptr<timer>(new timerGL()));
+}
+
 void OpenGLgraphics::setGamma(float gamma)
 {
 	currentGamma = gamma;

@@ -69,7 +69,7 @@ private:
         // Ratio of block resolution to the mesh resolution. Setting this value
         // greater than 1 allows us to leave additional information for the
         // normal map. Must be a power of two.
-        const unsigned int blockStep = 8;
+        const unsigned int blockStep;
         // Resolution of the mesh used to represent a block of a layer.
         const unsigned int meshResolution;
         // The resolution of a block. It is generally around half the size of a
@@ -81,6 +81,7 @@ private:
         shared_ptr<GraphicsManager::vertexBuffer> clipMapVBO;
         shared_ptr<GraphicsManager::indexBuffer> clipMapIBO;
         unsigned int numRingIndices;
+        unsigned int numCenterIndices;
         
         struct Layer{
             // Each layer represents a progressively higher resolution, but
