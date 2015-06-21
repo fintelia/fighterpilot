@@ -65,6 +65,44 @@ Terrain::ClipMap::ClipMap(float sLength, unsigned int lResolution, vector<unique
 	// t = GetTime();
 }
 
+float Terrain::ClipMap::getHeight(float x, float z)
+{
+    unsigned int layer = 0;
+    float sLength = sideLength;
+    while(abs(x) < 0.5*sLength && abs(z) < 0.5*sLength
+          && layer < layers.size() - 1)
+    {
+        ++layer;
+        sLength *= 0.5;
+    }
+
+    float sx = x / sLength * (layerResolution-1) + layerResolution/2;
+    float sz = z / sLength * (layerResolution-1) + layerResolution/2;
+
+    int ix = clamp(floor(sx), 0, layerResolution-2);
+    int iz = clamp(floor(sz), 0, layerResolution-2);
+    
+    float fx = clamp(sx - ix, 0, 1);
+    float fz = clamp(sz - iz, 0, 1);
+
+    if(fx + fz < 1.0)
+    {
+        float h00 = getHeight(layer, ix,   iz);
+        float h10 = getHeight(layer, ix+1, iz);
+        float h01 = getHeight(layer, ix,   iz+1);
+
+        return h00 * (1.0 - fx - fz) + h10 * fx + h01 * fz;
+    }
+    else
+    {
+        float h10 = getHeight(layer, ix+1, iz);
+        float h01 = getHeight(layer, ix,   iz+1);
+        float h11 = getHeight(layer, ix+1, iz+1);
+
+        return h11 * (fx + fz - 1.0) + h10 * (1.0 - fz) + h01 * (1.0 - fx);
+    }
+}
+
 Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                                 unsigned int num_layers, 
                                 const vector<unique_ptr<float[]>>& pinnedLayers):
@@ -892,7 +930,7 @@ void Terrain::FractalNode::renderTrees(shared_ptr<GraphicsManager::View> view)
 	}
 }
 
-Terrain::Terrain(shared_ptr<ClipMap> clipMap): terrainData(256, FractalNode::tileResolution), wireframe(false)
+Terrain::Terrain(shared_ptr<ClipMap> _clipMap): clipMap(_clipMap), terrainData(256, FractalNode::tileResolution), wireframe(false)
 {
 	debugAssert(isPowerOfTwo(clipMap->layerResolution));
 
@@ -1872,12 +1910,11 @@ void Terrain::setWireframe(bool w)
 }
 float Terrain::elevation(Vec2f v) const
 {
-	//TODO: implement
-	return 0.0f;
+    return elevation(v.x, v.y);
 }
 float Terrain::elevation(float x, float z) const
 {
-	return elevation(Vec2f(x,z));
+	return clipMap->getHeight(x,z);
 }
 float Terrain::altitude(Vec3f v) const
 {
@@ -1898,8 +1935,7 @@ Vec3f Terrain::terrainNormal(float x, float z) const
 }
 bool Terrain::isLand(Vec2f v) const
 {
-	//TODO: implement
-	return true;
+    return elevation(v) > 0;
 }
 bool Terrain::isLand(float x, float z) const
 {

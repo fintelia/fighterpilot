@@ -44,7 +44,8 @@ public:
 		float getMaxHeight() const { return maxHeight; }
 		float getSideLength() const { return sideLength; }
 		float getHeight(unsigned int layer, unsigned int x, unsigned int z) const { return layers[layer][x + z * layerResolution]; }
-		
+		float getHeight(float x, float z);
+        
 		void bindTexture(unsigned int textureUnit = 0) { texture->bind(textureUnit); }
 
 		unsigned int getLayerResolution() const { return layerResolution; }
@@ -129,7 +130,8 @@ private:
         void render(shared_ptr<GraphicsManager::View> view);
     };
     mutable unique_ptr<GpuClipMap> gpuClipMap;
-
+    shared_ptr<ClipMap> clipMap;
+    
     struct TerrainData {
 		/** space taken by a single vertex in the buffer */
 		const unsigned int vertexSize;
