@@ -581,7 +581,7 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Prim
 	if(graphics->hasShaderModel4())
 	{
 		glEnable(GL_RASTERIZER_DISCARD);
-		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
+//		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
@@ -598,7 +598,7 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedbackRange(GraphicsManager:
 	if(graphics->hasShaderModel4())
 	{
 		glEnable(GL_RASTERIZER_DISCARD);
-		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
+//		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID, offset, size);
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
@@ -615,11 +615,11 @@ unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
 	if(graphics->hasShaderModel4())
 	{
 		glEndTransformFeedback();
-		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+//		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 		glDisable(GL_RASTERIZER_DISCARD);
 
 		GLint64 primitiveCount = -1;
-		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
+//		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
 
 		debugAssert(primitiveCount <=  INT_MAX);
 
@@ -1132,6 +1132,16 @@ bool OpenGLgraphics::shaderGL::init(const char* vert, const char* frag)
 		fragString = string("#version 120\n")+frag;
 	}
 
+    // TODO: better parsing so we don't have to check every header against every
+    // file. However, since the expected number of headers is small, this should
+    // not be much of an issue for now.
+    for(auto& header : headers) {
+        boost::replace_all(vertString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(fragString, "#include \""s + header.first + "\""s,
+                           header.second);
+    }
+    
 	int i, length, success;//used whenever a pointer to int is required
 
 	if(!compileShader(v, vertString.c_str(), vertErrorLog) || !compileShader(f, fragString.c_str(), fragErrorLog))
@@ -1196,7 +1206,26 @@ bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, c
 	GLuint g = geometry ? glCreateShader(GL_GEOMETRY_SHADER) : 0;
 	int i, length, success;//used whenever a pointer to int is required
 
-	if((vertex && !compileShader(v, vertex, vertErrorLog)) || (fragment && !compileShader(f, fragment, fragErrorLog)) || (geometry && !compileShader(g, geometry, geomErrorLog)))
+    string vertString{vertex ? vertex : ""};
+    string geomString{geometry ? geometry : ""};
+    string fragString{fragment ? fragment : ""};
+
+    // TODO: better parsing so we don't have to check every header against every
+    // file. However, since the expected number of headers is small, this should
+    // not be much of an issue for now.
+    for(auto& header : headers) {
+        boost::replace_all(vertString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(geomString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(fragString, "#include \""s + header.first + "\""s,
+                           header.second);
+    }
+
+    
+	if((vertex && !compileShader(v, vertString.c_str(), vertErrorLog)) ||
+       (fragment && !compileShader(f, fragString.c_str(), fragErrorLog)) ||
+       (geometry && !compileShader(g, geomString.c_str(), geomErrorLog)))
 	{
 		return false;
 	}
@@ -1282,7 +1311,26 @@ bool OpenGLgraphics::shaderGL::init4(const char* vertex, const char* geometry, c
 	GLuint g = geometry ? glCreateShader(GL_GEOMETRY_SHADER) : 0;
 	int i, length, success;//used whenever a pointer to int is required
 
-	if((vertex && !compileShader(v, vertex, vertErrorLog)) || (fragment && !compileShader(f, fragment, fragErrorLog)) || (geometry && !compileShader(g, geometry, geomErrorLog)))
+    string vertString{vertex ? vertex : ""};
+    string geomString{geometry ? geometry : ""};
+    string fragString{fragment ? fragment : ""};
+
+    // TODO: better parsing so we don't have to check every header against every
+    // file. However, since the expected number of headers is small, this should
+    // not be much of an issue for now.
+    for(auto& header : headers) {
+        boost::replace_all(vertString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(geomString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(fragString, "#include \""s + header.first + "\""s,
+                           header.second);
+    }
+
+    
+	if((vertex && !compileShader(v, vertString.c_str(), vertErrorLog)) ||
+       (fragment && !compileShader(f, fragString.c_str(), fragErrorLog)) ||
+       (geometry && !compileShader(g, geomString.c_str(), geomErrorLog)))
 	{
 		return false;
 	}
@@ -1378,11 +1426,34 @@ bool OpenGLgraphics::shaderGL::init5(const char* vertex, const char* geometry, c
 
 	string tess_control_errors, tess_eval_errors; // we currently don't have error logs for these shaders, so they are added to the link error log
 
-	if(	(vertex && !compileShader(v, vertex, vertErrorLog)) ||
-		(fragment && !compileShader(f, fragment, fragErrorLog)) || 
-		(geometry && !compileShader(g, geometry, geomErrorLog)) || 
-		(tessellationControl && !compileShader(tc, tessellationControl, tess_control_errors)) || 
-		(tessellationEvaluation && !compileShader(te, tessellationEvaluation, tess_eval_errors)))
+    string vertString{vertex ? vertex : ""};
+    string geomString{geometry ? geometry : ""};
+    string tcString{tessellationControl ? tessellationControl : ""};
+    string teString{tessellationEvaluation ? tessellationEvaluation : ""};
+    string fragString{fragment ? fragment : ""};
+
+    // TODO: better parsing so we don't have to check every header against every
+    // file. However, since the expected number of headers is small, this should
+    // not be much of an issue for now.
+    for(auto& header : headers) {
+        boost::replace_all(vertString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(geomString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(tcString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(teString, "#include \""s + header.first + "\""s,
+                           header.second);
+        boost::replace_all(fragString, "#include \""s + header.first + "\""s,
+                           header.second);
+    }
+
+    
+	if(	(vertex && !compileShader(v, vertString.c_str(), vertErrorLog)) ||
+		(fragment && !compileShader(f, fragString.c_str(), fragErrorLog)) || 
+		(geometry && !compileShader(g, geomString.c_str(), geomErrorLog)) || 
+		(tessellationControl && !compileShader(tc, tcString.c_str(), tess_control_errors)) || 
+		(tessellationEvaluation && !compileShader(te, teString.c_str(), tess_eval_errors)))
 	{
 		return false;
 	}
@@ -2054,49 +2125,48 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textu
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 {
-	if(openGL3)
-	{
-		if(rTarget == RT_FBO)
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-			renderTarget = RT_FBO;
-		}
-		else if(rTarget == RT_MULTISAMPLE_FBO)
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-			renderTarget = RT_MULTISAMPLE_FBO;
-		}
-		else if(rTarget == RT_SCREEN)
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			renderTarget = RT_SCREEN;
-		}
-		else debugBreak();
-	}
-	else
-	{
-		if(rTarget == RT_FBO)
-		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
-			renderTarget = RT_FBO;
-		}
-		else if(rTarget == RT_MULTISAMPLE_FBO)
-		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-			renderTarget = RT_MULTISAMPLE_FBO;
-		}
-		else if(rTarget == RT_SCREEN)
-		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			renderTarget = RT_SCREEN;
-		}
-		else debugBreak();
-	}
-	
+	// if(openGL3)
+	// {
+    if(rTarget == RT_FBO)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+        renderTarget = RT_FBO;
+    }
+    // else if(rTarget == RT_MULTISAMPLE_FBO)
+    // {
+    // 	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+    // 	renderTarget = RT_MULTISAMPLE_FBO;
+    // }
+    else if(rTarget == RT_SCREEN)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        renderTarget = RT_SCREEN;
+    }
+    else debugBreak();
+	// }
+	// else
+	// {
+	// 	if(rTarget == RT_FBO)
+	// 	{
+	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
+	// 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
+	// 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
+	// 		renderTarget = RT_FBO;
+	// 	}
+	// 	else if(rTarget == RT_MULTISAMPLE_FBO)
+	// 	{
+	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
+	// 		renderTarget = RT_MULTISAMPLE_FBO;
+	// 	}
+	// 	else if(rTarget == RT_SCREEN)
+	// 	{
+	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	// 		renderTarget = RT_SCREEN;
+	// 	}
+	// 	else debugBreak();
+	// }
 }
 bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
 {
@@ -2108,19 +2178,19 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
     glBindTexture(GL_TEXTURE_2D, renderTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB10_A2, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGB10_A2, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glGenTextures(1, &renderTexture2);
     glBindTexture(GL_TEXTURE_2D, renderTexture2);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB10_A2, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGB10_A2, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -2136,27 +2206,27 @@ bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 	
-    if(multisampling)
-	{
-		glGenFramebuffers(1, &multisampleFboID);
-        glGenRenderbuffers(1, &multisampleRenderBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB10_A2, sw, sh);
+    // if(multisampling)
+	// {
+	// 	glGenFramebuffers(1, &multisampleFboID);
+    //     glGenRenderbuffers(1, &multisampleRenderBuffer);
+    //     glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
+    //     glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB10_A2, sw, sh);
 
-        glGenRenderbuffers(1, &multisampleDepthBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
+    //     glGenRenderbuffers(1, &multisampleDepthBuffer);
+    //     glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
+    //     glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
-	}
-    else
-    {
-        multisampleRenderBuffer = 0;
-        multisampleFboID = 0;
-        multisampleDepthBuffer = 0;
-    }
+    //     glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+    //     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
+    //     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
+	// }
+    // else
+    // {
+    //     multisampleRenderBuffer = 0;
+    //     multisampleFboID = 0;
+    //     multisampleDepthBuffer = 0;
+    // }
 	
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
@@ -2202,20 +2272,20 @@ void OpenGLgraphics::destroyFBOs()
 	if(blurTexture != 0)			glDeleteTextures(1, &blurTexture);
 	if(blurTexture2 != 0)			glDeleteTextures(1, &blurTexture2);
 
-	if(openGL3 || GLEW_ARB_framebuffer_object)
-	{
+	// if(openGL3 || GLEW_ARB_framebuffer_object)
+	// {
 		if(fboID != 0)						glDeleteFramebuffers(1, &fboID);
-		if(multisampleFboID != 0)			glDeleteFramebuffers(1, &multisampleFboID);
-		if(multisampleRenderBuffer != 0)	glDeleteRenderbuffers(1, &multisampleRenderBuffer);
-		if(multisampleDepthBuffer != 0)		glDeleteRenderbuffers(1, &multisampleDepthBuffer);
-	}
-	else
-	{
-		if(fboID != 0)						glDeleteFramebuffersEXT(1, &fboID);
-		if(multisampleFboID != 0)			glDeleteFramebuffersEXT(1, &multisampleFboID);
-		if(multisampleRenderBuffer != 0)	glDeleteRenderbuffersEXT(1, &multisampleRenderBuffer);
-		if(multisampleDepthBuffer != 0)		glDeleteRenderbuffersEXT(1, &multisampleDepthBuffer);
-	}
+		// if(multisampleFboID != 0)			glDeleteFramebuffers(1, &multisampleFboID);
+		// if(multisampleRenderBuffer != 0)	glDeleteRenderbuffers(1, &multisampleRenderBuffer);
+		// if(multisampleDepthBuffer != 0)		glDeleteRenderbuffers(1, &multisampleDepthBuffer);
+	// }
+	// else
+	// {
+	// 	if(fboID != 0)						glDeleteFramebuffersEXT(1, &fboID);
+	// 	if(multisampleFboID != 0)			glDeleteFramebuffersEXT(1, &multisampleFboID);
+	// 	if(multisampleRenderBuffer != 0)	glDeleteRenderbuffersEXT(1, &multisampleRenderBuffer);
+	// 	if(multisampleDepthBuffer != 0)		glDeleteRenderbuffersEXT(1, &multisampleDepthBuffer);
+	// }
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -2391,30 +2461,30 @@ void OpenGLgraphics::render()
 		}
 
 		//capture depth buffer for reading and bind it to texture unit 47
-		if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-			glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-		}
-		else if(multisampling)
-		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
-			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
-			glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-		}
-		else
-		{
+		// if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
+		// {
+		// 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
+		// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
+		// 	glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		// 	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
+		// }
+		// else if(multisampling)
+		// {
+		// 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		// 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
+		// 	glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
+		// 	glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		// 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+		// 	glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+		// 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
+		// }
+		// else
+		// {
 			setDepthMask(false);
-		}
+		// }
 		glDisable(GL_DEPTH_TEST);
 		glActiveTexture(GL_TEXTURE0 + 47);
 		glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -2480,16 +2550,16 @@ void OpenGLgraphics::render()
 	sceneManager.endRender(); //do some post render cleanup
 
 //////////////////////////////////Blit Framebuffer///////////////////////////////
-	if(multisampling)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-		glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	// if(multisampling)
+	// {
+	// 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
+	// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
+	// 	glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	}
+	// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	// }
 ////////////////////////////////////Motion Blur//////////////////////////////////
 	//glActiveTexture(GL_TEXTURE0);	glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
 	//glActiveTexture(GL_TEXTURE1);	glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
@@ -2563,10 +2633,7 @@ void OpenGLgraphics::render()
 					if(blurX && blurY)
 					{
 						glViewport(0,0,sw/2,sh/2);
-
-						if(openGL3)	glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-						else		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-			
+						glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 				
 						blurX->bind();
 						blurX->setUniform1i("tex",0);
@@ -2574,8 +2641,7 @@ void OpenGLgraphics::render()
 						glBindTexture(GL_TEXTURE_2D, renderTexture);
 						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 						glGenerateMipmapEXT(GL_TEXTURE_2D);
-						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
-						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
 						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 				
 				
@@ -2583,17 +2649,12 @@ void OpenGLgraphics::render()
 						blurY->setUniform1i("tex",0);
 						glActiveTexture(GL_TEXTURE0);
 						glBindTexture(GL_TEXTURE_2D, blurTexture2);
-						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
-						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
 						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 				
-				
 						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, blurTexture);//bind the blur texture
-
-						if(openGL3)	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-						else		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-
+						glBindTexture(GL_TEXTURE_2D, blurTexture);
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
 						glViewport(0,0,sw,sh);
 					}
 					else
@@ -2603,23 +2664,48 @@ void OpenGLgraphics::render()
 						glBindTexture(GL_TEXTURE_2D, 0);
 					}
 				}
+				                
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                       GL_TEXTURE_2D, renderTexture2, 0);
+//                bindRenderTarget(RT_SCREEN);
 
-				bindRenderTarget(RT_SCREEN);
-				currentView->postProcessShader()->bind();
-				currentView->postProcessShader()->setUniform1f("gamma",currentGamma);
-				currentView->postProcessShader()->setUniform1i("tex",0);
-				currentView->postProcessShader()->setUniform1i("noiseTex",2);
-				dataManager.bind("LCnoise",2);
-//				currentView->postProcessShader()->setUniform1f("time",world->time());
-				if(currentView->blurStage())
-				{
-					currentView->postProcessShader()->setUniform1i("blurTex",1);
-				}
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, renderTexture);
-				if(openGL3)	glGenerateMipmap(GL_TEXTURE_2D);
-				else		glGenerateMipmapEXT(GL_TEXTURE_2D);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                glViewport(0,0,sw,sh);
+                auto gamma = shaders("gamma");
+                debugAssert(gamma);
+                gamma->bind();
+                gamma->setUniform1f("gamma",currentGamma);
+                gamma->setUniform1i("tex",0);
+                setBlendMode(REPLACE);
+                GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                        GL_TEXTURE_2D, renderTexture, 0);
+				bindRenderTarget(RT_SCREEN);
+                glViewport(0,0,sw,sh);
+// 				currentView->postProcessShader()->bind();
+// 				currentView->postProcessShader()->setUniform1f("gamma",currentGamma);
+// 				currentView->postProcessShader()->setUniform1i("tex",0);
+// 				currentView->postProcessShader()->setUniform1i("noiseTex",2);
+// 				dataManager.bind("LCnoise",2);
+// //				currentView->postProcessShader()->setUniform1f("time",world->time());
+// 				if(currentView->blurStage())
+// 				{
+// 					currentView->postProcessShader()->setUniform1i("blurTex",1);
+// 				}
+
+                glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, renderTexture2);
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                auto fxaa = shaders("fxaa");
+                debugAssert(fxaa);
+                fxaa->bind();
+                fxaa->setUniform1i("tex", 0);
+                fxaa->setUniform2f("invScreenSize", 1.0/sw, 1.0/sh);
 				GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+                setBlendMode(TRANSPARENCY);
 			}
 		}
 	}

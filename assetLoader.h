@@ -6,7 +6,7 @@ private:
 		string name;
 		//string filename[2];		//extra for shaders
 		//set<string> options;
-		enum assetType{SHADER, TEXTURE, TEXTURE_3D, TEXTURE_CUBE, MODEL, COLLISION_MESH, FONT};
+		enum assetType{SHADER, SHADER_HEADER, TEXTURE, TEXTURE_3D, TEXTURE_CUBE, MODEL, COLLISION_MESH, FONT};
 		virtual assetType getType()=0;
 		//vector<shared_ptr<FileManager::file>> files; //for textures
 	};
@@ -28,9 +28,14 @@ private:
 		shared_ptr<FileManager::textFile> tessE4File;
 		bool use_sAspect;
 
-		string feedbackTransformVaryingsStr;
-		vector<const char*> feedbackTransformVaryings;
+		vector<string> transformFeedbackVaryings;
 	};
+    struct shaderHeaderFile: public assetFile{
+        shaderHeaderFile(){}
+        assetType getType(){return SHADER_HEADER;}
+
+        shared_ptr<FileManager::textFile> header;
+    };
 	struct textureAssetFile: public assetFile{
 		textureAssetFile():tileable(false), compress(false){}
 		assetType getType(){return TEXTURE;}

@@ -2,6 +2,7 @@
 #include "engine.h"
 
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
+map<string, string> GraphicsManager::shader::headers;
 
 GraphicsManager::GraphicsManager(): stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), currentView(0), currentGamma(1.0), highResScreenshot(false)
 {

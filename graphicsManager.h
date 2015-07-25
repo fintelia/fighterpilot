@@ -289,6 +289,8 @@ public:
 	class shader
 	{
 	protected:
+        static map<string, string> headers;
+        
 		friend class GraphicsManager;
 		static shader* boundShader;
 	public:
@@ -334,6 +336,10 @@ public:
 		virtual string getErrorStrings(){return "";}
 
 		virtual ~shader(){if(boundShader==this)boundShader=nullptr;}
+
+        static void loadHeader(string name, string contents){
+            headers[name] = contents;
+        }
 	};
     class timer{
     protected:
@@ -515,8 +521,8 @@ protected:
 	unsigned int renderTexture;
 	unsigned int renderTexture2;
 	unsigned int depthTexture;
-	unsigned int multisampleRenderBuffer;
-	unsigned int multisampleDepthBuffer;
+//	unsigned int multisampleRenderBuffer;
+//	unsigned int multisampleDepthBuffer;
 
 	RenderTarget renderTarget;
 
@@ -527,7 +533,7 @@ protected:
 	Rect4i currentViewport;
 
 	unsigned int fboID;
-	unsigned int multisampleFboID;
+//	unsigned int multisampleFboID;
 
 	unsigned int blurTexture;
 	unsigned int blurTexture2;

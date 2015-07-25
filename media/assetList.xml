@@ -62,9 +62,9 @@
     <texture name="fractal normals"           file="media/fractal normals 2.png"      tileable="true" />
     <texture name="wave lookup"               file="media/waves.png"                  tileable="true" />
     <texture3D name="ocean normals"           file="media/oceanNormals.png"           tileable="true"     depth="4" />
-    <texture3D name="fft ocean heights"       file="media/fftOceanHeights.png"           tileable="true"     depth="32" />
-    <texture3D name="fft ocean normals"       file="media/fftOceanNormals.png"           tileable="true"     depth="32" />
-    <texture3D name="fft ocean2 normals"       file="media/fftOcean2Normals.png"           tileable="true"     depth="16" />
+    <texture3D name="fft ocean heights"       file="media/fftOceanHeights.png"        tileable="true"     depth="32" />
+    <texture3D name="fft ocean normals"       file="media/fftOceanNormals.png"        tileable="true"     depth="32" />
+    <texture3D name="fft ocean2 normals"      file="media/fftOcean2Normals.png"       tileable="true"     depth="16" />
 
     <!-- world -->
     <texture name="hex grid"                  file="media/hexGrid.png"                tileable="true" />
@@ -84,12 +84,15 @@
   </textures>
 
   <shaders>
+    <header name="FXAA3_11.h" file="media/third_party/FXAA/FXAA3_11.h" />
+    
     <!-- loading screen -->
     <shader name="ortho"                     vertex="media/ortho.vert"             fragment="media/ortho.frag"   preload="true" sAspect="true" />
     <shader name="gamma"                     vertex="media/gamma.vert"             fragment="media/gamma.frag"   />
     <shader name="gamma bloom"               vertex="media/gamma.vert"             fragment="media/gammaBloom.frag"   />
     <shader name="gamma night"               vertex="media/gamma.vert"             fragment="media/gammaNight.frag"   />
     <shader name="gamma night vision"        vertex="media/gamma.vert"             fragment="media/gammaNightVision.frag"   />
+    <shader name="fxaa"                      vertex3="media/fxaa.vert"             fragment3="media/fxaa.frag"   />
 
     <!-- post process -->
     <shader name="blurX"                     vertex="media/blur.vert"              fragment="media/blurX.frag"   />

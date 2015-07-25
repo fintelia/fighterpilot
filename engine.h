@@ -82,6 +82,7 @@ using std::cout;
 using std::endl;
 using std::swap;
 using boost::lexical_cast;
+using namespace std::literals::string_literals;
 
 #ifndef UNICODE
 #define UNICODE
