@@ -54,7 +54,7 @@ public:
     static constexpr unsigned int kMultisampleDepthTextureUnit = 46;
     
 	typedef unsigned long gID;
-	enum RenderTarget{RT_FBO, RT_MULTISAMPLE_FBO, RT_SCREEN, RT_TEXTURE};
+	enum RenderTarget{RT_FBO, RT_SCREEN, RT_TEXTURE};
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON, PATCHES};
 	enum BlendMode{ALPHA_ONLY, TRANSPARENCY, REPLACE, ADDITIVE, PREMULTIPLIED_ALPHA};
 
@@ -476,10 +476,10 @@ public:
 	virtual void setRefreshRate(unsigned int rate)=0;
 	virtual void setVSync(bool enabled)=0;
 	virtual void setWireFrame(bool enabled)=0;
-	virtual void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)=0;
-	void setFrameBufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth){setFrameBufferTextures(color,0,depth,0);}
-	virtual void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)=0;
-	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face){setFrameBufferTextures(color,face,0);}
+	virtual void setFramebufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)=0;
+	void setFramebufferTextures(shared_ptr<texture2D> color, shared_ptr<texture2D> depth){setFramebufferTextures(color,0,depth,0);}
+	virtual void setFramebufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)=0;
+	void setFramebufferTextures(shared_ptr<textureCube> color, textureCube::Face face){setFramebufferTextures(color,face,0);}
 	virtual void bindRenderTarget(RenderTarget rTarget)=0;
 	virtual void setClearColor(Color4 clearColor)=0;
 	virtual void setSampleShadingFraction(float f)=0;
@@ -543,8 +543,9 @@ protected:
 	//only valid within render(), used to restore viewport after renderToTexture
 	Rect4i currentViewport;
 
-	unsigned int fboID;
+	unsigned int mainFramebufferObject;
     unsigned int blitFramebufferObject;
+    unsigned int textureFramebufferObject;
 
 	// unsigned int blurTexture;
 	// unsigned int blurTexture2;
@@ -661,8 +662,8 @@ public:
 	void setSampleShadingFraction(float f);
 	void setSampleShading(bool enabled);
 
-	void setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
-	void setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level);
+	void setFramebufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level);
+	void setFramebufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level);
 	void bindRenderTarget(RenderTarget rTarget);
 
 	void drawText(string text, Vec2f pos, string font);

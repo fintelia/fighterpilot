@@ -230,11 +230,14 @@ public:
     void setVertexData(unsigned int size, void* data);
     void setVertexDataRange(unsigned int offset, unsigned int size, void* data);
     void bindTransformFeedback(GraphicsManager::Primitive primitive);
-    void bindTransformFeedbackRange(GraphicsManager::Primitive primitive, unsigned int offset, unsigned int size);
+    void bindTransformFeedbackRange(GraphicsManager::Primitive primitive,
+                                    unsigned int offset, unsigned int size);
     unsigned int unbindTransformFeedback();
 
-    void drawBuffer(Primitive primitive, unsigned int bufferOffset, unsigned int count);
-    void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset, unsigned int count, unsigned int instances);
+    void drawBuffer(Primitive primitive, unsigned int bufferOffset,
+                    unsigned int count);
+    void drawBufferInstanced(Primitive primitive, unsigned int bufferOffset,
+                             unsigned int count, unsigned int instances);
 };
 class OpenGLgraphics::indexBufferGL: public GraphicsManager::indexBuffer
 {
@@ -256,7 +259,8 @@ public:
     void setData(unsigned int* data, Primitive primitive, unsigned int count);
 
     void bindBuffer();
-    void bindBuffer(shared_ptr<vertexBuffer> buffer, unsigned int vertexBufferOffset);
+    void bindBuffer(shared_ptr<vertexBuffer> buffer,
+                    unsigned int vertexBufferOffset);
 
     void drawBuffer();
     void drawBuffer(unsigned int numIndicies);
@@ -271,11 +275,13 @@ private:
 
     shared_ptr<vertexBufferGL> VBO;
     shared_ptr<indexBufferGL> IBO;
-    multiDrawGL(shared_ptr<vertexBufferGL> vBuffer, shared_ptr<indexBufferGL> iBuffer):VBO(vBuffer), IBO(iBuffer) {}
+    multiDrawGL(shared_ptr<vertexBufferGL> vBuffer,
+                shared_ptr<indexBufferGL> iBuffer):VBO(vBuffer), IBO(iBuffer) {}
     friend class OpenGLgraphics;
 public:
     void clearDraws();
-    void addDraw(unsigned int indexOffset, unsigned int baseVertex, unsigned int count);
+    void addDraw(unsigned int indexOffset, unsigned int baseVertex,
+                 unsigned int count);
     void render();
 };
 class OpenGLgraphics::texture2DGL: public GraphicsManager::texture2D
@@ -289,7 +295,8 @@ public:
     void bind(unsigned int textureUnit);
     void generateMipmaps();
     unsigned char* getData(unsigned int level);
-    void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data);
+    void setData(unsigned int Width, unsigned int Height, Format f,
+                 bool tileable, bool compress, unsigned char* data);
 };
 class OpenGLgraphics::texture3DGL: public GraphicsManager::texture3D
 {
@@ -301,7 +308,8 @@ public:
     ~texture3DGL();
     void bind(unsigned int textureUnit);
     unsigned char* getData(unsigned int level);
-    void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
+    void setData(unsigned int Width, unsigned int Height, unsigned int Depth,
+                 Format f, unsigned char* data, bool tileable);
 };
 class OpenGLgraphics::texture2DArrayGL : public GraphicsManager::texture2DArray
 {
@@ -313,19 +321,39 @@ public:
 	~texture2DArrayGL();
 	void bind(unsigned int textureUnit);
 	unsigned char* getData(unsigned int level);
-	void setData(unsigned int Width, unsigned int Height, unsigned int Depth, Format f, unsigned char* data, bool tileable);
+	void setData(unsigned int Width, unsigned int Height, unsigned int Depth,
+                 Format f, unsigned char* data, bool tileable);
 };
 class OpenGLgraphics::textureCubeGL: public GraphicsManager::textureCube
 {
 private:
     unsigned int textureID;
+
+    static GLenum faceToTextarget(GraphicsManager::textureCube::Face face){
+		if(face == textureCube::POSITIVE_X)
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+		else if(face == textureCube::POSITIVE_Y)
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+		else if(face == textureCube::POSITIVE_Z)
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+		else if(face == textureCube::NEGATIVE_X)
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+		else if(face == textureCube::NEGATIVE_Y)
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+		else if(face == textureCube::NEGATIVE_Z)
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+		else debugBreak();
+        return 0;
+    }
+    
 public:
     friend class OpenGLgraphics;
     textureCubeGL();
     ~textureCubeGL();
     void bind(unsigned int textureUnit);
     unsigned char* getData(unsigned int level);
-    void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data);
+    void setData(unsigned int Width, unsigned int Height, Format f,
+                 unsigned char* data);
 };
 class OpenGLgraphics::shaderGL: public GraphicsManager::shader
 {
@@ -1986,152 +2014,67 @@ Vec2f OpenGLgraphics::getTextSize(string text, string font)
 	//else
 	//	return textSize;
 }
-void OpenGLgraphics::setFrameBufferTextures(shared_ptr<texture2D> color, unsigned int color_level, shared_ptr<texture2D> depth, unsigned int depth_level)
+/**
+ * This function sets the first color and depth attachments on the currently
+ * bound framebuffer to the indicated values.
+ */
+void OpenGLgraphics::setFramebufferTextures(shared_ptr<texture2D> color,
+                                            unsigned int color_level,
+                                            shared_ptr<texture2D> depth,
+                                            unsigned int depth_level)
 {
-	if(openGL3)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color ? dynamic_pointer_cast<texture2DGL>(color)->textureID : 0, color_level);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth ? dynamic_pointer_cast<texture2DGL>(depth)->textureID : 0, depth_level);
-	}
-	else
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, color ? dynamic_pointer_cast<texture2DGL>(color)->textureID : 0, color ? color_level : 0);
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depth ? dynamic_pointer_cast<texture2DGL>(depth)->textureID : 0, depth ? depth_level : 0);
+    auto colorGL = static_pointer_cast<texture2DGL>(color);
+    auto depthGL = static_pointer_cast<texture2DGL>(depth);
 
-	}
-	if(!color && depth)
-	{
-		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(depth)->width >> depth_level, dynamic_pointer_cast<texture2DGL>(depth)->height >> depth_level);
-	}
-	else if(color && !depth)
-	{
-		glViewport(0,0,dynamic_pointer_cast<texture2DGL>(color)->width >> color_level, dynamic_pointer_cast<texture2DGL>(color)->height >> color_level);
-	}
-	else if(color && depth)
-	{
-		auto colorTex = dynamic_pointer_cast<texture2DGL>(color);
-		auto depthTex = dynamic_pointer_cast<texture2DGL>(depth);
-		debugAssert(colorTex->width>>color_level == depthTex->width>>depth_level && colorTex->height>>color_level == depthTex->height>>depth_level);
-		glViewport(0,0,colorTex->width >> color_level, colorTex->height >> color_level);
-	}
-	cachedRenderTarget = renderTarget;
-	renderTarget = RT_TEXTURE;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           colorGL ? colorGL->textureID : 0, color_level);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           depthGL ? colorGL->textureID : 0, depth_level);
 
-	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
-#if defined(WINDOWS) && defined(_DEBUG)
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
-	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
-#else
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			std::cerr << "Framebuffer incomplete: Attachment is NOT complete." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	std::cerr << "Framebuffer incomplete: No image is attached to FBO." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		std::cerr << "Framebuffer incomplete: Attached images have different dimensions." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		std::cerr << "Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		std::cerr << "Framebuffer incomplete: Draw buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		std::cerr << "Framebuffer incomplete: Read buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		std::cerr << "Framebuffer incomplete: Multisample buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					std::cerr << "Unsupported by FBO implementation." << std::endl;
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						std::cerr << "Framebuffer undefined." << std::endl;
-	else 															std::cerr << "Unknow frame buffer error." << std::endl;
-
-#endif
+	if(!colorGL && depthGL){
+		glViewport(0,0,depthGL->width >> depth_level,
+                   depthGL->height >> depth_level);
+	}
+	else if(colorGL && !depthGL){
+		glViewport(0,0,colorGL->width >> color_level,
+                   colorGL->height >> color_level);
+	}
+	else if(colorGL && depthGL){
+		debugAssert(colorGL->width>>color_level==depthGL->width>>depth_level &&
+                    colorGL->height>>color_level==depthGL->height>>depth_level);
+		glViewport(0,0,colorGL->width >> color_level,
+                   colorGL->height >> color_level);
+	}
+    checkFboStatus();
 }
-void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textureCube::Face face, unsigned int color_level)
+void OpenGLgraphics::setFramebufferTextures(shared_ptr<textureCube> color,
+                                            textureCube::Face face,
+                                            unsigned int color_level)
 {
-	if(openGL3)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+    auto colorGL = static_pointer_cast<textureCubeGL>(color);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           textureCubeGL::faceToTextarget(face),
+                           colorGL ? colorGL->textureID : 0, color_level);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D, 0, 0);
 
-		if(face == textureCube::POSITIVE_X)				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::POSITIVE_Y)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::POSITIVE_Z)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_X)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_Y)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_Z)		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else
-		{
-			debugBreak();
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-		}
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+	if(colorGL){
+		glViewport(0,0, colorGL->width >> color_level,
+                   colorGL->height >> color_level);
 	}
-	else
-	{
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-
-		if(face == textureCube::POSITIVE_X)				glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::POSITIVE_Y)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::POSITIVE_Z)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_X)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_Y)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else if(face == textureCube::NEGATIVE_Z)		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, color ? dynamic_pointer_cast<textureCubeGL>(color)->textureID : 0, color_level);
-		else
-		{
-			debugBreak();
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
-		}
-
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, 0, 0);
-	}
-	if(color)
-	{
-		glViewport(0,0,dynamic_pointer_cast<textureCubeGL>(color)->width >> color_level, dynamic_pointer_cast<textureCubeGL>(color)->height >> color_level);
-	}
-	cachedRenderTarget = renderTarget;
-	renderTarget = RT_TEXTURE;
-
-	GLenum status = openGL3 ? glCheckFramebufferStatus(GL_FRAMEBUFFER) : glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
-#if defined(WINDOWS) && defined(_DEBUG)
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
-	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
-#else
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			std::cerr << "Framebuffer incomplete: Attachment is NOT complete." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	std::cerr << "Framebuffer incomplete: No image is attached to FBO." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		std::cerr << "Framebuffer incomplete: Attached images have different dimensions." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		std::cerr << "Framebuffer incomplete: Color attached images have different internal formats." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		std::cerr << "Framebuffer incomplete: Draw buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		std::cerr << "Framebuffer incomplete: Read buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		std::cerr << "Framebuffer incomplete: Multisample buffer." << std::endl;
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					std::cerr << "Unsupported by FBO implementation." << std::endl;
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						std::cerr << "Framebuffer undefined." << std::endl;
-	else 															std::cerr << "Unknow frame buffer error." << std::endl;
-#endif
+    checkFboStatus();
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 {
-    if(rTarget == RT_FBO)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D_MULTISAMPLE,
-                               renderTextures.ms_color, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D_MULTISAMPLE,
-                               renderTextures.ms_depth, 0);
+    if(rTarget == RT_FBO){
+        glBindFramebuffer(GL_FRAMEBUFFER, mainFramebufferObject);
         renderTarget = RT_FBO;
     }
-    else if(rTarget == RT_SCREEN)
-    {
+    else if(rTarget == RT_TEXTURE){
+        glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferObject);
+        renderTarget = RT_TEXTURE;
+    }
+    else if(rTarget == RT_SCREEN){
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderTarget = RT_SCREEN;
     }
@@ -2207,6 +2150,30 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, nullptr);
 
+    // Create main framebuffer object.
+	glGenFramebuffers(1, &mainFramebufferObject);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFramebufferObject);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_depth, 0);
+    if(!checkFboStatus()){
+        return false;
+    }
+
+    // Create auxiliary frambuffer object for user specified render to texture.
+	glGenFramebuffers(1, &textureFramebufferObject);
+    glBindFramebuffer(GL_FRAMEBUFFER, textureFramebufferObject);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           renderTextures.color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           renderTextures.depth, 0);
+    if(!checkFboStatus()){
+        return false;
+    }
+    
     // Create secondary frambuffer object for doing multisample resolves.
 	glGenFramebuffers(1, &blitFramebufferObject);
     glBindFramebuffer(GL_FRAMEBUFFER, blitFramebufferObject);
@@ -2218,32 +2185,22 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
         return false;
     }
 
-    // Create main framebuffer object.
-	glGenFramebuffers(1, &fboID);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D_MULTISAMPLE,
-                           renderTextures.ms_color, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                           GL_TEXTURE_2D_MULTISAMPLE,
-                           renderTextures.ms_depth, 0);
-    if(!checkFboStatus()){
-        return false;
-    }
-    
     // Reset bound framebuffer to be the screen.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    bindRenderTarget(RT_SCREEN);
 	return true;
 }
 void OpenGLgraphics::destroyFBOs()
 {
-    if(renderTextures.ms_color)  glDeleteTextures(1, &renderTextures.ms_color);
-    if(renderTextures.ms_depth)  glDeleteTextures(1, &renderTextures.ms_depth);
-    if(renderTextures.color)     glDeleteTextures(1, &renderTextures.color);
-    if(renderTextures.depth)     glDeleteTextures(1, &renderTextures.depth);
-    if(renderTextures.luminance) glDeleteTextures(1, &renderTextures.luminance);
-    if(renderTextures.ldr_color) glDeleteTextures(1, &renderTextures.ldr_color);
-    if(fboID)                    glDeleteFramebuffers(1, &fboID);
+    glDeleteTextures(1, &renderTextures.ms_color);
+    glDeleteTextures(1, &renderTextures.ms_depth);
+    glDeleteTextures(1, &renderTextures.color);
+    glDeleteTextures(1, &renderTextures.depth);
+    glDeleteTextures(1, &renderTextures.luminance);
+    glDeleteTextures(1, &renderTextures.ldr_color);
+
+    glDeleteFramebuffers(1, &mainFramebufferObject);
+    glDeleteFramebuffers(1, &textureFramebufferObject);
+    glDeleteFramebuffers(1, &blitFramebufferObject);
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -2332,7 +2289,7 @@ bool OpenGLgraphics::checkFboStatus()
 #ifdef WINDOWS
     MessageBoxA(NULL, error_string.c_str(), "ERROR", MB_OK);
 #else
-    cout <<  error_string << endl;
+    std::cerr <<  error_string << std::endl;
 #endif
     return false;
 }
@@ -2348,9 +2305,15 @@ void OpenGLgraphics::render()
     fps = (avgFrameTime > 0) ? 1000.0 / avgFrameTime : 0;
 ////////////////////////////////////CLEAR SCREEN////////////////////////////////
 	bindRenderTarget(RT_SCREEN);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 /////////////////////////////////////BIND BUFFER////////////////////////////////
     bindRenderTarget(RT_FBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_depth, 0);
 	setDepthMask(true);
 	setColorMask(true);
 ///////////////////////////////////CLEAR BUFFERS////////////////////////////////
@@ -2439,23 +2402,21 @@ void OpenGLgraphics::render()
 
     // Peform multisample resolve for the depth buffer.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebufferObject);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
     glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT,
                       GL_NEAREST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-    // }
-    // else
-    // {
-    setDepthMask(false);
-    // }
-    glDisable(GL_DEPTH_TEST);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFramebufferObject);
+
+    // Remove depth buffer from Framebuffer Object and bind it as a texture
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D_MULTISAMPLE, 0, 0);
     glActiveTexture(GL_TEXTURE0 + kDepthTextureUnit);
     glBindTexture(GL_TEXTURE_2D, renderTextures.depth);
-    // glActiveTexture(GL_TEXTURE0 + kMultisampleDepthTextureUnit);
-    // glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_depth);
+    glActiveTexture(GL_TEXTURE0 + kMultisampleDepthTextureUnit);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_depth);
 
     for(auto i = views.begin(); i != views.end();)
     {
@@ -2513,18 +2474,15 @@ void OpenGLgraphics::render()
 
 //////////////////////////////////Blit Framebuffer///////////////////////////////
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebufferObject);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
     glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT,
                       GL_NEAREST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mainFramebufferObject);
 ///////////////////////////////////////Post Processing//////////////////////////
-    bindRenderTarget(RT_FBO);
 	currentViewport = Rect4i::XYWH(0,0,sw,sh);
 	glViewport(0,0,sw,sh);
-	//bindRenderTarget(RT_SCREEN);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for(auto i = views.begin(); i != views.end();)
 	{
@@ -2594,7 +2552,6 @@ void OpenGLgraphics::render()
                                    GL_TEXTURE_2D, renderTextures.ldr_color, 0);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                    GL_TEXTURE_2D, 0, 0);
-//                bindRenderTarget(RT_SCREEN);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, renderTextures.color);
@@ -2607,8 +2564,6 @@ void OpenGLgraphics::render()
             gamma->setUniform1i("tex",0);
             setBlendMode(REPLACE);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
-//            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-//                                   GL_TEXTURE_2D, renderTextures.ms_color, 0);
             bindRenderTarget(RT_SCREEN);
             glViewport(0,0,sw,sh);
 // 				currentView->postProcessShader()->bind();
@@ -3393,7 +3348,9 @@ void OpenGLgraphics::checkErrors()
 }
 void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, unsigned int texture_level, shared_ptr<texture2D> depthTexture, unsigned int depth_level, bool clearTextures)
 {
-	setFrameBufferTextures(texture, texture_level, depthTexture, depth_level);
+	cachedRenderTarget = renderTarget;
+    bindRenderTarget(RT_TEXTURE);
+	setFramebufferTextures(texture, texture_level, depthTexture, depth_level);
 	if(clearTextures && !texture && depthTexture)
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -3412,7 +3369,9 @@ void OpenGLgraphics::startRenderToTexture(shared_ptr<texture2D> texture, unsigne
 }
 void OpenGLgraphics::startRenderToTexture(shared_ptr<textureCube> texture, textureCube::Face face, unsigned int texture_level, bool clearTextures)
 {
-	setFrameBufferTextures(texture, face, texture_level);
+    cachedRenderTarget = renderTarget;
+    bindRenderTarget(RT_TEXTURE);
+	setFramebufferTextures(texture, face, texture_level);
 	if(clearTextures)
 	{
 		glClearColor(0,0,0,0);
@@ -3425,9 +3384,9 @@ void OpenGLgraphics::endRenderToTexture()
 	if(renderingToTexture)
 	{
 		//setBlendMode(GraphicsManager::TRANSPARENCY);
-		bindRenderTarget(RT_FBO); //restore render textures on RT_FBO
 		bindRenderTarget(cachedRenderTarget); //bind old render target
-		glViewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
+		glViewport(currentViewport.x, currentViewport.y, currentViewport.w,
+                   currentViewport.h);
 		renderingToTexture = false;
 	}
 	else
