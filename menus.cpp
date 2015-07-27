@@ -271,7 +271,7 @@ bool options::init()
 
 	initialState.resolutionChoice = -1;
 
-	unsigned int nSamples = graphics->getMultisampling();
+	unsigned int nSamples = graphics->getMultisamplingLevel();
 	if(nSamples==0 || nSamples==1)	initialState.samplesChoice=0;
 	else if(nSamples == 2)			initialState.samplesChoice=1;
 	else if(nSamples == 4)			initialState.samplesChoice=2;

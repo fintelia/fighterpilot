@@ -50,6 +50,9 @@ struct normalMappedVertex3D
 class GraphicsManager
 {
 public:
+    static constexpr unsigned int kDepthTextureUnit = 47;
+    static constexpr unsigned int kMultisampleDepthTextureUnit = 46;
+    
 	typedef unsigned long gID;
 	enum RenderTarget{RT_FBO, RT_MULTISAMPLE_FBO, RT_SCREEN, RT_TEXTURE};
 	enum Primitive{POINTS, LINES, LINE_STRIP, LINE_LOOP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP, POLYGON, PATCHES};
@@ -358,10 +361,10 @@ public:
 
 protected:
 
-	//stereoscopic 3D
-	enum StereoMode{STEREO_NONE,STEREO_ANAGLYPH, STEREO_3D} stereoMode;
-	bool leftEye;
-	float interOcularDistance;
+	// stereoscopic 3D
+	// enum StereoMode{STEREO_NONE,STEREO_ANAGLYPH, STEREO_3D} stereoMode;
+	// bool leftEye;
+	// float interOcularDistance;
 
 	//views
 	vector<weak_ptr<View>> views;
@@ -456,12 +459,12 @@ public:
 	bool	isHighResScreenshot()const;	//whether we are currently taking a high resolution screenshot
 
 	//virtual get functions
-	virtual bool				getFullscreen()const=0;
-	virtual int					getMultisampling()const=0;
-	virtual displayMode			getCurrentDisplayMode()const=0;	
-	virtual set<displayMode>	getSupportedDisplayModes()const=0;
-	virtual bool				hasShaderModel4()const=0;
-	virtual bool				hasShaderModel5()const=0;
+	virtual bool             getFullscreen()const=0;
+    virtual int              getMultisamplingLevel()const=0;
+	virtual displayMode      getCurrentDisplayMode()const=0;	
+	virtual set<displayMode> getSupportedDisplayModes()const=0;
+	virtual bool             hasShaderModel4()const=0;
+	virtual bool             hasShaderModel5()const=0;
 
 	//virtual set functions
 	virtual void setAlphaToCoverage(bool enabled)=0;
@@ -487,7 +490,7 @@ public:
 	void setColor(float r, float g, float b);
 	void setInterOcularDistance(float d);
 	void setLightPosition(Vec3f position);
-	void setStereoMode(StereoMode s);
+//	void setStereoMode(StereoMode s);
 
 	//generic OS functions
 	virtual void flashTaskBar(int times, int length=0)=0;
@@ -517,12 +520,20 @@ protected:
 	shared_ptr<vertexBuffer> overlayVBO;
 	shared_ptr<vertexBuffer> shapesVBO;
 
-
-	unsigned int renderTexture;
-	unsigned int renderTexture2;
-	unsigned int depthTexture;
-//	unsigned int multisampleRenderBuffer;
-//	unsigned int multisampleDepthBuffer;
+    struct RenderTextures {
+        unsigned int ms_color = 0;
+        unsigned int ms_depth = 0;
+        unsigned int color = 0;
+        unsigned int depth = 0;
+        unsigned int luminance = 0;
+        unsigned int ldr_color = 0;
+    } renderTextures;
+    
+// 	unsigned int renderTexture;
+// 	unsigned int renderTexture2;
+// 	unsigned int depthTexture;
+// //	unsigned int multisampleRenderBuffer;
+// //	unsigned int multisampleDepthBuffer;
 
 	RenderTarget renderTarget;
 
@@ -533,14 +544,15 @@ protected:
 	Rect4i currentViewport;
 
 	unsigned int fboID;
-//	unsigned int multisampleFboID;
+    unsigned int blitFramebufferObject;
 
-	unsigned int blurTexture;
-	unsigned int blurTexture2;
+	// unsigned int blurTexture;
+	// unsigned int blurTexture2;
 
 	unsigned int transformFeedbackQueryID;
 
-	bool multisampling;
+//	bool multisampling;
+    unsigned int sample_count;
 	bool isFullscreen;
 
 	int samples;
@@ -573,6 +585,7 @@ protected:
 	void destroyFBOs();
 	void setEnabled(unsigned int glEnum, bool enabled);
 	void computeViewport(Rect& clipped_viewport, Rect& projectionConstraint);
+    bool checkFboStatus();
 
 	//void bindRenderTarget(RenderTarget t);
 	//void renderFBO(RenderTarget src);
@@ -656,12 +669,12 @@ public:
 	void drawText(string text, Rect rect, string font);
 	Vec2f getTextSize(string text, string font);
 
-	bool				getFullscreen()const{return isFullscreen;}
-	int					getMultisampling()const{return multisampling ? samples : 0;}
-	displayMode			getCurrentDisplayMode()const;	
-	set<displayMode>	getSupportedDisplayModes()const;
-	bool				hasShaderModel4()const;
-	bool				hasShaderModel5()const;
+	bool getFullscreen()const{return isFullscreen;}
+    int getMultisamplingLevel()const{return samples;}
+	displayMode getCurrentDisplayMode()const;
+	set<displayMode> getSupportedDisplayModes()const;
+	bool hasShaderModel4()const;
+	bool hasShaderModel5()const;
 	void flashTaskBar(int times, int length=0);
 	void minimizeWindow();
 

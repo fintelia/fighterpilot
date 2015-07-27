@@ -4,7 +4,8 @@
 GraphicsManager::shader* GraphicsManager::shader::boundShader = nullptr;
 map<string, string> GraphicsManager::shader::headers;
 
-GraphicsManager::GraphicsManager(): stereoMode(STEREO_NONE), leftEye(true), interOcularDistance(0.0), currentView(0), currentGamma(1.0), highResScreenshot(false)
+GraphicsManager::GraphicsManager(): currentView(0), currentGamma(1.0),
+                                    highResScreenshot(false)
 {
 	viewConstraint = Rect::XYXY(0,0,1,1);
 }
@@ -295,14 +296,14 @@ void GraphicsManager::setLightPosition(Vec3f position)
 {
 	lightPosition = position;
 }
-void GraphicsManager::setStereoMode(StereoMode s)
-{
-	stereoMode = s;
-}
-void GraphicsManager::setInterOcularDistance(float d)
-{
-	interOcularDistance = d;
-}
+// void GraphicsManager::setStereoMode(StereoMode s)
+// {
+// 	stereoMode = s;
+// }
+// void GraphicsManager::setInterOcularDistance(float d)
+// {
+// 	interOcularDistance = d;
+// }
 bool GraphicsManager::drawOverlay(Rect4f r, string tex)
 {
 	return drawOverlay(r, tex != "" ? dataManager.getTexture(tex) : nullptr);

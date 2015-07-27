@@ -1688,7 +1688,7 @@ void OpenGLgraphics::minimizeWindow()
 	ShowWindow(context->hWnd, SW_MINIMIZE);
 #endif
 }
-OpenGLgraphics::OpenGLgraphics():renderTarget(RT_SCREEN),renderingToTexture(false),currentViewport(0,0,sw,sh),blurTexture(0),blurTexture2(0),multisampling(false),samples(0),context(new Context),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
+OpenGLgraphics::OpenGLgraphics():renderTarget(RT_SCREEN),renderingToTexture(false),currentViewport(0,0,sw,sh),samples(0),context(new Context),colorMask(true), depthMask(true), redChannelMask(true), greenChannelMask(true), blueChannelMask(true), texCoord_clientState(false), normal_clientState(false), color_clientState(false), openGL3(false), openGL4(false)
 {
 	vSync = false;
 
@@ -1847,10 +1847,7 @@ void OpenGLgraphics::setVSync(bool enabled)
 }
 void OpenGLgraphics::setAlphaToCoverage(bool enabled)
 {
-	if(multisampling)
-	{
-		setEnabled(GL_SAMPLE_ALPHA_TO_COVERAGE, enabled);
-	}
+    setEnabled(GL_SAMPLE_ALPHA_TO_COVERAGE, enabled);
 }
 void OpenGLgraphics::setWireFrame(bool enabled)
 {
@@ -1862,24 +1859,21 @@ void OpenGLgraphics::setClearColor(Color4 c)
 }
 void OpenGLgraphics::setSampleShadingFraction(float f)
 {
-	if(multisampling && openGL4)
+	if(openGL4)
 	{
 		glMinSampleShading(clamp(f, 0.0f, 1.0f));			
 	}
-	else if(multisampling && GLEW_ARB_sample_shading)
+	else if(GLEW_ARB_sample_shading)
 	{
 		glMinSampleShadingARB(clamp(f, 0.0f, 1.0f));
 	}
 }
 void OpenGLgraphics::setSampleShading(bool enabled)
 {
-	if(multisampling)
-	{
-		if(openGL4)
-			setEnabled(GL_SAMPLE_SHADING, enabled);
-		else if(GLEW_ARB_sample_shading)
-			setEnabled(GL_SAMPLE_SHADING_ARB, enabled);
-	}
+    if(openGL4)
+        setEnabled(GL_SAMPLE_SHADING, enabled);
+    else if(GLEW_ARB_sample_shading)
+        setEnabled(GL_SAMPLE_SHADING_ARB, enabled);
 }
 void OpenGLgraphics::drawText(string text, Vec2f pos, string font)
 {
@@ -2125,167 +2119,131 @@ void OpenGLgraphics::setFrameBufferTextures(shared_ptr<textureCube> color, textu
 }
 void OpenGLgraphics::bindRenderTarget(RenderTarget rTarget)
 {
-	// if(openGL3)
-	// {
     if(rTarget == RT_FBO)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D_MULTISAMPLE,
+                               renderTextures.ms_color, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                               GL_TEXTURE_2D_MULTISAMPLE,
+                               renderTextures.ms_depth, 0);
         renderTarget = RT_FBO;
     }
-    // else if(rTarget == RT_MULTISAMPLE_FBO)
-    // {
-    // 	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-    // 	renderTarget = RT_MULTISAMPLE_FBO;
-    // }
     else if(rTarget == RT_SCREEN)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         renderTarget = RT_SCREEN;
     }
     else debugBreak();
-	// }
-	// else
-	// {
-	// 	if(rTarget == RT_FBO)
-	// 	{
-	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-	// 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, renderTexture, 0);
-	// 		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTexture, 0);
-	// 		renderTarget = RT_FBO;
-	// 	}
-	// 	else if(rTarget == RT_MULTISAMPLE_FBO)
-	// 	{
-	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-	// 		renderTarget = RT_MULTISAMPLE_FBO;
-	// 	}
-	// 	else if(rTarget == RT_SCREEN)
-	// 	{
-	// 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-	// 		renderTarget = RT_SCREEN;
-	// 	}
-	// 	else debugBreak();
-	// }
 }
-bool OpenGLgraphics::initFBOs(unsigned int maxSamples)
+bool OpenGLgraphics::initFBOs(unsigned int samples)
 {
-	glGetIntegerv(GL_MAX_SAMPLES_EXT, &samples);
-	samples = samples >= maxSamples ? maxSamples : samples;
-	multisampling = samples > 1;
-	//////////////////////////////////////////////////////////////////////////////////////
-    glGenTextures(1, &renderTexture);
-    glBindTexture(GL_TEXTURE_2D, renderTexture);
+    // Figure out the maximum supported multisample level, and make sure we
+    // don't exceed it.
+    int max_samples, max_color_texture_samples, max_depth_texture_samples;
+	glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
+    glGetIntegerv(GL_MAX_COLOR_TEXTURE_SAMPLES, &max_color_texture_samples);
+    glGetIntegerv(GL_MAX_DEPTH_TEXTURE_SAMPLES, &max_depth_texture_samples);
+    samples = min(samples, max_samples);
+    samples = min(samples, max_color_texture_samples);
+    samples = min(samples, max_depth_texture_samples);
+    
+    // Generate the textures we'll need.
+    glGenTextures(1, &renderTextures.ms_color);
+    glGenTextures(1, &renderTextures.ms_depth);
+    glGenTextures(1, &renderTextures.color);
+    glGenTextures(1, &renderTextures.depth);
+    glGenTextures(1, &renderTextures.luminance);
+    glGenTextures(1, &renderTextures.ldr_color);
+
+    // Create the multisample color render texture.
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_color);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA16F,
+                            sw, sh, false);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    
+    // Create multisample depth render texture.
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_depth);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
+                            GL_DEPTH_COMPONENT24, sw, sh, false);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+    // Create normal color render texture.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.color);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
 
-    glGenTextures(1, &renderTexture2);
-    glBindTexture(GL_TEXTURE_2D, renderTexture2);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    glGenTextures(1, &depthTexture);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    // Create normal depth render texture.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.depth);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0,  GL_DEPTH_COMPONENT24, sw, sh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, sw, sh, 0,
+                 GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
+    // Create texture pyramid for computing log luminance.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.luminance);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, sw, sh, 0, GL_RED,
+                 GL_UNSIGNED_BYTE, nullptr);
+
+    // Create low dynamic range render texture used as input to FXAA.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.ldr_color);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw, sh, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
+
+    // Create secondary frambuffer object for doing multisample resolves.
+	glGenFramebuffers(1, &blitFramebufferObject);
+    glBindFramebuffer(GL_FRAMEBUFFER, blitFramebufferObject);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           renderTextures.color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           renderTextures.depth, 0);
+    if(!checkFboStatus()){
+        return false;
+    }
+
+    // Create main framebuffer object.
 	glGenFramebuffers(1, &fboID);
     glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-	
-    // if(multisampling)
-	// {
-	// 	glGenFramebuffers(1, &multisampleFboID);
-    //     glGenRenderbuffers(1, &multisampleRenderBuffer);
-    //     glBindRenderbuffer(GL_RENDERBUFFER, multisampleRenderBuffer);
-    //     glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGB10_A2, sw, sh);
-
-    //     glGenRenderbuffers(1, &multisampleDepthBuffer);
-    //     glBindRenderbuffer(GL_RENDERBUFFER, multisampleDepthBuffer);
-    //     glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, sw, sh);
-
-    //     glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-    //     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, multisampleRenderBuffer);
-    //     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, multisampleDepthBuffer);
-	// }
-    // else
-    // {
-    //     multisampleRenderBuffer = 0;
-    //     multisampleFboID = 0;
-    //     multisampleDepthBuffer = 0;
-    // }
-	
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if(status == GL_FRAMEBUFFER_COMPLETE)							{} //frame buffer valid
-#ifdef WINDOWS
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)			MessageBoxA(NULL, "Framebuffer incomplete: Attachment is NOT complete.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)	MessageBoxA(NULL, "Framebuffer incomplete: No image is attached to FBO.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Attached images have different dimensions.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT)		MessageBoxA(NULL, "Framebuffer incomplete: Color attached images have different internal formats.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Draw buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)		MessageBoxA(NULL, "Framebuffer incomplete: Read buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE)		MessageBoxA(NULL, "Framebuffer incomplete: Multisample buffer.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNSUPPORTED)					MessageBoxA(NULL, "Unsupported by FBO implementation.","ERROR",MB_OK);
-	else if(status == GL_FRAMEBUFFER_UNDEFINED)						MessageBoxA(NULL, "Framebuffer undefined.","ERROR",MB_OK);
-	else 															MessageBoxA(NULL, "Unknow frame buffer error.","ERROR",MB_OK);
-#endif
-
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D_MULTISAMPLE,
+                           renderTextures.ms_depth, 0);
+    if(!checkFboStatus()){
+        return false;
+    }
+    
+    // Reset bound framebuffer to be the screen.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	glGenTextures(1, &blurTexture);
-	glBindTexture(GL_TEXTURE_2D, blurTexture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	glGenTextures(1, &blurTexture2);
-	glBindTexture(GL_TEXTURE_2D, blurTexture2);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sw/2, sh/2, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
 	return true;
 }
 void OpenGLgraphics::destroyFBOs()
 {
-	if(renderTexture != 0)		glDeleteTextures(1, &renderTexture);
-	if(renderTexture2 != 0)		glDeleteTextures(1, &renderTexture2);
-	if(depthTexture != 0)		glDeleteTextures(1, &depthTexture);
-	if(blurTexture != 0)			glDeleteTextures(1, &blurTexture);
-	if(blurTexture2 != 0)			glDeleteTextures(1, &blurTexture2);
-
-	// if(openGL3 || GLEW_ARB_framebuffer_object)
-	// {
-		if(fboID != 0)						glDeleteFramebuffers(1, &fboID);
-		// if(multisampleFboID != 0)			glDeleteFramebuffers(1, &multisampleFboID);
-		// if(multisampleRenderBuffer != 0)	glDeleteRenderbuffers(1, &multisampleRenderBuffer);
-		// if(multisampleDepthBuffer != 0)		glDeleteRenderbuffers(1, &multisampleDepthBuffer);
-	// }
-	// else
-	// {
-	// 	if(fboID != 0)						glDeleteFramebuffersEXT(1, &fboID);
-	// 	if(multisampleFboID != 0)			glDeleteFramebuffersEXT(1, &multisampleFboID);
-	// 	if(multisampleRenderBuffer != 0)	glDeleteRenderbuffersEXT(1, &multisampleRenderBuffer);
-	// 	if(multisampleDepthBuffer != 0)		glDeleteRenderbuffersEXT(1, &multisampleDepthBuffer);
-	// }
+    if(renderTextures.ms_color)  glDeleteTextures(1, &renderTextures.ms_color);
+    if(renderTextures.ms_depth)  glDeleteTextures(1, &renderTextures.ms_depth);
+    if(renderTextures.color)     glDeleteTextures(1, &renderTextures.color);
+    if(renderTextures.depth)     glDeleteTextures(1, &renderTextures.depth);
+    if(renderTextures.luminance) glDeleteTextures(1, &renderTextures.luminance);
+    if(renderTextures.ldr_color) glDeleteTextures(1, &renderTextures.ldr_color);
+    if(fboID)                    glDeleteFramebuffers(1, &fboID);
 }
 void OpenGLgraphics::resize(int w, int h)
 {
@@ -2339,269 +2297,230 @@ void OpenGLgraphics::computeViewport(Rect& clipped_viewport, Rect& projectionCon
 		projectionConstraint = Rect::XYWH(0,0,1,1);
 	}
 }
+bool OpenGLgraphics::checkFboStatus()
+{
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(status == GL_FRAMEBUFFER_COMPLETE)
+        return true;
+
+    string error_string = "Framebuffer incomplete: ";
+    switch(status) {
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        error_string += "Attachment is NOT complete.";
+        break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        error_string += "No image is attached to FBO.";
+        break;
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+        error_string += "Draw buffer.";
+        break;
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+        error_string += "Read buffer.";
+        break;
+    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+        error_string += "Multisample buffer.";
+        break;
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+        error_string += "Unsupported by FBO implementation.";
+        break;
+    case GL_FRAMEBUFFER_UNDEFINED:
+        error_string += "Framebuffer undefined.";
+        break;
+    default:
+        error_string += "Unknow frame buffer error.";
+    }
+#ifdef WINDOWS
+    MessageBoxA(NULL, error_string.c_str(), "ERROR", MB_OK);
+#else
+    cout <<  error_string << endl;
+#endif
+    return false;
+}
 void OpenGLgraphics::render()
 {
-/////////////////////////////////////START TIMING/////////////////////////////////////
-	static vector<double> frameTimes;//in milliseconds
-	double time=GetTime();
-	static double lastTime=time;
-
-	frameTimes.push_back(time-lastTime);
-	if(frameTimes.size() > 20)
-		frameTimes.erase(frameTimes.begin());
-
-	lastTime=time;
-
-	double totalTime=0.0; //total recorded time for all the frame times (in seconds)
-	for(auto i=frameTimes.begin(); i != frameTimes.end(); i++)
-		totalTime+=((*i)*0.001);
-
-    fps = 0;
-    if(totalTime > 0)
-        fps = ((double)frameTimes.size()) /  totalTime;
-
-////////////////////////////////////CLEAR SCREEN//////////////////////////////////////////
+/////////////////////////////////////START TIMING///////////////////////////////
+	double time = GetTime();
+	static double lastTime = time;
+	static double avgFrameTime = time - lastTime;
+    avgFrameTime = lerp(avgFrameTime, time - lastTime, 0.05);
+	lastTime = time;
+    
+    fps = (avgFrameTime > 0) ? 1000.0 / avgFrameTime : 0;
+////////////////////////////////////CLEAR SCREEN////////////////////////////////
 	bindRenderTarget(RT_SCREEN);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-/////////////////////////////////////BIND BUFFER//////////////////////////////////////////
-	if(multisampling)
-	{
-		bindRenderTarget(RT_MULTISAMPLE_FBO);
-	}
-	else
-	{
-		bindRenderTarget(RT_FBO);
-	}
+/////////////////////////////////////BIND BUFFER////////////////////////////////
+    bindRenderTarget(RT_FBO);
 	setDepthMask(true);
 	setColorMask(true);
-///////////////////////////////////CLEAR BUFFERS/////////////////////////////////
+///////////////////////////////////CLEAR BUFFERS////////////////////////////////
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//////////////////////////////////SET 2D VIEW CONSTRAINTS///////////////////////////////////
+//////////////////////////////////SET 2D VIEW CONSTRAINTS///////////////////////
 	if(!highResScreenshot)
 	{
 		auto ortho = shaders.bind("ortho");
 		ortho->setUniform4f("viewConstraint", 0,0,1,1);
 	}
-////////////////////////////////////3D RENDERING/////////////////////////////////////
+////////////////////////////////////3D RENDERING////////////////////////////////
 	Vec3f cameraOffset;
 
-	for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
-	{
-		//set up stereo
-		if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==0)
-		{
-			leftEye = true;
-			redChannelMask = true;
-			greenChannelMask = false;
-			blueChannelMask = false;
-			glColorMask(true,false,false,true);
-			cameraOffset = Vec3f(-interOcularDistance/2,0,0);
-		}
-		else if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==1)
-		{
-			leftEye = false;
-			redChannelMask = false;
-			greenChannelMask = true;
-			blueChannelMask = true;
-			glColorMask(false,true,true,true);
-			cameraOffset = Vec3f(interOcularDistance/2,0,0);
+	// for(int eye=0; eye<(stereoMode!=STEREO_NONE?2:1); eye++)
+	// {
+	// 	//set up stereo
+	// 	if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==0)
+	// 	{
+	// 		leftEye = true;
+	// 		redChannelMask = true;
+	// 		greenChannelMask = false;
+	// 		blueChannelMask = false;
+	// 		glColorMask(true,false,false,true);
+	// 		cameraOffset = Vec3f(-interOcularDistance/2,0,0);
+	// 	}
+	// 	else if(!highResScreenshot && stereoMode==STEREO_ANAGLYPH && eye==1)
+	// 	{
+	// 		leftEye = false;
+	// 		redChannelMask = false;
+	// 		greenChannelMask = true;
+	// 		blueChannelMask = true;
+	// 		glColorMask(false,true,true,true);
+	// 		cameraOffset = Vec3f(interOcularDistance/2,0,0);
 
-			glClear(GL_DEPTH_BUFFER_BIT);
-		}
+	// 		glClear(GL_DEPTH_BUFFER_BIT);
+	// 	}
 
-		//render scene
-		for(auto i = views.begin(); i != views.end();)
-		{
-			if(i->expired()) //if the view no longer exists
-			{
-				i = views.erase(i);
-			}
-			else
-			{
-				currentView = shared_ptr<View>(*(i++));
+    for(auto i = views.begin(); i != views.end();)
+    {
+        if(i->expired()) //if the view no longer exists
+        {
+            i = views.erase(i);
+            continue;
+        }
+        currentView = shared_ptr<View>(*(i++));
 
-				Rect clipped_viewport, projConstraint;
-				computeViewport(clipped_viewport, projConstraint);
-				if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
-					continue;
+        Rect clipped_viewport, projConstraint;
+        computeViewport(clipped_viewport, projConstraint);
+        if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
+            continue;
 
-				currentViewport.x = clipped_viewport.x*sw;
-				currentViewport.y = clipped_viewport.y*sh;
-				currentViewport.w = clipped_viewport.w*sw;
-				currentViewport.h = clipped_viewport.h*sh;
-				glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
-				if(highResScreenshot)
-				{
-					//Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
-
-					currentView->constrainView(projConstraint);
-
-					auto ortho = shaders.bind("ortho");
-					ortho->setUniform4f("viewConstraint", projConstraint);
-				}
-				else
-				{
-					if((stereoMode!=STEREO_NONE))	
-						currentView->shiftCamera(cameraOffset);
-				}
+        currentViewport.x = clipped_viewport.x*sw;
+        currentViewport.y = clipped_viewport.y*sh;
+        currentViewport.w = clipped_viewport.w*sw;
+        currentViewport.h = clipped_viewport.h*sh;
+        glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh,
+                   clipped_viewport.w*sw, clipped_viewport.h*sh);
+        if(highResScreenshot)
+        {
+            currentView->constrainView(projConstraint);
+            auto ortho = shaders.bind("ortho");
+            ortho->setUniform4f("viewConstraint", projConstraint);
+        }
+        // else
+        // {
+        //     if((stereoMode!=STEREO_NONE))	
+        //         currentView->shiftCamera(cameraOffset);
+        // }
 
 
-				auto model = shaders.bind("model");
-				model->setUniformMatrix("cameraProjection",currentView->projectionMatrix() * currentView->modelViewMatrix());
-				model->setUniformMatrix("modelTransform", Mat4f());
-				model->setUniform1i("numLights",1);
+        auto model = shaders.bind("model");
+        model->setUniformMatrix("cameraProjection",
+            currentView->projectionMatrix() * currentView->modelViewMatrix());
+        model->setUniformMatrix("modelTransform", Mat4f());
+        model->setUniform1i("numLights", 1);
 
-				currentView->render();
+        currentView->render();
 
-				if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
-				else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
-			}
-		}
+        if(highResScreenshot)
+            currentView->constrainView(Rect::XYXY(0,0,1,1));
+        // else if((stereoMode!=STEREO_NONE))
+        //     currentView->shiftCamera(Vec3f(0,0,0));
+    }
 
-		//capture depth buffer for reading and bind it to texture unit 47
-		// if(multisampling && (openGL3 || GLEW_ARB_framebuffer_object))
-		// {
-		// 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
-		// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-		// 	glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-		// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		// 	glBindFramebuffer(GL_FRAMEBUFFER, multisampleFboID);
-		// }
-		// else if(multisampling)
-		// {
-		// 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		// 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, multisampleFboID);
-		// 	glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, fboID);
-		// 	glBlitFramebufferEXT(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		// 	glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-		// 	glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
-		// 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, multisampleFboID);
-		// }
-		// else
-		// {
-			setDepthMask(false);
-		// }
-		glDisable(GL_DEPTH_TEST);
-		glActiveTexture(GL_TEXTURE0 + 47);
-		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glActiveTexture(GL_TEXTURE0 + 46);
-		glBindTexture(GL_TEXTURE_2D, renderTexture);
+    // Peform multisample resolve for the depth buffer.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
+    glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT,
+                      GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+    // }
+    // else
+    // {
+    setDepthMask(false);
+    // }
+    glDisable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0 + kDepthTextureUnit);
+    glBindTexture(GL_TEXTURE_2D, renderTextures.depth);
+    // glActiveTexture(GL_TEXTURE0 + kMultisampleDepthTextureUnit);
+    // glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_depth);
 
-		for(auto i = views.begin(); i != views.end();)
-		{
-			if(i->expired()) //check if the view no longer exists (just to be safe)
-			{
-				i = views.erase(i);
-			}
-			else
-			{
-				currentView = shared_ptr<View>(*(i++));
-				if(currentView->transparentRenderFunc())
-				{
-					//glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
+    for(auto i = views.begin(); i != views.end();)
+    {
+        if(i->expired()) //check if the view no longer exists (just to be safe)
+        {
+            i = views.erase(i);
+            continue;
+        }
+        currentView = shared_ptr<View>(*(i++));
+        if(currentView->transparentRenderFunc())
+        {
+            Rect clipped_viewport, projConstraint;
+            computeViewport(clipped_viewport, projConstraint);
+            if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
+                continue;
+
+            currentViewport.x = clipped_viewport.x*sw;
+            currentViewport.y = clipped_viewport.y*sh;
+            currentViewport.w = clipped_viewport.w*sw;
+            currentViewport.h = clipped_viewport.h*sh;
+            glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh,
+                       clipped_viewport.w*sw, clipped_viewport.h*sh);
+            if(highResScreenshot)
+            {
+                currentView->constrainView(projConstraint);
+
+                auto ortho = shaders.bind("ortho");
+                ortho->setUniform4f("viewConstraint", projConstraint);
+            }
+            // else
+            // {
+            //     if((stereoMode!=STEREO_NONE))	
+            //         currentView->shiftCamera(cameraOffset);
+            // }
 		
-					Rect clipped_viewport, projConstraint;
-					computeViewport(clipped_viewport, projConstraint);
-					if(clipped_viewport.w <= 0.0 || clipped_viewport.h <= 0.0)
-						continue;
-
-					currentViewport.x = clipped_viewport.x*sw;
-					currentViewport.y = clipped_viewport.y*sh;
-					currentViewport.w = clipped_viewport.w*sw;
-					currentViewport.h = clipped_viewport.h*sh;
-					glViewport(clipped_viewport.x*sw, clipped_viewport.y*sh, clipped_viewport.w*sw, clipped_viewport.h*sh);
-					if(highResScreenshot)
-					{
-						//Rect fullViewport = Rect::XYWH(currentView->viewport().x / sAspect, (1.0-currentView->viewport().y-currentView->viewport().height), currentView->viewport().width / sAspect, currentView->viewport().height);
-
-						currentView->constrainView(projConstraint);
-
-						auto ortho = shaders.bind("ortho");
-						ortho->setUniform4f("viewConstraint", projConstraint);
-					}
-					else
-					{
-						if((stereoMode!=STEREO_NONE))	
-							currentView->shiftCamera(cameraOffset);
-					}
+            currentView->renderTransparent();
 		
-					currentView->renderTransparent();
-		
-					if(highResScreenshot)				currentView->constrainView(Rect::XYXY(0,0,1,1));
-					else if((stereoMode!=STEREO_NONE))	currentView->shiftCamera(Vec3f(0,0,0));
-				}
-			}
-		}
-	}
+            if(highResScreenshot)
+                currentView->constrainView(Rect::XYXY(0,0,1,1));
+            // else if((stereoMode!=STEREO_NONE))
+            //     currentView->shiftCamera(Vec3f(0,0,0));
+        }
+    }
 
 	glDisable(GL_DEPTH_TEST);
 	currentView.reset(); //set the current view to null
-	if(stereoMode==STEREO_ANAGLYPH)
-	{
-		redChannelMask = true;
-		greenChannelMask = true;
-		blueChannelMask = true;
-		glColorMask(true,true,true,true);
-	}
+	// if(stereoMode==STEREO_ANAGLYPH)
+	// {
+	// 	redChannelMask = true;
+	// 	greenChannelMask = true;
+	// 	blueChannelMask = true;
+	// 	glColorMask(true,true,true,true);
+	// }
 	sceneManager.endRender(); //do some post render cleanup
 
 //////////////////////////////////Blit Framebuffer///////////////////////////////
-	// if(multisampling)
-	// {
-	// 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisampleFboID);
-	// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fboID);
-	// 	glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-	// 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	// 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	// }
-////////////////////////////////////Motion Blur//////////////////////////////////
-	//glActiveTexture(GL_TEXTURE0);	glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
-	//glActiveTexture(GL_TEXTURE1);	glBindTexture(GL_TEXTURE_2D, FBOs[0].depth);
-	//
-	//bindRenderTarget(RT_FBO_1);
-	//
-	//auto motionBlur = shaders.bind("motion blur shader");
-	//if(motionBlur)
-	//{
-	//	motionBlur->setUniform1i("colorTexture", 0);
-	//	motionBlur->setUniform1i("depthTexture", 1);
-	//	for(auto i = views.begin(); i != views.end();)
-	//	{
-	//		if(i->expired()) //check if the view no longer exists (just to be safe)
-	//		{
-	//			i = views.erase(i);
-	//		}
-	//		else
-	//		{
-	//			currentView = shared_ptr<View>(*i);
-	//			Mat4f viewProjectionInverseMatrix;
-	//			(currentView->projectionMatrix() * currentView->modelViewMatrix()).inverse(viewProjectionInverseMatrix);
-	//
-	//			motionBlur->setUniformMatrix("viewProjectionInverseMatrix", viewProjectionInverseMatrix);
-	//			motionBlur->setUniformMatrix("previousViewProjectionMatrix", currentView->projectionMatrix() * currentView->lastModelViewMatrix());
-	//
-	//			glViewport(currentView->viewport().x * sh, (1.0 - currentView->viewport().y-currentView->viewport().height) * sh, currentView->viewport().width * sh, currentView->viewport().height * sh);
-	//			drawPartialOverlay(Rect::XYWH(currentView->viewport().x/sAspect*2.0-1.0,currentView->viewport().y*2.0-1.0,currentView->viewport().width/sAspect*2.0,currentView->viewport().height*2.0), 
-	//								Rect::XYWH(currentView->viewport().x/sAspect,currentView->viewport().y,currentView->viewport().width/sAspect,currentView->viewport().height));
-	//			i++;
-	//		}
-	//	}
-	//	currentView.reset(); //set the current view to null
-	//}
-
-///////////////////////////////////////Post Processing//////////////////////////////////
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, FBOs[0].color);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	//glGenerateMipmapEXT(GL_TEXTURE_2D);
-
-
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fboID);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
+    glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT,
+                      GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+///////////////////////////////////////Post Processing//////////////////////////
+    bindRenderTarget(RT_FBO);
 	currentViewport = Rect4i::XYWH(0,0,sw,sh);
 	glViewport(0,0,sw,sh);
 	//bindRenderTarget(RT_SCREEN);
@@ -2612,78 +2531,86 @@ void OpenGLgraphics::render()
 		if(i->expired()) //if the view no longer exists
 		{
 			i = views.erase(i);
+            continue;
 		}
-		else
-		{
-			currentView = shared_ptr<View>(*(i++));
+        currentView = shared_ptr<View>(*(i++));
 
-			Rect overlayRect, textureRect, projectionConstraint;
-			computeViewport(textureRect, projectionConstraint);
-			overlayRect.x = textureRect.x * 2.0 - 1.0;
-			overlayRect.y = textureRect.y * 2.0 - 1.0;
-			overlayRect.w = textureRect.w * 2.0;
-			overlayRect.h = textureRect.h * 2.0;
+        Rect overlayRect, textureRect, projectionConstraint;
+        computeViewport(textureRect, projectionConstraint);
+        overlayRect.x = textureRect.x * 2.0 - 1.0;
+        overlayRect.y = textureRect.y * 2.0 - 1.0;
+        overlayRect.w = textureRect.w * 2.0;
+        overlayRect.h = textureRect.h * 2.0;
 
-			if(currentView->postProcessShader() && overlayRect.w*overlayRect.h > 0.0)
-			{
-				if(currentView->blurStage())
-				{
-					auto blurX = shaders("blurX");
-					auto blurY = shaders("blurY");
-					if(blurX && blurY)
-					{
-						glViewport(0,0,sw/2,sh/2);
-						glBindFramebuffer(GL_FRAMEBUFFER, fboID);
+        if(currentView->postProcessShader() &&
+           overlayRect.w*overlayRect.h > 0.0)
+        {
+            // if(currentView->blurStage())
+            // {
+            //     auto blurX = shaders("blurX");
+            //     auto blurY = shaders("blurY");
+            //     if(blurX && blurY)
+            //     {
+            //         glViewport(0,0,sw/2,sh/2);
+            //         glBindFramebuffer(GL_FRAMEBUFFER, fboID);
 				
-						blurX->bind();
-						blurX->setUniform1i("tex",0);
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, renderTexture);
-						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-						glGenerateMipmapEXT(GL_TEXTURE_2D);
-						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture2, 0);
-						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+            //         blurX->bind();
+            //         blurX->setUniform1i("tex",0);
+            //         glActiveTexture(GL_TEXTURE0);
+            //         glBindTexture(GL_TEXTURE_2D, renderTexture);
+            //         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            //                         GL_LINEAR_MIPMAP_LINEAR);
+            //         glGenerateMipmapEXT(GL_TEXTURE_2D);
+            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            //                                GL_TEXTURE_2D, blurTexture2, 0);
+            //         GraphicsManager::drawPartialOverlay(overlayRect,
+            //                                             textureRect);
 				
 				
-						blurY->bind();
-						blurY->setUniform1i("tex",0);
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, blurTexture2);
-						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, blurTexture, 0);
-						GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+            //         blurY->bind();
+            //         blurY->setUniform1i("tex",0);
+            //         glActiveTexture(GL_TEXTURE0);
+            //         glBindTexture(GL_TEXTURE_2D, blurTexture2);
+            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            //                                GL_TEXTURE_2D, blurTexture, 0);
+            //         GraphicsManager::drawPartialOverlay(overlayRect,
+            //                                             textureRect);
 				
-						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, blurTexture);
-						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
-						glViewport(0,0,sw,sh);
-					}
-					else
-					{
-						debugBreak();
-						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, 0);
-					}
-				}
-				                
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                       GL_TEXTURE_2D, renderTexture2, 0);
+            //         glActiveTexture(GL_TEXTURE1);
+            //         glBindTexture(GL_TEXTURE_2D, blurTexture);
+            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            //                                GL_TEXTURE_2D, renderTexture, 0);
+            //         glViewport(0,0,sw,sh);
+            //     }
+            //     else
+            //     {
+            //         debugBreak();
+            //         glActiveTexture(GL_TEXTURE1);
+            //         glBindTexture(GL_TEXTURE_2D, 0);
+            //     }
+            // }
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, renderTextures.ldr_color, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                   GL_TEXTURE_2D, 0, 0);
 //                bindRenderTarget(RT_SCREEN);
 
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, renderTexture);
-                glGenerateMipmap(GL_TEXTURE_2D);
-                glViewport(0,0,sw,sh);
-                auto gamma = shaders("gamma");
-                debugAssert(gamma);
-                gamma->bind();
-                gamma->setUniform1f("gamma",currentGamma);
-                gamma->setUniform1i("tex",0);
-                setBlendMode(REPLACE);
-                GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
-                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                        GL_TEXTURE_2D, renderTexture, 0);
-				bindRenderTarget(RT_SCREEN);
-                glViewport(0,0,sw,sh);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.color);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glViewport(0,0,sw,sh);
+            auto gamma = shaders("gamma");
+            debugAssert(gamma);
+            gamma->bind();
+            gamma->setUniform1f("gamma",currentGamma);
+            gamma->setUniform1i("tex",0);
+            setBlendMode(REPLACE);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+//            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+//                                   GL_TEXTURE_2D, renderTextures.ms_color, 0);
+            bindRenderTarget(RT_SCREEN);
+            glViewport(0,0,sw,sh);
 // 				currentView->postProcessShader()->bind();
 // 				currentView->postProcessShader()->setUniform1f("gamma",currentGamma);
 // 				currentView->postProcessShader()->setUniform1i("tex",0);
@@ -2695,20 +2622,19 @@ void OpenGLgraphics::render()
 // 					currentView->postProcessShader()->setUniform1i("blurTex",1);
 // 				}
 
-                glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, renderTexture2);
-                glGenerateMipmap(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.ldr_color);
+            glGenerateMipmap(GL_TEXTURE_2D);
 
-                auto fxaa = shaders("fxaa");
-                debugAssert(fxaa);
-                fxaa->bind();
-                fxaa->setUniform1i("tex", 0);
-                fxaa->setUniform2f("invScreenSize", 1.0/sw, 1.0/sh);
-				GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
-                setBlendMode(TRANSPARENCY);
-			}
-		}
-	}
+            auto fxaa = shaders("fxaa");
+            debugAssert(fxaa);
+            fxaa->bind();
+            fxaa->setUniform1i("tex", 0);
+            fxaa->setUniform2f("invScreenSize", 1.0/sw, 1.0/sh);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+            setBlendMode(TRANSPARENCY);
+        }
+    }
 	currentView = nullptr;
 
 /////////////////////////////////////START 2D////////////////////////////////////
@@ -3179,11 +3105,11 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;
 	}
 
-	if(game->hasCommandLineOption("--stereo") && stereoMode == STEREO_NONE)
-	{
-		stereoMode = STEREO_ANAGLYPH;
-		setInterOcularDistance(0.25);
-	}
+	// if(game->hasCommandLineOption("--stereo") && stereoMode == STEREO_NONE)
+	// {
+	// 	stereoMode = STEREO_ANAGLYPH;
+	// 	setInterOcularDistance(0.25);
+	// }
 
 	isFullscreen = fullscreenflag;
 
