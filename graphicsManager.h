@@ -113,9 +113,6 @@ public:
 		Mat4f completeProjectionMat;
 
 		Rect mViewConstraint;
-
-		bool mBlurStage;
-		shared_ptr<GraphicsManager::shader> mPostProcessShader;
 	public:
 		View();
 		Vec2f project(Vec3f p);
@@ -145,13 +142,6 @@ public:
 
 		void render(){if(mRenderFunc)mRenderFunc(mRenderFuncParam);}
 		void renderTransparent(){if(mTransparentRenderFunc)mTransparentRenderFunc(mTransparentRenderFuncParam);}
-
-
-		bool blurStage(){return mBlurStage;}
-		void blurStage(bool b){mBlurStage=b;}
-
-		shared_ptr<GraphicsManager::shader> postProcessShader(){return mPostProcessShader;}
-		void postProcessShader(shared_ptr<GraphicsManager::shader> b){mPostProcessShader=b;}
 
 		void shiftCamera(Vec3f shift);
 		void constrainView(Rect4f bounds);

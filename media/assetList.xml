@@ -88,11 +88,9 @@
     
     <!-- loading screen -->
     <shader name="ortho"                     vertex="media/ortho.vert"             fragment="media/ortho.frag"   preload="true" sAspect="true" />
-    <shader name="gamma"                     vertex="media/gamma.vert"             fragment="media/gamma.frag"   />
-    <shader name="gamma bloom"               vertex="media/gamma.vert"             fragment="media/gammaBloom.frag"   />
-    <shader name="gamma night"               vertex="media/gamma.vert"             fragment="media/gammaNight.frag"   />
-    <shader name="gamma night vision"        vertex="media/gamma.vert"             fragment="media/gammaNightVision.frag"   />
+    <shader name="tonemap"                   vertex3="media/tonemap.vert"          fragment3="media/tonemap.frag"   />
     <shader name="fxaa"                      vertex3="media/fxaa.vert"             fragment3="media/fxaa.frag"   />
+    <shader name="log luminance"             vertex3="media/logLuminance.vert"     fragment3="media/logLuminance.frag"   />
 
     <!-- post process -->
     <shader name="blurX"                     vertex="media/blur.vert"              fragment="media/blurX.frag"   />

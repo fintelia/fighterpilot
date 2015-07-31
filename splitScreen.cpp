@@ -24,21 +24,6 @@ bool splitScreen::init()
 	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(2);
 
-	if(level->info.night)
-	{
-		views[0]->blurStage(true);
-		views[0]->postProcessShader(shaders("gamma night"));
-		views[1]->blurStage(true);
-		views[1]->postProcessShader(shaders("gamma night"));
-	}
-	else
-	{
-		views[0]->blurStage(false);
-		views[0]->postProcessShader(shaders("gamma bloom"));
-		views[1]->blurStage(false);
-		views[1]->postProcessShader(shaders("gamma bloom"));
-	}
-
 	if(players[0]->getObject()->team == players[1]->getObject()->team)
 		gameType = COOPERATIVE;
 	else
@@ -67,19 +52,6 @@ void splitScreen::updateFrame()
 		shared_ptr<plane> p = players[i]->getObject();
 		auto camera = players[i]->getCamera(p->controled || p->dead);
 		views[i]->lookAt(camera.eye, camera.center, camera.up);
-		if(level->info.night)
-		{
-			if(players[i]->firstPersonView && !p->controled && !p->dead)
-			{
-				views[i]->blurStage(false);
-				views[i]->postProcessShader(shaders("gamma night vision"));
-			}
-			else
-			{
-				views[i]->blurStage(true);
-				views[i]->postProcessShader(shaders("gamma night"));
-			}
-		}
 	}
 
 #ifdef _DEBUG

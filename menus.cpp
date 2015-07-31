@@ -664,18 +664,6 @@ bool lightbox::init()
 {
 	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(1);
-
-	if(level->info.night)
-	{
-		view->blurStage(true);
-		view->postProcessShader(shaders("gamma night"));
-	}
-	else
-	{
-		view->blurStage(false);
-		view->postProcessShader(shaders("gamma bloom"));
-	}
-
 	world->time.pause();
 
 	return true;
@@ -726,19 +714,6 @@ void lightbox::updateFrame()
 	//set camera position
 	shared_ptr<plane> p=players[0]->getObject();
 	view->lookAt(eye, eye + fwd, Vec3f(0,1,0));
-	if(level->info.night)
-	{
-		if(players[0]->firstPersonView && !p->controled && !p->dead)
-		{
-			view->blurStage(false);
-			view->postProcessShader(shaders("gamma night vision"));
-		}
-		else
-		{
-			view->blurStage(true);
-			view->postProcessShader(shaders("gamma night"));
-		}
-	}
 	players[0]->setVibrate(p->cameraShake);
 }
 void lightbox::render()

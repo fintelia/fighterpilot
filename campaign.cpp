@@ -22,16 +22,6 @@ bool campaign::init()
 	world = unique_ptr<WorldManager>(new WorldManager(level->clipMap));
 	level->initializeWorld(1);
 
-	if(level->info.night)
-	{
-		view->blurStage(true);
-		view->postProcessShader(shaders("gamma night"));
-	}
-	else
-	{
-		view->blurStage(false);
-		view->postProcessShader(shaders("gamma bloom"));
-	}
 	return true;
 }
 bool campaign::menuKey(int mkey)
@@ -74,19 +64,6 @@ void campaign::updateFrame()
 	shared_ptr<plane> p=players[0]->getObject();
 	auto camera = players[0]->getCamera(p->controled || p->dead);
 	view->lookAt(camera.eye, camera.center, camera.up);
-	if(level->info.night)
-	{
-		if(players[0]->firstPersonView && !p->controled && !p->dead)
-		{
-			view->blurStage(false);
-			view->postProcessShader(shaders("gamma night vision"));
-		}
-		else
-		{
-			view->blurStage(true);
-			view->postProcessShader(shaders("gamma night"));
-		}
-	}
 	players[0]->setVibrate(p->cameraShake);
 
 #ifdef _DEBUG

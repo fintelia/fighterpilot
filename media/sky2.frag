@@ -114,10 +114,7 @@ void main()
 	float fCos = -dot(normalize(lightDirection), normalize(direction));
 	float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos) / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
 	color = color1 + fMiePhase * color2;
-
 	color = vec3(1.0) - exp(-color * fExposure);
-
-
 
 	vec3 normal = normalize(worldPosition.xyz - earthCenter);
 	float randomIntensity =	( 0.75 * texture2D(noise, worldPosition.xz*0.000001+0.00001*time*vec2(0.732546,0.680718)).r +

@@ -2138,7 +2138,7 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, sw, sh, 0, GL_RED,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, sw, sh, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, nullptr);
 
     // Create low dynamic range render texture used as input to FXAA.
@@ -2401,13 +2401,10 @@ void OpenGLgraphics::render()
     }
 
     // Peform multisample resolve for the depth buffer.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebufferObject);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
     glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_DEPTH_BUFFER_BIT,
                       GL_NEAREST);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, mainFramebufferObject);
 
     // Remove depth buffer from Framebuffer Object and bind it as a texture
@@ -2473,13 +2470,11 @@ void OpenGLgraphics::render()
 	sceneManager.endRender(); //do some post render cleanup
 
 //////////////////////////////////Blit Framebuffer///////////////////////////////
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mainFramebufferObject);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, blitFramebufferObject);
     glBlitFramebuffer(0, 0, sw, sh, 0, 0, sw, sh, GL_COLOR_BUFFER_BIT,
                       GL_NEAREST);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mainFramebufferObject);
+    glBindFramebuffer(GL_FRAMEBUFFER, mainFramebufferObject);
 ///////////////////////////////////////Post Processing//////////////////////////
 	currentViewport = Rect4i::XYWH(0,0,sw,sh);
 	glViewport(0,0,sw,sh);
@@ -2493,6 +2488,15 @@ void OpenGLgraphics::render()
 		}
         currentView = shared_ptr<View>(*(i++));
 
+        // Get pointers to all the shaders we'll need for post processing. If
+        // one isn't found, then debugAssert. It would be better to move this
+        // outside the loop, but this triggers a crash because the shaders
+        // aren't loaded in time.
+        auto tonemap = shaders("tonemap");
+        auto fxaa = shaders("fxaa");
+        auto logLuminance = shaders("log luminance");
+        debugAssert(tonemap && fxaa && logLuminance);
+
         Rect overlayRect, textureRect, projectionConstraint;
         computeViewport(textureRect, projectionConstraint);
         overlayRect.x = textureRect.x * 2.0 - 1.0;
@@ -2500,97 +2504,53 @@ void OpenGLgraphics::render()
         overlayRect.w = textureRect.w * 2.0;
         overlayRect.h = textureRect.h * 2.0;
 
-        if(currentView->postProcessShader() &&
-           overlayRect.w*overlayRect.h > 0.0)
+        if(overlayRect.w*overlayRect.h > 0.0)
         {
-            // if(currentView->blurStage())
-            // {
-            //     auto blurX = shaders("blurX");
-            //     auto blurY = shaders("blurY");
-            //     if(blurX && blurY)
-            //     {
-            //         glViewport(0,0,sw/2,sh/2);
-            //         glBindFramebuffer(GL_FRAMEBUFFER, fboID);
-				
-            //         blurX->bind();
-            //         blurX->setUniform1i("tex",0);
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, renderTexture);
-            //         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            //                         GL_LINEAR_MIPMAP_LINEAR);
-            //         glGenerateMipmapEXT(GL_TEXTURE_2D);
-            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            //                                GL_TEXTURE_2D, blurTexture2, 0);
-            //         GraphicsManager::drawPartialOverlay(overlayRect,
-            //                                             textureRect);
-				
-				
-            //         blurY->bind();
-            //         blurY->setUniform1i("tex",0);
-            //         glActiveTexture(GL_TEXTURE0);
-            //         glBindTexture(GL_TEXTURE_2D, blurTexture2);
-            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            //                                GL_TEXTURE_2D, blurTexture, 0);
-            //         GraphicsManager::drawPartialOverlay(overlayRect,
-            //                                             textureRect);
-				
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, blurTexture);
-            //         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            //                                GL_TEXTURE_2D, renderTexture, 0);
-            //         glViewport(0,0,sw,sh);
-            //     }
-            //     else
-            //     {
-            //         debugBreak();
-            //         glActiveTexture(GL_TEXTURE1);
-            //         glBindTexture(GL_TEXTURE_2D, 0);
-            //     }
-            // }
-
+            // Compute the log luminance of the scene.
+            setBlendMode(TRANSPARENCY);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, renderTextures.ldr_color, 0);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                   GL_TEXTURE_2D, 0, 0);
+                                   GL_TEXTURE_2D, renderTextures.luminance, 0);
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, renderTextures.color);
             glGenerateMipmap(GL_TEXTURE_2D);
             glViewport(0,0,sw,sh);
-            auto gamma = shaders("gamma");
-            debugAssert(gamma);
-            gamma->bind();
-            gamma->setUniform1f("gamma",currentGamma);
-            gamma->setUniform1i("tex",0);
-            setBlendMode(REPLACE);
+            logLuminance->bind();
+            logLuminance->setUniform1f("alpha", 1.0);
+            logLuminance->setUniform1i("tex",0);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+
+            // Apply tone mapping to the scene to produce a LDR image
+            setBlendMode(REPLACE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, renderTextures.ldr_color, 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.color);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.luminance);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glViewport(0,0,sw,sh);
+            tonemap->bind();
+            tonemap->setUniform1f("inverseGamma", 1.0 / currentGamma);
+            tonemap->setUniform1i("tex",0);
+            tonemap->setUniform1i("logLuminance",1);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+
+            // Run FXAA shader to produce smooth the output.
             bindRenderTarget(RT_SCREEN);
             glViewport(0,0,sw,sh);
-// 				currentView->postProcessShader()->bind();
-// 				currentView->postProcessShader()->setUniform1f("gamma",currentGamma);
-// 				currentView->postProcessShader()->setUniform1i("tex",0);
-// 				currentView->postProcessShader()->setUniform1i("noiseTex",2);
-// 				dataManager.bind("LCnoise",2);
-// //				currentView->postProcessShader()->setUniform1f("time",world->time());
-// 				if(currentView->blurStage())
-// 				{
-// 					currentView->postProcessShader()->setUniform1i("blurTex",1);
-// 				}
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, renderTextures.ldr_color);
             glGenerateMipmap(GL_TEXTURE_2D);
-
-            auto fxaa = shaders("fxaa");
-            debugAssert(fxaa);
             fxaa->bind();
             fxaa->setUniform1i("tex", 0);
             fxaa->setUniform2f("invScreenSize", 1.0/sw, 1.0/sh);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
-            setBlendMode(TRANSPARENCY);
         }
     }
 	currentView = nullptr;
+    setBlendMode(TRANSPARENCY);
 
 /////////////////////////////////////START 2D////////////////////////////////////
 	bindRenderTarget(RT_SCREEN);
