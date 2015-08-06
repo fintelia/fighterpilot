@@ -54,4 +54,6 @@ void main()
                             0.0312,         // fxaaQualityEdgeThresholdMin
                             0.0, 0.0, 0.0,
                             vec4(0,0,0,0));
+
+    color.rgb = pow(color.rgb, vec3(1.0 / 2.2));
 }

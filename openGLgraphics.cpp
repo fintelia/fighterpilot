@@ -105,7 +105,7 @@ struct OpenGLgraphics::Context
 };
 #endif
 
-GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
+static GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
                                   bool use_compression = false)
 {
     if(use_compression){
@@ -139,7 +139,7 @@ GLenum getGLInternalTextureFormat(GraphicsManager::texture::Format fmt,
     }
     return 0;
 }
-GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
+static GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
     case GraphicsManager::texture::RED:
@@ -167,7 +167,7 @@ GLenum getGLTextureFormat(GraphicsManager::texture::Format fmt)
     return 0;
 
 }
-GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
+static GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
     case GraphicsManager::texture::RED:
@@ -191,7 +191,7 @@ GLenum getGLTextureDataType(GraphicsManager::texture::Format fmt)
     }
     return 0;
 }
-GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
+static GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
 {
     switch(fmt){
     case GraphicsManager::texture::RED:
@@ -214,6 +214,28 @@ GLenum getGLTextureBytesPerPixel(GraphicsManager::texture::Format fmt)
     case GraphicsManager::texture::RGBA16:
     case GraphicsManager::texture::RGBA16F:
         return 8;
+    default: debugBreak();
+    }
+    return 0;
+}
+static int getGLTextureComponentsPerPixel(GraphicsManager::texture::Format fmt)
+{
+    switch(fmt){
+    case GraphicsManager::texture::RED:
+    case GraphicsManager::texture::R32F:
+        return 1;
+    case GraphicsManager::texture::RG:
+    case GraphicsManager::texture::RG32F:
+        return 2;
+    case GraphicsManager::texture::BGR:
+    case GraphicsManager::texture::RGB:
+    case GraphicsManager::texture::RGB16:
+    case GraphicsManager::texture::RGB16F:
+        return 3;
+    case GraphicsManager::texture::BGRA:
+    case GraphicsManager::texture::RGBA:
+    case GraphicsManager::texture::RGBA16:
+    case GraphicsManager::texture::RGBA16F:
     default: debugBreak();
     }
     return 0;
@@ -294,7 +316,8 @@ public:
     ~texture2DGL();
     void bind(unsigned int textureUnit);
     void generateMipmaps();
-    unsigned char* getData(unsigned int level);
+    unique_ptr<unsigned char[]> getData(unsigned int level);
+    unique_ptr<float[]> getDataf(unsigned int level);
     void setData(unsigned int Width, unsigned int Height, Format f,
                  bool tileable, bool compress, unsigned char* data);
 };
@@ -916,15 +939,26 @@ void OpenGLgraphics::texture2DGL::setData(unsigned int Width, unsigned int Heigh
 
     glGenerateMipmap(GL_TEXTURE_2D);
 }
-unsigned char* OpenGLgraphics::texture2DGL::getData(unsigned int level)
+unique_ptr<unsigned char[]> OpenGLgraphics::texture2DGL::getData(unsigned int level)
 {
 	GLenum fmt = getGLTextureFormat(format);
 	unsigned int bytesPerPixel = getGLTextureBytesPerPixel(format);
-    
-	unsigned char* data = new unsigned char[max(width>>level,1)*
-                                            max(height>>level,1)*bytesPerPixel];
+
+    size_t size = max(width>>level,1)*max(height>>level,1)*bytesPerPixel;
+	unique_ptr<unsigned char[]> data(new unsigned char[size]);
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	glGetTexImage(GL_TEXTURE_2D, level, fmt, GL_UNSIGNED_BYTE, data);
+	glGetTexImage(GL_TEXTURE_2D, level, fmt, GL_UNSIGNED_BYTE, data.get());
+	return data;
+}
+unique_ptr<float[]> OpenGLgraphics::texture2DGL::getDataf(unsigned int level)
+{
+	GLenum fmt = getGLTextureFormat(format);
+	unsigned int componentsPerPixel = getGLTextureComponentsPerPixel(format);
+
+    size_t size = max(width>>level,1)*max(height>>level,1)*componentsPerPixel;
+	unique_ptr<float[]> data(new float[size]);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glGetTexImage(GL_TEXTURE_2D, level, fmt, GL_FLOAT, data.get());
 	return data;
 }
 OpenGLgraphics::texture3DGL::texture3DGL()
@@ -2507,18 +2541,18 @@ void OpenGLgraphics::render()
         if(overlayRect.w*overlayRect.h > 0.0)
         {
             // Compute the log luminance of the scene.
-            setBlendMode(TRANSPARENCY);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, renderTextures.luminance, 0);
+            // setBlendMode(TRANSPARENCY);
+            // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            //                        GL_TEXTURE_2D, renderTextures.luminance, 0);
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderTextures.color);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            glViewport(0,0,sw,sh);
-            logLuminance->bind();
-            logLuminance->setUniform1f("alpha", 1.0);
-            logLuminance->setUniform1i("tex",0);
-            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, renderTextures.color);
+            // glGenerateMipmap(GL_TEXTURE_2D);
+            // glViewport(0,0,sw,sh);
+            // logLuminance->bind();
+            // logLuminance->setUniform1f("alpha", 0.05);
+            // logLuminance->setUniform1i("tex",0);
+            // GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
             // Apply tone mapping to the scene to produce a LDR image
             setBlendMode(REPLACE);
@@ -2532,9 +2566,8 @@ void OpenGLgraphics::render()
             glGenerateMipmap(GL_TEXTURE_2D);
             glViewport(0,0,sw,sh);
             tonemap->bind();
-            tonemap->setUniform1f("inverseGamma", 1.0 / currentGamma);
             tonemap->setUniform1i("tex",0);
-            tonemap->setUniform1i("logLuminance",1);
+            // tonemap->setUniform1i("logLuminance",1);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
             // Run FXAA shader to produce smooth the output.

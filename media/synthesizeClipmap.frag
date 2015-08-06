@@ -78,7 +78,7 @@ void interpolate(vec2 texCoord, out float height, out vec3 normal){
 }
 
 void main()
-{ 
+{
     ivec2 texCoord = ivec2(gl_FragCoord.xy-0.5);
     ivec2 position = center + layerScale * (texCoord - layerResolution/2);
 
@@ -92,7 +92,7 @@ void main()
 
     if(fract(parent_texCoord) != vec2(0,0)){
         float slope = tan(acos(normal.y));
-        float random_scale = clamp(slope-0.02, 0, 0.2) * texelSize;
+        float random_scale = 0;//clamp(50 * (slope - 0.25), 0.05, 0.4) * texelSize;
         height += random_scale * (random(uvec2(position+resolution/2))-0.5);
     }
 

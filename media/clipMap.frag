@@ -11,9 +11,11 @@ uniform sampler3D oceanNormals;
 uniform sampler3D oceanNormals2;
 
 uniform sampler2D grass;
-
+uniform sampler2D LCnoise;
+uniform sampler2D oceanGradient;
 uniform vec3 sunDirection;
 uniform vec3 eyePosition;
+uniform float sideLength;
 
 uniform float time;
 
@@ -27,6 +29,7 @@ vec3 readNormal(sampler3D tex, vec2 coord, float time){
 
 void main()
 {
+    
     float height = texture(heightmap, texCoord).x;
     vec3 normal = normalize(texture(normalmap, texCoord).xzy * vec3(2,1,2)
                             - vec3(1,0,1));
@@ -37,10 +40,12 @@ void main()
     float slope = length(sNormal.xz) / sNormal.y;
     float nDotL = max(dot(normal,normalize(sunDirection)), 0);// * 0.5 + 0.5;
 
-    vec3 color = vec3(0.2,0.8,0.1);//pow(texture2D(grass, position.xz*0.0005).rgb, vec3(0.7));
+    vec3 grass_color = texture(grass, position.xz*0.001).rgb;
+    vec3 rock_color = vec3(0.3, 0.3, 0.3);
 //    color = mix(color, vec3(.6, .6, .5), min(slope * 1.0, 1.0));
-    color = mix(color, vec3(0.3, 0.3, 0.3), clamp(5*(slope- 0.15), 0.0, 1.0));
-//    color = vec3(1.0, 0.0, 0.0);
+    vec3 color = mix(grass_color, rock_color, clamp(5*(slope-0.15), 0.0, 1.0));
+    color *= 1.0 + 0.6*(texture(LCnoise, position.xz*0.025).r +
+                        texture(LCnoise, position.xz*0.25).r - 1.0);
     color *= nDotL;
 
     float depth = -(height-1150);
@@ -61,11 +66,12 @@ void main()
 //    wColor = mix(wColor, skyColor, R);
 //    wColor = vec3(R);
 
-    vec3 lightColor = vec3(0.12, 0.56, 0.75);
-    vec3 darkColor = /*sunColor */ 0.6 * (exp(-vec3(clamp(depth,0,50)) / vec3(7.0, 30.0, 70.0)));
+    float effectiveDepth = depth;
+    vec3 lightColor = vec3(0.12, 0.96, 0.75);
+    vec3 darkColor = /*sunColor */ 0.6 * (exp(-vec3(clamp(effectiveDepth,0,50)) / vec3(7.0, 30.0, 70.0)));
 
-    wColor = mix(lightColor, darkColor, R)  * dot(wNormal,sunDirection);;
-
+    wColor = mix(lightColor, darkColor, R)  * dot(wNormal,sunDirection);
+//    wColor = texture(oceanGradient, vec2(clamp(depth*0.1, 0, 1), 0.5)).rgb;
 
     FragColor = vec4(mix(color, wColor, waterAmount),1);
 //    ivec2 v = ivec2(texCoord * 1024);

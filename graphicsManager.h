@@ -239,8 +239,10 @@ public:
 		unsigned int getHeight(){return height;}
 		virtual void setData(unsigned int Width, unsigned int Height, Format f, bool tileable, bool compress, unsigned char* data)=0;
 		virtual void generateMipmaps()=0;
-		virtual unsigned char* getData(unsigned int level)=0;
-		unsigned char* getData(){return getData(0);}
+		virtual unique_ptr<unsigned char[]> getData(unsigned int level)=0;
+		virtual unique_ptr<float[]> getDataf(unsigned int level)=0;
+		unique_ptr<unsigned char[]> getData(){return getData(0);}
+		unique_ptr<float[]> getDataf(){return getDataf(0);}
 		//void setData(unsigned int Width, unsigned int Height, Format f, unsigned char* data){setData(Width, Height, f, data, false, false);}
 	};
 	class texture3D: public texture

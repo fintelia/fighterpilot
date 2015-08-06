@@ -1,11 +1,4 @@
-
 #version 330
-
-//out vec3 position;
-//out vec2 texCoord;
-
-//in vec3 Position;
-//in vec2 TexCoord;
 
 out VertexData{
 	float shouldDiscard;
@@ -25,8 +18,6 @@ uniform int width;
 uniform int vertexID_offset;
 uniform int patch_width;
 uniform int patch_height;
-//uniform int x_offset;
-//uniform int y_offset;
 
 uniform float earthRadius;
 uniform float slopeScale;
@@ -51,14 +42,13 @@ float random(float c1, float c2, uint trueVertexID)
 
 void main()
 {
-	uint trueVertexID = uint(vertexID_offset + gl_VertexID);//x_offset +int(mod(gl_VertexID,patch_width)) + (gl_VertexID/patch_width + y_offset)*width;
+	uint trueVertexID = uint(vertexID_offset + gl_VertexID);
 
 	int patchArea = patch_width * patch_height;
 	int a = int(trueVertexID) / patchArea;
 	int b = width / patch_width;
 	int c = int(mod(int(trueVertexID), patchArea));
 
-	//vec2 pos = vec2(mod(gl_VertexID, patch_width) + x_offset + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, gl_VertexID/patch_width + y_offset + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
 	vec2 pos = vec2(mod(c, patch_width) + mod(a, b)*patch_width + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, c/patch_width + (a/b)*patch_height + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
 	
 	vec4 groundVal = texture(groundTex, texOrigin + texSpacing * pos);

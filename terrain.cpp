@@ -102,7 +102,6 @@ float Terrain::ClipMap::getHeight(float x, float z)
         return h11 * (fx + fz - 1.0) + h10 * (1.0 - fz) + h01 * (1.0 - fx);
     }
 }
-
 Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                                 unsigned int num_layers, 
                                 const vector<unique_ptr<float[]>>& pinnedLayers):
@@ -110,7 +109,7 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     layerResolution(resolution),
     numPinnedLayers(pinnedLayers.size()),
     resolution(layerResolution << (num_layers-1)),
-    blockStep(4),
+    blockStep(8),
     meshResolution(layerResolution/(2*blockStep)-1),
     blockResolution((meshResolution - 1) * blockStep + 1),
     layers(num_layers)
@@ -235,6 +234,8 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
 //    debugAssert(iboDataSize == index);
     clipMapIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     clipMapIBO->setData(iboData.get(), GraphicsManager::TRIANGLES, index/*iboDataSize*/);
+
+//    generateTrees();
 }
 
 void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
@@ -258,13 +259,13 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
     layers[layer-1].heights->bind(0);
     layers[layer-1].normals->bind(1);
 
-    graphics->startRenderToTexture(layers[layer].heights);
+    graphics->startRenderToTexture(layers[layer].heights, 0, nullptr, 0, true);
+    graphics->setBlendMode(GraphicsManager::REPLACE);
 	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+    graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
 	graphics->endRenderToTexture();
     t->stop();
     layers[layer].heights->generateMipmaps();
-
-    std::cout << "synthesizeHeighmap: " << t->getElapsedTime() << " ms" << std::endl;
 }
 void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 {
@@ -273,10 +274,109 @@ void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 	shader->setUniform1i("heightmap", 0);
     layers[layer].heights->bind(0);
     
-    graphics->startRenderToTexture(layers[layer].normals);
+    graphics->startRenderToTexture(layers[layer].normals, 0, nullptr, 0, true);
 	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
 	graphics->endRenderToTexture();
     layers[layer].normals->generateMipmaps();
+}
+void Terrain::GpuClipMap::generateTrees()
+{
+    // This function fills the trees VBO. Due to the high memory constraints
+    // involed in doing it in one pass, we break up the process into patches. In
+    // the future we may enable logic to only render certain passes (perhaps
+    // based on distance to the camera). Each patch can contain up to sLength
+    // squared trees, although typically a lot less.
+    layers[numPinnedLayers-1].heights->bind(0);
+    
+    // number of patches in each dimension
+    unsigned int patchesX = 16;
+    unsigned int patchesY = 16;
+    // number of possible tree placements within each patch
+	unsigned int sLength = floor(sideLength / 16.0);
+
+	auto emptyVBO = graphics->genVertexBuffer(
+        GraphicsManager::vertexBuffer::STATIC);
+	emptyVBO->setTotalVertexSize(0);
+	emptyVBO->setVertexData(0, nullptr);
+	auto counterVBO = graphics->genVertexBuffer(
+        GraphicsManager::vertexBuffer::STATIC);
+	counterVBO->setTotalVertexSize(4);
+	counterVBO->setVertexData(4 * sLength * sLength, nullptr);
+
+	//count the number of trees that there will be
+	auto countTrees = shaders.bind("count trees");
+	countTrees->setUniform1i("groundTex", 0);
+	countTrees->setUniform1i("width", patchesX * sLength);
+	countTrees->setUniform3f("worldOrigin",
+                             Vec3f(-sideLength/2, 0, -sideLength/2));
+	countTrees->setUniform3f("worldSpacing",
+                             Vec3f(sideLength / (patchesX*sLength), 1,
+                                   sideLength / (patchesY*sLength)));
+	countTrees->setUniform2f("texOrigin", 0.5/layerResolution,
+                             0.5/layerResolution);
+	countTrees->setUniform2f("texSpacing",
+                ((layerResolution-1.0) / layerResolution)/(patchesX*sLength),
+                ((layerResolution-1.0) / layerResolution)/(patchesY*sLength));
+	countTrees->setUniform1f("earthRadius", earthRadius);
+	countTrees->setUniform1i("patch_width", sLength);
+	countTrees->setUniform1i("patch_height", sLength);
+
+	unsigned int numTreesInPatch;
+	unsigned int numTrees = 0;
+	emptyVBO->bindBuffer();
+	for(int y = 0; y < patchesY; y++)
+	{
+		for(int x = 0; x < patchesX; x++)
+		{
+			countTrees->setUniform1i("vertexID_offset",
+                                     (x+y*patchesX) * sLength*sLength);
+
+			counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
+			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0,  1);
+			numTreesInPatch = counterVBO->unbindTransformFeedback();
+            numTrees += numTreesInPatch;
+            cout << "first iteration\n";
+		}
+	}
+	counterVBO.reset();
+    // counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
+    // emptyVBO->bindBuffer();
+    // emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, patchesX * patchesY * sLength * sLength);
+    // graphics->checkErrors();
+    // numTrees = counterVBO->unbindTransformFeedback();
+    // counterVBO.reset();
+
+	// if(numTrees > 0)
+	// {
+	// 	//prepare foliage VBO
+	// 	treesVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
+	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
+	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
+	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
+	// 	treesVBO->setTotalVertexSize(32);
+	// 	treesVBO->setVertexData(32 * 12 * numTrees, nullptr);
+	// 	//render trees into VBO
+	// 	auto placeTreesShader = shaders.bind("place trees");
+	// 	placeTreesShader->setUniform1i("groundTex", 0);
+	// 	placeTreesShader->setUniform1i("width", patchesX*sLength);
+	// 	placeTreesShader->setUniform3f("worldOrigin", Vec3f(origin.x, clipMap->layers[clipMapLayer].minHeight, origin.y));
+	// 	placeTreesShader->setUniform3f("worldSpacing", Vec3f(sideLength / (patchesX*sLength), clipMap->layers[clipMapLayer].maxHeight - clipMap->layers[clipMapLayer].minHeight, sideLength / (patchesY*sLength)));
+	// 	placeTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
+	// 	placeTreesShader->setUniform2f("texSpacing",	float((texture->getWidth()-1.0) / texture->getWidth())/(patchesX*sLength), 
+	// 													float((texture->getHeight()-1.0) / texture->getHeight())/(patchesY*sLength));
+	// 	placeTreesShader->setUniform1f("earthRadius", earthRadius);
+	// 	placeTreesShader->setUniform1f("slopeScale", slopeScale);
+	// 	placeTreesShader->setUniform1i("patch_width", sLength);//patchesX *sLength
+	// 	placeTreesShader->setUniform1i("patch_height", sLength);
+	// 	placeTreesShader->setUniform1i("vertexID_offset", 0);
+
+	// 	treesVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
+	// 	emptyVBO->bindBuffer();
+	// 	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, patchesX * patchesY * sLength * sLength); //<-causes error on Linux (intel graphics)?
+	// 	unsigned int n = treesVBO->unbindTransformFeedback();
+	// 	debugAssert(n == 4*numTrees);
+	// }
+	// treesVBOcount = numTrees * 12;
 }
 void Terrain::GpuClipMap::regenLayer(unsigned int layer)
 {
@@ -346,6 +446,12 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
     shader->setUniform1i("oceanNormals2", 5);
     dataManager.bind("fft ocean2 normals", 5);
 
+    shader->setUniform1i("oceanGradient", 6);
+    dataManager.bind("ocean gradient", 6);
+
+    shader->setUniform1i("LCnoise", 7);
+    dataManager.bind("LCnoise", 7);
+    
     clipMapIBO->bindBuffer(clipMapVBO);
     for(int i = 0; i < layers.size(); i++){
         unsigned int layerScale = 1 << (layers.size()-i-1);
@@ -1065,7 +1171,7 @@ Terrain::Terrain(shared_ptr<ClipMap> _clipMap): clipMap(_clipMap), terrainData(2
         
         gpuClipMap = unique_ptr<GpuClipMap>(
              new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
-                            clipMap->getNumLayers() + 8, clipMap->layers));
+                            clipMap->getNumLayers() + 6, clipMap->layers));
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {
@@ -1423,10 +1529,10 @@ void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 	t = GetTime() - t;
 	t = GetTime();
 
-	unsigned char* texData = treeTexture->getData();
+	auto texData = treeTexture->getData();
 	shared_ptr<FileManager::textureFile> textureFile(new FileManager::textureFile("../treeTexture.png",FileManager::PNG));
 	textureFile->channels = 1;
-	textureFile->contents = texData;
+	textureFile->contents = texData.release();
 	textureFile->width = 512;
 	textureFile->height = 512;
 	fileManager.writeFile(textureFile); //will delete[] texData
@@ -1686,7 +1792,6 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
     
 	if (wireframe)
 		graphics->setWireFrame(false);
-
 
 //	graphics->setWireFrame(true);
 //	renderFractalWater(view);

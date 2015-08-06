@@ -53,7 +53,7 @@ void main()
     texCoord = vec2(tCoord+0.5) / textureSize(heightmap,0);
 
     position.y = texelFetch(heightmap, tCoord, 0).x;
-
+    
     // TODO: use textureGatherOffsets for this
     ivec2 mCoord = iposition % 2;
     ivec2 pCoord = tCoord - mCoord * textureStep;
@@ -82,14 +82,13 @@ void main()
 //    position.y = max(position.y, 0.0);
 
     position.y -= 1150;
-    float waterAmount = clamp(1.0 - position.y*0.5, 0, 1);
+    float waterAmount = clamp(-position.y*0.5, 0, 1);
     float waveHeight = 20.0*(texture(oceanHeights,
                                      vec3(position.xz / 2000.0,time/16))-0.5).r;
     position.y = mix(position.y, waterAmount*waveHeight, waterAmount);
     
     position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
-
-
+    position.y += 1150;
 	gl_Position = cameraProjection * vec4(position, 1.0);
 
 	flogz = 1.0 + gl_Position.w;

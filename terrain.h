@@ -117,12 +117,14 @@ private:
             shared_ptr<GraphicsManager::texture2D> shoreDistance;
         };
         vector<Layer> layers;
+        shared_ptr<GraphicsManager::vertexBuffer> trees;
 
         Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
 
         void synthesizeHeightmap(unsigned int layer);
         void generateAuxiliaryMaps(unsigned int layer);
         void regenLayer(unsigned int layer);
+        void generateTrees();
         
     public:
         GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, const vector<unique_ptr<float[]>>& pinnedLayers);
