@@ -1,6 +1,5 @@
 
 varying vec2 texCoord;
-varying float flogz;
 //varying vec3 normal;
 //varying vec3 tangent;
 
@@ -38,11 +37,4 @@ void main()
 	Specular.a =  max(Specular.r, max(Specular.g, Specular.b));
 
 	gl_FragColor = /*vec4(vec3(NdotL),1);//*/Diffuse + Specular;
-
-	///////////////DEPTH///////////////
-	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
-	const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
-	const float Fcoef_half = 0.5 * Fcoef;
-	gl_FragDepth = log2(flogz) * Fcoef_half;
-	
 }

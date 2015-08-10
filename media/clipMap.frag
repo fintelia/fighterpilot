@@ -2,7 +2,6 @@
 
 in vec3 position;
 in vec2 texCoord;
-in float flogz;
 
 uniform sampler2D heightmap;
 uniform sampler2D normalmap;
@@ -78,9 +77,4 @@ void main()
 //    FragColor = vec4(vec3(v.x%2 == v.y%2 ? 0.1 : 0.5), 1);
 //    FragColor = vec4(vec3(normal),1);
 //    FragColor = vec4(vec3(fract((position.y - 1100) / 300)),1);
-	///////////////DEPTH///////////////
-	//see: http://outerra.blogspot.com/2013/07/logarithmic-depth-buffer-optimizations.html
-	const float Fcoef = 2.0 / log2(2000000.0 + 1.0);
-	const float Fcoef_half = 0.5 * Fcoef;
-	gl_FragDepth = log2(flogz) * Fcoef_half;
 }

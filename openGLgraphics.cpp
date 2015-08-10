@@ -13,8 +13,8 @@
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
 	#include <X11/extensions/xf86vmode.h>
-	#include <GL/glew.h>
-	#include <GL/glxew.h>
+	#include "GL/glew.h"
+	#include "GL/glxew.h"
 	#include <GL/glx.h>
 #else
 	#error OS not supported by openGLgraphics
@@ -2143,7 +2143,7 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     // Create multisample depth render texture.
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, renderTextures.ms_depth);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                            GL_DEPTH_COMPONENT24, sw, sh, false);
+                            GL_DEPTH_COMPONENT32F, sw, sh, false);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
     // Create normal color render texture.
@@ -2162,7 +2162,7 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, sw, sh, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, sw, sh, 0,
                  GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
     // Create texture pyramid for computing log luminance.
@@ -3017,8 +3017,8 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
     if(errorString == ""){
         if(!GLEW_VERSION_3_3)
             errorString = "Your version of OpenGL must be at least 3.3: Please update your graphics drivers";
-//        else if(!GLEW_VERSION_4_5 || !GLEW_ARB_TEXTURE_BARRIER)
-//            errorString = "Your graphics card must support GL_ARB_TEXTURE_BARRIER";
+        else if(!GLEW_VERSION_4_5 || !GLEW_ARB_clip_control)
+            errorString = "Your graphics card must support GL_ARB_CLIP_CONTROL";
     }
     
 	if(errorString != "")
@@ -3045,8 +3045,11 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glDepthFunc(GL_LEQUAL);
-
+	glDepthFunc(GL_GEQUAL);
+    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    glDepthRange(1.0, 0.0);
+    glClearDepth(0.0);
+    
 	if (!initFBOs(maxSamples))
 	{
 		destroyWindow();

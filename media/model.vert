@@ -1,6 +1,5 @@
 
 varying vec2 texCoord;
-varying float flogz;
 //varying vec3 normal;
 
 centroid varying vec4 position;
@@ -52,6 +51,4 @@ void main()
 	//b = tangent;
 
 	normal = (modelTransform * vec4(Normal,0)).xyz;
-
-	flogz = 1.0 + gl_Position.w;
 }

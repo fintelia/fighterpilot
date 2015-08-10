@@ -109,7 +109,7 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     layerResolution(resolution),
     numPinnedLayers(pinnedLayers.size()),
     resolution(layerResolution << (num_layers-1)),
-    blockStep(8),
+    blockStep(4),
     meshResolution(layerResolution/(2*blockStep)-1),
     blockResolution((meshResolution - 1) * blockStep + 1),
     layers(num_layers)
@@ -204,8 +204,8 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
                 addTriangle(-1,2*i+2,  -2,2*i+2,  -2,2*i+1);
             }
         }
-        for(int y = 1-1; y < meshResolution-2+1; y++){
-            for(int x = 1-1; x < meshResolution-2+1; x++){
+        for(int y = 1; y < meshResolution-2; y++){
+            for(int x = 1; x < meshResolution-2; x++){
                 if((x < ringSize+1 || x >= meshResolution-ringSize-1) ||
                    (y < ringSize+1 || y >= meshResolution-ringSize-1)){
                     if(p == 0){
@@ -1040,7 +1040,7 @@ Terrain::Terrain(shared_ptr<ClipMap> _clipMap): clipMap(_clipMap), terrainData(2
 {
 	debugAssert(isPowerOfTwo(clipMap->layerResolution));
 
-	graphics->setClearColor(Color4(0, 0.2, 0.3, 1.0));
+	graphics->setClearColor(Color4(0, 0, 0, 1.0));
 
 	/*	shaderType = shader;
 	waterPlane = (shader==TERRAIN_ISLAND);

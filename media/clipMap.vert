@@ -5,7 +5,6 @@
 out vec3 position;
 out vec2 texCoord;
 out float parentBlend;
-out float flogz;
 
 uniform mat4 cameraProjection;
 uniform float earthRadius;
@@ -72,7 +71,7 @@ void main()
     position.xz = worldOrigin + fpos * sideLength;
 
     vec2 vSkirt = abs(position.xz - eyePosition.xz) * 2.0 / sideLength;
-    parentBlend = clamp(max(vSkirt.x, vSkirt.y) * 5.0 - 3.5, 0.0, 1.0);
+    parentBlend = clamp((max(vSkirt.x, vSkirt.y) - 0.7) * 7.0, 0.0, 1.0);
     position.y = mix(position.y, parentHeight, parentBlend);
     
 //    float r = length(position.xz) / 10000;
@@ -90,6 +89,4 @@ void main()
     position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
     position.y += 1150;
 	gl_Position = cameraProjection * vec4(position, 1.0);
-
-	flogz = 1.0 + gl_Position.w;
 }

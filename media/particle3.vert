@@ -1,16 +1,11 @@
 
 #version 330
 
-//out float radius;
-//out float angle;
-//out vec4 color;
-
 out VertexData{
 	vec4 color;
 	float radius;
 	float angle;
 }vertexOut;
-
 
 in vec3 Position;
 in vec2 TexCoord;

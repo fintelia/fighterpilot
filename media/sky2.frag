@@ -74,8 +74,6 @@ void main()
 	float t = (t0 > 0) ? t0 : t1;
 	vec4 worldPosition = vec4(eye + direction * t, 1.0);
 	vec4 cameraPosition = cameraProjection * worldPosition;
-	gl_FragDepth = min(0.5 + 0.5 * cameraPosition.z / cameraPosition.w,
-                       0.9999999);
 	 
 // ----------------------------------- color -----------------------------------
 // see: http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html

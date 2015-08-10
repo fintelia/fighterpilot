@@ -492,7 +492,7 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 
 	auto sparkShader = shaders.bind("spark shader");
 	sparkShader->setUniform1i("tex",0);
-	sparkShader->setUniform1i("depth", GraphicsManager::kDepthTextureUnit);
+	sparkShader->setUniform1i("depthTex", GraphicsManager::kDepthTextureUnit);
 	sparkShader->setUniformMatrix("cameraProjection",	view->projectionMatrix() * view->modelViewMatrix());
 	sparkShader->setUniform2f("invScreenDims",1.0/sw, 1.0/sh);
 

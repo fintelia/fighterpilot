@@ -2,7 +2,6 @@
 varying vec2 texCoord;
 varying vec3 position;
 varying vec3 treeColor;
-varying float flogz;
 
 attribute vec3 Position;
 attribute vec2 TexCoord;
@@ -18,6 +17,4 @@ void main()
 	treeColor = Color3;
 
 	gl_Position = cameraProjection * vec4(position,1.0);
-	
-	flogz = 1.0 + gl_Position.w;
 }

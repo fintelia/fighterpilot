@@ -1,13 +1,14 @@
+#version 330
 
-varying vec2 texCoord;
-varying vec4 color;
-varying float flogz;
+out vec2 texCoord;
+out vec4 color;
+out float depth;
 
 uniform mat4 cameraProjection;
 
-attribute vec3 Position;
-attribute vec2 TexCoord;
-attribute vec4 Color4;
+in vec3 Position;
+in vec2 TexCoord;
+in vec4 Color4;
 
 void main()
 {
@@ -15,5 +16,5 @@ void main()
 	color = Color4;
 
 	gl_Position = cameraProjection * vec4(Position,1.0);
-	flogz = 1.0 + gl_Position.w;
+    depth = gl_Position.w;
 }

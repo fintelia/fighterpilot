@@ -87,85 +87,138 @@
     <header name="FXAA3_11.h" file="media/third_party/FXAA/FXAA3_11.h" />
     
     <!-- loading screen -->
-    <shader name="ortho"                     vertex="media/ortho.vert"             fragment="media/ortho.frag"   preload="true" sAspect="true" />
-    <shader name="tonemap"                   vertex3="media/tonemap.vert"          fragment3="media/tonemap.frag"   />
-    <shader name="fxaa"                      vertex3="media/fxaa.vert"             fragment3="media/fxaa.frag"   />
-    <shader name="log luminance"             vertex3="media/logLuminance.vert"     fragment3="media/logLuminance.frag"   />
+    <shader name="ortho"
+            vertex="media/ortho.vert"
+            fragment="media/ortho.frag"
+            preload="true" sAspect="true" />
+
+    <shader name="tonemap"
+            vertex3="media/tonemap.vert"
+            fragment3="media/tonemap.frag"   />
+
+    <shader name="fxaa"
+            vertex3="media/fxaa.vert"
+            fragment3="media/fxaa.frag"   />
+
+    <shader name="log luminance"
+            vertex3="media/logLuminance.vert"
+            fragment3="media/logLuminance.frag"   />
 
     <!-- post process -->
-    <shader name="blurX"                     vertex="media/blur.vert"              fragment="media/blurX.frag"   />
-    <shader name="blurY"                     vertex="media/blur.vert"              fragment="media/blurY.frag"   />
+    <shader name="blurX"
+            vertex="media/blur.vert"
+            fragment="media/blurX.frag"   />
+
+    <shader name="blurY"
+            vertex="media/blur.vert"
+            fragment="media/blurY.frag"   />
     
     <!-- HUD-->
-    <shader name="radar plane shader"        vertex="media/radarPlane.vert"        fragment="media/radarPlane.frag"    sAspect="true" />
-    <shader name="radar"                     vertex="media/radar.vert"             fragment="media/radar.frag"         sAspect="true" />
-    <shader name="radar2"                    vertex="media/radar2.vert"            fragment="media/radar2.frag"        sAspect="true" />
-    <shader name="radar bounds"              vertex="media/radar bounds.vert"      fragment="media/radar bounds.frag"  sAspect="true" />
-    <shader name="health"                    vertex="media/health.vert"            fragment="media/health.frag"        sAspect="true" />
-    <shader name="circle shader"             vertex="media/circle.vert"            fragment="media/circle.frag"        sAspect="true" />
+    <shader name="radar plane shader"
+            vertex="media/radarPlane.vert"
+            fragment="media/radarPlane.frag"
+            sAspect="true" />
+    
+    <shader name="radar"
+            vertex="media/radar.vert"
+            fragment="media/radar.frag"
+            sAspect="true" />
+    
+    <shader name="radar2"
+            vertex="media/radar2.vert"
+            fragment="media/radar2.frag"
+            sAspect="true" />
+    
+    <shader name="radar bounds"
+            vertex="media/radar bounds.vert"
+            fragment="media/radar bounds.frag"
+            sAspect="true" />
+    
+    <shader name="health"
+            vertex="media/health.vert"
+            fragment="media/health.frag"
+            sAspect="true" />
+    
+    <shader name="circle shader"
+            vertex="media/circle.vert"
+            fragment="media/circle.frag"
+            sAspect="true" />
 
     <!-- general -->
-    <shader name="particle shader"           vertex="media/particle.vert"          fragment="media/particle.frag"  vertex3="media/particle3.vert" geometry3="media/particle3.geom" fragment3="media/particle3.frag"  />   <!--  --> 
-    <shader name="spark shader"              vertex="media/spark.vert"             fragment="media/spark.frag" />
-    <shader name="model"                     vertex="media/model.vert"             fragment="media/model.frag" />
-    <shader name="color3D"                   vertex="media/color3D.vert"           fragment="media/color3D.frag" />
-    <shader name="blur mipmaps"              vertex="media/blurMipmaps.vert"       fragment="media/blurMipmaps.frag" preload="true"/>
-    <shader name="hdr luminance"             vertex="media/postProcess.vert"       fragment="media/hdrLuminance.frag" preload="true"/>
+    <shader name="particle shader"
+            vertex3="media/particle3.vert"
+            geometry3="media/particle3.geom"
+            fragment3="media/particle3.frag" />
+    
+    <shader name="spark shader"
+            vertex3="media/spark.vert"
+            fragment3="media/spark.frag" />
+    
+    <shader name="model"
+            vertex="media/model.vert"
+            fragment="media/model.frag" />
+    
+    <shader name="color3D"
+            vertex="media/color3D.vert"
+            fragment="media/color3D.frag" />
+    
+    <shader name="blur mipmaps"
+            vertex="media/blurMipmaps.vert"
+            fragment="media/blurMipmaps.frag" preload="true"/>
 
     <!-- world -->
-    <shader name="ocean"                     vertex="media/ocean.vert"             fragment="media/ocean.frag" />
-    <shader name="sky shader"                vertex="media/sky.vert"               fragment="media/sky.frag" />
-    <shader name="sky2 shader"               vertex="media/sky2.vert"              fragment="media/sky2.frag" />
-    <shader name="hex grid shader"           vertex="media/hex grid.vert"          fragment="media/hex grid.frag" />
-    <shader name="count trees"               vertex3="media/placeTrees.vert"       geometry3="media/conditionalDiscard.geom" feedbackTransformVaryings="placeHolder" />
-    <shader name="place trees"               vertex3="media/placeTrees.vert"       geometry3="media/createTree.geom" feedbackTransformVaryings="position;texCoord;color" />
-    <shader name="create tree texture"       vertex3="media/placeTrees.vert"       geometry3="media/createTreeTexture.geom" fragment3="media/createTreeTexture3.frag" />
-    <shader name="decal"                     vertex="media/decal.vert"             fragment="media/decal.frag" />
+    <shader name="sky2 shader"
+            vertex="media/sky2.vert"
+            fragment="media/sky2.frag" />
+
+    <shader name="count trees"
+            vertex3="media/placeTrees.vert"
+            geometry3="media/conditionalDiscard.geom"
+            feedbackTransformVaryings="placeHolder" />
     
-    <shader name="trees shader"              vertex="media/trees.vert"             fragment="media/trees.frag" />
-    <shader name="trees3D shader"            vertex="media/tree3d.vert"            fragment="media/tree3d.frag" />
-    <shader name="trees alpha test shader"   vertex="media/trees.vert"             fragment="media/treesAlphaTest.frag" />
-    <shader name="cirrus cloud shader"       vertex="media/cirrusCloud.vert"       fragment="media/cirrusCloud.frag" />
+    <shader name="place trees"
+            vertex3="media/placeTrees.vert"
+            geometry3="media/createTree.geom"
+            feedbackTransformVaryings="position;texCoord;color" />
+    
+    <shader name="create tree texture"
+            vertex3="media/placeTrees.vert"
+            geometry3="media/createTreeTexture.geom"
+            fragment3="media/createTreeTexture3.frag" />
+    
+    <shader name="trees shader"
+            vertex="media/trees.vert"
+            fragment="media/trees.frag" />
+    
+    <shader name="trees3D shader"
+            vertex="media/tree3d.vert"
+            fragment="media/tree3d.frag" />
+    
+    <shader name="trees alpha test shader"
+            vertex="media/trees.vert"
+            fragment="media/treesAlphaTest.frag" />
     
     <!-- terrain -->
- <!--   <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" />  -->
-    <shader name="island terrain"            vertex="media/terrain.vert"           fragment="media/island.frag" vertex4="media/terrain4.vert"     tessellationControl4="media/island4.tessControl"       tessellationEval4="media/island4.tessEval"      fragment4="media/island4.frag" />
-    
-    <shader name="clipmap terrain"          vertex3="media/clipMap.vert"           fragment3="media/clipMap.frag" />
-    <shader name="clipmap auxmapgen"          vertex3="media/auxMapGen.vert"           fragment3="media/auxMapGen.frag" />
-  <shader name="clipmap synthesize"          vertex3="media/synthesizeClipmap.vert"           fragment3="media/synthesizeClipmap.frag" />
+    <shader name="clipmap terrain"
+            vertex3="media/clipMap.vert"
+            fragment3="media/clipMap.frag" />
 
-    
-    <shader name="mountain terrain"          vertex="media/terrain.vert"           fragment="media/grass.frag" />
-    <shader name="snow terrain"              vertex="media/terrain.vert"           fragment="media/snow.frag" />
-    <shader name="desert terrain"            vertex="media/terrain.vert"           fragment="media/desert.frag" />
+    <shader name="clipmap auxmapgen"
+            vertex3="media/auxMapGen.vert"
+            fragment3="media/auxMapGen.frag" />
 
-    <shader name="fractal terrain"           vertex="media/fractalTerrain.vert"    fragment="media/fractalTerrain.frag" />
-    <shader name="fractal ocean"             vertex="media/fractalOcean.vert"      fragment="media/fractalOcean.frag" />
-    <shader name="fractal tessellate"        vertex3="media/fractalTessellate.vert"    feedbackTransformVaryings="pos;slope;curvature;texCoord" />
-    <shader name="fractal subdivide"         vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivide.frag" />
-    <shader name="fractal subdivideX"        vertex3="media/fractalSubdivide.vert"    fragment3="media/fractalSubdivideX.frag" />
-    <shader name="waves"                     vertex3="media/waves.vert"    fragment3="media/waves.frag" />
-    
-    <!-- terrain preview -->
-    <shader name="island preview terrain"    vertex="media/terrain.vert"           fragment="media/island preview.frag" />
-    <shader name="mountain preview terrain"  vertex="media/terrain.vert"           fragment="media/grass preview.frag" />
-    <shader name="desert preview terrain"    vertex="media/terrain.vert"           fragment="media/desert preview.frag" />
-    <shader name="snow preview terrain"      vertex="media/terrain.vert"           fragment="media/snow preview.frag" />
-    <shader name="ocean preview"             vertex="media/ocean preview.vert"     fragment="media/ocean preview.frag" />
+    <shader name="clipmap synthesize"
+            vertex3="media/synthesizeClipmap.vert"
+            fragment3="media/synthesizeClipmap.frag" />
   </shaders>
   
   <models>
-    <model name="sky dome"              file="media/dome.obj" />
-    <model name="cylinder"              file="media/cylinder.obj" />
-    <model name="disk"                  file="media/disk.obj" />    
-    <model name="sphere"                file="media/sphere.obj" />
-    <model name="tree model"            file="media/tree2/tree.obj" />
-    <model name="tree leaves"           file="media/tree2/leaves.obj" />
-    <model name="tree trunk"            file="media/tree2/trunk.obj" />
+    <model name="cylinder" file="media/cylinder.obj" />
+    <model name="disk"     file="media/disk.obj" />    
+    <model name="sphere"   file="media/sphere.obj" />
   </models>
   <fonts>
-    <font name="default font"      file="media/fonts/Times22.fnt" preload="true"/>
-    <font name="font small"        file="media/fonts/tahoma12.fnt" preload="true"/>
+    <font name="default font" file="media/fonts/Times22.fnt"  preload="true" />
+    <font name="font small"   file="media/fonts/tahoma12.fnt" preload="true" />
   </fonts>
 </assets>
