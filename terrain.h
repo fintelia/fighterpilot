@@ -124,7 +124,6 @@ private:
         void synthesizeHeightmap(unsigned int layer);
         void generateAuxiliaryMaps(unsigned int layer);
         void regenLayer(unsigned int layer);
-        void generateTrees();
         
     public:
         GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, const vector<unique_ptr<float[]>>& pinnedLayers);
