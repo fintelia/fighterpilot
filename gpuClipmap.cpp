@@ -57,11 +57,11 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
             vboData[2*(x + meshResolution*y) + 1] = y;
         }
     }
-	clipMapVBO = graphics->genVertexBuffer(
+    clipMapVBO = graphics->genVertexBuffer(
         GraphicsManager::vertexBuffer::STATIC);
-	clipMapVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0);
-	clipMapVBO->setTotalVertexSize(sizeof(float)*2);
-	clipMapVBO->setVertexData(sizeof(float)*vboDataSize, vboData.get());
+    clipMapVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION2, 0);
+    clipMapVBO->setTotalVertexSize(sizeof(float)*2);
+    clipMapVBO->setVertexData(sizeof(float)*vboDataSize, vboData.get());
 
 
     // size is an over estimate, but is easier than computing the actual value,
@@ -143,7 +143,7 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
     float layerScale = 1 << (layers.size()-1-layer);
     
     auto shader = shaders.bind("clipmap synthesize");
-	shader->setUniform1i("parent_heightmap", 0);
+    shader->setUniform1i("parent_heightmap", 0);
     shader->setUniform1i("parent_normalmap", 1);
     shader->setUniform1i("layerScale", layerScale);
     shader->setUniform1f("texelSize", (sideLength*layerScale) / (resolution-1));
@@ -157,9 +157,9 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
 
     graphics->startRenderToTexture(layers[layer].heights, 0, nullptr, 0, true);
     graphics->setBlendMode(GraphicsManager::REPLACE);
-	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+    graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
     graphics->setBlendMode(GraphicsManager::TRANSPARENCY);
-	graphics->endRenderToTexture();
+    graphics->endRenderToTexture();
     t->stop();
     layers[layer].heights->generateMipmaps();
 }
@@ -168,12 +168,12 @@ void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
     auto shader = shaders.bind("clipmap auxmapgen");
     shader->setUniform1f("invTexelSize", (resolution-1)
                          / (sideLength * (1<<(layers.size()-1-layer))));
-	shader->setUniform1i("heightmap", 0);
+    shader->setUniform1i("heightmap", 0);
     layers[layer].heights->bind(0);
     
     graphics->startRenderToTexture(layers[layer].normals, 0, nullptr, 0, true);
-	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
-	graphics->endRenderToTexture();
+    graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+    graphics->endRenderToTexture();
     layers[layer].normals->generateMipmaps();
 }
 void Terrain::GpuClipMap::regenLayer(unsigned int layer)
@@ -219,21 +219,21 @@ void Terrain::GpuClipMap::centerClipMap(Vec2f center)
 void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
 {
     auto shader = shaders.bind("clipmap terrain");
-	shader->setUniformMatrix("cameraProjection",
+    shader->setUniformMatrix("cameraProjection",
                             view->projectionMatrix() * view->modelViewMatrix());
-	shader->setUniform1f("earthRadius", earthRadius);
+    shader->setUniform1f("earthRadius", earthRadius);
     shader->setUniform1i("resolution", meshResolution-1);
     shader->setUniform1f("invResolution", 1.0 / (meshResolution-1));
     shader->setUniform1i("textureStep", blockStep);
     shader->setUniform3f("eyePosition", view->camera().eye);
-	shader->setUniform3f("sunDirection",
+    shader->setUniform3f("sunDirection",
                          graphics->getLightPosition().normalize());
     shader->setUniform1f("time", world->time() / 1000.0);
     
-	shader->setUniform1i("heightmap", 0);
+    shader->setUniform1i("heightmap", 0);
     shader->setUniform1i("normalmap", 1);
 
-	shader->setUniform1i("grass", 2);
+    shader->setUniform1i("grass", 2);
     dataManager.bind("grass", 2);
 
     shader->setUniform1i("oceanHeights", 3);
