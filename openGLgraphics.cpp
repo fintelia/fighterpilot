@@ -632,7 +632,7 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedback(GraphicsManager::Prim
 	if(graphics->hasShaderModel4())
 	{
 		glEnable(GL_RASTERIZER_DISCARD);
-//		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID);
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
@@ -649,7 +649,7 @@ void OpenGLgraphics::vertexBufferGL::bindTransformFeedbackRange(GraphicsManager:
 	if(graphics->hasShaderModel4())
 	{
 		glEnable(GL_RASTERIZER_DISCARD);
-//		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID);
 		glBindBufferRange(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vBufferID, offset, size);
 		if(primitive == POINTS)			glBeginTransformFeedback(GL_POINTS);
 		else if(primitive == LINES)		glBeginTransformFeedback(GL_LINES);
@@ -666,11 +666,11 @@ unsigned int OpenGLgraphics::vertexBufferGL::unbindTransformFeedback()
 	if(graphics->hasShaderModel4())
 	{
 		glEndTransformFeedback();
-//		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
 		glDisable(GL_RASTERIZER_DISCARD);
 
 		GLint64 primitiveCount = -1;
-//		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
+		glGetQueryObjecti64v(dynamic_cast<OpenGLgraphics*>(graphics)->transformFeedbackQueryID, GL_QUERY_RESULT, &primitiveCount);
 
 		debugAssert(primitiveCount <=  INT_MAX);
 
@@ -1637,92 +1637,92 @@ string OpenGLgraphics::shaderGL::getErrorStrings()
 }
 void OpenGLgraphics::shaderGL::setUniform1f(string name, float v0)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform1f(getUniformLocation(name), v0);
 }
 void OpenGLgraphics::shaderGL::setUniform2f(string name, float v0, float v1)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform2f(getUniformLocation(name), v0, v1);
 }
 void OpenGLgraphics::shaderGL::setUniform3f(string name, float v0, float v1, float v2)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform3f(getUniformLocation(name), v0, v1, v2);
 }
 void OpenGLgraphics::shaderGL::setUniform4f(string name, float v0, float v1, float v2, float v3)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
 }
 void OpenGLgraphics::shaderGL::setUniform1i(string name, int v0)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform1i(getUniformLocation(name), v0);
 }
 void OpenGLgraphics::shaderGL::setUniform2i(string name, int v0, int v1)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform2i(getUniformLocation(name), v0, v1);
 }
 void OpenGLgraphics::shaderGL::setUniform3i(string name, int v0, int v1, int v2)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform3i(getUniformLocation(name), v0, v1, v2);
 }
 void OpenGLgraphics::shaderGL::setUniform4i(string name, int v0, int v1, int v2, int v3)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform4i(getUniformLocation(name), v0, v1, v2, v3);
 }
 void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat3f& m)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniformMatrix3fv(getUniformLocation(name),1,false,m.ptr());
 }
 void OpenGLgraphics::shaderGL::setUniformMatrix(string name, const Mat4f& m)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniformMatrix4fv(getUniformLocation(name),1,false,m.ptr());
 }
 void OpenGLgraphics::shaderGL::setUniform1fv(string name, unsigned int n, float* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform1fv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform2fv(string name, unsigned int n, float* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform2fv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform3fv(string name, unsigned int n, float* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform3fv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform4fv(string name, unsigned int n, float* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform4fv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform1iv(string name, unsigned int n, int* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform1iv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform2iv(string name, unsigned int n, int* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform2iv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform3iv(string name, unsigned int n, int* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform3iv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::shaderGL::setUniform4iv(string name, unsigned int n, int* v)
 {
-	if(boundShader != this) bind();
+	if(boundShader != this) {debugBreak(); bind();}
 	glUniform4iv(getUniformLocation(name), n, v);
 }
 void OpenGLgraphics::setEnabled(unsigned int glEnum, bool enabled)

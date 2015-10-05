@@ -541,6 +541,5 @@ void manager::render(shared_ptr<GraphicsManager::View> view)
 void manager::shutdown()
 {
 	emitters.clear();
-	emitter::quadIBO.reset();
 }
 }

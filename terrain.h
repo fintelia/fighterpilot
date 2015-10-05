@@ -118,6 +118,7 @@ private:
         };
         vector<Layer> layers;
         shared_ptr<GraphicsManager::vertexBuffer> trees;
+        unsigned int treesCount;
 
         Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
 
@@ -155,6 +156,14 @@ private:
         TerrainData(unsigned int totalIndices, unsigned int tileResolution);
     } mutable terrainData;
 
+    struct ScatteringLookupTables {
+        //see: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
+
+        // This texture stores the transmittance T of the atmosphere, indexed by
+        // u = altitude / 100 km, v = cos(view zenith angle).
+        shared_ptr<GraphicsManager::texture2D> T;
+    } scatteringLookupTables;
+    
 	class FractalNode
 	{
 	public:
@@ -289,7 +298,8 @@ private:
 	void resetTerrain();
 	void generateSky(Vec3f sunDirection);
 	void generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr);
-
+    void precomputeScattering();
+    
 	unsigned int computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const;
 
 	void renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const;

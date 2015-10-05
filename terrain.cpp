@@ -235,12 +235,12 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
     clipMapIBO = graphics->genIndexBuffer(GraphicsManager::indexBuffer::STATIC);
     clipMapIBO->setData(iboData.get(), GraphicsManager::TRIANGLES, index/*iboDataSize*/);
 
-//    generateTrees();
+    generateTrees();
 }
 
 void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
 {
-    static unique_ptr<GraphicsManager::timer> t = graphics->genTimer();
+    unique_ptr<GraphicsManager::timer> t = graphics->genTimer();
     t->start();
     debugAssert(layer > 0);
 
@@ -279,8 +279,28 @@ void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 	graphics->endRenderToTexture();
     layers[layer].normals->generateMipmaps();
 }
+void feedbackTest(){
+	auto empty = graphics->genVertexBuffer(
+        GraphicsManager::vertexBuffer::STATIC);
+	empty->setTotalVertexSize(0);
+	empty->setVertexData(0, nullptr);
+    
+	auto count = graphics->genVertexBuffer(
+        GraphicsManager::vertexBuffer::STATIC);
+	count->setVertexData(2048*sizeof(float), nullptr);
+    count->setTotalVertexSize(4);
+    shaders.bind("feedback test");
+
+    empty->bindBuffer();
+    count->bindTransformFeedback(GraphicsManager::POINTS);
+    empty->drawBufferInstanced(GraphicsManager::POINTS, 0, 1, 1024);
+    cout << count->unbindTransformFeedback() << endl;
+}
 void Terrain::GpuClipMap::generateTrees()
 {
+//    feedbackTest();
+//    return;
+    
     // This function fills the trees VBO. Due to the high memory constraints
     // involed in doing it in one pass, we break up the process into patches. In
     // the future we may enable logic to only render certain passes (perhaps
@@ -292,16 +312,19 @@ void Terrain::GpuClipMap::generateTrees()
     unsigned int patchesX = 16;
     unsigned int patchesY = 16;
     // number of possible tree placements within each patch
-	unsigned int sLength = floor(sideLength / 16.0);
+	unsigned int sLength = 128;//floor(sideLength / (16.0 * patchesX * patchesY);
 
+    unique_ptr<float[]> counterVboContents(new float[sLength*sLength]);
+    
 	auto emptyVBO = graphics->genVertexBuffer(
         GraphicsManager::vertexBuffer::STATIC);
 	emptyVBO->setTotalVertexSize(0);
 	emptyVBO->setVertexData(0, nullptr);
+    
 	auto counterVBO = graphics->genVertexBuffer(
         GraphicsManager::vertexBuffer::STATIC);
 	counterVBO->setTotalVertexSize(4);
-	counterVBO->setVertexData(4 * sLength * sLength, nullptr);
+	counterVBO->setVertexData(4 * sLength * sLength, counterVboContents.get());
 
 	//count the number of trees that there will be
 	auto countTrees = shaders.bind("count trees");
@@ -324,59 +347,66 @@ void Terrain::GpuClipMap::generateTrees()
 	unsigned int numTreesInPatch;
 	unsigned int numTrees = 0;
 	emptyVBO->bindBuffer();
-	for(int y = 0; y < patchesY; y++)
-	{
-		for(int x = 0; x < patchesX; x++)
-		{
+    for(int y = 0; y < patchesY; y++)
+    {
+	 	for(int x = 0; x < patchesX; x++)
+	 	{
 			countTrees->setUniform1i("vertexID_offset",
                                      (x+y*patchesX) * sLength*sLength);
 
 			counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
-			emptyVBO->drawBuffer(GraphicsManager::POINTS, 0,  1);
+			emptyVBO->drawBufferInstanced(GraphicsManager::POINTS, 0, 1,
+                                          sLength*sLength);
 			numTreesInPatch = counterVBO->unbindTransformFeedback();
             numTrees += numTreesInPatch;
-            cout << "first iteration\n";
-		}
+	 	}
 	}
 	counterVBO.reset();
-    // counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
-    // emptyVBO->bindBuffer();
-    // emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, patchesX * patchesY * sLength * sLength);
-    // graphics->checkErrors();
-    // numTrees = counterVBO->unbindTransformFeedback();
-    // counterVBO.reset();
+    cout << numTrees << endl;
 
-	// if(numTrees > 0)
-	// {
-	// 	//prepare foliage VBO
-	// 	treesVBO = graphics->genVertexBuffer(GraphicsManager::vertexBuffer::STATIC);
-	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,	0);
-	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,	3*sizeof(float));
-	// 	treesVBO->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,		5*sizeof(float));
-	// 	treesVBO->setTotalVertexSize(32);
-	// 	treesVBO->setVertexData(32 * 12 * numTrees, nullptr);
-	// 	//render trees into VBO
-	// 	auto placeTreesShader = shaders.bind("place trees");
-	// 	placeTreesShader->setUniform1i("groundTex", 0);
-	// 	placeTreesShader->setUniform1i("width", patchesX*sLength);
-	// 	placeTreesShader->setUniform3f("worldOrigin", Vec3f(origin.x, clipMap->layers[clipMapLayer].minHeight, origin.y));
-	// 	placeTreesShader->setUniform3f("worldSpacing", Vec3f(sideLength / (patchesX*sLength), clipMap->layers[clipMapLayer].maxHeight - clipMap->layers[clipMapLayer].minHeight, sideLength / (patchesY*sLength)));
-	// 	placeTreesShader->setUniform2f("texOrigin", 0.5/texture->getWidth(), 0.5/texture->getHeight());
-	// 	placeTreesShader->setUniform2f("texSpacing",	float((texture->getWidth()-1.0) / texture->getWidth())/(patchesX*sLength), 
-	// 													float((texture->getHeight()-1.0) / texture->getHeight())/(patchesY*sLength));
-	// 	placeTreesShader->setUniform1f("earthRadius", earthRadius);
-	// 	placeTreesShader->setUniform1f("slopeScale", slopeScale);
-	// 	placeTreesShader->setUniform1i("patch_width", sLength);//patchesX *sLength
-	// 	placeTreesShader->setUniform1i("patch_height", sLength);
-	// 	placeTreesShader->setUniform1i("vertexID_offset", 0);
+	if(numTrees == 0){
+        treesCount = 0;
+        return;
+    }
 
-	// 	treesVBO->bindTransformFeedback(GraphicsManager::TRIANGLES);
-	// 	emptyVBO->bindBuffer();
-	// 	emptyVBO->drawBuffer(GraphicsManager::POINTS, 0, patchesX * patchesY * sLength * sLength); //<-causes error on Linux (intel graphics)?
-	// 	unsigned int n = treesVBO->unbindTransformFeedback();
-	// 	debugAssert(n == 4*numTrees);
-	// }
-	// treesVBOcount = numTrees * 12;
+    //prepare foliage VBO
+    trees = graphics->genVertexBuffer(
+        GraphicsManager::vertexBuffer::STATIC);
+    trees->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,
+                                 0);
+    trees->addVertexAttribute(GraphicsManager::vertexBuffer::TEXCOORD,
+                                 3*sizeof(float));
+    trees->addVertexAttribute(GraphicsManager::vertexBuffer::COLOR3,
+                                 5*sizeof(float));
+    trees->setTotalVertexSize(32);
+    trees->setVertexData(32 * 12 * numTrees, nullptr);
+    //render trees into VBO
+    auto placeTreesShader = shaders.bind("place trees");
+	placeTreesShader->setUniform1i("groundTex", 0);
+	placeTreesShader->setUniform1i("width", patchesX * sLength);
+	placeTreesShader->setUniform3f("worldOrigin",
+                                   Vec3f(-sideLength/2, 0, -sideLength/2));
+	placeTreesShader->setUniform3f("worldSpacing",
+                                   Vec3f(sideLength / (patchesX*sLength), 1,
+                                         sideLength / (patchesY*sLength)));
+	placeTreesShader->setUniform2f("texOrigin", 0.5/layerResolution,
+                                   0.5/layerResolution);
+	placeTreesShader->setUniform2f("texSpacing",
+        ((layerResolution-1.0) / layerResolution)/(patchesX*sLength),
+        ((layerResolution-1.0) / layerResolution)/(patchesY*sLength));
+	placeTreesShader->setUniform1f("earthRadius", earthRadius);
+	placeTreesShader->setUniform1i("patch_width", sLength);
+	placeTreesShader->setUniform1i("patch_height", sLength);
+    placeTreesShader->setUniform1i("vertexID_offset", 0);
+    
+    emptyVBO->bindBuffer();
+    trees->bindTransformFeedback(GraphicsManager::TRIANGLES);
+    emptyVBO->drawBufferInstanced(GraphicsManager::POINTS, 0, 1,
+                                  sLength * sLength * patchesX * patchesY);
+    unsigned int n = trees->unbindTransformFeedback();
+
+    debugAssert(n == 4*numTrees);
+	treesCount = numTrees * 8;
 }
 void Terrain::GpuClipMap::regenLayer(unsigned int layer)
 {
@@ -1536,6 +1566,49 @@ void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 	textureFile->width = 512;
 	textureFile->height = 512;
 	fileManager.writeFile(textureFile); //will delete[] texData
+}
+void Terrain::precomputeScattering() {
+    // template<size_t Width, size_t Height>struct Table2 {
+    //     const size_t W = Width;
+    //     const size_t H = Hieght;
+    //     unique_ptr<float[]> data(new float[W*H]);
+    //     void set(size_t x, size_t y, float value){
+    //         date[x + Width * y] = value;
+    //     }
+    // };
+    
+    // // See: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
+    // auto altitude = [](Vec3f x) {
+    //     x.y += earthRadius;
+    //     return x.magnitude();
+    // };
+    // auto betaE_R = [](float height) -> Vec3f {
+    //     return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(h / 8000.0);
+    // };
+    // auto betaE_M = [](float height) -> Vec3f {
+    //     return Vec3f(2e-5, 2e-5, 2e-5) * exp(h / 1200.0) / 0.9f;
+    // };
+    // auto transmittance = [](float r, float u, size_t steps = 128) -> Vec3f {
+    //     Vec3f integral;
+    //     for(size_t i = 0; i < steps; i++){
+    //         float h = altitude(lerp(x, x0, (float)i / steps));
+    //         integral += betaE_R(h) + betaE_M(h);
+    //     }
+    //     return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
+    // }
+
+    // Table2<64, 256> Transmittance;
+    
+    // for(size_t x = 0; x < wtable_T; x++){
+    //     for(size_t y = 0; y < htable_T; y++){
+    //         float height = x * 100000.0 / wtable_T;
+    //         float view = y
+    //         float value = 0;
+
+    //         Transmittance.set(x,y, value);
+    //     }
+    // }
+    
 }
 void Terrain::addDecal(Vec2f center, float width, float height, string texture, double startTime, double fadeInLength)
 {

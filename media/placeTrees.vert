@@ -1,5 +1,7 @@
 #version 330
 
+in vec2 Position2;
+
 out VertexData{
 	float shouldDiscard;
 	vec3 position;
@@ -42,7 +44,7 @@ float random(float c1, float c2, uint trueVertexID)
 
 void main()
 {
-	uint trueVertexID = uint(vertexID_offset + gl_VertexID);
+	uint trueVertexID = uint(vertexID_offset + gl_InstanceID);
 
 	int patchArea = patch_width * patch_height;
 	int a = int(trueVertexID) / patchArea;
@@ -64,7 +66,7 @@ void main()
 	float odds = clamp(0.05 * (vertexOut.position.y - 20.0), 0.0, 1.0) * 
 		clamp(20 * (0.9 - slope), 0.0, 1.0) *
 		clamp(5 * (slope - 0.05), 0.0, 1.0);
-	
+
+    odds = 0.05;
 	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > odds /*|| groundVal.y <= 0.9111 ||(vertexOut.position.y >= 150.0 && groundVal.y >= 0.98)*/);
-	
 }

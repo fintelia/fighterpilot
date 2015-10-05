@@ -343,6 +343,7 @@ public:
         virtual void start()=0;
         virtual void stop()=0;
         virtual float getElapsedTime()=0;
+        virtual ~timer(){}
     };
 	struct displayMode
 	{

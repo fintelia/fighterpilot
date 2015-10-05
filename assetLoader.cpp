@@ -185,7 +185,8 @@ bool AssetLoader::loadAssetList()
                 boost::split(ftVec, feedbackTransformVaryings,
                              boost::is_any_of(";"));
                 ftVec.erase(std::remove_if(ftVec.begin(), ftVec.end(),
-                                           [](string s){return s.empty();}));
+                                           [](string s){return s.empty();}),
+                            ftVec.end());
                 
                 //load files
                 bool preload = (getAttribute(shaderElement,"preload") == "true");
@@ -493,6 +494,7 @@ int AssetLoader::loadAsset()
 
 			if(shaderAsset->use_sAspect)
 			{
+				shader->bind();
 				shader->setUniform1f("sAspect",sAspect);
 				shaders.add(shaderAsset->name, shader, true);
 			}

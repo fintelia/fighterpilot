@@ -1578,6 +1578,8 @@ void FileManager::modelFile::parseFile(fileContents data)
 			}
 		}
 
+        delete[] mtls;
+        
 		int n=0;
 		material unnamedMat;
 		unnamedMat.diffuse = white;
