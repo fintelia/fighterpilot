@@ -137,7 +137,7 @@ void manager::update()
 				p->callback(p.get());
 		}
 	}
-	else if(menu != nullptr)
+	/*else*/if(menu != nullptr)
 	{
 		menu->update();
 	}
