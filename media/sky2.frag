@@ -22,7 +22,7 @@ const float fKrESun = Kr * sunEnergy;  // Kr * ESun
 const float fKmESun = Km * sunEnergy;  // Km * ESun
 const float fKr4PI = Kr * 4.0 * PI;    // Kr * 4 * PI
 const float fKm4PI = Km * 4.0 * PI;    // Km * 4 * PI
-const float fExposure = 1.75;
+const float fExposure = 1.75 * 0.5;
 const int nSamples = 5;
 const float fSamples = 5.0;
 
@@ -122,7 +122,7 @@ void main()
 	float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos)
         / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
 	color = color1 + fMiePhase * color2;
-//	color = vec3(1.0) - exp(-color * fExposure);
+	color = 2 * (vec3(1.0) - exp(-color * fExposure));
 
 // ---------------------------------- clouds -----------------------------------
 	vec3 normal = normalize(worldPosition.xyz - earthCenter);
