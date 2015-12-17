@@ -1,8 +1,9 @@
+#version 330
 
-varying vec2 texCoord;
+out vec2 texCoord;
 
-attribute vec2 Position2;
-attribute vec2 TexCoord;
+in vec2 Position2;
+in vec2 TexCoord;
 
 void main()
 {

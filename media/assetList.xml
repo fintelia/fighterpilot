@@ -105,13 +105,17 @@
             fragment3="media/logLuminance.frag"   />
 
     <!-- post process -->
+    <shader name="bloom"
+            vertex3="media/bloom.vert"
+            fragment3="media/bloom.frag"   />
+
     <shader name="blurX"
-            vertex="media/blur.vert"
-            fragment="media/blurX.frag"   />
+            vertex3="media/blur.vert"
+            fragment3="media/blurX.frag"   />
 
     <shader name="blurY"
-            vertex="media/blur.vert"
-            fragment="media/blurY.frag"   />
+            vertex3="media/blur.vert"
+            fragment3="media/blurY.frag"   />
     
     <!-- HUD-->
     <shader name="radar plane shader"

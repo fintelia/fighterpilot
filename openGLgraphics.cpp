@@ -2131,6 +2131,8 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     glGenTextures(1, &renderTextures.ms_depth);
     glGenTextures(1, &renderTextures.color);
     glGenTextures(1, &renderTextures.depth);
+    glGenTextures(1, &renderTextures.bloom);
+    glGenTextures(1, &renderTextures.bloom2);
     glGenTextures(1, &renderTextures.luminance);
     glGenTextures(1, &renderTextures.ldr_color);
 
@@ -2164,6 +2166,36 @@ bool OpenGLgraphics::initFBOs(unsigned int samples)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, sw, sh, 0,
                  GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+
+    // Create first bloom render texture.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    unique_ptr<float[]> tmpBuffer(new float[sw*sh*3]);
+//    for(int p = 0; p < sw*sh*3; p++) tmpBuffer[p] = 1.0;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, sw, sh, 0, GL_RGB,
+                 GL_FLOAT, tmpBuffer.get());
+    glGenerateMipmap(GL_TEXTURE_2D);
+    // glTexImage2D(GL_TEXTURE_2D, 3, GL_RGB16F, sw/8, sh/8, 0, GL_RGB,
+    //              GL_UNSIGNED_BYTE, nullptr);
+
+    // Create second bloom render texture.
+    glBindTexture(GL_TEXTURE_2D, renderTextures.bloom2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, sw, sh, 0, GL_RGB,
+                 GL_FLOAT, tmpBuffer.get());
+    glGenerateMipmap(GL_TEXTURE_2D);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, sw, sh, 0, GL_RGB,
+    //              GL_UNSIGNED_BYTE, nullptr);
+    // glTexImage2D(GL_TEXTURE_2D, 3, GL_RGB16F, sw/8, sh/8, 0, GL_RGB,
+    //              GL_UNSIGNED_BYTE, nullptr);
 
     // Create texture pyramid for computing log luminance.
     glBindTexture(GL_TEXTURE_2D, renderTextures.luminance);
@@ -2529,7 +2561,10 @@ void OpenGLgraphics::render()
         auto tonemap = shaders("tonemap");
         auto fxaa = shaders("fxaa");
         auto logLuminance = shaders("log luminance");
-        debugAssert(tonemap && fxaa && logLuminance);
+        auto bloom = shaders("bloom");
+        auto blurX = shaders("blurX");
+        auto blurY = shaders("blurY");
+        debugAssert(tonemap && fxaa && logLuminance && bloom && blurX && blurY);
 
         Rect overlayRect, textureRect, projectionConstraint;
         computeViewport(textureRect, projectionConstraint);
@@ -2540,6 +2575,42 @@ void OpenGLgraphics::render()
 
         if(overlayRect.w*overlayRect.h > 0.0)
         {
+            // Remove colors darker than 1.0
+            setBlendMode(REPLACE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, renderTextures.bloom, 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.color);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glViewport(0,0,sw,sh);
+            bloom->bind();
+            bloom->setUniform1i("tex",0);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+
+            // Blur in the X direction
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, renderTextures.bloom2, 3);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glViewport(0,0,sw/8,sh/8);
+            blurX->bind();
+            blurX->setUniform1i("mipmapLayer", 3);
+            blurX->setUniform1i("tex",0);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+
+            // Blur in the Y direction
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, renderTextures.bloom, 3);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom2);
+//            glGenerateMipmap(GL_TEXTURE_2D);
+            glViewport(0, 0, sw/8, sh/8);
+            blurY->bind();
+            blurY->setUniform1i("mipmapLayer", 3);
+            blurY->setUniform1i("tex", 0);
+            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+
             // Compute the log luminance of the scene.
             // setBlendMode(TRANSPARENCY);
             // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -2564,9 +2635,12 @@ void OpenGLgraphics::render()
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, renderTextures.luminance);
             glGenerateMipmap(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
             glViewport(0,0,sw,sh);
             tonemap->bind();
             tonemap->setUniform1i("tex",0);
+            tonemap->setUniform1i("bloomTex", 2);
             // tonemap->setUniform1i("logLuminance",1);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 

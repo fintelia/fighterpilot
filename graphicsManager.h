@@ -518,6 +518,8 @@ protected:
         unsigned int ms_depth = 0;
         unsigned int color = 0;
         unsigned int depth = 0;
+        unsigned int bloom = 0;
+        unsigned int bloom2 = 0;
         unsigned int luminance = 0;
         unsigned int ldr_color = 0;
     } renderTextures;
