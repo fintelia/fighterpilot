@@ -117,8 +117,22 @@ private:
             shared_ptr<GraphicsManager::texture2D> shoreDistance;
         };
         vector<Layer> layers;
-        shared_ptr<GraphicsManager::vertexBuffer> trees;
-        unsigned int treesCount;
+
+        struct FoliageLayer{
+            struct patch{
+                // Bounding box of the patch
+                BoundingBox<float> bounds;
+                // Offset from the start of the vertex buffer
+                size_t offset;
+                // number of vertices in the patch
+                size_t vertices;
+            };
+            vector<patch> patches;
+
+            BoundingBox<float> bounds;
+            shared_ptr<GraphicsManager::vertexBuffer> vertexBuffer;
+        };
+        vector<FoliageLayer> foliageLayers;
 
         Vec2i worldCenterToLayerPosition(unsigned int layer, Vec2f center);
 
@@ -131,6 +145,7 @@ private:
         GpuClipMap(float sLength, unsigned int resolution, unsigned int num_layers, const vector<unique_ptr<float[]>>& pinnedLayers);
         void centerClipMap(Vec2f center);
         void render(shared_ptr<GraphicsManager::View> view);
+        void renderTrees(shared_ptr<GraphicsManager::View> view);
     };
     mutable unique_ptr<GpuClipMap> gpuClipMap;
     shared_ptr<ClipMap> clipMap;

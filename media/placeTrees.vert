@@ -59,14 +59,13 @@ void main()
 	vertexOut.vertexID = trueVertexID;
 
 	vec2 r = vertexOut.position.xz / earthRadius;
-	vertexOut.position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
+	//vertexOut.position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	
 	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
 	
-	float odds = clamp(0.05 * (vertexOut.position.y - 20.0), 0.0, 1.0) * 
+	float odds = clamp(0.05 * (vertexOut.position.y - 10.0 - 1150.0), 0.0, 1.0) * 0.5;/* * 
 		clamp(20 * (0.9 - slope), 0.0, 1.0) *
-		clamp(5 * (slope - 0.05), 0.0, 1.0);
+		clamp(5 * (slope - 0.05), 0.0, 1.0)*/;
 
-    odds = 0.05;
 	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > odds /*|| groundVal.y <= 0.9111 ||(vertexOut.position.y >= 150.0 && groundVal.y >= 0.98)*/);
 }

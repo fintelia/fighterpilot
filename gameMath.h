@@ -303,3 +303,23 @@ template <class T> T taylor(T t, T x, T dx, T ddx, T dddx)
 {
 	return x + dx * t + ddx * t*t + dddx * t*t*t;
 }
+
+template<size_t Width, size_t Height> struct Table2 {
+    const size_t W = Width;
+    const size_t H = Height;
+    unique_ptr<float[]> data = unique_ptr<float[]>(new float[W*H]);
+    float& operator() (size_t x, size_t y){
+        debugAssert(x < Width && y < Height);
+        return data[x + Width * y];
+    }
+};
+template<size_t Width, size_t Height, size_t Depth> struct Table3 {
+    const size_t W = Width;
+    const size_t H = Height;
+    const size_t D = Depth;
+    unique_ptr<float[]> data = unique_ptr<float[]>(new float[W*H*D]);
+    float& operator() (size_t x, size_t y, size_t z){
+        debugAssert(x < Width && y < Height && z < Depth);
+        return data[x + Width * y + Width*Height * z];
+    }
+};

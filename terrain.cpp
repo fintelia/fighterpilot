@@ -279,40 +279,20 @@ void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 	graphics->endRenderToTexture();
     layers[layer].normals->generateMipmaps();
 }
-void feedbackTest(){
-	auto empty = graphics->genVertexBuffer(
-        GraphicsManager::vertexBuffer::STATIC);
-	empty->setTotalVertexSize(0);
-	empty->setVertexData(0, nullptr);
-    
-	auto count = graphics->genVertexBuffer(
-        GraphicsManager::vertexBuffer::STATIC);
-	count->setVertexData(2048*sizeof(float), nullptr);
-    count->setTotalVertexSize(4);
-    shaders.bind("feedback test");
-
-    empty->bindBuffer();
-    count->bindTransformFeedback(GraphicsManager::POINTS);
-    empty->drawBufferInstanced(GraphicsManager::POINTS, 0, 1, 1024);
-    cout << count->unbindTransformFeedback() << endl;
-}
 void Terrain::GpuClipMap::generateTrees()
 {
-//    feedbackTest();
-//    return;
-    
     // This function fills the trees VBO. Due to the high memory constraints
     // involed in doing it in one pass, we break up the process into patches. In
     // the future we may enable logic to only render certain passes (perhaps
     // based on distance to the camera). Each patch can contain up to sLength
     // squared trees, although typically a lot less.
     layers[numPinnedLayers-1].heights->bind(0);
-    
+
+    float layerSize = sideLength / (1 << (numPinnedLayers-1));
     // number of patches in each dimension
-    unsigned int patchesX = 16;
-    unsigned int patchesY = 16;
+    unsigned int patches = 32;
     // number of possible tree placements within each patch
-	unsigned int sLength = 128;//floor(sideLength / (16.0 * patchesX * patchesY);
+	unsigned int sLength = floor(layerSize / (16.0 * patches));
 
     unique_ptr<float[]> counterVboContents(new float[sLength*sLength]);
     
@@ -329,48 +309,62 @@ void Terrain::GpuClipMap::generateTrees()
 	//count the number of trees that there will be
 	auto countTrees = shaders.bind("count trees");
 	countTrees->setUniform1i("groundTex", 0);
-	countTrees->setUniform1i("width", patchesX * sLength);
+	countTrees->setUniform1i("width", patches * sLength);
 	countTrees->setUniform3f("worldOrigin",
-                             Vec3f(-sideLength/2, 0, -sideLength/2));
+                             Vec3f(-layerSize/2, 0, -layerSize/2));
 	countTrees->setUniform3f("worldSpacing",
-                             Vec3f(sideLength / (patchesX*sLength), 1,
-                                   sideLength / (patchesY*sLength)));
+                             Vec3f(layerSize / (patches*sLength-1), 1,
+                                   layerSize / (patches*sLength-1)));
 	countTrees->setUniform2f("texOrigin", 0.5/layerResolution,
                              0.5/layerResolution);
 	countTrees->setUniform2f("texSpacing",
-                ((layerResolution-1.0) / layerResolution)/(patchesX*sLength),
-                ((layerResolution-1.0) / layerResolution)/(patchesY*sLength));
+                ((layerResolution-1.0) / layerResolution)/(patches*sLength),
+                ((layerResolution-1.0) / layerResolution)/(patches*sLength));
 	countTrees->setUniform1f("earthRadius", earthRadius);
 	countTrees->setUniform1i("patch_width", sLength);
 	countTrees->setUniform1i("patch_height", sLength);
 
 	unsigned int numTreesInPatch;
 	unsigned int numTrees = 0;
+    FoliageLayer fl;
 	emptyVBO->bindBuffer();
-    for(int y = 0; y < patchesY; y++)
+    for(int y = 0; y < patches; y++)
     {
-	 	for(int x = 0; x < patchesX; x++)
+	 	for(int x = 0; x < patches; x++)
 	 	{
 			countTrees->setUniform1i("vertexID_offset",
-                                     (x+y*patchesX) * sLength*sLength);
+                                     (x+y*patches) * sLength*sLength);
 
 			counterVBO->bindTransformFeedback(GraphicsManager::POINTS);
 			emptyVBO->drawBufferInstanced(GraphicsManager::POINTS, 0, 1,
                                           sLength*sLength);
 			numTreesInPatch = counterVBO->unbindTransformFeedback();
-            numTrees += numTreesInPatch;
+
+            if(numTreesInPatch > 0){
+                FoliageLayer::patch p;
+                float origin = -layerSize/2;
+                float spacing = layerSize / patches;
+                float d = 30;
+                p.bounds.minXYZ = Vec3f(origin+x*spacing-d, 0,
+                                        origin+y*spacing-d);
+                p.bounds.maxXYZ = Vec3f(origin+(x+1)*spacing+d, 99999,
+                                        origin+(y+1)*spacing+d);
+                p.offset = numTrees * 12;
+                p.vertices = numTreesInPatch * 12;
+                fl.patches.push_back(p);
+                numTrees += numTreesInPatch;
+            }
 	 	}
 	}
 	counterVBO.reset();
     cout << numTrees << endl;
 
 	if(numTrees == 0){
-        treesCount = 0;
         return;
     }
 
     //prepare foliage VBO
-    trees = graphics->genVertexBuffer(
+    auto trees = graphics->genVertexBuffer(
         GraphicsManager::vertexBuffer::STATIC);
     trees->addVertexAttribute(GraphicsManager::vertexBuffer::POSITION3,
                                  0);
@@ -383,17 +377,17 @@ void Terrain::GpuClipMap::generateTrees()
     //render trees into VBO
     auto placeTreesShader = shaders.bind("place trees");
 	placeTreesShader->setUniform1i("groundTex", 0);
-	placeTreesShader->setUniform1i("width", patchesX * sLength);
+	placeTreesShader->setUniform1i("width", patches * sLength);
 	placeTreesShader->setUniform3f("worldOrigin",
-                                   Vec3f(-sideLength/2, 0, -sideLength/2));
+                                   Vec3f(-layerSize/2, 0, -layerSize/2));
 	placeTreesShader->setUniform3f("worldSpacing",
-                                   Vec3f(sideLength / (patchesX*sLength), 1,
-                                         sideLength / (patchesY*sLength)));
+                                   Vec3f(layerSize / (patches*sLength-1), 1,
+                                         layerSize / (patches*sLength-1)));
 	placeTreesShader->setUniform2f("texOrigin", 0.5/layerResolution,
                                    0.5/layerResolution);
 	placeTreesShader->setUniform2f("texSpacing",
-        ((layerResolution-1.0) / layerResolution)/(patchesX*sLength),
-        ((layerResolution-1.0) / layerResolution)/(patchesY*sLength));
+        ((layerResolution-1.0) / layerResolution)/(patches*sLength),
+        ((layerResolution-1.0) / layerResolution)/(patches*sLength));
 	placeTreesShader->setUniform1f("earthRadius", earthRadius);
 	placeTreesShader->setUniform1i("patch_width", sLength);
 	placeTreesShader->setUniform1i("patch_height", sLength);
@@ -402,11 +396,12 @@ void Terrain::GpuClipMap::generateTrees()
     emptyVBO->bindBuffer();
     trees->bindTransformFeedback(GraphicsManager::TRIANGLES);
     emptyVBO->drawBufferInstanced(GraphicsManager::POINTS, 0, 1,
-                                  sLength * sLength * patchesX * patchesY);
+                                  sLength * sLength * patches * patches);
     unsigned int n = trees->unbindTransformFeedback();
-
+    fl.vertexBuffer = trees;
+    foliageLayers.push_back(fl);
+    
     debugAssert(n == 4*numTrees);
-	treesCount = numTrees * 8;
 }
 void Terrain::GpuClipMap::regenLayer(unsigned int layer)
 {
@@ -517,6 +512,21 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
             shader->setUniform2i("flipAxis", 0, 0);
             clipMapIBO->drawBuffer(numCenterIndices, numRingIndices);
             break;
+        }
+    }
+}
+void Terrain::GpuClipMap::renderTrees(shared_ptr<GraphicsManager::View> view){
+    for(auto& fl : foliageLayers){
+        fl.vertexBuffer->bindBuffer();
+        for(auto& p : fl.patches){
+            if(view->boundingBoxInFrustum(p.bounds)){
+                auto center = (p.bounds.minXYZ+p.bounds.maxXYZ) * 0.5;
+                center.y = 1150.0;
+                if(view->camera().eye.distanceSquared(center) < 7500*7500.0){
+                    fl.vertexBuffer->drawBuffer(GraphicsManager::TRIANGLES,
+                                                p.offset,p.vertices);
+                }
+            }
         }
     }
 }
@@ -1567,47 +1577,121 @@ void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 	textureFile->height = 512;
 	fileManager.writeFile(textureFile); //will delete[] texData
 }
-void Terrain::precomputeScattering() {
-    // template<size_t Width, size_t Height>struct Table2 {
-    //     const size_t W = Width;
-    //     const size_t H = Hieght;
-    //     unique_ptr<float[]> data(new float[W*H]);
-    //     void set(size_t x, size_t y, float value){
-    //         date[x + Width * y] = value;
-    //     }
-    // };
+void Terrain::precomputeScattering() {    
+    // See: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
+
+    // Incident intensity (ie sun color)
+    const Vec3f I_I = Vec3f(1,1,1);
     
-    // // See: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
-    // auto altitude = [](Vec3f x) {
-    //     x.y += earthRadius;
-    //     return x.magnitude();
-    // };
-    // auto betaE_R = [](float height) -> Vec3f {
-    //     return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(h / 8000.0);
-    // };
-    // auto betaE_M = [](float height) -> Vec3f {
-    //     return Vec3f(2e-5, 2e-5, 2e-5) * exp(h / 1200.0) / 0.9f;
-    // };
-    // auto transmittance = [](float r, float u, size_t steps = 128) -> Vec3f {
-    //     Vec3f integral;
-    //     for(size_t i = 0; i < steps; i++){
-    //         float h = altitude(lerp(x, x0, (float)i / steps));
-    //         integral += betaE_R(h) + betaE_M(h);
+    auto betaE_R = [](float height) -> Vec3f {
+        return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(height / 8000.0);
+    };
+    auto betaE_M = [](float height) -> Vec3f {
+        return Vec3f(2e-5, 2e-5, 2e-5) * exp(height / 1200.0) / 0.9f;
+    };
+
+    auto P_R = [](float u) -> float {
+        return 3.0 / (16.0 * 3.14159) * (1.0 + u*u);
+    };
+    auto P_M = [](float u, float g) -> float {
+//        return 3.0 / (8.0 * 3.14159) * ...;
+        return 0;
+    };
+    
+    /**
+     * Compute transmittance for a ray defined by (r,u) and extending to the
+     * edge of the atmosphere.
+     *
+     * r = distance from ray start to the center of the earth
+     * u = cosine of angle between ray and the vertical
+     * steps = number of points along the ray used to compute the integral
+     */
+    auto transmittance = [=](float r, float u, size_t steps = 32) -> Vec3f {
+        // If ray interests the earth, return zero:
+        if(r < earthRadius || (r*sqrt(1.0 - u*u) < earthRadius && u < 0))
+            return Vec3f(0,0,0);
+
+        // Compute distance from ray to edge of the atmosphere
+        float h = sqrt(earthRadius*earthRadius + r*r*(u*u-1)) - r*u;
+
+        // Compute starting and ending positions of the ray in 2D (since there
+        // is no need to use a third dimension). Cordinates are relative to the
+        // center of the earth.
+        Vec2f x = Vec2f(0, r+earthRadius);
+        Vec2f x0 = Vec2f(h*u, h*sqrt(1.0-u*u) + earthRadius);
+
+        // Integrate
+        Vec3f integral(0,0,0);
+        float stepSize = x.distance(x0) / steps;
+        for(size_t i = 0; i < steps; i++){
+            float h = (lerp(x, x0, (float)i / steps)).magnitude();
+            integral += (betaE_R(h) + betaE_M(h)) * stepSize;
+        }
+        return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
+    };
+
+    Table2<64, 256> Transmittance;
+    for(size_t x = 0; x < Transmittance.W; x++){
+        for(size_t y = 0; y < Transmittance.H; y++){
+            float r = x * 100000.0 / Transmittance.W + earthRadius;
+            float u = (float)y / Transmittance.H;
+
+            // Transmittance(x,y) = transmittance(r, u);
+        }
+    }
+
+    /**
+     * Compute first scattering term for a ray defined by (r,u) and extending to
+     * the edge of the atmosphere.
+     *
+     * r = distance from ray start to the center of the earth
+     * u = cosine of angle between ray and the vertical
+     * sun_zenith = angle between sun direction and the vertical
+     * sun_azimuth = angle between sun and view direction in the XZ plane
+     * steps = number of points along the ray used to compute the integral
+     */
+    auto SL0 = [&Transmittance, I_I](float r, float u, float sun_zenith,
+                                    float sun_azimuth, size_t steps = 32){
+        // If ray interests the earth, return zero:
+        if(r < earthRadius || (r*sqrt(1.0 - u*u) < earthRadius && u < 0))
+            return Vec3f(0,0,0);
+
+        // Compute distance from ray to edge of the atmosphere
+        float h = sqrt(earthRadius*earthRadius + r*r*(u*u-1)) - r*u;
+
+        // Compute starting and ending positions of the ray in 2D (since there
+        // is no need to use a third dimension). Cordinates are relative to the
+        // center of the earth.
+        Vec2f x = Vec2f(0, r+earthRadius);
+        Vec2f x0 = Vec2f(h*u, h*sqrt(1.0-u*u) + earthRadius);
+        
+        // Integrate
+        Vec3f integral(0,0,0);
+        float stepSize = x.distance(x0) / steps;
+        for(size_t i = 0; i < steps; i++){
+            float h = (lerp(x, x0, (float)i / steps)).magnitude();
+            integral += 0 * stepSize;
+        }
+        return integral;
+    };
+    
+    // Table2<16, 64> E;
+    // for(size_t x = 0; x < E.W; x++){
+    //     for(size_t y = 0; y < E.H; y++){
+    //         E(x,y) = 0;
     //     }
-    //     return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
     // }
 
-    // Table2<64, 256> Transmittance;
-    
-    // for(size_t x = 0; x < wtable_T; x++){
-    //     for(size_t y = 0; y < htable_T; y++){
-    //         float height = x * 100000.0 / wtable_T;
-    //         float view = y
-    //         float value = 0;
-
-    //         Transmittance.set(x,y, value);
-    //     }
-    // }
+    Table3<32, 128, 32*8> S;
+    for(size_t x = 0; x < S.W; x++){
+        for(size_t y = 0; y < S.H; y++){
+            for(size_t zw = 0; zw < S.D; zw++){
+                size_t z = zw % 32;
+                size_t w = zw / 32;
+                S(x,y,zw) = 0;
+            }
+        }
+    }
     
 }
 void Terrain::addDecal(Vec2f center, float width, float height, string texture, double startTime, double fadeInLength)
@@ -2037,6 +2121,7 @@ void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	alphaTreesShader->setUniform3f("eyePos", view->camera().eye);
 	//alphaTreesShader->setUniform3f("right", view->camera().right);
 	alphaTreesShader->setUniformMatrix("cameraProjection",view->projectionMatrix() * view->modelViewMatrix());
+    gpuClipMap->renderTrees(view);
 	//for(auto i = terrainPages.begin(); i != terrainPages.end(); i++)
 	//{
 	//	(*i)->renderFoliage(view);
@@ -2057,7 +2142,7 @@ void Terrain::renderFoliage(shared_ptr<GraphicsManager::View> view) const
 	//	(*i)->renderFoliage(view);
 	//}
 //	fractalTerrain->renderTrees(view);
-
+    
 
 }
 /*shared_ptr<Terrain::Page> Terrain::getPage(Vec2f position) const

@@ -45,6 +45,14 @@ void main()
 		color.g = 0.7 + 0.5 * random(50.780, 94699.9964);
 		color.b = 0.7 + 0.5 * random(57.329, 49563.7059);
 
+        // if(vertexIn[0].position.y < 500){
+        //     color.r =color.g = color.b = 0;
+        // }else if(vertexIn[0].position.y < 1000){
+        //     color.r =color.g = color.b = 10;
+        // }else{
+        //     color.r = fract(vertexIn[0].position.y / 100) * 10;
+        //     color.g = color.b = 0;
+        // }
 		vec2 dir = vec2(cos(angle), sin(angle)) * 2.5;
 
 
