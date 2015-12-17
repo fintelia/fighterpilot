@@ -974,13 +974,14 @@ void FileManager::textureFile::parseFile(fileContents data)
 
 		channels = bpp / 8;
 
-		if((width <= 0) || (height <= 0) || ((bpp != 24) && (bpp !=32)))
+		if((width <= 0) || (height <= 0) || ((bpp != 8) && (bpp != 24) && (bpp !=32)))
 		{
 			completeLoad(false);
 			return;
 		}
 
 		contents = new unsigned char[width*height*channels];
+        if(bpp == 8)    textureFormat = GraphicsManager::texture::RED;
 		if(bpp == 24)	textureFormat = GraphicsManager::texture::BGR;
 		if(bpp == 32)	textureFormat = GraphicsManager::texture::BGRA;
 		memcpy(contents, data.contents + 18, width*height*channels);
@@ -1193,7 +1194,7 @@ void FileManager::modelFile::parseFile(fileContents data)
 		{
 			mtlFilename = dataString.substr(stringPos+7,dataString.find("\n",stringPos+7)-(stringPos+7));
 		}
-
+        
 	/////////////////////////new mtl////////////////////////////
 		if(mtlFilename != "")
 		{
@@ -1428,6 +1429,21 @@ void FileManager::modelFile::parseFile(fileContents data)
 				}
 				tmpFace.material=cMtl;
 				faces.push_back(tmpFace);
+                
+                while((token = strtok(NULL, " \t")) != NULL){
+                    tmpFace.n[0] = tmpFace.n[1];
+                    tmpFace.t[0] = tmpFace.t[1];
+                    tmpFace.v[0] = tmpFace.v[1];
+                    tmpFace.n[1] = tmpFace.n[2];
+                    tmpFace.t[1] = tmpFace.t[2];
+                    tmpFace.v[1] = tmpFace.v[2];
+
+                    sscanf(safeStr(token), "%d/%d/%d", &v, &t, &n);
+                    tmpFace.n[2] = n;
+                    tmpFace.v[2] = v;
+                    tmpFace.t[2] = t;
+                    faces.push_back(tmpFace);
+                }
 			}
 			else if(strcmp(token, "usemtl") == 0)
 			{
@@ -1953,8 +1969,17 @@ FileManager::fileContents FileManager::textureFile::serializeFile()
 		writeAs<unsigned short>(	c.contents + 14, height);			//height
 		writeAs<unsigned char>(		c.contents + 16, channels * 8);		//bits per pixel
 		writeAs<unsigned char>(		c.contents + 17, 0);				//descriptor
-
-		if(channels == 3)
+        if(channels == 1)
+        {
+			for(unsigned int y = 0; y < height; y++)
+			{
+				for(unsigned int x = 0; x < width; x++)
+				{
+					c.contents[18 + (y * width + x)] = contents[(y * width + x)];
+				}
+			}
+        }
+		else if(channels == 3)
 		{
 			for(unsigned int y = 0; y < height; y++)
 			{
