@@ -39,15 +39,15 @@ void main()
     float slope = length(sNormal.xz) / sNormal.y;
     float nDotL = max(dot(normal,normalize(sunDirection)), 0);// * 0.5 + 0.5;
 
-    vec3 grass_color = texture(grass, position.xz*0.001).rgb;
-    vec3 rock_color = vec3(0.3, 0.3, 0.3);
+    vec3 grass_color = vec3(0.55, 0.45, 0.2) * (2*texture(grass, position.xz*0.001).rgb);
+    vec3 rock_color = vec3(0.45, 0.4, 0.2);
 //    color = mix(color, vec3(.6, .6, .5), min(slope * 1.0, 1.0));
-    vec3 color = mix(grass_color, rock_color, clamp(5*(slope-0.15), 0.0, 1.0));
+    vec3 color = mix(grass_color, rock_color, clamp(5*(slope-0.05), 0.0, 1.0));
     color *= 1.0 + 0.6*(texture(LCnoise, position.xz*0.025).r +
                         texture(LCnoise, position.xz*0.25).r - 1.0);
     color *= nDotL;
 
-    float depth = -(height-1150);
+    float depth = 1150-height;
     float waterAmount = clamp(1.0 + depth*10.0, 0, 1);
     vec3 wNormal = readNormal(oceanNormals, position.xz/2000, time/8)
         + readNormal(oceanNormals, position.xz/105, time/4);
@@ -73,7 +73,15 @@ void main()
 //    wColor = texture(oceanGradient, vec2(clamp(depth*0.1, 0, 1), 0.5)).rgb;
 
     FragColor = vec4(mix(color, wColor, waterAmount),1);
-//    ivec2 v = ivec2(texCoord * 1024);
+
+    // fog
+    float d = length(eyePosition - position);
+    FragColor.rgb = mix(FragColor.rgb, vec3(.3,.3,.34), 1-min(5000.0/d,1));
+    
+    // float mult = max(abs(position.x),abs(position.z)) > 512 * 30 ? 0 : 0.5;
+    // FragColor.rgb = mix(FragColor.rgb, vec3(1,0,1), mult);
+
+//    ivec2 v = ivec2(texCoord * 1024 * 8);
 //    FragColor = vec4(vec3(v.x%2 == v.y%2 ? 0.1 : 0.5), 1);
 //    FragColor = vec4(vec3(normal),1);
 //    FragColor = vec4(vec3(fract((position.y - 1100) / 300)),1);

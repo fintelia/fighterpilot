@@ -92,7 +92,7 @@ void main()
 
     if(fract(parent_texCoord) != vec2(0,0)){
         float slope = tan(acos(normal.y));
-        float random_scale = 0;//clamp(50 * (slope - 0.25), 0.05, 0.4) * texelSize;
+        float random_scale = clamp(0.1*(slope - 0.65), 0.003, 0.2) * texelSize;
         height += random_scale * (random(uvec2(position+resolution/2))-0.5);
     }
 
