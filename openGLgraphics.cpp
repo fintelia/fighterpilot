@@ -701,7 +701,7 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, Primitive primi
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STREAM_DRAW);
-	else cout << "useageFrequency not set: ";
+	else cerr << "useageFrequency not set: ";
 	
 #ifdef _DEBUG
 	maxIndex = 0;
@@ -734,7 +734,7 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, Primitive prim
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STREAM_DRAW);
-	else cout << "useageFrequency not set: ";
+	else cerr << "useageFrequency not set: ";
 	
 #ifdef _DEBUG
 	maxIndex = 0;
@@ -2919,7 +2919,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	if (vi == nullptr)
 	{
 		//TODO: add cleanup code
-		std::cout << "FATAL ERROR: could not find visual";
+		std::cerr << "FATAL ERROR: could not find visual";
 		return false;// could not find
 	}
 
@@ -3001,7 +3001,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	if(!glXIsDirect(x11_display, context->context))
 	{
 		//we don't have hardware acceleration!
-		cout << "No hardware acceleration!!!" << endl;
+		cerr << "No hardware acceleration!!!" << endl;
 	}
 	const char* cTitle = title.c_str();
 	XTextProperty textProperty;
@@ -3108,7 +3108,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 #ifdef WINDOWS
 		MessageBoxA(NULL, errorString.c_str(),"ERROR",MB_OK);
 #else
-		std::cout << "FATAL ERROR: " << errorString << endl;
+		std::cerr << "FATAL ERROR: " << errorString << endl;
 #endif
 		return false;
 	}
@@ -3293,7 +3293,7 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 }
 void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 {
-    cout << "Warning: can't pause for screenshot" << endl;
+    cerr << "Warning: can't pause for screenshot" << endl;
 //	world->time.pause();
 #ifdef WINDOWS
 	SYSTEMTIME sTime;
