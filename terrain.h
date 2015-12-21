@@ -171,14 +171,6 @@ private:
         TerrainData(unsigned int totalIndices, unsigned int tileResolution);
     } mutable terrainData;
 
-    struct ScatteringLookupTables {
-        //see: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
-
-        // This texture stores the transmittance T of the atmosphere, indexed by
-        // u = altitude / 100 km, v = cos(view zenith angle).
-        shared_ptr<GraphicsManager::texture2D> T;
-    } scatteringLookupTables;
-    
 	class FractalNode
 	{
 	public:
@@ -300,6 +292,12 @@ private:
 	shared_ptr<GraphicsManager::texture3D> oceanTexture;
 	shared_ptr<GraphicsManager::texture2D> treeTexture;
 
+	struct ScatteringTables{
+		shared_ptr<GraphicsManager::texture2D> transmittance;
+		shared_ptr<GraphicsManager::texture3D> inscattered;
+
+	} scatteringTables;
+	
 	shared_ptr<GraphicsManager::vertexBuffer> waterVBO;
 	shared_ptr<GraphicsManager::indexBuffer> waterIBO;
 

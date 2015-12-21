@@ -357,7 +357,6 @@ void Terrain::GpuClipMap::generateTrees()
 	 	}
 	}
 	counterVBO.reset();
-    cout << numTrees << endl;
 
 	if(numTrees == 0){
         return;
@@ -1178,40 +1177,42 @@ Terrain::Terrain(shared_ptr<ClipMap> _clipMap): clipMap(_clipMap), terrainData(2
 	waterIBO->setData(indices.get(), GraphicsManager::TRIANGLES, 3*(2*numRings-1)*vertsPerRing);
 
 
-        const unsigned int res = 1024;
-        vector<unique_ptr<float[]>> v;
-        v.emplace_back(new float[res*res]);
-        for(int x = 0; x < res; x++){
-            for(int y = 0; y < res; y++){
-                float r = sqrt((x-res/2)*(x-res/2)+(y-res/2)*(y-res/2));
-                v[0][x + y*res] = 800.0*max(1.0 - 16.0*r / res, 0);
-            }
-        }
-        // v.emplace_back(new float[res*res]);
-        // for(int x = 0; x < res; x++){
-        //     for(int y = 0; y < res; y++){
-        //         int dx = x-(int)res/2;
-        //         int dy = y-(int)res/2;
-        //         float r = sqrt(dx*dx+dy*dy) * 0.1;
-        //         v[1][x + y*res] = sin(r) / r * 1000;
-        //     }
-        // }
-        // v.emplace_back(new float[res*res]);
-        // for(int x = 0; x < res; x++){
-        //     for(int y = 0; y < res; y++){
-        //         int dx = x-(int)res/2;
-        //         int dy = y-(int)res/2;
-        //         float r = sqrt(dx*dx+dy*dy) * 0.05;
-        //         v[2][x + y*res] = sin(r) / r * 1000;
-        //     }
-        // }
-        // gpuClipMap = unique_ptr<GpuClipMap>(
-        //     new GpuClipMap(50000.0, res,
-        //                    2, std::move(v)));
+	const unsigned int res = 1024;
+	vector<unique_ptr<float[]>> v;
+	v.emplace_back(new float[res*res]);
+	for(int x = 0; x < res; x++){
+		for(int y = 0; y < res; y++){
+			float r = sqrt((x-res/2)*(x-res/2)+(y-res/2)*(y-res/2));
+			v[0][x + y*res] = 800.0*max(1.0 - 16.0*r / res, 0);
+		}
+	}
+	// v.emplace_back(new float[res*res]);
+	// for(int x = 0; x < res; x++){
+	//     for(int y = 0; y < res; y++){
+	//         int dx = x-(int)res/2;
+	//         int dy = y-(int)res/2;
+	//         float r = sqrt(dx*dx+dy*dy) * 0.1;
+	//         v[1][x + y*res] = sin(r) / r * 1000;
+	//     }
+	// }
+	// v.emplace_back(new float[res*res]);
+	// for(int x = 0; x < res; x++){
+	//     for(int y = 0; y < res; y++){
+	//         int dx = x-(int)res/2;
+	//         int dy = y-(int)res/2;
+	//         float r = sqrt(dx*dx+dy*dy) * 0.05;
+	//         v[2][x + y*res] = sin(r) / r * 1000;
+	//     }
+	// }
+	// gpuClipMap = unique_ptr<GpuClipMap>(
+	//     new GpuClipMap(50000.0, res,
+	//                    2, std::move(v)));
         
-        gpuClipMap = unique_ptr<GpuClipMap>(
-             new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
-                            clipMap->getNumLayers() + 6, clipMap->layers));
+	gpuClipMap = unique_ptr<GpuClipMap>(
+	    new GpuClipMap(clipMap->sideLength, clipMap->layerResolution,
+					   clipMap->getNumLayers() + 6, clipMap->layers));
+
+	precomputeScattering();
 }
 unsigned int Terrain::computeFractalSubdivision(shared_ptr<GraphicsManager::View> view, unsigned int maxDivisions) const
 {
@@ -1577,125 +1578,184 @@ void Terrain::generateTreeTexture(shared_ptr<SceneManager::mesh> treeMeshPtr)
 	textureFile->height = 512;
 	fileManager.writeFile(textureFile); //will delete[] texData
 }
-void Terrain::precomputeScattering() {    
-    // See: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
+void Terrain::precomputeScattering() {
+	// See: https://hal.inria.fr/file/index/docid/288758/filename/article.pdf
 
-    // Incident intensity (ie sun color)
-    const Vec3f I_I = Vec3f(1,1,1);
-    
-    auto betaE_R = [](float height) -> Vec3f {
-        return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(height / 8000.0);
-    };
-    auto betaE_M = [](float height) -> Vec3f {
-        return Vec3f(2e-5, 2e-5, 2e-5) * exp(height / 1200.0) / 0.9f;
-    };
+	// Radiance of the sun/Incident intensity (in MW/m^2/sr)
+	// Computed using data from http://lasp.colorado.edu/lisird/sorce/sorce_ssi
+	const Vec3f I_I = Vec3f(1.40e7, 1.45e7, 1.11e7) * 1e-6;
 
-    auto P_R = [](float u) -> float {
-        return 3.0 / (16.0 * 3.14159) * (1.0 + u*u);
-    };
-    auto P_M = [](float u, float g) -> float {
-//        return 3.0 / (8.0 * 3.14159) * ...;
-        return 0;
-    };
-    
-    /**
-     * Compute transmittance for a ray defined by (r,u) and extending to the
-     * edge of the atmosphere.
-     *
-     * r = distance from ray start to the center of the earth
-     * u = cosine of angle between ray and the vertical
-     * steps = number of points along the ray used to compute the integral
-     */
-    auto transmittance = [=](float r, float u, size_t steps = 32) -> Vec3f {
-        // If ray interests the earth, return zero:
-        if(r < earthRadius || (r*sqrt(1.0 - u*u) < earthRadius && u < 0))
-            return Vec3f(0,0,0);
+	auto betaS_R = [](float height) {
+		return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(height / 8000.0);
+	};
+	auto betaE_R = [&](float height) { return betaS_R(height); };
 
-        // Compute distance from ray to edge of the atmosphere
-        float h = sqrt(earthRadius*earthRadius + r*r*(u*u-1)) - r*u;
+	auto betaS_M = [](float height) {
+		return Vec3f(4, 4, 4) * 1e-6 * exp(height / 1200.0);
+	};
+	auto betaE_M = [&](float height) { return betaS_R(height) / 0.9f; };
 
-        // Compute starting and ending positions of the ray in 2D (since there
-        // is no need to use a third dimension). Cordinates are relative to the
-        // center of the earth.
-        Vec2f x = Vec2f(0, r+earthRadius);
-        Vec2f x0 = Vec2f(h*u, h*sqrt(1.0-u*u) + earthRadius);
+	auto P_R = [](float u) -> float {
+		return 3.0 / (16.0 * 3.14159) * (1.0 + u * u);
+	};
+	auto P_M = [](float u, float g) -> float {
+		return 3.0 / (8.0 * 3.14159) * (1 - g * g) * (1 + u * u) /
+		       ((2 + g * g) * pow(1 + g * g - 2 * g * u, 1.5));
+	};
 
-        // Integrate
-        Vec3f integral(0,0,0);
-        float stepSize = x.distance(x0) / steps;
-        for(size_t i = 0; i < steps; i++){
-            float h = (lerp(x, x0, (float)i / steps)).magnitude();
-            integral += (betaE_R(h) + betaE_M(h)) * stepSize;
-        }
-        return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
-    };
+	// distance in meters from the center of the earth to the surface, and edge
+	// of the atmosphere respectively
+	float Rg = earthRadius, Rt = earthRadius + 100000;
 
-    Table2<64, 256> Transmittance;
-    for(size_t x = 0; x < Transmittance.W; x++){
-        for(size_t y = 0; y < Transmittance.H; y++){
-            float r = x * 100000.0 / Transmittance.W + earthRadius;
-            float u = (float)y / Transmittance.H;
+	/**
+	 * Compute transmittance for a ray defined by (r,u) and extending to the
+	 * edge of the atmosphere. Return value is a dimensionless fraction.
+	 *
+	 * r = distance from ray start to the center of the earth (meters)
+	 * u = cosine of angle between ray and the vertical
+	 * steps = number of points along the ray used to compute the integral
+	 */
+	auto transmittance = [=](float r, float u, size_t steps = 32) -> Vec3f {
+		// If ray interests the earth, return zero:
+		if(r < Rg || (r * sqrt(1.0 - u * u) < Rg && u <= 0))
+			return Vec3f(0, 0, 0);
 
-            // Transmittance(x,y) = transmittance(r, u);
-        }
-    }
+		// Compute distance from ray to edge of the atmosphere (meters)
+		float m = sqrt(Rt * Rt + r * r * (u * u - 1)) - r * u;
+		
+		// Compute starting and ending positions of the ray in 2D (since there
+		// is no need to use a third dimension). Cordinates are relative to the
+		// center of the earth. (meters)
+		Vec2f x = Vec2f(0, r);
+		Vec2f x0 = Vec2f(m * u, m * sqrt(1.0 - u * u) + r);
 
-    /**
-     * Compute first scattering term for a ray defined by (r,u) and extending to
-     * the edge of the atmosphere.
-     *
-     * r = distance from ray start to the center of the earth
-     * u = cosine of angle between ray and the vertical
-     * sun_zenith = angle between sun direction and the vertical
-     * sun_azimuth = angle between sun and view direction in the XZ plane
-     * steps = number of points along the ray used to compute the integral
-     */
-    auto SL0 = [&Transmittance, I_I](float r, float u, float sun_zenith,
-                                    float sun_azimuth, size_t steps = 32){
-        // If ray interests the earth, return zero:
-        if(r < earthRadius || (r*sqrt(1.0 - u*u) < earthRadius && u < 0))
-            return Vec3f(0,0,0);
+		// Integrate
+		Vec3f integral(0, 0, 0);
+		float stepSize = x.distance(x0) / steps;
+		for(size_t i = 0; i < steps; i++) {
+			float h = (lerp(x, x0, (float)i / steps)).magnitude() - Rg;
+			integral += (betaE_R(h) + betaE_M(h)) * stepSize;
+		}
+		return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
+	};
 
-        // Compute distance from ray to edge of the atmosphere
-        float h = sqrt(earthRadius*earthRadius + r*r*(u*u-1)) - r*u;
+	Table2<Vec3f, 256, 1024> Transmittance;
+	for(size_t x = 0; x < Transmittance.W; x++) {
+		for(size_t y = 0; y < Transmittance.H; y++) {
+			float r = (x+0.5f) * (Rt - Rg) / Transmittance.W + Rg;
+			float u = (2.0f * (y+0.5f)) / Transmittance.H - 1.0f;
 
-        // Compute starting and ending positions of the ray in 2D (since there
-        // is no need to use a third dimension). Cordinates are relative to the
-        // center of the earth.
-        Vec2f x = Vec2f(0, r+earthRadius);
-        Vec2f x0 = Vec2f(h*u, h*sqrt(1.0-u*u) + earthRadius);
-        
-        // Integrate
-        Vec3f integral(0,0,0);
-        float stepSize = x.distance(x0) / steps;
-        for(size_t i = 0; i < steps; i++){
-            float h = (lerp(x, x0, (float)i / steps)).magnitude();
-            integral += 0 * stepSize;
-        }
-        return integral;
-    };
-    
-    // Table2<16, 64> E;
-    // for(size_t x = 0; x < E.W; x++){
-    //     for(size_t y = 0; y < E.H; y++){
-    //         E(x,y) = 0;
-    //     }
-    // }
+			Transmittance(x, y) = transmittance(r, u);
+		}
+	}
 
-    Table3<32, 128, 32*8> S;
-    for(size_t x = 0; x < S.W; x++){
-        for(size_t y = 0; y < S.H; y++){
-            for(size_t zw = 0; zw < S.D; zw++){
-                size_t z = zw % 32;
-                size_t w = zw / 32;
-                S(x,y,zw) = 0;
-            }
-        }
-    }
-    
+	/**
+	 * Compute first scattering term for a ray defined by (r,u) and extending to
+	 * the edge of the atmosphere.
+	 *
+	 * r = distance from ray start to the center of the earth (meters)
+	 * u = cosine of angle between ray and the vertical
+	 * u_s = cosine of the angle between sun direction and the vertical
+	 * v = cosine of the angle between sun and view direction
+	 * steps = number of points along the ray used to compute the integral
+	 */
+	auto SL0 = [&](float r, float u, float u_s, float v, size_t steps = 32) {
+		// If ray interests the earth, return zero:
+		if(r < Rg || (r * sqrt(1.0 - u * u) < Rg && u <= 0)){
+			return Vec3f(0, 0, 0);
+		}
+
+		// Compute distance from ray to edge of the atmosphere
+		float m = sqrt(Rt * Rt + r * r * (u * u - 1)) - r * u;
+
+		// Compute starting and ending positions of the ray in 2D (since there
+		// is no need to use a third dimension). Cordinates are relative to the
+		// center of the earth.
+		Vec2f x = Vec2f(0, r);
+		Vec2f x0 = Vec2f(m * sqrt(1.0 - u * u), m * u + r);
+
+		float pr = P_R(v), pm = P_M(v, 0.76);
+
+		// Integrate
+		Vec3f integral(0, 0, 0);
+		float stepSize = x.distance(x0) / steps;
+		for(size_t i = 0; i < steps; i++) {
+			Vec2f p = lerp(x, x0, (float)i / steps);
+			float h = p.magnitude() - Rg;
+
+			float tu = (h / (Rt - Rg)) * (Transmittance.W-1);
+			float tv = (u * 0.5 + 0.5) * (Transmittance.H-1);
+
+			tu = clamp(tu - 0.5, 0.5, Transmittance.W - 1.5);
+			tv = clamp(tv - 0.5, 0.5, Transmittance.H - 1.5);
+			
+			Vec3f T = Transmittance.interpolate(tu, tv);
+			Vec3f J = (betaS_R(h) * pr + betaS_M(h) * pm) * I_I;
+			integral += T * J * stepSize;
+		}
+		return integral;
+	};
+
+	float H = sqrt(Rt * Rt - Rg * Rg);
+
+	Table3<Vec3f, 32, 128, 8 * 32> S;
+	for(size_t x = 0; x < S.W; x++) {
+		for(size_t y = 0; y < S.H; y++) {
+			for(size_t zw = 0; zw < S.D; zw++) {
+				size_t z = zw / 8;
+				size_t w = zw % 8;
+
+				float ur = (x+0.5f) / S.W;
+				float uu = (y+0.5f) / S.H;
+				float uus = (z+0.5f) / 32;
+				float uv = (w+0.5f) / 8;
+
+				float r = sqrt(ur * ur * H + Rg * Rg);
+				float u_s = -1.0 / 3 * log(1 - uus * (1 - exp(-3.6))) - 0.2;
+				float v = 2 * uv - 1;
+				float u = 2 * uu - 1; // TODO: better mapping for u
+
+				// float ro2 = r * r - Rg * Rg;
+				// float ro = sqrt(ro2);
+				// if(y < S.H / 2) {
+				// 	u = ro * uu / (2 * r * (uu - 1));
+				// } else if (y > S.H / 2) {
+				// 	u = (1 - uu) / (8 * r * (ro + H)) +
+				// 	    (ro + H) * (ro2 - H) / (r * (0.5 - uu));
+				// } else {
+				// 	S(x, y, zw) = Vec3f(0,0,0);
+				// 	continue;
+				// }
+
+				S(x, y, zw) = SL0(r, u, u_s, v);
+			}
+		}
+	}
+
+	// for(int y = 0; y < 128; y++) {
+	// 	for(int x = 0; x < 32; x++) { cout << S(0, y, x) << " "; }
+	// 	cout << endl;
+	// }
+	
+	scatteringTables.transmittance = graphics->genTexture2D();
+	scatteringTables.inscattered = graphics->genTexture3D();
+
+	scatteringTables.transmittance->setData(
+	    Transmittance.W, Transmittance.H,
+	    GraphicsManager::texture::Format::RGB16F, false, false,
+	    (unsigned char*)Transmittance.data.get());
+
+	scatteringTables.inscattered->setData(
+	    S.W, S.H, S.D, GraphicsManager::texture::Format::RGB16F,
+	    (unsigned char*)S.data.get());
+
+	// auto p = scatteringTables.transmittance->getDataf();
+	// for(int i = 0; i < Transmittance.W * Transmittance.H; i++){
+	// 	cout << p[i*3] << "," << p[i*3+1] << "," << p[i*3+2] << " ";
+	// }
 }
-void Terrain::addDecal(Vec2f center, float width, float height, string texture, double startTime, double fadeInLength)
-{
+void Terrain::addDecal(Vec2f center, float width, float height, string texture,
+                       double startTime, double fadeInLength) {
 	cout << "decals not yet implemented.\n";
 	/*if(width <= 0 || height <= 0)
 		return;
@@ -1954,25 +2014,50 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 //	renderFractalWater(view);
 //	graphics->setWireFrame(false);
 
-	auto skyShader = shaders.bind("sky2 shader");
-	Vec3f fwd = view->camera().fwd;
-	Vec3f up = view->camera().up;
-	Vec3f right = view->camera().right;
+	// auto skyShader = shaders.bind("sky2 shader");
+	// Vec3f fwd = view->camera().fwd;
+	// Vec3f up = view->camera().up;
+	// Vec3f right = view->camera().right;
 
-	dataManager.bind("noise",0);
-	skyShader->setUniform1f("time", currentTime);
-	skyShader->setUniform1i("noise", 0);
+	// dataManager.bind("noise",0);
+	// skyShader->setUniform1f("time", currentTime);
+	// skyShader->setUniform1i("noise", 0);
+	// skyShader->setUniform3f("eye", view->camera().eye);
+	// skyShader->setUniform3f("fwd", fwd);
+	// skyShader->setUniform3f("up", up * tan(view->projection().fovy/2 * PI/180.0));
+	// skyShader->setUniform3f("right", right * tan(view->projection().fovy/2 * PI/180.0)*view->projection().aspect);
+	// skyShader->setUniform3f("lightDirection", graphics->getLightPosition().normalize());
+	// skyShader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
+	// skyShader->setUniform2f("mapCenter", 0, 0);
+	// graphics->drawOverlay(Rect::XYWH(	-1.0 - 2.0*view->viewConstraint().x / view->viewConstraint().w, 
+	// 									-1.0 - 2.0*view->viewConstraint().y / view->viewConstraint().h,
+	// 									 2.0 / view->viewConstraint().w,
+	// 									 2.0 / view->viewConstraint().h));//(view->viewport().x,view->viewport().y,view->viewport().width,view->viewport().height));
+
+	auto skyShader = shaders.bind("sky shader");
+	float scale = tan(view->projection().fovy / 2 * PI / 180.0);
+	Vec3f fwd = view->camera().fwd;
+	Vec3f up = view->camera().up * scale;
+	Vec3f right = view->camera().right * scale * view->projection().aspect;
+
+	scatteringTables.transmittance->bind(0);
+	scatteringTables.inscattered->bind(1);
+	skyShader->setUniform1i("transmittance", 0);
+	skyShader->setUniform1i("inscattering", 1);
+	
 	skyShader->setUniform3f("eye", view->camera().eye);
 	skyShader->setUniform3f("fwd", fwd);
-	skyShader->setUniform3f("up", up * tan(view->projection().fovy/2 * PI/180.0));
-	skyShader->setUniform3f("right", right * tan(view->projection().fovy/2 * PI/180.0)*view->projection().aspect);
-	skyShader->setUniform3f("lightDirection", graphics->getLightPosition().normalize());
-	skyShader->setUniformMatrix("cameraProjection", view->projectionMatrix() * view->modelViewMatrix());
-	skyShader->setUniform2f("mapCenter", 0, 0);
-	graphics->drawOverlay(Rect::XYWH(	-1.0 - 2.0*view->viewConstraint().x / view->viewConstraint().w, 
-										-1.0 - 2.0*view->viewConstraint().y / view->viewConstraint().h,
-										 2.0 / view->viewConstraint().w,
-										 2.0 / view->viewConstraint().h));//(view->viewport().x,view->viewport().y,view->viewport().width,view->viewport().height));
+	skyShader->setUniform3f("up", up);
+	skyShader->setUniform3f("right", right);
+	skyShader->setUniform1f("Rg", earthRadius);
+	skyShader->setUniform1f("Rt", earthRadius + 100000.0);
+	skyShader->setUniform3f("sunDirection",
+	                        graphics->getLightPosition().normalize());
+	skyShader->setUniform3f("sunRadiance", 1.40e7, 1.45e7, 1.11e7);
+	graphics->drawOverlay(Rect::XYWH(
+	    -1.0 - 2.0 * view->viewConstraint().x / view->viewConstraint().w,
+	    -1.0 - 2.0 * view->viewConstraint().y / view->viewConstraint().h,
+	    2.0 / view->viewConstraint().w, 2.0 / view->viewConstraint().h));
 }
 void Terrain::renderFractalTerrain(shared_ptr<GraphicsManager::View> view) const
 {

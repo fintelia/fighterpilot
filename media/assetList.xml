@@ -171,6 +171,10 @@
             fragment="media/blurMipmaps.frag" preload="true"/>
 
     <!-- world -->
+    <shader name="sky shader"
+            vertex3="media/sky.vert"
+            fragment3="media/sky.frag" />
+
     <shader name="sky2 shader"
             vertex="media/sky2.vert"
             fragment="media/sky2.frag" />

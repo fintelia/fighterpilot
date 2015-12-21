@@ -304,22 +304,54 @@ template <class T> T taylor(T t, T x, T dx, T ddx, T dddx)
 	return x + dx * t + ddx * t*t + dddx * t*t*t;
 }
 
-template<size_t Width, size_t Height> struct Table2 {
+template<typename T, size_t Width, size_t Height> struct Table2 {
     const size_t W = Width;
     const size_t H = Height;
-    unique_ptr<float[]> data = unique_ptr<float[]>(new float[W*H]);
-    float& operator() (size_t x, size_t y){
+    unique_ptr<T[]> data = unique_ptr<T[]>(new T[W*H]);
+    T& operator() (size_t x, size_t y){
         debugAssert(x < Width && y < Height);
         return data[x + Width * y];
     }
+	T interpolate(double x, double y){
+		T v00 = (*this)(floor(x), floor(y));
+		T v10 = (*this)(ceil(x), floor(y));
+		T v01 = (*this)(floor(x), ceil(y));
+		T v11 = (*this)(ceil(x), ceil(y));
+
+		T v0 = lerp(v00,v01, y-floor(y));
+		T v1 = lerp(v10,v11, y-floor(y));
+        return lerp(v0, v1, x-floor(x));
+    }
+
 };
-template<size_t Width, size_t Height, size_t Depth> struct Table3 {
+template<typename T, size_t Width, size_t Height, size_t Depth> struct Table3 {
     const size_t W = Width;
     const size_t H = Height;
     const size_t D = Depth;
-    unique_ptr<float[]> data = unique_ptr<float[]>(new float[W*H*D]);
-    float& operator() (size_t x, size_t y, size_t z){
+    unique_ptr<T[]> data = unique_ptr<T[]>(new T[W*H*D]);
+    T& operator() (size_t x, size_t y, size_t z){
         debugAssert(x < Width && y < Height && z < Depth);
         return data[x + Width * y + Width*Height * z];
     }
+	T interpolate(double x, double y, double z){
+		T v000 = (*this)(floor(x), floor(y), floor(z));
+		T v100 = (*this)(ceil(x), floor(y), floor(z));
+		T v010 = (*this)(floor(x), ceil(y), floor(z));
+		T v110 = (*this)(ceil(x), ceil(y), floor(z));
+		T v001 = (*this)(floor(x), floor(y), ceil(z));
+		T v101 = (*this)(ceil(x), floor(y), ceil(z));
+		T v011 = (*this)(floor(x), ceil(y), ceil(z));
+		T v111 = (*this)(ceil(x), ceil(y), ceil(z));
+
+		T v00 = lerp(v000, v001, z-floor(z));
+		T v10 = lerp(v100, v101, z-floor(z));
+		T v01 = lerp(v010, v011, z-floor(z));
+		T v11 = lerp(v110, v111, z-floor(z));
+		
+		T v0 = lerp(v00,v01, y-floor(y));
+		T v1 = lerp(v10,v11, y-floor(y));
+        return lerp(v0, v1, x-floor(x));
+    }
+
 };
+
