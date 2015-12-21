@@ -701,7 +701,7 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned char* data, Primitive primi
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count, data, GL_STREAM_DRAW);
-	else cerr << "useageFrequency not set: ";
+	else std::cerr << "useageFrequency not set: ";
 	
 #ifdef _DEBUG
 	maxIndex = 0;
@@ -734,7 +734,7 @@ void OpenGLgraphics::indexBufferGL::setData(unsigned short* data, Primitive prim
 	if(usageFrequency == STATIC)		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STATIC_DRAW);
 	else if(usageFrequency == DYNAMIC)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_DYNAMIC_DRAW);
 	else if(usageFrequency == STREAM)	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count*2, data, GL_STREAM_DRAW);
-	else cerr << "useageFrequency not set: ";
+	else std::cerr << "useageFrequency not set: ";
 	
 #ifdef _DEBUG
 	maxIndex = 0;
@@ -2575,41 +2575,41 @@ void OpenGLgraphics::render()
 
         if(overlayRect.w*overlayRect.h > 0.0)
         {
-            // Remove colors darker than 1.0
-            setBlendMode(REPLACE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, renderTextures.bloom, 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderTextures.color);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            glViewport(0,0,sw,sh);
-            bloom->bind();
-            bloom->setUniform1i("tex",0);
-            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+//             // Remove colors darker than 1.0
+//             setBlendMode(REPLACE);
+//             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+//                                    GL_TEXTURE_2D, renderTextures.bloom, 0);
+//             glActiveTexture(GL_TEXTURE0);
+//             glBindTexture(GL_TEXTURE_2D, renderTextures.color);
+//             glGenerateMipmap(GL_TEXTURE_2D);
+//             glViewport(0,0,sw,sh);
+//             bloom->bind();
+//             bloom->setUniform1i("tex",0);
+//             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
-            // Blur in the X direction
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, renderTextures.bloom2, 3);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            glViewport(0,0,sw/8,sh/8);
-            blurX->bind();
-            blurX->setUniform1i("mipmapLayer", 3);
-            blurX->setUniform1i("tex",0);
-            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+//             // Blur in the X direction
+//             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+//                                    GL_TEXTURE_2D, renderTextures.bloom2, 3);
+//             glActiveTexture(GL_TEXTURE0);
+//             glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
+//             glGenerateMipmap(GL_TEXTURE_2D);
+//             glViewport(0,0,sw/8,sh/8);
+//             blurX->bind();
+//             blurX->setUniform1i("mipmapLayer", 3);
+//             blurX->setUniform1i("tex",0);
+//             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
-            // Blur in the Y direction
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, renderTextures.bloom, 3);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom2);
-//            glGenerateMipmap(GL_TEXTURE_2D);
-            glViewport(0, 0, sw/8, sh/8);
-            blurY->bind();
-            blurY->setUniform1i("mipmapLayer", 3);
-            blurY->setUniform1i("tex", 0);
-            GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
+//             // Blur in the Y direction
+//             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+//                                    GL_TEXTURE_2D, renderTextures.bloom, 3);
+//             glActiveTexture(GL_TEXTURE0);
+//             glBindTexture(GL_TEXTURE_2D, renderTextures.bloom2);
+// //            glGenerateMipmap(GL_TEXTURE_2D);
+//             glViewport(0, 0, sw/8, sh/8);
+//             blurY->bind();
+//             blurY->setUniform1i("mipmapLayer", 3);
+//             blurY->setUniform1i("tex", 0);
+//             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
             // Compute the log luminance of the scene.
             // setBlendMode(TRANSPARENCY);
@@ -2635,12 +2635,12 @@ void OpenGLgraphics::render()
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, renderTextures.luminance);
             glGenerateMipmap(GL_TEXTURE_2D);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
+            // glActiveTexture(GL_TEXTURE2);
+            // glBindTexture(GL_TEXTURE_2D, renderTextures.bloom);
             glViewport(0,0,sw,sh);
             tonemap->bind();
             tonemap->setUniform1i("tex",0);
-            tonemap->setUniform1i("bloomTex", 2);
+            // tonemap->setUniform1i("bloomTex", 2);
             // tonemap->setUniform1i("logLuminance",1);
             GraphicsManager::drawPartialOverlay(overlayRect, textureRect);
 
@@ -3001,7 +3001,7 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 	if(!glXIsDirect(x11_display, context->context))
 	{
 		//we don't have hardware acceleration!
-		cerr << "No hardware acceleration!!!" << endl;
+		std::cerr << "No hardware acceleration!!!" << endl;
 	}
 	const char* cTitle = title.c_str();
 	XTextProperty textProperty;
@@ -3293,7 +3293,7 @@ void OpenGLgraphics::setRefreshRate(unsigned int rate)
 }
 void OpenGLgraphics::takeScreenshot(unsigned int tiles)
 {
-    cerr << "Warning: can't pause for screenshot" << endl;
+	std::cerr << "Warning: can't pause for screenshot" << endl;
 //	world->time.pause();
 #ifdef WINDOWS
 	SYSTEMTIME sTime;

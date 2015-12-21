@@ -47,7 +47,7 @@ void main()
                         texture(LCnoise, position.xz*0.25).r - 1.0);
     color *= nDotL;
 
-    float depth = 1150-height;
+    float depth = -height;
     float waterAmount = clamp(1.0 + depth*10.0, 0, 1);
     vec3 wNormal = readNormal(oceanNormals, position.xz/2000, time/8)
         + readNormal(oceanNormals, position.xz/105, time/4);
