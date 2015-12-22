@@ -1,4 +1,5 @@
 
+#include "engine.h"
 #include "game.h"
 #include "xml/tinyxml2.h"
 

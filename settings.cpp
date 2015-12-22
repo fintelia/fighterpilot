@@ -1,4 +1,5 @@
 
+#include "engine.h"
 #include "game.h"
 
 void SettingsManager::load(const map<string,map<string,string>>& m)

@@ -1,4 +1,5 @@
 
+#include "engine.h"
 #include "game.h"
 
 missileBase::missileBase(missileType Type, teamNum Team,Vec3f sPos, Quat4f sRot, float Speed, int Owner):object(Type), life(15.0), difAng(0), lastAng(0), speed(Speed), acceleration(1180.0/3.0), owner(Owner)

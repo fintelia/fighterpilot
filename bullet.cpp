@@ -1,4 +1,5 @@
 
+#include "engine.h"
 #include "game.h"
 
 const float bullet::bulletSpeed = 1000.0;

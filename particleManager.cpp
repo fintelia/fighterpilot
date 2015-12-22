@@ -1,5 +1,4 @@
 
-
 #include "engine.h"
 
 particle::manager& particleManager = particle::manager::getInstance();

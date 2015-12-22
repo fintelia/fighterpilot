@@ -1,7 +1,5 @@
-#include <iostream>
 
 #include "engine.h"
-//#include "xml/tinyxml.h"
 #include "xml/tinyxml2.h"
 
 using namespace tinyxml2; //makes the code much more readable...

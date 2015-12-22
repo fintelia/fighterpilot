@@ -1,5 +1,4 @@
 
-
 #include "engine.h"
 
 #ifdef OPENGL

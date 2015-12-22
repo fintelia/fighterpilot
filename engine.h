@@ -30,11 +30,7 @@
 	#pragma comment (lib, "dsound.lib")
 
 #elif defined __GNUG__
-
     #define GCC_COMPILER
-
-    #pragma GCC diagnostic ignored "-Wsign-compare"
-
 #endif
 
 #define NOMINMAX

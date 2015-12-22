@@ -1,5 +1,7 @@
 
+#include "engine.h"
 #include "game.h"
+
 LevelFile::Object::Object():type(0), team(NEUTRAL), startloc(), startRot()
 {
 

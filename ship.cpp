@@ -1,4 +1,5 @@
 
+#include "engine.h"
 #include "game.h"
 
 ship::ship(Vec3f sPos, Quat4f sRot, objectType Type, int Team):object(Type, Team), health(100.0)

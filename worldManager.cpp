@@ -1,5 +1,4 @@
 
-
 #include "engine.h"
 
 WorldManager::WorldManager(shared_ptr<ClipMap> clipMap):

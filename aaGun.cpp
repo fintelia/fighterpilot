@@ -1,5 +1,7 @@
 
+#include "engine.h"
 #include "game.h"
+
 void antiAircraftArtilleryBase::updateFrame(float interpolation) const
 {
 	Mat4f objectTransform = Mat4f(slerp(lastRotation,rotation, interpolation), lerp(lastPosition,position,interpolation));
