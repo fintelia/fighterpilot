@@ -215,6 +215,10 @@
             vertex3="media/auxMapGen.vert"
             fragment3="media/auxMapGen.frag" />
 
+    <shader name="clipmap colormap"
+            vertex3="media/colormapGen.vert"
+            fragment3="media/colormapGen.frag" />
+	
     <shader name="clipmap synthesize"
             vertex3="media/synthesizeClipmap.vert"
             fragment3="media/synthesizeClipmap.frag" />
