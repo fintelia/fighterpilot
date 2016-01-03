@@ -132,13 +132,6 @@ Vector2<T> operator*(U scale, const Vector2<T> v)
 	return Vector2<T>(v.x * scale, v.y * scale);
 }
 
-template <class T> Vector2<T> lerp(const Vector2<T>& v1, const Vector2<T>& v2, T t)
-{
-	if (t <= (T)0.0)	return v1;
-	if (t >= (T)1.0)	return v2;
-	return (v1 * ((T)1.0 - t) + v2 * t).normalize();
-};
-
 template <class T>
 class Vector3
 {
@@ -244,12 +237,6 @@ Vector3<T> operator*(T scale, const Vector3<T>& v)
 {
 	return Vector3<T>(v.x * scale, v.y * scale, v.z * scale);
 }
-template <class T> Vector3<T> lerp(const Vector3<T>& v1, const Vector3<T>& v2, T t)
-{
-	if (t <= (T)0.0)	return v1;
-	if (t >= (T)1.0)	return v2;
-	return (v1 * ((T)1.0 - t) + v2 * t);
-};
 
 template<class T>
 std::ostream& operator<<(std::ostream& s, const Vector3<T>& v)
