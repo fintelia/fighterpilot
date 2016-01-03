@@ -13,7 +13,7 @@ add_definitions(-D_DEBUG)
 # Somewhat hacky solution to get cmake to work with a precompiled header...
 get_property(defines DIRECTORY PROPERTY COMPILE_DEFINITIONS)
 separate_arguments(flags UNIX_COMMAND "${CMAKE_CXX_FLAGS}")
-add_custom_command(OUTPUT engine.h.gch DEPENDS engine.h COMMAND
+add_custom_command(OUTPUT engine.h.gch DEPENDS engine.h *.h COMMAND
   ${CMAKE_CXX_COMPILER} -c engine.h -o engine.h.gch ${flags} -D${defines}
   COMMENT "Building precompiled header"
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
