@@ -22,7 +22,9 @@ vec3 lookup_T(float r, float u){
 }
 
 vec3 lookup_S(float r, float u, float us, float v){
-	float ur = sqrt(   ((r-Rg)*(r-Rg))  /  ((Rt-Rg)*(Rt-Rg))   );
+	//	float ur = sqrt(   ((r-Rg)*(r-Rg))  /  ((Rt-Rg)*(Rt-Rg))   );
+	float ur = (r - Rg) / (Rt - Rg);
+
 	float uu = 0.5 * u + 0.5;
 	float uus = (1.0 - exp(-3*us - 0.6))  /  (1.0 - exp(-3.6));
 	float uv = 0.5 * v + 0.5;
@@ -37,6 +39,13 @@ vec3 lookup_S(float r, float u, float us, float v){
 	float uus_a = clamp(floor(uus * 32 - 0.5), 0.0, 31.0) / 32;
 	float uus_b = clamp(ceil(uus * 32- 0.5), 0.0, 31.0) / 32;
 	float t = fract(uus * 32 - 0.5);
+
+	if(r < Rg || (r * sqrt(1.0 - u * u) < Rg && u <= 0))
+		return vec3(1,1,0);
+
+	//	int y = textureSize(inscattering,0).y;
+	//	uu = (floor(uu * y - 0.5) + 0.5) / y;
+
 	return mix(texture(inscattering, vec3(ur, uu, uus_a + uv / 32)).rgb,
 	           texture(inscattering, vec3(ur, uu, uus_b + uv / 32)).rgb, t);
 }
@@ -89,7 +98,9 @@ void main()
 	
 	// Compute final color
 	vec3 color = L0 + SL;
-	//if(position.y > 0.5 && position.x > 0.5)
+
+	// if(position.x > 0.5 &&
+	//    (r < Rg || (r * sqrt(1.0 - v.y * v.y) < Rg && v.y <= 0)))
 	// 	color = vec3(0,1,0);
 // ---------------------------------- clouds -----------------------------------
 	// vec3 normal = normalize(worldPosition.xyz - earthCenter);

@@ -8,7 +8,7 @@ out VertexData{
 	uint vertexID;
 }vertexOut;
 
-uniform sampler2D groundTex;
+uniform sampler2D heights;
 
 uniform vec2 texOrigin;
 uniform vec2 texSpacing;
@@ -51,21 +51,28 @@ void main()
 	int b = width / patch_width;
 	int c = int(mod(int(trueVertexID), patchArea));
 
-	vec2 pos = vec2(mod(c, patch_width) + mod(a, b)*patch_width + random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0, c/patch_width + (a/b)*patch_height + random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
-	
-	vec4 groundVal = texture(groundTex, texOrigin + texSpacing * pos);
-	
-	vertexOut.position = worldOrigin + worldSpacing * vec3(pos.x, groundVal.r, pos.y);
+	vec2 pos = vec2(mod(c, patch_width) + mod(a, b) * patch_width +
+	                    random(75.151, 17473.9723, trueVertexID) * 2.0 - 1.0,
+	                c / patch_width + (a / b) * patch_height +
+	                    random(27.091, 25135.1073, trueVertexID) * 2.0 - 1.0);
+
+	vec2 texCoord = texOrigin + texSpacing * pos;
+	float height = texture(heights, texCoord).r;
+	// vec3 normal = normalize(texture(normals, texCoord).xzy * vec3(2, 1, 2) -
+	//                         vec3(1, 0, 1));
+	// float slope = length(normal.xy) / normal.y;
+
+	vertexOut.position =
+	    worldOrigin + worldSpacing * vec3(pos.x, height, pos.y);
 	vertexOut.vertexID = trueVertexID;
 
 	vec2 r = vertexOut.position.xz / earthRadius;
 	//vertexOut.position.y += earthRadius * (sqrt(1.0 - dot(r,r)) - 1.0);
 	
-	float slope = 2*max(abs(groundVal.g-0.5),abs(groundVal.b-0.5))*slopeScale;
-	
-	float odds = clamp(0.05 * (vertexOut.position.y - 10.0 - 1150.0), 0.0, 1.0) * 0.5;/* * 
-		clamp(20 * (0.9 - slope), 0.0, 1.0) *
-		clamp(5 * (slope - 0.05), 0.0, 1.0)*/;
 
+	float odds = clamp(0.05 * (vertexOut.position.y - 10.0 - 1150), 0.0, 1.0);
+		/*	             clamp(20 * (0.9 - slope), 0.0, 1.0) *
+						 clamp(5 * (slope - 0.05), 0.0, 1.0);*/
+	
 	vertexOut.shouldDiscard = float(random(75.246,42375.1354, trueVertexID) > odds /*|| groundVal.y <= 0.9111 ||(vertexOut.position.y >= 150.0 && groundVal.y >= 0.98)*/);
 }

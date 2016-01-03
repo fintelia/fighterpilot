@@ -23,6 +23,12 @@ void main()
 		float eyeDist = length(eyeDirection);
 		//gl_FragColor = vec4(treeColor,1.0) * color.rgba /* clamp((9500.0-distance(eyePos,position))*0.002,0.0,1.0)*/;//vec4(mix(color.rgb, textureCube(sky, vec3(-eyeDirection.x,0,-eyeDirection.z)).rgb, clamp(0.000000001*dot(eyeDirection,eyeDirection),0.0,1.0)),color.a /* clamp((10000.0-distance(eyePos,position))*0.002,0.0,1.0)*/);
 
-		gl_FragColor = vec4(   mix(treeColor*color.rgb, vec3(0.5,0.5,0.5), clamp(1.0 - 100000000.0 / dot(eyeDirection,eyeDirection),0.0,0.75)) , color.a );
+		vec3 fogColor = vec3(0.5, 0.5, 0.5);
+		float fogAmount = 1-min(5000.0/length(eyePos - position), 1);
+			// clamp(
+		    // 1.0 - 100000000.0 / dot(eyeDirection, eyeDirection), 0.0, 0.75);
+
+		gl_FragColor.rgb = mix(treeColor * color.rgb, fogColor, fogAmount);
+		gl_FragColor.a = color.a * clamp(1 - 0.001*(eyeDist - 6000), 0, 1);
 	}
 }

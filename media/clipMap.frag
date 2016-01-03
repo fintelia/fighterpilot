@@ -5,18 +5,19 @@ in vec2 texCoord;
 
 uniform sampler2D heightmap;
 uniform sampler2D normalmap;
-
 uniform sampler3D oceanNormals;
 uniform sampler3D oceanNormals2;
 
 uniform sampler2D grass;
 uniform sampler2D LCnoise;
-uniform sampler2D oceanGradient;
 uniform vec3 sunDirection;
 uniform vec3 eyePosition;
+uniform int layer;
+uniform float time;
 uniform float sideLength;
 
-uniform float time;
+uniform int maxColormapLayer;
+uniform sampler2D colormap;
 
 out vec4 FragColor;
 
@@ -28,7 +29,14 @@ vec3 readNormal(sampler3D tex, vec2 coord, float time){
 
 void main()
 {
-    
+    if(layer <= maxColormapLayer){
+		FragColor = texture(colormap, texCoord);
+
+		float d = length(eyePosition - position);
+		FragColor.rgb = mix(FragColor.rgb, vec3(.3,.3,.34), 1-min(5000.0/d,1));
+		return;
+	}
+	
     float height = texture(heightmap, texCoord).x;
     vec3 normal = normalize(texture(normalmap, texCoord).xzy * vec3(2,1,2)
                             - vec3(1,0,1));
@@ -45,8 +53,18 @@ void main()
     vec3 color = mix(grass_color, rock_color, clamp(5*(slope-0.05), 0.0, 1.0));
     color *= 1.0 + 0.6*(texture(LCnoise, position.xz*0.025).r +
                         texture(LCnoise, position.xz*0.25).r - 1.0);
-    color *= nDotL;
+	
+	color *= nDotL;
 
+	vec3 foliageColor = vec3(0.08, 0.10, 0.01);
+	float density = clamp(0.05 * (height - 10.0 - 1150.0), 0.0, 1.0);
+	density *= clamp(0.0005*(length(position.xz-eyePosition.xz) - 4500), 0, 1);
+	color = mix(color, foliageColor, density);
+
+	// vec3 foliageColor = pow(vec3(0.31, 0.32, 0.13), vec3(2.2));
+	// float density = clamp(0.05 * (height - 10.0 - 1150.0), 0.0, 1.0);
+	//	color = mix(rock_color, foliageColor, density * parentBlend);
+	
     float depth = -height;
     float waterAmount = clamp(1.0 + depth*10.0, 0, 1);
     vec3 wNormal = readNormal(oceanNormals, position.xz/2000, time/8)
@@ -77,12 +95,15 @@ void main()
     // fog
     float d = length(eyePosition - position);
     FragColor.rgb = mix(FragColor.rgb, vec3(.3,.3,.34), 1-min(5000.0/d,1));
-    
-    // float mult = max(abs(position.x),abs(position.z)) > 512 * 30 ? 0 : 0.5;
-    // FragColor.rgb = mix(FragColor.rgb, vec3(1,0,1), mult);
 
-//    ivec2 v = ivec2(texCoord * 1024 * 8);
-//    FragColor = vec4(vec3(v.x%2 == v.y%2 ? 0.1 : 0.5), 1);
+
+	//	float mult = layer == 4 ? 0.5 : 0;
+		//		float mult = max(abs(position.x),abs(position.z)) > 512 * 30 ? 0.5 : 0;
+	//	FragColor.rgb = mix(FragColor.rgb, vec3(1,0,0), mult);
+		//	}
+    ivec2 v = ivec2(floor(position.xz / 30 / 4));
+    FragColor = vec4(vec3(v.x%2 == v.y%2 ? vec3(0.1) : vec3(1,0,0)/*0.5*/), 1);
+	
 //    FragColor = vec4(vec3(normal),1);
 //    FragColor = vec4(vec3(fract((position.y - 1100) / 300)),1);
 }

@@ -128,6 +128,14 @@ Terrain::GpuClipMap::GpuClipMap(float sLength, unsigned int resolution,
             layers[i].normals->setData(layerResolution, layerResolution,
                                        GraphicsManager::texture::RGB, true,
                                        false, nullptr);
+
+			if(i < numPinnedLayers - 1){
+				layers[i].colors = graphics->genTexture2D();
+				layers[i].colors->setData(layerResolution, layerResolution,
+										  GraphicsManager::texture::RGB, true,
+										  false, nullptr);
+			}
+			
             layers[i].textureCenter.x = layerResolution/2;
             layers[i].textureCenter.y = layerResolution/2;
             generateAuxiliaryMaps(i);
@@ -269,8 +277,10 @@ void Terrain::GpuClipMap::synthesizeHeightmap(unsigned int layer)
 }
 void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 {
-    auto shader = shaders.bind("clipmap auxmapgen");
-    shader->setUniform1f("invTexelSize", (resolution-1) / (sideLength * (1<<(layers.size()-1-layer))));
+	float invTexelSize =
+	    (resolution - 1) / (sideLength * (1 << (layers.size() - 1 - layer)));
+	auto shader = shaders.bind("clipmap auxmapgen");
+	shader->setUniform1f("invTexelSize", invTexelSize);
 	shader->setUniform1i("heightmap", 0);
     layers[layer].heights->bind(0);
     
@@ -278,6 +288,37 @@ void Terrain::GpuClipMap::generateAuxiliaryMaps(unsigned int layer)
 	graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
 	graphics->endRenderToTexture();
     layers[layer].normals->generateMipmaps();
+
+	if(layer < numPinnedLayers-1){
+		auto shader = shaders.bind("clipmap colormap");
+
+        unsigned int layerScale = 1 << (layers.size()-layer-1);
+		float slength = sideLength * (blockResolution - 1) * layerScale
+            / (resolution - 1);
+		
+		// Uniforms
+		shader->setUniform1i("layer", layer);
+		shader->setUniform1f("sideLength", slength);
+		shader->setUniform3f("sunDirection",
+		                     graphics->getLightPosition().normalize());
+
+		// Textures
+		shader->setUniform1i("heightmap", 0);
+		layers[layer].heights->bind(0);
+		shader->setUniform1i("normalmap", 1);
+		layers[layer].normals->bind(1);
+		shader->setUniform1i("grass", 2);
+		dataManager.bind("grass", 2);
+		shader->setUniform1i("LCnoise", 7);
+		dataManager.bind("LCnoise", 7);
+
+		// Perform the render to texture.
+		graphics->startRenderToTexture(layers[layer].colors, 0, nullptr, 0,
+		                               true);
+		graphics->drawOverlay(Rect::XYXY(-1, -1, 1, 1));
+		graphics->endRenderToTexture();
+		layers[layer].colors->generateMipmaps();
+	}
 }
 void Terrain::GpuClipMap::generateTrees()
 {
@@ -308,7 +349,7 @@ void Terrain::GpuClipMap::generateTrees()
 
 	//count the number of trees that there will be
 	auto countTrees = shaders.bind("count trees");
-	countTrees->setUniform1i("groundTex", 0);
+	countTrees->setUniform1i("heights", 0);
 	countTrees->setUniform1i("width", patches * sLength);
 	countTrees->setUniform3f("worldOrigin",
                              Vec3f(-layerSize/2, 0, -layerSize/2));
@@ -375,7 +416,7 @@ void Terrain::GpuClipMap::generateTrees()
     trees->setVertexData(32 * 12 * numTrees, nullptr);
     //render trees into VBO
     auto placeTreesShader = shaders.bind("place trees");
-	placeTreesShader->setUniform1i("groundTex", 0);
+	placeTreesShader->setUniform1i("heights", 0);
 	placeTreesShader->setUniform1i("width", patches * sLength);
 	placeTreesShader->setUniform3f("worldOrigin",
                                    Vec3f(-layerSize/2, 0, -layerSize/2));
@@ -456,6 +497,7 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
 	shader->setUniform3f("sunDirection",
                          graphics->getLightPosition().normalize());
     shader->setUniform1f("time", world->time() / 1000.0);
+	shader->setUniform1i("maxColormapLayer", numPinnedLayers - 2);
     
 	shader->setUniform1i("heightmap", 0);
     shader->setUniform1i("normalmap", 1);
@@ -469,9 +511,6 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
     dataManager.bind("fft ocean normals", 4);
     shader->setUniform1i("oceanNormals2", 5);
     dataManager.bind("fft ocean2 normals", 5);
-
-    shader->setUniform1i("oceanGradient", 6);
-    dataManager.bind("ocean gradient", 6);
 
     shader->setUniform1i("LCnoise", 7);
     dataManager.bind("LCnoise", 7);
@@ -488,13 +527,19 @@ void Terrain::GpuClipMap::render(shared_ptr<GraphicsManager::View> view)
             layers[i].textureCenter - ((blockResolution-1)/2-blockStep);
         textureOrigin -= (layers[i].center - layers[i].targetCenter)
             / layerScale;
-        
+
         shader->setUniform1f("sideLength", slength);
         shader->setUniform2f("worldOrigin", worldOrigin.x, worldOrigin.y);
         shader->setUniform2i("textureOrigin", textureOrigin.x, textureOrigin.y);
+        shader->setUniform1i("layer", i);
 
         layers[i].heights->bind(0);
         layers[i].normals->bind(1);
+
+		if((i < numPinnedLayers - 1)){
+			layers[i].colors->bind(8);
+			shader->setUniform1i("colormap", 8);
+		}
 
         // TODO: factor in actual terrain height at viewer location, and make
         // max LOD decisions in update/regen phase instead of render.
@@ -1586,12 +1631,12 @@ void Terrain::precomputeScattering() {
 	const Vec3f I_I = Vec3f(1.40e7, 1.45e7, 1.11e7) * 1e-6;
 
 	auto betaS_R = [](float height) {
-		return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(height / 8000.0);
+		return Vec3f(5.8, 13.5, 33.1) * 1e-6 * exp(-height / 8000.0);
 	};
 	auto betaE_R = [&](float height) { return betaS_R(height); };
 
 	auto betaS_M = [](float height) {
-		return Vec3f(4, 4, 4) * 1e-6 * exp(height / 1200.0);
+		return Vec3f(8, 8, 8) * 1e-6 * exp(-height / 1200.0);
 	};
 	auto betaE_M = [&](float height) { return betaS_R(height) / 0.9f; };
 
@@ -1627,14 +1672,16 @@ void Terrain::precomputeScattering() {
 		// is no need to use a third dimension). Cordinates are relative to the
 		// center of the earth. (meters)
 		Vec2f x = Vec2f(0, r);
-		Vec2f x0 = Vec2f(m * u, m * sqrt(1.0 - u * u) + r);
+		Vec2f x0 = Vec2f(m * sqrt(1.0 - u * u), m * u + r);
 
 		// Integrate
 		Vec3f integral(0, 0, 0);
 		float stepSize = x.distance(x0) / steps;
 		for(size_t i = 0; i < steps; i++) {
 			float h = (lerp(x, x0, (float)i / steps)).magnitude() - Rg;
-			integral += (betaE_R(h) + betaE_M(h)) * stepSize;
+			auto ber = betaE_R(h);
+			auto bem = betaE_M(h);
+			integral += (ber + bem) * stepSize;
 		}
 		return Vec3f(exp(-integral.x), exp(-integral.x), exp(-integral.x));
 	};
@@ -1661,8 +1708,12 @@ void Terrain::precomputeScattering() {
 	 */
 	auto SL0 = [&](float r, float u, float u_s, float v, size_t steps = 32) {
 		// If ray interests the earth, return zero:
-		if(r < Rg || (r * sqrt(1.0 - u * u) < Rg && u <= 0)){
+		if(r < Rg){// || (r * sqrt(1.0 - u * u) < Rg && u <= 0)){
+			debugBreak();
 			return Vec3f(0, 0, 0);
+		}
+		if(r * sqrt(1.0 - u * u) < Rg && u <= 0){
+			return Vec3f(0,0,0);
 		}
 
 		// Compute distance from ray to edge of the atmosphere
@@ -1691,12 +1742,15 @@ void Terrain::precomputeScattering() {
 			
 			Vec3f T = Transmittance.interpolate(tu, tv);
 			Vec3f J = (betaS_R(h) * pr + betaS_M(h) * pm) * I_I;
-			integral += T * J * stepSize;
+
+			Vec3f delta = T * J * stepSize;
+			// debugAssert(std::isnormal(delta.x));
+			// debugAssert(std::isnormal(delta.y));
+			// debugAssert(std::isnormal(delta.z));
+			integral += delta;
 		}
 		return integral;
 	};
-
-	float H = sqrt(Rt * Rt - Rg * Rg);
 
 	Table3<Vec3f, 32, 128, 8 * 32> S;
 	for(size_t x = 0; x < S.W; x++) {
@@ -1710,11 +1764,13 @@ void Terrain::precomputeScattering() {
 				float uus = (z+0.5f) / 32;
 				float uv = (w+0.5f) / 8;
 
-				float r = sqrt(ur * ur * H + Rg * Rg);
+				// float r = sqrt(ur * ur * Rt * Rt + Rg * Rg * (1 - ur * ur));
+				float r = ur * (Rt - Rg) + Rg;
+
 				float u_s = -1.0 / 3 * log(1 - uus * (1 - exp(-3.6))) - 0.2;
 				float v = 2 * uv - 1;
 				float u = 2 * uu - 1; // TODO: better mapping for u
-
+				debugAssert(r >= Rg && r <= Rt);
 				// float ro2 = r * r - Rg * Rg;
 				// float ro = sqrt(ro2);
 				// if(y < S.H / 2) {
@@ -2005,7 +2061,7 @@ void Terrain::renderTerrain(shared_ptr<GraphicsManager::View> view) const
 	if (wireframe)
 		graphics->setWireFrame(true);
 
-    gpuClipMap->render(view);
+	gpuClipMap->render(view);
     
 	if (wireframe)
 		graphics->setWireFrame(false);

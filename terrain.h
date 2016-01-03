@@ -45,8 +45,10 @@ public:
 		float getSideLength() const { return sideLength; }
 		float getHeight(unsigned int layer, unsigned int x, unsigned int z) const { return layers[layer][x + z * layerResolution]; }
 		float getHeight(float x, float z);
-        
-		void bindTexture(unsigned int textureUnit = 0) { texture->bind(textureUnit); }
+
+		void bindTexture(unsigned int textureUnit = 0) {
+			texture->bind(textureUnit);
+		}
 
 		unsigned int getLayerResolution() const { return layerResolution; }
 		unsigned int getNumLayers() const { return layers.size(); }
@@ -114,7 +116,7 @@ private:
             // Texture arrays containing the current state of the clipMap.
             shared_ptr<GraphicsManager::texture2D> heights;
             shared_ptr<GraphicsManager::texture2D> normals;
-            shared_ptr<GraphicsManager::texture2D> shoreDistance;
+			shared_ptr<GraphicsManager::texture2D> colors;
         };
         vector<Layer> layers;
 
