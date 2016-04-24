@@ -15,6 +15,8 @@ uniform sampler3D inscattering;
 
 in vec2 position;
 
+out vec4 FragColor;
+
 vec3 lookup_T(float r, float u){
 	float tu = (r - Rg) / (Rt - Rg);
 	float tv = u * 0.5 + 0.5;
@@ -114,5 +116,5 @@ void main()
     //                      (1.0 - eye.y / (0.01 * earthRadius)), 0.0, 0.6);
 	//color = mix(color, vec3(0.8,0.8,0.8), clouds);
 
-	gl_FragColor = vec4(color, 1);
+	FragColor = vec4(color, 1);
 }

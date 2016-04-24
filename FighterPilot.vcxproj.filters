@@ -752,6 +752,7 @@
     <None Include="media\fractalTerrain.vert">
       <Filter>shaders\terrain</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FighterPilot.rc">

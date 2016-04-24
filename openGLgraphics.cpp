@@ -19,8 +19,6 @@
 	#error OS not supported by openGLgraphics
 #endif
 
-#include "png/png.h"
-
 // NOTE: Versions of OpenGL prior to 3.3 are no longer supported. However not
 // all the code has been updated to reflect this.
 
@@ -37,36 +35,36 @@ struct OpenGLgraphics::Context
         ChangeDisplaySettings(NULL,0);					// Switch Back To The Desktop
         ShowCursor(true);								// Show Mouse Pointer
 
-        if (context->hRC)											// Do We Have A Rendering Context?
+        if (hRC)											// Do We Have A Rendering Context?
         {
             if (!wglMakeCurrent(NULL,NULL))					// Are We Able To Release The DC And RC Contexts?
             {
                 //MessageBox(NULL,"Release Of DC And RC Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
             }
 
-            if (!wglDeleteContext(context->hRC))						// Are We Able To Delete The RC?
+            if (!wglDeleteContext(hRC))						// Are We Able To Delete The RC?
             {
                 //MessageBox(NULL,"Release Rendering Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
             }
-            context->hRC=NULL;										// Set RC To NULL
+            hRC=NULL;										// Set RC To NULL
         }
 
-        if (context->hDC && !ReleaseDC(context->hWnd,context->hDC))					// Are We Able To Release The DC
+        if (hDC && !ReleaseDC(hWnd,hDC))					// Are We Able To Release The DC
         {
             //MessageBox(NULL,"Release Device Context Failed.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-            context->hDC=NULL;										// Set DC To NULL
+            hDC=NULL;										// Set DC To NULL
         }
 
-        if (context->hWnd && !DestroyWindow(context->hWnd))					// Are We Able To Destroy The Window?
+        if (hWnd && !DestroyWindow(hWnd))					// Are We Able To Destroy The Window?
         {
             //MessageBox(NULL,"Could Not Release hWnd.","SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-            context->hWnd=NULL;										// Set hWnd To NULL
+            hWnd=NULL;										// Set hWnd To NULL
         }
 
-        if (!UnregisterClass(L"OpenGL",context->hInstance))			// Are We Able To Unregister Class
+        if (!UnregisterClass(L"OpenGL",hInstance))			// Are We Able To Unregister Class
         {
             MessageBox(NULL,L"Could Not Unregister Class.",L"SHUTDOWN ERROR",MB_OK | MB_ICONINFORMATION);
-            context->hInstance=NULL;									// Set hInstance To NULL
+            hInstance=NULL;									// Set hInstance To NULL
         }
 
     }
@@ -2836,10 +2834,10 @@ bool OpenGLgraphics::createWindow(string title, Vec2i screenResolution, unsigned
 		return false;								// Return false
 	}
 	DescribePixelFormat(context->hDC, PixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-	if(pfd.dwFlags & PFD_STEREO)
-	{
-		stereoMode = STEREO_3D;
-	}
+	//if(pfd.dwFlags & PFD_STEREO)
+	//{
+	//	stereoMode = STEREO_3D;
+	//}
 
 	if(!(context->hRC=wglCreateContext(context->hDC)))				// Are We Able To Get A Rendering Context?
 	{

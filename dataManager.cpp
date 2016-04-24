@@ -1,6 +1,5 @@
 
 #include "engine.h"
-#include "png/png.h"
 
 DataManager::fontAsset* DataManager::registerFont(shared_ptr<FileManager::textFile> f) //loads a "text" .fnt file as created by Bitmap Font Generator from http://www.angelcode.com/products/bmfont/
 {

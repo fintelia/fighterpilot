@@ -82,7 +82,10 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,			// Handle For This Window
 	}
 	else if(uMsg == WM_ACTIVATEAPP)
 	{
-		world->time.setPaused(!(wParam != 0));
+		if (world)
+		{
+			world->time.setPaused(!(wParam != 0));
+		}
 		game->active = wParam != 0;
 		input.windowsInput(uMsg,wParam,lParam);
 		return 0;

@@ -506,7 +506,7 @@ public:
 		return pInstance;
 	}
 protected:
-	class Context;
+	struct Context;
 
 	texturedVertex2D overlay[4];
 	vertex3D shapes3D[4];

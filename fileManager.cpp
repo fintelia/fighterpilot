@@ -7,7 +7,7 @@
 	#include <process.h>
 	#include <Shlobj.h>
 	#include "zlib/zlib.h"
-	#include "png/png.h"
+	#include <png.h>
 #elif defined(LINUX)
 	#include <sys/types.h>
 	#include <sys/stat.h>
