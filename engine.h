@@ -58,6 +58,9 @@ typedef void* HANDLE;
 #include <iomanip>
 #include <cassert>
 #include <functional>
+#include <thread>
+#include <mutex>
+#include <atomic>
 //--Boost C++ Library
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>

@@ -113,5 +113,12 @@ public:
 	void addCollisionMesh(string filename, objectType objType);
 
 	void saveAssetZip();
+
+	void freeMemory() {
+		assetsZipFile.reset();
+		modelsToAddToZip.clear();
+		modelsToRegister.clear();
+		texturesToAddToZip.clear();
+	}
 };
 extern AssetLoader& assetLoader;

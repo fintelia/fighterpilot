@@ -381,7 +381,7 @@ int main(int argc, const char* argv[])
 				do{
 					time = GetTime();
 				}while(time < nextUpdate - swapTime);
-				nextUpdate = 2.0 + GetTime(); //limits frame rate to 500 fps
+				nextUpdate = 5.0 + GetTime(); //limits frame rate to 200 fps
 				time = GetTime();
 				//end timing code
 

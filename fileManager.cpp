@@ -18,13 +18,6 @@
 #endif 
 
 
-
-#if defined(WINDOWS)
-	HANDLE pWorkerThread;
-#elif defined(LINUX)
-	pthread_t pWorkerThread;
-#endif
-
 /**
  *  The FileManager class provides in interface to load and save files to a wide variety of formats, it also has several methods
  *  to query information about the filesystem and to minipulate filenames.
@@ -37,63 +30,53 @@
 //															FileManager methods																			 //
 //																																						 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-FileManager::FileManager(): terminateFlag(false)
+FileManager::FileManager() : terminateFlag(false)
 {
-#if defined(WINDOWS)
-	pWorkerThread = (HANDLE)_beginthread(startWorkerThread,0,this);
-#elif defined(LINUX)
-	int errorCode = pthread_create(&pWorkerThread, nullptr, startWorkerThread, this);
-	if(errorCode)
-		cout << "fileManager worker thread creation failed with error code" << errorCode << endl;
-#endif
+	workerThread = std::thread([&] {peformBackgroundWrites(); });
 }
 void FileManager::shutdown()
 {
-	fileQueueMutex.lock();
+	fileQueuesMutex.lock();
 	while(!fileQueue.empty())
 		fileQueue.pop();
-	fileQueueMutex.unlock();
+	while (!fileQueue.empty())
+		fileQueue.pop();
 	terminateFlag = true;
-#if defined(WINDOWS)
-	WaitForSingleObject(pWorkerThread, INFINITE);
-#elif defined(LINUX)
-	pthread_join(pWorkerThread, NULL);
-#endif
+	fileQueuesMutex.unlock();
+	fileQueuesCv.notify_all();
+
+	if (workerThread.joinable())
+		workerThread.join();
+
 	this->~FileManager();
 }
-void FileManager::workerThread()
+void FileManager::peformBackgroundWrites()
 {
-	bool empty;
-	bool writeEmpty;
+	std::unique_lock<std::mutex> lock(fileQueuesMutex);
+
 	while(true)
 	{
-		fileQueueMutex.lock();
-		empty = fileQueue.empty();
-		writeEmpty = fileWriteQueue.empty();
-		if(!empty)
+		fileQueuesCv.wait(lock, [&] {return !fileQueue.empty() || !fileWriteQueue.empty() || terminateFlag;});
+		if(!fileQueue.empty())
 		{
 			shared_ptr<file> f = fileQueue.front();
 			fileQueue.pop();
-			fileQueueMutex.unlock();
 
 			fileContents data = loadFileContents(f->filename);
 			f->parseFile(data);
 			delete[] data.contents;
 		}
-		else if(!writeEmpty)
+		else if(!fileWriteQueue.empty())
 		{
 			shared_ptr<file> f = fileWriteQueue.front();
 			fileWriteQueue.pop();
-			fileQueueMutex.unlock();
 
 			writeFileContents(f->filename, f->serializeFile());
 		}
 		else
 		{
-			fileQueueMutex.unlock();
 			if(terminateFlag)
 				break;
-			threadSleep(15);
 		}
 	}
 }

@@ -174,9 +174,9 @@ public:
 
 		if(async)
 		{
-			fileQueueMutex.lock();
+			std::unique_lock<std::mutex>(fileQueuesMutex);
 			fileQueue.push(f);
-			fileQueueMutex.unlock();
+			fileQueuesCv.notify_all();
 		}
 		else
 		{
@@ -191,9 +191,9 @@ public:
 		static_assert(std::is_base_of<file,T>::value, "Type T must derive from FileManager::file");
 		if(async)
 		{
-			fileQueueMutex.lock();
+			std::unique_lock<std::mutex> lock(fileQueuesMutex);
 			fileWriteQueue.push(f);
-			fileQueueMutex.unlock();
+			fileQueuesCv.notify_all();
 			return true;
 		}
 		else
@@ -201,40 +201,6 @@ public:
 			return writeFileContents(f->filename, f->serializeFile());
 		}
 	}
-	//shared_ptr<binaryFile> loadBinaryFile(string filename, bool async = false);
-	//shared_ptr<textFile> loadTextFile(string filename, bool async = false);
-	//shared_ptr<iniFile> loadIniFile(string filename, bool async = false);
-	//shared_ptr<zipFile> loadZipFile(string filename, bool async = false);
-	//shared_ptr<textureFile> loadTextureFile(string filename, bool async = false);
-	//shared_ptr<textureFile> loadBmpFile(string filename, bool async = false);
-	//shared_ptr<textureFile> loadTgaFile(string filename, bool async = false);
-	//shared_ptr<textureFile> loadPngFile(string filename, bool async = false);
-	//shared_ptr<modelFile> loadMeshFile(string filename, bool async = false);
-	//shared_ptr<modelFile> loadObjFile(string filename, bool async = false);
-
-	//bool writeBinaryFile(shared_ptr<binaryFile> f, bool async = false);
-	//bool writeTextFile(shared_ptr<textFile> f, bool async = false);
-	//bool writeIniFile(shared_ptr<iniFile> f, bool async = false);
-	//bool writeZipFile(shared_ptr<zipFile> f, bool async = false);
-	//bool writeBmpFile(shared_ptr<textureFile> f, bool async = false);
-	//bool writeTgaFile(shared_ptr<textureFile> f, bool async = false);
-	//bool writePngFile(shared_ptr<textureFile> f, bool async = false);
-	//bool writeMeshFile(shared_ptr<modelFile> f, bool async = false);					//uses custom format
-
-	//template<typename T> shared_ptr<T> loadFile(string filename, bool async);
-	//template<> shared_ptr<binaryFile>	loadFile<binaryFile>(string filename, bool async);
-	//template<> shared_ptr<textFile>	loadFile<textFile>(string filename, bool async);
-	//template<> shared_ptr<iniFile>	loadFile<iniFile>(string filename, bool async);
-	//template<> shared_ptr<zipFile>	loadFile<zipFile>(string filename, bool async);
-//	template<> shared_ptr<textureFile>	loadFile<textureFile>(string filename, bool async);
-//	template<> shared_ptr<modelFile>	loadFile<modelFile>(string filename, bool async);
-
-	//template<class T> shared_ptr<T>		loadFile(string filename){return loadFile<T>(filename, false);}
-
-	//shared_ptr<file> loadFile(string filename, bool async=false);
-	//bool writeFile(shared_ptr<file> f, bool async, string ext);
-	//bool writeFile(shared_ptr<file> f, bool async=false);
-
 
 	string filename(string filename);
 	string extension(string filename);
@@ -254,10 +220,12 @@ public:
 
 	void shutdown();
 private:
+	std::thread workerThread;
 	queue<shared_ptr<file>> fileQueue;
 	queue<shared_ptr<file>> fileWriteQueue;
-	mutex fileQueueMutex;
-	bool terminateFlag;	
+	std::mutex fileQueuesMutex;
+	std::condition_variable fileQueuesCv;
+	std::atomic<bool> terminateFlag;	
 
 	shared_ptr<file> parseFile(string filename, fileContents data);
 
@@ -290,20 +258,7 @@ private:
 	FileManager();
 	~FileManager(){}
 
-	void workerThread();
-
-#if defined(WINDOWS)
-	static void startWorkerThread(void* pThis)
-	{
-		((FileManager*)pThis)->workerThread();
-	}	
-#elif defined(LINUX)
-	static void* startWorkerThread(void* pThis)
-	{
-		((FileManager*)pThis)->workerThread();
-		return nullptr;
-	}
-#endif 
+	void peformBackgroundWrites();
 };
 
 extern FileManager& fileManager;

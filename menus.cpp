@@ -610,6 +610,7 @@ void loading::update()
 	{
 		objectInfo.linkObjectMeshes();
 		assetLoader.saveAssetZip();
+		assetLoader.freeMemory();
 		shaders.writeErrorLog("media/shaderErrors.txt");
 
 /*		if(!game->commandLineOptions.empty() && fileManager.fileExists(game->commandLineOptions[0]))
